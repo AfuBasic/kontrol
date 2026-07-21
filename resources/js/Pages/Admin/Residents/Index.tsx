@@ -1,19 +1,46 @@
-import { MagnifyingGlassIcon, FunnelIcon, XMarkIcon, PlusIcon, ArrowRightIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { 
+    MagnifyingGlassIcon, 
+    FunnelIcon, 
+    XMarkIcon, 
+    PlusIcon, 
+    ArrowRightIcon, 
+    ChevronDownIcon, 
+    ChevronRightIcon,
+    EllipsisVerticalIcon
+} from '@heroicons/react/24/outline';
+import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LinkIcon, Mail, Trash2, MapPin, Phone, User, Loader2, Check } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { 
+    LinkIcon, 
+    Mail, 
+    Trash2, 
+    MapPin, 
+    Phone, 
+    User, 
+    Loader2, 
+    Check, 
+    Users, 
+    Percent, 
+    ShieldCheck, 
+    UserMinus, 
+    Send, 
+    Copy, 
+    AlertCircle, 
+    Calendar,
+    Pencil,
+    ShieldAlert,
+    ExternalLink,
+    Clock,
+    X,
+    Eye
+} from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { index as inviteLinkIndex } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import ResidentActions from '@/Components/Admin/ResidentActions';
-import ResidentsSkeleton from '@/Components/Admin/ResidentsSkeleton';
-
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
-
-// Wayfinder actions are used for routing instead of global route()
 
 type Resident = {
     ulid: string;
@@ -23,10 +50,13 @@ type Resident = {
     phone: string | null;
     unit_number: string | null;
     property_owner_name: string | null;
-    status: 'pending' | 'accepted';
+    status: 'pending' | 'accepted' | 'inactive';
     is_property_owner: boolean;
+    role_label: string;
+    household_members_count: number;
     suspended_at: string | null;
     email_verified_at: string | null;
+    last_active: string;
     created_at: string;
 };
 
@@ -44,612 +74,818 @@ type Props = {
     filters: {
         search?: string;
         status?: string;
+        role?: string;
+        property?: string;
+        sort?: string;
     };
-    pendingCount: number;
+    stats: {
+        total: number;
+        active: number;
+        pending: number;
+        inactive: number;
+        occupancy_rate: number;
+    };
+    insights: string[];
+    inviteLink: {
+        token: string;
+        url: string;
+        is_active: boolean;
+        usage_count: number;
+        max_usages: number | null;
+        requires_approval: boolean;
+        expires_at: string | null;
+        is_expired: boolean;
+    } | null;
 };
 
-export default function Residents({ residents, filters, pendingCount }: Props) {
+export default function Residents({ residents, filters, stats, insights, inviteLink }: Props) {
     const { can } = usePermission();
     const hasResidents = residents && residents.data && residents.data.length > 0;
+    
+    // States
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
+    const [role, setRole] = useState(filters.role || '');
+    const [property, setProperty] = useState(filters.property || '');
+    const [sort, setSort] = useState(filters.sort || '');
+    
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
-    const [allSelected, setAllSelected] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
-    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+
     const debouncedSearch = useDebounce(search, 300);
 
-    // Clear selection when page changes (unless globally selected)
-    useEffect(() => {
-        if (!allSelected) {
-            setSelectedIds([]);
-        }
-    }, [residents?.current_page, allSelected]);
+    // Apply filters
+    const applyFilters = useCallback((updatedFilters: Record<string, string>) => {
+        router.get(index.url(), {
+            search,
+            status,
+            role,
+            property,
+            sort,
+            ...updatedFilters
+        }, { preserveState: true, preserveScroll: true, replace: true });
+    }, [search, status, role, property, sort]);
 
-    // Debounce search
+    // Handle search debounce
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(index.url(), { search: debouncedSearch, status }, { preserveState: true, preserveScroll: true, replace: true });
+            applyFilters({ search: debouncedSearch });
         }
-    }, [debouncedSearch, filters.search, status]);
+    }, [debouncedSearch]);
 
-    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = e.target.value;
-        setStatus(newStatus);
-        router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
+    const handleFilterChange = (key: string, value: string) => {
+        if (key === 'status') setStatus(value);
+        if (key === 'role') setRole(value);
+        if (key === 'property') setProperty(value);
+        if (key === 'sort') setSort(value);
+        
+        applyFilters({ [key]: value });
     };
 
-    const clearFilters = useCallback(() => {
+    const clearFilters = () => {
         setSearch('');
         setStatus('');
+        setRole('');
+        setProperty('');
+        setSort('');
         router.get(index.url(), {}, { preserveState: true, preserveScroll: true, replace: true });
-    }, []);
-
-    const hasActiveFilters = Boolean(search || status);
-
-    const toggleSelectAll = useCallback(() => {
-        if (!residents?.data) return;
-        if (selectedIds.length === residents.data.length || allSelected) {
-            setSelectedIds([]);
-            setAllSelected(false);
-        } else {
-            setSelectedIds(residents.data.map((r) => r.id));
-        }
-    }, [selectedIds.length, residents?.data, allSelected]);
-
-    const toggleSelect = useCallback((id: number) => {
-        setAllSelected(false);
-        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
-    }, []);
-
-    const selectAllAcrossPages = () => {
-        setAllSelected(true);
-        // We don't necessarily need all IDs if the backend supports a "select all" flag for bulk actions
-        // But for UI feedback, we can show the total count
     };
 
-    const handleBulkDelete = useCallback(() => {
-        if (selectedIds.length === 0 && !allSelected) return;
+    const hasActiveFilters = Boolean(search || status || role || property || sort);
 
+    // Copy link helper
+    const copyToClipboard = () => {
+        if (!inviteLink?.url) return;
+        navigator.clipboard.writeText(inviteLink.url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    // Selection Helpers
+    const toggleSelectAll = () => {
+        if (!residents?.data) return;
+        if (selectedIds.length === residents.data.length) {
+            setSelectedIds([]);
+        } else {
+            setSelectedIds(residents.data.map(r => r.id));
+        }
+    };
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+    };
+
+    // Bulk action triggers
+    const handleBulkDelete = () => {
+        if (selectedIds.length === 0) return;
         setIsDeleting(true);
         router.delete(bulkDelete.url(), {
-            data: {
-                ids: selectedIds,
-                all: allSelected,
-                filters: { search, status },
-            },
+            data: { ids: selectedIds },
             onSuccess: () => {
                 setSelectedIds([]);
-                setAllSelected(false);
                 setShowDeleteConfirm(false);
             },
-            onFinish: () => setIsDeleting(false),
+            onFinish: () => setIsDeleting(false)
         });
-    }, [selectedIds, allSelected, search, status]);
+    };
 
-    const isAllSelected = (residents?.data?.length ?? 0) > 0 && selectedIds.length === (residents?.data?.length ?? 0);
-    const isSomeSelected = selectedIds.length > 0 && selectedIds.length < (residents?.data?.length ?? 0);
+    const handleBulkSuspend = () => {
+        if (selectedIds.length === 0) return;
+        setIsBulkActionRunning(true);
+        router.post('/admin/residents/bulk-suspend', { ids: selectedIds }, {
+            onSuccess: () => setSelectedIds([]),
+            onFinish: () => setIsBulkActionRunning(false)
+        });
+    };
 
-    const loadMore = () => {
-        if (residents.next_page_url && !isLoadingMore) {
-            setIsLoadingMore(true);
-            router.get(
-                residents.next_page_url,
-                {},
-                {
-                    preserveScroll: true,
-                    only: ['residents'],
-                    // @ts-expect-error - merge is a new Inertia v2 feature
-                    merge: true,
-                    onFinish: () => setIsLoadingMore(false),
-                },
-            );
+    const handleBulkActivate = () => {
+        if (selectedIds.length === 0) return;
+        setIsBulkActionRunning(true);
+        router.post('/admin/residents/bulk-activate', { ids: selectedIds }, {
+            onSuccess: () => setSelectedIds([]),
+            onFinish: () => setIsBulkActionRunning(false)
+        });
+    };
+
+    const handleBulkResend = () => {
+        if (selectedIds.length === 0) return;
+        setIsBulkActionRunning(true);
+        router.post('/admin/residents/bulk-resend-invitation', { ids: selectedIds }, {
+            onSuccess: () => setSelectedIds([]),
+            onFinish: () => setIsBulkActionRunning(false)
+        });
+    };
+
+    // Toggle invite link
+    const toggleInviteLink = () => {
+        router.post('/admin/residents/invite-link/toggle', {}, { preserveScroll: true });
+    };
+
+    // Regenerate invite link
+    const regenerateInviteLink = () => {
+        router.post('/admin/residents/invite-link/regenerate', {}, { preserveScroll: true });
+    };
+
+    // Individual actions
+    const handleResendInvitation = (id: number) => {
+        router.post(`/admin/residents/${id}/resend-invitation`, {}, { preserveScroll: true });
+    };
+
+    const handleToggleSuspend = (id: number) => {
+        router.patch(`/admin/residents/${id}/suspend`, {}, { preserveScroll: true });
+    };
+
+    const handleMarkAsPropertyOwner = (id: number) => {
+        router.patch(`/admin/residents/${id}/mark-as-property-owner`, {}, { preserveScroll: true });
+    };
+
+    const handleDeleteResident = (id: number) => {
+        if (confirm('Are you sure you want to remove this resident?')) {
+            router.delete(`/admin/residents/${id}`, { preserveScroll: true });
         }
     };
 
     return (
-        <>
-            <Head title="Residents" />
+        <AdminLayout>
+            <Head title="Residents Workspace" />
 
-            {/* Page Header */}
-            <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            {/* Top Workspace Header */}
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Residents</h1>
-                    <p className="mt-1 text-slate-500">Manage and oversee all estate residents.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Resident Workspace</h1>
+                    <p className="text-xs font-semibold text-slate-500">Monitor community health, handle activations, and manage profiles.</p>
                 </div>
                 {can('residents.create') && (
-                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-                        <Link
-                            href={inviteLinkIndex.url()}
-                            className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-                        >
-                            <LinkIcon className="h-4 w-4" />
-                            Manage Invite Link
-                        </Link>
-                        <Link
-                            href={index.url() + '/create'}
-                            className="flex items-center justify-center gap-2 rounded-2xl bg-[#1F6FDB] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95"
-                        >
-                            <PlusIcon className="h-5 w-5" />
-                            Add Resident
-                        </Link>
-                    </div>
+                    <Link
+                        href={index.url() + '/create'}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                    >
+                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                        Invite Resident
+                    </Link>
                 )}
             </div>
 
-            {/* Pending Approvals Notice - Glassmorphism Redesign */}
-            <AnimatePresence>
-                {pendingCount && pendingCount > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="mb-8">
-                        <Link
-                            href={approvalsIndex.url()}
-                            className="group relative flex flex-col items-start gap-4 overflow-hidden rounded-3xl border border-blue-100 bg-linear-to-br from-blue-50/50 to-indigo-50/50 p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98] sm:flex-row sm:items-center sm:justify-between"
-                        >
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600 shadow-inner ring-4 ring-blue-50">
-                                    <Mail className="h-7 w-7" />
-                                </div>
-                                <div>
-                                    <p className="text-lg font-black tracking-tight text-blue-900">
-                                        {pendingCount} Pending Application{pendingCount > 1 ? 's' : ''}
-                                    </p>
-                                    <p className="text-sm leading-relaxed text-blue-700/80">Approvals required for new resident sign-ups.</p>
-                                </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4 items-start">
+                
+                {/* Left Workspace Column (75%) */}
+                <div className="lg:col-span-3 space-y-6">
+                    
+                    {/* SECTION 1 — RESIDENT OVERVIEW STRIP */}
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Residents</span>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <Users className="h-4 w-4 text-blue-500 shrink-0" />
+                                <span className="text-2xl font-black text-slate-900">{stats.total}</span>
                             </div>
-                            <div className="flex w-full items-center justify-between border-t border-blue-100 pt-4 sm:w-auto sm:border-0 sm:pt-0">
-                                <span className="text-sm font-bold text-blue-600 sm:hidden">Action Required</span>
-                                <div className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-all group-hover:bg-blue-700 group-hover:px-5">
-                                    Review
-                                    <ArrowRightIcon className="h-4 w-4" />
-                                </div>
-                            </div>
-                            {/* Decorative Blobs */}
-                            <div className="absolute -top-12 -right-12 h-24 w-24 rounded-full bg-blue-400/5 blur-3xl" />
-                            <div className="absolute -bottom-12 -left-12 h-24 w-24 rounded-full bg-indigo-400/5 blur-3xl" />
-                        </Link>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Filters Section - Modernized */}
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row">
-                <div className="relative flex-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                        <MagnifyingGlassIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
-                    </div>
-                    <input
-                        type="text"
-                        name="search"
-                        id="search"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="block w-full rounded-2xl border-0 bg-white py-3.5 pl-11 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
-                        placeholder="Search residents..."
-                    />
-                </div>
-                <div className="w-full sm:w-56">
-                    <div className="relative">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                            <FunnelIcon className="h-5 w-5 text-slate-400" aria-hidden="true" />
                         </div>
-                        <select
-                            value={status}
-                            onChange={handleStatusChange}
-                            className="block w-full appearance-none rounded-2xl border-0 bg-white py-3.5 pr-10 pl-11 text-sm text-slate-900 shadow-sm ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
-                        >
-                            <option value="">All Statuses</option>
-                            <option value="active">Active Residents</option>
-                            <option value="property_owner">Property Owners</option>
-                            <option value="pending">Pending Invites</option>
-                            <option value="suspended">Suspended Users</option>
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-                            <ChevronDownIcon className="h-5 w-5" />
+
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active</span>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                                <span className="text-2xl font-black text-slate-900">{stats.active}</span>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pending</span>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <Send className="h-4 w-4 text-amber-500 shrink-0" />
+                                <span className="text-2xl font-black text-slate-900">{stats.pending}</span>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 flex flex-col justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Suspended</span>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <UserMinus className="h-4 w-4 text-rose-500 shrink-0" />
+                                <span className="text-2xl font-black text-slate-900">{stats.inactive}</span>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50 col-span-2 sm:col-span-1 flex flex-col justify-between">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Occupancy</span>
+                            <div className="mt-2 flex items-baseline gap-2">
+                                <Percent className="h-4 w-4 text-indigo-500 shrink-0" />
+                                <span className="text-2xl font-black text-slate-900">{stats.occupancy_rate}%</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-                {hasActiveFilters && (
-                    <button
-                        type="button"
-                        onClick={clearFilters}
-                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3.5 text-sm font-bold text-slate-600 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-                    >
-                        <XMarkIcon className="h-4 w-4" />
-                        Reset
-                    </button>
-                )}
-            </div>
 
-            {/* Bulk Actions Bar */}
-            <AnimatePresence>
-                {selectedIds.length > 0 && can('residents.delete') && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="mb-4 flex flex-col rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
-                    >
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-black tracking-tight text-primary-900">
-                                {allSelected ? residents.total : selectedIds.length} resident(s) selected
-                            </span>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setSelectedIds([]);
-                                        setAllSelected(false);
-                                    }}
-                                    className="rounded-lg px-3 py-1.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-100"
-                                >
-                                    Unselect All
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDeleteConfirm(true)}
-                                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                    Delete Selected
-                                </button>
+                    {/* SECTION 2 — OPERATIONAL INSIGHTS */}
+                    {insights.length > 0 && (
+                        <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
+                            <div className="flex items-center gap-2 mb-2.5">
+                                <AlertCircle className="h-4 w-4 text-blue-600" />
+                                <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
                             </div>
-                        </div>
-
-                        {/* Intelligent Cross-Page Selection */}
-                        <AnimatePresence>
-                            {isAllSelected && residents.total > residents.data.length && !allSelected && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: 'auto' }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="mt-3 border-t border-primary-200 pt-3"
-                                >
-                                    <p className="text-center text-xs font-medium text-primary-700">
-                                        All {residents.data.length} residents on this page are selected.{' '}
-                                        <button
-                                            type="button"
-                                            onClick={selectAllAcrossPages}
-                                            className="font-black text-primary-900 underline decoration-primary-900/30 underline-offset-4 hover:decoration-primary-900"
-                                        >
-                                            Select all {residents.total} residents in the estate
-                                        </button>
-                                    </p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Content Container */}
-            <div className="space-y-4">
-                {!residents ? (
-                    <ResidentsSkeleton />
-                ) : hasResidents ? (
-                    <>
-                        {/* Mobile Card List (Hidden on Desktop) */}
-                        <div className="flex flex-col gap-4 sm:hidden">
-                            <AnimatePresence mode="popLayout">
-                                {residents.data.map((resident) => (
-                                    <motion.div
-                                        layout
-                                        key={resident.ulid ?? String(resident.id)}
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        className={`group relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all active:bg-slate-50 ${
-                                            selectedIds.includes(resident.id) ? 'bg-blue-50/30 ring-2 ring-blue-500' : ''
-                                        }`}
-                                    >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleSelect(resident.id);
-                                                    }}
-                                                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl font-black shadow-inner transition-colors ${
-                                                        selectedIds.includes(resident.id) ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-400'
-                                                    }`}
-                                                >
-                                                    {selectedIds.includes(resident.id) ? (
-                                                        <Check className="h-6 w-6" strokeWidth={3} />
-                                                    ) : (
-                                                        resident.name.charAt(0).toUpperCase()
-                                                    )}
-                                                </div>
-                                                <div onClick={() => toggleSelect(resident.id)}>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
-                                                        {resident.is_property_owner && (
-                                                            <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-700 uppercase">
-                                                                Property Owner
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="flex items-center gap-1.5 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                                                        <MapPin className="h-3 w-3" />
-                                                        {resident.unit_number || 'Unit Pending'}
-                                                    </div>
-                                                    {resident.property_owner_name && (
-                                                        <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                                            <User className="h-2.5 w-2.5" />
-                                                            via {resident.property_owner_name}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center gap-2">
-                                                <span
-                                                    className={`rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest uppercase ${
-                                                        resident.suspended_at
-                                                            ? 'bg-rose-100 text-rose-700'
-                                                            : !resident.email_verified_at
-                                                              ? 'bg-slate-100 text-slate-700'
-                                                              : resident.status === 'accepted'
-                                                                ? 'bg-emerald-100 text-emerald-700'
-                                                                : 'bg-amber-100 text-amber-700'
-                                                    }`}
-                                                >
-                                                    {resident.suspended_at
-                                                        ? 'Suspended'
-                                                        : !resident.email_verified_at
-                                                          ? 'Pending Setup'
-                                                          : resident.status === 'accepted'
-                                                            ? 'Active'
-                                                            : 'Pending'}
-                                                </span>
-                                                <ResidentActions resident={resident} />
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-5 space-y-3 rounded-2xl bg-slate-50/50 p-4 ring-1 ring-slate-100">
-                                            <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
-                                                <Mail className="h-4 w-4 text-slate-400" />
-                                                <span className="truncate">{resident.email}</span>
-                                            </div>
-                                            {resident.phone && (
-                                                <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
-                                                    <Phone className="h-4 w-4 text-slate-400" />
-                                                    {resident.phone}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </motion.div>
+                            <ul className="space-y-2">
+                                {insights.map((insight, idx) => (
+                                    <li key={idx} className="flex items-start gap-2 text-xs text-blue-950 font-semibold">
+                                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-600 shrink-0" />
+                                        {insight}
+                                    </li>
                                 ))}
-                            </AnimatePresence>
+                            </ul>
                         </div>
+                    )}
 
-                        {/* Desktop Table (Hidden on Mobile) */}
-                        <div className="hidden overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm sm:block">
-                            <table className="min-w-full divide-y divide-slate-100">
-                                <thead className="bg-slate-50/50">
-                                    <tr>
-                                        {can('residents.delete') && (
-                                            <th className="w-12 px-6 py-4">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={isAllSelected}
-                                                    ref={(el) => {
-                                                        if (el) el.indeterminate = isSomeSelected;
-                                                    }}
-                                                    onChange={toggleSelectAll}
-                                                    className="h-5 w-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
-                                                />
-                                            </th>
-                                        )}
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Resident
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Contact
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Unit</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Status
-                                        </th>
-                                        <th className="relative px-6 py-4">
-                                            <span className="sr-only">Actions</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 bg-white">
-                                    {residents.data.map((resident) => (
-                                        <tr
-                                            key={resident.ulid ?? String(resident.id)}
-                                            className={`transition-colors hover:bg-slate-50/50 ${selectedIds.includes(resident.id) ? 'bg-blue-50/50' : ''}`}
-                                        >
+                    {/* SECTION 3 — SEARCH & FILTERS */}
+                    <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
+                        <div className="flex flex-col gap-3">
+                            {/* Search Input */}
+                            <div className="relative w-full">
+                                <MagnifyingGlassIcon className="absolute top-3.5 left-4 h-4.5 w-4.5 text-slate-400 pointer-events-none" />
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search residents by name, email, phone, or unit..."
+                                    className="w-full rounded-xl border-slate-200 pl-11 pr-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                />
+                            </div>
+
+                            {/* Dropdowns filters */}
+                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                                <div>
+                                    <select
+                                        value={status}
+                                        onChange={(e) => handleFilterChange('status', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                    >
+                                        <option value="">All Statuses</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="invited">Invited</option>
+                                        <option value="pending_activation">Pending Activation</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <select
+                                        value={role}
+                                        onChange={(e) => handleFilterChange('role', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                    >
+                                        <option value="">All Roles</option>
+                                        <option value="resident">Resident</option>
+                                        <option value="property_owner">Property Owner</option>
+                                        <option value="tenant">Tenant</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <select
+                                        value={property}
+                                        onChange={(e) => handleFilterChange('property', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                    >
+                                        <option value="">All Properties</option>
+                                        <option value="assigned">Assigned Unit</option>
+                                        <option value="unassigned">Unassigned</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <select
+                                        value={sort}
+                                        onChange={(e) => handleFilterChange('sort', e.target.value)}
+                                        className="w-full rounded-xl border-slate-200 bg-slate-50 py-2.5 px-3 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                    >
+                                        <option value="">Sort By</option>
+                                        <option value="name">Name</option>
+                                        <option value="date_joined">Date Joined</option>
+                                        <option value="recently_active">Recently Active</option>
+                                        <option value="unit_number">Unit Number</option>
+                                    </select>
+                                </div>
+
+                                <div className="col-span-2 sm:col-span-1">
+                                    <button
+                                        onClick={clearFilters}
+                                        disabled={!hasActiveFilters}
+                                        className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white py-2.5 px-3 text-[11px] font-black tracking-wider text-slate-600 uppercase shadow-xs transition hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                        Reset
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* SECTION 4 — TABLE REDESIGN */}
+                    <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
+                        {hasResidents ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full table-auto border-collapse">
+                                    <thead className="bg-slate-50/70 border-b border-slate-100">
+                                        <tr>
                                             {can('residents.delete') && (
-                                                <td className="w-12 px-6 py-4">
+                                                <th className="w-10 px-4 py-3.5 text-center">
                                                     <input
                                                         type="checkbox"
-                                                        checked={selectedIds.includes(resident.id)}
-                                                        onChange={() => toggleSelect(resident.id)}
-                                                        className="h-5 w-5 rounded-lg border-slate-300 text-blue-600 focus:ring-blue-500"
+                                                        checked={selectedIds.length === residents.data.length && residents.data.length > 0}
+                                                        onChange={toggleSelectAll}
+                                                        className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
                                                     />
-                                                </td>
+                                                </th>
                                             )}
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
-                                                        {resident.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <div>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="text-sm font-bold text-slate-900">{resident.name}</div>
-                                                            {resident.is_property_owner && (
-                                                                <span className="inline-flex rounded-full bg-indigo-100 px-2 py-0.5 text-[9px] font-black tracking-widest text-indigo-700 uppercase">
-                                                                    Property Owner
-                                                                </span>
+                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Resident</th>
+                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Contact</th>
+                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Unit</th>
+                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Household</th>
+                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Joined & Active</th>
+                                            <th className="px-4 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-450 uppercase">Status</th>
+                                            <th className="w-20 px-4 py-3.5 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {residents.data.map((resident, idx) => {
+                                            const isSelected = selectedIds.includes(resident.id);
+                                            const initial = resident.name ? resident.name.charAt(0).toUpperCase() : 'R';
+                                            
+                                            // Soft premium colors for avatars
+                                            const bgColors = ['bg-blue-50 text-blue-700', 'bg-indigo-50 text-indigo-700', 'bg-purple-50 text-purple-700', 'bg-emerald-50 text-emerald-700'];
+                                            const avatarColor = bgColors[idx % bgColors.length];
+
+                                            return (
+                                                <tr 
+                                                    key={resident.ulid} 
+                                                    className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
+                                                >
+                                                    {can('residents.delete') && (
+                                                        <td className="px-4 py-3.5 text-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => toggleSelect(resident.id)}
+                                                                className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
+                                                            />
+                                                        </td>
+                                                    )}
+                                                    
+                                                    {/* Avatar & Name */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${avatarColor}`}>
+                                                                {initial}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-1.5 flex-wrap">
+                                                                    <span className="text-xs font-bold text-slate-900 truncate max-w-[130px]">{resident.name}</span>
+                                                                    <span className={`inline-flex rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${
+                                                                        resident.role_label === 'Property Owner' 
+                                                                            ? 'bg-indigo-50 text-indigo-700' 
+                                                                            : resident.role_label === 'Tenant' 
+                                                                                ? 'bg-purple-50 text-purple-700' 
+                                                                                : 'bg-blue-50 text-blue-700'
+                                                                    }`}>
+                                                                        {resident.role_label}
+                                                                    </span>
+                                                                </div>
+                                                                {resident.property_owner_name && (
+                                                                    <p className="text-[10px] text-slate-400 font-semibold truncate mt-0.5">
+                                                                        Owner: {resident.property_owner_name}
+                                                                    </p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Contact */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="text-xs font-semibold text-slate-800">
+                                                            <span className="block truncate max-w-[150px]">{resident.email}</span>
+                                                            <span className="block text-[10px] text-slate-400 font-bold mt-0.5">{resident.phone || '—'}</span>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Unit */}
+                                                    <td className="px-4 py-3.5">
+                                                        {resident.unit_number ? (
+                                                            <div className="inline-flex items-center gap-1 text-xs font-bold text-slate-700">
+                                                                <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                                                {resident.unit_number}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-350 font-bold">Unassigned</span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* Household */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-1 text-xs font-semibold text-slate-600">
+                                                            <Users className="h-3.5 w-3.5 text-slate-400" />
+                                                            {resident.household_members_count > 0 ? (
+                                                                <span>{resident.household_members_count + 1} Members</span>
+                                                            ) : (
+                                                                <span className="text-slate-400">1 Member</span>
                                                             )}
                                                         </div>
-                                                        {resident.property_owner_name && (
-                                                            <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                                                <User className="h-2.5 w-2.5" />
-                                                                via {resident.property_owner_name}
+                                                    </td>
+
+                                                    {/* Dates */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="text-xs font-semibold text-slate-850">
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar className="h-3 w-3 text-slate-400" />
+                                                                <span>{resident.created_at}</span>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex flex-col text-xs font-medium text-slate-500">
-                                                    <span className="font-bold text-slate-900">{resident.email}</span>
-                                                    <span>{resident.phone || '—'}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
-                                                    <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                                                    {resident.unit_number || '—'}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-black tracking-widest uppercase ${
-                                                        resident.suspended_at
-                                                            ? 'bg-rose-100 text-rose-700'
-                                                            : !resident.email_verified_at
-                                                              ? 'bg-slate-100 text-slate-700'
-                                                              : resident.status === 'accepted'
-                                                                ? 'bg-emerald-100 text-emerald-700'
-                                                                : 'bg-amber-100 text-amber-700'
-                                                    }`}
-                                                >
-                                                    {resident.suspended_at
-                                                        ? 'Suspended'
-                                                        : !resident.email_verified_at
-                                                          ? 'Pending Setup'
-                                                          : resident.status === 'accepted'
-                                                            ? 'Active'
-                                                            : 'Pending'}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                                                <ResidentActions resident={resident} />
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                                            <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold mt-0.5">
+                                                                <Clock className="h-3 w-3 text-slate-350" />
+                                                                <span>Active {resident.last_active}</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
 
-                        {/* Pagination Strategy - Load More for Mobile, Links for Desktop */}
-                        <div className="mt-8 flex flex-col items-center justify-center gap-6 pb-12">
-                            {residents.next_page_url ? (
-                                <button
-                                    onClick={loadMore}
-                                    disabled={isLoadingMore}
-                                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-black tracking-tight text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50 sm:hidden"
-                                >
-                                    {isLoadingMore ? (
-                                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
-                                    ) : (
-                                        <>
-                                            Load More Residents
-                                            <ChevronRightIcon className="h-4 w-4 text-slate-400" />
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                residents.total > 0 && (
-                                    <p className="text-xs font-bold tracking-widest text-slate-400 uppercase sm:hidden">End of listing</p>
-                                )
-                            )}
+                                                    {/* Status Badge */}
+                                                    <td className="px-4 py-3.5">
+                                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                                                            resident.status === 'inactive'
+                                                                ? 'bg-rose-50 text-rose-700'
+                                                                : resident.status === 'accepted'
+                                                                    ? 'bg-emerald-50 text-emerald-700'
+                                                                    : 'bg-amber-50 text-amber-700'
+                                                        }`}>
+                                                            {resident.status === 'inactive' ? 'Suspended' : resident.status === 'accepted' ? 'Active' : 'Pending'}
+                                                        </span>
+                                                    </td>
 
-                            {/* Desktop Pagination */}
-                            {residents.last_page > 1 && (
-                                <div className="hidden w-full items-center justify-between sm:flex">
-                                    <p className="text-sm font-bold text-slate-500">
-                                        Showing <span className="text-slate-900">{residents.data.length}</span> of{' '}
-                                        <span className="text-slate-900">{residents.total}</span> residents
-                                    </p>
-                                    <div className="flex gap-2">
-                                        {residents.links.map((link, index) => (
-                                            <Link
-                                                key={index}
-                                                href={link.url || '#'}
-                                                preserveScroll
-                                                preserveState
-                                                className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
-                                                    link.active
-                                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                                        : link.url
-                                                          ? 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
-                                                          : 'cursor-not-allowed text-slate-400 opacity-30'
-                                                }`}
-                                                dangerouslySetInnerHTML={{ __html: link.label }}
-                                            />
-                                        ))}
-                                    </div>
+                                                    {/* Actions */}
+                                                    <td className="px-4 py-3.5 text-right relative">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {/* Direct Edit */}
+                                                            <Link
+                                                                href={`/admin/residents/${resident.id}/edit`}
+                                                                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                title="Edit Profile"
+                                                            >
+                                                                <Pencil className="h-3.5 w-3.5" />
+                                                            </Link>
+                                                            
+                                                            {/* Direct Resend Invitation if Pending */}
+                                                            {resident.status === 'pending' && (
+                                                                <button
+                                                                    onClick={() => handleResendInvitation(resident.id)}
+                                                                    className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                    title="Resend Invitation"
+                                                                >
+                                                                    <Send className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            )}
+
+                                                            {/* Direct Assign Unit Link if Unassigned */}
+                                                            {!resident.unit_number && (
+                                                                <Link
+                                                                    href={`/admin/residents/${resident.id}/edit`}
+                                                                    className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                                    title="Assign Unit"
+                                                                >
+                                                                    <MapPin className="h-3.5 w-3.5" />
+                                                                </Link>
+                                                            )}
+
+                                                            {/* Overflow menu */}
+                                                            <button
+                                                                onClick={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
+                                                                className="p-1 text-slate-400 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-all"
+                                                            >
+                                                                <EllipsisVerticalIcon className="h-4 w-4" />
+                                                            </button>
+
+                                                            {/* Popup Dropdown */}
+                                                            {menuOpenId === resident.id && (
+                                                                <>
+                                                                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+                                                                    <div className="absolute right-4 top-11 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 shadow-lg ring-1 ring-slate-150/50 text-left">
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                handleToggleSuspend(resident.id);
+                                                                                setMenuOpenId(null);
+                                                                            }}
+                                                                            className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                        >
+                                                                            <UserMinus className="h-3.5 w-3.5 text-slate-400" />
+                                                                            {resident.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
+                                                                        </button>
+                                                                        {!resident.is_property_owner && (
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleMarkAsPropertyOwner(resident.id);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                            >
+                                                                                <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+                                                                                Make Property Owner
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                handleDeleteResident(resident.id);
+                                                                                setMenuOpenId(null);
+                                                                            }}
+                                                                            className="w-full rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-slate-50 mt-1 pt-2"
+                                                                        >
+                                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                                            Delete Resident
+                                                                        </button>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            /* Redesigned Empty State */
+                            <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-50 text-slate-400 shadow-inner">
+                                    <Users className="h-6 w-6" />
                                 </div>
-                            )}
-                        </div>
-                    </>
-                ) : (
-                    /* Empty State */
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                        <div className="mb-4 rounded-full bg-gray-100 p-4">
-                            <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
-                                />
-                            </svg>
-                        </div>
-                        <h3 className="text-lg font-medium text-gray-900">No residents found</h3>
-                        <p className="mt-1 max-w-sm text-sm text-gray-500">
-                            {search || status
-                                ? 'Try adjusting your search or filters to find what you are looking for.'
-                                : "Get started by adding your first resident. They'll receive an invitation email to set up their account."}
-                        </p>
-                        {!(search || status) && can('residents.create') && (
-                            <Link
-                                href={index.url() + '/create'}
-                                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
-                            >
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                                Add Resident
-                            </Link>
+                                <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide">No residents found</h3>
+                                <p className="mt-1 max-w-xs text-xs font-semibold text-slate-400">
+                                    {hasActiveFilters 
+                                        ? 'No records match your selected criteria. Try resetting or adjusting your search term.' 
+                                        : 'Invite your first resident to build your community and enable seamless access control.'}
+                                </p>
+                                {!hasActiveFilters && can('residents.create') && (
+                                    <Link
+                                        href={index.url() + '/create'}
+                                        className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
+                                    >
+                                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                        Invite Resident
+                                    </Link>
+                                )}
+                            </div>
                         )}
                     </div>
-                )}
+
+                    {/* Pagination */}
+                    {residents.last_page > 1 && (
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
+                            <p className="text-xs font-bold text-slate-500">
+                                Showing <span className="text-slate-950">{residents.data.length}</span> of <span className="text-slate-950">{residents.total}</span> residents
+                            </p>
+                            <div className="flex gap-1.5">
+                                {residents.links.map((link, idx) => (
+                                    <Link
+                                        key={idx}
+                                        href={link.url || '#'}
+                                        preserveScroll
+                                        preserveState
+                                        className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                            link.active
+                                                ? 'bg-slate-950 text-white shadow-sm'
+                                                : link.url
+                                                    ? 'bg-white text-slate-655 border border-slate-200 hover:bg-slate-50'
+                                                    : 'cursor-not-allowed text-slate-300 border border-slate-100 opacity-50'
+                                        }`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Right Sidebar Column (25%) */}
+                <div className="space-y-6">
+                    
+                    {/* INVITATION LINK MANAGEMENT */}
+                    {inviteLink && (
+                        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
+                            <h3 className="text-xs font-black tracking-widest text-slate-450 uppercase mb-3.5">Community Invitations</h3>
+                            
+                            <div className="space-y-4">
+                                {/* Token link preview */}
+                                <div className="rounded-xl border border-slate-150/70 bg-slate-50/50 p-3 flex flex-col gap-2">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Public Invite URL</span>
+                                    <div className="flex items-center justify-between gap-2">
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={inviteLink.url}
+                                            className="w-full bg-transparent border-0 p-0 text-xs font-semibold text-slate-800 focus:ring-0 truncate"
+                                        />
+                                        <button
+                                            onClick={copyToClipboard}
+                                            className="p-1.5 text-slate-455 hover:text-slate-800 hover:bg-slate-150/50 rounded-lg shrink-0 transition"
+                                            title="Copy Link"
+                                        >
+                                            {copied ? <Check className="h-4.5 w-4.5 text-emerald-600" /> : <Copy className="h-4.5 w-4.5" />}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* invitation stats */}
+                                <div className="grid grid-cols-2 gap-2 text-center">
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50/30 p-2.5">
+                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Usages</span>
+                                        <span className="block text-base font-black text-slate-900 mt-1">
+                                            {inviteLink.usage_count}
+                                        </span>
+                                    </div>
+                                    <div className="rounded-xl border border-slate-100 bg-slate-50/30 p-2.5">
+                                        <span className="block text-[9px] font-black text-slate-400 uppercase tracking-wider">Limit</span>
+                                        <span className="block text-base font-black text-slate-900 mt-1">
+                                            {inviteLink.max_usages || '∞'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Active toggle / actions */}
+                                <div className="border-t border-slate-50 pt-4.5 space-y-2">
+                                    <button
+                                        onClick={toggleInviteLink}
+                                        className={`w-full py-2.5 rounded-xl text-xs font-black tracking-wider uppercase border shadow-xs transition ${
+                                            inviteLink.is_active 
+                                                ? 'bg-white text-rose-600 border-rose-250 hover:bg-rose-50/50' 
+                                                : 'bg-emerald-600 text-white border-transparent hover:bg-emerald-700'
+                                        }`}
+                                    >
+                                        {inviteLink.is_active ? 'Disable Link' : 'Enable Link'}
+                                    </button>
+                                    <button
+                                        onClick={regenerateInviteLink}
+                                        className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl text-xs font-black tracking-wider uppercase transition"
+                                    >
+                                        Regenerate Token
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Pending Approvals Notice Banner */}
+                    <AnimatePresence>
+                        {stats.pending > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="rounded-2xl border border-amber-100 bg-amber-50/40 p-4.5 shadow-xs"
+                            >
+                                <div className="flex gap-3">
+                                    <Mail className="h-5 w-5 text-amber-600 shrink-0" />
+                                    <div>
+                                        <h4 className="text-xs font-black tracking-wider text-amber-900 uppercase">Approvals Required</h4>
+                                        <p className="text-[11px] font-semibold text-amber-700 leading-relaxed mt-1">
+                                            {stats.pending} users signed up and are waiting for authorization to join the estate.
+                                        </p>
+                                        <Link
+                                            href={approvalsIndex.url()}
+                                            className="mt-3.5 inline-flex items-center gap-1 text-[11px] font-black tracking-widest text-amber-900 uppercase hover:underline"
+                                        >
+                                            Go to Approvals
+                                            <ArrowRightIcon className="h-3 w-3" strokeWidth={3} />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
+            {/* FLOATING BULK ACTIONS TOOLBAR */}
+            <AnimatePresence>
+                {selectedIds.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 100 }}
+                        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-2xl px-4"
+                    >
+                        <div className="rounded-2xl border border-slate-900/10 bg-slate-950/95 backdrop-blur-md px-6 py-4.5 shadow-xl flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+                                <span className="text-xs font-black tracking-wider uppercase text-white">
+                                    {selectedIds.length} Selected
+                                </span>
+                            </div>
+                            
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <button
+                                    onClick={handleBulkResend}
+                                    disabled={isBulkActionRunning}
+                                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                >
+                                    Resend Invites
+                                </button>
+                                <button
+                                    onClick={handleBulkActivate}
+                                    disabled={isBulkActionRunning}
+                                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                >
+                                    Activate
+                                </button>
+                                <button
+                                    onClick={handleBulkSuspend}
+                                    disabled={isBulkActionRunning}
+                                    className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                >
+                                    Suspend
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    disabled={isBulkActionRunning}
+                                    className="px-3.5 py-2 rounded-xl bg-red-650 hover:bg-red-750 text-white text-[11px] font-black uppercase tracking-wider transition disabled:opacity-40"
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    onClick={() => setSelectedIds([])}
+                                    className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition"
+                                >
+                                    <X className="h-4.5 w-4.5" />
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Bulk Delete Confirm Modal */}
             <AnimatePresence>
                 {showDeleteConfirm && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-                        onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
                     >
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
-                            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+                            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                                <Trash2 className="h-6 w-6 text-red-600" />
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600 shadow-inner">
+                                <Trash2 className="h-6 w-6" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900">Delete {selectedIds.length} Resident(s)?</h3>
-                            <p className="mt-2 text-sm text-gray-500">
-                                This action cannot be undone. The selected residents will be permanently removed from this estate.
+                            <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">Confirm Bulk Removal</h3>
+                            <p className="mt-2 text-xs font-semibold text-slate-500 leading-relaxed">
+                                You are about to permanently remove {selectedIds.length} resident(s). This will detach them from the estate records. This action is irreversible.
                             </p>
-                            <div className="mt-6 flex justify-end gap-3">
+                            <div className="mt-6 flex justify-end gap-2.5">
                                 <button
                                     type="button"
                                     onClick={() => setShowDeleteConfirm(false)}
                                     disabled={isDeleting}
-                                    className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                                    className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-650 hover:bg-slate-100 disabled:opacity-50"
                                 >
                                     Cancel
                                 </button>
@@ -657,15 +893,12 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-red-655 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {isDeleting ? (
-                                        <>
-                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                                            Deleting...
-                                        </>
+                                        <Loader2 className="h-4.5 w-4.5 animate-spin" />
                                     ) : (
-                                        'Delete'
+                                        'Yes, Delete Selected'
                                     )}
                                 </button>
                             </div>
@@ -673,6 +906,6 @@ export default function Residents({ residents, filters, pendingCount }: Props) {
                     </motion.div>
                 )}
             </AnimatePresence>
-        </>
+        </AdminLayout>
     );
 }
