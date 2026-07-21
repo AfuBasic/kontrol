@@ -215,7 +215,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="e.g. Broken water main, Main entrance guard house intrusion"
-                                    className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
                                     required
                                 />
                                 {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
@@ -232,7 +232,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Provide full description of the operational issue, safety threat, or maintenance request..."
                                     rows={6}
-                                    className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
                                     required
                                 />
                                 {errors.body && <span className="mt-1 block text-xs font-medium text-red-600">{errors.body}</span>}
@@ -248,7 +248,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                         id="category"
                                         value={data.category}
                                         onChange={(e) => setData('category', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
                                         required
                                     >
                                         <option value="">Select Category</option>
@@ -270,7 +270,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                         id="priority"
                                         value={data.priority}
                                         onChange={(e) => setData('priority', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
                                         required
                                     >
                                         <option value="low">Low</option>
@@ -294,7 +294,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                         value={data.location}
                                         onChange={(e) => setData('location', e.target.value)}
                                         placeholder="e.g. Block A, Unit 12, Main Gate"
-                                        className="w-full rounded-xl border-slate-200 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
                                     />
                                     {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
                                 </div>
@@ -308,7 +308,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                         id="assigned_to"
                                         value={data.assigned_to}
                                         onChange={(e) => setData('assigned_to', e.target.value)}
-                                        className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
                                     >
                                         <option value="">Unassigned</option>
                                         {admins.map((adm) => (
