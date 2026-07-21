@@ -2,6 +2,7 @@
 
 namespace App\Actions\Incidents;
 
+use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Models\Estate;
 use App\Models\Incident;
@@ -11,8 +12,6 @@ use App\Services\CloudinaryService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-
-use App\Enums\IncidentSource;
 
 class CreateIncidentAction
 {
@@ -46,6 +45,11 @@ class CreateIncidentAction
                 }
             }
 
+            $isPrivate = $data['is_private'] ?? false;
+            if ($source === IncidentSource::SecurityReport) {
+                $isPrivate = true;
+            }
+
             $incident = new Incident([
                 'estate_id' => $estate->id,
                 'reporter_id' => $reporterId,
@@ -61,7 +65,7 @@ class CreateIncidentAction
                 'attachment_type' => $data['attachment_type'] ?? null,
                 'attachment_hash' => $data['attachment_hash'] ?? null,
                 'location' => $data['location'] ?? null,
-                'is_private' => $data['is_private'] ?? false,
+                'is_private' => $isPrivate,
             ]);
 
             $incident->save();
