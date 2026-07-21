@@ -4,7 +4,7 @@ import type { PermissionStatus } from '@capacitor/push-notifications';
 import { Link, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Newspaper, Bell, User, History } from 'lucide-react';
+import { Home, Newspaper, Bell, User, History, ClipboardList } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 
 import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
@@ -75,6 +75,12 @@ const navItems = [
         href: NotificationController.index.url(),
         icon: Bell,
         matchPaths: ['/security/notifications'],
+    },
+    {
+        name: 'Incidents',
+        href: '/security/incidents',
+        icon: ClipboardList,
+        matchPaths: ['/security/incidents'],
     },
     {
         name: 'Profile',
@@ -393,7 +399,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 >
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80" aria-hidden="true" />
                     <div className="mx-auto max-w-lg px-2">
-                        <ul className="grid grid-cols-5 items-stretch">
+                        <ul className="grid grid-cols-6 items-stretch">
                             {navItems.map((item) => {
                                 const active = isActive(item);
                                 const Icon = item.icon;

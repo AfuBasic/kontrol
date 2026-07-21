@@ -8,6 +8,7 @@ use App\Http\Controllers\Security\HomeController;
 use App\Http\Controllers\Security\NotificationController;
 use App\Http\Controllers\Security\ProfileController;
 use App\Http\Controllers\Security\VerifyController;
+use App\Http\Controllers\Security\IncidentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,4 +66,15 @@ Route::middleware('role:security')->group(function (): void {
 
     // SOS Emergency
     Route::post('/sos/{sosEvent}/acknowledge', [SosController::class, 'acknowledge'])->name('security.sos.acknowledge');
+
+    // Incidents
+    Route::prefix('incidents')->name('security.incidents.')->group(function (): void {
+        Route::get('/', [IncidentController::class, 'index'])->name('index');
+        Route::get('/create', [IncidentController::class, 'create'])->name('create');
+        Route::post('/check-deduplication', [IncidentController::class, 'checkDeduplication'])->name('check-deduplication');
+        Route::post('/signed-upload', [IncidentController::class, 'signedUploadParams'])->name('signed-upload');
+        Route::post('/', [IncidentController::class, 'store'])->name('store');
+        Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
+        Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
+    });
 });
