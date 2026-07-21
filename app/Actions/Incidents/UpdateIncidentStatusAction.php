@@ -17,71 +17,86 @@ class UpdateIncidentStatusAction
     {
         return DB::transaction(function () use ($incident, $data) {
             $user = Auth::user();
-            $newStatus = IncidentStatus::from($data['status']);
+            $loggedActions = [];
 
-            // Validate status transitions:
-            // 1. Cannot transition to Closed (only reporter can close)
-            // 2. Cannot change status if already Closed
-            if ($newStatus === IncidentStatus::Closed) {
-                throw new \InvalidArgumentException('Only the reporter can close this incident.');
-            }
+            // 1. Handle status update if provided
+            if (isset($data['status'])) {
+                $newStatus = IncidentStatus::from($data['status']);
 
-            if ($incident->status === IncidentStatus::Closed) {
-                throw new \InvalidArgumentException('This incident is closed and cannot be updated.');
-            }
+                if ($newStatus !== $incident->status) {
+                    if ($incident->status === IncidentStatus::Closed) {
+                        throw new \InvalidArgumentException('This incident is closed and cannot be updated.');
+                    }
 
-            // 3. Prevent backwards or illegal transitions if necessary
-            if ($newStatus !== $incident->status) {
-                $expectedStatus = match ($incident->status) {
-                    IncidentStatus::Pending => IncidentStatus::Acknowledged,
-                    IncidentStatus::Acknowledged => IncidentStatus::Resolving,
-                    IncidentStatus::Resolving => IncidentStatus::Solved,
-                    default => null,
-                };
+                    $incident->status = $newStatus;
+                    $loggedActions[] = "updated incident status to: {$newStatus->label()}";
 
-                if ($expectedStatus === null || $newStatus !== $expectedStatus) {
-                    throw new \InvalidArgumentException("Invalid status transition from {$incident->status->value} to {$newStatus->value}.");
+                    // Set timestamps
+                    if ($newStatus === IncidentStatus::Acknowledged && ! $incident->acknowledged_at) {
+                        $incident->acknowledged_at = now();
+                    } elseif ($newStatus === IncidentStatus::Resolving) {
+                        if (! $incident->acknowledged_at) {
+                            $incident->acknowledged_at = now();
+                        }
+                        if (! $incident->resolving_at) {
+                            $incident->resolving_at = now();
+                        }
+                    } elseif ($newStatus === IncidentStatus::Solved) {
+                        if (! $incident->acknowledged_at) {
+                            $incident->acknowledged_at = now();
+                        }
+                        if (! $incident->resolving_at) {
+                            $incident->resolving_at = now();
+                        }
+                        if (! $incident->solved_at) {
+                            $incident->solved_at = now();
+                        }
+                    } elseif ($newStatus === IncidentStatus::Closed) {
+                        if (! $incident->closed_at) {
+                            $incident->closed_at = now();
+                        }
+                    }
                 }
             }
 
-            $incident->status = $newStatus;
-
-            // Set timestamps
-            if ($newStatus === IncidentStatus::Acknowledged && ! $incident->acknowledged_at) {
-                $incident->acknowledged_at = now();
-            } elseif ($newStatus === IncidentStatus::Resolving) {
-                if (! $incident->acknowledged_at) {
-                    $incident->acknowledged_at = now();
-                }
-                if (! $incident->resolving_at) {
-                    $incident->resolving_at = now();
-                }
-            } elseif ($newStatus === IncidentStatus::Solved) {
-                if (! $incident->acknowledged_at) {
-                    $incident->acknowledged_at = now();
-                }
-                if (! $incident->resolving_at) {
-                    $incident->resolving_at = now();
-                }
-                if (! $incident->solved_at) {
-                    $incident->solved_at = now();
-                }
-            }
-
+            // 2. Handle assignee update if provided
             if (array_key_exists('assigned_to', $data)) {
-                $incident->assigned_to = $data['assigned_to'];
+                if ($incident->assigned_to !== $data['assigned_to']) {
+                    $incident->assigned_to = $data['assigned_to'];
+                    $assigneeName = $incident->assignee ? $incident->assignee->name : 'Unassigned';
+                    $loggedActions[] = "reassigned incident to: {$assigneeName}";
+                }
+            }
+
+            // 3. Handle priority update if provided
+            if (array_key_exists('priority', $data)) {
+                if ($incident->priority?->value !== $data['priority']) {
+                    $incident->priority = $data['priority'];
+                    $loggedActions[] = "updated incident priority to: " . ucfirst($data['priority']);
+                }
+            }
+
+            // 4. Handle category update if provided
+            if (array_key_exists('category', $data)) {
+                if ($incident->category?->value !== $data['category']) {
+                    $incident->category = $data['category'];
+                    $loggedActions[] = "updated incident category to: " . str_replace('_', ' ', $data['category']);
+                }
             }
 
             $incident->save();
 
-            activity()
-                ->performedOn($incident)
-                ->causedBy($user)
-                ->withProperties(['estate_id' => $incident->estate_id, 'status' => $newStatus->value])
-                ->log("updated incident status to: {$newStatus->label()}");
+            // Log activity for updates
+            foreach ($loggedActions as $actionLog) {
+                activity()
+                    ->performedOn($incident)
+                    ->causedBy($user)
+                    ->withProperties(['estate_id' => $incident->estate_id, 'status' => $incident->status->value])
+                    ->log($actionLog);
+            }
 
-            // Notify the reporter
-            if ($incident->reporter) {
+            // Notify the reporter if status changed
+            if (isset($newStatus) && $incident->reporter) {
                 $incident->reporter->notify(new IncidentStatusUpdatedNotification($incident));
             }
 
