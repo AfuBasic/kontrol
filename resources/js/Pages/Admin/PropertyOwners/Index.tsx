@@ -125,12 +125,38 @@ export default function Index({ propertyOwners, filters: initialFilters, stats: 
 
     const hasActiveFilters = Boolean(search || status || property || sort);
 
+    const fallbackCopy = (text: string) => {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.position = 'fixed';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    };
+
     // Copy link helper
     const copyToClipboard = () => {
         if (!inviteLink?.url) return;
-        navigator.clipboard.writeText(inviteLink.url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(inviteLink.url)
+                .then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                })
+                .catch(() => fallbackCopy(inviteLink.url));
+        } else {
+            fallbackCopy(inviteLink.url);
+        }
     };
 
     // Selection Helpers
