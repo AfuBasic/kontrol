@@ -27,6 +27,7 @@ export default function Create({ categories }: Props) {
         title: string;
         body: string;
         category: string;
+        priority: string;
         attachment: File | null;
         location: string;
         is_private: boolean;
@@ -34,6 +35,7 @@ export default function Create({ categories }: Props) {
         title: '',
         body: '',
         category: '',
+        priority: 'medium',
         attachment: null,
         location: '',
         is_private: false,
@@ -151,6 +153,7 @@ export default function Create({ categories }: Props) {
                     title: data.title,
                     body: data.body,
                     category: data.category,
+                    priority: data.priority,
                     attachment_url: attachmentUrl,
                     attachment_type: attachmentTypeParam,
                     attachment_hash: attachmentHash,
@@ -210,6 +213,30 @@ export default function Create({ categories }: Props) {
                             <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-600">
                                 <AlertCircle className="h-3.5 w-3.5" />
                                 {errors.category}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Priority Selection */}
+                    <div>
+                        <label className="mb-2 block text-xs font-black tracking-wider text-slate-400 uppercase">
+                            Priority <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={data.priority}
+                            onChange={(e) => setData('priority', e.target.value)}
+                            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-800 ring-indigo-100 outline-hidden transition-all focus:border-indigo-500 focus:ring-4"
+                            required
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                        {errors.priority && (
+                            <p className="mt-1.5 flex items-center gap-1 text-xs font-bold text-red-600">
+                                <AlertCircle className="h-3.5 w-3.5" />
+                                {errors.priority}
                             </p>
                         )}
                     </div>
