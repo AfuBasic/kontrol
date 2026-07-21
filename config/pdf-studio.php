@@ -43,7 +43,12 @@ return [
         'dompdf' => [
             'paper' => 'A4',
             'orientation' => 'portrait',
-            'options' => [],
+            'options' => [
+                'defaultFont' => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isFontSubsettingEnabled' => true,
+                'isRemoteEnabled' => true,
+            ],
         ],
         'fake' => [],
     ],
