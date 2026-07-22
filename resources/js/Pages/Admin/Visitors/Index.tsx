@@ -1,4 +1,4 @@
-import { Deferred, Head, Link, router } from '@inertiajs/react';
+import { Deferred, Head, Link, router, WhenVisible } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, X, Eye, Download, CheckCircle2, XCircle, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -454,9 +454,24 @@ export default function VisitorIndex({
                                     </table>
                                 </div>
                                 {logs.next_page_url && (
-                                    <div className="border-t border-slate-50 p-3">
-                                        <TableRowSkeleton rows={3} columns={4} />
-                                    </div>
+                                    <WhenVisible
+                                        always
+                                        data="logs"
+                                        params={{
+                                            page: logs.current_page + 1,
+                                            search: debouncedSearch,
+                                            date,
+                                            vehicle_plate: debouncedPlate,
+                                            host_id: hostId,
+                                            status,
+                                            verifier_id: verifierId,
+                                        }}
+                                        fallback={
+                                            <div className="border-t border-slate-50 p-3">
+                                                <TableRowSkeleton rows={3} columns={4} />
+                                            </div>
+                                        }
+                                    />
                                 )}
                             </div>
                             </SectionErrorBoundary>
