@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Link } from '@inertiajs/react';
 import { ChevronDown, ChevronRight, Plus, Search } from 'lucide-react';
-import resident from '@/routes/resident';
+import VisitorAvatar from '@/Components/Visitors/VisitorAvatar';
+import VisitorRow from '@/Components/Visitors/VisitorRow';
 import type { VisitorTimelineItem } from '@/types/visitor-timeline';
+import { deriveCategory } from '@/Utils/visitorTheme';
 
 type RecentVisitor = {
     visitor_name: string;
@@ -55,7 +56,7 @@ export default function HistoryArchive({
     };
 
     return (
-        <div className="space-y-4 py-3">
+        <div className="space-y-4 py-2">
             {/* Search Input */}
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -64,30 +65,36 @@ export default function HistoryArchive({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search past visitors, phone numbers or codes..."
-                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-semibold text-slate-900 placeholder-slate-400 transition focus:border-slate-400 focus:outline-hidden"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-semibold text-slate-900 placeholder-slate-400 transition focus:border-primary-500 focus:outline-hidden"
                 />
             </div>
 
-            {/* Recent Visitors — Invite Again */}
+            {/* Horizontal Snap Scroll of Compact Recent Contacts Chips */}
             {!search && recentVisitors.length > 0 && (
-                <div className="space-y-2">
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recent Visitors</h4>
-                    <div className="divide-y divide-slate-100 rounded-xl border border-slate-100 bg-white">
-                        {recentVisitors.map((v) => (
-                            <div key={v.visitor_name} className="flex items-center justify-between px-3.5 py-2.5">
-                                <div>
-                                    <p className="text-xs font-bold text-slate-900">{v.visitor_name}</p>
-                                    {v.purpose && <p className="text-[10px] text-slate-400">{v.purpose}</p>}
-                                </div>
-                                <button
-                                    onClick={() => onInviteAgain(v)}
-                                    className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recent Contacts</h4>
+                    <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {recentVisitors.map((v) => {
+                            const category = deriveCategory(v.purpose, v.type);
+                            return (
+                                <div
+                                    key={v.visitor_name}
+                                    className="flex shrink-0 snap-start items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-2xs transition hover:border-primary-300 hover:bg-primary-50/30"
                                 >
-                                    <Plus className="h-3 w-3 text-slate-400" />
-                                    <span>Invite Again</span>
-                                </button>
-                            </div>
-                        ))}
+                                    <VisitorAvatar category={category} name={v.visitor_name} size="sm" />
+                                    <span className="max-w-[100px] truncate text-xs font-bold text-slate-900">
+                                        {v.visitor_name}
+                                    </span>
+                                    <button
+                                        onClick={() => onInviteAgain(v)}
+                                        className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-50 text-primary-600 transition hover:bg-primary-500 hover:text-white"
+                                        title={`Invite ${v.visitor_name} again`}
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                    </button>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -100,13 +107,13 @@ export default function HistoryArchive({
                 ) : (
                     monthKeys.map((month, idx) => {
                         const items = groupedByMonth[month];
-                        const isExpanded = expandedMonths[month] ?? idx === 0; // Expand first month by default
+                        const isExpanded = expandedMonths[month] ?? idx === 0;
 
                         return (
-                            <div key={month} className="rounded-xl border border-slate-100 bg-white">
+                            <div key={month} className="rounded-xl border border-slate-100 bg-white overflow-hidden">
                                 <button
                                     onClick={() => toggleMonth(month)}
-                                    className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-900"
+                                    className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-900 hover:bg-slate-50"
                                 >
                                     <span>{month} ({items.length} visit{items.length === 1 ? '' : 's'})</span>
                                     {isExpanded ? (
@@ -119,22 +126,7 @@ export default function HistoryArchive({
                                 {isExpanded && (
                                     <div className="divide-y divide-slate-100 border-t border-slate-100">
                                         {items.map((item) => (
-                                            <Link
-                                                key={item.id}
-                                                href={resident.visitors.show.url(item.id, { query: { from_tab: 'history' } })}
-                                                className="flex items-center justify-between px-3.5 py-2.5 transition hover:bg-slate-50"
-                                            >
-                                                <div>
-                                                    <p className="text-xs font-bold text-slate-900">{item.visitor_name}</p>
-                                                    <p className="text-[10px] text-slate-400">
-                                                        {item.arrival_date_formatted || item.arrival_date}
-                                                        {item.purpose ? ` · ${item.purpose}` : ''}
-                                                    </p>
-                                                </div>
-                                                <span className="rounded-sm bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 capitalize">
-                                                    {item.status}
-                                                </span>
-                                            </Link>
+                                            <VisitorRow key={item.id} visit={item} fromTab="history" />
                                         ))}
                                     </div>
                                 )}
