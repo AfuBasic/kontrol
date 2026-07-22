@@ -145,6 +145,12 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
 
     const peakTime = getPeakArrivalTime();
 
+    const fromTab = (typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('from_tab')
+        : null) === 'history' ? 'history' : 'upcoming';
+
+    const backUrl = `/resident/visitors?tab=${fromTab}`;
+
     return (
         <>
             <Head title="Access Code Details" />
@@ -152,7 +158,7 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
             <div className="flex min-h-[60vh] flex-col items-center justify-center py-4">
                 <div className="mx-auto w-full max-w-4xl px-2 mb-2">
                     <Link
-                        href="/resident/visitors"
+                        href={backUrl}
                         className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                     >
                         <ArrowLeft className="h-4 w-4" />
