@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, CheckCircle, Users } from 'lucide-react';
+import { Calendar, CheckCircle2, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import type { AccessCode, VisitorTimelineGroup } from '@/types/access-code';
 import VisitorAgendaCard, { type VisitorAgendaCardProps } from './VisitorAgendaCard';
@@ -26,15 +26,15 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
     const isPast = isYesterday || (!isToday && new Date(group.date + 'T00:00:00') < new Date());
 
     return (
-        <div className="sticky top-0 z-10 flex items-center gap-3 bg-white/90 py-2 backdrop-blur-xs">
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-white/95 py-1.5 backdrop-blur-xs border-b border-slate-100/90 mb-1">
             <div className="flex items-baseline gap-2">
                 <span
-                    className={`text-xs font-bold uppercase tracking-wider ${
+                    className={`text-[11px] font-bold uppercase tracking-wider ${
                         isToday
                             ? 'text-indigo-600'
                             : isPast
-                              ? 'text-slate-400'
-                              : 'text-slate-700'
+                              ? 'text-slate-400 font-medium'
+                              : 'text-slate-700 font-bold'
                     }`}
                 >
                     {group.label}
@@ -47,9 +47,7 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
                 )}
             </div>
 
-            <div className="h-px flex-1 bg-slate-100" />
-
-            <span className="text-[11px] font-semibold text-slate-300 tabular-nums">
+            <span className="text-[10px] font-medium text-slate-400 tabular-nums">
                 {group.items.length} {group.items.length === 1 ? 'visit' : 'visits'}
             </span>
         </div>
@@ -58,30 +56,26 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
 
 function DefaultEmptyState({ variant }: { variant: TimelineVariant }) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-14 text-center">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-xs border border-slate-100">
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
                 {variant === 'upcoming' ? (
-                    <Calendar className="h-5 w-5" />
+                    <Calendar className="h-4 w-4" />
                 ) : (
-                    <Users className="h-5 w-5" />
+                    <Users className="h-4 w-4" />
                 )}
             </div>
             {variant === 'upcoming' ? (
                 <>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        No visits scheduled
-                    </h3>
-                    <p className="mt-1 max-w-xs text-xs text-slate-400 font-medium">
-                        Your upcoming agenda is clear. Create a pass to invite visitors.
+                    <p className="text-xs font-semibold text-slate-700">No visits scheduled</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400 font-normal">
+                        Your schedule is clear. Create a pass to invite visitors.
                     </p>
                 </>
             ) : (
                 <>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        No past visits
-                    </h3>
-                    <p className="mt-1 max-w-xs text-xs text-slate-400 font-medium">
-                        Completed and expired visitor records will appear in your history log.
+                    <p className="text-xs font-semibold text-slate-700">No history found</p>
+                    <p className="mt-0.5 text-[11px] text-slate-400 font-normal">
+                        Completed and expired visitor records will appear here.
                     </p>
                 </>
             )}
@@ -139,23 +133,23 @@ export default function VisitorTimeline({
         <AnimatePresence mode="wait">
             <motion.div
                 key={variant}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.15 }}
-                className="space-y-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="space-y-4"
             >
                 {groups.map((group) => (
-                    <div key={group.date} className="space-y-1">
+                    <div key={group.date} className="relative">
                         <DateGroupHeading group={group} />
 
                         {group.items.length === 0 ? (
-                            <div className="flex items-center gap-2 py-3 px-3 text-xs text-slate-400 font-medium italic">
-                                <CheckCircle className="h-3.5 w-3.5 text-emerald-500 not-italic" />
-                                No visits scheduled today.
+                            <div className="flex items-center gap-2 py-2 px-2 text-xs text-slate-400 font-normal italic">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 not-italic shrink-0" />
+                                <span>No visits scheduled today.</span>
                             </div>
                         ) : (
-                            <div className="pl-1">
+                            <div className="space-y-0.5">
                                 {group.items.map((code, idx) => (
                                     <VisitorAgendaCard
                                         key={code.id}
