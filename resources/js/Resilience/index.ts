@@ -28,5 +28,7 @@ export {
     type SyncState,
 } from './SyncEngine';
 export { SecurityStore } from './OfflineStorage/SecurityStore';
+export type { CachedCode, OfflineLog } from './OfflineStorage/types';
 export { ResidentStore, type PendingPass, type PendingIncident, type StaleCacheEntry } from './OfflineStorage/ResidentStore';
 export { AdminStore } from './OfflineStorage/AdminStore';
+export { sha256 } from './sha256';

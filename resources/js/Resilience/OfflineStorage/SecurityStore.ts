@@ -1,5 +1,3 @@
-import type { CachedCode, OfflineLog } from '@/Utils/offlineDb';
-
 import {
     add,
     clear,
@@ -10,11 +8,10 @@ import {
     replaceAll,
     type StoreConfig,
 } from './BaseStore';
+import type { CachedCode, OfflineLog } from './types';
 
 export type { CachedCode, OfflineLog };
-
-/** Re-export crypto helper used by the scanner. */
-export { sha256 } from '@/Utils/offlineDb';
+export { sha256 } from '@/Resilience/sha256';
 
 const CODES_STORE = 'active_codes';
 const LOGS_STORE = 'pending_logs';
@@ -30,7 +27,7 @@ const config: StoreConfig = {
 
 /**
  * Security offline store — hashed pass cache + pending scan logs.
- * Replaces / extends the surface of Utils/offlineDb for the security domain.
+ * Replaces Utils/offlineDb for the security domain.
  */
 export const SecurityStore = {
     async saveActiveCodes(codes: CachedCode[]): Promise<void> {
