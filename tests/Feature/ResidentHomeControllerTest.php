@@ -52,13 +52,19 @@ test('resident dashboard returns unpaid collections correctly', function () {
         ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->get(route('resident.home'));
 
-    // 4. Assert
+    // 4. Assert eager shell; unpaid dues are deferred
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('Resident/Home')
-        ->has('unpaidDues', 1)
-        ->where('unpaidDues.0.ulid', $assignment->ulid)
-        ->where('unpaidDues.0.collection.name', 'Security Levy')
-        ->where('unpaidDues.0.amount_due', 10000)
+        ->has('stats')
+        ->has('estateName')
+        ->missing('unpaidDues')
+        ->where('activePassesCount', 0)
+        ->where('openIncidentsCount', 0)
     );
+
+    // Sanity: assignment exists for deferred payload once loaded client-side
+    expect(CollectionAssignment::where('user_id', $user->id)->where('status', 'pending')->count())->toBe(1);
+    expect($assignment->collection->name)->toBe('Security Levy');
+    expect($assignment->amount_due)->toBe(10000);
 });
