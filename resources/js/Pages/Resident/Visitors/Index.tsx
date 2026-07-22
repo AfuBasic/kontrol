@@ -6,6 +6,7 @@ import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import ContextBanner from '@/Components/Visitors/ContextBanner';
 import HistoryArchive from '@/Components/Visitors/HistoryArchive';
+import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
 import QuickActions from '@/Components/Visitors/QuickActions';
 import TodaySchedule from '@/Components/Visitors/TodaySchedule';
 import WeekOverview from '@/Components/Visitors/WeekOverview';
@@ -233,10 +234,16 @@ export default function Visitors({
                     </div>
                 )}
 
-                {/* 4 Core Focus Areas (Schedule View) */}
+                {/* Schedule View */}
                 {activeTab === 'schedule' && (
-                    <div className="space-y-2">
-                        {/* 1. Context Banner */}
+                    <div className="space-y-3">
+                        {/* Next Visitor Hero Card */}
+                        <NextVisitorHero
+                            nextCode={upcomingTimeline[0] || null}
+                            totalExpectedToday={todayVisits.length}
+                        />
+
+                        {/* Context Banner */}
                         <ContextBanner upcoming={upcomingTimeline as any} />
 
                         {/* 2. Today's Schedule */}
