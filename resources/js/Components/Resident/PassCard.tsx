@@ -1,7 +1,10 @@
-import { motion } from 'framer-motion';
-import { Clock, ChevronDown, CheckCircle2, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronDown, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import StatusBadge from '@/Components/Visitors/StatusBadge';
+import VisitorAvatar from '@/Components/Visitors/VisitorAvatar';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
+import { deriveCategory, formatRelativeDate, normalizeStatus } from '@/Utils/visitorTheme';
 
 export interface PassData {
     id: number;
@@ -28,270 +31,151 @@ interface Props {
 export default function PassCard({ pass, qrUrl }: Props) {
     const [viewNotes, setViewNotes] = useState(false);
 
-    // Format dates nicely
-    const expiryDate = pass.expires_at ? new Date(pass.expires_at) : null;
+    const resolvedStatus = normalizeStatus(pass);
+    const category = deriveCategory(pass.purpose, pass.type);
+    const isPassActiveOrScheduled = resolvedStatus === 'expected' || resolvedStatus === 'checked_in';
 
-    const isExpired = expiryDate ? expiryDate < new Date() : false;
-    const isUsed = pass.status === 'used';
-    const isRevoked = pass.status === 'revoked';
-
-    const startsAtDate = pass.starts_at ? new Date(pass.starts_at) : null;
-    const isFutureStart = startsAtDate ? startsAtDate > new Date() : false;
-    const isScheduled = pass.status === 'scheduled' && isFutureStart;
-    const isActive = (pass.status === 'active' || (pass.status === 'scheduled' && !isFutureStart)) && !isExpired;
-    const isPassActiveOrScheduled = isActive || isScheduled;
-
-    // Status styling
-    let statusLabel = 'Active Pass';
-    let statusIcon = <CheckCircle2 className="h-5 w-5 text-emerald-600" />;
-    let statusBg = 'bg-emerald-50 text-emerald-600 border-emerald-100';
-
-    if (isUsed) {
-        statusLabel = 'Checked In';
-        statusIcon = <CheckCircle2 className="h-5 w-5 text-blue-600" />;
-        statusBg = 'bg-blue-50 text-blue-600 border-blue-100';
-    } else if (isExpired) {
-        statusLabel = 'Expired';
-        statusIcon = <Clock className="h-5 w-5 text-rose-600" />;
-        statusBg = 'bg-rose-50 text-rose-600 border-rose-100';
-    } else if (isRevoked) {
-        statusLabel = 'Revoked';
-        statusIcon = <XCircle className="h-5 w-5 text-slate-600" />;
-        statusBg = 'bg-slate-50 text-slate-600 border-slate-200';
-    } else if (isScheduled) {
-        statusLabel = 'Scheduled';
-        statusIcon = <Clock className="h-5 w-5 text-indigo-600" />;
-        statusBg = 'bg-indigo-50 text-indigo-600 border-indigo-100';
-    }
-
-    const formatSmartStartsAt = (iso: string | null | undefined) => {
-        if (!iso) return '';
-        const date = new Date(iso);
-        const now = new Date();
-
-        const timeStr = date
-            .toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true,
-            })
-            .toLowerCase();
-
-        const isToday = date.toDateString() === now.toDateString();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(now.getDate() + 1);
-        const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
-        if (isToday) {
-            return `Valid from ${timeStr} today`;
-        }
-        if (isTomorrow) {
-            return `Valid from ${timeStr} tomorrow`;
+    // Format single combined validity range
+    const formatValidityRange = () => {
+        if (pass.type === 'long_lived') {
+            if (!pass.expires_at) return 'Long-term access · Unlimited';
+            return `Long-term access · Until ${formatRelativeDate(pass.expires_at)}`;
         }
 
-        const dateStr = date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-        });
-        return `Valid from ${timeStr} on ${dateStr}`;
-    };
+        const startDate = pass.starts_at ? new Date(pass.starts_at) : (pass.created_at ? new Date(pass.created_at) : null);
+        const endDate = pass.expires_at ? new Date(pass.expires_at) : null;
 
-    const formatFaintExpiry = (iso: string | null, type: string) => {
-        if (type === 'long_lived') {
-            if (!iso) return 'Long-term access · Never expires';
-            const date = new Date(iso);
-            const dateStr = date.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-            });
-            return `Long-term access · Valid until ${dateStr}`;
+        if (!startDate && !endDate) return 'Unlimited validity';
+
+        const startTimeStr = startDate
+            ? startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
+            : null;
+
+        const endTimeStr = endDate
+            ? endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
+            : null;
+
+        const dateFormatted = formatRelativeDate(startDate || endDate);
+
+        if (startTimeStr && endTimeStr) {
+            return `${startTimeStr} – ${endTimeStr} (${dateFormatted})`;
+        }
+        if (endTimeStr) {
+            return `Until ${endTimeStr} (${dateFormatted})`;
+        }
+        if (startTimeStr) {
+            return `From ${startTimeStr} (${dateFormatted})`;
         }
 
-        if (!iso) return 'Never expires';
-        const date = new Date(iso);
-        const now = new Date();
-
-        // Format time like "9:00 pm"
-        const timeStr = date.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-        });
-
-        const isToday = date.toDateString() === now.toDateString();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(now.getDate() + 1);
-        const isTomorrow = date.toDateString() === tomorrow.toDateString();
-
-        if (isToday) {
-            return `Valid until ${timeStr.toLowerCase()} today`;
-        }
-        if (isTomorrow) {
-            return `Valid until ${timeStr.toLowerCase()} tomorrow`;
-        }
-
-        const dateStr = date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-        });
-        return `Valid until ${timeStr.toLowerCase()} on ${dateStr}`;
+        return dateFormatted;
     };
 
     const isEvent = pass.type === 'event';
-    const qrColor = isEvent ? '7c3aed' : '0a3d91';
+    const qrColor = isEvent ? '7c3aed' : '1f6fdb'; // Kontrol Primary Blue
 
-    // Google Chart / QR Server API QR code link with high error correction (ecc=H) to allow logo overlay
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=${qrColor}&bgcolor=ffffff&qzone=1&ecc=H`;
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            initial={{ opacity: 0, y: 15, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[32px] border shadow-2xl transition-all duration-300 ${
+            className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] border shadow-xl transition-all duration-300 ${
                 isEvent
-                    ? 'border-violet-500/30 bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#1e112f] text-slate-100 shadow-[0_20px_50px_rgba(124,58,237,0.25)]'
-                    : 'border-slate-100 bg-white text-slate-800'
+                    ? 'border-violet-500/30 bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#1e112f] text-slate-100'
+                    : 'border-slate-200 bg-white text-slate-900'
             }`}
         >
-            {/* Estate & Status Header */}
-            <div
-                className={`flex items-center justify-between border-b px-5 py-3 ${
-                    isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'
-                }`}
-            >
-                <div className="min-w-0 flex-1 text-left">
-                    <p className={`text-[9px] font-black tracking-widest uppercase ${isEvent ? 'text-violet-400' : 'text-primary-500'}`}>ESTATE</p>
-                    <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.estate_name || 'My Estate'}</h2>
+            {/* Top Info: Visitor Avatar, Name & Single Status Badge */}
+            <div className={`flex items-center justify-between border-b px-5 py-4 ${isEvent ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/60'}`}>
+                <div className="flex items-center gap-3 min-w-0">
+                    <VisitorAvatar category={category} name={pass.visitor_name} size="md" />
+                    <div className="min-w-0 text-left">
+                        <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-900'}`}>
+                            {pass.visitor_name || 'Guest Visitor'}
+                        </h2>
+                        {pass.purpose && (
+                            <p className="truncate text-xs text-slate-400 font-medium">{pass.purpose}</p>
+                        )}
+                    </div>
                 </div>
-                <div
-                    className={`share-exclude flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold ${
-                        isEvent ? 'border-violet-500/30 bg-violet-500/20 text-violet-300' : statusBg
-                    }`}
-                >
-                    {statusIcon}
-                    {statusLabel}
-                </div>
+
+                {/* Single Status Badge (no duplicate top-right vs bottom banner) */}
+                <StatusBadge codeObj={pass} />
             </div>
 
-            {/* Visitor & Host Info */}
-            <div
-                className={`relative grid grid-cols-2 gap-4 border-b px-5 py-3 ${
-                    isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
-                }`}
-            >
+            {/* Host & Single Validity Range Section */}
+            <div className={`grid grid-cols-2 gap-3 border-b px-5 py-3 text-xs ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-100 bg-white'}`}>
                 <div className="text-left">
-                    <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">{isEvent ? 'EVENT' : 'GUEST'}</p>
-                    <p className={`text-sm leading-snug font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>
-                        {pass.visitor_name || 'Guest visitor'}
+                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">HOST / ESTATE</p>
+                    <p className={`font-bold truncate ${isEvent ? 'text-white' : 'text-slate-800'}`}>
+                        {pass.host_name || 'Resident'}
                     </p>
+                    <p className="text-[10px] text-slate-400 font-medium truncate">{pass.estate_name || 'My Estate'}</p>
                 </div>
                 <div className="text-right">
-                    <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">HOST</p>
-                    <p className={`text-sm leading-snug font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>{pass.host_name || 'Resident'}</p>
+                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">VALIDITY WINDOW</p>
+                    <p className={`font-bold truncate ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
+                        {formatValidityRange()}
+                    </p>
                 </div>
             </div>
 
-            {/* QR Code Segment */}
-            <div className={`relative flex flex-col items-center justify-center px-5 py-4 ${isEvent ? 'bg-white/5' : 'bg-slate-50/50'}`}>
-                <div
-                    className={`relative overflow-hidden rounded-2xl border p-3 transition-all hover:scale-102 ${
-                        isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-100 bg-white'
-                    }`}
-                >
-                    {/* Visual lock status */}
+            {/* QR Code Section */}
+            <div className={`relative flex flex-col items-center justify-center px-5 py-5 ${isEvent ? 'bg-white/5' : 'bg-slate-50/50'}`}>
+                <div className={`relative overflow-hidden rounded-2xl border p-3 ${isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-200 bg-white shadow-xs'}`}>
                     {!isPassActiveOrScheduled && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
-                            {isUsed ? (
+                            {resolvedStatus === 'completed' ? (
                                 <CheckCircle2 className="mb-1 h-8 w-8 text-emerald-500" strokeWidth={2.5} />
-                            ) : isRevoked ? (
-                                <XCircle className="mb-1 h-8 w-8 text-rose-500" />
                             ) : (
-                                <Clock className="mb-1 h-8 w-8 text-rose-500" />
+                                <XCircle className="mb-1 h-8 w-8 text-rose-500" />
                             )}
-                            <p className={`text-[10px] font-black tracking-wider uppercase ${isUsed ? 'text-emerald-400' : 'text-rose-400'}`}>
-                                {isUsed ? 'Visitor Admitted' : isRevoked ? 'Pass Revoked' : 'Pass Expired'}
+                            <p className={`text-[10px] font-black uppercase tracking-wider ${resolvedStatus === 'completed' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {resolvedStatus === 'completed' ? 'Visitor Admitted' : 'Pass Expired / Revoked'}
                             </p>
                         </div>
                     )}
                     <img src={qrImageUrl} alt="Access QR Code" className="block h-36 w-36" />
 
-                    {/* Centered logo icon overlay (Safe with ecc=H error correction) */}
+                    {/* Centered logo icon overlay */}
                     {isPassActiveOrScheduled && (
-                        <div
-                            className="absolute flex items-center justify-center rounded-lg bg-white p-1"
-                            style={{ top: '68px', left: '68px', zIndex: 10 }}
-                        >
+                        <div className="absolute flex items-center justify-center rounded-lg bg-white p-1" style={{ top: '68px', left: '68px', zIndex: 10 }}>
                             <img src={KONTROL_LOGO_BASE64} alt="Kontrol" className="h-6 w-6 object-contain" />
                         </div>
                     )}
                 </div>
-                {isScheduled ? (
-                    <div
-                        className={`mt-2.5 rounded-xl border px-4 py-1.5 text-center ${
-                            isEvent ? 'border-violet-500/20 bg-violet-500/10 text-violet-300' : 'border-indigo-100/50 bg-indigo-50/80 text-indigo-700'
-                        }`}
-                    >
-                        <p className="text-[10px] font-black tracking-wide uppercase">Pass Scheduled</p>
-                        <p className="mt-0.5 text-[9px] font-bold opacity-90">{formatSmartStartsAt(pass.starts_at)}</p>
-                    </div>
-                ) : (
-                    <p className={`mt-2 text-[10px] font-medium ${isEvent ? 'text-slate-400' : 'text-slate-500'}`}>
-                        Present at gate terminal for fast verification
-                    </p>
-                )}
+                <p className={`mt-2 text-[10px] font-medium ${isEvent ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Present at gate terminal for fast verification
+                </p>
             </div>
 
-            {/* Fallback code segment - dotted ticket line separation */}
-            <div
-                className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${
-                    isEvent ? 'border-white/5 bg-transparent' : 'border-slate-100 bg-white'
-                }`}
-            >
-                {/* Ticket notches */}
-                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full" style={{ backgroundColor: '#f8fafc' }} />
-                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full" style={{ backgroundColor: '#f8fafc' }} />
+            {/* Fallback Code Section with Ticket Notches */}
+            <div className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-200 bg-white'}`}>
+                {/* Left & Right Ticket Notches */}
+                <div className="absolute -left-3 top-0 h-5 w-5 -translate-y-1/2 rounded-full border-r border-slate-200 bg-white dark:bg-slate-950" />
+                <div className="absolute -right-3 top-0 h-5 w-5 -translate-y-1/2 rounded-full border-l border-slate-200 bg-white dark:bg-slate-950" />
 
-                <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
-                <div
-                    className={`py-0.5 pl-2.5 font-mono text-2xl font-black tracking-[0.2em] ${
-                        isEvent
-                            ? 'bg-gradient-to-r from-violet-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(167,139,250,0.3)]'
-                            : 'text-primary-500'
-                    }`}
-                >
+                <p className="mb-0.5 text-[9px] font-black uppercase tracking-widest text-slate-400">FALLBACK ACCESS CODE</p>
+                <div className={`font-mono text-2xl font-black tracking-[0.2em] ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
                     {pass.code}
                 </div>
             </div>
 
-            {/* Validity Metadata (Faint Centered Footer) */}
-            <div className={`border-t px-5 py-2.5 text-center ${isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
-                <p className={`text-[10px] font-bold tracking-wide ${isEvent ? 'text-slate-400' : 'text-slate-400'}`}>
-                    {formatFaintExpiry(pass.expires_at, pass.type)}
-                </p>
-            </div>
-
             {/* Optional Notes */}
             {pass.notes && (
-                <div className={`border-t px-6 py-4 ${isEvent ? 'border-white/5 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
+                <div className={`border-t px-5 py-3 ${isEvent ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/50'}`}>
                     <button
                         onClick={() => setViewNotes(!viewNotes)}
-                        className={`flex w-full items-center justify-between text-xs font-bold transition-colors ${
-                            isEvent ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-700'
-                        }`}
+                        className={`flex w-full items-center justify-between text-xs font-bold ${isEvent ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-800'}`}
                     >
-                        <span>Entry Notes / Instructions</span>
+                        <span>Entry Instructions</span>
                         <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${viewNotes ? 'rotate-180' : ''}`} />
                     </button>
                     {viewNotes && (
-                        <motion.p
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            className={`mt-3 text-left text-xs leading-relaxed font-medium ${isEvent ? 'text-slate-350' : 'text-slate-600'}`}
-                        >
+                        <p className={`mt-2 text-left text-xs leading-relaxed font-medium ${isEvent ? 'text-slate-300' : 'text-slate-600'}`}>
                             {pass.notes}
-                        </motion.p>
+                        </p>
                     )}
                 </div>
             )}
