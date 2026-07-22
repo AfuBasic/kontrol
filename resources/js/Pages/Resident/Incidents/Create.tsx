@@ -1,8 +1,12 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft, Paperclip, Send } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Paperclip, Send, WifiOff } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import ResidentLayout from '@/Layouts/ResidentLayout';
+import { ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
+import { SyncEngine } from '@/Resilience/SyncEngine';
+import { SyncStatus } from '@/Resilience/SyncStatus';
 
 type Props = {
     categories: Array<{ value: string; label: string }>;
@@ -41,10 +45,12 @@ export default function Create({ categories }: Props) {
         is_private: false,
     });
 
+    const { isOnline, isServerReachable } = useNetworkQuality();
     const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
     const [attachmentType, setAttachmentType] = useState<'image' | 'video' | null>(null);
     const [uploadingMedia, setUploadingMedia] = useState(false);
     const [customError, setCustomError] = useState<string | null>(null);
+    const [offlineSaved, setOfflineSaved] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +80,64 @@ export default function Create({ categories }: Props) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setCustomError(null);
+        setOfflineSaved(false);
+
+        const online = isOnline && (await isServerReachable(2500));
+
+        // Attachments require online upload (Cloudinary). Text-only reports can queue offline.
+        if (!online) {
+            if (data.attachment) {
+                setCustomError('Photo/video attachments require an internet connection. Remove the attachment to submit offline, or reconnect.');
+                return;
+            }
+
+            if (!data.title.trim() || !data.body.trim() || !data.category) {
+                setCustomError('Title, description, and category are required.');
+                return;
+            }
+
+            setUploadingMedia(true);
+            try {
+                const payload = {
+                    title: data.title,
+                    body: data.body,
+                    category: data.category,
+                    priority: data.priority,
+                    attachment_url: null,
+                    attachment_type: null,
+                    attachment_hash: null,
+                    location: data.location || null,
+                    is_private: data.is_private,
+                    submitted_offline: true,
+                    client_created_at: new Date().toISOString(),
+                };
+
+                const operationId = await SyncEngine.enqueue({
+                    type: 'incident_report',
+                    endpoint: '/resident/incidents',
+                    method: 'POST',
+                    payload,
+                    retryPolicyKey: 'incident_report',
+                });
+
+                await ResidentStore.putPendingIncident({
+                    id: operationId,
+                    payload,
+                    status: SyncStatus.Pending,
+                    createdAt: new Date().toISOString(),
+                    title: data.title,
+                    category: data.category,
+                });
+
+                setOfflineSaved(true);
+            } catch (error: any) {
+                setCustomError(error?.message || 'Could not save this report offline. Please try again.');
+            } finally {
+                setUploadingMedia(false);
+            }
+            return;
+        }
+
         setUploadingMedia(true);
 
         try {
@@ -187,6 +251,27 @@ export default function Create({ categories }: Props) {
                 <h1 className="text-2xl font-black tracking-tight text-slate-900">Report community incident</h1>
                 <p className="mt-1 text-sm text-slate-500">Provide detailed information to help the estate management team resolve the issue.</p>
             </div>
+
+            {!isOnline && (
+                <div className="mb-4 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    <WifiOff className="mt-0.5 h-4 w-4 shrink-0" />
+                    <p className="text-xs font-semibold leading-relaxed">
+                        You&apos;re offline. Text-only reports can be saved locally and will submit when you reconnect. Attachments require internet.
+                    </p>
+                </div>
+            )}
+
+            {offlineSaved && (
+                <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+                    <p className="text-xs font-bold">Your report has been saved locally</p>
+                    <p className="mt-1 text-xs font-medium text-emerald-800/90">
+                        It will be submitted automatically when you&apos;re back online.
+                    </p>
+                    <Link href="/resident/incidents" className="mt-2 inline-block text-xs font-black text-emerald-800 underline">
+                        Back to incidents
+                    </Link>
+                </div>
+            )}
 
             {/* Form Card */}
             <div className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sm:p-6">
@@ -392,23 +477,28 @@ export default function Create({ categories }: Props) {
                     <div className="flex justify-end border-t border-slate-100 pt-4">
                         <button
                             type="submit"
-                            disabled={processing || uploadingMedia || data.body.length < 20}
+                            disabled={processing || uploadingMedia || offlineSaved || data.body.length < 20}
                             className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-100 transition-all hover:bg-indigo-700 hover:shadow-indigo-200 disabled:opacity-50 disabled:shadow-none"
                         >
                             {uploadingMedia ? (
                                 <>
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                    Uploading...
+                                    {isOnline ? 'Uploading...' : 'Saving offline…'}
                                 </>
                             ) : processing ? (
                                 <>
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                                     Submitting...
                                 </>
+                            ) : offlineSaved ? (
+                                <>
+                                    <Send className="h-4 w-4" />
+                                    Saved offline
+                                </>
                             ) : (
                                 <>
                                     <Send className="h-4 w-4" />
-                                    Submit Report
+                                    {isOnline ? 'Submit Report' : 'Save Offline'}
                                 </>
                             )}
                         </button>

@@ -17,11 +17,14 @@ import {
     Filter,
     ArrowRight,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import MobileSheet from '@/Components/MobileSheet';
 import Modal from '@/Components/Modal';
+import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
+import { type PendingIncident, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
+import { SyncStatus } from '@/Resilience/SyncStatus';
 import type { Incident, IncidentCategory, IncidentStatus, PaginatedData, SharedData } from '@/types';
 
 type Props = {
@@ -103,6 +106,7 @@ const getCategoryIcon = (category: IncidentCategory) => {
 export default function Index({ incidents, filters, categories }: Props) {
     const { auth } = usePage<SharedData>().props;
     const authUser = auth?.user;
+    const { operations, retryOperation, syncNow, isSyncing } = useSyncStatus();
 
     const [search, setSearch] = useState(typeof filters?.search === 'string' ? filters.search : '');
     const [category, setCategory] = useState(typeof filters?.category === 'string' ? filters.category : '');
@@ -110,6 +114,7 @@ export default function Index({ incidents, filters, categories }: Props) {
     const [sort, setSort] = useState((typeof filters?.sort === 'string' ? filters.sort : '') || 'newest');
     const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(true);
+    const [pendingIncidents, setPendingIncidents] = useState<PendingIncident[]>([]);
 
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -117,6 +122,29 @@ export default function Index({ incidents, filters, categories }: Props) {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
+
+    const refreshPending = useCallback(async () => {
+        try {
+            const stored = await ResidentStore.getPendingIncidents();
+            const merged = stored.map((item) => {
+                const op = operations.find((o) => o.id === item.id);
+                return op ? { ...item, status: op.status, error: op.lastError ?? item.error } : item;
+            });
+            setPendingIncidents(merged.filter((i) => i.status !== SyncStatus.Synced));
+
+            const synced = stored.filter((i) => operations.find((o) => o.id === i.id)?.status === SyncStatus.Synced);
+            if (synced.length > 0) {
+                await Promise.all(synced.map((i) => ResidentStore.removePendingIncident(i.id)));
+                router.reload({ only: ['incidents'] });
+            }
+        } catch {
+            setPendingIncidents([]);
+        }
+    }, [operations]);
+
+    useEffect(() => {
+        void refreshPending();
+    }, [refreshPending]);
 
     const applyFilters = (newParams: Record<string, string | undefined>) => {
         const params: Record<string, string | undefined> = {
@@ -354,6 +382,48 @@ export default function Index({ incidents, filters, categories }: Props) {
                 <Modal isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents" maxWidth="md">
                     {filterFormContent}
                 </Modal>
+            )}
+
+            {pendingIncidents.length > 0 && (
+                <div className="mb-4 space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                        <p className="text-[11px] font-bold tracking-widest text-amber-700 uppercase">
+                            Pending offline reports ({pendingIncidents.length})
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => void syncNow()}
+                            disabled={isSyncing}
+                            className="text-[10px] font-bold text-amber-800 underline disabled:opacity-50"
+                        >
+                            Sync now
+                        </button>
+                    </div>
+                    {pendingIncidents.map((item) => (
+                        <div key={item.id} className="rounded-2xl border border-amber-100 bg-amber-50/50 p-4">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className="truncate text-sm font-bold text-slate-900">{item.title || 'Incident report'}</p>
+                                    <p className="mt-0.5 text-[11px] text-slate-500">
+                                        {item.category || 'General'} · will submit when online
+                                    </p>
+                                </div>
+                                <span className="shrink-0 rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                    {item.status === SyncStatus.Failed ? 'Failed' : item.status === SyncStatus.Syncing ? 'Syncing' : 'Pending'}
+                                </span>
+                            </div>
+                            {item.status === SyncStatus.Failed && (
+                                <button
+                                    type="button"
+                                    onClick={() => void retryOperation(item.id)}
+                                    className="mt-2 text-xs font-bold text-indigo-600"
+                                >
+                                    Retry
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
             )}
 
             {/* Incidents Feed */}
