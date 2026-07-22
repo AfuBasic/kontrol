@@ -73,7 +73,6 @@ type SecurityOperations = {
     visitorsCheckedIn: number;
     visitorsCheckedOut: number;
     openIncidents: number;
-    emergencyAlerts: number;
     recentGateActivity: {
         id: number;
         visitor_name: string;

@@ -16,7 +16,6 @@ use App\Models\EstateBoardPost;
 use App\Models\EstateTransaction;
 use App\Models\Incident;
 use App\Models\Property;
-use App\Models\SosEvent;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Support\Carbon;
@@ -205,10 +204,6 @@ class DashboardService
             ->whereDate('checked_out_at', $today)
             ->count();
 
-        $activeEmergencyAlerts = SosEvent::where('estate_id', $estateId)
-            ->where('status', '!=', 'resolved')
-            ->count();
-
         // 3. Finance & Collections (Excluding collections created by property owners)
         $collectionFilter = function ($q) use ($estateId) {
             $q->where('estate_id', $estateId)
@@ -253,7 +248,7 @@ class DashboardService
         $status = 'normal';
         $statusLabel = '🟢 Estate Operating Normally';
 
-        if ($activeEmergencyAlerts > 0 || $openIncidents > 2) {
+        if ($openIncidents > 2) {
             $status = 'critical';
             $statusLabel = '🔴 Critical Issues';
         } elseif ($residentsAwaitingApproval > 0 || $outstandingBalances > 1000000 || $failedPaymentsCount > 0) {
@@ -309,16 +304,6 @@ class DashboardService
                 'desc' => "{$failedPaymentsCount} payment attempt".($failedPaymentsCount > 1 ? 's' : '').' failed recently.',
                 'severity' => 'warning',
                 'actionUrl' => route('admin.collections.index'),
-            ];
-        }
-
-        if ($activeEmergencyAlerts > 0) {
-            $needsAttention[] = [
-                'type' => 'active_sos',
-                'title' => 'Active SOS Panic Alerts',
-                'desc' => "{$activeEmergencyAlerts} emergency panic alert".($activeEmergencyAlerts > 1 ? 's' : '').' triggered by residents!',
-                'severity' => 'danger',
-                'actionUrl' => '/admin/sos', // SOS page
             ];
         }
 
@@ -384,7 +369,6 @@ class DashboardService
                 'visitorsCheckedIn' => $visitorsCheckedInToday,
                 'visitorsCheckedOut' => $visitorsCheckedOutToday,
                 'openIncidents' => $openIncidents,
-                'emergencyAlerts' => $activeEmergencyAlerts,
                 'recentGateActivity' => $recentGateActivity,
             ],
             'estate' => [
