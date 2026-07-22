@@ -66,7 +66,21 @@ export default function Visitors({
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const { operations, retryOperation, isSyncing, syncNow } = useSyncStatus();
 
-    const [activeTab, setActiveTab] = useState<Tab>('upcoming');
+    const initialTab = (typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('tab')
+        : null) === 'history' ? 'history' : 'upcoming';
+
+    const [activeTab, setActiveTab] = useState<Tab>(initialTab);
+
+    const switchTab = (tab: Tab) => {
+        setActiveTab(tab);
+        if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.set('tab', tab);
+            window.history.replaceState({}, '', url.toString());
+        }
+    };
+
     const [searchQuery, setSearchQuery] = useState(
         activeTab === 'upcoming' ? (filters?.search_upcoming ?? '') : (filters?.search_history ?? ''),
     );
@@ -202,7 +216,7 @@ export default function Visitors({
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => switchTab(tab.id)}
                                 className={`relative py-1 text-xs font-bold transition-colors cursor-pointer ${
                                     activeTab === tab.id
                                         ? 'text-slate-900'
@@ -324,7 +338,7 @@ export default function Visitors({
                                 codes={upcomingTimeline}
                                 variant="upcoming"
                                 alwaysShowToday
-                                getCardHref={(code) => resident.visitors.show.url(code.id)}
+                                getCardHref={(code) => `${resident.visitors.show.url(code.id)}?from_tab=upcoming`}
                                 renderCardActions={(code) =>
                                     code.status === 'active' || code.status === 'scheduled' ? (
                                         <button
@@ -355,7 +369,7 @@ export default function Visitors({
                             <VisitorTimeline
                                 codes={historyTimeline}
                                 variant="history"
-                                getCardHref={(code) => resident.visitors.show.url(code.id)}
+                                getCardHref={(code) => `${resident.visitors.show.url(code.id)}?from_tab=history`}
                             />
                         </motion.div>
                     )}
