@@ -229,6 +229,35 @@ class AccessCodeService
     }
 
     /**
+     * Fetch recent unique visitors for 1-tap "Invite Again" workflow.
+     *
+     * @return Collection<int, array{visitor_name: string, visitor_phone: string|null, purpose: string|null, type: string}>
+     */
+    public function getRecentUniqueVisitors(int $limit = 5): Collection
+    {
+        $user = Auth::user();
+        $estate = $this->estateContext->getEstate();
+        $userIds = $user->getHouseholdUserIds();
+
+        return AccessCode::query()
+            ->forEstate($estate->id)
+            ->whereIn('user_id', $userIds)
+            ->whereNotNull('visitor_name')
+            ->where('visitor_name', '!=', '')
+            ->orderByDesc('created_at')
+            ->get()
+            ->unique('visitor_name')
+            ->take($limit)
+            ->values()
+            ->map(fn ($code) => [
+                'visitor_name' => $code->visitor_name,
+                'visitor_phone' => $code->visitor_phone,
+                'purpose' => $code->purpose,
+                'type' => $code->type,
+            ]);
+    }
+
+    /**
      * Get all access codes for the current user (paginated).
      *
      * @return Collection<int, AccessCode>

@@ -37,6 +37,7 @@ class AccessCodeController extends Controller
             ],
             'upcomingTimeline' => $upcomingCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress)),
             'historyTimeline' => $historyCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress, withCompletion: true)),
+            'recentVisitors' => $this->accessCodeService->getRecentUniqueVisitors(5),
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
             'visitorStats' => $this->accessCodeService->getHomeStats(),

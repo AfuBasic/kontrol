@@ -4,9 +4,11 @@ import { Calendar, Plus, RefreshCw, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
-import SearchInput from '@/Components/SearchInput';
-import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
-import VisitorTimeline from '@/Components/Visitors/VisitorTimeline';
+import ContextBanner from '@/Components/Visitors/ContextBanner';
+import HistoryArchive from '@/Components/Visitors/HistoryArchive';
+import QuickActions from '@/Components/Visitors/QuickActions';
+import TodaySchedule from '@/Components/Visitors/TodaySchedule';
+import WeekOverview from '@/Components/Visitors/WeekOverview';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import { type PendingPass, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
@@ -14,30 +16,24 @@ import { SyncStatus } from '@/Resilience/SyncStatus';
 import resident from '@/routes/resident';
 import type { AccessCode } from '@/types/access-code';
 
+type RecentVisitor = {
+    visitor_name: string;
+    visitor_phone: string | null;
+    purpose: string | null;
+    type: string;
+};
+
 type Props = {
     upcomingTimeline: AccessCode[];
     historyTimeline: AccessCode[];
+    recentVisitors?: RecentVisitor[];
     filters: {
         search_upcoming?: string;
         search_history?: string;
     };
-    recentActivity: {
-        type: string;
-        message: string;
-        time: string;
-        time_full: string;
-        code?: string;
-        visitor?: string;
-    }[];
-    visitorStats: {
-        active_codes: number;
-        created_today: number;
-        visitors_today: number;
-        expected_today: number;
-    };
 };
 
-type Tab = 'upcoming' | 'history';
+type Tab = 'schedule' | 'history';
 
 function pendingBadge(status: SyncStatus): { label: string; className: string } {
     switch (status) {
@@ -59,8 +55,7 @@ function pendingBadge(status: SyncStatus): { label: string; className: string } 
 export default function Visitors({
     upcomingTimeline,
     historyTimeline,
-    filters,
-    visitorStats,
+    recentVisitors = [],
 }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
@@ -68,7 +63,7 @@ export default function Visitors({
 
     const initialTab = (typeof window !== 'undefined'
         ? new URLSearchParams(window.location.search).get('tab')
-        : null) === 'history' ? 'history' : 'upcoming';
+        : null) === 'history' ? 'history' : 'schedule';
 
     const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
@@ -81,83 +76,49 @@ export default function Visitors({
         }
     };
 
-    const [searchQuery, setSearchQuery] = useState(
-        activeTab === 'upcoming' ? (filters?.search_upcoming ?? '') : (filters?.search_history ?? ''),
-    );
-    const [isLoading, setIsLoading] = useState(false);
-    const [showCreateSheet, setShowCreateSheet] = useState(false);
+    // Offline pending passes
     const [pendingPasses, setPendingPasses] = useState<PendingPass[]>([]);
-    const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [retryingId, setRetryingId] = useState<string | null>(null);
 
-    // Revoke modal state
-    const [revokeModalOpen, setRevokeModalOpen] = useState(false);
-    const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
-    const [revoking, setRevoking] = useState(false);
-
-    // Immediate next visitor
-    const nextVisitor = upcomingTimeline.length > 0 ? upcomingTimeline[0] : null;
-
-    const refreshPending = useCallback(async () => {
+    const loadPendingPasses = useCallback(async () => {
         try {
-            const stored = await ResidentStore.getPendingPasses();
-            const merged = stored.map((pass) => {
-                const op = operations.find((o) => o.id === pass.id);
-                return op ? { ...pass, status: op.status, error: op.lastError ?? pass.error } : pass;
-            });
-            setPendingPasses(merged.filter((p) => p.status !== SyncStatus.Synced));
-
-            const syncedIds = stored.filter((p) => {
-                const op = operations.find((o) => o.id === p.id);
-                return op?.status === SyncStatus.Synced;
-            });
-            if (syncedIds.length > 0) {
-                await Promise.all(syncedIds.map((p) => ResidentStore.removePendingPass(p.id)));
-                router.reload({ only: ['upcomingTimeline', 'historyTimeline', 'visitorStats'] });
-            }
+            const passes = await ResidentStore.getPendingPasses();
+            setPendingPasses(passes);
         } catch {
-            setPendingPasses([]);
+            // IndexDB unsupported fallback
         }
-    }, [operations]);
+    }, []);
 
     useEffect(() => {
-        void refreshPending();
-    }, [refreshPending]);
+        loadPendingPasses();
+    }, [loadPendingPasses]);
 
-    useEffect(() => {
-        setSearchQuery(
-            activeTab === 'upcoming'
-                ? (filters?.search_upcoming ?? '')
-                : (filters?.search_history ?? ''),
-        );
-    }, [activeTab, filters]);
-
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-        if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
-        setIsLoading(true);
-
-        debounceTimeout.current = setTimeout(() => {
-            const params =
-                activeTab === 'upcoming'
-                    ? { search_upcoming: query }
-                    : { search_history: query };
-            const only =
-                activeTab === 'upcoming'
-                    ? (['upcomingTimeline', 'filters'] as const)
-                    : (['historyTimeline', 'filters'] as const);
-
-            router.get(resident.visitors.index.url(), params, {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-                only,
-                onFinish: () => setIsLoading(false),
-            });
-        }, 300);
+    const handleRetry = async (pass: PendingPass) => {
+        setRetryingId(pass.id);
+        try {
+            const matchingOp = operations.find(
+                (op) => op.payload && (op.payload as any).uuid === pass.uuid,
+            );
+            if (matchingOp) {
+                await retryOperation(matchingOp.id);
+            } else {
+                await syncNow();
+            }
+            await loadPendingPasses();
+        } finally {
+            setRetryingId(null);
+        }
     };
 
-    const openRevokeModal = (code: AccessCode) => {
-        setCodeToRevoke(code);
+    // Modals & Creation Sheet State
+    const [showCreateSheet, setShowCreateSheet] = useState(false);
+    const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+    const [codeToRevoke, setCodeToRevoke] = useState<{ id: number; visitor_name?: string } | null>(null);
+    const [revoking, setRevoking] = useState(false);
+
+    const promptCancelPass = (id: number) => {
+        const item = upcomingTimeline.find((code) => code.id === id);
+        setCodeToRevoke({ id, visitor_name: item?.visitor_name });
         setRevokeModalOpen(true);
     };
 
@@ -168,210 +129,146 @@ export default function Visitors({
             onSuccess: () => {
                 setRevokeModalOpen(false);
                 setCodeToRevoke(null);
-                setRevoking(false);
             },
-            onError: () => setRevoking(false),
+            onFinish: () => setRevoking(false),
         });
     };
 
-    const tabs: { id: Tab; label: string; count: number }[] = [
-        { id: 'upcoming', label: 'Agenda', count: upcomingTimeline.length },
-        { id: 'history', label: 'History', count: historyTimeline.length },
-    ];
+    const handleInviteAgain = (v: RecentVisitor) => {
+        router.get('/resident/visitors/create', {
+            type: v.type || 'single_use',
+            visitor_name: v.visitor_name,
+            visitor_phone: v.visitor_phone || '',
+            purpose: v.purpose || '',
+        });
+    };
+
+    // Filter today's visits for TodaySchedule
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayVisits = upcomingTimeline.filter((v: any) => v.arrival_date === todayStr);
 
     return (
         <>
-            <Head title="Visitor Agenda" />
+            <Head title="Visitors" />
 
-            <div className="mx-auto max-w-2xl space-y-4 pb-24 px-1">
-                {/* Clean Header */}
-                <div className="flex items-center justify-between pt-1">
+            <div className="mx-auto max-w-xl px-4 py-4 space-y-3 pb-24">
+                {/* Header */}
+                <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">
-                            Visitor Agenda
-                        </h1>
-                        <p className="text-xs text-slate-400 font-medium">
-                            Personal timeline of scheduled visits
-                        </p>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Visitors</h1>
                     </div>
-
                     <button
                         onClick={() => setShowCreateSheet(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-98 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
                     >
-                        <Plus className="h-4 w-4" />
-                        New Visitor
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Invite</span>
                     </button>
                 </div>
 
-                {/* Next Visitor Hero Card */}
-                {activeTab === 'upcoming' && (
-                    <NextVisitorHero
-                        nextCode={nextVisitor}
-                        totalExpectedToday={visitorStats.expected_today}
-                    />
-                )}
-
-                {/* Segmented Navigation & Search */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-1 pt-1">
-                    <div className="flex items-center gap-4">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => switchTab(tab.id)}
-                                className={`relative py-1 text-xs font-bold transition-colors cursor-pointer ${
-                                    activeTab === tab.id
-                                        ? 'text-slate-900'
-                                        : 'text-slate-400 hover:text-slate-600'
-                                }`}
-                            >
-                                <span className="flex items-center gap-1.5">
-                                    {tab.label}
-                                    <span
-                                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${
-                                            activeTab === tab.id
-                                                ? 'bg-slate-100 text-slate-700'
-                                                : 'bg-slate-50 text-slate-400'
-                                        }`}
-                                    >
-                                        {tab.count}
-                                    </span>
-                                </span>
-
-                                {activeTab === tab.id && (
-                                    <motion.div
-                                        layoutId="plannerTabUnderline"
-                                        className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-slate-900 rounded-full"
-                                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                                    />
-                                )}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Calendar tab placeholder */}
+                {/* Segmented View Switcher */}
+                <div className="flex rounded-xl bg-slate-100/80 p-1 font-semibold">
                     <button
-                        disabled
-                        title="Calendar view — coming soon"
-                        className="flex items-center gap-1.5 text-xs font-medium text-slate-300 cursor-not-allowed select-none"
+                        onClick={() => switchTab('schedule')}
+                        className={`flex-1 rounded-lg py-1.5 text-xs transition ${
+                            activeTab === 'schedule'
+                                ? 'bg-white text-slate-900 shadow-2xs'
+                                : 'text-slate-500 hover:text-slate-800'
+                        }`}
                     >
-                        <Calendar className="h-3.5 w-3.5" />
-                        <span>Calendar</span>
-                        <span className="rounded-full bg-slate-100 px-1.5 py-0.2 text-[9px] font-bold uppercase text-slate-400">
-                            soon
-                        </span>
+                        Schedule
+                    </button>
+                    <button
+                        onClick={() => switchTab('history')}
+                        className={`flex-1 rounded-lg py-1.5 text-xs transition ${
+                            activeTab === 'history'
+                                ? 'bg-white text-slate-900 shadow-2xs'
+                                : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                    >
+                        Archive
                     </button>
                 </div>
 
-                {/* Offline Pending Passes */}
+                {/* Pending Offline Passes Banner */}
                 {pendingPasses.length > 0 && (
-                    <section className="space-y-2">
-                        <div className="flex items-center justify-between">
-                            <h3 className="flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-amber-700 uppercase">
-                                <WifiOff className="h-3.5 w-3.5" />
-                                Pending sync ({pendingPasses.length})
-                            </h3>
-                            <button
-                                type="button"
-                                onClick={() => void syncNow()}
-                                disabled={isSyncing}
-                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-800 disabled:opacity-50"
-                            >
-                                <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
-                                Sync now
-                            </button>
+                    <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs">
+                        <div className="flex items-center gap-2 font-bold text-amber-900">
+                            <WifiOff className="h-4 w-4 shrink-0 text-amber-600" />
+                            <span>{pendingPasses.length} pass(es) pending sync</span>
                         </div>
-
-                        <div className="rounded-xl border border-amber-100 bg-white divide-y divide-slate-50 shadow-xs overflow-hidden">
+                        <div className="mt-2 space-y-1.5">
                             {pendingPasses.map((pass) => {
-                                const badge = pendingBadge(pass.status);
+                                const matchingOp = operations.find(
+                                    (op) => op.payload && (op.payload as any).uuid === pass.uuid,
+                                );
+                                const status = matchingOp ? matchingOp.status : SyncStatus.Pending;
+                                const badge = pendingBadge(status);
+
                                 return (
-                                    <div key={pass.id} className="flex items-start gap-3 px-3 py-2.5">
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-xs font-semibold text-slate-900">
-                                                {pass.visitor_name || 'Visitor pass'}
-                                            </p>
-                                            <p className="mt-0.5 text-[11px] text-slate-500">
-                                                {pass.purpose || pass.type || 'Access code'} · saved offline
-                                            </p>
+                                    <div
+                                        key={pass.id}
+                                        className="flex items-center justify-between rounded-lg bg-white/80 p-2 border border-amber-100"
+                                    >
+                                        <div>
+                                            <p className="font-bold text-slate-900">{pass.visitor_name || 'Guest Pass'}</p>
+                                            <p className="text-[10px] text-slate-500">{pass.type}</p>
                                         </div>
-                                        <span
-                                            className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${badge.className}`}
-                                        >
-                                            {badge.label}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>
+                                                {badge.label}
+                                            </span>
+                                            <button
+                                                onClick={() => handleRetry(pass)}
+                                                disabled={retryingId === pass.id || isSyncing}
+                                                className="rounded-md bg-amber-100 p-1 text-amber-800 hover:bg-amber-200"
+                                            >
+                                                <RefreshCw className={`h-3 w-3 ${retryingId === pass.id ? 'animate-spin' : ''}`} />
+                                            </button>
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
-                    </section>
+                    </div>
                 )}
 
-                {/* Quick Search */}
-                <SearchInput
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    placeholder={
-                        activeTab === 'upcoming'
-                            ? 'Search upcoming visits...'
-                            : 'Search history by visitor or code...'
-                    }
-                    isLoading={isLoading}
-                />
+                {/* 4 Core Focus Areas (Schedule View) */}
+                {activeTab === 'schedule' && (
+                    <div className="space-y-2">
+                        {/* 1. Context Banner */}
+                        <ContextBanner upcoming={upcomingTimeline as any} />
 
-                {/* Flowing Agenda Timeline */}
-                <AnimatePresence mode="wait">
-                    {activeTab === 'upcoming' && (
-                        <motion.div
-                            key="upcoming"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.1 }}
-                        >
-                            <VisitorTimeline
-                                codes={upcomingTimeline}
-                                variant="upcoming"
-                                alwaysShowToday
-                                getCardHref={(code) => `${resident.visitors.show.url(code.id)}?from_tab=upcoming`}
-                                renderCardActions={(code) =>
-                                    code.status === 'active' || code.status === 'scheduled' ? (
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                e.stopPropagation();
-                                                openRevokeModal(code);
-                                            }}
-                                            className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                                        >
-                                            Cancel
-                                        </button>
-                                    ) : null
-                                }
-                            />
-                        </motion.div>
-                    )}
+                        {/* 2. Today's Schedule */}
+                        <TodaySchedule
+                            visits={todayVisits as any}
+                            onCancel={promptCancelPass}
+                        />
 
-                    {activeTab === 'history' && (
-                        <motion.div
-                            key="history"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.1 }}
-                        >
-                            <VisitorTimeline
-                                codes={historyTimeline}
-                                variant="history"
-                                getCardHref={(code) => `${resident.visitors.show.url(code.id)}?from_tab=history`}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                        {/* 3. This Week Overview (Mini Activity Heatmap) */}
+                        <WeekOverview upcoming={upcomingTimeline as any} />
+
+                        {/* 4. Quick Actions & 1-Tap Invite Again */}
+                        <QuickActions
+                            recentVisitors={recentVisitors}
+                            onInvite={() => setShowCreateSheet(true)}
+                            onInviteAgain={handleInviteAgain}
+                            onOpenSearch={() => switchTab('history')}
+                        />
+                    </div>
+                )}
+
+                {/* History Archive View */}
+                {activeTab === 'history' && (
+                    <HistoryArchive
+                        historyTimeline={historyTimeline as any}
+                        recentVisitors={recentVisitors}
+                        onInviteAgain={handleInviteAgain}
+                    />
+                )}
             </div>
 
-            {/* Creation Sheet */}
+            {/* Pass Creation Sheet */}
             <MobileSheet
                 isOpen={showCreateSheet}
                 onClose={() => setShowCreateSheet(false)}
@@ -385,7 +282,7 @@ export default function Visitors({
                     <Link
                         href="/resident/visitors/create?type=single_use"
                         onClick={() => setShowCreateSheet(false)}
-                        className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80 active:scale-99"
+                        className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                     >
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                             <Calendar className="h-4 w-4" />
@@ -402,7 +299,7 @@ export default function Visitors({
                         <Link
                             href="/resident/visitors/create?type=long_lived"
                             onClick={() => setShowCreateSheet(false)}
-                            className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80 active:scale-99"
+                            className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                         >
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
                                 <Calendar className="h-4 w-4" />
@@ -419,7 +316,7 @@ export default function Visitors({
                     <Link
                         href="/resident/visitors/create?type=event"
                         onClick={() => setShowCreateSheet(false)}
-                        className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80 active:scale-99"
+                        className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
                     >
                         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
                             <Calendar className="h-4 w-4" />
