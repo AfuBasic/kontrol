@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Shield, User, Copy, Share2 } from 'lucide-react';
+import { Calendar, Clock, Shield, User, Copy, Share2, ArrowLeft } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PassCard from '@/Components/Resident/PassCard';
 import resident from '@/routes/resident';
@@ -149,7 +149,17 @@ export default function CodeShow({ accessCode, usageLogs, filters }: Props) {
         <>
             <Head title="Access Code Details" />
 
-            <div className="flex min-h-[60vh] flex-col items-center justify-center py-6">
+            <div className="flex min-h-[60vh] flex-col items-center justify-center py-4">
+                <div className="mx-auto w-full max-w-4xl px-2 mb-2">
+                    <Link
+                        href="/resident/visitors"
+                        className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft className="h-4 w-4" />
+                        Back to Visitor Agenda
+                    </Link>
+                </div>
+
                 <div className="mx-auto grid w-full max-w-4xl grid-cols-1 items-start gap-8 md:grid-cols-12">
                     {/* Left Column: Pass card & Actions (cols: 5 on md+) */}
                     <div className="flex w-full flex-col items-center text-center md:col-span-5">
