@@ -323,29 +323,27 @@ class PropertyOwnerController extends Controller
         $this->authorize('property_owners.view');
         $estate = $this->estateContext->getEstate();
 
-        $residents = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $propertyOwner->id))
-            ->forEstate($estate->id)
-            ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($user) => [
-                'id' => $user->id,
-                'ulid' => $user->ulid,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->profile?->phone,
-                'property' => $user->profile?->property?->name,
-                'status' => $user->estates->first()?->pivot?->status ?? 'pending',
-                'suspended_at' => $user->suspended_at,
-            ]);
-
         return Inertia::render('Admin/PropertyOwners/Residents', [
             'propertyOwner' => [
                 'id' => $propertyOwner->id,
                 'name' => $propertyOwner->name,
             ],
-            'residents' => $residents,
+            'residents' => Inertia::defer(fn () => User::query()
+                ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $propertyOwner->id))
+                ->forEstate($estate->id)
+                ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($user) => [
+                    'id' => $user->id,
+                    'ulid' => $user->ulid,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->profile?->phone,
+                    'property' => $user->profile?->property?->name,
+                    'status' => $user->estates->first()?->pivot?->status ?? 'pending',
+                    'suspended_at' => $user->suspended_at,
+                ])),
         ]);
     }
 
@@ -421,27 +419,25 @@ class PropertyOwnerController extends Controller
         $this->authorize('property_owners.view');
         $estate = $this->estateContext->getEstate();
 
-        $properties = Property::query()
-            ->where('property_owner_id', $propertyOwner->id)
-            ->where('estate_id', $estate->id)
-            ->withCount(['residents'])
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($property) => [
-                'id' => $property->id,
-                'ulid' => $property->ulid,
-                'name' => $property->name,
-                'residents_count' => $property->residents_count,
-                'archived_at' => $property->archived_at,
-                'created_at' => $property->created_at->format('M d, Y'),
-            ]);
-
         return Inertia::render('Admin/PropertyOwners/Properties', [
             'propertyOwner' => [
                 'id' => $propertyOwner->id,
                 'name' => $propertyOwner->name,
             ],
-            'properties' => $properties,
+            'properties' => Inertia::defer(fn () => Property::query()
+                ->where('property_owner_id', $propertyOwner->id)
+                ->where('estate_id', $estate->id)
+                ->withCount(['residents'])
+                ->orderBy('name')
+                ->get()
+                ->map(fn ($property) => [
+                    'id' => $property->id,
+                    'ulid' => $property->ulid,
+                    'name' => $property->name,
+                    'residents_count' => $property->residents_count,
+                    'archived_at' => $property->archived_at,
+                    'created_at' => $property->created_at->format('M d, Y'),
+                ])),
         ]);
     }
 

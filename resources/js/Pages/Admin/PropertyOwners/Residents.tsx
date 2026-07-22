@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { UsersIcon, MapPinIcon, EnvelopeIcon, PhoneIcon, UserPlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
+import axios from 'axios';
 import { index, availableResidents, assignResidents } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import { create as createResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import AdminLayout from '@/Layouts/AdminLayout';
 import Modal from '@/Components/Modal';
-import axios from 'axios';
+import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
+import { TableRowSkeleton } from '@/Components/Skeletons';
+import { EmptyState } from '@/Components/States';
+import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Resident {
     id: number;
@@ -30,10 +33,11 @@ interface Props {
         id: number;
         name: string;
     };
-    residents: Resident[];
+    residents?: Resident[] | null;
 }
 
 export default function Residents({ propertyOwner, residents }: Props) {
+    const residentList = residents ?? [];
     const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<AvailableResident[]>([]);
@@ -126,8 +130,10 @@ export default function Residents({ propertyOwner, residents }: Props) {
                     </div>
                 </div>
 
+                <SectionErrorBoundary name="po-residents">
+                <Deferred data="residents" fallback={<TableRowSkeleton rows={6} columns={4} />}>
                 <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
-                    {residents.length > 0 ? (
+                    {residentList.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-100">
                                 <thead className="bg-slate-50/50">
@@ -145,7 +151,7 @@ export default function Residents({ propertyOwner, residents }: Props) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 bg-white">
-                                    {residents.map((resident) => (
+                                    {residentList.map((resident) => (
                                         <tr key={resident.id} className="transition-colors hover:bg-slate-50/50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
@@ -220,6 +226,8 @@ export default function Residents({ propertyOwner, residents }: Props) {
                         </div>
                     )}
                 </div>
+                </Deferred>
+                </SectionErrorBoundary>
             </div>
 
             <Modal isOpen={isAssignModalOpen} onClose={() => setIsAssignModalOpen(false)} maxWidth="2xl">

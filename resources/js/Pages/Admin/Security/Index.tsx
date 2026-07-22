@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     Trash2, 
@@ -14,6 +14,8 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SecurityActions from '@/Components/Admin/SecurityActions';
+import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
+import { TableRowSkeleton } from '@/Components/Skeletons';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -40,7 +42,7 @@ type PaginatedSecurity = {
 };
 
 type Props = {
-    security: PaginatedSecurity;
+    security?: PaginatedSecurity | null;
     filters: {
         search?: string;
         status?: string;
@@ -51,14 +53,16 @@ type Props = {
         pending: number;
         inactive: number;
     };
-    insights: string[];
+    insights?: string[] | null;
 };
 
-export default function SecurityPersonnel({ security, filters: initialFilters, stats: initialStats, insights: initialInsights }: Props) {
+export default function SecurityPersonnel({ security: initialSecurity, filters: initialFilters, stats: initialStats, insights: initialInsights }: Props) {
     const { can } = usePermission();
     const filters = !Array.isArray(initialFilters) ? (initialFilters || {}) : {};
     const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0 };
     const insights = initialInsights || [];
+    const security = initialSecurity || { data: [], current_page: 1, last_page: 1, per_page: 15, total: 0, links: [] };
+    const isLoadingSecurity = initialSecurity === undefined;
 
     const hasSecurity = security.data.length > 0;
     const [search, setSearch] = useState(filters.search || '');
@@ -180,22 +184,24 @@ export default function SecurityPersonnel({ security, filters: initialFilters, s
                 </div>
 
                 {/* SECTION 2 — INSIGHTS PANEL */}
-                {insights.length > 0 && (
-                    <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
-                        <div className="mb-2.5 flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4 text-blue-600" />
-                            <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
+                <Deferred data="insights" fallback={<div className="h-16 animate-pulse rounded-2xl bg-blue-50/40" />}>
+                    {insights.length > 0 && (
+                        <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
+                            <div className="mb-2.5 flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-blue-600" />
+                                <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
+                            </div>
+                            <ul className="space-y-2">
+                                {insights.map((insight, idx) => (
+                                    <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                        {insight}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
-                        <ul className="space-y-2">
-                            {insights.map((insight, idx) => (
-                                <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                                    {insight}
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
+                    )}
+                </Deferred>
 
                 {/* SECTION 3 — SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
@@ -238,8 +244,12 @@ export default function SecurityPersonnel({ security, filters: initialFilters, s
                 </div>
 
                 {/* SECTION 4 — TABLE */}
-                <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
-                    {hasSecurity ? (
+                <SectionErrorBoundary name="security-table">
+                <Deferred data="security" fallback={<TableRowSkeleton rows={6} columns={5} />}>
+                <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
+                    {isLoadingSecurity ? (
+                        <TableRowSkeleton rows={6} columns={5} />
+                    ) : hasSecurity ? (
                         <div className="overflow-x-auto min-h-[280px]">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="bg-slate-50/70 border-b border-slate-100">
@@ -387,6 +397,8 @@ export default function SecurityPersonnel({ security, filters: initialFilters, s
                         </div>
                     </div>
                 )}
+                </Deferred>
+                </SectionErrorBoundary>
             </div>
 
             {/* FLOATING BULK ACTIONS TOOLBAR */}

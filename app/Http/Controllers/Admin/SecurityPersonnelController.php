@@ -38,32 +38,25 @@ class SecurityPersonnelController extends Controller
         $filters = $request->only(['search', 'status']);
         $estate = $this->estateContext->getEstate();
 
-        $security = $this->securityService
-            ->getPaginatedSecurity(15, $filters)
-            ->through(fn ($user) => [
-                'ulid' => $user->ulid,
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->profile?->phone,
-                'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
-                'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
-                'suspended_at' => $user->suspended_at,
-                'created_at' => $user->created_at->format('M d, Y'),
-            ]);
-
         $totalSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
         $activeSecurity = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
         $pendingSecurity = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
         $suspendedSecurity = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
 
-        $insights = [];
-        if ($pendingSecurity > 0) {
-            $insights[] = "{$pendingSecurity} security personnel have not accepted their invitations.";
-        }
-
         return Inertia::render('Admin/Security/Index', [
-            'security' => $security,
+            'security' => Inertia::defer(fn () => $this->securityService
+                ->getPaginatedSecurity(15, $filters)
+                ->through(fn ($user) => [
+                    'ulid' => $user->ulid,
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->profile?->phone,
+                    'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
+                    'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
+                    'suspended_at' => $user->suspended_at,
+                    'created_at' => $user->created_at->format('M d, Y'),
+                ])),
             'filters' => $filters,
             'stats' => [
                 'total' => $totalSecurity,
@@ -71,7 +64,14 @@ class SecurityPersonnelController extends Controller
                 'pending' => $pendingSecurity,
                 'inactive' => $suspendedSecurity,
             ],
-            'insights' => $insights,
+            'insights' => Inertia::defer(function () use ($pendingSecurity) {
+                $insights = [];
+                if ($pendingSecurity > 0) {
+                    $insights[] = "{$pendingSecurity} security personnel have not accepted their invitations.";
+                }
+
+                return $insights;
+            }),
         ]);
     }
 

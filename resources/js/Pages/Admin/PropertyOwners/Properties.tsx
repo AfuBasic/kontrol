@@ -1,6 +1,8 @@
 import { BuildingOffice2Icon, CalendarDaysIcon, UsersIcon } from '@heroicons/react/24/outline';
-import { Head, Link } from '@inertiajs/react';
+import { Deferred, Head, Link } from '@inertiajs/react';
 import { index } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
+import { TableRowSkeleton } from '@/Components/Skeletons';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Property {
@@ -17,10 +19,12 @@ interface Props {
         id: number;
         name: string;
     };
-    properties: Property[];
+    properties?: Property[] | null;
 }
 
 export default function Properties({ propertyOwner, properties }: Props) {
+    const propertyList = properties ?? [];
+
     return (
         <>
             <Head title={`Properties - ${propertyOwner.name}`} />
@@ -44,8 +48,10 @@ export default function Properties({ propertyOwner, properties }: Props) {
                     </div>
                 </div>
 
+                <SectionErrorBoundary name="po-properties">
+                <Deferred data="properties" fallback={<TableRowSkeleton rows={6} columns={3} />}>
                 <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
-                    {properties.length > 0 ? (
+                    {propertyList.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="min-w-full divide-y divide-slate-100">
                                 <thead className="bg-slate-50/50">
@@ -62,7 +68,7 @@ export default function Properties({ propertyOwner, properties }: Props) {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 bg-white">
-                                    {properties.map((property) => (
+                                    {propertyList.map((property) => (
                                         <tr key={property.id} className="transition-colors hover:bg-slate-50/50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-3">
@@ -97,6 +103,8 @@ export default function Properties({ propertyOwner, properties }: Props) {
                         </div>
                     )}
                 </div>
+                </Deferred>
+                </SectionErrorBoundary>
             </div>
         </>
     );
