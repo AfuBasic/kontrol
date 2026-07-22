@@ -168,27 +168,38 @@ export default function Visitors({
                     </button>
                 </div>
 
-                {/* Segmented View Switcher */}
-                <div className="flex rounded-lg bg-slate-100/80 p-0.5 font-semibold">
+                {/* Animated Segmented View Switcher */}
+                <div className="relative flex rounded-lg bg-slate-100/80 p-0.5 font-semibold">
                     <button
                         onClick={() => switchTab('schedule')}
-                        className={`flex-1 rounded-md py-1 text-xs transition ${
-                            activeTab === 'schedule'
-                                ? 'bg-white text-slate-900 shadow-2xs'
-                                : 'text-slate-500 hover:text-slate-800'
+                        className={`relative flex-1 rounded-md py-1 text-xs transition-colors duration-200 ${
+                            activeTab === 'schedule' ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'
                         }`}
                     >
-                        Schedule
+                        {activeTab === 'schedule' && (
+                            <motion.div
+                                layoutId="activeTabPill"
+                                className="absolute inset-0 rounded-md bg-white shadow-2xs"
+                                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            />
+                        )}
+                        <span className="relative z-10">Schedule</span>
                     </button>
+
                     <button
                         onClick={() => switchTab('history')}
-                        className={`flex-1 rounded-md py-1 text-xs transition ${
-                            activeTab === 'history'
-                                ? 'bg-white text-slate-900 shadow-2xs'
-                                : 'text-slate-500 hover:text-slate-800'
+                        className={`relative flex-1 rounded-md py-1 text-xs transition-colors duration-200 ${
+                            activeTab === 'history' ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'
                         }`}
                     >
-                        Archive
+                        {activeTab === 'history' && (
+                            <motion.div
+                                layoutId="activeTabPill"
+                                className="absolute inset-0 rounded-md bg-white shadow-2xs"
+                                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                            />
+                        )}
+                        <span className="relative z-10">Archive</span>
                     </button>
                 </div>
 
@@ -235,42 +246,56 @@ export default function Visitors({
                     </div>
                 )}
 
-                {/* Schedule View — natural flow */}
-                {activeTab === 'schedule' && (
-                    <div className="space-y-2">
-                        {/* 1. Adaptive Context */}
-                        <ContextBanner upcoming={upcomingTimeline as any} />
+                {/* Tab Views Animated Transition Container */}
+                <AnimatePresence mode="wait">
+                    {activeTab === 'schedule' ? (
+                        <motion.div
+                            key="schedule"
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 8 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                            className="space-y-2"
+                        >
+                            {/* 1. Adaptive Context */}
+                            <ContextBanner upcoming={upcomingTimeline as any} />
 
-                        {/* 2. Next Arrival Hero */}
-                        <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
+                            {/* 2. Next Arrival Hero */}
+                            <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
 
-                        {/* 3. Today's Schedule */}
-                        <TodaySchedule
-                            visits={todayVisits as any}
-                            onCancel={promptCancelPass}
-                        />
+                            {/* 3. Today's Schedule */}
+                            <TodaySchedule
+                                visits={todayVisits as any}
+                                onCancel={promptCancelPass}
+                            />
 
-                        {/* 4. Upcoming (Event-based, replacing week chart) */}
-                        <UpcomingSchedule visits={futureUpcomingVisits as any} />
+                            {/* 4. Upcoming (Event-based) */}
+                            <UpcomingSchedule visits={futureUpcomingVisits as any} />
 
-                        {/* 5. Quick Actions & Invite Again */}
-                        <QuickActions
-                            recentVisitors={recentVisitors}
-                            onInvite={() => setShowCreateSheet(true)}
-                            onInviteAgain={handleInviteAgain}
-                            onOpenSearch={() => switchTab('history')}
-                        />
-                    </div>
-                )}
-
-                {/* History Archive View */}
-                {activeTab === 'history' && (
-                    <HistoryArchive
-                        historyTimeline={historyTimeline as any}
-                        recentVisitors={recentVisitors}
-                        onInviteAgain={handleInviteAgain}
-                    />
-                )}
+                            {/* 5. Quick Actions & Invite Again */}
+                            <QuickActions
+                                recentVisitors={recentVisitors}
+                                onInvite={() => setShowCreateSheet(true)}
+                                onInviteAgain={handleInviteAgain}
+                                onOpenSearch={() => switchTab('history')}
+                            />
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="history"
+                            initial={{ opacity: 0, x: 8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -8 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                        >
+                            <HistoryArchive
+                                historyTimeline={historyTimeline as any}
+                                recentVisitors={recentVisitors}
+                                onInviteAgain={handleInviteAgain}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Pass Creation Sheet */}
