@@ -150,11 +150,12 @@ class VisitorTimelineSeeder extends Seeder
 
             if ($status === AccessCodeStatus::Used && $usedAt) {
                 AccessLog::create([
+                    'estate_id' => $estate->id,
                     'access_code_id' => $code->id,
+                    'verified_by' => $user->id,
                     'verified_at' => $usedAt,
-                    'verifier_name' => 'Officer Security Gate 1',
                     'checked_out_at' => $usedAt->copy()->addHours(2),
-                    'checkout_verifier_name' => 'Officer Security Gate 1',
+                    'checked_out_by' => $user->id,
                 ]);
             }
         }
