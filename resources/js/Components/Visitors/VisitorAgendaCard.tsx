@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Check, Clock, StickyNote } from 'lucide-react';
+import { Check, StickyNote } from 'lucide-react';
 import type { AccessCode } from '@/types/access-code';
 
 export type StatusConfig = {
@@ -13,32 +13,32 @@ export type StatusConfig = {
 const DEFAULT_STATUS_MAP: Record<string, StatusConfig> = {
     active: {
         label: 'Expected',
-        nodeClass: 'bg-emerald-500 ring-4 ring-emerald-50 text-white',
+        nodeClass: 'bg-emerald-500 text-white ring-3 ring-emerald-100',
         textClass: 'text-emerald-700 font-semibold',
         icon: 'dot',
     },
     scheduled: {
         label: 'Scheduled',
-        nodeClass: 'border-2 border-indigo-500 bg-white text-indigo-600',
+        nodeClass: 'border-2 border-indigo-400 bg-white text-indigo-500',
         textClass: 'text-indigo-600 font-medium',
         icon: 'ring',
     },
     used: {
-        label: 'Checked In',
-        nodeClass: 'bg-slate-700 text-white',
-        textClass: 'text-slate-600 font-medium',
+        label: 'Completed',
+        nodeClass: 'bg-slate-300 text-slate-700',
+        textClass: 'text-slate-500 font-medium',
         icon: 'check',
     },
     expired: {
         label: 'Expired',
-        nodeClass: 'border-2 border-slate-300 bg-slate-100 text-slate-400',
+        nodeClass: 'border border-slate-300 bg-slate-100 text-slate-400',
         textClass: 'text-slate-400 font-normal',
         icon: 'ring',
     },
     revoked: {
         label: 'Cancelled',
-        nodeClass: 'border-2 border-rose-300 bg-rose-50 text-rose-500',
-        textClass: 'text-rose-500 font-normal',
+        nodeClass: 'border border-rose-300 bg-rose-50 text-rose-400',
+        textClass: 'text-rose-400 font-normal',
         icon: 'ring',
     },
 };
@@ -67,7 +67,7 @@ export default function VisitorAgendaCard({
 }: VisitorAgendaCardProps) {
     const statusConfig = statusMap[code.status] ?? DEFAULT_STATUS_MAP[code.status] ?? {
         label: code.status,
-        nodeClass: 'border-2 border-slate-300 bg-white text-slate-400',
+        nodeClass: 'border border-slate-300 bg-white text-slate-400',
         textClass: 'text-slate-500 font-normal',
         icon: 'ring',
     };
@@ -86,29 +86,14 @@ export default function VisitorAgendaCard({
               ? 'Long-Term'
               : 'Event';
 
-    const cardInner = (
-        <div className="group relative flex items-start gap-4 py-2.5 px-2 transition-colors rounded-xl hover:bg-slate-50/80">
-            {/* Timeline vertical connector & status node */}
-            <div className="relative flex flex-col items-center shrink-0 pt-1">
-                {/* Status node */}
-                <div
-                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] transition-transform group-hover:scale-110 ${statusConfig.nodeClass}`}
-                >
-                    {statusConfig.icon === 'check' && <Check className="h-2.5 w-2.5 stroke-[3]" />}
-                </div>
-
-                {/* Connecting line */}
-                {!isLastInGroup && (
-                    <div className="absolute top-5 bottom-0 w-px bg-slate-200/70" />
-                )}
-            </div>
-
-            {/* Time column */}
+    const rowContent = (
+        <div className="group relative flex items-center gap-3 py-2 px-1 rounded-lg transition-colors hover:bg-slate-50/90 active:bg-slate-100/80">
+            {/* 1. Time Column (Left-aligned, prominent) */}
             {showTime && (
-                <div className="w-16 shrink-0 pt-0.5 text-right">
+                <div className="w-16 shrink-0 text-right">
                     <span
                         className={`text-xs font-semibold tabular-nums tracking-tight ${
-                            isHistoryItem ? 'text-slate-400' : 'text-slate-700'
+                            isHistoryItem ? 'text-slate-400 font-normal' : 'text-slate-700'
                         }`}
                     >
                         {timeLabel || 'Anytime'}
@@ -116,12 +101,25 @@ export default function VisitorAgendaCard({
                 </div>
             )}
 
-            {/* Visitor details */}
-            <div className="min-w-0 flex-1 pt-0.5">
-                <div className="flex items-baseline gap-2 flex-wrap">
+            {/* 2. Timeline Node & Connector */}
+            <div className="relative flex flex-col items-center shrink-0">
+                <div
+                    className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[8px] transition-transform group-hover:scale-110 ${statusConfig.nodeClass}`}
+                >
+                    {statusConfig.icon === 'check' && <Check className="h-2 w-2 stroke-[3]" />}
+                </div>
+
+                {!isLastInGroup && (
+                    <div className="absolute top-4 bottom-0 w-px bg-slate-200/80" />
+                )}
+            </div>
+
+            {/* 3. Event Details (Typography-first) */}
+            <div className="min-w-0 flex-1 flex items-baseline justify-between gap-2">
+                <div className="min-w-0 flex items-baseline gap-2 flex-wrap">
                     <span
-                        className={`text-sm font-semibold leading-snug truncate ${
-                            isHistoryItem ? 'text-slate-500 line-through/40' : 'text-slate-900'
+                        className={`text-sm font-semibold tracking-tight truncate ${
+                            isHistoryItem ? 'text-slate-500 font-normal' : 'text-slate-900'
                         }`}
                     >
                         {visitorName}
@@ -138,54 +136,49 @@ export default function VisitorAgendaCard({
                     )}
                 </div>
 
-                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400 font-normal">
+                {/* Status & Actions on right edge */}
+                <div className="flex items-center gap-2 shrink-0">
                     {renderMeta ? (
                         renderMeta(code)
                     ) : (
-                        <span>{typeLabel}</span>
+                        <span className="text-[11px] text-slate-400 font-normal hidden sm:inline">
+                            {typeLabel}
+                        </span>
                     )}
 
                     {showStatus && (
-                        <>
-                            <span>·</span>
-                            <span className={`text-[11px] ${statusConfig.textClass}`}>
-                                {statusConfig.label}
-                            </span>
-                        </>
+                        <span className={`text-[11px] ${statusConfig.textClass}`}>
+                            {statusConfig.label}
+                        </span>
+                    )}
+
+                    {renderActions && (
+                        <div className="opacity-70 group-hover:opacity-100 transition-opacity">
+                            {renderActions(code)}
+                        </div>
                     )}
                 </div>
             </div>
-
-            {/* Action buttons on far right */}
-            {renderActions && (
-                <div className="shrink-0 pt-0.5 opacity-80 transition-opacity group-hover:opacity-100">
-                    {renderActions(code)}
-                </div>
-            )}
         </div>
     );
 
     if (href) {
         return (
             <motion.div
-                initial={{ opacity: 0, y: 3 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.1 }}
             >
                 <Link href={href} className="block cursor-pointer">
-                    {cardInner}
+                    {rowContent}
                 </Link>
             </motion.div>
         );
     }
 
     return (
-        <motion.div
-            initial={{ opacity: 0, y: 3 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.15 }}
-        >
-            {cardInner}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.1 }}>
+            {rowContent}
         </motion.div>
     );
 }
