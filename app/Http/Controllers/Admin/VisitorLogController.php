@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
+use App\Models\Estate;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class VisitorLogController extends Controller
 {
@@ -25,12 +27,44 @@ class VisitorLogController extends Controller
     {
         $estate = $this->estateContext->getEstate();
         $today = Carbon::today();
-
         $filters = $request->only(['search', 'date', 'vehicle_plate', 'host_id', 'status', 'gate', 'verifier_id']);
 
-        // Query Logs with filters
-        $logsQuery = AccessLog::query()
-            ->where('estate_id', $estate->id)
+        $checkoutEnabled = (bool) ($estate->settings?->visitor_checkout_enabled ?? false);
+
+        return Inertia::render('Admin/Visitors/Index', [
+            'logs' => Inertia::scroll(fn () => $this->paginatedLogs($estate->id, $filters)),
+            'filters' => $filters,
+            'hosts' => Inertia::defer(fn () => $this->hostsForFilters($estate)),
+            'securityOfficers' => Inertia::defer(fn () => $this->securityOfficersForFilters($estate)),
+            'checkoutEnabled' => $checkoutEnabled,
+            'metrics' => $this->safe(fn () => $this->buildMetrics($estate->id, $today), [
+                'currentlyInside' => 0,
+                'visitorsToday' => 0,
+                'pendingCheckout' => 0,
+                'deniedEntries' => 0,
+                'avgDuration' => 0,
+                'expectedToday' => 0,
+                'totalChecked' => 0,
+            ]),
+            'analytics' => Inertia::defer(fn () => $this->safe(
+                fn () => $this->buildAnalytics($estate->id),
+                ['trend' => [], 'peakHours' => [], 'mostVisited' => []]
+            )),
+            'liveFeed' => Inertia::defer(fn () => $this->safe(
+                fn () => $this->buildLiveFeed($estate->id),
+                []
+            )),
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return mixed
+     */
+    private function paginatedLogs(int $estateId, array $filters)
+    {
+        return AccessLog::query()
+            ->where('estate_id', $estateId)
             ->with(['accessCode.user.profile', 'verifier:id,name', 'checkoutVerifier:id,name'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -65,9 +99,8 @@ class VisitorLogController extends Controller
             ->when($filters['verifier_id'] ?? null, function ($query, $verifierId) {
                 $query->where('verified_by', $verifierId);
             })
-            ->orderByDesc('verified_at');
-
-        $logs = $logsQuery->paginate(25)
+            ->orderByDesc('verified_at')
+            ->paginate(25)
             ->withQueryString()
             ->through(fn ($log) => [
                 'id' => $log->id,
@@ -98,35 +131,39 @@ class VisitorLogController extends Controller
                     'plate' => $log->vehicle_plate_number,
                 ] : null,
             ]);
+    }
 
-        // Aggregate Metrics for Operations Center
-        $currentlyInside = AccessLog::where('estate_id', $estate->id)
+    /**
+     * @return array<string, int|float>
+     */
+    private function buildMetrics(int $estateId, Carbon $today): array
+    {
+        $currentlyInside = AccessLog::where('estate_id', $estateId)
             ->whereNull('checked_out_at')
             ->count();
 
-        $visitorsToday = AccessLog::where('estate_id', $estate->id)
+        $visitorsToday = AccessLog::where('estate_id', $estateId)
             ->whereDate('verified_at', $today)
             ->count();
 
-        $pendingCheckout = AccessLog::where('estate_id', $estate->id)
+        $pendingCheckout = AccessLog::where('estate_id', $estateId)
             ->whereNull('checked_out_at')
             ->whereHas('accessCode', function ($q) {
                 $q->where('expires_at', '<', now());
             })
             ->count();
 
-        $deniedEntries = AccessCode::where('estate_id', $estate->id)
+        $deniedEntries = AccessCode::where('estate_id', $estateId)
             ->where('status', 'revoked')
             ->count();
 
-        // Calculate average duration
-        $durations = AccessLog::where('estate_id', $estate->id)
+        $durations = AccessLog::where('estate_id', $estateId)
             ->whereNotNull('checked_out_at')
             ->selectRaw('TIMESTAMPDIFF(MINUTE, verified_at, checked_out_at) as duration')
             ->pluck('duration');
         $avgDuration = $durations->count() > 0 ? round($durations->average()) : 0;
 
-        $expectedToday = AccessCode::where('estate_id', $estate->id)
+        $expectedToday = AccessCode::where('estate_id', $estateId)
             ->whereIn('status', ['active', 'scheduled'])
             ->where(function ($q) {
                 $q->whereNull('expires_at')
@@ -134,58 +171,82 @@ class VisitorLogController extends Controller
             })
             ->count();
 
-        $totalChecked = AccessLog::where('estate_id', $estate->id)->count();
+        $totalChecked = AccessLog::where('estate_id', $estateId)->count();
 
-        // Trend (7 Days)
+        return [
+            'currentlyInside' => $currentlyInside,
+            'visitorsToday' => $visitorsToday,
+            'pendingCheckout' => $pendingCheckout,
+            'deniedEntries' => $deniedEntries,
+            'avgDuration' => $avgDuration,
+            'expectedToday' => $expectedToday,
+            'totalChecked' => $totalChecked,
+        ];
+    }
+
+    /**
+     * @return array{trend: list<array{date: string, count: int}>, peakHours: list<array{label: string, value: int}>, mostVisited: list<array{name: string, count: int}>}
+     */
+    private function buildAnalytics(int $estateId): array
+    {
         $trend = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = Carbon::today()->subDays($i);
             $trend[] = [
                 'date' => $date->format('D, M j'),
-                'count' => AccessLog::where('estate_id', $estate->id)->whereDate('verified_at', $date)->count(),
+                'count' => AccessLog::where('estate_id', $estateId)->whereDate('verified_at', $date)->count(),
             ];
         }
 
-        // Peak Hours (hourly distribution)
-        $peakHours = AccessLog::where('estate_id', $estate->id)
+        $peakHours = AccessLog::where('estate_id', $estateId)
             ->selectRaw('HOUR(verified_at) as hour, COUNT(*) as count')
             ->groupBy('hour')
             ->orderBy('hour')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'label' => sprintf('%02d:00', $item->hour),
                 'value' => $item->count,
             ])
             ->toArray();
 
-        // Most Visited Residents
         $mostVisited = User::query()
-            ->whereIn('id', function ($query) use ($estate) {
+            ->whereIn('id', function ($query) use ($estateId) {
                 $query->select('user_id')
                     ->from('access_codes')
-                    ->whereIn('id', function ($subQuery) use ($estate) {
+                    ->whereIn('id', function ($subQuery) use ($estateId) {
                         $subQuery->select('access_code_id')
                             ->from('access_logs')
-                            ->where('estate_id', $estate->id);
+                            ->where('estate_id', $estateId);
                     });
             })
             ->role('resident')
-            ->withCount(['accessCodes as visits_count' => function ($query) use ($estate) {
-                $query->whereHas('accessLogs', function ($sq) use ($estate) {
-                    $sq->where('estate_id', $estate->id);
+            ->withCount(['accessCodes as visits_count' => function ($query) use ($estateId) {
+                $query->whereHas('accessLogs', function ($sq) use ($estateId) {
+                    $sq->where('estate_id', $estateId);
                 });
             }])
             ->orderByDesc('visits_count')
             ->limit(5)
             ->get(['id', 'name'])
-            ->map(fn($u) => [
+            ->map(fn ($u) => [
                 'name' => $u->name,
                 'count' => $u->visits_count,
             ])
             ->toArray();
 
-        // Live Feed
-        $liveFeed = AccessLog::where('estate_id', $estate->id)
+        return [
+            'trend' => $trend,
+            'peakHours' => $peakHours,
+            'mostVisited' => $mostVisited,
+        ];
+    }
+
+    /**
+     * @return list<array{id: int, type: string, message: string, time: string}>
+     */
+    private function buildLiveFeed(int $estateId): array
+    {
+        return AccessLog::where('estate_id', $estateId)
             ->with(['accessCode.user'])
             ->orderByDesc('updated_at')
             ->limit(10)
@@ -199,16 +260,18 @@ class VisitorLogController extends Controller
                 return [
                     'id' => $log->id,
                     'type' => $type,
-                    'message' => $type === 'exit' 
+                    'message' => $type === 'exit'
                         ? "{$visitor} checked out of the estate"
                         : "{$visitor} arrived to visit {$host}",
                     'time' => $time->diffForHumans(),
                 ];
             })
             ->toArray();
+    }
 
-        // Hosts list for filters
-        $hosts = User::query()
+    private function hostsForFilters(Estate $estate)
+    {
+        return User::query()
             ->whereIn('id', function ($query) use ($estate) {
                 $query->select('user_id')
                     ->from('access_codes')
@@ -225,9 +288,11 @@ class VisitorLogController extends Controller
             ->select('users.id', 'users.name')
             ->orderBy('users.name')
             ->get();
+    }
 
-        // Security Officers list for filters
-        $securityOfficers = User::query()
+    private function securityOfficersForFilters(Estate $estate)
+    {
+        return User::query()
             ->role('security')
             ->whereHas('estates', function ($query) use ($estate) {
                 $query->where('estates.id', $estate->id);
@@ -235,30 +300,23 @@ class VisitorLogController extends Controller
             ->select('users.id', 'users.name')
             ->orderBy('users.name')
             ->get();
+    }
 
-        $checkoutEnabled = (bool) ($estate->settings?->visitor_checkout_enabled ?? false);
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @param  T  $fallback
+     * @return T
+     */
+    private function safe(callable $callback, mixed $fallback): mixed
+    {
+        try {
+            return $callback();
+        } catch (Throwable $e) {
+            report($e);
 
-        return Inertia::render('Admin/Visitors/Index', [
-            'logs' => Inertia::scroll(fn () => $logs),
-            'filters' => $filters,
-            'hosts' => $hosts,
-            'securityOfficers' => $securityOfficers,
-            'checkoutEnabled' => $checkoutEnabled,
-            'metrics' => [
-                'currentlyInside' => $currentlyInside,
-                'visitorsToday' => $visitorsToday,
-                'pendingCheckout' => $pendingCheckout,
-                'deniedEntries' => $deniedEntries,
-                'avgDuration' => $avgDuration,
-                'expectedToday' => $expectedToday,
-                'totalChecked' => $totalChecked,
-            ],
-            'analytics' => [
-                'trend' => $trend,
-                'peakHours' => $peakHours,
-                'mostVisited' => $mostVisited,
-            ],
-            'liveFeed' => $liveFeed,
-        ]);
+            return $fallback;
+        }
     }
 }

@@ -21,23 +21,39 @@ class CollectionAnalyticsController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $estateId = $this->estateContext->getEstate()->id;
-        $days = (int) $request->input('days', 30);
+        try {
+            $estateId = $this->estateContext->getEstate()->id;
+            $days = (int) $request->input('days', 30);
 
-        $cacheKey = "estate_{$estateId}_collection_analytics_{$days}";
-        $ttl = 300; // Cache for 5 minutes to ensure high speed loading
+            $cacheKey = "estate_{$estateId}_collection_analytics_{$days}";
+            $ttl = 300; // Cache for 5 minutes to ensure high speed loading
 
-        $data = Cache::remember($cacheKey, $ttl, function () use ($estateId, $days) {
-            return [
-                'trends' => $this->getRevenueTrends($estateId, $days),
-                'activity' => $this->getRecentActivity($estateId),
-                'performance' => $this->getCollectionPerformance($estateId),
-                'distribution' => $this->getRevenueDistribution($estateId),
-                'outstanding' => $this->getOutstandingBalances($estateId),
-            ];
-        });
+            $data = Cache::remember($cacheKey, $ttl, function () use ($estateId, $days) {
+                return [
+                    'trends' => $this->getRevenueTrends($estateId, $days),
+                    'activity' => $this->getRecentActivity($estateId),
+                    'performance' => $this->getCollectionPerformance($estateId),
+                    'distribution' => $this->getRevenueDistribution($estateId),
+                    'outstanding' => $this->getOutstandingBalances($estateId),
+                ];
+            });
 
-        return response()->json($data);
+            return response()->json($data);
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Unable to load collection analytics right now.',
+                'code' => 'ANALYTICS_UNAVAILABLE',
+                'retryable' => true,
+                'trends' => [],
+                'activity' => [],
+                'performance' => [],
+                'distribution' => [],
+                'outstanding' => [],
+            ], 503);
+        }
     }
 
     private function getRevenueTrends(int $estateId, int $days): array

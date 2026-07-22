@@ -1,9 +1,13 @@
-import { Head, Link, router, InfiniteScroll } from '@inertiajs/react';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, X, Eye, Download, CheckCircle2, XCircle, SlidersHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
+import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
+import { FeedItemSkeleton, TableRowSkeleton } from '@/Components/Skeletons';
+import { OfflineState } from '@/Components/States';
 import { useDebounce } from '@/Hooks/useDebounce';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Log = {
@@ -61,8 +65,8 @@ type Props = {
         gate?: string;
         verifier_id?: string | number;
     };
-    hosts: Host[];
-    securityOfficers: any[];
+    hosts?: Host[] | null;
+    securityOfficers?: any[] | null;
     checkoutEnabled: boolean;
     metrics: {
         currentlyInside: number;
@@ -73,12 +77,12 @@ type Props = {
         expectedToday: number;
         totalChecked: number;
     };
-    analytics: {
+    analytics?: {
         trend: Array<{ date: string; count: number }>;
         peakHours: Array<{ label: string; value: number }>;
         mostVisited: Array<{ name: string; count: number }>;
-    };
-    liveFeed: Array<{ id: number; type: string; message: string; time: string }>;
+    } | null;
+    liveFeed?: Array<{ id: number; type: string; message: string; time: string }> | null;
 };
 
 const formatVisitorType = (type: string | null) => {
@@ -93,12 +97,19 @@ export default function VisitorIndex({
     logs,
     filters,
     hosts,
-    securityOfficers = [],
+    securityOfficers,
     checkoutEnabled = false,
     metrics,
     analytics,
-    liveFeed = [],
+    liveFeed,
 }: Props) {
+    const hostOptions = hosts ?? [];
+    const officerOptions = securityOfficers ?? [];
+    const feed = liveFeed ?? [];
+    const analyticsData = analytics ?? { trend: [], peakHours: [], mostVisited: [] };
+    const { isOnline, quality } = useNetworkQuality();
+    const offline = !isOnline || quality === 'offline';
+
     const [search, setSearch] = useState(filters.search || '');
     const [date, setDate] = useState(filters.date || '');
     const [plate, setPlate] = useState(filters.vehicle_plate || '');
@@ -316,7 +327,7 @@ export default function VisitorIndex({
                                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-hidden"
                                             >
                                                 <option value="">All Hosts</option>
-                                                {hosts.map((h) => (
+                                                {hostOptions.map((h) => (
                                                     <option key={h.id} value={h.id}>
                                                         {h.name}
                                                     </option>
@@ -334,7 +345,7 @@ export default function VisitorIndex({
                                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-indigo-500 focus:outline-hidden"
                                             >
                                                 <option value="">All Officers</option>
-                                                {securityOfficers.map((o) => (
+                                                {officerOptions.map((o) => (
                                                     <option key={o.id} value={o.id}>
                                                         {o.name}
                                                     </option>
@@ -359,6 +370,7 @@ export default function VisitorIndex({
                             </div>
 
                             {/* Table of logs */}
+                            <SectionErrorBoundary name="visitor-logs">
                             <div className="overflow-hidden rounded-xl border border-slate-100 bg-white shadow-xs">
                                 <div className="overflow-x-auto">
                                     <table className="w-full border-collapse text-left">
@@ -435,7 +447,13 @@ export default function VisitorIndex({
                                         </tbody>
                                     </table>
                                 </div>
+                                {logs.next_page_url && (
+                                    <div className="border-t border-slate-50 p-3">
+                                        <TableRowSkeleton rows={3} columns={4} />
+                                    </div>
+                                )}
                             </div>
+                            </SectionErrorBoundary>
                         </div>
 
                         {/* Right Grid Sidebar: Live activity feed panel & Operational insights */}
@@ -443,27 +461,29 @@ export default function VisitorIndex({
                             {/* Live activity feed */}
                             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
                                 <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-900 uppercase">Gate Stream</h3>
-                                {liveFeed.length > 0 ? (
-                                    <div className="space-y-4">
-                                        {liveFeed.map((activity) => (
-                                            <div key={activity.id} className="relative flex gap-3 text-xs">
-                                                <div className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-slate-100/50 bg-slate-50">
-                                                    {activity.type === 'exit' ? (
-                                                        <XCircle className="h-3.5 w-3.5 text-rose-500" />
-                                                    ) : (
-                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                                                    )}
+                                <Deferred data="liveFeed" fallback={<FeedItemSkeleton count={4} />}>
+                                    {feed.length > 0 ? (
+                                        <div className="space-y-4">
+                                            {feed.map((activity) => (
+                                                <div key={activity.id} className="relative flex gap-3 text-xs">
+                                                    <div className="relative flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-slate-100/50 bg-slate-50">
+                                                        {activity.type === 'exit' ? (
+                                                            <XCircle className="h-3.5 w-3.5 text-rose-500" />
+                                                        ) : (
+                                                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0 flex-1">
+                                                        <p className="leading-normal font-semibold text-slate-700">{activity.message}</p>
+                                                        <p className="mt-0.5 text-[9px] font-medium text-slate-400">{activity.time}</p>
+                                                    </div>
                                                 </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="leading-normal font-semibold text-slate-700">{activity.message}</p>
-                                                    <p className="mt-0.5 text-[9px] font-medium text-slate-400">{activity.time}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                ) : (
-                                    <p className="text-xs font-semibold text-slate-400 italic">No movements recorded today</p>
-                                )}
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs font-semibold text-slate-400 italic">No movements recorded today</p>
+                                    )}
+                                </Deferred>
                             </div>
 
                             {/* Operational Insights */}
@@ -546,52 +566,71 @@ export default function VisitorIndex({
 
                 {/* Tab content 3: ANALYTICS VIEW */}
                 {activeTab === 'analytics' && (
-                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {/* Visitor trend chart (Visual bar layout) */}
-                        <div className="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
-                            <div>
-                                <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">Visitor Volume (Past 7 Days)</h3>
-                                <p className="mt-0.5 text-[10px] text-slate-400">Total checked-in guest entries daily.</p>
-                            </div>
-                            <div className="flex h-44 items-end gap-3 pt-6">
-                                {analytics.trend.map((day, idx) => {
-                                    const maxVal = Math.max(...analytics.trend.map((d) => d.count), 1);
-                                    const heightPercent = `${(day.count / maxVal) * 100}%`;
-                                    return (
-                                        <div key={idx} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-                                            <span className="text-[9px] font-bold text-slate-500">{day.count}</span>
-                                            <div
-                                                className="hover:bg-indigo-650 w-full cursor-pointer rounded-t bg-indigo-600/85 transition-all"
-                                                style={{ height: heightPercent }}
-                                            />
-                                            <span className="text-[9px] font-bold text-slate-400">{day.date}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                    offline ? (
+                        <div className="rounded-xl border border-slate-100 bg-white">
+                            <OfflineState
+                                title="Visitor analytics require internet"
+                                message="Reconnect to load gate trends and host volume charts."
+                            />
                         </div>
-
-                        {/* Peak hours & Most visited */}
-                        <div className="space-y-6 rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
-                            <div>
-                                <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">Top Visited Hosts</h3>
-                                <p className="mt-0.5 text-[10px] text-slate-400">Residents receiving the highest guest volume.</p>
-                            </div>
-                            <div className="space-y-3.5">
-                                {analytics.mostVisited.map((host, idx) => (
-                                    <div key={idx} className="flex items-center justify-between text-xs font-semibold">
-                                        <span className="text-slate-700">{host.name}</span>
-                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">
-                                            {host.count} visits
-                                        </span>
+                    ) : (
+                        <Deferred
+                            data="analytics"
+                            fallback={
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                    <TableRowSkeleton rows={4} columns={3} />
+                                    <FeedItemSkeleton count={4} />
+                                </div>
+                            }
+                        >
+                            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                <div className="space-y-4 rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
+                                    <div>
+                                        <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">
+                                            Visitor Volume (Past 7 Days)
+                                        </h3>
+                                        <p className="mt-0.5 text-[10px] text-slate-400">Total checked-in guest entries daily.</p>
                                     </div>
-                                ))}
-                                {analytics.mostVisited.length === 0 && (
-                                    <p className="text-xs font-semibold text-slate-400 italic">No host analytics available</p>
-                                )}
+                                    <div className="flex h-44 items-end gap-3 pt-6">
+                                        {analyticsData.trend.map((day, idx) => {
+                                            const maxVal = Math.max(...analyticsData.trend.map((d) => d.count), 1);
+                                            const heightPercent = `${(day.count / maxVal) * 100}%`;
+                                            return (
+                                                <div key={idx} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
+                                                    <span className="text-[9px] font-bold text-slate-500">{day.count}</span>
+                                                    <div
+                                                        className="w-full cursor-pointer rounded-t bg-indigo-600/85 transition-all hover:bg-indigo-600"
+                                                        style={{ height: heightPercent }}
+                                                    />
+                                                    <span className="text-[9px] font-bold text-slate-400">{day.date}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-6 rounded-xl border border-slate-100 bg-white p-5 shadow-xs">
+                                    <div>
+                                        <h3 className="text-xs font-bold tracking-wider text-slate-900 uppercase">Top Visited Hosts</h3>
+                                        <p className="mt-0.5 text-[10px] text-slate-400">Residents receiving the highest guest volume.</p>
+                                    </div>
+                                    <div className="space-y-3.5">
+                                        {analyticsData.mostVisited.map((host, idx) => (
+                                            <div key={idx} className="flex items-center justify-between text-xs font-semibold">
+                                                <span className="text-slate-700">{host.name}</span>
+                                                <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">
+                                                    {host.count} visits
+                                                </span>
+                                            </div>
+                                        ))}
+                                        {analyticsData.mostVisited.length === 0 && (
+                                            <p className="text-xs font-semibold text-slate-400 italic">No host analytics available</p>
+                                        )}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        </Deferred>
+                    )
                 )}
             </div>
 
