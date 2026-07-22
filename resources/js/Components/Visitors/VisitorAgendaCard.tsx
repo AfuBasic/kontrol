@@ -1,70 +1,58 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Clock, Tag, Users, Calendar, AlertCircle, StickyNote } from 'lucide-react';
+import { Check, Clock, StickyNote } from 'lucide-react';
 import type { AccessCode } from '@/types/access-code';
 
-// ── Status configuration ──────────────────────────────────────────────────────
-
-type StatusConfig = {
+export type StatusConfig = {
     label: string;
-    className: string;
+    nodeClass: string;
+    textClass: string;
+    icon?: 'check' | 'dot' | 'ring';
 };
 
 const DEFAULT_STATUS_MAP: Record<string, StatusConfig> = {
-    active: { label: 'Expected', className: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-    scheduled: { label: 'Scheduled', className: 'bg-amber-50 text-amber-700 border-amber-100' },
-    used: { label: 'Checked In', className: 'bg-blue-50 text-blue-700 border-blue-100' },
-    expired: { label: 'Expired', className: 'bg-slate-100 text-slate-500 border-slate-200' },
-    revoked: { label: 'Cancelled', className: 'bg-rose-50 text-rose-700 border-rose-100' },
+    active: {
+        label: 'Expected',
+        nodeClass: 'bg-emerald-500 ring-4 ring-emerald-50 text-white',
+        textClass: 'text-emerald-700 font-semibold',
+        icon: 'dot',
+    },
+    scheduled: {
+        label: 'Scheduled',
+        nodeClass: 'border-2 border-indigo-500 bg-white text-indigo-600',
+        textClass: 'text-indigo-600 font-medium',
+        icon: 'ring',
+    },
+    used: {
+        label: 'Checked In',
+        nodeClass: 'bg-slate-700 text-white',
+        textClass: 'text-slate-600 font-medium',
+        icon: 'check',
+    },
+    expired: {
+        label: 'Expired',
+        nodeClass: 'border-2 border-slate-300 bg-slate-100 text-slate-400',
+        textClass: 'text-slate-400 font-normal',
+        icon: 'ring',
+    },
+    revoked: {
+        label: 'Cancelled',
+        nodeClass: 'border-2 border-rose-300 bg-rose-50 text-rose-500',
+        textClass: 'text-rose-500 font-normal',
+        icon: 'ring',
+    },
 };
 
-const PASS_TYPE_ICON: Record<string, React.ElementType> = {
-    single_use: Tag,
-    long_lived: Calendar,
-    event: Users,
-};
-
-// ── Component ─────────────────────────────────────────────────────────────────
-
-/**
- * VisitorAgendaCard — compact, scannable agenda row for the Visitor Timeline.
- *
- * Decision 5: This component is completely role-agnostic. It accepts
- * render-prop style overrides for status labels, secondary metadata, and
- * available actions so the exact same card can power:
- *   • Resident Visitor Passes
- *   • Security Expected Visitors
- *   • Estate Visitor Schedule / Dashboard widgets
- *
- * Decision 4: Only consumes arrival_time and completion_time — never raw
- * database timestamps.
- */
 export type VisitorAgendaCardProps = {
     code: AccessCode;
-
-    /** Override status label/colour mapping for role-specific wording. */
     statusMap?: Record<string, StatusConfig>;
-
-    /**
-     * Optional secondary metadata line rendered below the visitor name.
-     * Defaults to the pass type label.
-     */
     renderMeta?: (code: AccessCode) => React.ReactNode;
-
-    /** Actions rendered at the right edge of the card. */
     renderActions?: (code: AccessCode) => React.ReactNode;
-
-    /** Called when the card body is tapped (in addition to the link). */
     onPress?: (code: AccessCode) => void;
-
-    /** URL the card navigates to. Defaults to the resident show route. */
     href?: string;
-
-    /** Show arrival time label. Default: true. */
     showTime?: boolean;
-
-    /** Show status badge. Default: true. */
     showStatus?: boolean;
+    isLastInGroup?: boolean;
 };
 
 export default function VisitorAgendaCard({
@@ -75,109 +63,117 @@ export default function VisitorAgendaCard({
     href,
     showTime = true,
     showStatus = true,
+    isLastInGroup = false,
 }: VisitorAgendaCardProps) {
     const statusConfig = statusMap[code.status] ?? DEFAULT_STATUS_MAP[code.status] ?? {
         label: code.status,
-        className: 'bg-slate-100 text-slate-600 border-slate-200',
+        nodeClass: 'border-2 border-slate-300 bg-white text-slate-400',
+        textClass: 'text-slate-500 font-normal',
+        icon: 'ring',
     };
 
-    const TypeIcon = PASS_TYPE_ICON[code.type] ?? Tag;
-    const visitorLabel = code.visitor_name ?? 'Guest';
+    const visitorName = code.visitor_name || 'Guest';
     const isHistoryItem = !!code.completion_at;
 
-    // Decide which time to surface depending on context
     const timeLabel = isHistoryItem
         ? (code.completion_time ?? null)
         : (code.arrival_time ?? null);
 
-    const cardContent = (
-        <div className="flex items-center gap-3 w-full min-w-0">
-            {/* Avatar / icon */}
-            <div
-                className={`flex-shrink-0 flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold select-none ${
-                    isHistoryItem
-                        ? 'bg-slate-100 text-slate-400'
-                        : 'bg-indigo-50 text-indigo-600'
-                }`}
-            >
-                {visitorLabel.charAt(0).toUpperCase()}
+    const typeLabel =
+        code.type === 'single_use'
+            ? 'One-Time'
+            : code.type === 'long_lived'
+              ? 'Long-Term'
+              : 'Event';
+
+    const cardInner = (
+        <div className="group relative flex items-start gap-4 py-2.5 px-2 transition-colors rounded-xl hover:bg-slate-50/80">
+            {/* Timeline vertical connector & status node */}
+            <div className="relative flex flex-col items-center shrink-0 pt-1">
+                {/* Status node */}
+                <div
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] transition-transform group-hover:scale-110 ${statusConfig.nodeClass}`}
+                >
+                    {statusConfig.icon === 'check' && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                </div>
+
+                {/* Connecting line */}
+                {!isLastInGroup && (
+                    <div className="absolute top-5 bottom-0 w-px bg-slate-200/70" />
+                )}
             </div>
 
-            {/* Body */}
-            <div className="min-w-0 flex-1">
-                <div className="flex items-baseline gap-1.5 flex-wrap">
+            {/* Time column */}
+            {showTime && (
+                <div className="w-16 shrink-0 pt-0.5 text-right">
                     <span
-                        className={`text-[13px] font-semibold leading-snug truncate ${
-                            isHistoryItem ? 'text-slate-500' : 'text-slate-900'
+                        className={`text-xs font-semibold tabular-nums tracking-tight ${
+                            isHistoryItem ? 'text-slate-400' : 'text-slate-700'
                         }`}
                     >
-                        {visitorLabel}
+                        {timeLabel || 'Anytime'}
                     </span>
-                    {code.type === 'event' && code.guest_limit && (
-                        <span className="text-[10px] text-slate-400 font-medium">
-                            {code.guest_limit} guests
+                </div>
+            )}
+
+            {/* Visitor details */}
+            <div className="min-w-0 flex-1 pt-0.5">
+                <div className="flex items-baseline gap-2 flex-wrap">
+                    <span
+                        className={`text-sm font-semibold leading-snug truncate ${
+                            isHistoryItem ? 'text-slate-500 line-through/40' : 'text-slate-900'
+                        }`}
+                    >
+                        {visitorName}
+                    </span>
+
+                    {code.purpose && (
+                        <span className="text-xs text-slate-400 font-normal truncate">
+                            · {code.purpose}
                         </span>
                     )}
+
                     {code.notes && (
-                        <StickyNote className="h-3 w-3 text-slate-300 flex-shrink-0" />
+                        <StickyNote className="h-3 w-3 text-slate-300 shrink-0" />
                     )}
                 </div>
 
-                {/* Secondary meta line */}
-                <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
-                    {showTime && timeLabel ? (
-                        <>
-                            <Clock className="h-3 w-3 flex-shrink-0" />
-                            <span>{timeLabel}</span>
-                        </>
-                    ) : showTime ? (
-                        <span className="italic">Anytime</span>
-                    ) : null}
-
+                <div className="mt-0.5 flex items-center gap-2 text-[11px] text-slate-400 font-normal">
                     {renderMeta ? (
                         renderMeta(code)
                     ) : (
+                        <span>{typeLabel}</span>
+                    )}
+
+                    {showStatus && (
                         <>
-                            {showTime && <span className="text-slate-200">·</span>}
-                            <TypeIcon className="h-3 w-3 flex-shrink-0" />
-                            <span>
-                                {code.type === 'single_use'
-                                    ? 'One-Time'
-                                    : code.type === 'long_lived'
-                                      ? 'Long-Term'
-                                      : 'Event'}
+                            <span>·</span>
+                            <span className={`text-[11px] ${statusConfig.textClass}`}>
+                                {statusConfig.label}
                             </span>
                         </>
                     )}
                 </div>
             </div>
 
-            {/* Right side: status + actions */}
-            <div className="flex flex-shrink-0 items-center gap-2">
-                {showStatus && (
-                    <span
-                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusConfig.className}`}
-                    >
-                        {statusConfig.label}
-                    </span>
-                )}
-                {renderActions?.(code)}
-            </div>
+            {/* Action buttons on far right */}
+            {renderActions && (
+                <div className="shrink-0 pt-0.5 opacity-80 transition-opacity group-hover:opacity-100">
+                    {renderActions(code)}
+                </div>
+            )}
         </div>
     );
-
-    const wrapperClass =
-        'flex w-full items-center gap-0 rounded-xl px-3.5 py-3 transition-colors active:bg-slate-50 hover:bg-slate-50/80 cursor-pointer';
 
     if (href) {
         return (
             <motion.div
-                initial={{ opacity: 0, y: 4 }}
+                initial={{ opacity: 0, y: 3 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: 'spring', stiffness: 160, damping: 20 }}
+                transition={{ duration: 0.15 }}
             >
-                <Link href={href} className={wrapperClass}>
-                    {cardContent}
+                <Link href={href} className="block cursor-pointer">
+                    {cardInner}
                 </Link>
             </motion.div>
         );
@@ -185,12 +181,11 @@ export default function VisitorAgendaCard({
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 4 }}
+            initial={{ opacity: 0, y: 3 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: 'spring', stiffness: 160, damping: 20 }}
-            className={wrapperClass}
+            transition={{ duration: 0.15 }}
         >
-            {cardContent}
+            {cardInner}
         </motion.div>
     );
 }
