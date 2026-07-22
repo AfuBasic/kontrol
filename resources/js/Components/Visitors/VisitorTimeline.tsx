@@ -1,72 +1,24 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Users } from 'lucide-react';
+import { Calendar, CheckCircle, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import type { AccessCode, VisitorTimelineGroup } from '@/types/access-code';
 import VisitorAgendaCard, { type VisitorAgendaCardProps } from './VisitorAgendaCard';
 import { useVisitorTimeline } from './useVisitorTimeline';
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-
 export type TimelineVariant = 'upcoming' | 'history';
 
-/**
- * VisitorTimeline props.
- *
- * Decision 5: This component is completely role-agnostic. It accepts render
- * props / configuration objects for all role-specific wording and behaviour.
- * The exact same component can power:
- *
- *   • Resident Visitor Passes         (variant="upcoming" | "history")
- *   • Security Expected Visitors      (variant="upcoming", custom statusMap)
- *   • Estate Visitor Schedule         (variant="upcoming", custom renderActions)
- *   • Dashboard widgets               (limit groups, custom emptyState)
- *   • Calendar View (future)          (groups already pre-built externally)
- */
 export type VisitorTimelineProps = {
-    /** Flat list of passes from the server. The component groups them internally. */
     codes: AccessCode[];
-
-    /**
-     * Controls which date field is used for grouping:
-     *   'upcoming' → arrival_date  (Today pinned first)
-     *   'history'  → completion_date (most recent first)
-     */
     variant: TimelineVariant;
-
-    // ── Role-agnostic configuration ──────────────────────────────────────────
-
-    /** Override the status label/colour map. Defaults to resident wording. */
     statusMap?: VisitorAgendaCardProps['statusMap'];
-
-    /** Secondary metadata rendered below each visitor's name. */
     renderCardMeta?: VisitorAgendaCardProps['renderMeta'];
-
-    /** Actions rendered on the right of each card. */
     renderCardActions?: VisitorAgendaCardProps['renderActions'];
-
-    /**
-     * Generate the href for each card. Receives the AccessCode and must return
-     * a URL string. Defaults to null (non-navigable card).
-     */
     getCardHref?: (code: AccessCode) => string;
-
-    /** Rendered when no passes exist at all. */
     emptyState?: React.ReactNode;
-
-    /** When provided, only this many groups are rendered (for widget use). */
     maxGroups?: number;
-
-    /**
-     * Pre-grouped data. When supplied, skips internal grouping.
-     * Useful for Calendar View or when the host already groups externally.
-     */
     preGrouped?: VisitorTimelineGroup[];
-
-    /** Show the "Today" group heading even when there are no passes today. Default: false. */
     alwaysShowToday?: boolean;
 };
-
-// ── Sub-components ─────────────────────────────────────────────────────────────
 
 function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
     const isToday = group.label === 'Today';
@@ -74,29 +26,31 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
     const isPast = isYesterday || (!isToday && new Date(group.date + 'T00:00:00') < new Date());
 
     return (
-        <div className="flex items-center gap-3 px-1 mb-1">
-            <div className="flex flex-col leading-none">
+        <div className="sticky top-0 z-10 flex items-center gap-3 bg-white/90 py-2 backdrop-blur-xs">
+            <div className="flex items-baseline gap-2">
                 <span
-                    className={`text-[11px] font-bold tracking-wider uppercase ${
+                    className={`text-xs font-bold uppercase tracking-wider ${
                         isToday
                             ? 'text-indigo-600'
                             : isPast
                               ? 'text-slate-400'
-                              : 'text-slate-500'
+                              : 'text-slate-700'
                     }`}
                 >
                     {group.label}
                 </span>
-                {/* Show absolute date for non-relative headings */}
+
                 {!['Today', 'Tomorrow', 'Yesterday'].includes(group.label) && (
-                    <span className="text-[10px] text-slate-300 font-medium mt-0.5">
+                    <span className="text-[11px] font-medium text-slate-400">
                         {group.weekday}, {group.month} {new Date(group.date + 'T00:00:00').getDate()}
                     </span>
                 )}
             </div>
+
             <div className="h-px flex-1 bg-slate-100" />
-            <span className="text-[10px] text-slate-300 font-semibold tabular-nums">
-                {group.items.length}
+
+            <span className="text-[11px] font-semibold text-slate-300 tabular-nums">
+                {group.items.length} {group.items.length === 1 ? 'visit' : 'visits'}
             </span>
         </div>
     );
@@ -104,8 +58,8 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
 
 function DefaultEmptyState({ variant }: { variant: TimelineVariant }) {
     return (
-        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
-            <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-6 py-14 text-center">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-400 shadow-xs border border-slate-100">
                 {variant === 'upcoming' ? (
                     <Calendar className="h-5 w-5" />
                 ) : (
@@ -114,16 +68,20 @@ function DefaultEmptyState({ variant }: { variant: TimelineVariant }) {
             </div>
             {variant === 'upcoming' ? (
                 <>
-                    <h3 className="text-sm font-semibold text-slate-900">No upcoming visitors</h3>
-                    <p className="mt-1 max-w-xs text-xs leading-normal text-slate-400">
-                        Create a visitor pass to invite guests, workers, or delivery riders.
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        No visits scheduled
+                    </h3>
+                    <p className="mt-1 max-w-xs text-xs text-slate-400 font-medium">
+                        Your upcoming agenda is clear. Create a pass to invite visitors.
                     </p>
                 </>
             ) : (
                 <>
-                    <h3 className="text-sm font-semibold text-slate-900">No visit history yet</h3>
-                    <p className="mt-1 max-w-xs text-xs leading-normal text-slate-400">
-                        Completed and expired passes will appear here.
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        No past visits
+                    </h3>
+                    <p className="mt-1 max-w-xs text-xs text-slate-400 font-medium">
+                        Completed and expired visitor records will appear in your history log.
                     </p>
                 </>
             )}
@@ -131,14 +89,6 @@ function DefaultEmptyState({ variant }: { variant: TimelineVariant }) {
     );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
-
-/**
- * VisitorTimeline — the shared, role-agnostic Visitor Timeline component.
- *
- * Renders an Apple Calendar-style agenda view grouped by natural date headings.
- * Powers all Visitor Timeline surfaces in the application without duplication.
- */
 export default function VisitorTimeline({
     codes,
     variant,
@@ -153,7 +103,6 @@ export default function VisitorTimeline({
 }: VisitorTimelineProps) {
     const dateField = variant === 'upcoming' ? 'arrival_date' : 'completion_date';
 
-    // Use pre-grouped data when provided (Calendar View), otherwise group internally.
     const internalGroups = useVisitorTimeline(preGrouped ? [] : codes, dateField);
     const rawGroups = preGrouped ?? internalGroups;
 
@@ -190,24 +139,24 @@ export default function VisitorTimeline({
         <AnimatePresence mode="wait">
             <motion.div
                 key={variant}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.18 }}
-                className="space-y-5"
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-6"
             >
                 {groups.map((group) => (
-                    <div key={group.date} className="space-y-0.5">
+                    <div key={group.date} className="space-y-1">
                         <DateGroupHeading group={group} />
 
                         {group.items.length === 0 ? (
-                            // Shown only when alwaysShowToday is true and Today is empty
-                            <div className="px-3.5 py-3 text-xs text-slate-400 italic">
-                                No visitors today
+                            <div className="flex items-center gap-2 py-3 px-3 text-xs text-slate-400 font-medium italic">
+                                <CheckCircle className="h-3.5 w-3.5 text-emerald-500 not-italic" />
+                                No visits scheduled today.
                             </div>
                         ) : (
-                            <div className="rounded-xl border border-slate-100 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] overflow-hidden divide-y divide-slate-50">
-                                {group.items.map((code) => (
+                            <div className="pl-1">
+                                {group.items.map((code, idx) => (
                                     <VisitorAgendaCard
                                         key={code.id}
                                         code={code}
@@ -215,6 +164,7 @@ export default function VisitorTimeline({
                                         renderMeta={renderCardMeta}
                                         renderActions={renderCardActions}
                                         href={getCardHref?.(code)}
+                                        isLastInGroup={idx === group.items.length - 1}
                                     />
                                 ))}
                             </div>
