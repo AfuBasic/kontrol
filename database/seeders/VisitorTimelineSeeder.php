@@ -16,13 +16,14 @@ class VisitorTimelineSeeder extends Seeder
 {
     public function run(): void
     {
-        // Find or create a default resident user
-        $user = User::first() ?? User::factory()->create([
-            'name' => 'Demo Resident',
-            'email' => 'resident@example.com',
-        ]);
+        // Find a resident user (one with an active subscription), not the admin
+        $user = User::whereHas('residentSubscription')->first()
+            ?? User::factory()->create([
+                'name' => 'Demo Resident',
+                'email' => 'resident@example.com',
+            ]);
 
-        $estate = Estate::first() ?? Estate::factory()->create([
+        $estate = $user->estates()->first() ?? Estate::first() ?? Estate::factory()->create([
             'name' => 'Royal Gardens Estate',
         ]);
 
