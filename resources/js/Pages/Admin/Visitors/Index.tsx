@@ -380,13 +380,11 @@ export default function VisitorIndex({
                                                 <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Host</th>
                                                 <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Status</th>
                                                 <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Gate</th>
-                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">
-                                                    Entry Time
-                                                </th>
-                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Duration</th>
-                                                <th className="text-slate-450 px-4 py-3 text-right text-[10px] font-bold tracking-wider uppercase">
-                                                    Actions
-                                                </th>
+                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Entry Time</th>
+                                                {checkoutEnabled && (
+                                                    <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Duration</th>
+                                                )}
+                                                <th className="text-slate-450 px-4 py-3 text-right text-[10px] font-bold tracking-wider uppercase">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
@@ -405,13 +403,19 @@ export default function VisitorIndex({
                                                         </div>
                                                     </td>
                                                     <td className="px-4 py-3.5">
-                                                        {log.checked_out_at ? (
-                                                            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                                                Checked Out
-                                                            </span>
+                                                        {checkoutEnabled ? (
+                                                            log.checked_out_at ? (
+                                                                <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                                                    Checked Out
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                                                    Inside
+                                                                </span>
+                                                            )
                                                         ) : (
                                                             <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                                                                Inside
+                                                                Verified
                                                             </span>
                                                         )}
                                                     </td>
@@ -419,13 +423,15 @@ export default function VisitorIndex({
                                                         <span className="text-[11px] text-slate-500">{log.gate}</span>
                                                     </td>
                                                     <td className="px-4 py-3.5 text-slate-500">{log.verified_at}</td>
-                                                    <td className="px-4 py-3.5">
-                                                        {log.checked_out_at ? (
-                                                            <span className="text-slate-500">{log.duration_minutes} min</span>
-                                                        ) : (
-                                                            <span className="font-bold text-emerald-600">Running</span>
-                                                        )}
-                                                    </td>
+                                                    {checkoutEnabled && (
+                                                        <td className="px-4 py-3.5">
+                                                            {log.checked_out_at ? (
+                                                                <span className="text-slate-500">{log.duration_minutes} min</span>
+                                                            ) : (
+                                                                <span className="font-bold text-emerald-600">Running</span>
+                                                            )}
+                                                        </td>
+                                                    )}
                                                     <td className="px-4 py-3.5 text-right">
                                                         <button
                                                             onClick={() => setSelectedLog(log)}
@@ -439,7 +445,7 @@ export default function VisitorIndex({
                                             ))}
                                             {logs.data.length === 0 && (
                                                 <tr>
-                                                    <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                                                    <td colSpan={checkoutEnabled ? 7 : 6} className="px-4 py-8 text-center text-slate-400">
                                                         No active logs match the current filters.
                                                     </td>
                                                 </tr>
