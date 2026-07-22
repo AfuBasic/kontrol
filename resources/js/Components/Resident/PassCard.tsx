@@ -100,24 +100,23 @@ export default function PassCard({ pass, qrUrl }: Props) {
                     </div>
                 </div>
 
-                {/* Single Status Badge (no duplicate top-right vs bottom banner) */}
+                {/* Single Status Badge */}
                 <StatusBadge codeObj={pass} />
             </div>
 
-            {/* Host & Single Validity Range Section */}
-            <div className={`grid grid-cols-2 gap-3 border-b px-5 py-3 text-xs ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-100 bg-white'}`}>
-                <div className="text-left">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">HOST / ESTATE</p>
-                    <p className={`font-bold truncate ${isEvent ? 'text-white' : 'text-slate-800'}`}>
-                        {pass.host_name || 'Resident'}
-                    </p>
-                    <p className="text-[10px] text-slate-400 font-medium truncate">{pass.estate_name || 'My Estate'}</p>
+            {/* Host & Validity Info Section - Stacked Layout to Prevent Text Truncation */}
+            <div className={`space-y-2.5 border-b px-5 py-3 text-xs ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-100 bg-white'}`}>
+                <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">HOST / ESTATE</span>
+                    <span className={`font-bold text-right ${isEvent ? 'text-white' : 'text-slate-800'}`}>
+                        {pass.host_name || 'Resident'} <span className="text-slate-400 font-medium">• {pass.estate_name || 'My Estate'}</span>
+                    </span>
                 </div>
-                <div className="text-right">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">VALIDITY WINDOW</p>
-                    <p className={`font-bold truncate ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
+                <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
+                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">VALIDITY WINDOW</span>
+                    <span className={`font-bold text-right ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
                         {formatValidityRange()}
-                    </p>
+                    </span>
                 </div>
             </div>
 
