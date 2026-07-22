@@ -1,10 +1,12 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ChevronRight, ScanLine, ShieldCheck, Siren } from 'lucide-react';
+import { ChevronRight, Loader2, RefreshCw, ScanLine, ShieldCheck, Siren, Wifi, WifiOff, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import EmergencyServicesList from '@/Components/EmergencyServicesList';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
+import { useSyncStatus } from '@/Hooks/useSyncStatus';
 
 type ActivityItem = {
     id: number;
@@ -33,6 +35,21 @@ interface PageProps {
 
 const EMPTY_STATS: Stats = { expected_today: 0, validated_today: 0, active_codes: 0 };
 
+function formatLastSync(iso: string | null): string {
+    if (!iso) {
+        return 'Never';
+    }
+
+    try {
+        return new Intl.DateTimeFormat(undefined, {
+            hour: 'numeric',
+            minute: '2-digit',
+        }).format(new Date(iso));
+    } catch {
+        return '—';
+    }
+}
+
 export default function SecurityCommandCenter() {
     const props = usePage<PageProps>().props;
     const estateName = props.estateName ?? '';
@@ -41,11 +58,90 @@ export default function SecurityCommandCenter() {
     const stats = props.stats ?? EMPTY_STATS;
     const recentActivity = props.recentActivity ?? [];
     const [clock, setClock] = useState(formatClock());
+    const { quality, isOnline } = useNetworkQuality();
+    const { pendingCount, lastSyncAt, isSyncing, syncNow } = useSyncStatus();
+    const [syncBusy, setSyncBusy] = useState(false);
 
     useEffect(() => {
         const t = setInterval(() => setClock(formatClock()), 30000);
         return () => clearInterval(t);
     }, []);
+
+    const handleSyncNow = async () => {
+        setSyncBusy(true);
+        try {
+            await syncNow();
+        } finally {
+            setSyncBusy(false);
+        }
+    };
+
+    const status = (() => {
+        if (!isOnline || quality === 'offline') {
+            return {
+                label: 'Offline Mode — Scanning from cache',
+                detail: pendingCount > 0 ? `${pendingCount} log${pendingCount === 1 ? '' : 's'} pending sync` : 'Manual entry always available',
+                tone: 'slate' as const,
+                Icon: WifiOff,
+                pulse: false,
+            };
+        }
+
+        if (quality === 'poor') {
+            return {
+                label: 'Limited Connectivity — Scanning still available',
+                detail: pendingCount > 0 ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}` : `Last sync ${formatLastSync(lastSyncAt)}`,
+                tone: 'amber' as const,
+                Icon: Zap,
+                pulse: false,
+            };
+        }
+
+        if (isSyncing || syncBusy) {
+            return {
+                label: 'Syncing…',
+                detail: pendingCount > 0 ? `Uploading ${pendingCount} offline log${pendingCount === 1 ? '' : 's'}` : 'Refreshing offline cache',
+                tone: 'blue' as const,
+                Icon: Loader2,
+                pulse: true,
+            };
+        }
+
+        return {
+            label: 'System Online',
+            detail: pendingCount > 0 ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}` : `Last sync ${formatLastSync(lastSyncAt)}`,
+            tone: 'emerald' as const,
+            Icon: Wifi,
+            pulse: true,
+        };
+    })();
+
+    const toneClasses = {
+        emerald: {
+            border: 'border-emerald-200/80',
+            label: 'text-emerald-600',
+            dot: 'bg-emerald-500',
+            ping: 'bg-emerald-400',
+        },
+        amber: {
+            border: 'border-amber-200/80',
+            label: 'text-amber-700',
+            dot: 'bg-amber-500',
+            ping: 'bg-amber-400',
+        },
+        blue: {
+            border: 'border-blue-200/80',
+            label: 'text-blue-700',
+            dot: 'bg-blue-500',
+            ping: 'bg-blue-400',
+        },
+        slate: {
+            border: 'border-slate-200',
+            label: 'text-slate-600',
+            dot: 'bg-slate-400',
+            ping: 'bg-slate-300',
+        },
+    }[status.tone];
 
     return (
         <>
@@ -56,23 +152,44 @@ export default function SecurityCommandCenter() {
                 <motion.div
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                    className={`rounded-2xl border bg-white px-4 py-3 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${toneClasses.border}`}
                 >
-                    <div className="flex items-center gap-2.5">
-                        <span className="relative flex h-2 w-2">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-                        </span>
-                        <div className="min-w-0">
-                            <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-600 uppercase">System online</p>
-                            <p className="truncate text-xs text-slate-500">
-                                {gateName} · {estateName}
-                            </p>
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2.5">
+                            <span className="relative flex h-2 w-2 shrink-0">
+                                {status.pulse && (
+                                    <span className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${toneClasses.ping}`} />
+                                )}
+                                <span className={`relative inline-flex h-2 w-2 rounded-full ${toneClasses.dot}`} />
+                            </span>
+                            <div className="min-w-0">
+                                <p className={`flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase ${toneClasses.label}`}>
+                                    <status.Icon className={`h-3 w-3 ${status.Icon === Loader2 ? 'animate-spin' : ''}`} />
+                                    <span className="truncate">{status.label}</span>
+                                </p>
+                                <p className="truncate text-xs text-slate-500">
+                                    {gateName} · {estateName}
+                                    {status.detail ? ` · ${status.detail}` : ''}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                            {(pendingCount > 0 || !isOnline) && (
+                                <button
+                                    type="button"
+                                    onClick={() => void handleSyncNow()}
+                                    disabled={syncBusy || isSyncing || !isOnline}
+                                    className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-2.5 py-1 text-[10px] font-bold text-slate-600 transition active:scale-95 disabled:opacity-40"
+                                >
+                                    <RefreshCw className={`h-3 w-3 ${syncBusy || isSyncing ? 'animate-spin' : ''}`} />
+                                    Sync
+                                </button>
+                            )}
+                            <span className="rounded-full border border-slate-200 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-600">
+                                {clock}
+                            </span>
                         </div>
                     </div>
-                    <span className="rounded-full border border-slate-200 px-2.5 py-1 font-mono text-[10px] font-semibold tracking-wider text-slate-600">
-                        {clock}
-                    </span>
                 </motion.div>
 
                 {/* Greeting */}
@@ -102,7 +219,9 @@ export default function SecurityCommandCenter() {
                         <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-semibold tracking-[0.18em] text-emerald-300/80 uppercase">Primary action</p>
                             <p className="text-lg font-semibold tracking-tight">Validate access code</p>
-                            <p className="mt-0.5 text-xs text-slate-300">Open terminal · auto-validate on entry</p>
+                            <p className="mt-0.5 text-xs text-slate-300">
+                                {!isOnline ? 'Offline terminal · cache + manual entry' : 'Open terminal · auto-validate on entry'}
+                            </p>
                         </div>
                         <ChevronRight
                             className="h-5 w-5 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-white"

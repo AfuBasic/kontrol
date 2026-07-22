@@ -41,7 +41,9 @@ import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/Se
 import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
+import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
+import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
@@ -452,6 +454,7 @@ export default function AdminLayout({ children, title }: Props) {
 
     return (
         <div className="min-h-screen bg-slate-50">
+            <OfflineBanner />
             {/* Mobile View Structure */}
             <div className="md:hidden">
                 <header className="fixed top-0 right-0 left-0 z-50 border-b border-slate-200/50 bg-white/80 ring-1 ring-black/5 backdrop-blur-xl">
@@ -474,8 +477,11 @@ export default function AdminLayout({ children, title }: Props) {
                             )}
                         </Link>
 
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
-                            <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
+                        <div className="flex items-center gap-2">
+                            <SystemHealthMonitor hideWhenHealthy />
+                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
+                                <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
+                            </div>
                         </div>
                     </div>
                 </header>
@@ -689,6 +695,8 @@ export default function AdminLayout({ children, title }: Props) {
                             <div className="h-2 w-2 rounded-full bg-[#1F6FDB]" />
                             <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">{title || 'Dashboard'}</span>
                         </div>
+                        <div className="flex items-center gap-3">
+                            <SystemHealthMonitor hideWhenHealthy />
                         <div className="relative">
                             <button
                                 onClick={() => setNotificationOpen(!notificationOpen)}
@@ -773,6 +781,7 @@ export default function AdminLayout({ children, title }: Props) {
                                     </>
                                 )}
                             </AnimatePresence>
+                        </div>
                         </div>
                     </header>
 

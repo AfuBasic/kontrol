@@ -21,6 +21,11 @@ export interface OfflineLog {
     created_at: string;
 }
 
+/**
+ * @deprecated Prefer SecurityStore from @/Resilience for new code.
+ * Kept until Phase 2 Verify migration consumers are fully cut over.
+ */
+
 const DB_NAME = 'kontrol_offline';
 const DB_VERSION = 1;
 const CODES_STORE = 'active_codes';

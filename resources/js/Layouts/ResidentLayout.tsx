@@ -26,11 +26,13 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
+import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
 import type { Notification } from '@/Components/Resident/NotificationDetailSheet';
 import SosButton from '@/Components/SosButton';
+import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import type { SharedData } from '@/types';
@@ -472,18 +474,28 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     return (
         <div className={`flex min-h-screen ${isPropertyOwner ? 'flex-col md:flex-row' : 'flex-col'} bg-slate-50 ${className || ''}`}>
+            <div className="fixed top-0 right-0 left-0 z-[60]">
+                <OfflineBanner />
+            </div>
+            {/* Mobile health chip — resident shell has no persistent header */}
+            <div className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-3 z-[55] md:hidden">
+                <SystemHealthMonitor hideWhenHealthy className="shadow-sm" />
+            </div>
             {/* Desktop Property Owner Sidebar */}
             {isPropertyOwner && (
                 <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-slate-100 bg-white p-6 md:flex">
                     <div className="flex flex-col gap-8">
-                        <div className="flex items-center gap-3 px-2">
-                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
-                            <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
-                            {props.is_local && (
-                                <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">
-                                    Local
-                                </span>
-                            )}
+                        <div className="flex items-center justify-between gap-2 px-2">
+                            <div className="flex items-center gap-3">
+                                <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
+                                <span className="text-xl font-black tracking-tight text-slate-900">Kontrol</span>
+                                {props.is_local && (
+                                    <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">
+                                        Local
+                                    </span>
+                                )}
+                            </div>
+                            <SystemHealthMonitor hideWhenHealthy />
                         </div>
                         <nav className="flex flex-col gap-1">
                             {poSidebarItems.map((item) => {

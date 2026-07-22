@@ -5,10 +5,16 @@ import jsQR from 'jsqr';
 import { ArrowLeft, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
+import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import SecurityLayout from '@/Layouts/SecurityLayout';
-import { offlineDb, sha256 } from '@/Utils/offlineDb';
+import { SyncEngine } from '@/Resilience/SyncEngine';
+import { SecurityStore, sha256 } from '@/Resilience/OfflineStorage/SecurityStore';
+import { SyncStatus } from '@/Resilience/SyncStatus';
+
 
 const CODE_LENGTH = 6;
+const SYNC_ENDPOINT = '/security/verify/sync';
 
 type ValidationResult = {
     valid: boolean;
@@ -26,6 +32,8 @@ type ValidationResult = {
     starts_at?: string | null;
     action?: string | null;
     checked_in_at?: string | null;
+    /** True when validated from the local offline cache, not the server. */
+    offline?: boolean;
 };
 
 interface PageProps {
@@ -83,22 +91,28 @@ function getPassTypeLabel(type: string | null) {
     }
 }
 
-async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
-    if (!navigator.onLine) return false;
-    try {
-        const response = await axios.get('/security/verify/sync', {
-            method: 'HEAD',
-            params: { ping: Date.now() },
-            timeout: timeoutMs,
-        });
-        return response.status === 200 || response.status === 404 || response.status === 405;
-    } catch {
-        return false;
+function cameraErrorMessage(err: unknown): string {
+    const name = err instanceof DOMException ? err.name : err instanceof Error ? err.name : '';
+
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+        return 'Camera permission denied — use manual code entry below';
     }
+
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return 'No camera detected — use manual code entry below';
+    }
+
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return 'Camera is in use by another app — use manual code entry below';
+    }
+
+    return 'Camera unavailable — use manual code entry below';
 }
 
 export default function SecurityVerify() {
     const { flash } = usePage<PageProps>().props;
+    const { quality, isOnline, isServerReachable } = useNetworkQuality();
+    const { pendingCount, isSyncing, syncNow } = useSyncStatus();
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<ValidationResult | null>(null);
@@ -112,92 +126,71 @@ export default function SecurityVerify() {
     const streamRef = useRef<MediaStream | null>(null);
     const animationFrameRef = useRef<number | null>(null);
 
-    // Offline / Sync State
-    const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [syncing, setSyncing] = useState(false);
-    const [pendingLogsCount, setPendingLogsCount] = useState(0);
+    // Offline cache inventory
+    const [cachedCodesCount, setCachedCodesCount] = useState<number | null>(null);
+    const [refreshingCache, setRefreshingCache] = useState(false);
 
-    const syncOfflineLogsAndData = useCallback(async () => {
-        if (syncing) return;
-        const online = await checkServerReachable(3000);
-        setIsOnline(online);
-        if (!online) return;
-        setSyncing(true);
+    const securityPendingCount = pendingCount;
+    const offlineWithEmptyCache = !isOnline && cachedCodesCount === 0;
 
+    const refreshCodeCache = useCallback(async () => {
+        const online = await isServerReachable(3000, SYNC_ENDPOINT);
+        if (!online) {
+            return;
+        }
+
+        setRefreshingCache(true);
         try {
-            // 1. Sync pending check-in logs
-            const pending = await offlineDb.getPendingLogs();
-            if (pending.length > 0) {
-                const response = await axios.post('/security/verify/sync', { logs: pending });
-                if (response.data?.success) {
-                    await offlineDb.clearPendingLogs();
-                    setPendingLogsCount(0);
-                }
+            await syncNow();
+
+            // Drop local mirror of pending logs once the engine has no security ops left.
+            const state = await SyncEngine.getState();
+            const hasSecurityPending = state.operations.some(
+                (op) =>
+                    op.type === 'security_log' &&
+                    (op.status === SyncStatus.Pending ||
+                        op.status === SyncStatus.Syncing ||
+                        op.status === SyncStatus.Failed),
+            );
+            if (!hasSecurityPending) {
+                await SecurityStore.clearPendingLogs();
             }
 
-            // 2. Fetch new active code hashes to cache
-            const response = await axios.get('/security/verify/sync');
+            const response = await axios.get(SYNC_ENDPOINT, {
+                headers: { Accept: 'application/json' },
+            });
             if (response.data?.success && response.data.codes) {
-                await offlineDb.saveActiveCodes(response.data.codes);
+                await SecurityStore.saveActiveCodes(response.data.codes);
+                setCachedCodesCount(response.data.codes.length);
             }
         } catch (err) {
-            console.error('Offline sync failed:', err);
+            console.error('Offline cache refresh failed:', err);
         } finally {
-            setSyncing(false);
+            setRefreshingCache(false);
         }
-    }, [syncing]);
+    }, [isServerReachable, syncNow]);
 
     useEffect(() => {
-        const handleOnline = () => {
-            setIsOnline(true);
-            syncOfflineLogsAndData();
-        };
-        const handleOffline = () => {
-            setIsOnline(false);
-        };
+        SecurityStore.countActiveCodes()
+            .then(setCachedCodesCount)
+            .catch(() => setCachedCodesCount(0));
+    }, []);
 
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        // Run sync on load if online
-        if (navigator.onLine) {
-            syncOfflineLogsAndData();
+    useEffect(() => {
+        if (isOnline) {
+            void refreshCodeCache();
         }
+    }, [isOnline, refreshCodeCache]);
 
-        // Get initial pending count
-        offlineDb.getPendingLogs().then((logs) => {
-            setPendingLogsCount(logs.length);
-        });
-
-        // Sync periodically every 2 minutes
+    useEffect(() => {
         const interval = setInterval(() => {
-            if (navigator.onLine) {
-                syncOfflineLogsAndData();
+            if (isOnline) {
+                void refreshCodeCache();
             }
-        }, 120000);
+        }, 120_000);
 
-        // Periodic reachability heartbeat to auto-recover when online status is restored (webview support)
-        const reachabilityInterval = setInterval(async () => {
-            if (navigator.onLine) {
-                const online = await checkServerReachable(2000);
-                if (online !== isOnline) {
-                    setIsOnline(online);
-                    if (online) {
-                        syncOfflineLogsAndData();
-                    }
-                }
-            } else if (isOnline) {
-                setIsOnline(false);
-            }
-        }, 10000);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-            clearInterval(interval);
-            clearInterval(reachabilityInterval);
-        };
-    }, [isOnline, syncOfflineLogsAndData]);
+        return () => clearInterval(interval);
+    }, [isOnline, refreshCodeCache]);
 
     useEffect(() => {
         if (flash?.validation_result) {
@@ -215,73 +208,77 @@ export default function SecurityVerify() {
         }
     }, [result, isScanning]);
 
-    const submit = useCallback(async (code: string, source?: 'scanned' | 'typed') => {
-        if (submittedFor.current === code) return;
-        submittedFor.current = code;
-        setSubmitting(true);
+    const submit = useCallback(
+        async (code: string, source?: 'scanned' | 'typed') => {
+            if (submittedFor.current === code) return;
+            submittedFor.current = code;
+            setSubmitting(true);
 
-        const online = await checkServerReachable(2000);
-        setIsOnline(online);
-        if (!online) {
+            const online = await isServerReachable(2000, SYNC_ENDPOINT);
+            if (!online) {
+                try {
+                    const codeHash = await sha256(code);
+                    const cached = await SecurityStore.findActiveCode(codeHash);
+
+                    if (cached) {
+                        setResult({
+                            valid: true,
+                            status: 'granted',
+                            message: 'Access code validated offline',
+                            visitor_name: cached.visitor_name,
+                            host_name: cached.host_name,
+                            purpose: cached.purpose || null,
+                            expires_at: cached.expires_at,
+                            code_type: cached.code_type || null,
+                            has_vehicle: cached.has_vehicle,
+                            guest_limit: cached.guest_limit || null,
+                            uses_count: cached.uses_count || 0,
+                            starts_at: cached.starts_at || null,
+                            offline: true,
+                        });
+                    } else {
+                        setResult({
+                            valid: false,
+                            status: 'offline_not_found',
+                            message: 'Code Not Recognized Offline',
+                            visitor_name: null,
+                            host_name: null,
+                            purpose: null,
+                            expires_at: null,
+                            code_type: null,
+                            has_vehicle: false,
+                            offline: true,
+                        });
+                    }
+                } catch (err) {
+                    console.error(err);
+                } finally {
+                    setSubmitting(false);
+                }
+                return;
+            }
+
             try {
-                const codeHash = await sha256(code);
-                const cached = await offlineDb.findActiveCode(codeHash);
-
-                if (cached) {
-                    setResult({
-                        valid: true,
-                        status: 'granted',
-                        message: 'Access code validated offline',
-                        visitor_name: cached.visitor_name,
-                        host_name: cached.host_name,
-                        purpose: cached.purpose || null,
-                        expires_at: cached.expires_at,
-                        code_type: cached.code_type || null,
-                        has_vehicle: cached.has_vehicle,
-                        guest_limit: cached.guest_limit || null,
-                        uses_count: cached.uses_count || 0,
-                        starts_at: cached.starts_at || null,
-                    });
-                } else {
-                    setResult({
-                        valid: false,
-                        status: 'offline_not_found',
-                        message: 'Code Not Recognized Offline',
-                        visitor_name: null,
-                        host_name: null,
-                        purpose: null,
-                        expires_at: null,
-                        code_type: null,
-                        has_vehicle: false,
-                    });
+                const response = await axios.post(
+                    VerifyController.validate.url(),
+                    { code, source },
+                    {
+                        headers: {
+                            Accept: 'application/json',
+                        },
+                    },
+                );
+                if (response.data?.validation_result) {
+                    setResult({ ...response.data.validation_result, offline: false });
                 }
             } catch (err) {
                 console.error(err);
             } finally {
                 setSubmitting(false);
             }
-            return;
-        }
-
-        try {
-            const response = await axios.post(
-                VerifyController.validate.url(),
-                { code, source },
-                {
-                    headers: {
-                        Accept: 'application/json',
-                    },
-                },
-            );
-            if (response.data?.validation_result) {
-                setResult(response.data.validation_result);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setSubmitting(false);
-        }
-    }, []);
+        },
+        [isServerReachable],
+    );
 
     // FIXED: Unified Sequential Processing Pipeline
     useEffect(() => {
@@ -383,8 +380,10 @@ export default function SecurityVerify() {
                 animationFrameRef.current = requestAnimationFrame(scanFrame);
             } catch (err) {
                 console.error('Camera access failed:', err);
-                setScannerError('Camera access denied or unavailable. Please use manual fallback.');
+                setScannerError(cameraErrorMessage(err));
                 setIsScanning(false);
+                // Manual entry remains the primary path — focus first digit.
+                setTimeout(() => inputsRef.current[0]?.focus(), 100);
             }
         };
 
@@ -480,25 +479,33 @@ export default function SecurityVerify() {
             return;
         }
 
-        const online = await checkServerReachable(2000);
-        setIsOnline(online);
+        const online = await isServerReachable(2000, SYNC_ENDPOINT);
         if (!online) {
-            try {
-                await offlineDb.queueOfflineLog({
-                    code,
-                    decision,
-                    vehicle_make: extraData.vehicle_make,
-                    vehicle_model: extraData.vehicle_model,
-                    vehicle_plate_number: extraData.vehicle_plate_number,
-                    created_at: new Date().toISOString(),
-                });
-                const logs = await offlineDb.getPendingLogs();
-                setPendingLogsCount(logs.length);
-            } catch (err) {
-                console.error('Failed to queue offline log:', err);
-            } finally {
-                reset();
+            // Checkout requires live server state; only queue admit/reject offline.
+            if (decision === 'admit' || decision === 'reject') {
+                try {
+                    const log = {
+                        code,
+                        decision,
+                        vehicle_make: extraData.vehicle_make,
+                        vehicle_model: extraData.vehicle_model,
+                        vehicle_plate_number: extraData.vehicle_plate_number,
+                        created_at: new Date().toISOString(),
+                    };
+
+                    await SecurityStore.queueOfflineLog(log);
+                    await SyncEngine.enqueue({
+                        type: 'security_log',
+                        endpoint: SYNC_ENDPOINT,
+                        method: 'POST',
+                        payload: { logs: [log] },
+                        retryPolicyKey: 'security_log',
+                    });
+                } catch (err) {
+                    console.error('Failed to queue offline log:', err);
+                }
             }
+            reset();
             return;
         }
 
@@ -547,19 +554,36 @@ export default function SecurityVerify() {
                                             Offline Mode Active
                                         </span>
                                         <span className="text-[10px] font-bold text-amber-600/85 dark:text-amber-500/80">
-                                            Verifying codes locally via encrypted cache
+                                            {offlineWithEmptyCache
+                                                ? 'No offline pass cache — manual entry still available'
+                                                : 'Verifying codes locally via encrypted cache'}
                                         </span>
                                     </div>
                                 </div>
-                                {pendingLogsCount > 0 && (
+                                {securityPendingCount > 0 && (
                                     <span className="rounded-lg bg-amber-500/15 px-2.5 py-1 font-mono text-[10px] font-black tracking-wider text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                                        {pendingLogsCount} Queue
+                                        {securityPendingCount} Queue
                                     </span>
                                 )}
                             </div>
                         </motion.div>
                     )}
-                    {isOnline && pendingLogsCount > 0 && (
+                    {offlineWithEmptyCache && !result && !isScanning && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0, y: -10 }}
+                            animate={{ height: 'auto', opacity: 1, y: 0 }}
+                            exit={{ height: 0, opacity: 0, y: -10 }}
+                            className="mb-6 overflow-hidden"
+                        >
+                            <div className="rounded-2xl border border-amber-300/40 bg-amber-50 p-4 text-left shadow-sm">
+                                <p className="text-sm font-black text-amber-900">No offline codes available</p>
+                                <p className="mt-1 text-xs leading-relaxed font-semibold text-amber-800/90">
+                                    Connect to the internet once to download offline pass data. Manual code entry is still available.
+                                </p>
+                            </div>
+                        </motion.div>
+                    )}
+                    {isOnline && (securityPendingCount > 0 || isSyncing || refreshingCache) && (
                         <motion.div
                             initial={{ height: 0, opacity: 0, y: -10 }}
                             animate={{ height: 'auto', opacity: 1, y: 0 }}
@@ -573,10 +597,14 @@ export default function SecurityVerify() {
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-xs font-extrabold tracking-wide text-indigo-800 dark:text-indigo-400">
-                                            Synchronizing Logs
+                                            {securityPendingCount > 0 ? 'Synchronizing Logs' : 'Refreshing offline cache'}
                                         </span>
                                         <span className="text-[10px] font-bold text-indigo-600/85 dark:text-indigo-500/85">
-                                            Uploading {pendingLogsCount} queued check-ins to server...
+                                            {securityPendingCount > 0
+                                                ? `Uploading ${securityPendingCount} queued check-ins to server...`
+                                                : quality === 'poor'
+                                                  ? 'Limited connectivity — cache update may be slow'
+                                                  : 'Downloading latest pass hashes...'}
                                         </span>
                                     </div>
                                 </div>
@@ -681,11 +709,18 @@ export default function SecurityVerify() {
                                 ))}
                             </div>
 
-                            {scannerError && <p className="mt-4 text-xs font-bold text-rose-500">{scannerError}</p>}
+                            {scannerError && (
+                                <p className="mt-4 max-w-xs rounded-xl border border-amber-100 bg-amber-50 px-3 py-2 text-center text-xs font-bold text-amber-800">
+                                    {scannerError}
+                                </p>
+                            )}
 
                             <div className="mt-8 flex w-full max-w-xs flex-col items-center gap-4">
                                 <button
-                                    onClick={() => setIsScanning(true)}
+                                    onClick={() => {
+                                        setScannerError(null);
+                                        setIsScanning(true);
+                                    }}
                                     className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4.5 text-sm font-black text-white shadow-xl shadow-indigo-500/10 transition-all hover:bg-indigo-700 active:scale-95"
                                 >
                                     <QrCode className="h-5 w-5" />
@@ -792,6 +827,8 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         );
     }
 
+    const isOfflineAdmission = Boolean(result.offline && valid);
+
     // Status UI Configuration
     let statusLabel = 'Access Approved';
     let statusBg = 'bg-emerald-50 text-emerald-700 border-emerald-100/80';
@@ -813,6 +850,11 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         statusBg = 'bg-amber-50 text-amber-700 border-amber-100/80';
         ringColor = 'ring-amber-500/10 border-amber-100/80';
         icon = <Clock className="h-4.5 w-4.5 text-amber-600" strokeWidth={2.5} />;
+    } else if (isOfflineAdmission) {
+        statusLabel = 'Access Approved';
+        statusBg = 'bg-amber-50 text-amber-800 border-amber-100/80';
+        ringColor = 'ring-amber-500/15 border-amber-200/80';
+        icon = <ShieldCheck className="h-4.5 w-4.5 text-amber-600" strokeWidth={2.5} />;
     }
 
     // Context tags computation
@@ -861,12 +903,26 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                             {statusLabel}
                         </span>
 
-                        {result.code_type && (
-                            <span className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-500 uppercase">
-                                {getPassTypeLabel(result.code_type)}
-                            </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {isOfflineAdmission && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-[10px] font-black tracking-wider text-amber-800 uppercase">
+                                    <WifiOff className="h-3 w-3" />
+                                    Offline mode
+                                </span>
+                            )}
+                            {result.code_type && (
+                                <span className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-500 uppercase">
+                                    {getPassTypeLabel(result.code_type)}
+                                </span>
+                            )}
+                        </div>
                     </div>
+
+                    {isOfflineAdmission && (
+                        <p className="mt-3 rounded-xl border border-amber-100 bg-amber-50/80 px-3 py-2 text-[11px] leading-relaxed font-semibold text-amber-800">
+                            This admission was recorded locally and will sync when connectivity is restored.
+                        </p>
+                    )}
 
                     {/* Visitor Hero Info */}
                     <div className="mt-8 space-y-1">

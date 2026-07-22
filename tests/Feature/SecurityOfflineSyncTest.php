@@ -123,3 +123,80 @@ test('security guard can sync offline check-in logs back to server', function ()
     expect($log->meta['offline_override'])->toBeTrue();
     expect($log->meta['offline_code'])->toBe('UNKNOWN123');
 });
+
+test('security sync data returns standardized success shape', function () {
+    Role::create(['name' => 'security']);
+    $estate = Estate::factory()->create();
+    $guard = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $guard->assignRole('security');
+    $guard->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $response = $this->actingAs($guard)
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->getJson(route('security.verify.sync'));
+
+    $response->assertOk();
+    $response->assertJsonStructure([
+        'success',
+        'synced_count',
+        'codes',
+        'timestamp',
+    ]);
+    $response->assertJsonPath('success', true);
+});
+
+test('security sync logs validates input shape', function () {
+    Role::create(['name' => 'security']);
+    $estate = Estate::factory()->create();
+    $guard = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $guard->assignRole('security');
+    $guard->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $response = $this->actingAs($guard)
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->postJson(route('security.verify.sync-logs'), [
+            'logs' => [
+                [
+                    'code' => 'ABC123',
+                    // missing decision + created_at
+                ],
+            ],
+        ]);
+
+    $response->assertUnprocessable();
+});
+
+test('security sync logs records reject decisions without access log', function () {
+    Role::create(['name' => 'security']);
+    $estate = Estate::factory()->create();
+    $guard = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $guard->assignRole('security');
+    $guard->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $before = AccessLog::query()->count();
+
+    $response = $this->actingAs($guard)
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->postJson(route('security.verify.sync-logs'), [
+            'logs' => [
+                [
+                    'code' => 'REJ001',
+                    'decision' => 'reject',
+                    'created_at' => now()->subMinute()->toIso8601String(),
+                ],
+            ],
+        ]);
+
+    $response->assertOk();
+    $response->assertJsonPath('success', true);
+    $response->assertJsonPath('synced_count', 1);
+    $response->assertJsonPath('failed_count', 0);
+
+    expect(AccessLog::query()->count())->toBe($before);
+});

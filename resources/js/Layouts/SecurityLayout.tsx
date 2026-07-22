@@ -12,8 +12,11 @@ import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryCo
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
+import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
+import { useOnlineStatus } from '@/Hooks/useOnlineStatus';
 import '@/echo';
 
 const urlBase64ToUint8Array = (base64String: string) => {
@@ -90,27 +93,11 @@ const navItems = [
     },
 ];
 
-async function checkServerReachable(timeoutMs = 2000): Promise<boolean> {
-    if (!navigator.onLine) return false;
-    const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-        const response = await fetch('/security/verify/sync?ping=' + Date.now(), {
-            method: 'HEAD',
-            signal: controller.signal,
-        });
-        clearTimeout(id);
-        return response.ok || response.status === 404 || response.status === 405;
-    } catch (e) {
-        clearTimeout(id);
-        return false;
-    }
-}
-
 export default function SecurityLayout({ children, hideNav = false, variant = 'light' }: Props & { variant?: 'light' | 'dark' }) {
     const page = usePage<PageProps>();
     const { auth, estateName, unreadCount: initialUnreadCount = 0, flash, is_local } = page.props;
     const currentPath = new URL(page.url, 'http://localhost').pathname;
+    const { isOnline } = useOnlineStatus();
 
     // Redirect to download app if accessing on a non-native web browser
     useEffect(() => {
@@ -124,32 +111,6 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     const [toastType, setToastType] = useState<'success' | 'error'>('success');
     const [unreadCount, setUnreadCount] = useState(initialUnreadCount);
     const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
-    const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-    useEffect(() => {
-        const handleOnline = () => setIsOnline(true);
-        const handleOffline = () => setIsOnline(false);
-
-        window.addEventListener('online', handleOnline);
-        window.addEventListener('offline', handleOffline);
-
-        const checkInterval = setInterval(async () => {
-            if (navigator.onLine) {
-                const online = await checkServerReachable(2000);
-                if (online !== isOnline) {
-                    setIsOnline(online);
-                }
-            } else if (isOnline) {
-                setIsOnline(false);
-            }
-        }, 4000);
-
-        return () => {
-            window.removeEventListener('online', handleOnline);
-            window.removeEventListener('offline', handleOffline);
-            clearInterval(checkInterval);
-        };
-    }, [isOnline]);
 
     // Sync unread count when props change
     useEffect(() => {
@@ -333,6 +294,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
     return (
         <div className={`flex min-h-screen flex-col ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
+            <OfflineBanner variant="security" />
             {/* Single Header with Safe Area integrated */}
             <motion.header
                 id="kontrol-security-header"
@@ -373,7 +335,8 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                         </div>
                     </Link>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <SystemHealthMonitor size="md" />
                         <div
                             className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
                                 isDark
