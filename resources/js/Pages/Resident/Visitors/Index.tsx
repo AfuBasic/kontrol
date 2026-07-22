@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import SearchInput from '@/Components/SearchInput';
+import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
 import VisitorTimeline from '@/Components/Visitors/VisitorTimeline';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
@@ -12,8 +13,6 @@ import { type PendingPass, ResidentStore } from '@/Resilience/OfflineStorage/Res
 import { SyncStatus } from '@/Resilience/SyncStatus';
 import resident from '@/routes/resident';
 import type { AccessCode } from '@/types/access-code';
-
-// ── Types ──────────────────────────────────────────────────────────────────────
 
 type Props = {
     upcomingTimeline: AccessCode[];
@@ -40,8 +39,6 @@ type Props = {
 
 type Tab = 'upcoming' | 'history';
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
 function pendingBadge(status: SyncStatus): { label: string; className: string } {
     switch (status) {
         case SyncStatus.Failed:
@@ -58,8 +55,6 @@ function pendingBadge(status: SyncStatus): { label: string; className: string } 
             return { label: 'Pending sync', className: 'bg-amber-50 text-amber-800 border-amber-100' };
     }
 }
-
-// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function Visitors({
     upcomingTimeline,
@@ -80,12 +75,13 @@ export default function Visitors({
     const [pendingPasses, setPendingPasses] = useState<PendingPass[]>([]);
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-    // Revoke modal
+    // Revoke modal state
     const [revokeModalOpen, setRevokeModalOpen] = useState(false);
     const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
     const [revoking, setRevoking] = useState(false);
 
-    // ── Sync pending passes ────────────────────────────────────────────────────
+    // The next immediate visitor is the first item in upcomingTimeline
+    const nextVisitor = upcomingTimeline.length > 0 ? upcomingTimeline[0] : null;
 
     const refreshPending = useCallback(async () => {
         try {
@@ -113,9 +109,6 @@ export default function Visitors({
         void refreshPending();
     }, [refreshPending]);
 
-    // ── Search ─────────────────────────────────────────────────────────────────
-
-    // Sync search query when switching tabs
     useEffect(() => {
         setSearchQuery(
             activeTab === 'upcoming'
@@ -149,8 +142,6 @@ export default function Visitors({
         }, 300);
     };
 
-    // ── Revoke ─────────────────────────────────────────────────────────────────
-
     const openRevokeModal = (code: AccessCode) => {
         setCodeToRevoke(code);
         setRevokeModalOpen(true);
@@ -169,108 +160,94 @@ export default function Visitors({
         });
     };
 
-    // ── Tab counts ─────────────────────────────────────────────────────────────
-
     const tabs: { id: Tab; label: string; count: number }[] = [
         { id: 'upcoming', label: 'Upcoming', count: upcomingTimeline.length },
         { id: 'history', label: 'History', count: historyTimeline.length },
     ];
 
-    // ── Render ─────────────────────────────────────────────────────────────────
-
     return (
         <>
-            <Head title="Visitor Passes" />
+            <Head title="Visitor Agenda" />
 
-            <div className="mx-auto max-w-3xl space-y-5 pb-24">
+            <div className="mx-auto max-w-2xl space-y-6 pb-24">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                            Visitor Agenda
+                        </h1>
+                        <p className="mt-0.5 text-xs text-slate-400 font-medium">
+                            Personal timeline of scheduled &amp; past visits
+                        </p>
+                    </div>
 
-                {/* ── Header ─────────────────────────────────────────────── */}
-                <div className="flex flex-col">
-                    <h1 className="text-xl font-bold tracking-tight text-slate-900 px-1">
-                        Visitor Passes
-                    </h1>
-                    <p className="mt-0.5 px-1 text-xs text-slate-400 font-medium">
-                        Your scheduled visits &amp; access history
-                    </p>
+                    <button
+                        onClick={() => setShowCreateSheet(true)}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-98 cursor-pointer"
+                    >
+                        <Plus className="h-4 w-4" />
+                        New Visitor
+                    </button>
                 </div>
 
-                {/* ── Today's summary strip ──────────────────────────────── */}
-                {visitorStats.expected_today > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-3 rounded-2xl bg-indigo-950 px-4 py-3.5 text-white"
-                    >
-                        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-300">
-                            <Calendar className="h-4.5 w-4.5" />
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-[13px] font-semibold">
-                                {visitorStats.expected_today === 1
-                                    ? '1 visitor expected today'
-                                    : `${visitorStats.expected_today} visitors expected today`}
-                            </p>
-                            {visitorStats.visitors_today > 0 && (
-                                <p className="text-[11px] text-indigo-300 mt-0.5">
-                                    {visitorStats.visitors_today} already arrived
-                                </p>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
+                {/* Next Visitor Hero Section */}
+                <NextVisitorHero
+                    nextCode={nextVisitor}
+                    totalExpectedToday={visitorStats.expected_today}
+                />
 
-                {/* ── Tabs ───────────────────────────────────────────────── */}
-                <div className="bg-slate-100/80 p-0.5 rounded-xl flex relative">
-                    {/* Active tabs */}
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            id={`visitor-tab-${tab.id}`}
-                            onClick={() => setActiveTab(tab.id)}
-                            className={`relative flex-1 py-2.5 text-xs font-semibold text-center transition-colors select-none cursor-pointer ${
-                                activeTab === tab.id
-                                    ? 'text-slate-900 font-bold'
-                                    : 'text-slate-500 hover:text-slate-700'
-                            }`}
-                        >
-                            <span className="relative z-10 flex items-center justify-center gap-1.5">
-                                {tab.label}
-                                <span
-                                    className={`text-[10px] leading-none px-1.5 py-0.5 rounded-full font-medium ${
-                                        activeTab === tab.id
-                                            ? 'bg-slate-900 text-white'
-                                            : 'bg-slate-200 text-slate-500'
-                                    }`}
-                                >
-                                    {tab.count}
+                {/* Segmented Planner Tabs */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <div className="flex items-center gap-4">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`relative py-1 text-xs font-bold transition-colors cursor-pointer ${
+                                    activeTab === tab.id
+                                        ? 'text-slate-900'
+                                        : 'text-slate-400 hover:text-slate-600'
+                                }`}
+                            >
+                                <span className="flex items-center gap-1.5">
+                                    {tab.label}
+                                    <span
+                                        className={`rounded-full px-1.5 py-0.2 text-[10px] font-semibold ${
+                                            activeTab === tab.id
+                                                ? 'bg-slate-100 text-slate-700'
+                                                : 'bg-slate-50 text-slate-400'
+                                        }`}
+                                    >
+                                        {tab.count}
+                                    </span>
                                 </span>
-                            </span>
-                            {activeTab === tab.id && (
-                                <motion.div
-                                    layoutId="visitorTabIndicator"
-                                    className="absolute inset-0 bg-white rounded-lg shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.03)]"
-                                    transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                />
-                            )}
-                        </button>
-                    ))}
 
-                    {/* Calendar tab — future, disabled */}
+                                {activeTab === tab.id && (
+                                    <motion.div
+                                        layoutId="plannerTabUnderline"
+                                        className="absolute -bottom-2.5 left-0 right-0 h-0.5 bg-slate-900 rounded-full"
+                                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                    />
+                                )}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Future Calendar tab placeholder */}
                     <button
                         disabled
                         title="Calendar view — coming soon"
-                        className="relative flex-1 py-2.5 text-xs font-semibold text-center text-slate-300 cursor-not-allowed select-none"
+                        className="flex items-center gap-1.5 text-xs font-medium text-slate-300 cursor-not-allowed select-none"
                     >
-                        <span className="relative z-10 flex items-center justify-center gap-1">
-                            Calendar
-                            <span className="text-[8px] leading-none bg-slate-200 text-slate-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">
-                                soon
-                            </span>
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>Calendar</span>
+                        <span className="rounded-full bg-slate-100 px-1.5 py-0.2 text-[9px] font-bold uppercase text-slate-400">
+                            soon
                         </span>
                     </button>
                 </div>
 
-                {/* ── Offline pending passes ─────────────────────────────── */}
+                {/* Offline Pending Passes */}
                 {pendingPasses.length > 0 && (
                     <section className="space-y-3">
                         <div className="flex items-center justify-between px-1">
@@ -289,13 +266,13 @@ export default function Visitors({
                             </button>
                         </div>
 
-                        <div className="rounded-xl border border-amber-100 bg-white divide-y divide-slate-50 shadow-sm overflow-hidden">
+                        <div className="rounded-xl border border-amber-100 bg-white divide-y divide-slate-50 shadow-xs overflow-hidden">
                             {pendingPasses.map((pass) => {
                                 const badge = pendingBadge(pass.status);
                                 return (
                                     <div key={pass.id} className="flex items-start gap-3 px-4 py-3">
                                         <div className="min-w-0 flex-1">
-                                            <p className="truncate text-[13px] font-semibold text-slate-900">
+                                            <p className="truncate text-xs font-semibold text-slate-900">
                                                 {pass.visitor_name || 'Visitor pass'}
                                             </p>
                                             <p className="mt-0.5 text-[11px] text-slate-500">
@@ -311,58 +288,37 @@ export default function Visitors({
                                 );
                             })}
                         </div>
-
-                        {pendingPasses.some(
-                            (p) => p.status === SyncStatus.Failed || p.status === SyncStatus.Conflict,
-                        ) && (
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    pendingPasses.forEach((p) => {
-                                        if (
-                                            p.status === SyncStatus.Failed ||
-                                            p.status === SyncStatus.Conflict
-                                        ) {
-                                            void retryOperation(p.id);
-                                        }
-                                    })
-                                }
-                                className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white"
-                            >
-                                Retry all failed
-                            </button>
-                        )}
                     </section>
                 )}
 
-                {/* ── Search (History only) ──────────────────────────────── */}
+                {/* Search query input (History) */}
                 <AnimatePresence>
                     {activeTab === 'history' && (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.18 }}
+                            transition={{ duration: 0.15 }}
                         >
                             <SearchInput
                                 value={searchQuery}
                                 onChange={handleSearch}
-                                placeholder="Search history by visitor or code..."
+                                placeholder="Filter history timeline..."
                                 isLoading={isLoading}
                             />
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* ── Timeline content ───────────────────────────────────── */}
+                {/* Timeline rendering */}
                 <AnimatePresence mode="wait">
                     {activeTab === 'upcoming' && (
                         <motion.div
                             key="upcoming"
-                            initial={{ opacity: 0, y: 8 }}
+                            initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.18 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.15 }}
                         >
                             <VisitorTimeline
                                 codes={upcomingTimeline}
@@ -378,7 +334,7 @@ export default function Visitors({
                                                 e.stopPropagation();
                                                 openRevokeModal(code);
                                             }}
-                                            className="rounded-lg px-2 py-1 text-[10px] font-semibold text-rose-500 hover:bg-rose-50 transition-colors"
+                                            className="rounded-lg px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                                         >
                                             Cancel
                                         </button>
@@ -391,10 +347,10 @@ export default function Visitors({
                     {activeTab === 'history' && (
                         <motion.div
                             key="history"
-                            initial={{ opacity: 0, y: 8 }}
+                            initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.18 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.15 }}
                         >
                             <VisitorTimeline
                                 codes={historyTimeline}
@@ -406,41 +362,29 @@ export default function Visitors({
                 </AnimatePresence>
             </div>
 
-            {/* ── Floating Action Button ─────────────────────────────────── */}
-            <div className="fixed bottom-6 right-6 z-40 hidden md:block">
-                <button
-                    id="create-visitor-pass-fab"
-                    onClick={() => setShowCreateSheet(true)}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg hover:bg-slate-800 transition-all active:scale-95 cursor-pointer"
-                    title="Create Pass"
-                >
-                    <Plus className="h-5 w-5" strokeWidth={2.5} />
-                </button>
-            </div>
-
-            {/* ── Pass creation drawer ───────────────────────────────────── */}
+            {/* Pass Creation Drawer */}
             <MobileSheet
                 isOpen={showCreateSheet}
                 onClose={() => setShowCreateSheet(false)}
-                title="What kind of access do you need?"
+                title="Create Visitor Pass"
             >
                 <div className="space-y-3 pb-8">
-                    <p className="mb-2 px-1 text-xs font-semibold text-slate-450">
-                        Select a pass type to continue with invitation code generation.
+                    <p className="mb-2 px-1 text-xs font-medium text-slate-500">
+                        Choose the pass duration for your visitor.
                     </p>
 
                     <Link
                         href="/resident/visitors/create?type=single_use"
                         onClick={() => setShowCreateSheet(false)}
-                        className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-slate-200 hover:bg-slate-100 active:scale-99"
+                        className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80 active:scale-99"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition-colors group-hover:bg-emerald-100">
-                            <Calendar className="h-4.5 w-4.5" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                            <Calendar className="h-4 w-4" />
                         </div>
                         <div>
-                            <h4 className="text-xs font-bold tracking-tight text-slate-900">One-Time Pass</h4>
-                            <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-400">
-                                Perfect for a single visitor, delivery driver, or utility pickup. Valid for one entry.
+                            <h4 className="text-xs font-bold text-slate-900">One-Time Pass</h4>
+                            <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
+                                Valid for a single entry (deliveries, service visits, guests).
                             </p>
                         </div>
                     </Link>
@@ -449,15 +393,15 @@ export default function Visitors({
                         <Link
                             href="/resident/visitors/create?type=long_lived"
                             onClick={() => setShowCreateSheet(false)}
-                            className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-slate-200 hover:bg-slate-100 active:scale-99"
+                            className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80 active:scale-99"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition-colors group-hover:bg-blue-100">
-                                <Calendar className="h-4.5 w-4.5" />
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+                                <Calendar className="h-4 w-4" />
                             </div>
                             <div>
-                                <h4 className="text-xs font-bold tracking-tight text-slate-900">Long-Term Pass</h4>
-                                <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-400">
-                                    For recurring visitors like family members, domestic staff, or contractors.
+                                <h4 className="text-xs font-bold text-slate-900">Long-Term Pass</h4>
+                                <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
+                                    Recurring pass for family members, staff, or contractors.
                                 </p>
                             </div>
                         </Link>
@@ -466,22 +410,22 @@ export default function Visitors({
                     <Link
                         href="/resident/visitors/create?type=event"
                         onClick={() => setShowCreateSheet(false)}
-                        className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-slate-50 p-4 transition-all duration-200 hover:border-slate-200 hover:bg-slate-100 active:scale-99"
+                        className="group flex items-start gap-3.5 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80 active:scale-99"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 transition-colors group-hover:bg-purple-100">
-                            <Calendar className="h-4.5 w-4.5" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
+                            <Calendar className="h-4 w-4" />
                         </div>
                         <div>
-                            <h4 className="text-xs font-bold tracking-tight text-slate-900">Event Pass</h4>
-                            <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-400">
-                                Generate one access pass that can be shared with multiple guests. Perfect for events.
+                            <h4 className="text-xs font-bold text-slate-900">Event Pass</h4>
+                            <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
+                                Shared access pass for multiple guests arriving for an event.
                             </p>
                         </div>
                     </Link>
                 </div>
             </MobileSheet>
 
-            {/* ── Revoke confirmation ────────────────────────────────────── */}
+            {/* Revoke Modal */}
             <ConfirmationModal
                 isOpen={revokeModalOpen}
                 onClose={() => setRevokeModalOpen(false)}
@@ -489,7 +433,7 @@ export default function Visitors({
                 title="Cancel Visitor Pass"
                 message={`Are you sure you want to cancel the pass for ${
                     codeToRevoke?.visitor_name || 'this visitor'
-                }? This action cannot be undone.`}
+                }?`}
                 confirmLabel="Cancel Pass"
                 type="danger"
                 isLoading={revoking}
