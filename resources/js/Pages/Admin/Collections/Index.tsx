@@ -37,7 +37,9 @@ import { create, edit, index, publish, show } from '@/actions/App/Http/Controlle
 import { index as analyticsIndex } from '@/actions/App/Http/Controllers/Admin/CollectionAnalyticsController';
 import BankingSetupModal from '@/Components/BankingSetupModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import { OfflineState } from '@/Components/States';
 import { useDebounce } from '@/Hooks/useDebounce';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import AdminLayout from '@/Layouts/AdminLayout';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from 'recharts';
 
@@ -223,6 +225,8 @@ export default function CollectionsIndex({
     const debouncedSearch = useDebounce(search, 300);
     const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
     const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+    const { quality, isOnline } = useNetworkQuality();
+    const skipCharts = quality === 'poor' || quality === 'offline' || !isOnline;
 
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
@@ -231,12 +235,17 @@ export default function CollectionsIndex({
     }, [debouncedSearch, filters.search, statusFilter]);
 
     useEffect(() => {
+        if (skipCharts) {
+            setIsAnalyticsLoading(false);
+            return;
+        }
+
         setIsAnalyticsLoading(true);
         axios
             .get(analyticsIndex.url(), { params: { days: 30 } })
             .then((res) => { setAnalyticsData(res.data); setIsAnalyticsLoading(false); })
             .catch(() => setIsAnalyticsLoading(false));
-    }, []);
+    }, [skipCharts]);
 
     const handleStatusChange = useCallback((s: string) => {
         setStatusFilter(s);
@@ -767,7 +776,13 @@ export default function CollectionsIndex({
                             <BarChart3 className="h-4 w-4 text-slate-300" />
                         </div>
 
-                        {isAnalyticsLoading ? (
+                        {skipCharts ? (
+                            <OfflineState
+                                className="py-8"
+                                title="Charts unavailable"
+                                message="Revenue charts are skipped on poor or offline connections."
+                            />
+                        ) : isAnalyticsLoading ? (
                             <div className="flex h-[180px] items-end gap-1">
                                 {[...Array(12)].map((_, i) => (
                                     <div key={i} className="flex-1 animate-pulse rounded-t-lg bg-slate-100" style={{ height: `${30 + Math.random() * 70}%` }} />

@@ -1,5 +1,5 @@
 import { MagnifyingGlassIcon, PlusIcon, EllipsisVerticalIcon } from '@heroicons/react/24/outline';
-import { Head, Link, router } from '@inertiajs/react';
+import { Deferred, Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     Trash2,
@@ -73,8 +73,8 @@ type Props = {
         inactive: number;
         occupancy_rate: number;
     };
-    insights: string[];
-    incompleteResidents?: { id: number; name: string }[];
+    insights?: string[] | null;
+    incompleteResidents?: { id: number; name: string }[] | null;
     inviteLink: {
         token: string;
         url: string;
@@ -367,47 +367,57 @@ export default function Residents({
                     </div>
                 </div>
 
-                {/* SECTION 2 — INSIGHTS PANEL */}
-                {((insights && insights.length > 0) || (incompleteResidents && incompleteResidents.length > 0)) && (
-                    <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
-                        <div className="mb-2.5 flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4 text-blue-600" />
-                            <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
-                        </div>
-                        <ul className="space-y-2">
-                            {insights.map((insight, idx) => {
-                                if (insight.includes("require profile completion")) return null;
-                                return (
-                                    <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                {/* SECTION 2 — INSIGHTS PANEL (deferred) */}
+                <Deferred
+                    data={['insights', 'incompleteResidents']}
+                    fallback={
+                        <div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />
+                    }
+                >
+                    {((insights && insights.length > 0) || (incompleteResidents && incompleteResidents.length > 0)) && (
+                        <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
+                            <div className="mb-2.5 flex items-center gap-2">
+                                <AlertCircle className="h-4 w-4 text-blue-600" />
+                                <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
+                            </div>
+                            <ul className="space-y-2">
+                                {insights.map((insight, idx) => {
+                                    if (insight.includes('require profile completion')) return null;
+                                    return (
+                                        <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
+                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                            <span>{insight}</span>
+                                        </li>
+                                    );
+                                })}
+                                {incompleteResidents && incompleteResidents.length > 0 && (
+                                    <li className="flex items-start gap-2 text-xs font-semibold text-blue-950">
                                         <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                                        <span>{insight}</span>
-                                    </li>
-                                );
-                            })}
-                            {incompleteResidents && incompleteResidents.length > 0 && (
-                                <li className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                                    <span>
-                                        {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile completion:{' '}
-                                        <span className="inline-flex flex-wrap gap-x-1.5 gap-y-0.5">
-                                            {incompleteResidents.map((r, idx) => (
-                                                <span key={r.id} className="inline-flex items-center">
-                                                    <Link 
-                                                        href={`/admin/residents/${r.id}/edit`}
-                                                        className="font-bold text-blue-700 underline hover:text-blue-900"
-                                                    >
-                                                        {r.name}
-                                                    </Link>
-                                                    {idx < incompleteResidents.length - 1 && <span className="text-blue-950/80 mr-1">,</span>}
-                                                </span>
-                                            ))}
+                                        <span>
+                                            {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile
+                                            completion:{' '}
+                                            <span className="inline-flex flex-wrap gap-x-1.5 gap-y-0.5">
+                                                {incompleteResidents.map((r, idx) => (
+                                                    <span key={r.id} className="inline-flex items-center">
+                                                        <Link
+                                                            href={`/admin/residents/${r.id}/edit`}
+                                                            className="font-bold text-blue-700 underline hover:text-blue-900"
+                                                        >
+                                                            {r.name}
+                                                        </Link>
+                                                        {idx < incompleteResidents.length - 1 && (
+                                                            <span className="mr-1 text-blue-950/80">,</span>
+                                                        )}
+                                                    </span>
+                                                ))}
+                                            </span>
                                         </span>
-                                    </span>
-                                </li>
-                            )}
-                        </ul>
-                    </div>
-                )}
+                                    </li>
+                                )}
+                            </ul>
+                        </div>
+                    )}
+                </Deferred>
 
                 {/* SECTION 3 — SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">

@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -103,16 +103,18 @@ type ActivityEvent = {
 
 type Props = {
     incident: Incident;
-    comments: {
+    comments?: {
         data: IncidentComment[];
-    };
+    } | null;
     admins: AdminUser[];
     statuses: Array<{ value: string; label: string }>;
     categories: Array<{ value: string; label: string }>;
-    activities: ActivityEvent[];
+    activities?: ActivityEvent[] | null;
 };
 
 export default function IncidentShow({ incident, comments, admins, statuses, categories, activities }: Props) {
+    const commentList = comments?.data ?? [];
+    const activityList = activities ?? [];
     const [commentText, setCommentText] = useState('');
     const [replyToId, setReplyToId] = useState<number | null>(null);
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -335,14 +337,18 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
 
                     {/* COMMENTS / OPERATIONAL THREAD */}
                     <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-5 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-50 pb-3">
+                        <h3 className="mb-5 flex items-center gap-2 border-b border-slate-50 pb-3 text-xs font-black tracking-wider text-slate-900 uppercase">
                             <MessageSquare className="h-4.5 w-4.5 text-slate-400" />
-                            Operational Log & Discussion ({comments.data.length})
+                            Operational Log & Discussion ({commentList.length})
                         </h3>
 
                         {/* Comments feed */}
+                        <Deferred
+                            data="comments"
+                            fallback={<div className="mb-4 h-24 animate-pulse rounded-xl bg-slate-50" />}
+                        >
                         <div className="space-y-4">
-                            {comments.data.map((comment) => (
+                            {commentList.map((comment) => (
                                 <div key={comment.id} className="rounded-xl bg-slate-50/50 p-4 border border-slate-100">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -393,6 +399,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                                 </div>
                             ))}
                         </div>
+                        </Deferred>
 
                         {/* Add Comment form */}
                         <form onSubmit={handleCommentSubmit} className="mt-6 border-t border-slate-100 pt-5">
@@ -428,30 +435,32 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
 
                     {/* ACTIVITY TIMELINE */}
                     <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-5 flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-50 pb-3">
+                        <h3 className="mb-5 flex items-center gap-2 border-b border-slate-50 pb-3 text-xs font-black tracking-wider text-slate-900 uppercase">
                             <Clock className="h-4.5 w-4.5 text-slate-400" />
-                            Activity Timeline ({activities.length})
+                            Activity Timeline ({activityList.length})
                         </h3>
 
-                        {activities.length === 0 ? (
-                            <p className="text-center text-[11px] font-semibold text-slate-400 py-4">No activity recorded yet.</p>
-                        ) : (
-                            <ol className="relative space-y-4 border-l border-slate-100 pl-5">
-                                {activities.map((event) => (
-                                    <li key={event.id} className="relative">
-                                        <span className="absolute -left-[22px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 ring-4 ring-white">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                                        </span>
-                                        <p className="text-[11px] font-semibold text-slate-700 leading-snug">{event.description}</p>
-                                        <div className="mt-0.5 flex items-center gap-2 text-[10px] font-bold text-slate-400">
-                                            {event.causer && <span>{event.causer.name}</span>}
-                                            {event.causer && <span>·</span>}
-                                            <span>{event.created_at}</span>
-                                        </div>
-                                    </li>
-                                ))}
-                            </ol>
-                        )}
+                        <Deferred data="activities" fallback={<div className="h-20 animate-pulse rounded-xl bg-slate-50" />}>
+                            {activityList.length === 0 ? (
+                                <p className="py-4 text-center text-[11px] font-semibold text-slate-400">No activity recorded yet.</p>
+                            ) : (
+                                <ol className="relative space-y-4 border-l border-slate-100 pl-5">
+                                    {activityList.map((event) => (
+                                        <li key={event.id} className="relative">
+                                            <span className="absolute top-0.5 -left-[22px] flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 ring-4 ring-white">
+                                                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+                                            </span>
+                                            <p className="text-[11px] leading-snug font-semibold text-slate-700">{event.description}</p>
+                                            <div className="mt-0.5 flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                                {event.causer && <span>{event.causer.name}</span>}
+                                                {event.causer && <span>·</span>}
+                                                <span>{event.created_at}</span>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ol>
+                            )}
+                        </Deferred>
                     </div>
                 </div>
 

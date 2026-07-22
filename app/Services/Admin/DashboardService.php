@@ -128,8 +128,18 @@ class DashboardService
 
     /**
      * Get detailed, operational dashboard statistics.
+     *
+     * Memoized per request so multiple deferred prop closures share one computation.
      */
     public function getDetailedDashboardStats(): array
+    {
+        return once(fn () => $this->computeDetailedDashboardStats());
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function computeDetailedDashboardStats(): array
     {
         $estate = $this->estateContext->getEstate();
         $estateId = $estate->id;

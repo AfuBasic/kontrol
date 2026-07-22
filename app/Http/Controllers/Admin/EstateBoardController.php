@@ -108,7 +108,6 @@ class EstateBoardController extends Controller
 
         $estateId = $this->estateContext->getEstateId();
         $postData = $this->boardService->getPost($post->id, $estateId);
-        $comments = $this->boardService->getComments($post->id, $estateId);
 
         $targetsCount = 0;
         if ($postData->applies_to === 'all') {
@@ -148,16 +147,18 @@ class EstateBoardController extends Controller
         $formattedTargets = $postData->targets->map(function ($target) {
             if ($target->target_type === 'user') {
                 $user = User::find($target->target_id);
+
                 return ['type' => 'Resident', 'name' => $user ? $user->name : 'Unknown'];
             } else {
                 $property = Property::find($target->target_id);
+
                 return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
             }
         })->values()->all();
 
         return Inertia::render('Admin/EstateBoard/Show', [
             'post' => $postData,
-            'comments' => $comments,
+            'comments' => Inertia::defer(fn () => $this->boardService->getComments($post->id, $estateId)),
             'metrics' => [
                 'targets_count' => $targetsCount,
                 'reads_count' => $readsCount,

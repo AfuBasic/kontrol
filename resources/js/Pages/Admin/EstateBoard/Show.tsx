@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Deferred, Head, Link, router, useForm } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -30,7 +30,7 @@ interface Target {
 
 type Props = {
     post: EstateBoardPost;
-    comments: CursorPaginatedComments;
+    comments?: CursorPaginatedComments | null;
     metrics: {
         targets_count: number;
         reads_count: number;
@@ -137,6 +137,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
     const [showActions, setShowActions] = useState(false);
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
+    const commentPage = comments ?? { data: [], next_page_url: null as string | null };
 
     const { data, setData, post: submitComment, processing, reset, errors } = useForm({ body: '' });
 
@@ -147,10 +148,10 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
     };
 
     const loadMore = useCallback(() => {
-        if (!comments.next_page_url || isLoadingMore.current) return;
+        if (!commentPage.next_page_url || isLoadingMore.current) return;
         isLoadingMore.current = true;
         router.get(
-            comments.next_page_url,
+            commentPage.next_page_url,
             {},
             {
                 preserveState: true,
@@ -161,7 +162,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                 },
             },
         );
-    }, [comments.next_page_url]);
+    }, [commentPage.next_page_url]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -356,34 +357,41 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                             </form>
                         </motion.div>
 
-                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
-                            {comments.data.length > 0 ? (
-                                <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                                    <div className="space-y-6">
-                                        {comments.data.map((comment) => (
-                                            <CommentItem key={comment.id} comment={comment} postHashid={post.hashid} />
-                                        ))}
-                                    </div>
-                                    {comments.next_page_url && (
-                                        <div ref={loadMoreRef} className="flex justify-center pt-6">
-                                            <div className="flex gap-2">
-                                                <div className="h-2 w-2 animate-bounce rounded-full bg-slate-300 [animation-delay:-0.3s]" />
-                                                <div className="h-2 w-2 animate-bounce rounded-full bg-slate-300 [animation-delay:-0.15s]" />
-                                                <div className="h-2 w-2 animate-bounce rounded-full bg-slate-300" />
-                                            </div>
+                        <Deferred
+                            data="comments"
+                            fallback={
+                                <div className="h-40 animate-pulse rounded-3xl border border-slate-200 bg-white" />
+                            }
+                        >
+                            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
+                                {commentPage.data.length > 0 ? (
+                                    <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                                        <div className="space-y-6">
+                                            {commentPage.data.map((comment) => (
+                                                <CommentItem key={comment.id} comment={comment} postHashid={post.hashid} />
+                                            ))}
                                         </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
-                                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 ring-1 ring-slate-100">
-                                        <MessageCircle className="h-8 w-8 text-slate-300" />
+                                        {commentPage.next_page_url && (
+                                            <div ref={loadMoreRef} className="flex justify-center pt-6">
+                                                <div className="flex gap-2">
+                                                    <div className="h-2 w-2 animate-bounce rounded-full bg-slate-300 [animation-delay:-0.3s]" />
+                                                    <div className="h-2 w-2 animate-bounce rounded-full bg-slate-300 [animation-delay:-0.15s]" />
+                                                    <div className="h-2 w-2 animate-bounce rounded-full bg-slate-300" />
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
-                                    <h3 className="text-lg font-bold text-slate-900">No comments yet</h3>
-                                    <p className="mt-1 text-sm font-medium text-slate-500">Be the first to share your thoughts!</p>
-                                </div>
-                            )}
-                        </motion.div>
+                                ) : (
+                                    <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 ring-1 ring-slate-100">
+                                            <MessageCircle className="h-8 w-8 text-slate-300" />
+                                        </div>
+                                        <h3 className="text-lg font-bold text-slate-900">No comments yet</h3>
+                                        <p className="mt-1 text-sm font-medium text-slate-500">Be the first to share your thoughts!</p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        </Deferred>
                     </div>
                 </div>
 

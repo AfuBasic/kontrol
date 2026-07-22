@@ -75,36 +75,6 @@ class ResidentController extends Controller
         $occupiedProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereHas('residents')->count();
         $occupancyRate = $totalProperties > 0 ? (int) round(($occupiedProperties / $totalProperties) * 100) : 0;
 
-        // Section 2: Insights
-        $insights = [];
-        if ($pendingInvitations > 0) {
-            $insights[] = "{$pendingInvitations} residents have not accepted their invitations.";
-        }
-        $vacantUnits = $totalProperties - $occupiedProperties;
-        if ($vacantUnits > 0) {
-            $insights[] = "{$vacantUnits} units are currently vacant.";
-        }
-        $joinedThisMonth = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->where('users.created_at', '>=', now()->startOfMonth())->count();
-        if ($joinedThisMonth > 0) {
-            $insights[] = "{$joinedThisMonth} residents joined this month.";
-        }
-        $incompleteResidents = User::query()
-            ->forEstate($estate->id)
-            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
-            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
-            ->where(function ($query) {
-                $query->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
-                    ->orWhereDoesntHave('profile');
-            })
-            ->get(['users.id', 'users.name'])
-            ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
-            ->toArray();
-
-        $profileIncomplete = count($incompleteResidents);
-        if ($profileIncomplete > 0) {
-            $insights[] = "{$profileIncomplete} residents require profile completion.";
-        }
-
         // Section 3: Invitation management link
         $link = $estate->inviteLink;
         $inviteLinkData = $link ? [
@@ -128,8 +98,51 @@ class ResidentController extends Controller
                 'inactive' => $inactiveResidents,
                 'occupancy_rate' => $occupancyRate,
             ],
-            'insights' => $insights,
-            'incompleteResidents' => $incompleteResidents,
+            // Heavier insight queries load after first paint
+            'insights' => Inertia::defer(function () use ($estate, $pendingInvitations, $totalProperties, $occupiedProperties) {
+                $insights = [];
+                if ($pendingInvitations > 0) {
+                    $insights[] = "{$pendingInvitations} residents have not accepted their invitations.";
+                }
+                $vacantUnits = $totalProperties - $occupiedProperties;
+                if ($vacantUnits > 0) {
+                    $insights[] = "{$vacantUnits} units are currently vacant.";
+                }
+                $joinedThisMonth = User::query()
+                    ->forEstate($estate->id)
+                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
+                    ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+                    ->where('users.created_at', '>=', now()->startOfMonth())
+                    ->count();
+                if ($joinedThisMonth > 0) {
+                    $insights[] = "{$joinedThisMonth} residents joined this month.";
+                }
+                $profileIncomplete = User::query()
+                    ->forEstate($estate->id)
+                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
+                    ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+                    ->where(function ($query) {
+                        $query->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
+                            ->orWhereDoesntHave('profile');
+                    })
+                    ->count();
+                if ($profileIncomplete > 0) {
+                    $insights[] = "{$profileIncomplete} residents require profile completion.";
+                }
+
+                return $insights;
+            }),
+            'incompleteResidents' => Inertia::defer(fn () => User::query()
+                ->forEstate($estate->id)
+                ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
+                ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+                ->where(function ($query) {
+                    $query->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
+                        ->orWhereDoesntHave('profile');
+                })
+                ->get(['users.id', 'users.name'])
+                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
+                ->toArray()),
             'inviteLink' => $inviteLinkData,
         ]);
     }
