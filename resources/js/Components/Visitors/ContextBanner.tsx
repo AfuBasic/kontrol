@@ -9,11 +9,10 @@ export default function ContextBanner({ upcoming }: Props) {
     const [now, setNow] = useState(() => new Date());
 
     useEffect(() => {
-        const interval = setInterval(() => setNow(new Date()), 30000); // refresh every 30s
+        const interval = setInterval(() => setNow(new Date()), 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // Find the chronologically next visit today or in future
     const todayStr = now.toISOString().split('T')[0];
     const todayVisits = upcoming.filter((v) => v.arrival_date === todayStr);
 
@@ -34,27 +33,25 @@ export default function ContextBanner({ upcoming }: Props) {
         const diffMinutes = Math.round((visitTime - now.getTime()) / (1000 * 60));
         message = `${imminent.visitor_name} arrives in ${diffMinutes} minute${diffMinutes === 1 ? '' : 's'}.`;
     } else if (todayVisits.length >= 3) {
-        message = `Busy day ahead — ${todayVisits.length} visitors scheduled today.`;
+        message = `Busy day ahead — ${todayVisits.length} visitors expected today.`;
     } else if (todayVisits.length > 0) {
-        const next = todayVisits[0];
-        message = `Next up: ${next.visitor_name}${next.arrival_time ? ` at ${next.arrival_time}` : ''}.`;
+        message = `${todayVisits.length} visitor${todayVisits.length === 1 ? '' : 's'} scheduled for today.`;
     } else if (upcoming.length > 0) {
-        const next = upcoming[0];
-        message = `Next visitor: ${next.visitor_name} (${next.arrival_date_formatted || next.arrival_date}).`;
+        message = 'Next visitor arriving soon.';
     } else {
         message = "You're all clear today.";
     }
 
     return (
-        <div className="py-2.5">
+        <div className="py-1">
             <div className="flex items-center gap-2">
                 {isImminent && (
-                    <span className="relative flex h-2.5 w-2.5 shrink-0">
+                    <span className="relative flex h-2 w-2 shrink-0">
                         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
-                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-amber-500" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
                     </span>
                 )}
-                <p className={`text-sm font-semibold tracking-tight ${isImminent ? 'text-amber-950 font-bold' : 'text-slate-700'}`}>
+                <p className={`text-xs font-semibold tracking-tight ${isImminent ? 'text-amber-950 font-bold' : 'text-slate-600'}`}>
                     {message}
                 </p>
             </div>

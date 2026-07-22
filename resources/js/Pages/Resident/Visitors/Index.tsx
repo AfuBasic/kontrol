@@ -9,7 +9,7 @@ import HistoryArchive from '@/Components/Visitors/HistoryArchive';
 import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
 import QuickActions from '@/Components/Visitors/QuickActions';
 import TodaySchedule from '@/Components/Visitors/TodaySchedule';
-import WeekOverview from '@/Components/Visitors/WeekOverview';
+import UpcomingSchedule from '@/Components/Visitors/UpcomingSchedule';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import { type PendingPass, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
@@ -144,23 +144,24 @@ export default function Visitors({
         });
     };
 
-    // Filter today's visits for TodaySchedule
+    // Filter today's vs future upcoming visits
     const todayStr = new Date().toISOString().split('T')[0];
     const todayVisits = upcomingTimeline.filter((v: any) => v.arrival_date === todayStr);
+    const futureUpcomingVisits = upcomingTimeline.filter((v: any) => v.arrival_date !== todayStr);
 
     return (
         <>
             <Head title="Visitors" />
 
-            <div className="mx-auto max-w-xl px-4 py-4 space-y-3 pb-24">
+            <div className="mx-auto max-w-xl px-3.5 py-3 space-y-2 pb-20">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900">Visitors</h1>
+                        <h1 className="text-lg font-bold tracking-tight text-slate-900">Visitors</h1>
                     </div>
                     <button
                         onClick={() => setShowCreateSheet(true)}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
+                        className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white transition hover:bg-slate-800"
                     >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Invite</span>
@@ -168,10 +169,10 @@ export default function Visitors({
                 </div>
 
                 {/* Segmented View Switcher */}
-                <div className="flex rounded-xl bg-slate-100/80 p-1 font-semibold">
+                <div className="flex rounded-lg bg-slate-100/80 p-0.5 font-semibold">
                     <button
                         onClick={() => switchTab('schedule')}
-                        className={`flex-1 rounded-lg py-1.5 text-xs transition ${
+                        className={`flex-1 rounded-md py-1 text-xs transition ${
                             activeTab === 'schedule'
                                 ? 'bg-white text-slate-900 shadow-2xs'
                                 : 'text-slate-500 hover:text-slate-800'
@@ -181,7 +182,7 @@ export default function Visitors({
                     </button>
                     <button
                         onClick={() => switchTab('history')}
-                        className={`flex-1 rounded-lg py-1.5 text-xs transition ${
+                        className={`flex-1 rounded-md py-1 text-xs transition ${
                             activeTab === 'history'
                                 ? 'bg-white text-slate-900 shadow-2xs'
                                 : 'text-slate-500 hover:text-slate-800'
@@ -234,28 +235,25 @@ export default function Visitors({
                     </div>
                 )}
 
-                {/* Schedule View */}
+                {/* Schedule View — natural flow */}
                 {activeTab === 'schedule' && (
-                    <div className="space-y-3">
-                        {/* Next Visitor Hero Card */}
-                        <NextVisitorHero
-                            nextCode={upcomingTimeline[0] || null}
-                            totalExpectedToday={todayVisits.length}
-                        />
-
-                        {/* Context Banner */}
+                    <div className="space-y-2">
+                        {/* 1. Adaptive Context */}
                         <ContextBanner upcoming={upcomingTimeline as any} />
 
-                        {/* 2. Today's Schedule */}
+                        {/* 2. Next Arrival Hero */}
+                        <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
+
+                        {/* 3. Today's Schedule */}
                         <TodaySchedule
                             visits={todayVisits as any}
                             onCancel={promptCancelPass}
                         />
 
-                        {/* 3. This Week Overview (Mini Activity Heatmap) */}
-                        <WeekOverview upcoming={upcomingTimeline as any} />
+                        {/* 4. Upcoming (Event-based, replacing week chart) */}
+                        <UpcomingSchedule visits={futureUpcomingVisits as any} />
 
-                        {/* 4. Quick Actions & 1-Tap Invite Again */}
+                        {/* 5. Quick Actions & Invite Again */}
                         <QuickActions
                             recentVisitors={recentVisitors}
                             onInvite={() => setShowCreateSheet(true)}
