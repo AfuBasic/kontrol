@@ -1,14 +1,17 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clock, Calendar, Tag, Users, PlusCircle, CheckCircle2, XCircle, History as HistoryIcon, Activity, Plus, Search, Filter } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { Clock, Calendar, Tag, Users, PlusCircle, CheckCircle2, XCircle, History as HistoryIcon, Activity, Plus, Search, Filter, RefreshCw, WifiOff } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import MobileSheet from '@/Components/MobileSheet';
 import SearchInput from '@/Components/SearchInput';
+import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
+import { type PendingPass, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
+import { SyncStatus } from '@/Resilience/SyncStatus';
 import resident from '@/routes/resident';
 import type { AccessCode } from '@/types/access-code';
 import CodeCard from './Components/CodeCard';
-import MobileSheet from '@/Components/MobileSheet';
 
 type Props = {
     activeCodes: AccessCode[];
@@ -33,16 +36,70 @@ type Props = {
     };
 };
 
+function pendingBadge(status: SyncStatus): { label: string; className: string } {
+    switch (status) {
+        case SyncStatus.Failed:
+        case SyncStatus.Conflict:
+            return {
+                label: status === SyncStatus.Conflict ? 'Conflict' : 'Sync failed — tap to retry',
+                className: 'bg-rose-50 text-rose-700 border-rose-100',
+            };
+        case SyncStatus.Syncing:
+            return { label: 'Syncing…', className: 'bg-blue-50 text-blue-700 border-blue-100' };
+        case SyncStatus.Synced:
+            return { label: 'Synced ✓', className: 'bg-emerald-50 text-emerald-700 border-emerald-100' };
+        default:
+            return { label: 'Pending sync', className: 'bg-amber-50 text-amber-800 border-amber-100' };
+    }
+}
+
 export default function Visitors({ activeCodes, historyCodes, filters, recentActivity, visitorStats }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
+    const { operations, retryOperation, isSyncing, syncNow } = useSyncStatus();
 
     const [activeTab, setActiveTab] = useState<'active' | 'upcoming' | 'history'>('active');
     const [searchQuery, setSearchQuery] = useState(filters?.search_history || '');
     const [statusFilter, setStatusFilter] = useState<'all' | 'used' | 'expired' | 'revoked'>('all');
     const [isLoading, setIsLoading] = useState(false);
     const [showCreateSheet, setShowCreateSheet] = useState(false);
+    const [pendingPasses, setPendingPasses] = useState<PendingPass[]>([]);
     const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+    const refreshPending = useCallback(async () => {
+        try {
+            const stored = await ResidentStore.getPendingPasses();
+            // Merge live engine status onto stored optimistic passes.
+            const merged = stored.map((pass) => {
+                const op = operations.find((o) => o.id === pass.id);
+                if (!op) {
+                    return pass;
+                }
+                return {
+                    ...pass,
+                    status: op.status,
+                    error: op.lastError ?? pass.error,
+                };
+            });
+            setPendingPasses(merged.filter((p) => p.status !== SyncStatus.Synced));
+
+            // Drop synced locals and refresh list once engine finishes.
+            const syncedIds = stored.filter((p) => {
+                const op = operations.find((o) => o.id === p.id);
+                return op?.status === SyncStatus.Synced;
+            });
+            if (syncedIds.length > 0) {
+                await Promise.all(syncedIds.map((p) => ResidentStore.removePendingPass(p.id)));
+                router.reload({ only: ['activeCodes', 'historyCodes', 'visitorStats'] });
+            }
+        } catch {
+            setPendingPasses([]);
+        }
+    }, [operations]);
+
+    useEffect(() => {
+        void refreshPending();
+    }, [refreshPending]);
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -230,6 +287,66 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                     })}
                 </div>
 
+                {/* Offline pending passes */}
+                {pendingPasses.length > 0 && (
+                    <section className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-amber-700 uppercase">
+                                <WifiOff className="h-3.5 w-3.5" />
+                                Pending sync ({pendingPasses.length})
+                            </h3>
+                            <button
+                                type="button"
+                                onClick={() => void syncNow()}
+                                disabled={isSyncing}
+                                className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-800 disabled:opacity-50"
+                            >
+                                <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                                Sync now
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {pendingPasses.map((pass) => {
+                                const badge = pendingBadge(pass.status);
+                                return (
+                                    <div
+                                        key={pass.id}
+                                        className="rounded-2xl border border-amber-100 bg-white p-4 shadow-sm ring-1 ring-amber-50"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="truncate text-sm font-bold text-slate-900">
+                                                    {pass.visitor_name || 'Visitor pass'}
+                                                </p>
+                                                <p className="mt-0.5 text-[11px] text-slate-500">
+                                                    {pass.purpose || pass.type || 'Access code'} · saved offline
+                                                </p>
+                                            </div>
+                                            <span
+                                                className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${badge.className}`}
+                                            >
+                                                {badge.label}
+                                            </span>
+                                        </div>
+                                        {(pass.status === SyncStatus.Failed || pass.status === SyncStatus.Conflict) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => void retryOperation(pass.id)}
+                                                className="mt-3 w-full rounded-xl bg-slate-900 py-2 text-xs font-bold text-white"
+                                            >
+                                                Retry sync
+                                            </button>
+                                        )}
+                                        {pass.error && (
+                                            <p className="mt-2 text-[11px] leading-snug text-rose-600">{pass.error}</p>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
+
                 {/* 4. CONTENT AREA */}
                 <AnimatePresence mode="wait">
                     {activeTab === 'active' && (
@@ -254,7 +371,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                                         </motion.div>
                                     ))}
                                 </motion.div>
-                            ) : (
+                            ) : pendingPasses.length === 0 ? (
                                 <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white px-6 py-16 text-center shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
                                     <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-slate-400">
                                         <Users className="h-5 w-5" />
@@ -264,7 +381,7 @@ export default function Visitors({ activeCodes, historyCodes, filters, recentAct
                                         Create a visitor pass for family, friends, deliveries, or service providers.
                                     </p>
                                 </div>
-                            )}
+                            ) : null}
                         </motion.div>
                     )}
 

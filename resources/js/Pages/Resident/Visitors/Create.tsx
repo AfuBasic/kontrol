@@ -3,8 +3,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, Calendar as CalendarIcon, ChevronLeft, Clock, Phone, ShieldCheck, User, Users, X, Zap, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import ResidentLayout from '@/Layouts/ResidentLayout';
+import { ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
+import { SyncEngine } from '@/Resilience/SyncEngine';
+import { SyncStatus } from '@/Resilience/SyncStatus';
 import type { SharedData } from '@/types';
 
 type Step = 'type' | 'schedule' | 'details' | 'review';
@@ -43,6 +47,8 @@ const CreateAccessCode = () => {
             isSubscriptionActive: boolean;
         }
     >().props;
+    const { isOnline, isServerReachable } = useNetworkQuality();
+    const [queuingOffline, setQueuingOffline] = useState(false);
 
     const features = estate_plan?.features || [];
     const hasFlexibleCodes = features.includes('flexible-code-types');
@@ -191,13 +197,49 @@ const CreateAccessCode = () => {
         );
     }
 
-    const submit = () => {
+    const submit = async () => {
         const payload = {
             ...form.data,
             guest_limit: form.data.guest_limit === '' ? null : Number(form.data.guest_limit),
             starts_at: form.data.starts_at ? new Date(form.data.starts_at).toISOString() : null,
             expires_at: form.data.expires_at ? new Date(form.data.expires_at).toISOString() : null,
         };
+
+        const online = isOnline && (await isServerReachable(2500));
+
+        if (!online) {
+            setQueuingOffline(true);
+            try {
+                const operationId = await SyncEngine.enqueue({
+                    type: 'visitor_pass',
+                    endpoint: AccessCodeController.store.url(),
+                    method: 'POST',
+                    payload: payload as Record<string, unknown>,
+                    retryPolicyKey: 'visitor_pass',
+                });
+
+                await ResidentStore.putPendingPass({
+                    id: operationId,
+                    payload: payload as Record<string, unknown>,
+                    status: SyncStatus.Pending,
+                    createdAt: new Date().toISOString(),
+                    visitor_name: form.data.visitor_name || undefined,
+                    purpose: form.data.purpose || undefined,
+                    type: form.data.type,
+                    expires_at: payload.expires_at,
+                });
+
+                router.visit(AccessCodeController.index.url(), {
+                    preserveScroll: false,
+                });
+            } catch (error) {
+                console.error('Failed to queue offline visitor pass:', error);
+                form.setError('visitor_name', 'Could not save offline. Please try again when online.');
+            } finally {
+                setQueuingOffline(false);
+            }
+            return;
+        }
 
         form.transform(() => payload);
         form.post(AccessCodeController.store.url());
@@ -935,11 +977,11 @@ const CreateAccessCode = () => {
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={submit}
-                                        disabled={form.processing}
+                                        onClick={() => void submit()}
+                                        disabled={form.processing || queuingOffline}
                                         className="flex-[2] items-center justify-center rounded-full bg-slate-900 py-4.5 text-[17px] font-black text-white shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
                                     >
-                                        {form.processing ? (
+                                        {form.processing || queuingOffline ? (
                                             <span className="flex items-center justify-center gap-2">
                                                 <svg
                                                     className="h-5 w-5 animate-spin text-white"
@@ -961,8 +1003,10 @@ const CreateAccessCode = () => {
                                                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                                                     ></path>
                                                 </svg>
-                                                Generating...
+                                                {queuingOffline ? 'Saving offline…' : 'Generating...'}
                                             </span>
+                                        ) : !isOnline ? (
+                                            'Save Offline'
                                         ) : (
                                             'Generate Pass'
                                         )}
