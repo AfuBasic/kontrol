@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import SearchInput from '@/Components/SearchInput';
-import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
+import PlannerSummary from '@/Components/Visitors/PlannerSummary';
 import VisitorTimeline from '@/Components/Visitors/VisitorTimeline';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
@@ -94,7 +94,7 @@ export default function Visitors({
     const [codeToRevoke, setCodeToRevoke] = useState<AccessCode | null>(null);
     const [revoking, setRevoking] = useState(false);
 
-    // The next immediate visitor is the first item in upcomingTimeline
+    // Immediate next visitor
     const nextVisitor = upcomingTimeline.length > 0 ? upcomingTimeline[0] : null;
 
     const refreshPending = useCallback(async () => {
@@ -175,7 +175,7 @@ export default function Visitors({
     };
 
     const tabs: { id: Tab; label: string; count: number }[] = [
-        { id: 'upcoming', label: 'Upcoming', count: upcomingTimeline.length },
+        { id: 'upcoming', label: 'Agenda', count: upcomingTimeline.length },
         { id: 'history', label: 'History', count: historyTimeline.length },
     ];
 
@@ -183,35 +183,37 @@ export default function Visitors({
         <>
             <Head title="Visitor Agenda" />
 
-            <div className="mx-auto max-w-2xl space-y-6 pb-24">
-                {/* Header */}
-                <div className="flex items-center justify-between">
+            <div className="mx-auto max-w-2xl space-y-4 pb-24 px-1">
+                {/* Clean Header */}
+                <div className="flex items-center justify-between pt-1">
                     <div>
                         <h1 className="text-xl font-bold tracking-tight text-slate-900">
                             Visitor Agenda
                         </h1>
-                        <p className="mt-0.5 text-xs text-slate-400 font-medium">
-                            Personal timeline of scheduled &amp; past visits
+                        <p className="text-xs text-slate-400 font-medium">
+                            Personal timeline of scheduled visits
                         </p>
                     </div>
 
                     <button
                         onClick={() => setShowCreateSheet(true)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-98 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-98 cursor-pointer"
                     >
                         <Plus className="h-4 w-4" />
                         New Visitor
                     </button>
                 </div>
 
-                {/* Next Visitor Hero Section */}
-                <NextVisitorHero
-                    nextCode={nextVisitor}
-                    totalExpectedToday={visitorStats.expected_today}
-                />
+                {/* Lightweight Context Summary (1-line bar) */}
+                {activeTab === 'upcoming' && (
+                    <PlannerSummary
+                        nextCode={nextVisitor}
+                        totalExpectedToday={visitorStats.expected_today}
+                    />
+                )}
 
-                {/* Segmented Planner Tabs */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                {/* Segmented Navigation & Search */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1 pt-1">
                     <div className="flex items-center gap-4">
                         {tabs.map((tab) => (
                             <button
@@ -239,7 +241,7 @@ export default function Visitors({
                                 {activeTab === tab.id && (
                                     <motion.div
                                         layoutId="plannerTabUnderline"
-                                        className="absolute -bottom-2.5 left-0 right-0 h-0.5 bg-slate-900 rounded-full"
+                                        className="absolute -bottom-1.5 left-0 right-0 h-0.5 bg-slate-900 rounded-full"
                                         transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                                     />
                                 )}
@@ -247,7 +249,7 @@ export default function Visitors({
                         ))}
                     </div>
 
-                    {/* Future Calendar tab placeholder */}
+                    {/* Calendar tab placeholder */}
                     <button
                         disabled
                         title="Calendar view — coming soon"
@@ -263,8 +265,8 @@ export default function Visitors({
 
                 {/* Offline Pending Passes */}
                 {pendingPasses.length > 0 && (
-                    <section className="space-y-3">
-                        <div className="flex items-center justify-between px-1">
+                    <section className="space-y-2">
+                        <div className="flex items-center justify-between">
                             <h3 className="flex items-center gap-1.5 text-[11px] font-bold tracking-widest text-amber-700 uppercase">
                                 <WifiOff className="h-3.5 w-3.5" />
                                 Pending sync ({pendingPasses.length})
@@ -284,7 +286,7 @@ export default function Visitors({
                             {pendingPasses.map((pass) => {
                                 const badge = pendingBadge(pass.status);
                                 return (
-                                    <div key={pass.id} className="flex items-start gap-3 px-4 py-3">
+                                    <div key={pass.id} className="flex items-start gap-3 px-3 py-2.5">
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-xs font-semibold text-slate-900">
                                                 {pass.visitor_name || 'Visitor pass'}
@@ -305,34 +307,27 @@ export default function Visitors({
                     </section>
                 )}
 
-                {/* Search query input (History) */}
-                <AnimatePresence>
-                    {activeTab === 'history' && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.15 }}
-                        >
-                            <SearchInput
-                                value={searchQuery}
-                                onChange={handleSearch}
-                                placeholder="Filter history timeline..."
-                                isLoading={isLoading}
-                            />
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Quick Search */}
+                <SearchInput
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    placeholder={
+                        activeTab === 'upcoming'
+                            ? 'Search upcoming visits...'
+                            : 'Search history by visitor or code...'
+                    }
+                    isLoading={isLoading}
+                />
 
-                {/* Timeline rendering */}
+                {/* Flowing Agenda Timeline */}
                 <AnimatePresence mode="wait">
                     {activeTab === 'upcoming' && (
                         <motion.div
                             key="upcoming"
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.15 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.1 }}
                         >
                             <VisitorTimeline
                                 codes={upcomingTimeline}
@@ -348,7 +343,7 @@ export default function Visitors({
                                                 e.stopPropagation();
                                                 openRevokeModal(code);
                                             }}
-                                            className="rounded-lg px-2 py-1 text-[11px] font-medium text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                                            className="rounded-lg px-2 py-0.5 text-[11px] font-medium text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                                         >
                                             Cancel
                                         </button>
@@ -361,10 +356,10 @@ export default function Visitors({
                     {activeTab === 'history' && (
                         <motion.div
                             key="history"
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.15 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.1 }}
                         >
                             <VisitorTimeline
                                 codes={historyTimeline}
@@ -376,7 +371,7 @@ export default function Visitors({
                 </AnimatePresence>
             </div>
 
-            {/* Pass Creation Drawer */}
+            {/* Creation Sheet */}
             <MobileSheet
                 isOpen={showCreateSheet}
                 onClose={() => setShowCreateSheet(false)}
@@ -384,7 +379,7 @@ export default function Visitors({
             >
                 <div className="space-y-3 pb-8">
                     <p className="mb-2 px-1 text-xs font-medium text-slate-500">
-                        Choose the pass duration for your visitor.
+                        Select a pass type to continue.
                     </p>
 
                     <Link
@@ -398,7 +393,7 @@ export default function Visitors({
                         <div>
                             <h4 className="text-xs font-bold text-slate-900">One-Time Pass</h4>
                             <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
-                                Valid for a single entry (deliveries, service visits, guests).
+                                Single entry for guests, deliveries, or contractors.
                             </p>
                         </div>
                     </Link>
@@ -415,7 +410,7 @@ export default function Visitors({
                             <div>
                                 <h4 className="text-xs font-bold text-slate-900">Long-Term Pass</h4>
                                 <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
-                                    Recurring pass for family members, staff, or contractors.
+                                    Recurring pass for family, domestic staff, or regulars.
                                 </p>
                             </div>
                         </Link>
@@ -432,7 +427,7 @@ export default function Visitors({
                         <div>
                             <h4 className="text-xs font-bold text-slate-900">Event Pass</h4>
                             <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
-                                Shared access pass for multiple guests arriving for an event.
+                                Shared access pass for multiple event guests.
                             </p>
                         </div>
                     </Link>
