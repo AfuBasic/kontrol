@@ -467,8 +467,9 @@ export default function VisitorIndex({
                                             verifier_id: verifierId,
                                         }}
                                         fallback={
-                                            <div className="border-t border-slate-50 p-3">
-                                                <TableRowSkeleton rows={3} columns={4} />
+                                            <div className="flex items-center justify-center gap-2 border-t border-slate-100 py-4 text-xs font-semibold text-slate-500">
+                                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                                                <span>Loading more visitor logs...</span>
                                             </div>
                                         }
                                     />
