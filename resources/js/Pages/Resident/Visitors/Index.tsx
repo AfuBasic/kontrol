@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import SearchInput from '@/Components/SearchInput';
-import PlannerSummary from '@/Components/Visitors/PlannerSummary';
+import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
 import VisitorTimeline from '@/Components/Visitors/VisitorTimeline';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
@@ -204,9 +204,9 @@ export default function Visitors({
                     </button>
                 </div>
 
-                {/* Lightweight Context Summary (1-line bar) */}
+                {/* Next Visitor Hero Card */}
                 {activeTab === 'upcoming' && (
-                    <PlannerSummary
+                    <NextVisitorHero
                         nextCode={nextVisitor}
                         totalExpectedToday={visitorStats.expected_today}
                     />
