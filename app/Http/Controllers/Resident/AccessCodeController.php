@@ -18,69 +18,87 @@ class AccessCodeController extends Controller
     ) {}
 
     /**
-     * Display a listing of access codes.
+     * Display the Visitor Timeline (Upcoming + History agenda views).
      */
     public function index(Request $request): Response
     {
-        $searchActive = $request->input('search_active');
+        $searchUpcoming = $request->input('search_upcoming');
         $searchHistory = $request->input('search_history');
 
-        $activeCodes = $this->accessCodeService->getActiveCodes($searchActive)->loadCount('accessLogs');
-        $historyCodes = $this->accessCodeService->getCodeHistory(20, $searchHistory)->loadCount('accessLogs');
+        $upcomingCodes = $this->accessCodeService->getUpcomingTimeline($searchUpcoming);
+        $historyCodes = $this->accessCodeService->getHistoryTimeline(50, $searchHistory);
 
-        // Resolved once — same for all codes (it's the authenticated resident's address).
         $residentAddress = $this->resolveResidentAddress();
 
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
-                'search_active' => $searchActive,
+                'search_upcoming' => $searchUpcoming,
                 'search_history' => $searchHistory,
             ],
-            'activeCodes' => $activeCodes->map(fn ($code) => [
-                'id' => $code->id,
-                'type' => $code->type,
-                'code' => $code->code,
-                'pass_uuid' => $code->pass_uuid,
-                'qr_token' => $code->qr_token,
-                'visitor_name' => $code->visitor_name,
-                'visitor_phone' => $code->visitor_phone,
-                'purpose' => $code->purpose,
-                'status' => $code->status->value,
-                'source' => $code->source->value,
-                'expires_at' => $code->expires_at?->toISOString(),
-                'starts_at' => $code->starts_at?->toISOString(),
-                'guest_limit' => $code->guest_limit,
-                'uses_count' => $code->access_logs_count ?? 0,
-                'used_at' => $code->used_at?->toISOString(),
-                'time_remaining' => $code->time_remaining,
-                'created_at' => $code->created_at->toISOString(),
-                'resident_address' => $residentAddress,
-            ]),
-            'historyCodes' => $historyCodes->map(fn ($code) => [
-                'id' => $code->id,
-                'type' => $code->type,
-                'code' => $code->code,
-                'pass_uuid' => $code->pass_uuid,
-                'qr_token' => $code->qr_token,
-                'visitor_name' => $code->visitor_name,
-                'visitor_phone' => $code->visitor_phone,
-                'purpose' => $code->purpose,
-                'status' => $code->status->value,
-                'source' => $code->source->value,
-                'expires_at' => $code->expires_at?->toISOString(),
-                'starts_at' => $code->starts_at?->toISOString(),
-                'guest_limit' => $code->guest_limit,
-                'uses_count' => $code->access_logs_count ?? 0,
-                'used_at' => $code->used_at?->toISOString(),
-                'revoked_at' => $code->revoked_at?->toISOString(),
-                'time_remaining' => $code->time_remaining,
-                'created_at' => $code->created_at->toISOString(),
-                'resident_address' => $residentAddress,
-            ]),
+            'upcomingTimeline' => $upcomingCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress)),
+            'historyTimeline' => $historyCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress, withCompletion: true)),
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
             'visitorStats' => $this->accessCodeService->getHomeStats(),
         ]);
+    }
+
+    /**
+     * Serialize an AccessCode into the Visitor Timeline shape.
+     *
+     * Exposes effective_visit_at (and derived arrival_date / arrival_time) as the
+     * canonical scheduling concept, and optionally completion_at (with derived
+     * completion_date / completion_time) for the History tab.
+     *
+     * The frontend must consume these fields exclusively and never reference raw
+     * database timestamps for grouping or sorting.
+     */
+    private function serializeAccessCode(AccessCode $code, ?string $residentAddress, bool $withCompletion = false): array
+    {
+        $effectiveVisitAt = $code->effective_visit_at;
+
+        $base = [
+            'id' => $code->id,
+            'type' => $code->type,
+            'code' => $code->code,
+            'pass_uuid' => $code->pass_uuid,
+            'qr_token' => $code->qr_token,
+            'visitor_name' => $code->visitor_name,
+            'visitor_phone' => $code->visitor_phone,
+            'purpose' => $code->purpose,
+            'status' => $code->status->value,
+            'source' => $code->source->value,
+            'expires_at' => $code->expires_at?->toISOString(),
+            'starts_at' => $code->starts_at?->toISOString(),
+            'used_at' => $code->used_at?->toISOString(),
+            'revoked_at' => $code->revoked_at?->toISOString(),
+            'guest_limit' => $code->guest_limit,
+            'uses_count' => $code->access_logs_count ?? $code->accessLogs->count(),
+            'time_remaining' => $code->time_remaining,
+            'notes' => $code->notes,
+            'has_vehicle' => $code->has_vehicle,
+            'resident_address' => $residentAddress,
+            'created_at' => $code->created_at->toISOString(),
+
+            // --- Visitor Timeline canonical fields ---
+            // effective_visit_at: the single source of truth for when this visit
+            // is scheduled. Derived from starts_at → expires_at → created_at.
+            'effective_visit_at' => $effectiveVisitAt->toISOString(),
+            'arrival_date' => $effectiveVisitAt->toDateString(),        // "2026-07-23"
+            'arrival_time' => $code->starts_at !== null
+                ? $effectiveVisitAt->format('g:i A')                   // "10:00 AM"
+                : null,                                                  // null = "Anytime"
+        ];
+
+        if ($withCompletion) {
+            $completionAt = $code->completion_at;
+
+            $base['completion_at'] = $completionAt?->toISOString();
+            $base['completion_date'] = $completionAt?->toDateString();
+            $base['completion_time'] = $completionAt?->format('g:i A');
+        }
+
+        return $base;
     }
 
     /**

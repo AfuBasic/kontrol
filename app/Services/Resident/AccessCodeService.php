@@ -159,6 +159,76 @@ class AccessCodeService
     }
 
     /**
+     * Fetch all active and scheduled passes for the Visitor Timeline (Upcoming tab).
+     *
+     * Returns passes ordered by effective_visit_at ascending so that the earliest
+     * scheduled visit appears first. Grouping into date buckets happens on the
+     * frontend via the useVisitorTimeline hook.
+     *
+     * This method intentionally merges what were previously two separate "active"
+     * and "upcoming" buckets — the timeline uses time as its primary axis, not
+     * pass state.
+     *
+     * @return Collection<int, AccessCode>
+     */
+    public function getUpcomingTimeline(?string $search = null): Collection
+    {
+        $user = Auth::user();
+        $estate = $this->estateContext->getEstate();
+
+        $userIds = $user->getHouseholdUserIds();
+
+        return AccessCode::query()
+            ->forEstate($estate->id)
+            ->whereIn('user_id', $userIds)
+            ->active()
+            ->search($search)
+            ->with('accessLogs')
+            // Order by starts_at when present, then expires_at for single_use/event,
+            // then created_at — mirrors the effective_visit_at precedence in the model.
+            ->orderByRaw('COALESCE(starts_at, CASE WHEN type IN (\'single_use\', \'event\') THEN expires_at ELSE NULL END, created_at) ASC')
+            ->get();
+    }
+
+    /**
+     * Fetch completed visits for the Visitor Timeline (History tab).
+     *
+     * Ordered by the completion_at precedence (checked_out_at → used_at → revoked_at
+     * → expires_at → created_at), most recent first.
+     *
+     * @return Collection<int, AccessCode>
+     */
+    public function getHistoryTimeline(int $limit = 50, ?string $search = null): Collection
+    {
+        $user = Auth::user();
+        $estate = $this->estateContext->getEstate();
+
+        $userIds = $user->getHouseholdUserIds();
+
+        $query = AccessCode::query()
+            ->forEstate($estate->id)
+            ->whereIn('user_id', $userIds)
+            ->where(function ($q) {
+                $q->whereIn('status', [AccessCodeStatus::Used, AccessCodeStatus::Expired, AccessCodeStatus::Revoked])
+                    ->orWhere(fn ($sq) => $sq->where('status', AccessCodeStatus::Active)
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '<=', now()))
+                    ->orWhere(fn ($sq) => $sq->where('type', 'long_lived')
+                        ->whereNotNull('used_at'));
+            })
+            ->search($search)
+            ->with('accessLogs')
+            // Order by the same precedence as getCompletionAtAttribute()
+            ->orderByRaw('COALESCE(used_at, revoked_at, expires_at, created_at) DESC');
+
+        if (! $search) {
+            $query->limit($limit);
+        }
+
+        return $query->get();
+    }
+
+    /**
      * Get all access codes for the current user (paginated).
      *
      * @return Collection<int, AccessCode>

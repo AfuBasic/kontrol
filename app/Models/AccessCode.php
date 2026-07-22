@@ -40,6 +40,8 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read int|null $activities_count
  * @property-read Estate $estate
  * @property-read string $time_remaining
+ * @property-read CarbonImmutable $effective_visit_at
+ * @property-read CarbonImmutable|null $completion_at
  * @property-read User $user
  * @property-read User|null $verifiedBy
  *
@@ -334,6 +336,82 @@ class AccessCode extends Model
         }
 
         return $this->expires_at->diffForHumans(['parts' => 2, 'short' => true]);
+    }
+
+    /**
+     * The canonical "when is this visit scheduled?" field for the Visitor Timeline.
+     *
+     * Precedence:
+     *   1. starts_at  — explicit visitor arrival time
+     *   2. expires_at — only for non-schedulable pass types (single_use, event)
+     *   3. created_at — last resort; prevents orphaned records on the timeline
+     *
+     * The frontend must consume this field exclusively and never reference
+     * raw database timestamps for grouping or sorting.
+     */
+    public function getEffectiveVisitAtAttribute(): CarbonImmutable
+    {
+        if ($this->starts_at !== null) {
+            return $this->starts_at;
+        }
+
+        // For pass types that do not support open-ended scheduling,
+        // expires_at represents the deadline for the visit window.
+        if ($this->expires_at !== null && in_array($this->type, ['single_use', 'event'])) {
+            return $this->expires_at;
+        }
+
+        return $this->created_at;
+    }
+
+    /**
+     * The canonical "when was this visit completed?" field for the Visitor Timeline.
+     *
+     * Precedence follows the most granular completion signal available:
+     *   1. checked_out_at — visitor physically exited (most precise)
+     *   2. used_at        — visitor was verified at entry
+     *   3. verified_at    — legacy check-in timestamp (via latest access log)
+     *   4. revoked_at     — host cancelled the visit
+     *   5. expires_at     — pass window closed without entry
+     *   6. created_at     — last resort
+     *
+     * Returns null for passes that are not yet completed (active/scheduled).
+     */
+    public function getCompletionAtAttribute(): ?CarbonImmutable
+    {
+        // Not a terminal state — visit is ongoing or pending.
+        if (in_array($this->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled])) {
+            return null;
+        }
+
+        // Most granular: visitor physically left
+        $latestLog = $this->accessLogs->sortByDesc('checked_out_at')->first();
+        if ($latestLog?->checked_out_at !== null) {
+            return CarbonImmutable::instance($latestLog->checked_out_at);
+        }
+
+        // Visitor was checked in
+        if ($this->used_at !== null) {
+            return $this->used_at;
+        }
+
+        // Latest access log verified_at
+        $latestVerified = $this->accessLogs->sortByDesc('verified_at')->first();
+        if ($latestVerified?->verified_at !== null) {
+            return CarbonImmutable::instance($latestVerified->verified_at);
+        }
+
+        // Host cancelled
+        if ($this->revoked_at !== null) {
+            return $this->revoked_at;
+        }
+
+        // Pass window closed
+        if ($this->expires_at !== null) {
+            return $this->expires_at;
+        }
+
+        return $this->created_at;
     }
 
     public static function generateCode(): string
