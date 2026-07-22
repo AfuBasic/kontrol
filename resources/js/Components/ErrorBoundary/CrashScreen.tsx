@@ -10,6 +10,8 @@ interface Props {
 export default function CrashScreen({ error, resetError }: Props) {
     const [showDetails, setShowDetails] = useState(false);
     const [copied, setCopied] = useState(false);
+    // Never expose stack traces or error payloads to end users in production.
+    const showTechnicalDetails = import.meta.env.DEV && error != null;
 
     const handleReload = () => {
         window.location.reload();
@@ -110,8 +112,8 @@ export default function CrashScreen({ error, resetError }: Props) {
                     </div>
                 </div>
 
-                {/* Technical Details Toggle */}
-                {error && (
+                {/* Technical Details — local/dev only */}
+                {showTechnicalDetails && (
                     <div className="border-t border-slate-50 bg-slate-50/50 px-8 py-4">
                         <button
                             onClick={() => setShowDetails(!showDetails)}
@@ -123,10 +125,10 @@ export default function CrashScreen({ error, resetError }: Props) {
 
                         {showDetails && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="mt-4 overflow-hidden">
-                                <div className="relative group">
+                                <div className="group relative">
                                     <button
                                         onClick={handleCopy}
-                                        className="absolute right-3 top-3 z-10 flex items-center gap-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 px-2.5 py-1.5 text-[10px] font-bold text-slate-300 hover:text-white transition-all backdrop-blur-xs"
+                                        className="absolute top-3 right-3 z-10 flex items-center gap-1 rounded-lg bg-slate-800/80 px-2.5 py-1.5 text-[10px] font-bold text-slate-300 backdrop-blur-xs transition-all hover:bg-slate-700 hover:text-white"
                                     >
                                         {copied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
                                         {copied ? 'Copied' : 'Copy Error'}
@@ -138,9 +140,6 @@ export default function CrashScreen({ error, resetError }: Props) {
                                         <p className="whitespace-pre-wrap opacity-60">{error.stack}</p>
                                     </div>
                                 </div>
-                                <p className="mt-3 text-center text-[10px] text-slate-400 italic">
-                                    Report ID: {Math.random().toString(36).substring(7).toUpperCase()}
-                                </p>
                             </motion.div>
                         )}
                     </div>
