@@ -23,38 +23,10 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $estate = $this->estateContext->getEstate();
-        $boardService = app(EstateBoardService::class);
-        $announcements = $boardService->getFeed($estate->id, 3, [
-            EstateBoardPostAudience::All,
-            EstateBoardPostAudience::Residents,
-        ]);
-
         $user = auth()->user();
         $isHouseholdMember = $user->isHouseholdMember();
 
-        $unpaidDues = [];
-        if (! $isHouseholdMember) {
-            $unpaidDues = CollectionAssignment::where('user_id', $user->id)
-                ->where('estate_id', $estate->id)
-                ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
-                ->with('collection')
-                ->latest()
-                ->get()
-                ->map(fn ($assignment) => [
-                    'ulid' => $assignment->ulid,
-                    'amount_due' => $assignment->amount_due,
-                    'amount_paid' => $assignment->amount_paid,
-                    'status' => $assignment->status,
-                    'due_date' => $assignment->due_date?->toISOString() ?: $assignment->due_date,
-                    'collection' => [
-                        'name' => $assignment->collection->name,
-                        'description' => $assignment->collection->description,
-                    ],
-                ]);
-        }
-
         $activeCodesCollection = $this->accessCodeService->getActiveCodes();
-        $now = now();
         $activePassesCount = $activeCodesCollection->filter(function ($code) {
             $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
             $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
@@ -82,12 +54,16 @@ class HomeController extends Controller
             ])
             ->count();
 
-        $unpaidDuesCount = count($unpaidDues);
-        $totalUnpaidDuesAmount = collect($unpaidDues)->sum('amount_due') - collect($unpaidDues)->sum('amount_paid');
-
         return Inertia::render('Resident/Home', [
+            // Eager — lightweight command center shell
             'stats' => $this->accessCodeService->getHomeStats(),
-            'activeCodes' => $activeCodesCollection->map(fn ($code) => [
+            'estateName' => $estate->name,
+            'openIncidentsCount' => $openIncidentsCount,
+            'activePassesCount' => $activePassesCount,
+            'upcomingPassesCount' => $upcomingPassesCount,
+
+            // Deferred — heavier secondary sections
+            'activeCodes' => Inertia::defer(fn () => $activeCodesCollection->map(fn ($code) => [
                 'id' => $code->id,
                 'code' => $code->code,
                 'type' => $code->type,
@@ -100,16 +76,62 @@ class HomeController extends Controller
                 'used_at' => $code->used_at?->toISOString(),
                 'time_remaining' => $code->time_remaining,
                 'created_at' => $code->created_at?->toISOString(),
-            ]),
-            'recentActivity' => $this->accessCodeService->getRecentActivity(5),
-            'latestAnnouncements' => $announcements->items(),
-            'estateName' => $estate->name,
-            'unpaidDues' => $unpaidDues,
-            'openIncidentsCount' => $openIncidentsCount,
-            'activePassesCount' => $activePassesCount,
-            'upcomingPassesCount' => $upcomingPassesCount,
-            'unpaidDuesCount' => $unpaidDuesCount,
-            'totalUnpaidDuesAmount' => $totalUnpaidDuesAmount,
+            ])),
+            'recentActivity' => Inertia::defer(fn () => $this->accessCodeService->getRecentActivity(5)),
+            'latestAnnouncements' => Inertia::defer(function () use ($estate) {
+                $boardService = app(EstateBoardService::class);
+                $announcements = $boardService->getFeed($estate->id, 3, [
+                    EstateBoardPostAudience::All,
+                    EstateBoardPostAudience::Residents,
+                ]);
+
+                return $announcements->items();
+            }),
+            'unpaidDues' => Inertia::defer(function () use ($user, $estate, $isHouseholdMember) {
+                if ($isHouseholdMember) {
+                    return [];
+                }
+
+                return CollectionAssignment::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
+                    ->with('collection')
+                    ->latest()
+                    ->get()
+                    ->map(fn ($assignment) => [
+                        'ulid' => $assignment->ulid,
+                        'amount_due' => $assignment->amount_due,
+                        'amount_paid' => $assignment->amount_paid,
+                        'status' => $assignment->status,
+                        'due_date' => $assignment->due_date?->toISOString() ?: $assignment->due_date,
+                        'collection' => [
+                            'name' => $assignment->collection->name,
+                            'description' => $assignment->collection->description,
+                        ],
+                    ]);
+            }),
+            'unpaidDuesCount' => Inertia::defer(function () use ($user, $estate, $isHouseholdMember) {
+                if ($isHouseholdMember) {
+                    return 0;
+                }
+
+                return CollectionAssignment::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
+                    ->count();
+            }),
+            'totalUnpaidDuesAmount' => Inertia::defer(function () use ($user, $estate, $isHouseholdMember) {
+                if ($isHouseholdMember) {
+                    return 0;
+                }
+
+                $rows = CollectionAssignment::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
+                    ->get(['amount_due', 'amount_paid']);
+
+                return $rows->sum('amount_due') - $rows->sum('amount_paid');
+            }),
         ]);
     }
 }

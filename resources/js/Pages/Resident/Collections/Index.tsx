@@ -2,11 +2,13 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { Head, Link, usePage, InfiniteScroll, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Wallet, Clock, CheckCircle2, AlertCircle, Search, X, Loader2 } from 'lucide-react';
+import { Wallet, Clock, CheckCircle2, AlertCircle, Search, X, Loader2, WifiOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { index, show } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import MobileSheet from '@/Components/MobileSheet';
 import { useDebounce } from '@/Hooks/useDebounce';
+import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
+import { useStaleData } from '@/Hooks/useStaleData';
 import { isRouteChangeVisit } from '@/Lib/inertia';
 import type { SharedData } from '@/types';
 
@@ -49,6 +51,17 @@ type Props = {
 };
 
 export default function CollectionsIndex({ summary, paid, filters }: Props) {
+    const { isOnline, quality } = useNetworkQuality();
+    const paymentsDisabled = !isOnline || quality === 'offline';
+
+    useStaleData({
+        key: 'resident-collections',
+        serverData: summary,
+        namespace: 'resident',
+        only: ['summary'],
+        revalidate: isOnline,
+    });
+
     const { auth, app_url: appUrl } = usePage<SharedData>().props;
     const hasLandlord = !!auth?.user?.profile?.property_owner_id;
     const [billFilter, setBillFilter] = useState<'all' | 'estate' | 'property_owner'>(
@@ -147,6 +160,10 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
               : propertyOwnerOutstanding.length;
 
     const handlePayAll = async () => {
+        if (paymentsDisabled) {
+            return;
+        }
+
         if (billFilter === 'estate') {
             redirectToCheckout(estateOutstanding);
         } else if (billFilter === 'property_owner') {
@@ -272,12 +289,19 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
                         {showPayAllButton && (
                             <button
                                 onClick={handlePayAll}
-                                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all hover:bg-indigo-100 active:scale-95"
+                                disabled={paymentsDisabled}
+                                className="flex cursor-pointer items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1.5 text-[9px] font-black tracking-widest text-indigo-600 uppercase transition-all hover:bg-indigo-100 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 Pay All ({payAllCount})
                             </button>
                         )}
                     </div>
+                    {paymentsDisabled && (
+                        <div className="mb-3 flex items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-semibold text-slate-600">
+                            <WifiOff className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                            Payments require an internet connection. Your balances are shown from your last visit.
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {filteredOutstanding.length > 0 ? (
