@@ -26,20 +26,14 @@ import { CardSkeleton, FeedItemSkeleton, StatCardSkeleton } from '@/Components/S
 import { ErrorState, OfflineState } from '@/Components/States';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 
+import ActionCenter, { AttentionItem } from '@/Components/Admin/Dashboard/ActionCenter';
+
 type EstateHealth = {
     name: string;
     address: string | null;
     status: 'normal' | 'attention' | 'critical';
     statusLabel: string;
     summary: string[];
-};
-
-type AttentionItem = {
-    type: string;
-    title: string;
-    desc: string;
-    severity: 'info' | 'warning' | 'danger';
-    actionUrl: string;
 };
 
 type OperationalSnapshot = {
@@ -181,13 +175,13 @@ export default function Dashboard({
                     </Deferred>
                 </SectionErrorBoundary>
 
-                {/* SECTION 2 — NEEDS ATTENTION */}
+                {/* SECTION 2 — ACTION CENTER */}
                 <SectionErrorBoundary name="needs-attention">
                     <Deferred
                         data="needsAttention"
                         fallback={
                             <section className="space-y-2.5">
-                                <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Needs Attention</h3>
+                                <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Action Center</h3>
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                     <CardSkeleton />
                                     <CardSkeleton />
@@ -195,7 +189,7 @@ export default function Dashboard({
                             </section>
                         }
                     >
-                        <NeedsAttentionSection items={needsAttention ?? []} />
+                        <ActionCenter items={needsAttention ?? []} />
                     </Deferred>
                 </SectionErrorBoundary>
 
@@ -430,44 +424,7 @@ function EstateHealthHero({ health }: { health: EstateHealth }) {
     );
 }
 
-function NeedsAttentionSection({ items }: { items: AttentionItem[] }) {
-    return (
-        <section className="space-y-2.5">
-            <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Needs Attention</h3>
-            {items.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    {items.map((item, idx) => (
-                        <Link
-                            key={idx}
-                            href={item.actionUrl}
-                            className={`flex items-center justify-between gap-4 rounded-xl border p-4 transition-all active:scale-99 ${getSeverityStyles(item.severity)}`}
-                        >
-                            <div className="min-w-0 flex-1">
-                                <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
-                                <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-500">{item.desc}</p>
-                            </div>
-                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-100 bg-white/80 text-slate-700">
-                                <ChevronRight className="h-4 w-4" />
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex items-center gap-3.5 rounded-xl border border-emerald-100 bg-emerald-50/20 p-4">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                        <CheckCircle2 className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-emerald-800">Everything looks good</h4>
-                        <p className="mt-0.5 text-[11px] leading-tight font-medium text-emerald-600/90">
-                            No operational issues require your attention today.
-                        </p>
-                    </div>
-                </div>
-            )}
-        </section>
-    );
-}
+
 
 function OperationalSnapshotSection({ snapshot }: { snapshot: OperationalSnapshot }) {
     const cards = [
