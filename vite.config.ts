@@ -34,6 +34,16 @@ export default defineConfig({
         target: 'es2020',
         jsx: 'automatic',
     },
+    optimizeDeps: {
+        include: [
+            '@fullcalendar/core',
+            '@fullcalendar/react',
+            '@fullcalendar/daygrid',
+            '@fullcalendar/timegrid',
+            '@fullcalendar/list',
+            '@fullcalendar/interaction',
+        ],
+    },
     build: {
         target: 'es2020',
         rollupOptions: {
