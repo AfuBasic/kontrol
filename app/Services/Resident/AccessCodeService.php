@@ -745,10 +745,12 @@ class AccessCodeService
             $query->where('estate_id', $estate->id);
         }
 
-        // Filter by date range (overlapping start/end)
+        // Filter by date range (overlapping start/end or scheduled visit date)
         $query->where(function ($q) use ($startDate, $endDate) {
             $q->whereBetween('created_at', [$startDate, $endDate])
+                ->orWhereBetween('starts_at', [$startDate, $endDate])
                 ->orWhereBetween('expires_at', [$startDate, $endDate])
+                ->orWhereBetween('used_at', [$startDate, $endDate])
                 ->orWhere(function ($sq) use ($startDate, $endDate) {
                     $sq->where('created_at', '<=', $startDate)
                         ->where('expires_at', '>=', $endDate);
@@ -781,7 +783,8 @@ class AccessCodeService
 
         return $codes->map(function (AccessCode $code) {
             $isLongLived = $code->type === 'long_lived';
-            $start = $code->created_at ? $code->created_at->toIso8601String() : now()->toIso8601String();
+            $effectiveStart = $code->effective_visit_at;
+            $start = $effectiveStart ? $effectiveStart->toIso8601String() : ($code->created_at ? $code->created_at->toIso8601String() : now()->toIso8601String());
             $end = $code->expires_at ? $code->expires_at->toIso8601String() : $start;
 
             return [
@@ -794,7 +797,7 @@ class AccessCodeService
                     'code' => $code->code,
                     'visitor_name' => $code->visitor_name ?: 'Guest',
                     'visitor_phone' => $code->visitor_phone,
-                    'purpose' => $code->purpose ?: 'Personal Visit',
+                    'purpose' => $code->purpose ?: 'Personal Guest',
                     'type' => $code->type,
                     'status' => $code->status instanceof AccessCodeStatus ? $code->status->value : (string) $code->status,
                     'host_name' => $code->user?->name ?? 'Resident',
