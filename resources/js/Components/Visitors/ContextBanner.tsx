@@ -32,7 +32,13 @@ export default function ContextBanner({ upcoming }: Props) {
         const visitTime = new Date(imminent.effective_visit_at).getTime();
         const diffMinutes = Math.round((visitTime - now.getTime()) / (1000 * 60));
         const visitorName = imminent.visitor_name || 'Guest';
-        message = `${visitorName} arrives in ${diffMinutes} minute${diffMinutes === 1 ? '' : 's'}.`;
+        let timeFormatted = `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'}`;
+        if (diffMinutes >= 60) {
+            const hours = Math.floor(diffMinutes / 60);
+            const mins = diffMinutes % 60;
+            timeFormatted = mins > 0 ? `${hours} hr ${mins} min${mins === 1 ? '' : 's'}` : `${hours} hour${hours === 1 ? '' : 's'}`;
+        }
+        message = `${visitorName} arrives in ${timeFormatted}.`;
     } else if (todayVisits.length >= 3) {
         message = `Busy day ahead — ${todayVisits.length} visitors expected today.`;
     } else if (todayVisits.length > 0) {
