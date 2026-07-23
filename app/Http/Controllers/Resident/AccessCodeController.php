@@ -45,6 +45,39 @@ class AccessCodeController extends Controller
     }
 
     /**
+     * Display the Resident Visitor Calendar page.
+     */
+    public function calendar(Request $request): Response
+    {
+        return Inertia::render('Resident/Visitors/Calendar', [
+            'initialFilters' => [
+                'purpose' => $request->input('purpose'),
+                'status' => $request->input('status'),
+                'type' => $request->input('type'),
+                'search' => $request->input('search'),
+            ],
+        ]);
+    }
+
+    /**
+     * Return JSON calendar events for date range lazy-loading.
+     */
+    public function calendarEvents(Request $request): JsonResponse
+    {
+        $startDate = $request->input('start') ? \Carbon\Carbon::parse($request->input('start')) : now()->startOfMonth();
+        $endDate = $request->input('end') ? \Carbon\Carbon::parse($request->input('end')) : now()->endOfMonth();
+
+        $events = $this->accessCodeService->getCalendarEvents(
+            $startDate,
+            $endDate,
+            userId: $request->user()->id,
+            filters: $request->only(['purpose', 'status', 'type', 'search'])
+        );
+
+        return response()->json($events);
+    }
+
+    /**
      * Serialize an AccessCode into the Visitor Timeline shape.
      *
      * Exposes effective_visit_at (and derived arrival_date / arrival_time) as the
