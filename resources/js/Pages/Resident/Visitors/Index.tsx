@@ -159,13 +159,22 @@ export default function Visitors({
                     <div>
                         <h1 className="text-lg font-bold tracking-tight text-slate-900">Visitors</h1>
                     </div>
-                    <button
-                        onClick={() => setShowCreateSheet(true)}
-                        className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white transition hover:bg-slate-800"
-                    >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Invite</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={resident.visitors.calendar.url()}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50"
+                        >
+                            <Calendar className="h-3.5 w-3.5 text-primary-600" />
+                            <span>Calendar</span>
+                        </Link>
+                        <button
+                            onClick={() => setShowCreateSheet(true)}
+                            className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white transition hover:bg-slate-800"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>Invite</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Animated Segmented View Switcher */}
