@@ -1,22 +1,7 @@
 import { Deferred, Head, Link, usePage, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Megaphone,
-    ChevronRight,
-    Wallet,
-    Users,
-    AlertCircle,
-    Bell,
-    Plus,
-    CheckCircle2,
-    Clock,
-    Calendar,
-    ArrowRight,
-    Activity,
-    PlusCircle,
-    XCircle,
-} from 'lucide-react';
+import { Megaphone, ChevronRight, Wallet, Users, AlertCircle, Bell, Plus, CheckCircle2, Clock, Calendar, ArrowRight, Activity, PlusCircle, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import { FeedItemSkeleton } from '@/Components/Skeletons';
@@ -84,11 +69,7 @@ export default function Home({
         [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount],
     );
 
-    const {
-        data: staleShell,
-        isStale,
-        cachedAt,
-    } = useStaleData({
+    const { data: staleShell, isStale, cachedAt } = useStaleData({
         key: 'resident-home',
         serverData: shellSnapshot,
         namespace: 'resident',
@@ -138,7 +119,7 @@ export default function Home({
             title: 'Outstanding Estate Dues',
             desc: `You have ${duesCount} pending payment${duesCount > 1 ? 's' : ''} totaling ₦${duesAmount.toLocaleString()}`,
             href: '/resident/dues',
-            color: 'border-rose-100 bg-rose-50/30 text-rose-700',
+            color: 'border-rose-100 bg-rose-50/30 text-rose-700'
         });
     }
 
@@ -148,7 +129,7 @@ export default function Home({
             title: 'Visitors Expected Today',
             desc: `${displayActivePasses} visitor pass${displayActivePasses > 1 ? 'es' : ''} currently active and ready for check-in`,
             href: '/resident/visitors',
-            color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700',
+            color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700'
         });
     }
 
@@ -158,7 +139,7 @@ export default function Home({
             title: 'Visitor Pass Expiring Soon',
             desc: `${expiringPasses[0].visitor_name || 'Visitor'}'s pass is expiring shortly`,
             href: `/resident/visitors/${expiringPasses[0].id}`,
-            color: 'border-amber-100 bg-amber-50/30 text-amber-700',
+            color: 'border-amber-100 bg-amber-50/30 text-amber-700'
         });
     }
 
@@ -168,7 +149,7 @@ export default function Home({
             title: 'Pending Incidents',
             desc: `You have ${displayOpenIncidents} unresolved security or estate incident${displayOpenIncidents > 1 ? 's' : ''}`,
             href: '/resident/incidents',
-            color: 'border-slate-200 bg-slate-50/40 text-slate-700',
+            color: 'border-slate-200 bg-slate-50/40 text-slate-700'
         });
     }
 
@@ -178,7 +159,7 @@ export default function Home({
             title: 'Unread Announcements',
             desc: `There are ${auth.user.unread_notifications_count} unread notifications/announcements`,
             href: '/resident/notifications',
-            color: 'border-blue-100 bg-blue-50/20 text-blue-700',
+            color: 'border-blue-100 bg-blue-50/20 text-blue-700'
         });
     }
 
@@ -202,16 +183,19 @@ export default function Home({
         <>
             <Head title="Home" />
 
-            <div className="mx-auto max-w-xl space-y-3 px-0.5 pb-20">
+            <div className="mx-auto max-w-2xl space-y-5 pb-24 px-1.5">
+                
                 {/* HEADER */}
-                <div className="flex items-center justify-between py-0.5">
+                <div className="flex items-center justify-between py-1">
                     <div className="flex flex-col">
-                        <span className="text-slate-450 text-xs font-semibold">{getGreeting()}</span>
+                        <span className="text-xs font-semibold text-slate-450">{getGreeting()}</span>
                         <h1 className="text-lg font-bold tracking-tight text-slate-900">{displayEstateName}</h1>
                         {isHouseholdMember && parentResidentName && (
                             <span className="text-[10px] font-medium text-slate-400">Household member of {parentResidentName}</span>
                         )}
-                        {isStale && cachedAt && <span className="text-[10px] font-medium text-amber-600">Showing last saved home data</span>}
+                        {isStale && cachedAt && (
+                            <span className="text-[10px] font-medium text-amber-600">Showing last saved home data</span>
+                        )}
                     </div>
                 </div>
 
@@ -225,7 +209,7 @@ export default function Home({
 
                 {/* SECTION 1: ATTENTION CENTER */}
                 <section className="space-y-2">
-                    <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Attention Center</h3>
+                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-1">Attention Center</h3>
                     {attentionItems.length > 0 ? (
                         <div className="space-y-2">
                             {attentionItems.map((item, index) => {
@@ -233,9 +217,9 @@ export default function Home({
                                     <div className="flex items-center justify-between gap-3">
                                         <div className="min-w-0 flex-1">
                                             <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
-                                            <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-500">{item.desc}</p>
+                                            <p className="mt-0.5 text-[11px] font-medium text-slate-500 leading-normal">{item.desc}</p>
                                         </div>
-                                        {item.href && <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />}
+                                        {item.href && <ChevronRight className="h-4 w-4 text-slate-400 shrink-0" />}
                                     </div>
                                 );
 
@@ -243,12 +227,15 @@ export default function Home({
                                     <Link
                                         key={index}
                                         href={item.href}
-                                        className={`block rounded-2xl border p-3.5 transition-all hover:bg-slate-50/30 active:scale-99 ${item.color}`}
+                                        className={`block rounded-2xl border p-3.5 transition-all active:scale-99 hover:bg-slate-50/30 ${item.color}`}
                                     >
                                         {CardContent}
                                     </Link>
                                 ) : (
-                                    <div key={index} className={`rounded-2xl border p-3.5 ${item.color}`}>
+                                    <div
+                                        key={index}
+                                        className={`rounded-2xl border p-3.5 ${item.color}`}
+                                    >
                                         {CardContent}
                                     </div>
                                 );
@@ -261,7 +248,7 @@ export default function Home({
                             </div>
                             <div className="min-w-0">
                                 <h4 className="text-xs font-bold text-emerald-800">Everything looks good</h4>
-                                <p className="mt-0.5 text-[11px] leading-tight font-medium text-emerald-600/90">
+                                <p className="mt-0.5 text-[11px] font-medium text-emerald-600/90 leading-tight">
                                     No outstanding dues • No expected visitors today • No unresolved incidents
                                 </p>
                             </div>
@@ -271,18 +258,19 @@ export default function Home({
 
                 {/* SECTION 2: TODAY'S SNAPSHOT (4 Compact Summary Cards) */}
                 <section className="space-y-2">
-                    <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Today's Snapshot</h3>
+                    <h3 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase px-1">Today's Snapshot</h3>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                        
                         {/* Visitors Card */}
                         <Link
                             href="/resident/visitors"
-                            className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)] transition-all hover:bg-slate-50/40 active:scale-97"
+                            className="rounded-2xl border border-slate-100 bg-white p-3 flex items-center justify-between transition-all hover:bg-slate-50/40 active:scale-97 shadow-[0_1px_4px_rgba(0,0,0,0.01)]"
                         >
                             <div className="min-w-0">
-                                <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Visitors</span>
+                                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Visitors</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{displayActivePasses}</span>
                             </div>
-                            <div className="text-indigo-650 flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-indigo-650">
                                 <Users className="h-4 w-4" />
                             </div>
                         </Link>
@@ -294,9 +282,11 @@ export default function Home({
                         >
                             <div className="min-w-0">
                                 <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Dues</span>
-                                <span className="mt-0.5 block text-base font-bold text-slate-900">₦{duesAmount.toLocaleString()}</span>
+                                <span className="mt-0.5 block text-base font-bold text-slate-900">
+                                    ₦{duesAmount.toLocaleString()}
+                                </span>
                             </div>
-                            <div className="text-rose-650 flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-650">
                                 <Wallet className="h-4 w-4" />
                             </div>
                         </Link>
@@ -310,7 +300,7 @@ export default function Home({
                                 <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Updates</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{announcements.length}</span>
                             </div>
-                            <div className="text-amber-650 flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-650">
                                 <Megaphone className="h-4 w-4" />
                             </div>
                         </Link>
@@ -324,12 +314,14 @@ export default function Home({
                                 <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Incidents</span>
                                 <span className="mt-0.5 block text-base font-bold text-slate-900">{displayOpenIncidents}</span>
                             </div>
-                            <div className="text-slate-650 flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-650">
                                 <AlertCircle className="h-4 w-4" />
                             </div>
                         </Link>
+
                     </div>
                 </section>
+
 
                 {/* SECTION 4: ESTATE UPDATES */}
                 {hasEstateBoard && (
@@ -356,7 +348,7 @@ export default function Home({
                                                 <Megaphone className="h-4 w-4" />
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <h4 className="group-hover:text-indigo-650 truncate text-xs font-semibold text-slate-800 transition-colors">
+                                                <h4 className="truncate text-xs font-semibold text-slate-800 transition-colors group-hover:text-indigo-650">
                                                     {post.title}
                                                 </h4>
                                                 <p className="mt-0.5 text-[9px] font-medium text-slate-400">
@@ -373,8 +365,8 @@ export default function Home({
                 )}
 
                 {/* SECTION 5: RECENT ACTIVITY */}
-                {hasLiveFeed &&
-                    (!isOnline || quality === 'offline' ? (
+                {hasLiveFeed && (
+                    !isOnline || quality === 'offline' ? (
                         <section className="space-y-2">
                             <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Recent Activity</h3>
                             <div className="rounded-2xl border border-slate-100 bg-white">
@@ -420,7 +412,9 @@ export default function Home({
                                 </section>
                             )}
                         </Deferred>
-                    ))}
+                    )
+                )}
+
             </div>
         </>
     );

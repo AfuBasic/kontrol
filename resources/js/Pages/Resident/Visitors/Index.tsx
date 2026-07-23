@@ -153,7 +153,7 @@ export default function Visitors({
         <>
             <Head title="Visitors" />
 
-            <div className="mx-auto max-w-xl px-1 py-1.5 space-y-2 pb-16">
+            <div className="mx-auto max-w-xl px-3.5 py-3 space-y-2 pb-20">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>

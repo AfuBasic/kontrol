@@ -8,19 +8,11 @@ import SecurityLayout from '@/Layouts/SecurityLayout';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import type { SharedData } from '@/types';
 
-interface ErrorDetails {
-    message?: string;
-    file?: string;
-    line?: number;
-    trace?: string;
-}
-
 interface Props {
     status: number;
-    errorDetails?: ErrorDetails;
 }
 
-export default function Error({ status, errorDetails }: Props) {
+export default function Error({ status }: Props) {
     const { props } = usePage<SharedData>();
     const hasLayout = !!props.auth?.user;
 
@@ -62,7 +54,7 @@ export default function Error({ status, errorDetails }: Props) {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-lg"
+                className="relative z-10 w-full max-w-md"
             >
                 {/* Icon Circle */}
                 <div
@@ -101,32 +93,7 @@ export default function Error({ status, errorDetails }: Props) {
                 </h1>
 
                 {/* Description */}
-                <p className={`mb-6 text-base leading-relaxed ${hasLayout ? 'text-slate-500' : 'text-slate-400'}`}>{description}</p>
-
-                {/* Technical Error Details Box */}
-                {errorDetails && (errorDetails.message || errorDetails.file) && (
-                    <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-left font-mono text-xs text-rose-950 shadow-xs">
-                        <p className="font-bold text-rose-900 uppercase tracking-wider text-[10px] mb-1">TECHNICAL ERROR DETAILS</p>
-                        {errorDetails.message && (
-                            <p className="font-bold text-rose-800 break-words">{errorDetails.message}</p>
-                        )}
-                        {errorDetails.file && (
-                            <p className="mt-1 text-[11px] text-rose-700/90 break-all">
-                                {errorDetails.file}:{errorDetails.line}
-                            </p>
-                        )}
-                        {errorDetails.trace && (
-                            <details className="mt-2 border-t border-rose-200/80 pt-2">
-                                <summary className="cursor-pointer text-[10px] font-bold text-rose-700 hover:underline">
-                                    View Stack Trace
-                                </summary>
-                                <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap text-[10px] text-rose-900/80">
-                                    {errorDetails.trace}
-                                </pre>
-                            </details>
-                        )}
-                    </div>
-                )}
+                <p className={`mb-10 text-base leading-relaxed ${hasLayout ? 'text-slate-500' : 'text-slate-400'}`}>{description}</p>
 
                 {/* Actions */}
                 <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">

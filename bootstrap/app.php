@@ -127,22 +127,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            $statusCode = $e instanceof HttpExceptionInterface
-                ? $e->getStatusCode()
-                : 500;
+            if (app()->environment('production') || ! config('app.debug')) {
+                $statusCode = $e instanceof HttpExceptionInterface
+                    ? $e->getStatusCode()
+                    : 500;
 
-            if (in_array($statusCode, [500, 503, 404, 403, 419])) {
-                return Inertia::render('Error', [
-                    'status' => $statusCode,
-                    'errorDetails' => [
-                        'message' => $e->getMessage(),
-                        'file' => $e->getFile(),
-                        'line' => $e->getLine(),
-                        'trace' => substr($e->getTraceAsString(), 0, 1000),
-                    ],
-                ])
-                    ->toResponse($request)
-                    ->setStatusCode($statusCode);
+                if (in_array($statusCode, [500, 503, 404, 403, 419])) {
+                    return Inertia::render('Error', ['status' => $statusCode])
+                        ->toResponse($request)
+                        ->setStatusCode($statusCode);
+                }
             }
 
             return null;
