@@ -9,6 +9,7 @@ use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\EstateContextService;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -731,7 +732,7 @@ class AccessCodeService
     /**
      * Fetch calendar events for a specific date range and optional user/estate filters.
      */
-    public function getCalendarEvents(Carbon $startDate, Carbon $endDate, ?int $userId = null, ?int $estateId = null, array $filters = []): array
+    public function getCalendarEvents(CarbonInterface $startDate, CarbonInterface $endDate, ?int $userId = null, ?int $estateId = null, array $filters = []): array
     {
         $query = AccessCode::query()
             ->with(['user:id,name', 'accessLogs']);
