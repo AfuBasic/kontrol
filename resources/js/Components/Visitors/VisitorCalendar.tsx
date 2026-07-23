@@ -200,10 +200,36 @@ export default function VisitorCalendar({
     const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
     const selectedDateEvents = eventsByDate[selectedDateStr] || [];
 
+    const [toastMessage, setToastMessage] = useState<string | null>(null);
+
     const handleCopyCode = (code: string) => {
-        navigator.clipboard.writeText(code);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(code).catch(() => {
+                fallbackCopy(code);
+            });
+        } else {
+            fallbackCopy(code);
+        }
         setCopiedCode(code);
-        setTimeout(() => setCopiedCode(null), 2000);
+        setToastMessage(`Access Code ${code} copied to clipboard!`);
+        setTimeout(() => setCopiedCode(null), 2500);
+        setTimeout(() => setToastMessage(null), 3000);
+    };
+
+    const fallbackCopy = (text: string) => {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+        }
+        document.body.removeChild(textArea);
     };
 
     const goToday = () => {
@@ -213,7 +239,14 @@ export default function VisitorCalendar({
     };
 
     return (
-        <div className="mx-auto max-w-md sm:max-w-2xl px-3 py-2 space-y-3 pb-24">
+        <div className="relative mx-auto max-w-md sm:max-w-2xl px-3 py-2 space-y-3 pb-24">
+            {/* Toast Notification Banner */}
+            {toastMessage && (
+                <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-2xl bg-gray-900/95 px-4 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>{toastMessage}</span>
+                </div>
+            )}
 
             {/* ─── Top Bar ─── */}
             <div className="flex items-center justify-between">
@@ -607,13 +640,23 @@ function EventCard({
                         e.stopPropagation();
                         onCopyCode(ev.extendedProps.code);
                     }}
-                    className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition active:scale-95"
+                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all active:scale-90 ${
+                        isCopied
+                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-300 ring-2 ring-emerald-400/20 scale-105'
+                            : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-2xs'
+                    }`}
                     title="Copy code"
                 >
                     {isCopied ? (
-                        <Check className="h-3.5 w-3.5 text-success-500" />
+                        <>
+                            <Check className="h-3.5 w-3.5 text-emerald-600 animate-in zoom-in-50 duration-150" />
+                            <span className="text-[10px] text-emerald-700">Copied!</span>
+                        </>
                     ) : (
-                        <Copy className="h-3.5 w-3.5" />
+                        <>
+                            <Copy className="h-3.5 w-3.5 text-gray-400" />
+                            <span className="text-[10px]">Copy</span>
+                        </>
                     )}
                 </button>
             </div>
