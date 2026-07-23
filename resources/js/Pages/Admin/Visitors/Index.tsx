@@ -117,7 +117,47 @@ export default function VisitorIndex({
     const [status, setStatus] = useState(filters.status || '');
     const [verifierId, setVerifierId] = useState(filters.verifier_id || '');
 
-    const [activeTab, setActiveTab] = useState<'live' | 'history' | 'analytics'>('live');
+    const [sortField, setSortField] = useState<'visitor' | 'host' | 'entry' | 'duration'>('entry');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
+    const handleSort = (field: 'visitor' | 'host' | 'entry' | 'duration') => {
+        if (sortField === field) {
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
+    };
+
+    const sortedLogsData = [...logs.data].sort((a, b) => {
+        let valA: any = '';
+        let valB: any = '';
+
+        if (sortField === 'visitor') {
+            valA = a.visitor.name || '';
+            valB = b.visitor.name || '';
+        } else if (sortField === 'host') {
+            valA = a.host.name || '';
+            valB = b.host.name || '';
+        } else if (sortField === 'entry') {
+            valA = new Date(a.verified_at || 0).getTime();
+            valB = new Date(b.verified_at || 0).getTime();
+        } else if (sortField === 'duration') {
+            valA = a.duration_minutes || 0;
+            valB = b.duration_minutes || 0;
+        }
+
+        if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    const renderSortIcon = (field: 'visitor' | 'host' | 'entry' | 'duration') => {
+        if (sortField !== field) {
+            return <span className="ml-1 opacity-0 group-hover:opacity-100 transition text-slate-300 font-normal">↕</span>;
+        }
+        return <span className="ml-1 text-indigo-600 font-black">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
+    };
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
@@ -386,19 +426,51 @@ export default function VisitorIndex({
                                     <table className="w-full border-collapse text-left">
                                         <thead>
                                             <tr className="border-b border-slate-100 bg-slate-50/50">
-                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Visitor</th>
-                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Host</th>
+                                                <th
+                                                    onClick={() => handleSort('visitor')}
+                                                    className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <span>Visitor</span>
+                                                        {renderSortIcon('visitor')}
+                                                    </div>
+                                                </th>
+                                                <th
+                                                    onClick={() => handleSort('host')}
+                                                    className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <span>Host</span>
+                                                        {renderSortIcon('host')}
+                                                    </div>
+                                                </th>
                                                 <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Status</th>
                                                 <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Gate</th>
-                                                <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Entry Time</th>
+                                                <th
+                                                    onClick={() => handleSort('entry')}
+                                                    className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                                >
+                                                    <div className="flex items-center">
+                                                        <span>Entry Time</span>
+                                                        {renderSortIcon('entry')}
+                                                    </div>
+                                                </th>
                                                 {checkoutEnabled && (
-                                                    <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Duration</th>
+                                                    <th
+                                                        onClick={() => handleSort('duration')}
+                                                        className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                                    >
+                                                        <div className="flex items-center">
+                                                            <span>Duration</span>
+                                                            {renderSortIcon('duration')}
+                                                        </div>
+                                                    </th>
                                                 )}
                                                 <th className="text-slate-450 px-4 py-3 text-right text-[10px] font-bold tracking-wider uppercase">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                                            {logs.data.map((log) => (
+                                            {sortedLogsData.map((log) => (
                                                 <tr key={log.id} className="transition hover:bg-slate-50/40">
                                                     <td className="px-4 py-3.5">
                                                         <div>
