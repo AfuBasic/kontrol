@@ -55,6 +55,8 @@ class VisitorLogController extends Controller
                 []
             )),
         ]);
+    }
+
     /**
      * Display Admin Visitor Calendar page.
      */
