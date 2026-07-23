@@ -217,7 +217,7 @@ export default function ResidentVisitorCalendar({ initialFilters }: Props) {
 
                 {/* Controls Bar (Month/Week/Day Switcher + Date Navigation) */}
                 <div className="flex items-center justify-between rounded-2xl bg-slate-100/80 p-1.5">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                         <button
                             onClick={handleToday}
                             className="rounded-lg bg-white px-2.5 py-1 text-xs font-bold text-slate-800 shadow-2xs hover:bg-slate-50 transition"
@@ -238,6 +238,9 @@ export default function ResidentVisitorCalendar({ initialFilters }: Props) {
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>
+                        <span className="text-xs sm:text-sm font-black text-slate-900 tracking-tight ml-1">
+                            {titleText}
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -284,6 +287,7 @@ export default function ResidentVisitorCalendar({ initialFilters }: Props) {
                         initialView="dayGridMonth"
                         headerToolbar={false}
                         events={fetchEvents}
+                        datesSet={(dateInfo) => setTitleText(dateInfo.view.title)}
                         editable={false}
                         selectable={true}
                         dateClick={handleDateClick}

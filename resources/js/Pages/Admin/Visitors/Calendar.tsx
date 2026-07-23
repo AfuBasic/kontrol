@@ -40,6 +40,7 @@ export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Pro
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [dayEvents, setDayEvents] = useState<CalendarEventItem[]>([]);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [titleText, setTitleText] = useState<string>('');
 
     // Fetch events dynamically via date range API (Estate-wide)
     const fetchEvents = useCallback(
@@ -235,7 +236,7 @@ export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Pro
 
                 {/* View Switcher & Controls */}
                 <div className="flex items-center justify-between rounded-2xl bg-slate-100/80 p-1.5">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                         <button
                             onClick={handleToday}
                             className="rounded-lg bg-white px-3 py-1 text-xs font-bold text-slate-800 shadow-2xs hover:bg-slate-50 transition"
@@ -256,6 +257,9 @@ export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Pro
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>
+                        <span className="text-xs sm:text-sm font-black text-slate-900 tracking-tight ml-1">
+                            {titleText}
+                        </span>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -302,6 +306,7 @@ export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Pro
                         initialView="dayGridMonth"
                         headerToolbar={false}
                         events={fetchEvents}
+                        datesSet={(dateInfo) => setTitleText(dateInfo.view.title)}
                         editable={false}
                         selectable={true}
                         dateClick={handleDateClick}
