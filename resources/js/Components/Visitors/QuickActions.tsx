@@ -58,7 +58,7 @@ export default function QuickActions({ recentVisitors, onInvite, onInviteAgain, 
                                     className="flex shrink-0 snap-start items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-900 shadow-2xs transition hover:border-primary-300 hover:bg-primary-50/30"
                                 >
                                     <VisitorAvatar category={category} name={visitor.visitor_name} size="sm" />
-                                    <span className="max-w-[100px] truncate">{visitor.visitor_name}</span>
+                                    <span className="text-xs font-bold text-slate-900">{visitor.visitor_name}</span>
                                     <Plus className="h-3.5 w-3.5 text-primary-600" />
                                 </button>
                             );

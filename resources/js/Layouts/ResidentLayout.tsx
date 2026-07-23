@@ -601,21 +601,21 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     className={`relative mx-auto w-full flex-1 ${
                         hideHeader && hideNav
                             ? 'max-w-none p-0'
-                            : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-32' : 'pb-8'} ${
-                                  isPropertyOwner ? 'max-w-4xl px-4 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
+                            : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-24' : 'pb-6'} ${
+                                  isPropertyOwner ? 'max-w-4xl px-3 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
                               } ${
                                   !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform())
-                                      ? 'pt-[calc(4.5rem+env(safe-area-inset-top,0px))]'
-                                      : 'py-8'
+                                      ? 'pt-[calc(3.75rem+env(safe-area-inset-top,0px))]'
+                                      : 'py-4'
                               }`
                     }`}
                 >
                     {auth?.user?.resident_subscription && component !== 'Resident/Billing/Index' && (
-                        <div className="mb-4 px-4">
+                        <div className="mb-3 px-3">
                             <SubscriptionBanner subscription={auth.user.resident_subscription} />
                         </div>
                     )}
-                    <PullToRefresh className={hideHeader && hideNav ? '' : 'px-4 md:px-10'}>{children}</PullToRefresh>
+                    <PullToRefresh className={hideHeader && hideNav ? '' : 'px-3 sm:px-4 md:px-10'}>{children}</PullToRefresh>
                 </main>
 
                 {/* Bottom Navigation for normal Residents */}
