@@ -635,18 +635,42 @@ export default function VisitorIndex({
                                 <table className="w-full border-collapse text-left">
                                     <thead>
                                         <tr className="border-b border-slate-100 bg-slate-50/50">
-                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Visitor</th>
-                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Host</th>
+                                            <th
+                                                onClick={() => handleSort('visitor')}
+                                                className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                            >
+                                                <div className="flex items-center">
+                                                    <span>Visitor</span>
+                                                    {renderSortIcon('visitor')}
+                                                </div>
+                                            </th>
+                                            <th
+                                                onClick={() => handleSort('host')}
+                                                className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                            >
+                                                <div className="flex items-center">
+                                                    <span>Host</span>
+                                                    {renderSortIcon('host')}
+                                                </div>
+                                            </th>
                                             <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Gate</th>
                                             <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Verifier</th>
                                             <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Status</th>
-                                            <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Entry Time</th>
+                                            <th
+                                                onClick={() => handleSort('entry')}
+                                                className="group cursor-pointer text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase select-none hover:text-slate-800"
+                                            >
+                                                <div className="flex items-center">
+                                                    <span>Entry Time</span>
+                                                    {renderSortIcon('entry')}
+                                                </div>
+                                            </th>
                                             <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Exit Time</th>
                                             <th className="text-slate-450 px-4 py-3 text-[10px] font-bold tracking-wider uppercase">Vehicle</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                                        {logs.data.map((log) => (
+                                        {sortedLogsData.map((log) => (
                                             <tr key={log.id} className="transition hover:bg-slate-50/40">
                                                 <td className="px-4 py-3.5">
                                                     <span className="font-bold text-slate-900">{log.visitor.name}</span>
