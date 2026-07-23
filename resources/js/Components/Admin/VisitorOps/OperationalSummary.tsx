@@ -5,26 +5,30 @@ type Props = {
     currentlyInside: number;
     expectedToday: number;
     visitorsToday: number;
+    checkoutEnabled?: boolean;
 };
 
 export default function OperationalSummary({
     currentlyInside,
     expectedToday,
     visitorsToday,
+    checkoutEnabled = false,
 }: Props) {
     return (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {/* Inside Now */}
-            <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4 transition shadow-2xs">
-                <div className="flex items-center justify-between text-emerald-700">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider">Inside Now</span>
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+        <div className={`grid grid-cols-1 gap-3 ${checkoutEnabled ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}>
+            {/* Inside Now (Only if Checkout Enabled) */}
+            {checkoutEnabled && (
+                <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4 transition shadow-2xs">
+                    <div className="flex items-center justify-between text-emerald-700">
+                        <span className="text-[11px] font-extrabold uppercase tracking-wider">Inside Now</span>
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <div className="mt-2 flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-slate-900 sm:text-3xl">{currentlyInside}</span>
+                        <span className="text-xs font-bold text-slate-500">active visitors</span>
+                    </div>
                 </div>
-                <div className="mt-2 flex items-baseline gap-2">
-                    <span className="text-2xl font-black text-slate-900 sm:text-3xl">{currentlyInside}</span>
-                    <span className="text-xs font-bold text-slate-500">visitors</span>
-                </div>
-            </div>
+            )}
 
             {/* Expected Today */}
             <div className="relative overflow-hidden rounded-2xl border border-blue-100 bg-blue-50/40 p-4 transition shadow-2xs">
@@ -34,7 +38,7 @@ export default function OperationalSummary({
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-2xl font-black text-slate-900 sm:text-3xl">{expectedToday}</span>
-                    <span className="text-xs font-bold text-slate-500">scheduled</span>
+                    <span className="text-xs font-bold text-slate-500">scheduled passes</span>
                 </div>
             </div>
 
@@ -46,7 +50,7 @@ export default function OperationalSummary({
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
                     <span className="text-2xl font-black text-slate-900 sm:text-3xl">{visitorsToday}</span>
-                    <span className="text-xs font-bold text-slate-500">processed</span>
+                    <span className="text-xs font-bold text-slate-500">gate check-ins</span>
                 </div>
             </div>
         </div>
