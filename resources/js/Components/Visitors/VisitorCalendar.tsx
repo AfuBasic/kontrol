@@ -552,8 +552,13 @@ function EventCard({
     const style = getPurposeColorStyle(ev.extendedProps.purpose);
     const isCopied = copiedCode === ev.extendedProps.code;
 
+    const detailUrl = isAdmin ? '/admin/visitors' : `/resident/visitors/${ev.id}`;
+
     return (
-        <div className="group flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-3 hover:border-gray-200 transition">
+        <div
+            onClick={() => router.get(detailUrl)}
+            className="group flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-3 hover:border-gray-200 transition cursor-pointer active:scale-[0.99]"
+        >
             {/* Category-colored left accent bar */}
             <div className={`w-0.5 self-stretch rounded-full shrink-0 ${style.dot}`} />
 
@@ -593,13 +598,17 @@ function EventCard({
             </div>
 
             {/* Code + Copy */}
-            <div className="flex items-center gap-1.5 shrink-0">
+            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
                 <span className="font-mono text-[10px] font-black tracking-widest text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
                     {ev.extendedProps.code}
                 </span>
                 <button
-                    onClick={() => onCopyCode(ev.extendedProps.code)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onCopyCode(ev.extendedProps.code);
+                    }}
                     className="rounded-lg p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition active:scale-95"
+                    title="Copy code"
                 >
                     {isCopied ? (
                         <Check className="h-3.5 w-3.5 text-success-500" />
