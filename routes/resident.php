@@ -80,6 +80,7 @@ Route::middleware('role:resident,household_member')->group(function (): void {
         Route::get('/visitors', [AccessCodeController::class, 'index'])->name('resident.visitors.index');
         Route::get('/visitors/{accessCode}', [AccessCodeController::class, 'show'])->name('resident.visitors.show');
         Route::post('/visitors/{accessCode}/share', [AccessCodeController::class, 'share'])->name('resident.visitors.share');
+        Route::post('/visitors/{accessCode}/extend', [AccessCodeController::class, 'extend'])->name('resident.visitors.extend');
         Route::delete('/visitors/{accessCode}', [AccessCodeController::class, 'destroy'])->name('resident.visitors.destroy');
     });
 
