@@ -158,6 +158,7 @@ export default function VisitorIndex({
         }
         return <span className="ml-1 text-indigo-600 font-black">{sortDirection === 'asc' ? '↑' : '↓'}</span>;
     };
+    const [activeTab, setActiveTab] = useState<'live' | 'history' | 'analytics'>('live');
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [selectedLog, setSelectedLog] = useState<Log | null>(null);
 
