@@ -123,7 +123,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             {/* QR Code Section */}
             <div className={`relative flex flex-col items-center justify-center px-5 py-5 ${isEvent ? 'bg-white/5' : 'bg-slate-50/50'}`}>
                 <div className={`relative overflow-hidden rounded-2xl border p-3 ${isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-200 bg-white shadow-xs'}`}>
-                    {!isPassActiveOrScheduled && (
+                    {(!isPassActiveOrScheduled && (pass.type !== 'long_lived' || resolvedStatus === 'expired')) && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
                             {resolvedStatus === 'completed' ? (
                                 <CheckCircle2 className="mb-1 h-8 w-8 text-emerald-500" strokeWidth={2.5} />
