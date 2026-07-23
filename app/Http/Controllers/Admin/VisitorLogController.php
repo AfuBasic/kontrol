@@ -54,7 +54,7 @@ class VisitorLogController extends Controller
                 ['trend' => [], 'peakHours' => [], 'mostVisited' => []]
             )),
             'liveFeed' => Inertia::defer(fn () => $this->safe(
-                fn () => $this->buildLiveFeed($estate->id),
+                fn () => $this->buildLiveFeed($estate->id, $checkoutEnabled),
                 []
             )),
         ]);
@@ -299,25 +299,25 @@ class VisitorLogController extends Controller
     /**
      * @return list<array{id: int, type: string, message: string, time: string}>
      */
-    private function buildLiveFeed(int $estateId): array
+    private function buildLiveFeed(int $estateId, bool $checkoutEnabled = false): array
     {
         return AccessLog::where('estate_id', $estateId)
             ->with(['accessCode.user'])
             ->orderByDesc('updated_at')
             ->limit(10)
             ->get()
-            ->map(function ($log) {
+            ->map(function ($log) use ($checkoutEnabled) {
                 $visitor = $log->accessCode?->visitor_name ?? 'Visitor';
                 $host = $log->accessCode?->user?->name ?? 'Resident';
-                $type = $log->checked_out_at ? 'exit' : 'entry';
-                $time = $log->checked_out_at ?? $log->verified_at;
+                $type = ($checkoutEnabled && $log->checked_out_at) ? 'exit' : 'entry';
+                $time = ($type === 'exit' && $log->checked_out_at) ? $log->checked_out_at : $log->verified_at;
 
                 return [
                     'id' => $log->id,
                     'type' => $type,
                     'message' => $type === 'exit'
                         ? "{$visitor} checked out of the estate"
-                        : "{$visitor} arrived to visit {$host}",
+                        : ($checkoutEnabled ? "{$visitor} arrived to visit {$host}" : "{$visitor} verified at gate to visit {$host}"),
                     'time' => $time->diffForHumans(),
                 ];
             })
