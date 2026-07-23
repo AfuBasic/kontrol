@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Share2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PassCard from '@/Components/Resident/PassCard';
+import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import type { AccessCode, CursorPaginatedUsageLogs } from '@/types/access-code';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
