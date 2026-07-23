@@ -264,46 +264,123 @@ class DashboardService
             $residentsAwaitingApproval > 0 ? "{$residentsAwaitingApproval} resident".($residentsAwaitingApproval > 1 ? 's' : '').' awaiting approval' : 'No pending resident approvals',
         ];
 
-        // 5. Build Needs Attention List
+        // 5. Build Action Center Items
         $needsAttention = [];
 
         if ($residentsAwaitingApproval > 0) {
+            $pendingResidents = User::query()
+                ->forEstate($estateId)
+                ->withRole('resident', $estateId)
+                ->whereHas('estateMemberships', fn ($q) => $q->where('estate_id', $estateId)->where('status', 'pending'))
+                ->with('profile')
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn ($u) => [
+                    'id' => $u->id,
+                    'title' => $u->name,
+                    'subtitle' => $u->profile?->unit_number ? "Unit {$u->profile->unit_number}" : 'Unassigned Unit',
+                    'context' => 'Requested '.($u->created_at?->diffForHumans() ?? 'recently'),
+                ])
+                ->values()
+                ->all();
+
             $needsAttention[] = [
+                'id' => 'residents_approval',
                 'type' => 'residents_approval',
-                'title' => 'Residents Awaiting Approval',
-                'desc' => "{$residentsAwaitingApproval} resident".($residentsAwaitingApproval > 1 ? 's' : '').' requested to join and need approval.',
+                'title' => 'Pending Resident Approvals',
+                'desc' => "{$residentsAwaitingApproval} resident".($residentsAwaitingApproval > 1 ? 's' : '').' requested access and require verification.',
+                'count' => $residentsAwaitingApproval,
                 'severity' => 'warning',
+                'actionLabel' => 'Review Approvals',
                 'actionUrl' => route('admin.residents.index'),
+                'previews' => $pendingResidents,
             ];
         }
 
         if ($openIncidents > 0) {
+            $openIncidentsList = Incident::where('estate_id', $estateId)
+                ->whereIn('status', [IncidentStatus::Pending, IncidentStatus::Acknowledged, IncidentStatus::Resolving])
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn ($inc) => [
+                    'id' => $inc->id,
+                    'title' => $inc->title ?? 'Security Incident',
+                    'subtitle' => $inc->location ?? 'Estate Grounds',
+                    'context' => 'Reported '.($inc->created_at?->diffForHumans() ?? 'recently'),
+                ])
+                ->values()
+                ->all();
+
             $needsAttention[] = [
+                'id' => 'pending_incidents',
                 'type' => 'pending_incidents',
-                'title' => 'Pending Incident Reports',
+                'title' => 'Pending Security Incidents',
                 'desc' => "{$openIncidents} security or facility incident".($openIncidents > 1 ? 's' : '').' require resolution.',
-                'severity' => 'danger',
-                'actionUrl' => '/admin/incidents', // Or exact incidents index route
+                'count' => $openIncidents,
+                'severity' => 'critical',
+                'actionLabel' => 'Resolve Incidents',
+                'actionUrl' => route('admin.incidents.index'),
+                'previews' => $openIncidentsList,
             ];
         }
 
-        if ($outstandingBalances > 0) {
+        // Residents Without Assigned Units
+        $unassignedCount = User::query()
+            ->forEstate($estateId)
+            ->withRole('resident', $estateId)
+            ->whereNull('suspended_at')
+            ->where(function ($q) {
+                $q->whereDoesntHave('profile')
+                    ->orWhereHas('profile', fn ($sq) => $sq->whereNull('unit_number')->orWhere('unit_number', ''));
+            })
+            ->count();
+
+        if ($unassignedCount > 0) {
+            $unassignedResidents = User::query()
+                ->forEstate($estateId)
+                ->withRole('resident', $estateId)
+                ->whereNull('suspended_at')
+                ->where(function ($q) {
+                    $q->whereDoesntHave('profile')
+                        ->orWhereHas('profile', fn ($sq) => $sq->whereNull('unit_number')->orWhere('unit_number', ''));
+                })
+                ->take(5)
+                ->get()
+                ->map(fn ($u) => [
+                    'id' => $u->id,
+                    'title' => $u->name,
+                    'subtitle' => 'No unit assigned',
+                    'context' => 'Joined '.($u->created_at?->diffForHumans() ?? 'recently'),
+                ])
+                ->values()
+                ->all();
+
             $needsAttention[] = [
+                'id' => 'unassigned_units',
+                'type' => 'unassigned_units',
+                'title' => 'Residents Without Assigned Units',
+                'desc' => "{$unassignedCount} active resident".($unassignedCount > 1 ? 's' : '').' require property unit assignments.',
+                'count' => $unassignedCount,
+                'severity' => 'info',
+                'actionLabel' => 'Assign Units',
+                'actionUrl' => route('admin.residents.index'),
+                'previews' => $unassignedResidents,
+            ];
+        }
+
+        if ($outstandingBalances > 0 || $failedPaymentsCount > 0) {
+            $needsAttention[] = [
+                'id' => 'outstanding_dues',
                 'type' => 'outstanding_dues',
                 'title' => 'Outstanding Estate Dues',
-                'desc' => 'Estate is currently owed ₦'.number_format($outstandingBalances).' in unpaid member dues.',
-                'severity' => 'info',
-                'actionUrl' => route('admin.collections.index'),
-            ];
-        }
-
-        if ($failedPaymentsCount > 0) {
-            $needsAttention[] = [
-                'type' => 'failed_payments',
-                'title' => 'Failed Transactions',
-                'desc' => "{$failedPaymentsCount} payment attempt".($failedPaymentsCount > 1 ? 's' : '').' failed recently.',
+                'desc' => 'Estate is currently owed ₦'.number_format($outstandingBalances).' in unpaid member dues with '.$failedPaymentsCount.' failed payment attempt(s).',
+                'count' => $failedPaymentsCount > 0 ? $failedPaymentsCount : 1,
                 'severity' => 'warning',
+                'actionLabel' => 'Review Dues',
                 'actionUrl' => route('admin.collections.index'),
+                'previews' => [],
             ];
         }
 
