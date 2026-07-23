@@ -1,14 +1,14 @@
 import { useMemo, useState } from 'react';
-import { ChevronRight, ExternalLink, LogIn, LogOut } from 'lucide-react';
+import { ChevronRight, ExternalLink } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
 import RecordDetailChain from './RecordDetailChain';
+import VisitEventIcon from './VisitEventIcon';
 import {
     buildActivityEvents,
     formatStayDuration,
     groupEventsByDay,
     hasActiveVisitorFilters,
     type ActivityEvent,
-    type ActivityEventType,
     type VisitorFilters,
     type VisitorRecord,
 } from './types';
@@ -36,6 +36,15 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
         const events = buildActivityEvents(logs, checkoutEnabled);
         return groupEventsByDay(events);
     }, [logs, checkoutEnabled]);
+
+    // Only surface gate on a row when gates actually vary across the loaded feed.
+    const showGateWhenVaries = useMemo(() => {
+        const gates = new Set(
+            logs.map((log) => log.gate).filter((g): g is string => Boolean(g) && g !== 'Main Gate')
+        );
+        // If every row is "Main Gate" or blank, never print gate. If multiple real gates, show when it changes.
+        return gates.size > 1;
+    }, [logs]);
 
     const hasFilters = hasActiveVisitorFilters(filters);
     const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
@@ -93,6 +102,7 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
                                         previous={previous}
                                         expanded={expandedEventId === event.id}
                                         checkoutEnabled={checkoutEnabled}
+                                        showGateWhenVaries={showGateWhenVaries}
                                         onToggle={() => toggleEvent(event.id)}
                                         onOpenFullRecord={onSelect}
                                     />
@@ -111,6 +121,7 @@ function TimelineEvent({
     previous,
     expanded,
     checkoutEnabled,
+    showGateWhenVaries,
     onToggle,
     onOpenFullRecord,
 }: {
@@ -118,6 +129,7 @@ function TimelineEvent({
     previous: ActivityEvent | null;
     expanded: boolean;
     checkoutEnabled: boolean;
+    showGateWhenVaries: boolean;
     onToggle: () => void;
     onOpenFullRecord: (record: VisitorRecord) => void;
 }) {
@@ -125,7 +137,9 @@ function TimelineEvent({
     const hostChanged = !previous || previous.record.host.name !== record.host.name;
     const gateChanged = !previous || previous.record.gate !== record.gate;
     const showHost = hostChanged;
-    const showGate = gateChanged && record.gate && record.gate !== 'Main Gate';
+    // Gate only when the feed has multiple real gates AND this row differs from the one above.
+    const showGate =
+        showGateWhenVaries && gateChanged && record.gate && record.gate !== 'Main Gate';
 
     const verb =
         type === 'check_out' ? 'checked out' : checkoutEnabled ? 'checked in' : 'verified';
@@ -159,7 +173,7 @@ function TimelineEvent({
                         expanded ? 'bg-gray-50' : 'hover:bg-gray-50/80'
                     }`}
                 >
-                    {/* Time sits on the left of the content — classic timeline clock column */}
+                    {/* Time only — no static "GATE"/"IN" label under every row */}
                     <div className="w-[3.75rem] shrink-0 pt-0.5 sm:w-16">
                         <time
                             dateTime={event.occurredAt}
@@ -167,23 +181,10 @@ function TimelineEvent({
                         >
                             {timeLabel}
                         </time>
-                        <EventTypeLabel type={type} checkoutEnabled={checkoutEnabled} />
                     </div>
 
-                    <span
-                        className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${
-                            isCheckIn
-                                ? 'border-primary-200 bg-primary-50 text-primary-600'
-                                : 'border-gray-200 bg-gray-100 text-gray-600'
-                        }`}
-                        aria-hidden
-                    >
-                        {isCheckIn ? (
-                            <LogIn className="h-3.5 w-3.5" />
-                        ) : (
-                            <LogOut className="h-3.5 w-3.5" />
-                        )}
-                    </span>
+                    {/* Distinct check-in (↓↗ primary) vs check-out (↑↗ gray) */}
+                    <VisitEventIcon type={type} size="sm" />
 
                     <div className="min-w-0 flex-1 pt-0.5">
                         <p className="text-sm leading-snug text-gray-900">
@@ -240,7 +241,7 @@ function TimelineEvent({
                                             Stay {formatStayDuration(record.duration_minutes)}
                                         </span>
                                     ) : null}
-                                    {record.gate && record.gate !== 'Main Gate' ? (
+                                    {showGateWhenVaries && record.gate && record.gate !== 'Main Gate' ? (
                                         <span>{record.gate}</span>
                                     ) : null}
                                     {record.code ? (
@@ -269,27 +270,5 @@ function TimelineEvent({
                 </div>
             </div>
         </li>
-    );
-}
-
-function EventTypeLabel({
-    type,
-    checkoutEnabled,
-}: {
-    type: ActivityEventType;
-    checkoutEnabled: boolean;
-}) {
-    if (type === 'check_out') {
-        return (
-            <span className="mt-0.5 block text-[10px] font-bold tracking-wide text-gray-400 uppercase">
-                Out
-            </span>
-        );
-    }
-
-    return (
-        <span className="mt-0.5 block text-[10px] font-bold tracking-wide text-primary-600/80 uppercase">
-            {checkoutEnabled ? 'In' : 'Gate'}
-        </span>
     );
 }

@@ -290,5 +290,7 @@ it('returns an empty currently inside list when checkout is disabled', function 
             ->where('checkoutEnabled', false)
             ->has('currentlyInsideList', 0)
             ->has('logs.data', 1)
+            // Presence cannot be derived without check-out tracking.
+            ->has('currentlyInsideList')
         );
 });

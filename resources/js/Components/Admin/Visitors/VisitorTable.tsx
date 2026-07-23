@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Eye } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
+import VisitEventIcon from './VisitEventIcon';
 import {
     formatStayDuration,
     hasActiveVisitorFilters,
@@ -18,13 +20,22 @@ type Props = {
 };
 
 /**
- * Tabular visit ledger — filterable, sortable, designed for infinite scroll (parent loads more).
- * Default sort is latest check-in first (verified_at desc).
+ * Tabular visit ledger — filterable, sortable, infinite-scroll friendly.
+ * No always-identical "Verified" status column.
+ * Event type is an icon (check-in vs check-out), not a text badge that never varies.
  */
 export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, onSelect }: Props) {
     const sort = (filters.sort ?? 'verified_at') as SortField;
     const direction = (filters.direction ?? 'desc') as SortDirection;
     const hasFilters = hasActiveVisitorFilters(filters);
+
+    // Only show Gate column when values actually vary across the loaded page.
+    const showGateColumn = useMemo(() => {
+        const gates = new Set(
+            logs.map((log) => log.gate).filter((g): g is string => Boolean(g) && g !== 'Main Gate')
+        );
+        return gates.size > 0;
+    }, [logs]);
 
     if (logs.length === 0) {
         return (
@@ -48,6 +59,9 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                 <table className="w-full min-w-[720px] text-left text-xs">
                     <thead>
                         <tr className="border-b border-gray-100 bg-gray-50/80 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
+                            <th className="w-12 px-3 py-3 font-bold" scope="col">
+                                <span className="sr-only">Event</span>
+                            </th>
                             <SortableTh field="visitor" label="Visitor" sort={sort} direction={direction} onSort={onSort} />
                             <SortableTh field="host" label="Host" sort={sort} direction={direction} onSort={onSort} />
                             <SortableTh
@@ -75,28 +89,25 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                     onSort={onSort}
                                 />
                             )}
-                            {checkoutEnabled && (
-                                <SortableTh
-                                    field="status"
-                                    label="Stay"
-                                    sort={sort}
-                                    direction={direction}
-                                    onSort={onSort}
-                                />
-                            )}
-                            <th className="px-4 py-3 font-bold">Gate</th>
+                            {showGateColumn && <th className="px-4 py-3 font-bold">Gate</th>}
                             <th className="px-4 py-3 text-right font-bold"> </th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                         {logs.map((log) => {
-                            const inside = checkoutEnabled && !log.checked_out_at;
+                            // Table rows are visit records: still-on-property reads as check-in;
+                            // completed stays surface the check-out state as the latest outcome.
+                            const eventType =
+                                checkoutEnabled && log.checked_out_at ? 'check_out' : 'check_in';
 
                             return (
                                 <tr
                                     key={log.id}
                                     className="transition-colors duration-150 ease-out hover:bg-gray-50/80"
                                 >
+                                    <td className="px-3 py-3">
+                                        <VisitEventIcon type={eventType} size="sm" />
+                                    </td>
                                     <td className="px-4 py-3">
                                         <p className="font-semibold text-gray-900">{log.visitor.name}</p>
                                         {log.visitor.phone ? (
@@ -105,7 +116,9 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                             </p>
                                         ) : null}
                                         {log.purpose ? (
-                                            <p className="mt-0.5 text-[11px] font-medium text-gray-400">{log.purpose}</p>
+                                            <p className="mt-0.5 text-[11px] font-medium text-gray-400">
+                                                {log.purpose}
+                                            </p>
                                         ) : null}
                                     </td>
                                     <td className="px-4 py-3">
@@ -145,23 +158,11 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                             {formatStayDuration(log.duration_minutes)}
                                         </td>
                                     )}
-                                    {checkoutEnabled && (
-                                        <td className="px-4 py-3">
-                                            {inside ? (
-                                                <span className="inline-flex items-center gap-1 rounded-md bg-primary-50 px-2 py-0.5 text-[10px] font-bold text-primary-700">
-                                                    <span className="h-1.5 w-1.5 rounded-full bg-primary-500" />
-                                                    On property
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">
-                                                    Left
-                                                </span>
-                                            )}
+                                    {showGateColumn && (
+                                        <td className="px-4 py-3 font-medium text-gray-500">
+                                            {log.gate === 'Main Gate' ? '—' : log.gate}
                                         </td>
                                     )}
-                                    <td className="px-4 py-3 font-medium text-gray-500">
-                                        {log.gate === 'Main Gate' ? '—' : log.gate}
-                                    </td>
                                     <td className="px-4 py-3 text-right">
                                         <button
                                             type="button"

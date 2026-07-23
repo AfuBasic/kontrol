@@ -1,48 +1,54 @@
-import { Users } from 'lucide-react';
-import EmptyState from '@/Components/States/EmptyState';
 import { formatStayDuration, type VisitorRecord } from './types';
 
 type Props = {
     visitors: VisitorRecord[];
+    /** When false, presence cannot be derived (no check-out tracking). */
+    checkoutEnabled: boolean;
     expectedTodayCount?: number;
     onSelect?: (record: VisitorRecord) => void;
 };
 
 /**
- * Surface 1 — guest book of visitors currently checked in (not yet checked out).
- * Warning emphasis is reserved exclusively for overstay.
+ * Surface 1 — who is on the property right now (checked in, not checked out).
+ * Warning color is reserved exclusively for overstay.
  */
-export default function OnPropertyNow({ visitors, expectedTodayCount = 0, onSelect }: Props) {
+export default function OnPropertyNow({
+    visitors,
+    checkoutEnabled,
+    expectedTodayCount = 0,
+    onSelect,
+}: Props) {
     return (
         <section aria-labelledby="on-property-heading" className="space-y-3">
             <div className="flex flex-wrap items-end justify-between gap-2">
                 <div>
-                    <h2 id="on-property-heading" className="text-base font-semibold tracking-tight text-gray-900">
+                    <h2
+                        id="on-property-heading"
+                        className="text-base font-semibold tracking-tight text-gray-900"
+                    >
                         On the property now
                     </h2>
-                    {visitors.length > 0 && (
+                    {checkoutEnabled && visitors.length > 0 && (
                         <p className="mt-0.5 text-xs font-medium text-gray-500">
                             {visitors.length} {visitors.length === 1 ? 'guest' : 'guests'} checked in
                         </p>
                     )}
                 </div>
 
-                {expectedTodayCount > 0 && (
+                {checkoutEnabled && expectedTodayCount > 0 && (
                     <p className="text-xs font-medium text-gray-500">
                         {expectedTodayCount} expected today
                     </p>
                 )}
             </div>
 
-            {visitors.length === 0 ? (
-                <div className="rounded-2xl border border-gray-200 bg-white">
-                    <EmptyState
-                        icon={Users}
-                        title="No one currently on the property"
-                        description="When a visitor is checked in at the gate, they will appear here until they leave."
-                        className="py-12"
-                    />
-                </div>
+            {!checkoutEnabled ? (
+                <p className="text-sm font-medium text-gray-500">
+                    Presence isn&apos;t tracked for this estate — visitor check-out is disabled, so we
+                    can&apos;t tell who is still on the property.
+                </p>
+            ) : visitors.length === 0 ? (
+                <p className="text-sm font-medium text-gray-500">No one currently on the property</p>
             ) : (
                 <ul className="divide-y divide-gray-100 overflow-hidden rounded-2xl border border-gray-200 bg-white">
                     {visitors.map((visitor) => (
@@ -62,7 +68,7 @@ export default function OnPropertyNow({ visitors, expectedTodayCount = 0, onSele
                                             {visitor.visitor.name}
                                         </p>
                                         {visitor.is_overstayed && (
-                                            <span className="inline-flex items-center rounded-md bg-warning-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-warning-700">
+                                            <span className="inline-flex items-center rounded-md bg-warning-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-warning-700 uppercase">
                                                 Overstay
                                             </span>
                                         )}

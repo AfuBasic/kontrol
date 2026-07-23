@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Head, Link, router, WhenVisible } from '@inertiajs/react';
-import { Calendar, Download, LayoutList, Table2 } from 'lucide-react';
+import { Calendar, Download, LayoutList, Lock, Table2 } from 'lucide-react';
 
 import { index, calendar } from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import ActivityFiltersBar from '@/Components/Admin/Visitors/ActivityFiltersBar';
@@ -211,6 +211,10 @@ export default function VisitorIndex({
                         <p className="mt-1 text-sm font-medium text-gray-500">
                             Who is on the property, and what happened at the gate.
                         </p>
+                        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-gray-500">
+                            <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
+                            <span>Immutable record · verified at the gate</span>
+                        </p>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -233,13 +237,13 @@ export default function VisitorIndex({
                     </div>
                 </header>
 
-                {checkoutEnabled && (
-                    <OnPropertyNow
-                        visitors={onProperty}
-                        expectedTodayCount={expectedTodayCount}
-                        onSelect={setSelectedRecord}
-                    />
-                )}
+                {/* Surface 1 — always visible; presence requires check-out tracking */}
+                <OnPropertyNow
+                    visitors={onProperty}
+                    checkoutEnabled={checkoutEnabled}
+                    expectedTodayCount={expectedTodayCount}
+                    onSelect={setSelectedRecord}
+                />
 
                 {/* Surface 2 — Activity (timeline) + Table tabs */}
                 <section aria-labelledby="activity-heading" className="space-y-4">
