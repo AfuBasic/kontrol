@@ -85,7 +85,7 @@ export default function RevenueIndex({ financialKPIs, forecastData, revenueBreak
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
     };
 
     // Calculate total active MRR from breakdown
@@ -207,8 +207,8 @@ export default function RevenueIndex({ financialKPIs, forecastData, revenueBreak
                                             background: 'rgba(255, 255, 255, 0.9)',
                                             backdropFilter: 'blur(8px)',
                                         }}
-                                        formatter={(value: number, name: string) => [
-                                            formatExactCurrency(value),
+                                        formatter={(value: any, name: any) => [
+                                            formatExactCurrency(Number(value || 0)),
                                             name === 'actual' ? 'Actual MRR' : 'Projected MRR',
                                         ]}
                                         labelStyle={{ color: '#64748b', fontWeight: 600, fontSize: '12px', marginBottom: '4px' }}
@@ -265,7 +265,7 @@ export default function RevenueIndex({ financialKPIs, forecastData, revenueBreak
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(value: number) => formatExactCurrency(value)}
+                                        formatter={(value: any) => formatExactCurrency(Number(value || 0))}
                                         contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgb(0 0 0 / 0.1)' }}
                                     />
                                 </PieChart>
