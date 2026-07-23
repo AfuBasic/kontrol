@@ -242,7 +242,29 @@ class AccessCodeController extends Controller
             'filters' => [
                 'date' => $dateFilter,
             ],
+            'durationOptions' => $this->accessCodeService->getDurationOptions(),
+            'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
         ]);
+    }
+
+    /**
+     * Extend validity of the specified access code.
+     */
+    public function extend(AccessCode $accessCode, Request $request): RedirectResponse
+    {
+        $userCode = $this->accessCodeService->getCode($accessCode->id);
+
+        if (! $userCode) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'duration_minutes' => ['required', 'integer', 'min:15'],
+        ]);
+
+        $this->accessCodeService->extendCode($userCode, (int) $validated['duration_minutes']);
+
+        return back()->with('success', 'Pass extended successfully.');
     }
 
     /**
