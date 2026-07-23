@@ -68,10 +68,10 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
                     const isLast = index === steps.length - 1;
 
                     return (
-                        <li key={step.key} className="relative flex gap-3 pb-6 last:pb-0">
+                        <li key={step.key} className="relative flex gap-2.5 pb-3.5 last:pb-0">
                             {!isLast && (
                                 <span
-                                    className="absolute top-9 bottom-0 left-[17px] w-px bg-gray-200"
+                                    className="absolute top-7 bottom-0 left-[13px] w-px bg-gray-200"
                                     aria-hidden
                                 />
                             )}
@@ -80,27 +80,27 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
 
                             <div className="min-w-0 flex-1 pt-0.5">
                                 <p
-                                    className={`text-sm font-semibold ${
+                                    className={`text-xs font-semibold ${
                                         step.done ? 'text-gray-900' : 'text-gray-400'
                                     }`}
                                 >
                                     {step.title}
                                     {!step.done && (
-                                        <span className="ml-2 text-xs font-medium text-gray-400">
+                                        <span className="ml-1.5 text-[10px] font-medium text-gray-400">
                                             Pending
                                         </span>
                                     )}
                                 </p>
                                 {step.actor && (
-                                    <p className="mt-0.5 text-xs font-medium text-gray-500">{step.actor}</p>
+                                    <p className="mt-0.5 text-[11px] font-medium text-gray-500">{step.actor}</p>
                                 )}
                                 {step.timestamp ? (
-                                    <p className="mt-1 text-xs font-medium tabular-nums text-gray-600">
+                                    <p className="mt-0.5 text-[11px] font-medium tabular-nums text-gray-500">
                                         {step.timestamp}
                                     </p>
                                 ) : (
                                     !step.done && (
-                                        <p className="mt-1 text-xs font-medium text-gray-400">
+                                        <p className="mt-0.5 text-[11px] font-medium text-gray-400">
                                             Still on the property
                                         </p>
                                     )
@@ -111,10 +111,10 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
                 })}
             </ol>
 
-            <div className="mt-2 flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
-                <Lock className="h-3.5 w-3.5 shrink-0 text-gray-400" aria-hidden />
-                <p className="text-[11px] font-medium leading-snug text-gray-500">
-                    Record locked — this ledger entry cannot be edited.
+            <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-2">
+                <Lock className="h-3 w-3 shrink-0 text-gray-400" aria-hidden />
+                <p className="text-[10px] font-medium leading-snug text-gray-500">
+                    Record locked — cannot be edited.
                 </p>
             </div>
         </div>
@@ -125,21 +125,21 @@ function StepGlyph({ kind, done }: { kind: ChainStep['kind']; done: boolean }) {
     if (kind === 'issued') {
         return (
             <span
-                className={`relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${
+                className={`relative z-10 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border ${
                     done
                         ? 'border-gray-200 bg-white text-gray-600'
                         : 'border-gray-100 bg-gray-50 text-gray-300'
                 }`}
             >
-                <Ticket className="h-4 w-4" />
+                <Ticket className="h-3.5 w-3.5" />
             </span>
         );
     }
 
     if (kind === 'pending') {
         return (
-            <span className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-gray-300">
-                <span className="h-2 w-2 rounded-full bg-gray-300" />
+            <span className="relative z-10 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50 text-gray-300">
+                <span className="h-1.5 w-1.5 rounded-full bg-gray-300" />
             </span>
         );
     }
@@ -147,14 +147,14 @@ function StepGlyph({ kind, done }: { kind: ChainStep['kind']; done: boolean }) {
     if (kind === 'check_in' || kind === 'check_out') {
         return (
             <span className="relative z-10">
-                <VisitEventIcon type={kind} />
+                <VisitEventIcon type={kind} size="sm" />
             </span>
         );
     }
 
     return (
-        <span className="relative z-10 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-success-100 bg-success-50 text-success-600">
-            <Check className="h-4 w-4" />
+        <span className="relative z-10 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-success-100 bg-success-50 text-success-600">
+            <Check className="h-3.5 w-3.5" />
         </span>
     );
 }
