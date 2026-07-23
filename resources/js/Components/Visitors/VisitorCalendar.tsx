@@ -146,7 +146,24 @@ export default function VisitorCalendar({
                     params.append('search', searchQuery.trim());
                 }
 
-                const response = await fetch(`${eventsUrl}?${params.toString()}`);
+                // Read XSRF token from cookie (set by Laravel)
+                const xsrfMatch = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+                const xsrfToken = xsrfMatch ? decodeURIComponent(xsrfMatch[1]) : '';
+
+                const response = await fetch(`${eventsUrl}?${params.toString()}`, {
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {}),
+                    },
+                });
+
+                if (!response.ok) {
+                    console.error('Calendar fetch failed:', response.status, response.statusText);
+                    return;
+                }
+
                 const data = await response.json();
                 if (isMounted) {
                     setEvents(Array.isArray(data) ? data : []);
