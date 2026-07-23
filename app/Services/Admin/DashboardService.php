@@ -213,18 +213,18 @@ class DashboardService
                 });
         };
 
-        $collectionsThisMonth = CollectionAssignment::whereHas('collection', $collectionFilter)
+        $collectionsThisMonth = (int) CollectionAssignment::whereHas('collection', $collectionFilter)
             ->whereDate('updated_at', '>=', $startOfMonth)
-            ->sum('amount_paid') / 100;
+            ->sum('amount_paid');
 
         $totalAssigned = CollectionAssignment::whereHas('collection', $collectionFilter)->sum('amount_due');
         $totalPaid = CollectionAssignment::whereHas('collection', $collectionFilter)->sum('amount_paid');
         $collectionRate = $totalAssigned > 0 ? round(($totalPaid / $totalAssigned) * 100, 1) : 0;
 
-        $outstandingBalances = CollectionAssignment::whereHas('collection', $collectionFilter)
+        $outstandingBalances = (int) CollectionAssignment::whereHas('collection', $collectionFilter)
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->get()
-            ->sum(fn ($a) => $a->amount_due - $a->amount_paid) / 100;
+            ->sum(fn ($a) => $a->amount_due - $a->amount_paid);
 
         $transactionFilter = function ($q) use ($estateId) {
             $q->where('estate_id', $estateId)
