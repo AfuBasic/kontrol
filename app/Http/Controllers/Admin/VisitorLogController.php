@@ -204,11 +204,22 @@ class VisitorLogController extends Controller
             ->pluck('duration');
         $avgDuration = $durations->count() > 0 ? round($durations->average()) : 0;
 
+        $now = Carbon::now();
+        $todayStart = Carbon::today();
+        $todayEnd = Carbon::today()->endOfDay();
+
         $expectedToday = AccessCode::where('estate_id', $estateId)
             ->whereIn('status', ['active', 'scheduled'])
-            ->where(function ($q) {
+            ->where(function ($q) use ($now) {
                 $q->whereNull('expires_at')
-                    ->orWhereDate('expires_at', '>=', Carbon::today());
+                    ->orWhere('expires_at', '>', $now);
+            })
+            ->where(function ($q) use ($todayStart, $todayEnd) {
+                $q->whereBetween('starts_at', [$todayStart, $todayEnd])
+                    ->orWhere(function ($sq) use ($todayStart, $todayEnd) {
+                        $sq->whereNull('starts_at')
+                            ->whereBetween('created_at', [$todayStart, $todayEnd]);
+                    });
             })
             ->count();
 
