@@ -239,7 +239,7 @@ export default function VisitorCalendar({
     };
 
     return (
-        <div className="relative mx-auto max-w-md sm:max-w-2xl px-3 py-2 space-y-3 pb-24">
+        <div className="relative mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-4 space-y-6 pb-24">
             {/* Toast Notification Banner */}
             {toastMessage && (
                 <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-2xl bg-gray-900/95 px-4 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
@@ -390,108 +390,110 @@ export default function VisitorCalendar({
             </div>
 
             {/* ═══════════════════════════════════════════════════
-                MONTH GRID VIEW
+                MONTH GRID VIEW (2-column layout on desktop)
                ═══════════════════════════════════════════════════ */}
             {viewMode === 'grid' && (
-                <div className="space-y-3">
-                    {/* Grid Card */}
-                    <div className="rounded-2xl bg-white p-2">
-                        {/* Weekday Header — small, uppercase, muted (#7) */}
-                        <div className="grid grid-cols-7 mb-1 text-center">
-                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                                <div
-                                    key={idx}
-                                    className="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-400 py-1"
-                                >
-                                    {day}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Day Cells — compact, no borders, spacing-based (#2, #5) */}
-                        <div className="grid grid-cols-7 text-center">
-                            {calendarDays.map((day) => {
-                                const dateStr = format(day, 'yyyy-MM-dd');
-                                const dayEventsList = eventsByDate[dateStr] || [];
-                                const isCurrentMonth = isSameMonth(day, currentMonth);
-                                const isSelected = isSameDay(day, selectedDate);
-                                const isTodayDate = isToday(day);
-
-                                return (
-                                    <button
-                                        key={dateStr}
-                                        onClick={() => setSelectedDate(day)}
-                                        className="group flex flex-col items-center py-1 rounded-xl transition-colors hover:bg-gray-50"
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left Column: Month Grid (lg:col-span-7) */}
+                    <div className="lg:col-span-7 space-y-3">
+                        <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-2xs">
+                            {/* Weekday Header — small, uppercase, muted */}
+                            <div className="grid grid-cols-7 mb-1 text-center">
+                                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-400 py-1"
                                     >
-                                        {/* Day Number — today uses accent ring (#3) */}
-                                        <div
-                                            className={`h-7 w-7 rounded-full flex items-center justify-center text-[13px] transition-all ${
-                                                isSelected && !isTodayDate
-                                                    ? 'bg-gray-900 text-white font-bold'
-                                                    : isTodayDate && isSelected
-                                                    ? 'ring-2 ring-primary-500 bg-primary-50 text-primary-700 font-black'
-                                                    : isTodayDate
-                                                    ? 'ring-2 ring-primary-500/50 text-primary-600 font-bold'
-                                                    : isCurrentMonth
-                                                    ? 'text-gray-800 font-medium'
-                                                    : 'text-gray-300 font-normal'
-                                            }`}
-                                        >
-                                            {format(day, 'd')}
-                                        </div>
-
-                                        {/* Visitor Dots — category-colored (#1) */}
-                                        <div className="flex items-center justify-center gap-[3px] h-2 mt-0.5">
-                                            {dayEventsList.slice(0, 3).map((ev, i) => {
-                                                const style = getPurposeColorStyle(ev.extendedProps.purpose);
-                                                return (
-                                                    <span
-                                                        key={i}
-                                                        className={`h-[5px] w-[5px] rounded-full ${style.dot}`}
-                                                    />
-                                                );
-                                            })}
-                                            {dayEventsList.length > 3 && (
-                                                <span className="text-[7px] font-black text-gray-400 leading-none">
-                                                    +{dayEventsList.length - 3}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {/* Legend toggle (#6) */}
-                    <div className="flex items-center justify-end px-1">
-                        <button
-                            onClick={() => setShowLegend(!showLegend)}
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 hover:text-gray-600 transition"
-                        >
-                            <Info className="h-3 w-3" />
-                            {showLegend ? 'Hide legend' : 'Color legend'}
-                        </button>
-                    </div>
-
-                    {showLegend && (
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1 pb-1">
-                            {LEGEND_ITEMS.map((item) => {
-                                const style = getPurposeColorStyle(item.purpose);
-                                return (
-                                    <div key={item.label} className="flex items-center gap-1.5">
-                                        <span className={`h-2 w-2 rounded-full ${style.dot}`} />
-                                        <span className="text-[10px] font-medium text-gray-500">
-                                            {item.label}
-                                        </span>
+                                        {day}
                                     </div>
-                                );
-                            })}
-                        </div>
-                    )}
+                                ))}
+                            </div>
 
-                    {/* Selected Day Agenda */}
-                    <div className="space-y-2.5">
+                            {/* Day Cells */}
+                            <div className="grid grid-cols-7 text-center">
+                                {calendarDays.map((day) => {
+                                    const dateStr = format(day, 'yyyy-MM-dd');
+                                    const dayEventsList = eventsByDate[dateStr] || [];
+                                    const isCurrentMonth = isSameMonth(day, currentMonth);
+                                    const isSelected = isSameDay(day, selectedDate);
+                                    const isTodayDate = isToday(day);
+
+                                    return (
+                                        <button
+                                            key={dateStr}
+                                            onClick={() => setSelectedDate(day)}
+                                            className="group flex flex-col items-center py-2.5 rounded-xl transition-colors hover:bg-gray-50"
+                                        >
+                                            {/* Day Number */}
+                                            <div
+                                                className={`h-8 w-8 rounded-full flex items-center justify-center text-sm transition-all ${
+                                                    isSelected && !isTodayDate
+                                                        ? 'bg-gray-900 text-white font-bold'
+                                                        : isTodayDate && isSelected
+                                                        ? 'ring-2 ring-primary-500 bg-primary-50 text-primary-700 font-black'
+                                                        : isTodayDate
+                                                        ? 'ring-2 ring-primary-500/50 text-primary-600 font-bold'
+                                                        : isCurrentMonth
+                                                        ? 'text-gray-800 font-medium'
+                                                        : 'text-gray-300 font-normal'
+                                                }`}
+                                            >
+                                                {format(day, 'd')}
+                                            </div>
+
+                                            {/* Visitor Dots */}
+                                            <div className="flex items-center justify-center gap-[3px] h-2 mt-1">
+                                                {dayEventsList.slice(0, 3).map((ev, i) => {
+                                                    const style = getPurposeColorStyle(ev.extendedProps.purpose);
+                                                    return (
+                                                        <span
+                                                            key={i}
+                                                            className={`h-[5px] w-[5px] rounded-full ${style.dot}`}
+                                                        />
+                                                    );
+                                                })}
+                                                {dayEventsList.length > 3 && (
+                                                    <span className="text-[7px] font-black text-gray-400 leading-none">
+                                                        +{dayEventsList.length - 3}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Legend toggle */}
+                        <div className="flex items-center justify-end px-1">
+                            <button
+                                onClick={() => setShowLegend(!showLegend)}
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 hover:text-gray-600 transition"
+                            >
+                                <Info className="h-3 w-3" />
+                                {showLegend ? 'Hide legend' : 'Color legend'}
+                            </button>
+                        </div>
+
+                        {showLegend && (
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1 pb-1">
+                                {LEGEND_ITEMS.map((item) => {
+                                    const style = getPurposeColorStyle(item.purpose);
+                                    return (
+                                        <div key={item.label} className="flex items-center gap-1.5">
+                                            <span className={`h-2 w-2 rounded-full ${style.dot}`} />
+                                            <span className="text-[10px] font-medium text-gray-500">
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column: Selected Day Agenda (lg:col-span-5) */}
+                    <div className="lg:col-span-5 space-y-3">
                         <div className="flex items-center justify-between px-1">
                             <h2 className="text-sm font-bold text-gray-900">
                                 {format(selectedDate, 'EEEE, MMM d')}
@@ -503,7 +505,7 @@ export default function VisitorCalendar({
                         </div>
 
                         {selectedDateEvents.length > 0 ? (
-                            <div className="space-y-2">
+                            <div className="space-y-2.5">
                                 {selectedDateEvents.map((ev) => (
                                     <EventCard
                                         key={ev.id}
@@ -515,9 +517,9 @@ export default function VisitorCalendar({
                                 ))}
                             </div>
                         ) : (
-                            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-6 px-4 text-center space-y-1.5">
+                            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-10 px-4 text-center space-y-2">
                                 <p className="text-xs font-medium text-gray-400">
-                                    No visitors on {format(selectedDate, 'MMM d')}
+                                    No visitors scheduled for {format(selectedDate, 'MMM d')}
                                 </p>
                                 <button
                                     onClick={() => router.get(createUrl)}
