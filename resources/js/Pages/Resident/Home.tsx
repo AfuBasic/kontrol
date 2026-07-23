@@ -183,10 +183,10 @@ export default function Home({
         <>
             <Head title="Home" />
 
-            <div className="mx-auto max-w-2xl space-y-5 pb-24 px-1.5">
+            <div className="mx-auto max-w-xl space-y-3 pb-20 px-0.5">
                 
                 {/* HEADER */}
-                <div className="flex items-center justify-between py-1">
+                <div className="flex items-center justify-between py-0.5">
                     <div className="flex flex-col">
                         <span className="text-xs font-semibold text-slate-450">{getGreeting()}</span>
                         <h1 className="text-lg font-bold tracking-tight text-slate-900">{displayEstateName}</h1>
