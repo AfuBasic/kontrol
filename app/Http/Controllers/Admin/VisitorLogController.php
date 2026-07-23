@@ -55,6 +55,45 @@ class VisitorLogController extends Controller
                 []
             )),
         ]);
+    /**
+     * Display Admin Visitor Calendar page.
+     */
+    public function calendar(Request $request): Response
+    {
+        $estate = $this->estateContext->getEstate();
+
+        return Inertia::render('Admin/Visitors/Calendar', [
+            'hosts' => $this->hostsForFilters($estate),
+            'initialFilters' => [
+                'purpose' => $request->input('purpose'),
+                'status' => $request->input('status'),
+                'type' => $request->input('type'),
+                'search' => $request->input('search'),
+                'user_id' => $request->input('user_id'),
+            ],
+        ]);
+    }
+
+    /**
+     * Return JSON calendar events for estate-wide visitor activity lazy-loading.
+     */
+    public function calendarEvents(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $estate = $this->estateContext->getEstate();
+        $startDate = $request->input('start') ? Carbon::parse($request->input('start')) : now()->startOfMonth();
+        $endDate = $request->input('end') ? Carbon::parse($request->input('end')) : now()->endOfMonth();
+
+        $accessCodeService = app(\App\Services\Resident\AccessCodeService::class);
+
+        $events = $accessCodeService->getCalendarEvents(
+            $startDate,
+            $endDate,
+            userId: $request->input('user_id') ? (int) $request->input('user_id') : null,
+            estateId: $estate->id,
+            filters: $request->only(['purpose', 'status', 'type', 'search'])
+        );
+
+        return response()->json($events);
     }
 
     /**
