@@ -171,63 +171,67 @@ export default function VisitorIndex({
                     currentlyInside={metrics.currentlyInside}
                     expectedToday={metrics.expectedToday}
                     visitorsToday={metrics.visitorsToday}
+                    checkoutEnabled={checkoutEnabled}
                 />
 
-                {/* Main Operations Grid Layout */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                    {/* Primary Operations Column */}
-                    <div className="space-y-6 lg:col-span-8">
-                        {/* Currently Inside Estate Workspace */}
-                        <CurrentlyInsideWorkspace visitors={activeVisitors} />
-
-                        {/* Today's Expected Arrivals Feed */}
-                        <ExpectedArrivalsFeed arrivals={upcomingArrivals} />
-
-                        {/* Search & Investigation Audit Archive */}
-                        <SearchAndArchive
-                            logs={logs.data}
-                            filters={filters}
-                            hosts={hostOptions}
-                            securityOfficers={officerOptions}
-                            checkoutEnabled={checkoutEnabled}
-                            onFilterChange={handleFilterChange}
-                            onClearFilters={handleClearFilters}
-                            onSelectLog={(log) => setSelectedLog(log)}
-                        />
-
-                        {/* Infinite Scroll trigger */}
-                        {logs.next_page_url && (
-                            <WhenVisible
-                                always
-                                fallback={
-                                    <div className="flex items-center justify-center gap-2 border-t border-slate-100 py-4 text-xs font-semibold text-slate-500">
-                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-                                        <span>Loading more audit logs...</span>
-                                    </div>
-                                }
-                                params={{
-                                    data: {
-                                        page: logs.current_page + 1,
-                                        ...filters,
-                                    },
-                                    only: ['logs'],
-                                    preserveUrl: true,
-                                }}
-                            >
-                                <div className="flex items-center justify-center gap-2 border-t border-slate-100 py-4 text-xs font-semibold text-slate-500">
-                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-                                    <span>Loading more audit logs...</span>
-                                </div>
-                            </WhenVisible>
-                        )}
+                {/* Top Operational Area */}
+                {checkoutEnabled ? (
+                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                        {/* Currently Inside Workspace (Left) */}
+                        <div className="lg:col-span-8">
+                            <CurrentlyInsideWorkspace visitors={activeVisitors} />
+                        </div>
+                        {/* Gate Stream (Right) */}
+                        <div className="lg:col-span-4">
+                            <LiveActivityFeed items={feed} />
+                        </div>
                     </div>
-
-                    {/* Operational Stream Sidebar */}
-                    <div className="space-y-6 lg:col-span-4">
-                        {/* Live Activity Event Feed ("Gate Stream") */}
+                ) : (
+                    <div>
                         <LiveActivityFeed items={feed} />
                     </div>
-                </div>
+                )}
+
+                {/* Today's Expected Arrivals Feed (Full Width) */}
+                <ExpectedArrivalsFeed arrivals={upcomingArrivals} />
+
+                {/* Search & Investigation Audit Archive (Full Width) */}
+                <SearchAndArchive
+                    logs={logs.data}
+                    filters={filters}
+                    hosts={hostOptions}
+                    securityOfficers={officerOptions}
+                    checkoutEnabled={checkoutEnabled}
+                    onFilterChange={handleFilterChange}
+                    onClearFilters={handleClearFilters}
+                    onSelectLog={(log) => setSelectedLog(log)}
+                />
+
+                {/* Infinite Scroll trigger */}
+                {logs.next_page_url && (
+                    <WhenVisible
+                        always
+                        fallback={
+                            <div className="flex items-center justify-center gap-2 border-t border-slate-100 py-4 text-xs font-semibold text-slate-500">
+                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+                                <span>Loading more audit logs...</span>
+                            </div>
+                        }
+                        params={{
+                            data: {
+                                page: logs.current_page + 1,
+                                ...filters,
+                            },
+                            only: ['logs'],
+                            preserveUrl: true,
+                        }}
+                    >
+                        <div className="flex items-center justify-center gap-2 border-t border-slate-100 py-4 text-xs font-semibold text-slate-500">
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+                            <span>Loading more audit logs...</span>
+                        </div>
+                    </WhenVisible>
+                )}
             </div>
 
             {/* Log Details Modal */}
@@ -287,7 +291,11 @@ export default function VisitorIndex({
                                     <div className="flex justify-between border-b border-slate-100 pb-2">
                                         <span className="text-slate-400">Status</span>
                                         <span className="font-bold text-emerald-600">
-                                            {selectedLog.checked_out_at ? 'Checked Out' : 'Currently Inside'}
+                                            {checkoutEnabled
+                                                ? selectedLog.checked_out_at
+                                                    ? 'Checked Out'
+                                                    : 'Currently Inside'
+                                                : 'Verified'}
                                         </span>
                                     </div>
                                     {selectedLog.vehicle && (
