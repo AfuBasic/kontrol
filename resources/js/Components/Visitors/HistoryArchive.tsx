@@ -32,6 +32,7 @@ export default function HistoryArchive({
     const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
     const [sortField, setSortField] = useState<SortField>('date');
     const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+    const [selectedCategory, setSelectedCategory] = useState<string>('All');
     const [displayMode, setDisplayMode] = useState<'accordion' | 'table'>('table');
 
     const handleSort = (field: SortField) => {
@@ -43,8 +44,15 @@ export default function HistoryArchive({
         }
     };
 
-    // Filter by search
+    // Filter by search and category
     const filtered = historyTimeline.filter((item) => {
+        if (selectedCategory !== 'All') {
+            const cat = (item.purpose || '').toLowerCase();
+            if (!cat.includes(selectedCategory.toLowerCase())) {
+                return false;
+            }
+        }
+
         if (!search) return true;
         const q = search.toLowerCase();
         return (
@@ -106,7 +114,7 @@ export default function HistoryArchive({
 
     return (
         <div className="space-y-4 py-2">
-            {/* Search Input & Sort Toolbar */}
+            {/* Search Input & Filter/Sort Toolbar */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -119,28 +127,67 @@ export default function HistoryArchive({
                     />
                 </div>
 
-                {/* Display Mode Switcher */}
-                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 self-end sm:self-auto shrink-0">
-                    <button
-                        onClick={() => setDisplayMode('table')}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
-                            displayMode === 'table'
-                                ? 'bg-white text-slate-900 shadow-2xs'
-                                : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    {/* Category Filter Dropdown */}
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:border-primary-500 focus:outline-hidden shadow-2xs"
                     >
-                        Table
-                    </button>
-                    <button
-                        onClick={() => setDisplayMode('accordion')}
-                        className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
-                            displayMode === 'accordion'
-                                ? 'bg-white text-slate-900 shadow-2xs'
-                                : 'text-slate-500 hover:text-slate-800'
-                        }`}
+                        <option value="All">All Categories</option>
+                        <option value="Family">Family</option>
+                        <option value="Friends">Friends</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Delivery">Delivery</option>
+                        <option value="Healthcare">Healthcare</option>
+                        <option value="Business">Business</option>
+                    </select>
+
+                    {/* Explicit Sort Select (for Mobile & Desktop) */}
+                    <select
+                        value={sortField}
+                        onChange={(e) => setSortField(e.target.value as SortField)}
+                        className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 focus:border-primary-500 focus:outline-hidden shadow-2xs"
                     >
-                        By Month
+                        <option value="date">Sort: Visit Date</option>
+                        <option value="visitor_name">Sort: Visitor Name</option>
+                        <option value="purpose">Sort: Category</option>
+                        <option value="status">Sort: Status</option>
+                        <option value="code">Sort: Pass Code</option>
+                    </select>
+
+                    {/* Sort Direction Toggle Button */}
+                    <button
+                        onClick={() => setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+                        className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs shrink-0"
+                        title={`Sort ${sortDirection === 'asc' ? 'Descending' : 'Ascending'}`}
+                    >
+                        <span>{sortDirection === 'asc' ? '↑ Asc' : '↓ Desc'}</span>
                     </button>
+
+                    {/* Display Mode Switcher */}
+                    <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 shrink-0">
+                        <button
+                            onClick={() => setDisplayMode('table')}
+                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                                displayMode === 'table'
+                                    ? 'bg-white text-slate-900 shadow-2xs'
+                                    : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                        >
+                            Table
+                        </button>
+                        <button
+                            onClick={() => setDisplayMode('accordion')}
+                            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                                displayMode === 'accordion'
+                                    ? 'bg-white text-slate-900 shadow-2xs'
+                                    : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                        >
+                            By Month
+                        </button>
+                    </div>
                 </div>
             </div>
 
