@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import React from 'react';
-import AppleVisitorCalendar from '@/Components/Visitors/AppleVisitorCalendar';
+import VisitorCalendar from '@/Components/Visitors/VisitorCalendar';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Props = {
@@ -19,7 +19,7 @@ export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Pro
         <>
             <Head title="Estate Visitor Calendar" />
             <div className="space-y-4">
-                <AppleVisitorCalendar
+                <VisitorCalendar
                     eventsUrl="/admin/visitors/calendar-events"
                     backUrl="/admin/visitors"
                     backLabel="Logs"

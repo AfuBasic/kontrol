@@ -1,8 +1,7 @@
 import { Head } from '@inertiajs/react';
 import React from 'react';
-import AppleVisitorCalendar from '@/Components/Visitors/AppleVisitorCalendar';
+import VisitorCalendar from '@/Components/Visitors/VisitorCalendar';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import resident from '@/routes/resident';
 
 type Props = {
     initialFilters?: {
@@ -17,8 +16,8 @@ export default function ResidentVisitorCalendar({ initialFilters }: Props) {
     return (
         <>
             <Head title="Visitor Calendar" />
-            <AppleVisitorCalendar
-                eventsUrl={resident.visitors['calendar-events'].url()}
+            <VisitorCalendar
+                eventsUrl="/resident/visitors/calendar-events"
                 backUrl="/resident/visitors"
                 backLabel="Timeline"
                 createUrl="/resident/visitors/create"

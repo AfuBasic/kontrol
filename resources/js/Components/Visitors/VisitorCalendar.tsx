@@ -51,7 +51,7 @@ export type VisitorCalendarEvent = {
     };
 };
 
-type AppleVisitorCalendarProps = {
+type VisitorCalendarProps = {
     eventsUrl: string;
     backUrl: string;
     backLabel?: string;
@@ -68,7 +68,7 @@ type AppleVisitorCalendarProps = {
 
 const PURPOSES = ['All', 'Family', 'Friends', 'Maintenance', 'Delivery', 'Healthcare', 'Business'];
 
-export default function AppleVisitorCalendar({
+export default function VisitorCalendar({
     eventsUrl,
     backUrl,
     backLabel = 'Timeline',
@@ -76,7 +76,7 @@ export default function AppleVisitorCalendar({
     hosts = [],
     createUrl = '/resident/visitors/create',
     initialFilters,
-}: AppleVisitorCalendarProps) {
+}: VisitorCalendarProps) {
     const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -124,7 +124,7 @@ export default function AppleVisitorCalendar({
                 const response = await fetch(`${eventsUrl}?${params.toString()}`);
                 const data = await response.json();
                 if (isMounted) {
-                    setEvents(data);
+                    setEvents(Array.isArray(data) ? data : []);
                 }
             } catch (err) {
                 console.error('Failed to fetch calendar events', err);
@@ -167,7 +167,7 @@ export default function AppleVisitorCalendar({
 
     return (
         <div className="mx-auto max-w-md sm:max-w-2xl px-3 py-2 space-y-4 pb-28">
-            {/* Top Navigation & Apple Style Header */}
+            {/* Top Navigation & Minimal Mobile Header */}
             <div className="space-y-3">
                 <div className="flex items-center justify-between">
                     {/* Left Back Navigation Pill */}
@@ -340,7 +340,7 @@ export default function AppleVisitorCalendar({
                         </div>
                     </div>
 
-                    {/* Selected Day Visitor Agenda Section (Apple Style) */}
+                    {/* Selected Day Visitor Agenda Section */}
                     <div className="space-y-3 pt-1">
                         <div className="flex items-center justify-between px-1">
                             <h2 className="text-sm font-black text-slate-900 tracking-tight">
@@ -509,7 +509,7 @@ export default function AppleVisitorCalendar({
                 </div>
             )}
 
-            {/* Bottom Dock Control Bar (Apple Floating Pill Bar) */}
+            {/* Bottom Dock Control Bar (Floating Pill Bar) */}
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 px-3 py-1.5 shadow-xl backdrop-blur-md">
                 <button
                     onClick={() => {
