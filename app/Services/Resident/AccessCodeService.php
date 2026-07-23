@@ -301,6 +301,33 @@ class AccessCodeService
     }
 
     /**
+     * Extend an access code validity by specified minutes.
+     */
+    public function extendCode(AccessCode $accessCode, int $minutes): AccessCode
+    {
+        $currentExpiresAt = $accessCode->expires_at ? Carbon::parse($accessCode->expires_at) : now();
+        $baseTime = $currentExpiresAt->isPast() ? now() : $currentExpiresAt;
+        $newExpiresAt = $baseTime->copy()->addMinutes($minutes);
+
+        $accessCode->update([
+            'expires_at' => $newExpiresAt,
+            'status' => AccessCodeStatus::Active,
+        ]);
+
+        activity()
+            ->performedOn($accessCode)
+            ->by(Auth::user())
+            ->withEstate($accessCode->estate_id)
+            ->withProperties([
+                'extended_minutes' => $minutes,
+                'new_expires_at' => $newExpiresAt->toIsoString(),
+            ])
+            ->log('Access code extended');
+
+        return $accessCode;
+    }
+
+    /**
      * Get recent activity for the current user.
      *
      * @return Collection<int, array{type: string, message: string, time: string, time_full: string, code?: string, visitor?: string}>
@@ -480,6 +507,7 @@ class AccessCodeService
             'Access code used' => 'used',
             'Access code expired' => 'expired',
             'Access code revoked' => 'revoked',
+            'Access code extended' => 'extended',
             'Visitor checked out' => 'checked_out',
             default => 'info',
         };
@@ -489,6 +517,7 @@ class AccessCodeService
             'Access code used' => $visitorName ? "{$visitorName} arrived" : 'Visitor arrived',
             'Access code expired' => $visitorName ? "Code for {$visitorName} expired" : 'Access code expired',
             'Access code revoked' => $visitorName ? "Code for {$visitorName} revoked" : 'Access code revoked',
+            'Access code extended' => $visitorName ? "Code for {$visitorName} extended" : 'Access code extended',
             'Visitor checked out' => $visitorName ? "{$visitorName} checked out" : 'Visitor checked out',
             default => $activity->description,
         };
