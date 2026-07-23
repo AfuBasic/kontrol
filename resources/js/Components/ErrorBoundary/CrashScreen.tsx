@@ -8,10 +8,10 @@ interface Props {
 }
 
 export default function CrashScreen({ error, resetError }: Props) {
-    const [showDetails, setShowDetails] = useState(false);
+    const [showDetails, setShowDetails] = useState(true);
     const [copied, setCopied] = useState(false);
-    // Never expose stack traces or error payloads to end users in production.
-    const showTechnicalDetails = import.meta.env.DEV && error != null;
+    // Show technical details and stack traces when error is present.
+    const showTechnicalDetails = error != null;
 
     const handleReload = () => {
         window.location.reload();
