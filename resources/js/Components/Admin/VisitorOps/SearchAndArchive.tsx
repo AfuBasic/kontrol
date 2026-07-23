@@ -202,8 +202,8 @@ export default function SearchAndArchive({
                             className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 focus:border-primary-500 focus:outline-hidden"
                         >
                             <option value="">All Statuses</option>
-                            <option value="inside">Currently Inside</option>
-                            <option value="checked_out">Checked Out</option>
+                            {checkoutEnabled && <option value="inside">Currently Inside</option>}
+                            {checkoutEnabled && <option value="checked_out">Checked Out</option>}
                         </select>
                     </div>
 
@@ -300,14 +300,20 @@ export default function SearchAndArchive({
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            {log.checked_out_at ? (
-                                                <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                                                    Checked Out
-                                                </span>
+                                            {checkoutEnabled ? (
+                                                log.checked_out_at ? (
+                                                    <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                                        Checked Out
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                        Inside
+                                                    </span>
+                                                )
                                             ) : (
-                                                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                                                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                                    Inside
+                                                <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                                    Verified
                                                 </span>
                                             )}
                                         </td>
