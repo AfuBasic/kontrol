@@ -153,42 +153,42 @@ export default function Visitors({
         <>
             <Head title="Visitors" />
 
-            <div className="mx-auto max-w-xl px-1 py-1.5 space-y-2 pb-16">
+            <div className="mx-auto max-w-xl px-2 py-3 space-y-4 pb-20">
                 {/* Header */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pt-1 pb-1">
                     <div>
-                        <h1 className="text-lg font-bold tracking-tight text-slate-900">Visitors</h1>
+                        <h1 className="text-xl font-black tracking-tight text-slate-900">Visitors</h1>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2.5">
                         <Link
                             href={resident.visitors.calendar.url()}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50"
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 active:scale-95"
                         >
-                            <Calendar className="h-3.5 w-3.5 text-primary-600" />
+                            <Calendar className="h-4 w-4 text-primary-600" />
                             <span>Calendar</span>
                         </Link>
                         <button
                             onClick={() => setShowCreateSheet(true)}
-                            className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-3 py-1 text-xs font-bold text-white transition hover:bg-slate-800"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-95"
                         >
-                            <Plus className="h-3.5 w-3.5" />
+                            <Plus className="h-4 w-4" />
                             <span>Invite</span>
                         </button>
                     </div>
                 </div>
 
                 {/* Animated Segmented View Switcher */}
-                <div className="relative flex rounded-lg bg-slate-100/80 p-0.5 font-semibold">
+                <div className="relative flex rounded-xl bg-slate-100/90 p-1 font-semibold">
                     <button
                         onClick={() => switchTab('schedule')}
-                        className={`relative flex-1 rounded-md py-1 text-xs transition-colors duration-200 ${
-                            activeTab === 'schedule' ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'
+                        className={`relative flex-1 rounded-lg py-2 text-xs font-bold transition-colors duration-200 ${
+                            activeTab === 'schedule' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
                         }`}
                     >
                         {activeTab === 'schedule' && (
                             <motion.div
                                 layoutId="activeTabPill"
-                                className="absolute inset-0 rounded-md bg-white shadow-2xs"
+                                className="absolute inset-0 rounded-lg bg-white shadow-2xs"
                                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                             />
                         )}
@@ -197,14 +197,14 @@ export default function Visitors({
 
                     <button
                         onClick={() => switchTab('history')}
-                        className={`relative flex-1 rounded-md py-1 text-xs transition-colors duration-200 ${
-                            activeTab === 'history' ? 'text-slate-900 font-bold' : 'text-slate-500 hover:text-slate-800'
+                        className={`relative flex-1 rounded-lg py-2 text-xs font-bold transition-colors duration-200 ${
+                            activeTab === 'history' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
                         }`}
                     >
                         {activeTab === 'history' && (
                             <motion.div
                                 layoutId="activeTabPill"
-                                className="absolute inset-0 rounded-md bg-white shadow-2xs"
+                                className="absolute inset-0 rounded-lg bg-white shadow-2xs"
                                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                             />
                         )}

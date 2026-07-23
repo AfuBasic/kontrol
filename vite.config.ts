@@ -31,11 +31,11 @@ export default defineConfig({
     //     },
     // },
     esbuild: {
-        target: ["es2015", "chrome60", "safari11"],
+        target: 'es2020',
         jsx: 'automatic',
     },
     build: {
-        target: ["es2015", "chrome60", "safari11"],
+        target: 'es2020',
         rollupOptions: {
             output: {
                 manualChunks: {
