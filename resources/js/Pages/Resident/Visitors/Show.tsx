@@ -1,5 +1,5 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import { ArrowLeft, Copy, Share2, Clock, X } from 'lucide-react';
+import { ArrowLeft, Copy, Share2, Clock, X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import PassCard from '@/Components/Resident/PassCard';
 import ResidentLayout from '@/Layouts/ResidentLayout';
@@ -21,6 +21,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
     const [copied, setCopied] = useState(false);
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
     const [selectedDuration, setSelectedDuration] = useState<number>(durationOptions[0]?.minutes || 120);
+    const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
     const { post, processing } = useForm({
         duration_minutes: selectedDuration,
@@ -61,7 +62,11 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
             resident.visitors.extend.url(accessCode.id),
             { duration_minutes: selectedDuration },
             {
-                onSuccess: () => setIsExtendModalOpen(false),
+                onSuccess: () => {
+                    setIsExtendModalOpen(false);
+                    setSuccessBanner('Pass validity successfully extended!');
+                    setTimeout(() => setSuccessBanner(null), 4000);
+                },
             }
         );
     }
@@ -97,6 +102,14 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
             <Head title="Visitor Pass Details" />
 
             <div className="mx-auto max-w-lg px-4 py-3 space-y-4 pb-20">
+                {/* Toast / Feedback Notification Banner */}
+                {successBanner && (
+                    <div className="flex items-center gap-2 rounded-xl bg-emerald-500 p-3 text-xs font-bold text-white shadow-lg animate-in fade-in slide-in-from-top-2">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        <span>{successBanner}</span>
+                    </div>
+                )}
+
                 {/* Compact App Header with Brand Logo, Wordmark & Estate Name */}
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <Link
@@ -126,49 +139,53 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
 
                 {/* Primary & Secondary Action Controls */}
                 <div className="mx-auto w-full max-w-sm space-y-3 px-1">
-                    {/* Primary Actions: Copy & Share */}
+                    {/* Primary Actions: Copy, Share & Prominent Extend */}
                     {isPassValid && (
-                        <div className="flex w-full gap-2.5">
-                            <button
-                                onClick={copyCode}
-                                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all active:scale-98 ${
-                                    copied
-                                        ? 'border-success-500 bg-success-50 text-success-700'
-                                        : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
-                                }`}
-                            >
-                                <Copy className="h-3.5 w-3.5" />
-                                <span>{copied ? 'Copied!' : 'Copy Code'}</span>
-                            </button>
+                        <div className="space-y-2">
+                            <div className="flex w-full gap-2.5">
+                                <button
+                                    onClick={copyCode}
+                                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all active:scale-98 ${
+                                        copied
+                                            ? 'border-success-500 bg-success-50 text-success-700'
+                                            : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <Copy className="h-3.5 w-3.5" />
+                                    <span>{copied ? 'Copied!' : 'Copy Code'}</span>
+                                </button>
 
+                                <button
+                                    onClick={handleShare}
+                                    disabled={sharing}
+                                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all active:scale-98 disabled:opacity-75 ${
+                                        shareCopied
+                                            ? 'border-success-500 bg-success-50 text-success-700'
+                                            : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                                    }`}
+                                >
+                                    <Share2 className="h-3.5 w-3.5" />
+                                    <span>{shareCopied ? 'Copied!' : 'Share Pass'}</span>
+                                </button>
+                            </div>
+
+                            {/* Repositioned Prominent Extend Pass Action Button */}
                             <button
-                                onClick={handleShare}
-                                disabled={sharing}
-                                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all active:scale-98 disabled:opacity-75 ${
-                                    shareCopied
-                                        ? 'border-success-500 bg-success-50 text-success-700'
-                                        : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
-                                }`}
+                                onClick={() => setIsExtendModalOpen(true)}
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 py-2.5 text-xs font-bold text-primary-700 border border-primary-100 transition-all hover:bg-primary-100 active:scale-98"
                             >
-                                <Share2 className="h-3.5 w-3.5" />
-                                <span>{shareCopied ? 'Copied!' : 'Share Pass'}</span>
+                                <Clock className="h-3.5 w-3.5 text-primary-600" />
+                                <span>Extend Pass Duration</span>
                             </button>
                         </div>
                     )}
 
-                    {/* Quiet Secondary Actions: Extend Pass & Revoke Pass */}
+                    {/* Quiet Danger Action: Revoke Pass */}
                     {isPassValid && (
-                        <div className="flex items-center justify-center gap-6 pt-1 text-xs font-semibold">
-                            <button
-                                onClick={() => setIsExtendModalOpen(true)}
-                                className="text-primary-600 transition hover:text-primary-700 hover:underline"
-                            >
-                                Extend pass
-                            </button>
-                            <span className="text-slate-300">•</span>
+                        <div className="flex items-center justify-center pt-1 text-xs font-semibold">
                             <button
                                 onClick={revokeCode}
-                                className="text-error-600 transition hover:text-error-700 hover:underline"
+                                className="text-slate-400 transition hover:text-error-600 hover:underline"
                             >
                                 Revoke pass
                             </button>
@@ -187,7 +204,8 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
                                 </div>
                                 <button
                                     onClick={() => setIsExtendModalOpen(false)}
-                                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                    disabled={processing}
+                                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
@@ -201,7 +219,8 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
                                     <select
                                         value={selectedDuration}
                                         onChange={(e) => setSelectedDuration(Number(e.target.value))}
-                                        className="w-full rounded-xl border-slate-200 text-xs font-medium focus:border-primary-500 focus:ring-primary-500"
+                                        disabled={processing}
+                                        className="w-full rounded-xl border-slate-200 text-xs font-medium focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50"
                                     >
                                         {durationOptions.length > 0 ? (
                                             durationOptions.map((opt) => (
@@ -224,16 +243,24 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
                                     <button
                                         type="button"
                                         onClick={() => setIsExtendModalOpen(false)}
-                                        className="flex-1 rounded-xl border border-slate-200 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                                        disabled={processing}
+                                        className="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="flex-1 rounded-xl bg-primary-600 py-2 text-xs font-bold text-white hover:bg-primary-700 disabled:opacity-50"
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary-600 py-2.5 text-xs font-bold text-white hover:bg-primary-700 disabled:opacity-75"
                                     >
-                                        Confirm Extension
+                                        {processing ? (
+                                            <>
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                <span>Extending...</span>
+                                            </>
+                                        ) : (
+                                            <span>Confirm Extension</span>
+                                        )}
                                     </button>
                                 </div>
                             </form>

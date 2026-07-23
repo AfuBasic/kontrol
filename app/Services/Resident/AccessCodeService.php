@@ -317,8 +317,8 @@ class AccessCodeService
         activity()
             ->performedOn($accessCode)
             ->by(Auth::user())
-            ->withEstate($accessCode->estate_id)
             ->withProperties([
+                'estate_id' => $accessCode->estate_id,
                 'extended_minutes' => $minutes,
                 'new_expires_at' => $newExpiresAt->toIsoString(),
             ])
