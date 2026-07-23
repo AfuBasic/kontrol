@@ -587,12 +587,18 @@ function EventCard({
     const style = getPurposeColorStyle(ev.extendedProps.purpose);
     const isCopied = copiedCode === ev.extendedProps.code;
 
-    const detailUrl = isAdmin ? '/admin/visitors' : `/resident/visitors/${ev.id}`;
+    const detailUrl = `/resident/visitors/${ev.id}`;
 
     return (
         <div
-            onClick={() => router.get(detailUrl)}
-            className="group flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-3 hover:border-gray-200 transition cursor-pointer active:scale-[0.99]"
+            onClick={() => {
+                if (!isAdmin) {
+                    router.get(detailUrl);
+                }
+            }}
+            className={`group flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-3 transition ${
+                isAdmin ? '' : 'hover:border-gray-200 cursor-pointer active:scale-[0.99]'
+            }`}
         >
             {/* Category-colored left accent bar */}
             <div className={`w-0.5 self-stretch rounded-full shrink-0 ${style.dot}`} />
