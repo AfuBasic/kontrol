@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, Lock, Users, Bell, Shield, QrCode, CheckCircle, Send, Smartphone, CreditCard } from 'lucide-react';
+import { Fingerprint, Lock, Users, Bell, Shield, QrCode, CheckCircle, Send, Smartphone, CreditCard, TrendingUp } from 'lucide-react';
 import InteractiveTilt from './InteractiveTilt';
 
 interface FeatureItem {

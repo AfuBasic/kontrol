@@ -98,7 +98,7 @@ export default function Visitors({
         setRetryingId(pass.id);
         try {
             const matchingOp = operations.find(
-                (op) => op.payload && (op.payload as any).uuid === pass.uuid,
+                (op) => op.payload && (op.payload as any).uuid === pass.id,
             );
             if (matchingOp) {
                 await retryOperation(matchingOp.id);
@@ -114,12 +114,12 @@ export default function Visitors({
     // Modals & Creation Sheet State
     const [showCreateSheet, setShowCreateSheet] = useState(false);
     const [revokeModalOpen, setRevokeModalOpen] = useState(false);
-    const [codeToRevoke, setCodeToRevoke] = useState<{ id: number; visitor_name?: string } | null>(null);
+    const [codeToRevoke, setCodeToRevoke] = useState<{ id: number; visitor_name?: string | null } | null>(null);
     const [revoking, setRevoking] = useState(false);
 
     const promptCancelPass = (id: number) => {
         const item = upcomingTimeline.find((code) => code.id === id);
-        setCodeToRevoke({ id, visitor_name: item?.visitor_name });
+        setCodeToRevoke({ id, visitor_name: item?.visitor_name ?? null });
         setRevokeModalOpen(true);
     };
 

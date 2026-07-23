@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { ChevronLeft, ChevronRight, Download, Eye, MoreHorizontal, Loader2 } from 'lucide-react';
+import { formatCurrency } from '@/Utils/currency';
 import { format, parseISO } from 'date-fns';
 import { useState } from 'react';
 
@@ -157,7 +158,14 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.collection?.name || '—'}</td>
                                         <td className="px-4 py-3 text-xs font-black text-slate-950">{formatCurrency(tx.amount, tx.direction)}</td>
                                         <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '—'}</td>
-                                        <td className="px-4 py-3"><StatusBadge status={tx.status} label={tx.status_label} /></td>
+                                        <td className="px-4 py-3">
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                                                tx.status === 'successful' || tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
+                                                tx.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
+                                            }`}>
+                                                {tx.status_label || tx.status}
+                                            </span>
+                                        </td>
                                         <td className="px-4 py-3 font-mono text-[10px] text-slate-450 font-semibold">{tx.reference_number}</td>
                                         <td className="px-4 py-3 text-xs text-slate-500 font-semibold">
                                             {tx.created_at ? format(parseISO(tx.created_at), 'MMM d, h:mm a') : '—'}
