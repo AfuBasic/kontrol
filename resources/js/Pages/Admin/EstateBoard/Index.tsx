@@ -1,28 +1,26 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
     Megaphone,
-    Plus,
     Search,
     Filter,
     X,
-    BarChart3,
+    Settings,
+    Pin,
     CalendarDays,
-    Clock,
-    MessageSquare,
-    Image as ImageIcon,
-    Trash2,
-    Shield,
-    Users,
     Globe,
+    Users,
+    Shield,
 } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { create, show, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import { index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import type { CursorPaginatedPosts, EstateBoardPost, PostAudience } from '@/types';
+import { index as boardIndex, manage } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, PostCategory } from '@/types';
 import { useDebounce } from '@/Hooks/useDebounce';
+
+import QuickComposer from '@/Components/Admin/EstateBoard/QuickComposer';
+import PinnedSection from '@/Components/Admin/EstateBoard/PinnedSection';
+import FeedGroup from '@/Components/Admin/EstateBoard/FeedGroup';
+import EmptyState from '@/Components/Admin/EstateBoard/EmptyState';
 
 type Props = {
     posts: CursorPaginatedPosts;
@@ -39,33 +37,18 @@ type Props = {
     };
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-    general: 'bg-slate-100 text-slate-700 ring-slate-200',
-    meeting: 'bg-blue-100 text-blue-700 ring-blue-200',
-    maintenance: 'bg-orange-100 text-orange-700 ring-orange-200',
-    security: 'bg-rose-100 text-rose-700 ring-rose-200',
-    event: 'bg-purple-100 text-purple-700 ring-purple-200',
-};
-
-const PRIORITY_STYLES: Record<string, { badge: string; border: string }> = {
-    normal: { badge: 'bg-slate-100 text-slate-600', border: 'ring-slate-100' },
-    important: { badge: 'bg-amber-100 text-amber-700', border: 'ring-amber-200' },
-    critical: { badge: 'bg-rose-100 text-rose-700 animate-pulse', border: 'ring-rose-300 shadow-rose-100' },
-};
-
-function getAudienceConfig(audience: PostAudience) {
-    switch (audience) {
-        case 'residents':
-            return { icon: <Users className="h-3.5 w-3.5" />, label: 'Residents' };
-        case 'security':
-            return { icon: <Shield className="h-3.5 w-3.5" />, label: 'Security' };
-        default:
-            return { icon: <Globe className="h-3.5 w-3.5" />, label: 'Everyone' };
-    }
-}
+const CATEGORIES: { value: PostCategory | 'all'; label: string }[] = [
+    { value: 'all', label: 'All Categories' },
+    { value: 'general', label: 'General' },
+    { value: 'meeting', label: 'Meeting' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'security', label: 'Security' },
+    { value: 'event', label: 'Event' },
+];
 
 export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
+    const composerRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
     const [search, setSearch] = useState(filters.search || '');
@@ -75,14 +58,22 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
         if (debouncedSearch !== (filters.search || '')) {
             router.get(
                 boardIndex.url(),
-                { search: debouncedSearch, audience: filters.audience, category: filters.category, priority: filters.priority },
-                { preserveState: true, preserveScroll: true, replace: true },
+                {
+                    search: debouncedSearch,
+                    audience: filters.audience,
+                    category: filters.category,
+                    priority: filters.priority,
+                },
+                { preserveState: true, preserveScroll: true, replace: true }
             );
         }
     }, [debouncedSearch, filters.audience, filters.category, filters.priority]);
 
     const setFilter = (key: string, value: string) => {
-        const newFilters = { ...filters, [key]: value === filters[key as keyof typeof filters] ? '' : value };
+        const currentVal = filters[key as keyof typeof filters] || '';
+        const newVal = value === currentVal || value === 'all' ? '' : value;
+        const newFilters = { ...filters, [key]: newVal };
+
         router.get(boardIndex.url(), newFilters, { preserveState: true, preserveScroll: true, replace: true });
     };
 
@@ -105,7 +96,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                 onFinish: () => {
                     isLoadingMore.current = false;
                 },
-            },
+            }
         );
     }, [posts.next_page_url]);
 
@@ -116,7 +107,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
                     loadMore();
                 }
             },
-            { threshold: 0.1 },
+            { threshold: 0.1 }
         );
 
         if (loadMoreRef.current) {
@@ -126,258 +117,174 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
         return () => observer.disconnect();
     }, [loadMore]);
 
-    const hasActiveFilters = Boolean(search || filters.audience !== 'all' || filters.category || filters.priority);
+    const handleFocusComposer = () => {
+        if (composerRef.current) {
+            composerRef.current.scrollIntoView({ behavior: 'smooth' });
+            const textarea = composerRef.current.querySelector('textarea');
+            if (textarea) textarea.focus();
+        }
+    };
+
+    const hasActiveFilters = Boolean(
+        search || (filters.audience && filters.audience !== 'all') || filters.category || filters.priority
+    );
+
+    // Separate Pinned / High Priority posts from general chronological feed
+    const pinnedPosts = posts.data.filter(
+        (post) => post.priority === 'important' || post.priority === 'critical'
+    );
+
+    // Feed posts excluding pinned (or including if filters active)
+    const regularPosts = hasActiveFilters
+        ? posts.data
+        : posts.data.filter((post) => post.priority !== 'important' && post.priority !== 'critical');
 
     return (
-        <div className="mx-auto max-w-7xl space-y-8 pb-32">
+        <div className="mx-auto max-w-5xl space-y-6 pb-32">
             <Head title="Estate Board" />
 
             {/* Header */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Communication Center</h1>
-                    <p className="mt-1.5 text-sm font-medium text-slate-500">Manage estate-wide broadcasts, alerts, and community updates.</p>
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Estate Board</h1>
+                    <p className="mt-1 text-xs font-semibold text-slate-500 sm:text-sm">
+                        Broadcast announcements, critical alerts, and community updates to residents and estate staff.
+                    </p>
                 </div>
-                <Link
-                    href={create.url()}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-700 hover:shadow-primary-600/30 active:scale-95"
-                >
-                    <Plus className="h-5 w-5" />
-                    New Broadcast
-                </Link>
-            </div>
 
-            {/* Communication Summary Hero */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-slate-900 p-8 shadow-2xl sm:p-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-primary-500/10 to-transparent"></div>
-                <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary-500/20 blur-3xl"></div>
-                <div className="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-slate-500/20 blur-3xl"></div>
-
-                <div className="relative grid grid-cols-1 gap-8 divide-y divide-white/10 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-                    <div className="flex flex-col gap-2">
-                        <div className="flex items-center gap-2 text-primary-200">
-                            <BarChart3 className="h-5 w-5 opacity-70" />
-                            <span className="text-xs font-bold tracking-wider uppercase">Total Broadcasts</span>
-                        </div>
-                        <span className="text-4xl font-black text-white">{metrics.total}</span>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-6 sm:pt-0 sm:pl-8">
-                        <div className="flex items-center gap-2 text-primary-200">
-                            <CalendarDays className="h-5 w-5 opacity-70" />
-                            <span className="text-xs font-bold tracking-wider uppercase">This Month</span>
-                        </div>
-                        <span className="text-4xl font-black text-white">{metrics.this_month}</span>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-6 sm:pt-0 sm:pl-8">
-                        <div className="flex items-center gap-2 text-primary-200">
-                            <Clock className="h-5 w-5 opacity-70" />
-                            <span className="text-xs font-bold tracking-wider uppercase">Latest Update</span>
-                        </div>
-                        <span className="mt-2 text-xl font-black text-white">{metrics.last_broadcast || 'Never'}</span>
-                    </div>
+                <div className="flex items-center gap-2">
+                    <Link
+                        href={manage.url()}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50"
+                    >
+                        <Settings className="h-4 w-4 text-slate-400" />
+                        <span>Manage Posts</span>
+                    </Link>
                 </div>
             </div>
 
-            {/* Filters Section */}
-            <div className="space-y-4">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="relative max-w-md flex-1">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                            <Search className="h-5 w-5 text-slate-400" />
-                        </div>
+            {/* Quick Composer Surface */}
+            <div ref={composerRef}>
+                <QuickComposer lastBroadcastNote={metrics.last_broadcast} />
+            </div>
+
+            {/* Search & Category Filter Toolbar */}
+            <div className="space-y-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="block w-full rounded-2xl border-0 bg-white py-3.5 pr-4 pl-11 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-primary-600 focus:ring-inset sm:leading-6"
-                            placeholder="Search broadcasts..."
+                            placeholder="Search title, content, or author..."
+                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 shadow-2xs transition focus:border-primary-500 focus:outline-hidden"
                         />
                     </div>
 
-                    <div className="hide-scrollbar flex flex-wrap items-center gap-2 overflow-x-auto pb-2 sm:pb-0">
-                        <div className="flex items-center rounded-xl bg-white px-3 py-1.5 shadow-sm ring-1 ring-slate-200 focus-within:ring-2 focus-within:ring-primary-600">
-                            <Filter className="mr-2 h-4 w-4 text-slate-400" />
+                    {/* Audience & Category Filter Controls */}
+                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        {/* Category Dropdown */}
+                        <div className="relative">
                             <select
-                                value={filters.audience}
+                                value={filters.category || 'all'}
+                                onChange={(e) => setFilter('category', e.target.value)}
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:border-primary-500 focus:outline-hidden"
+                            >
+                                {CATEGORIES.map((cat) => (
+                                    <option key={cat.value} value={cat.value}>
+                                        {cat.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Audience Filter */}
+                        <div className="relative">
+                            <select
+                                value={filters.audience || 'all'}
                                 onChange={(e) => setFilter('audience', e.target.value)}
-                                className="cursor-pointer border-none bg-transparent py-1 pr-6 pl-0 text-sm font-bold text-slate-700 focus:ring-0"
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:border-primary-500 focus:outline-hidden"
                             >
                                 <option value="all">All Audiences</option>
                                 <option value="residents">Residents Only</option>
                                 <option value="security">Security Only</option>
                             </select>
                         </div>
+
+                        {/* Priority / Important Filter */}
                         <button
                             onClick={() => setFilter('priority', 'important')}
-                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
+                            className={`inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs shrink-0 ${
                                 filters.priority === 'important'
-                                    ? 'bg-amber-100 text-amber-700 ring-1 ring-amber-300'
-                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
+                                    ? 'border-amber-300 bg-amber-50 text-amber-700'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                             }`}
                         >
-                            Important
+                            <Pin className="h-3.5 w-3.5 text-amber-600" />
+                            <span>Pinned</span>
                         </button>
-                        <button
-                            onClick={() => setFilter('category', 'meeting')}
-                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
-                                filters.category === 'meeting'
-                                    ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300'
-                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
-                            }`}
-                        >
-                            Meetings
-                        </button>
-                        <button
-                            onClick={() => setFilter('category', 'security')}
-                            className={`inline-flex items-center rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all ${
-                                filters.category === 'security'
-                                    ? 'bg-rose-100 text-rose-700 ring-1 ring-rose-300'
-                                    : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
-                            }`}
-                        >
-                            Security
-                        </button>
+
+                        {/* Clear Filters */}
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
-                                className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-600 transition-all hover:bg-slate-200"
+                                className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-200 shrink-0"
                             >
-                                <X className="h-4 w-4" />
-                                Clear
+                                <X className="h-3.5 w-3.5" />
+                                <span>Clear</span>
                             </button>
                         )}
                     </div>
                 </div>
+
+                {/* Category Chips Bar (Quick 1-tap filter) */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    {CATEGORIES.map((cat) => {
+                        const isActive = (filters.category || 'all') === cat.value;
+                        return (
+                            <button
+                                key={cat.value}
+                                onClick={() => setFilter('category', cat.value)}
+                                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition shrink-0 ${
+                                    isActive
+                                        ? 'bg-primary-600 text-white shadow-2xs'
+                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                }`}
+                            >
+                                <span>{cat.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
-            {/* Broadcast Feed */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <AnimatePresence mode="popLayout">
-                    {posts.data.length > 0 ? (
-                        posts.data.map((post, idx) => {
-                            const audienceConfig = getAudienceConfig(post.audience);
-                            return (
-                                <motion.div
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.95 }}
-                                    transition={{ duration: 0.2 }}
-                                    key={post.id}
-                                    className={`group relative flex flex-col justify-between overflow-hidden rounded-3xl bg-white p-6 shadow-sm ring-1 transition-all hover:-translate-y-1 hover:shadow-xl ${PRIORITY_STYLES[post.priority || 'normal']?.border || 'ring-slate-200'}`}
-                                >
-                                    <div>
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {post.category && (
-                                                    <span
-                                                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ring-1 ring-inset ${CATEGORY_COLORS[post.category] || CATEGORY_COLORS.general}`}
-                                                    >
-                                                        {post.category}
-                                                    </span>
-                                                )}
-                                                {post.priority && post.priority !== 'normal' && (
-                                                    <span
-                                                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${PRIORITY_STYLES[post.priority].badge}`}
-                                                    >
-                                                        {post.priority}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-5">
-                                            <Link href={show.url({ post: post.hashid })} className="absolute inset-0 z-0" />
-                                            {post.title ? (
-                                                <h3 className="text-lg leading-tight font-black text-slate-900 transition-colors group-hover:text-primary-600">
-                                                    {post.title}
-                                                </h3>
-                                            ) : (
-                                                <p className="text-lg font-medium text-slate-900 italic">No Title</p>
-                                            )}
-                                            <div
-                                                className="prose prose-sm prose-slate mt-3 line-clamp-3 max-w-none text-sm leading-relaxed font-medium text-slate-500"
-                                                dangerouslySetInnerHTML={{ __html: post.body }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="relative z-10 mt-8 flex items-center justify-between border-t border-slate-100 pt-5">
-                                        <div className="pointer-events-none flex flex-col gap-1">
-                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Audience</span>
-                                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
-                                                {audienceConfig.icon}
-                                                {audienceConfig.label}
-                                            </span>
-                                        </div>
-                                        <div className="pointer-events-none flex flex-col items-end gap-1">
-                                            <span className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                                {post.published_at
-                                                    ? formatDistanceToNow(new Date(post.published_at), { addSuffix: true })
-                                                    : formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                                            </span>
-                                            <div className="flex items-center gap-3 text-slate-500">
-                                                {post.media && post.media.length > 0 && (
-                                                    <div className="flex items-center gap-1">
-                                                        <ImageIcon className="h-3.5 w-3.5" />
-                                                        <span className="text-xs font-bold">{post.media.length}</span>
-                                                    </div>
-                                                )}
-                                                <div className="flex items-center gap-1">
-                                                    <MessageSquare className="h-3.5 w-3.5" />
-                                                    <span className="text-xs font-bold">{post.comments_count}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            );
-                        })
-                    ) : (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="col-span-full flex flex-col items-center justify-center rounded-[2.5rem] border-2 border-dashed border-slate-200 bg-slate-50 px-6 py-24 text-center"
-                        >
-                            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-slate-100">
-                                <Megaphone className="h-10 w-10 text-primary-500" />
-                            </div>
-                            <h3 className="mt-6 text-xl font-black text-slate-900">
-                                {hasActiveFilters ? 'No matching broadcasts found' : 'No broadcasts yet'}
-                            </h3>
-                            <p className="mt-2 max-w-md text-sm leading-relaxed font-medium text-slate-500">
-                                {hasActiveFilters
-                                    ? "Try adjusting your search query or filters to find what you're looking for."
-                                    : 'Start engaging with your community by creating your first announcement. Share updates, news, and important information.'}
-                            </p>
-                            {hasActiveFilters ? (
-                                <button
-                                    onClick={clearFilters}
-                                    className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm ring-1 shadow-slate-200 ring-slate-200 transition-all hover:-translate-y-0.5 hover:bg-slate-50 active:translate-y-0"
-                                >
-                                    Clear filters
-                                </button>
-                            ) : (
-                                <Link
-                                    href={create.url()}
-                                    className="mt-8 inline-flex items-center justify-center gap-2 rounded-2xl bg-primary-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-primary-600/20 transition-all hover:-translate-y-0.5 hover:bg-primary-700 active:translate-y-0"
-                                >
-                                    <Plus className="h-5 w-5" />
-                                    Create First Broadcast
-                                </Link>
-                            )}
-                        </motion.div>
+            {/* Main Feed Content Area */}
+            {posts.data.length === 0 ? (
+                <EmptyState
+                    hasActiveFilters={hasActiveFilters}
+                    onClearFilters={clearFilters}
+                    onFocusComposer={handleFocusComposer}
+                />
+            ) : (
+                <div className="space-y-8">
+                    {/* Dedicated Pinned Section */}
+                    {!hasActiveFilters && pinnedPosts.length > 0 && (
+                        <PinnedSection pinnedPosts={pinnedPosts} />
                     )}
-                </AnimatePresence>
-            </div>
+
+                    {/* Chronological Feed (Grouped by Today / Yesterday / This Week / Earlier) */}
+                    <FeedGroup posts={regularPosts} hasActiveFilters={hasActiveFilters} />
+                </div>
+            )}
 
             {/* Infinite Scroll Loader */}
             {posts.next_page_url && (
-                <div ref={loadMoreRef} className="mt-10 flex justify-center pb-12">
-                    <div className="flex items-center gap-3">
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-primary-500 [animation-delay:-0.3s]" />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-primary-500 [animation-delay:-0.15s]" />
-                        <div className="h-2 w-2 animate-bounce rounded-full bg-primary-500" />
+                <div ref={loadMoreRef} className="mt-8 flex justify-center pb-12">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
+                        <span>Loading more announcements...</span>
                     </div>
                 </div>
             )}
