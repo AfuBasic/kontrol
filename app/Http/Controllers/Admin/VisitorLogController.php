@@ -37,6 +37,9 @@ class VisitorLogController extends Controller
             'hosts' => Inertia::defer(fn () => $this->hostsForFilters($estate)),
             'securityOfficers' => Inertia::defer(fn () => $this->securityOfficersForFilters($estate)),
             'checkoutEnabled' => $checkoutEnabled,
+            'currentlyInsideList' => $this->safe(fn () => $this->buildCurrentlyInsideList($estate->id), []),
+            'expectedArrivals' => $this->safe(fn () => $this->buildExpectedArrivals($estate->id), []),
+            'attentionItems' => $this->safe(fn () => $this->buildAttentionItems($estate->id), []),
             'metrics' => $this->safe(fn () => $this->buildMetrics($estate->id, $today), [
                 'currentlyInside' => 0,
                 'visitorsToday' => 0,
@@ -352,6 +355,127 @@ class VisitorLogController extends Controller
             ->select('users.id', 'users.name')
             ->orderBy('users.name')
             ->get();
+    }
+
+    private function buildCurrentlyInsideList(int $estateId): array
+    {
+        return AccessLog::where('estate_id', $estateId)
+            ->whereNull('checked_out_at')
+            ->with(['accessCode.user.profile', 'verifier:id,name'])
+            ->orderByDesc('verified_at')
+            ->get()
+            ->map(fn ($log) => [
+                'id' => $log->id,
+                'code' => $log->accessCode?->code,
+                'visitor' => [
+                    'name' => $log->accessCode?->visitor_name ?? 'Visitor',
+                    'phone' => $log->accessCode?->visitor_phone ?? 'N/A',
+                    'type' => $log->accessCode?->type,
+                ],
+                'host' => [
+                    'id' => $log->accessCode?->user_id,
+                    'name' => $log->accessCode?->user?->name ?? 'N/A',
+                    'unit' => $log->accessCode?->user?->profile?->unit_number ?? 'N/A',
+                    'address' => $log->accessCode?->user?->profile?->address,
+                ],
+                'purpose' => $log->accessCode?->purpose ?? 'General Visit',
+                'verified_at' => $log->verified_at->format('g:i A'),
+                'verified_at_human' => $log->verified_at->diffForHumans(),
+                'duration_minutes' => now()->diffInMinutes($log->verified_at),
+                'is_overstayed' => $log->accessCode?->expires_at ? $log->accessCode->expires_at->isPast() : false,
+                'gate' => $log->meta['gate'] ?? 'Main Gate',
+                'vehicle' => $log->vehicle_make ? [
+                    'make' => $log->vehicle_make,
+                    'model' => $log->vehicle_model,
+                    'plate' => $log->vehicle_plate_number,
+                ] : null,
+            ])
+            ->toArray();
+    }
+
+    private function buildExpectedArrivals(int $estateId): array
+    {
+        $now = Carbon::now();
+        $todayStart = Carbon::today();
+        $todayEnd = Carbon::today()->endOfDay();
+
+        return AccessCode::where('estate_id', $estateId)
+            ->whereIn('status', ['active', 'scheduled'])
+            ->whereDoesntHave('accessLogs', function ($q) {
+                $q->whereNull('checked_out_at');
+            })
+            ->where(function ($q) use ($now) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', $now);
+            })
+            ->where(function ($q) use ($todayStart, $todayEnd) {
+                $q->whereBetween('starts_at', [$todayStart, $todayEnd])
+                    ->orWhere(function ($sq) use ($todayStart, $todayEnd) {
+                        $sq->whereNull('starts_at')
+                            ->whereBetween('created_at', [$todayStart, $todayEnd]);
+                    });
+            })
+            ->with(['user.profile'])
+            ->orderBy('starts_at')
+            ->limit(15)
+            ->get()
+            ->map(fn ($code) => [
+                'id' => $code->id,
+                'code' => $code->code,
+                'visitor_name' => $code->visitor_name ?? 'Guest',
+                'visitor_phone' => $code->visitor_phone ?? 'N/A',
+                'purpose' => $code->purpose ?? 'General Visit',
+                'type' => $code->type,
+                'host_name' => $code->user?->name ?? 'Host',
+                'host_unit' => $code->user?->profile?->unit_number ?? 'Main',
+                'expected_time' => $code->starts_at ? $code->starts_at->format('g:i A') : $code->created_at->format('g:i A'),
+                'expires_at' => $code->expires_at?->format('g:i A'),
+            ])
+            ->toArray();
+    }
+
+    private function buildAttentionItems(int $estateId): array
+    {
+        $items = [];
+
+        $overstayedLogs = AccessLog::where('estate_id', $estateId)
+            ->whereNull('checked_out_at')
+            ->whereHas('accessCode', fn ($q) => $q->where('expires_at', '<', now()))
+            ->with(['accessCode.user'])
+            ->limit(5)
+            ->get();
+
+        foreach ($overstayedLogs as $log) {
+            $visitor = $log->accessCode?->visitor_name ?? 'Visitor';
+            $host = $log->accessCode?->user?->name ?? 'Host';
+            $items[] = [
+                'id' => 'overstay-'.$log->id,
+                'type' => 'overstay',
+                'severity' => 'high',
+                'title' => "Overstay Alert: {$visitor}",
+                'description' => "Inside with {$host}. Pass expired ".($log->accessCode?->expires_at?->diffForHumans() ?? 'recently'),
+                'action_label' => 'Check Out',
+                'log_id' => $log->id,
+            ];
+        }
+
+        $revokedCount = AccessCode::where('estate_id', $estateId)
+            ->where('status', 'revoked')
+            ->whereDate('updated_at', Carbon::today())
+            ->count();
+
+        if ($revokedCount > 0) {
+            $items[] = [
+                'id' => 'revoked-today',
+                'type' => 'security',
+                'severity' => 'medium',
+                'title' => "{$revokedCount} Pass".($revokedCount > 1 ? 'es' : '').' Denied / Revoked Today',
+                'description' => 'Security intervention or host revocation flagged.',
+                'action_label' => 'View Log',
+            ];
+        }
+
+        return $items;
     }
 
     /**
