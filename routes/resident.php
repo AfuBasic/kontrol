@@ -77,6 +77,8 @@ Route::middleware('role:resident,household_member')->group(function (): void {
         Route::get('/visitors/{accessCode}/success', [AccessCodeController::class, 'success'])->name('resident.visitors.success');
 
         Route::get('/visitors/create', [AccessCodeController::class, 'create'])->name('resident.visitors.create');
+        Route::get('/visitors/calendar', [AccessCodeController::class, 'calendar'])->name('resident.visitors.calendar');
+        Route::get('/visitors/calendar-events', [AccessCodeController::class, 'calendarEvents'])->name('resident.visitors.calendar-events');
         Route::get('/visitors', [AccessCodeController::class, 'index'])->name('resident.visitors.index');
         Route::get('/visitors/{accessCode}', [AccessCodeController::class, 'show'])->name('resident.visitors.show');
         Route::post('/visitors/{accessCode}/share', [AccessCodeController::class, 'share'])->name('resident.visitors.share');

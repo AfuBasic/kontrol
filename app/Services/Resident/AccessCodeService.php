@@ -727,4 +727,82 @@ class AccessCodeService
         $accessCode->increment('share_count');
         $accessCode->update(['last_shared_at' => now()]);
     }
+
+    /**
+     * Fetch calendar events for a specific date range and optional user/estate filters.
+     */
+    public function getCalendarEvents(Carbon $startDate, Carbon $endDate, ?int $userId = null, ?int $estateId = null, array $filters = []): array
+    {
+        $query = AccessCode::query()
+            ->with(['user:id,name', 'accessLogs']);
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        } elseif ($estateId) {
+            $query->where('estate_id', $estateId);
+        } else {
+            $estate = $this->estateContext->getEstate();
+            $query->where('estate_id', $estate->id);
+        }
+
+        // Filter by date range (overlapping start/end)
+        $query->where(function ($q) use ($startDate, $endDate) {
+            $q->whereBetween('created_at', [$startDate, $endDate])
+                ->orWhereBetween('expires_at', [$startDate, $endDate])
+                ->orWhere(function ($sq) use ($startDate, $endDate) {
+                    $sq->where('created_at', '<=', $startDate)
+                        ->where('expires_at', '>=', $endDate);
+                });
+        });
+
+        if (!empty($filters['purpose'])) {
+            $query->where('purpose', $filters['purpose']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['type'])) {
+            $query->where('type', $filters['type']);
+        }
+
+        if (!empty($filters['search'])) {
+            $term = '%' . $filters['search'] . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('visitor_name', 'like', $term)
+                    ->orWhere('visitor_phone', 'like', $term)
+                    ->orWhere('purpose', 'like', $term)
+                    ->orWhere('code', 'like', $term);
+            });
+        }
+
+        $codes = $query->get();
+
+        return $codes->map(function (AccessCode $code) {
+            $isLongLived = $code->type === 'long_lived';
+            $start = $code->created_at ? $code->created_at->toIso8601String() : now()->toIso8601String();
+            $end = $code->expires_at ? $code->expires_at->toIso8601String() : $start;
+
+            return [
+                'id' => (string) $code->id,
+                'title' => $code->visitor_name ?: ($code->purpose ?: 'Visitor Pass'),
+                'start' => $start,
+                'end' => $end,
+                'allDay' => $isLongLived,
+                'extendedProps' => [
+                    'code' => $code->code,
+                    'visitor_name' => $code->visitor_name ?: 'Guest',
+                    'visitor_phone' => $code->visitor_phone,
+                    'purpose' => $code->purpose ?: 'Personal Visit',
+                    'type' => $code->type,
+                    'status' => $code->status instanceof AccessCodeStatus ? $code->status->value : (string) $code->status,
+                    'host_name' => $code->user?->name ?? 'Resident',
+                    'used_at' => $code->used_at ? $code->used_at->toIso8601String() : null,
+                    'expires_at' => $code->expires_at ? $code->expires_at->toIso8601String() : null,
+                    'is_valid' => $code->isValid(),
+                ],
+            ];
+        })->toArray();
+    }
 }
