@@ -123,9 +123,11 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         });
     });
 
-    // Visitor Logs
+    // Visitor Logs & Calendar
     Route::prefix('visitors')->name('visitors.')->group(function (): void {
         Route::get('/', [VisitorLogController::class, 'index'])->name('index');
+        Route::get('/calendar', [VisitorLogController::class, 'calendar'])->name('calendar');
+        Route::get('/calendar-events', [VisitorLogController::class, 'calendarEvents'])->name('calendar-events');
     });
 
     // Security Personnel management
