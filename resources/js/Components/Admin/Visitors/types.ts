@@ -170,10 +170,19 @@ function dayGroupLabel(iso: string): string {
         return 'Yesterday';
     }
 
+    // Full weekday + long month for chapter weight (e.g. "Monday, July 21")
+    if (date.getFullYear() === now.getFullYear()) {
+        return date.toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+        });
+    }
+
     return date.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
+        weekday: 'long',
+        month: 'long',
         day: 'numeric',
-        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+        year: 'numeric',
     });
 }

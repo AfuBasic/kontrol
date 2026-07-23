@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { ChevronRight, ExternalLink } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
 import RecordDetailChain from './RecordDetailChain';
@@ -20,16 +20,18 @@ type Props = {
     onSelect: (record: VisitorRecord) => void;
 };
 
-/** Strong ease-out for open/close — snappy, not floaty */
 const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
 
+/** Fixed width for the time column — the visual anchor of every event row */
+const TIME_COL = 'w-[4.5rem] shrink-0 sm:w-[5.25rem]';
+
 /**
- * Vertical activity timeline.
+ * Chronological activity journal with three-level hierarchy:
+ * 1. Date groups (chapters) — dominant, never confusable with events
+ * 2. Time — fixed-width column, the scan anchor
+ * 3. Event body — name / action / host, not a single run-on sentence
  *
- * Visual language:
- * - One continuous left spine for the whole feed
- * - Day markers as labels on that spine (not collapsible cards)
- * - Events as timed nodes on the spine, expandable for custody detail
+ * Each day owns an independent spine; connectors do not run through day breaks.
  */
 export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSelect }: Props) {
     const groups = useMemo(() => {
@@ -37,12 +39,10 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
         return groupEventsByDay(events);
     }, [logs, checkoutEnabled]);
 
-    // Only surface gate on a row when gates actually vary across the loaded feed.
     const showGateWhenVaries = useMemo(() => {
         const gates = new Set(
             logs.map((log) => log.gate).filter((g): g is string => Boolean(g) && g !== 'Main Gate')
         );
-        // If every row is "Main Gate" or blank, never print gate. If multiple real gates, show when it changes.
         return gates.size > 1;
     }, [logs]);
 
@@ -70,55 +70,85 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
     }
 
     return (
-        <div className="rounded-2xl border border-gray-200 bg-white px-4 py-5 sm:px-6 sm:py-6">
-            {/* Continuous spine — border-l runs through every day + event */}
-            <div className="relative border-l-2 border-gray-200">
-                {groups.map((group) => (
-                    <section key={group.label} className="relative">
-                        {/* Day marker on the spine */}
-                        <header className="relative flex items-center py-3 first:pt-0">
-                            <span
-                                className="absolute top-1/2 left-0 z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary-500 bg-white ring-[3px] ring-white"
-                                aria-hidden
-                            />
-                            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pl-5 sm:pl-6">
-                                <h3 className="text-xs font-bold tracking-wider text-gray-900 uppercase">
-                                    {group.label}
-                                </h3>
-                                <span className="text-[11px] font-medium text-gray-400">
-                                    {group.events.length}{' '}
-                                    {group.events.length === 1 ? 'event' : 'events'}
-                                </span>
-                            </div>
-                        </header>
+        <div className="space-y-0">
+            {groups.map((group, groupIndex) => (
+                <DayChapter
+                    key={group.label}
+                    label={group.label}
+                    eventCount={group.events.length}
+                    isFirst={groupIndex === 0}
+                >
+                    <ol className="relative border-l border-gray-200">
+                        {group.events.map((event, index) => {
+                            const previous = index > 0 ? group.events[index - 1] : null;
+                            const isLast = index === group.events.length - 1;
 
-                        <ol>
-                            {group.events.map((event, index) => {
-                                const previous = index > 0 ? group.events[index - 1] : null;
-                                return (
-                                    <TimelineEvent
-                                        key={event.id}
-                                        event={event}
-                                        previous={previous}
-                                        expanded={expandedEventId === event.id}
-                                        checkoutEnabled={checkoutEnabled}
-                                        showGateWhenVaries={showGateWhenVaries}
-                                        onToggle={() => toggleEvent(event.id)}
-                                        onOpenFullRecord={onSelect}
-                                    />
-                                );
-                            })}
-                        </ol>
-                    </section>
-                ))}
-            </div>
+                            return (
+                                <TimelineEvent
+                                    key={event.id}
+                                    event={event}
+                                    previous={previous}
+                                    isLast={isLast}
+                                    expanded={expandedEventId === event.id}
+                                    checkoutEnabled={checkoutEnabled}
+                                    showGateWhenVaries={showGateWhenVaries}
+                                    onToggle={() => toggleEvent(event.id)}
+                                    onOpenFullRecord={onSelect}
+                                />
+                            );
+                        })}
+                    </ol>
+                </DayChapter>
+            ))}
         </div>
+    );
+}
+
+/**
+ * Level 1 — Date group as a chapter break.
+ * Large type, heavy weight, generous top space, hairline separator.
+ * Must never read as another timeline event.
+ */
+function DayChapter({
+    label,
+    eventCount,
+    isFirst,
+    children,
+}: {
+    label: string;
+    eventCount: number;
+    isFirst: boolean;
+    children: ReactNode;
+}) {
+    return (
+        <section
+            className={isFirst ? 'pt-0' : 'mt-10 border-t border-gray-200 pt-8 sm:mt-12 sm:pt-10'}
+            aria-labelledby={`day-${slugify(label)}`}
+        >
+            <header className="mb-5 sm:mb-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <h3
+                        id={`day-${slugify(label)}`}
+                        className="text-xl font-semibold tracking-tight text-gray-900 sm:text-2xl"
+                    >
+                        {formatDayChapterLabel(label)}
+                    </h3>
+                    <span className="text-xs font-medium tabular-nums text-gray-400">
+                        {eventCount} {eventCount === 1 ? 'event' : 'events'}
+                    </span>
+                </div>
+            </header>
+
+            {/* Independent spine for this day only — broken between chapters */}
+            <div className="pl-0 sm:pl-0.5">{children}</div>
+        </section>
     );
 }
 
 function TimelineEvent({
     event,
     previous,
+    isLast,
     expanded,
     checkoutEnabled,
     showGateWhenVaries,
@@ -127,6 +157,7 @@ function TimelineEvent({
 }: {
     event: ActivityEvent;
     previous: ActivityEvent | null;
+    isLast: boolean;
     expanded: boolean;
     checkoutEnabled: boolean;
     showGateWhenVaries: boolean;
@@ -137,31 +168,24 @@ function TimelineEvent({
     const hostChanged = !previous || previous.record.host.name !== record.host.name;
     const gateChanged = !previous || previous.record.gate !== record.gate;
     const showHost = hostChanged;
-    // Gate only when the feed has multiple real gates AND this row differs from the one above.
     const showGate =
         showGateWhenVaries && gateChanged && record.gate && record.gate !== 'Main Gate';
 
-    const verb =
-        type === 'check_out' ? 'checked out' : checkoutEnabled ? 'checked in' : 'verified';
+    const actionLabel =
+        type === 'check_out' ? 'Checked out' : checkoutEnabled ? 'Checked in' : 'Verified';
 
     const panelId = `event-panel-${event.id}`;
     const isCheckIn = type === 'check_in';
 
     return (
-        <li className="relative">
-            {/* Node centered on the spine */}
+        <li className={`relative ${isLast ? 'pb-0' : 'pb-1'}`}>
+            {/* Node on this day's spine only */}
             <span
-                className={`absolute top-[1.35rem] left-0 z-10 flex h-3.5 w-3.5 -translate-x-1/2 items-center justify-center rounded-full border-2 bg-white ring-[3px] ring-white ${
+                className={`absolute top-[1.125rem] left-0 z-10 h-2.5 w-2.5 -translate-x-1/2 rounded-full border-2 bg-white ring-[3px] ring-white ${
                     isCheckIn ? 'border-primary-500' : 'border-gray-300'
-                } ${expanded ? (isCheckIn ? 'bg-primary-50' : 'bg-gray-100') : ''}`}
+                }`}
                 aria-hidden
-            >
-                <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                        isCheckIn ? 'bg-primary-500' : 'bg-gray-400'
-                    }`}
-                />
-            </span>
+            />
 
             <div className="pl-5 sm:pl-6">
                 <button
@@ -169,48 +193,48 @@ function TimelineEvent({
                     onClick={onToggle}
                     aria-expanded={expanded}
                     aria-controls={panelId}
-                    className={`group flex w-full cursor-pointer gap-3 rounded-xl px-2 py-2.5 text-left transition-colors duration-150 ease-out active:scale-[0.995] sm:gap-4 sm:px-3 ${
-                        expanded ? 'bg-gray-50' : 'hover:bg-gray-50/80'
+                    className={`group flex w-full cursor-pointer gap-3 rounded-xl py-2 pr-1 text-left transition-colors duration-150 ease-out active:scale-[0.995] sm:gap-4 sm:pr-2 ${
+                        expanded ? 'bg-gray-50/90' : 'hover:bg-gray-50/70'
                     }`}
                 >
-                    {/* Time only — no static "GATE"/"IN" label under every row */}
-                    <div className="w-[3.75rem] shrink-0 pt-0.5 sm:w-16">
-                        <time
-                            dateTime={event.occurredAt}
-                            className="block text-xs font-semibold tabular-nums text-gray-600"
-                        >
-                            {timeLabel}
-                        </time>
-                    </div>
+                    {/* Level 2 — fixed-width time column */}
+                    <time
+                        dateTime={event.occurredAt}
+                        className={`${TIME_COL} pt-0.5 text-left text-sm font-semibold tabular-nums tracking-tight text-gray-500`}
+                    >
+                        {timeLabel}
+                    </time>
 
-                    {/* Distinct check-in (↓↗ primary) vs check-out (↑↗ gray) */}
                     <VisitEventIcon type={type} size="sm" />
 
+                    {/* Level 3 — structured event body */}
                     <div className="min-w-0 flex-1 pt-0.5">
-                        <p className="text-sm leading-snug text-gray-900">
-                            <span className="font-semibold">{record.visitor.name}</span>
-                            <span className="font-medium text-gray-600"> {verb}</span>
-                            {type === 'check_in' && showHost ? (
-                                <>
-                                    <span className="font-medium text-gray-600">, visiting </span>
-                                    <span className="font-semibold text-gray-800">{record.host.name}</span>
-                                    {record.host.unit ? (
-                                        <span className="font-normal text-gray-500">
-                                            {' '}
-                                            ({record.host.unit})
-                                        </span>
-                                    ) : null}
-                                </>
-                            ) : null}
+                        <p className="truncate text-[15px] font-semibold leading-snug text-gray-900">
+                            {record.visitor.name}
                         </p>
-
-                        {(showGate || (type === 'check_out' && showHost && !expanded)) && (
-                            <p className="mt-0.5 text-[11px] font-medium text-gray-400">
-                                {type === 'check_out' && showHost ? `Host: ${record.host.name}` : null}
-                                {type === 'check_out' && showHost && showGate ? ' · ' : null}
-                                {showGate ? record.gate : null}
+                        <p
+                            className={`mt-0.5 text-xs font-medium ${
+                                isCheckIn ? 'text-primary-700' : 'text-gray-500'
+                            }`}
+                        >
+                            {actionLabel}
+                        </p>
+                        {type === 'check_in' && showHost ? (
+                            <p className="mt-0.5 truncate text-xs font-medium text-gray-500">
+                                Visiting {record.host.name}
+                                {record.host.unit ? (
+                                    <span className="text-gray-400"> · {record.host.unit}</span>
+                                ) : null}
                             </p>
-                        )}
+                        ) : null}
+                        {type === 'check_out' && showHost && !expanded ? (
+                            <p className="mt-0.5 truncate text-xs font-medium text-gray-400">
+                                Host: {record.host.name}
+                            </p>
+                        ) : null}
+                        {showGate ? (
+                            <p className="mt-0.5 text-xs font-medium text-gray-400">{record.gate}</p>
+                        ) : null}
                     </div>
 
                     <ChevronRight
@@ -222,7 +246,6 @@ function TimelineEvent({
                     />
                 </button>
 
-                {/* Expanded custody detail — hangs off the event, spine stays continuous */}
                 <div
                     id={panelId}
                     className="grid transition-[grid-template-rows] duration-200 motion-reduce:transition-none"
@@ -232,8 +255,10 @@ function TimelineEvent({
                     }}
                 >
                     <div className="min-h-0 overflow-hidden">
-                        <div className="px-2 pb-4 sm:px-3">
-                            <div className="ml-[4.5rem] space-y-3 rounded-xl border border-gray-200 bg-white p-3.5 sm:ml-[5.75rem]">
+                        <div className={`pb-3 pl-0 ${isLast ? 'pb-1' : ''}`}>
+                            <div
+                                className={`ml-[calc(4.5rem+2.25rem)] space-y-3 rounded-xl border border-gray-200 bg-white p-3.5 sm:ml-[calc(5.25rem+2.5rem)]`}
+                            >
                                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-medium text-gray-500">
                                     {record.purpose ? <span>{record.purpose}</span> : null}
                                     {record.duration_minutes != null ? (
@@ -271,4 +296,16 @@ function TimelineEvent({
             </div>
         </li>
     );
+}
+
+/** Present day labels as chapter titles — Today / Yesterday stay short; others get full weight. */
+function formatDayChapterLabel(label: string): string {
+    if (label === 'Today' || label === 'Yesterday') {
+        return label;
+    }
+    return label;
+}
+
+function slugify(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
