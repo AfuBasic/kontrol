@@ -147,7 +147,7 @@ export default function VisitorIndex({
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Visitor Operations Center" />
 
             <div className="w-full space-y-6 pb-24">
@@ -170,12 +170,8 @@ export default function VisitorIndex({
                 <OperationalSummary
                     currentlyInside={metrics.currentlyInside}
                     expectedToday={metrics.expectedToday}
-                    pendingCheckout={metrics.pendingCheckout}
                     visitorsToday={metrics.visitorsToday}
                 />
-
-                {/* Attention Required Panel */}
-                <AttentionPanel items={alerts} />
 
                 {/* Main Operations Grid Layout */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -317,6 +313,6 @@ export default function VisitorIndex({
                     </div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }

@@ -59,11 +59,7 @@ export default function CurrentlyInsideWorkspace({ visitors, onCheckOut }: Props
                     {visitors.map((v) => (
                         <div
                             key={v.id}
-                            className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-2xs transition hover:shadow-md ${
-                                v.is_overstayed
-                                    ? 'border-rose-300 ring-1 ring-rose-200 bg-rose-50/10'
-                                    : 'border-slate-200 hover:border-slate-300'
-                            }`}
+                            className="group relative flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs transition hover:shadow-md hover:border-slate-300"
                         >
                             <div>
                                 {/* Status Header & Code */}
@@ -71,16 +67,10 @@ export default function CurrentlyInsideWorkspace({ visitors, onCheckOut }: Props
                                     <span className="font-mono text-[10px] font-black text-slate-400 tracking-wider">
                                         #{v.code}
                                     </span>
-                                    {v.is_overstayed ? (
-                                        <span className="inline-flex items-center rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-extrabold uppercase text-rose-700">
-                                            Overstayed
-                                        </span>
-                                    ) : (
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                            Inside
-                                        </span>
-                                    )}
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                        Inside
+                                    </span>
                                 </div>
 
                                 {/* Visitor & Host Details */}
