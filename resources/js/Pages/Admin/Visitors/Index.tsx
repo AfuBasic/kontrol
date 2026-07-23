@@ -212,31 +212,41 @@ export default function VisitorIndex({
                         <p className="text-xs text-slate-500">Monitor live activity, analyze gates performance and audit logs.</p>
                     </div>
 
-                    <div className="flex max-w-xs items-center gap-1.5 rounded-lg bg-slate-100/80 p-0.5 md:max-w-none">
-                        <button
-                            onClick={() => setActiveTab('live')}
-                            className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
-                                activeTab === 'live' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                            }`}
+                    <div className="flex items-center gap-3">
+                        <div className="flex max-w-xs items-center gap-1.5 rounded-lg bg-slate-100/80 p-0.5 md:max-w-none">
+                            <button
+                                onClick={() => setActiveTab('live')}
+                                className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                    activeTab === 'live' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                                }`}
+                            >
+                                Live
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('history')}
+                                className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                    activeTab === 'history' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                                }`}
+                            >
+                                History
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('analytics')}
+                                className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
+                                    activeTab === 'analytics' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
+                                }`}
+                            >
+                                Analytics
+                            </button>
+                        </div>
+
+                        <Link
+                            href="/admin/visitors/calendar"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50"
                         >
-                            Live
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('history')}
-                            className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
-                                activeTab === 'history' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                            }`}
-                        >
-                            History
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('analytics')}
-                            className={`rounded-md px-3.5 py-1.5 text-xs font-bold transition-all ${
-                                activeTab === 'analytics' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'
-                            }`}
-                        >
-                            Analytics
-                        </button>
+                            <span className="text-primary-600 font-bold">📅</span>
+                            <span>Calendar</span>
+                        </Link>
                     </div>
                 </div>
 
