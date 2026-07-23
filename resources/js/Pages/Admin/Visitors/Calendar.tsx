@@ -17,12 +17,12 @@ type Props = {
 export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Props) {
     return (
         <>
-            <Head title="Estate Visitor Calendar" />
+            <Head title="Visitors · Calendar" />
             <div className="space-y-4">
                 <VisitorCalendar
                     eventsUrl="/admin/visitors/calendar-events"
                     backUrl="/admin/visitors"
-                    backLabel="Logs"
+                    backLabel="Visitors"
                     isAdmin={true}
                     hosts={hosts}
                     createUrl="/admin/visitors/create"
