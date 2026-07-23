@@ -5,6 +5,7 @@ import PassCard from '@/Components/Resident/PassCard';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
 import type { AccessCode, CursorPaginatedUsageLogs, DurationOption } from '@/types/access-code';
+import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 import { shareAccessCode } from '@/Utils/share';
 
 type Props = {

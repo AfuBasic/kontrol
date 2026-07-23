@@ -213,7 +213,7 @@ export default function Visitors({
                         <div className="mt-2 space-y-1.5">
                             {pendingPasses.map((pass) => {
                                 const matchingOp = operations.find(
-                                    (op) => op.payload && (op.payload as any).uuid === pass.uuid,
+                                    (op) => op.payload && ((op.payload as any).uuid === pass.id || (op.payload as any).id === pass.id),
                                 );
                                 const status = matchingOp ? matchingOp.status : SyncStatus.Pending;
                                 const badge = pendingBadge(status);
