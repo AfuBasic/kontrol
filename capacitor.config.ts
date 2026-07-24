@@ -1,10 +1,28 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Set this to true for local development with Simulator/Emulator
 const isDev = true;
 
-// Tip: For Android Emulator, use 'http://10.0.2.2:5173'. For Physical devices, use your Mac's Local IP.
-const devUrl = 'http://app.kontrol.test';
+// Default local URL
+let devUrl = 'http://app.kontrol.test';
+let devHostname = '10.0.2.2';
+
+// Dynamically read from .env to prevent committing local URLs to Git
+try {
+    const envPath = path.join(process.cwd(), '.env');
+    if (fs.existsSync(envPath)) {
+        const envFile = fs.readFileSync(envPath, 'utf-8');
+        const match = envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m);
+        if (match) {
+            devUrl = match[1].trim();
+            devHostname = new URL(devUrl).hostname;
+        }
+    }
+} catch (e) {
+    console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
+}
 
 const config: CapacitorConfig = {
     appId: 'com.kontrol.hq',
@@ -16,11 +34,11 @@ const config: CapacitorConfig = {
         url: isDev ? devUrl : 'https://app.usekontrol.com',
         cleartext: isDev,
         // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
-        hostname: isDev ? '10.0.2.2' : 'app.usekontrol.com',
+        hostname: isDev ? devHostname : 'app.usekontrol.com',
         // Allow all subdomains and the emulator IP for local development
-        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', '10.0.2.2'],
+        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', '10.0.2.2', devHostname],
         // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
-        androidScheme: isDev ? 'http' : 'https',
+        androidScheme: isDev && !devUrl.startsWith('https') ? 'http' : 'https',
     },
     android: {
         // Hardware acceleration is on by default in modern Capacitor,
