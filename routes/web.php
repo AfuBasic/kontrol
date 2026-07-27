@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginOtpController;
 use App\Http\Controllers\Auth\MagicLoginController;
 use App\Http\Controllers\Auth\SocialLoginController;
+use App\Http\Controllers\Platform\InstallExperienceController;
 use App\Http\Controllers\PublicPassController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Telegram\TelegramWebhookController;
@@ -104,3 +105,14 @@ Route::post('/billing/collection/verify/{reference}', [CollectionPaymentControll
 
 Route::get('/download-app', [LandingController::class, 'downloadApp'])->name('landing.download');
 Route::get('/pass/{uuid}', [PublicPassController::class, 'show'])->name('public.pass');
+
+/*
+|--------------------------------------------------------------------------
+| Platform Access Experience Routes
+|--------------------------------------------------------------------------
+*/
+Route::prefix('platform')->name('platform.')->group(function (): void {
+    Route::get('/install/android', [InstallExperienceController::class, 'androidInstall'])->name('install.android');
+    Route::get('/install/ios', [InstallExperienceController::class, 'iosDownload'])->name('install.ios');
+    Route::get('/unsupported', [InstallExperienceController::class, 'unsupported'])->name('unsupported');
+});
