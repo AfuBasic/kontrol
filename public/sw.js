@@ -1,16 +1,104 @@
+const CACHE_NAME = 'kontrol-pwa-v1';
+const STATIC_ASSETS = [
+    '/',
+    '/manifest.json',
+    '/favicon.svg',
+    '/assets/images/app-icon.png',
+    '/assets/icons/icon-192.webp',
+    '/assets/icons/icon-512.webp',
+];
+
+// Install Event
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then((cache) => {
+            return cache.addAll(STATIC_ASSETS).catch((err) => {
+                console.warn('PWA: Failed to cache initial static assets', err);
+            });
+        }).then(() => self.skipWaiting())
+    );
+});
+
+// Activate Event - Cache cleanup
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        return caches.delete(cache);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
+    );
+});
+
+// Fetch Event - Network first strategy for documents, stale-while-revalidate for static assets
+self.addEventListener('fetch', (event) => {
+    const request = event.request;
+
+    // Bypasses non-GET or cross-origin requests
+    if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
+        return;
+    }
+
+    // Skip API, webhooks, or authentication endpoints
+    if (request.url.includes('/api/') || request.url.includes('/auth/') || request.url.includes('/logout')) {
+        return;
+    }
+
+    // Static Asset Caching (Stale While Revalidate)
+    if (request.destination === 'image' || request.destination === 'font' || request.destination === 'style' || request.destination === 'script') {
+        event.respondWith(
+            caches.open(CACHE_NAME).then((cache) => {
+                return cache.match(request).then((cachedResponse) => {
+                    const fetchPromise = fetch(request).then((networkResponse) => {
+                        if (networkResponse && networkResponse.status === 200) {
+                            cache.put(request, networkResponse.clone());
+                        }
+                        return networkResponse;
+                    }).catch(() => cachedResponse);
+
+                    return cachedResponse || fetchPromise;
+                });
+            })
+        );
+        return;
+    }
+
+    // Navigation / Document requests: Network-First with Offline Fallback
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request).catch(() => {
+                return caches.match(request).then((cached) => {
+                    return cached || caches.match('/manifest.json');
+                });
+            })
+        );
+    }
+});
+
+// Push Notifications
 self.addEventListener('push', function (event) {
     if (!(self.Notification && self.Notification.permission === 'granted')) {
         return;
     }
 
     if (event.data) {
-        const data = event.data.json();
+        let data = {};
+        try {
+            data = event.data.json();
+        } catch (e) {
+            data = { title: 'Kontrol Notification', body: event.data.text() };
+        }
+
         const title = data.title || 'New Notification';
         const options = {
             body: data.message || data.body || '',
             icon: '/assets/images/app-icon.png',
             badge: '/favicon.svg',
-            data: data, // Store the whole data object for click handling
+            data: data,
             tag: data.tag || 'general-notification',
             renotify: true,
             vibrate: [100, 50, 100],
@@ -20,10 +108,11 @@ self.addEventListener('push', function (event) {
     }
 });
 
+// Notification Click Handler
 self.addEventListener('notificationclick', function (event) {
     event.notification.close();
 
-    const data = event.notification.data;
+    const data = event.notification.data || {};
     const urlToOpen = data.action_url || data.url || '/';
 
     event.waitUntil(
