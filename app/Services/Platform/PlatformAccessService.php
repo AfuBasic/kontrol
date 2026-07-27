@@ -42,6 +42,11 @@ class PlatformAccessService
      */
     protected function isExemptRoute(Request $request): bool
     {
+        // Check explicit bypass flags (header or query param)
+        if ($request->has('bypass_mobile_restrict') || $request->header('X-Bypass-Mobile-Restrict') === 'true') {
+            return true;
+        }
+
         $exemptPatterns = config('platform.exempt_routes', []);
         $path = $request->path();
 
