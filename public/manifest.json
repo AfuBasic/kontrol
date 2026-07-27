@@ -1,56 +1,74 @@
 {
-  "name": "Kontrol",
+  "id": "com.kontrol.hq.pwa",
+  "name": "Kontrol - Estate Access Management",
   "short_name": "Kontrol",
-  "description": "Estate access management made simple",
-  "start_url": "/",
+  "description": "Smart, secure estate access management and community operations platform",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#0A3D91",
+  "background_color": "#020617",
+  "theme_color": "#020617",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
+  "categories": ["lifestyle", "utilities", "productivity"],
   "icons": [
     {
-      "src": "assets/icons/icon-48.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-48.webp",
+      "type": "image/webp",
       "sizes": "48x48",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-72.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-72.webp",
+      "type": "image/webp",
       "sizes": "72x72",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-96.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-96.webp",
+      "type": "image/webp",
       "sizes": "96x96",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-128.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-128.webp",
+      "type": "image/webp",
       "sizes": "128x128",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-192.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-192.webp",
+      "type": "image/webp",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-256.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-256.webp",
+      "type": "image/webp",
       "sizes": "256x256",
       "purpose": "any maskable"
     },
     {
-      "src": "assets/icons/icon-512.webp",
-      "type": "image/png",
+      "src": "/assets/icons/icon-512.webp",
+      "type": "image/webp",
       "sizes": "512x512",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Gate Pass",
+      "short_name": "Gate Pass",
+      "description": "Generate a new visitor access code",
+      "url": "/resident/visitors/create",
+      "icons": [{ "src": "/assets/icons/icon-96.webp", "sizes": "96x96" }]
+    },
+    {
+      "name": "Activity Feed",
+      "short_name": "Activity",
+      "description": "View recent estate activity",
+      "url": "/resident/activity",
+      "icons": [{ "src": "/assets/icons/icon-96.webp", "sizes": "96x96" }]
     }
   ]
 }
