@@ -16,8 +16,8 @@ import {
     Home,
 } from 'lucide-react';
 import React, { useState } from 'react';
-import { useInstallPrompt } from '@/hooks/useInstallPrompt';
-import { getBrowserName } from '@/utils/platform';
+import { useInstallPrompt } from '@/Hooks/useInstallPrompt';
+import { getBrowserName } from '@/Utils/platform';
 
 interface Props {
     browser: string;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { isInstalledPwa } from '@/utils/platform';
+import { isInstalledPwa } from '@/Utils/platform';
 
 interface BeforeInstallPromptEvent extends Event {
     prompt: () => Promise<void>;
