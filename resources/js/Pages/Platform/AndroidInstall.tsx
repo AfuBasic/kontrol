@@ -1,20 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Smartphone,
-    CheckCircle2,
-    Download,
-    HelpCircle,
-    ChevronDown,
-    Shield,
-    Sparkles,
-    ArrowRight,
-    Compass,
-    Share,
-    MoreVertical,
-    PlusSquare,
-    Home,
-} from 'lucide-react';
+import { Smartphone, CheckCircle2, Download, HelpCircle, ChevronDown, Shield, Sparkles, ArrowRight, Compass } from 'lucide-react';
 import React, { useState } from 'react';
 import { useInstallPrompt } from '@/Hooks/useInstallPrompt';
 import { getBrowserName } from '@/Utils/platform';
@@ -44,7 +30,7 @@ export default function AndroidInstall({ browser: initialBrowser, isInstalled: i
 
     if (isInstalled || initialIsInstalled) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 py-12 text-center text-white font-sans">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-slate-950 px-6 py-12 text-center font-sans text-white">
                 <Head title="Kontrol Installed" />
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
@@ -105,16 +91,14 @@ export default function AndroidInstall({ browser: initialBrowser, isInstalled: i
                         <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-500/30 bg-indigo-600/10 text-indigo-400 shadow-xl shadow-indigo-500/10">
                             <Smartphone className="h-10 w-10" />
                         </div>
-                        <div className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md">
+                        <div className="absolute -right-1 -bottom-1 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md">
                             <Download className="h-4 w-4" />
                         </div>
                     </div>
 
                     {/* Headlines */}
                     <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Install Kontrol</h1>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-400">
-                        Install Kontrol to your device in under a minute.
-                    </p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-400">Install Kontrol to your device in under a minute.</p>
 
                     {/* Value Proposition List */}
                     <div className="my-6 w-full space-y-3 rounded-2xl border border-slate-800/80 bg-slate-950/50 p-4 text-left">
@@ -164,7 +148,7 @@ export default function AndroidInstall({ browser: initialBrowser, isInstalled: i
                                 <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-5 text-xs">
                                     <div className="mb-3 flex items-center justify-between border-b border-slate-800 pb-2">
                                         <span className="font-bold text-slate-200">
-                                            Detected: <span className="capitalize text-indigo-400">{browser} Browser</span>
+                                            Detected: <span className="text-indigo-400 capitalize">{browser} Browser</span>
                                         </span>
                                         <Compass className="h-4 w-4 text-indigo-400" />
                                     </div>
@@ -172,42 +156,74 @@ export default function AndroidInstall({ browser: initialBrowser, isInstalled: i
                                     {browser === 'samsung' ? (
                                         <ol className="space-y-3 text-slate-300">
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">1</span>
-                                                <span>Tap the <strong>Menu (≡)</strong> icon at the bottom right.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    1
+                                                </span>
+                                                <span>
+                                                    Tap the <strong>Menu (≡)</strong> icon at the bottom right.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">2</span>
-                                                <span>Select <strong>+ Add page to</strong>.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    2
+                                                </span>
+                                                <span>
+                                                    Select <strong>+ Add page to</strong>.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">3</span>
-                                                <span>Choose <strong>App screen</strong> or <strong>Home screen</strong>.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    3
+                                                </span>
+                                                <span>
+                                                    Choose <strong>App screen</strong> or <strong>Home screen</strong>.
+                                                </span>
                                             </li>
                                         </ol>
                                     ) : browser === 'firefox' ? (
                                         <ol className="space-y-3 text-slate-300">
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">1</span>
-                                                <span>Tap the <strong>Three Dots (⋮)</strong> menu button.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    1
+                                                </span>
+                                                <span>
+                                                    Tap the <strong>Three Dots (⋮)</strong> menu button.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">2</span>
-                                                <span>Tap <strong>Install</strong> or <strong>Add to Home screen</strong>.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    2
+                                                </span>
+                                                <span>
+                                                    Tap <strong>Install</strong> or <strong>Add to Home screen</strong>.
+                                                </span>
                                             </li>
                                         </ol>
                                     ) : (
                                         <ol className="space-y-3 text-slate-300">
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">1</span>
-                                                <span>Tap the <strong>Three Dots (⋮)</strong> at the top right of Chrome/Edge.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    1
+                                                </span>
+                                                <span>
+                                                    Tap the <strong>Three Dots (⋮)</strong> at the top right of Chrome/Edge.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">2</span>
-                                                <span>Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    2
+                                                </span>
+                                                <span>
+                                                    Select <strong>Install app</strong> or <strong>Add to Home screen</strong>.
+                                                </span>
                                             </li>
                                             <li className="flex items-start gap-2.5">
-                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">3</span>
-                                                <span>Confirm <strong>Install</strong> when prompted.</span>
+                                                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600/30 text-[10px] font-bold text-indigo-300">
+                                                    3
+                                                </span>
+                                                <span>
+                                                    Confirm <strong>Install</strong> when prompted.
+                                                </span>
                                             </li>
                                         </ol>
                                     )}
@@ -220,7 +236,7 @@ export default function AndroidInstall({ browser: initialBrowser, isInstalled: i
 
             {/* Footer */}
             <footer className="relative z-10 py-6 text-center text-xs text-slate-500">
-                <div className="flex items-center justify-center gap-1.5 mb-2 text-slate-400">
+                <div className="mb-2 flex items-center justify-center gap-1.5 text-slate-400">
                     <Shield className="h-3.5 w-3.5 text-indigo-400" />
                     <span>Official Kontrol Platform Architecture</span>
                 </div>
