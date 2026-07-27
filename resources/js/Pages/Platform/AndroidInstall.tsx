@@ -84,12 +84,9 @@ export default function AndroidInstall({ browser: initialBrowser, isInstalled: i
 
             {/* Header / Brand */}
             <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-xl shadow-lg shadow-indigo-600/30">
-                        K
-                    </div>
-                    <span className="text-lg font-extrabold tracking-tight text-white">Kontrol</span>
-                </div>
+                <Link href="/" className="flex items-center gap-3">
+                    <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-8 w-auto" />
+                </Link>
                 <div className="flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-950/40 px-3 py-1 text-xs font-semibold text-indigo-300 backdrop-blur-md">
                     <Sparkles className="h-3.5 w-3.5 text-indigo-400" /> Official Android PWA
                 </div>
