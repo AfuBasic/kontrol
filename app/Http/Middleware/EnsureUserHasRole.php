@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Actions\Auth\DetermineUserRedirect;
+use App\Services\Platform\PlatformAccessService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -51,30 +52,10 @@ class EnsureUserHasRole
         // Check if user has any of the allowed roles
         foreach ($roles as $role) {
             if ($user->hasRole($role)) {
-                // If it's a restricted mobile-only role, check if they are on the native app
-                if (in_array($role, ['resident', 'household_member', 'security'])) {
-                    $ua = $request->userAgent() ?? '';
-                    $isNativeApp = false;
-
-                    // Check if request is authenticated as native via Header or Cookie, or falls back to UA checks
-                    if ($request->header('X-Capacitor-App') === 'true' || $request->cookie('is_native_app') === 'true') {
-                        $isNativeApp = true;
-                    }
-                    // 1. Standard custom UA check or obvious mobile webview paths
-                    elseif (str_contains($ua, 'KontrolApp') || (str_contains($ua, 'Mobile/') && ! str_contains($ua, 'Safari/'))) {
-                        $isNativeApp = true;
-                    }
-                    // 2. Android WebView check
-                    elseif (str_contains($ua, '; wv)') || str_contains($ua, 'Version/4.0')) {
-                        $isNativeApp = true;
-                    }
-
-                    $bypassRestrict = $request->has('bypass_mobile_restrict') || ($request->header('X-Bypass-Mobile-Restrict') === 'true');
-                    $isBillingRoute = $request->is('resident/billing*') || $request->is('billing*') || $request->is('resident/coupons*');
-
-                    if (! $isNativeApp && ! $bypassRestrict && ! $isBillingRoute) {
-                        return redirect('/download-app');
-                    }
+                // Evaluate platform access via centralized PlatformAccessService
+                $accessResult = app(PlatformAccessService::class)->evaluate($request, $user);
+                if (! $accessResult->allowed && $accessResult->redirectUrl) {
+                    return redirect($accessResult->redirectUrl);
                 }
 
                 return $next($request);
