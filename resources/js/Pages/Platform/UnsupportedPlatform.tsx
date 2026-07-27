@@ -21,12 +21,9 @@ export default function UnsupportedPlatform({ userRole }: Props) {
             </div>
 
             <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white font-black text-xl shadow-lg shadow-indigo-600/30">
-                        K
-                    </div>
-                    <span className="text-lg font-extrabold tracking-tight text-white">Kontrol</span>
-                </div>
+                <Link href="/" className="flex items-center gap-3">
+                    <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-8 w-auto" />
+                </Link>
             </header>
 
             <main className="relative z-10 mx-auto my-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-8">
