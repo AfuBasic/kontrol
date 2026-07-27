@@ -61,11 +61,12 @@ class InvitationController extends Controller
         Auth::login($user);
 
         $request->session()->regenerate();
-        broadcast(new ForceLogout($user->id));
+        ForceLogout::dispatchSafely($user->id);
 
         // Redirect based on role
         if ($user->user_type === 'affiliate') {
             setPermissionsTeamId(0);
+
             return redirect()->route('partner.dashboard');
         }
 

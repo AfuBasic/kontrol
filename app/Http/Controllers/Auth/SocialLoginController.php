@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialLoginController
@@ -119,7 +120,7 @@ class SocialLoginController
 
         try {
             $authenticateUser->validate($user->email);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             $message = collect($e->errors())->flatten()->first();
 
             return redirect()->route('login')->with('error', $message);
@@ -139,7 +140,7 @@ class SocialLoginController
         Auth::login($user, true);
 
         $request->session()->regenerate();
-        broadcast(new ForceLogout($user->id));
+        ForceLogout::dispatchSafely($user->id);
         $this->storePasswordHashInSession($user);
 
         $redirectUrl = $this->getRedirectUrl($user);
