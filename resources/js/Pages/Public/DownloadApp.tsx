@@ -129,22 +129,18 @@ export default function DownloadApp({ autologinToken }: Props) {
                                 </div>
                             </a>
 
-                            <a
-                                href="#"
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    alert('Android app integration is coming soon! Please download the app from the Play Store once available.');
-                                }}
+                            <Link
+                                href="/platform/install/android"
                                 className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
                                 <Play className="h-5 w-5 fill-current text-white dark:text-slate-950" />
                                 <div className="text-left leading-tight">
                                     <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                        Get it on
+                                        Install for
                                     </div>
-                                    <div className="text-xs font-bold text-white dark:text-slate-950">Google Play (Android)</div>
+                                    <div className="text-xs font-bold text-white dark:text-slate-950">Android PWA</div>
                                 </div>
-                            </a>
+                            </Link>
                         </div>
                     </div>
 
