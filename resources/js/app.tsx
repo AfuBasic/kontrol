@@ -114,6 +114,14 @@ createInertiaApp({
 
         root.render(<AppWrapper />);
 
+        // Handle PWA standalone mode detection header
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone === true;
+        if (isStandalone) {
+            router.on('before', (event) => {
+                event.detail.visit.headers['X-PWA-Standalone'] = 'true';
+            });
+        }
+
         // Handle Capacitor specific logic
         if (Capacitor.isNativePlatform()) {
             document.documentElement.classList.add('capacitor-native');
