@@ -6,6 +6,7 @@ use App\Http\Controllers\Partner\NotificationController;
 use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Models\ZeusNotification;
+use App\Services\Platform\AndroidMigrationService;
 use App\Services\Resident\AccessCodeService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -177,6 +178,13 @@ class HandleInertiaRequests extends Middleware
                 ? request()->getScheme().'://'.config('domains.app')
                 : url('/'),
             'is_local' => app()->environment('local'),
+            'platform' => [
+                'is_pwa_installed' => $request->header('X-PWA-Standalone') === 'true',
+                'android_native_available' => (bool) config('platform.android_native_available'),
+                'app_store_url' => config('platform.app_store_url'),
+                'play_store_url' => config('platform.play_store_url'),
+                'migration' => $user ? app(AndroidMigrationService::class)->getMigrationData($request, $user) : null,
+            ],
         ];
     }
 }

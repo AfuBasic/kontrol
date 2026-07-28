@@ -45,6 +45,12 @@ export default function Login() {
     const [googleLoading, setGoogleLoading] = useState(false);
     const [loginError, setLoginError] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (flash?.error) {
+            setLoginError(flash.error);
+        }
+    }, [flash?.error]);
+
     // Onboarding welcome slides state
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
@@ -383,6 +389,8 @@ export default function Login() {
                         onFinish: () => setGoogleLoading(false),
                         onError: (errs) => {
                             console.error('Google Backend Errors:', errs);
+                            const msg = typeof errs === 'string' ? errs : (errs.email || errs.error || Object.values(errs)[0] || 'Google authentication failed.');
+                            setLoginError(msg);
                             setGoogleLoading(false);
                         },
                     },

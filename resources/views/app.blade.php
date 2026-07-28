@@ -53,14 +53,29 @@
     <meta name="twitter:image" content="{{ asset('assets/images/app-icon.png') }}">
     <meta name="twitter:image:alt" content="Kontrol - Estate Access Reimagined">
 
-    {{-- App Meta --}}
+    {{-- App Meta & PWA --}}
     <meta name="application-name" content="Kontrol">
     <meta name="apple-mobile-web-app-title" content="Kontrol">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+    <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/assets/images/icon.png" type="image/png">
     <link rel="apple-touch-icon" href="/assets/images/app-icon.png">
     <link rel="canonical" href="{{ url()->current() }}">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#020617">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                    console.log('Kontrol PWA ServiceWorker registered with scope: ', registration.scope);
+                }, function(err) {
+                    console.warn('Kontrol PWA ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet" />

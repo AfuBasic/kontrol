@@ -14,6 +14,7 @@ import NotificationController from '@/actions/App/Http/Controllers/Security/Noti
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
+import PwaInstallModal from '@/Components/PwaInstallModal';
 import SosAlertOverlay from '@/Components/SosAlertOverlay';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
 import { useOnlineStatus } from '@/Hooks/useOnlineStatus';
@@ -461,6 +462,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 )}
             </AnimatePresence>
             <SosAlertOverlay />
+            <PwaInstallModal />
         </div>
     );
 }

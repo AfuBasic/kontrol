@@ -80,7 +80,7 @@ class LoginOtpController extends Controller
         Auth::login($user, $remember);
         $request->session()->regenerate();
 
-        broadcast(new ForceLogout($user->id));
+        ForceLogout::dispatchSafely($user->id);
 
         $this->storePasswordHashInSession($user);
 
