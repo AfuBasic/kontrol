@@ -13,13 +13,8 @@ body {
     color: #111827;
     color-scheme: light;
     -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    user-select: none;
     overflow-x: hidden;
-    overscroll-behavior-y: none; /* Prevent browser rubber-band scrolling into blank whitespace */
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
+    overscroll-behavior-y: auto;
 }
 
 html.dark,
