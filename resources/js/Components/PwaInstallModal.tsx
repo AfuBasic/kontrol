@@ -5,6 +5,49 @@ import { useInstallPrompt } from '@/Hooks/useInstallPrompt';
 import { getBrowserName, getOperatingSystem } from '@/Utils/platform';
 
 const STORAGE_KEY = 'kontrol_pwa_modal_dismissed_at_v2';
+const COOKIE_NAME = 'kontrol_pwa_dismissed';
+const COOLDOWN_DAYS = 7;
+
+function setDismissalRecord() {
+    try {
+        // 1. Set 7-day expiration Cookie
+        const date = new Date();
+        date.setTime(date.getTime() + COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
+        const expires = `expires=${date.toUTCString()}`;
+        document.cookie = `${COOKIE_NAME}=true; ${expires}; path=/; SameSite=Lax`;
+
+        // 2. Set localStorage backup
+        localStorage.setItem(STORAGE_KEY, Date.now().toString());
+    } catch {
+        // Fallback for storage errors
+    }
+}
+
+function checkIsDismissed(): boolean {
+    if (typeof window === 'undefined') return false;
+
+    // 1. Check Cookie
+    const hasCookie = document.cookie.split('; ').some((row) => row.startsWith(`${COOKIE_NAME}=`));
+    if (hasCookie) return true;
+
+    // 2. Check localStorage fallback
+    try {
+        const dismissedAt = localStorage.getItem(STORAGE_KEY);
+        if (dismissedAt) {
+            const timestamp = parseInt(dismissedAt, 10);
+            if (!isNaN(timestamp)) {
+                const daysPassed = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
+                if (daysPassed < COOLDOWN_DAYS) {
+                    return true;
+                }
+            }
+        }
+    } catch {
+        // Ignore storage errors
+    }
+
+    return false;
+}
 
 export default function PwaInstallModal() {
     const { canPrompt, isChecking, isInstalled, promptInstall } = useInstallPrompt();
@@ -20,8 +63,10 @@ export default function PwaInstallModal() {
         // STRICTLY ANDROID ONLY per user directive
         if (os !== 'android') return;
 
-        // Dismissal check temporarily bypassed for design review per user directive
-        if (!isInstalled) {
+        // Check if prompt was dismissed within the 7-day cooldown window
+        const dismissed = checkIsDismissed();
+
+        if (!isInstalled && !dismissed) {
             const timer = setTimeout(() => {
                 setIsOpen(true);
             }, 1000);
@@ -37,6 +82,7 @@ export default function PwaInstallModal() {
             setIsInstalling(false);
             if (accepted) {
                 setIsOpen(false);
+                setDismissalRecord();
             }
         } else {
             setShowGuideModal(true);
@@ -45,11 +91,7 @@ export default function PwaInstallModal() {
 
     const handleDismiss = () => {
         setIsOpen(false);
-        try {
-            localStorage.setItem(STORAGE_KEY, Date.now().toString());
-        } catch {
-            // Ignore storage errors
-        }
+        setDismissalRecord();
     };
 
     const browser = getBrowserName();
@@ -253,7 +295,10 @@ export default function PwaInstallModal() {
                             {/* Back/Close Button */}
                             <div className="mt-6 pt-2">
                                 <button
-                                    onClick={() => setShowGuideModal(false)}
+                                    onClick={() => {
+                                        setShowGuideModal(false);
+                                        setDismissalRecord();
+                                    }}
                                     className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-sm font-extrabold text-white shadow-xl shadow-indigo-600/30 transition-all hover:bg-indigo-500 active:scale-[0.98]"
                                 >
                                     <span>Got it, back to app</span>
