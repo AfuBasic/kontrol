@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -70,17 +71,19 @@ class CollectionPaymentController extends Controller
             ], 400);
         }
 
-        // 3. Check all initiated/pending payments to see if any succeeded on Paystack
+        // 3. Check all initiated/pending payments with Paystack
         $initiatedPayments = Payment::where('collection_assignment_id', $assignment->id)
             ->where('status', '!=', 'success')
+            ->orderByDesc('created_at')
             ->get();
 
         foreach ($initiatedPayments as $p) {
             try {
                 // Verify status with Paystack
                 $verification = $paystackService->verifyPayment($p->reference);
+                $status = $verification['status'] ?? null;
 
-                if ($verification['status'] === 'success') {
+                if ($status === 'success') {
                     DB::transaction(function () use ($p, $assignment) {
                         $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
                         $lockedAssignment = CollectionAssignment::where('id', $assignment->id)->lockForUpdate()->first();
@@ -126,35 +129,31 @@ class CollectionPaymentController extends Controller
                         'already_paid' => true,
                         'message' => 'Payment already completed.',
                     ]);
+                } elseif (in_array($status, ['ongoing', 'pending', 'processing'])) {
+                    return response()->json([
+                        'message' => 'Your previous payment attempt is currently pending confirmation from Paystack. Please wait a few moments or check back later.',
+                    ], 400);
+                } elseif (in_array($status, ['failed', 'abandoned', 'reversed'])) {
+                    $p->update(['status' => 'failed']);
                 }
             } catch (\Exception $e) {
-                // Ignore and check the next one
+                // Ignore verification errors if reference was never submitted to Paystack
             }
         }
 
-        // 4. Find the latest initiated payment to reuse for idempotency
-        $existing = $initiatedPayments->sortByDesc('created_at')->first();
+        // 4. Generate a NEW UNIQUE payment record for this attempt to prevent reference collisions on Paystack
+        $totalAttempts = Payment::where('collection_assignment_id', $assignment->id)->count();
+        $suffix = '-a'.($totalAttempts + 1).'-'.Str::random(4);
+        $reference = 'COLL-'.$assignment->ulid.$suffix;
 
-        if ($existing) {
-            $payment = $existing;
-        } else {
-            // Generate a stable reference using assignment ULID and success count
-            $successCount = Payment::where('collection_assignment_id', $assignment->id)
-                ->where('status', 'success')
-                ->count();
-
-            $reference = 'COLL-'.$assignment->ulid.($successCount > 0 ? '-'.($successCount + 1) : '');
-
-            // Create a new pending payment record
-            $payment = Payment::create([
-                'user_id' => $user->id,
-                'estate_id' => $assignment->estate_id,
-                'collection_assignment_id' => $assignment->id,
-                'amount' => $assignment->amount_due - $assignment->amount_paid,
-                'reference' => $reference,
-                'status' => 'initiated',
-            ]);
-        }
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'estate_id' => $assignment->estate_id,
+            'collection_assignment_id' => $assignment->id,
+            'amount' => $assignment->amount_due - $assignment->amount_paid,
+            'reference' => $reference,
+            'status' => 'initiated',
+        ]);
 
         // 5. Calculate Exact Fees for Exact Split
         $baseAmount = $payment->amount;
