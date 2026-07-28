@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, ArrowRight, ArrowLeft, RefreshCw, AlertCircle, Sparkles, Check } from 'lucide-react';
+import { ArrowRight, ArrowLeft, RefreshCw, AlertCircle, Check, ShieldCheck } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
 
@@ -15,7 +15,7 @@ export default function VerifyOtp({ email }: Props) {
     const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-    const { data, setData, post, processing, errors, clearErrors } = useForm({
+    const { data, setData, setError, clearErrors, errors, processing } = useForm({
         code: '',
     });
 
@@ -59,27 +59,36 @@ export default function VerifyOtp({ email }: Props) {
         return `${local[0]}${'•'.repeat(Math.min(local.length - 2, 5))}${local[local.length - 1]}@${domain}`;
     }, [email]);
 
-    // Trigger verification submission
+    // Trigger verification submission with explicit 6-digit payload
     const submitVerification = useCallback(
         (codeToSubmit: string) => {
-            if (processing || isAutoSubmitting) return;
+            if (processing || isAutoSubmitting || codeToSubmit.length !== 6) return;
 
             setIsAutoSubmitting(true);
-            post(LoginOtpController.verify.url(), {
-                preserveScroll: true,
-                onError: () => {
-                    setIsAutoSubmitting(false);
-                    setIsShaking(true);
-                    setTimeout(() => setIsShaking(false), 600);
-                    // Select all inputs to make correction effortless
-                    inputRefs.current[0]?.focus();
+            clearErrors('code');
+
+            router.post(
+                LoginOtpController.verify.url(),
+                { code: codeToSubmit },
+                {
+                    preserveScroll: true,
+                    onError: (errs) => {
+                        setIsAutoSubmitting(false);
+                        setIsShaking(true);
+                        if (errs.code) {
+                            setError('code', errs.code);
+                        }
+                        setTimeout(() => setIsShaking(false), 600);
+                        // Select first input to make correction effortless
+                        inputRefs.current[0]?.focus();
+                    },
+                    onFinish: () => {
+                        setIsAutoSubmitting(false);
+                    },
                 },
-                onFinish: () => {
-                    setIsAutoSubmitting(false);
-                },
-            });
+            );
         },
-        [post, processing, isAutoSubmitting],
+        [processing, isAutoSubmitting, clearErrors, setError],
     );
 
     const handleDigitChange = useCallback(
@@ -184,10 +193,6 @@ export default function VerifyOtp({ email }: Props) {
                         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
                         <span>Back to sign in</span>
                     </Link>
-
-                    <div className="flex items-center gap-2">
-                        <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-7 w-auto object-contain" />
-                    </div>
                 </header>
 
                 {/* Main Card Container */}
@@ -202,13 +207,10 @@ export default function VerifyOtp({ email }: Props) {
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                         className="rounded-[32px] border border-slate-800/80 bg-slate-900/80 p-7 shadow-2xl shadow-slate-950/80 backdrop-blur-xl sm:p-9"
                     >
-                        {/* Trust Badge Icon */}
+                        {/* Official Kontrol Logo */}
                         <div className="mb-6 flex justify-center">
-                            <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/15 to-indigo-600/05 text-indigo-400 shadow-inner shadow-indigo-500/10">
-                                <ShieldCheck className="h-8 w-8 text-indigo-400" />
-                                <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow-md">
-                                    <Sparkles className="h-3 w-3" />
-                                </div>
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/15 to-indigo-600/05 p-3.5 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
+                                <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol Logo" className="h-8 w-auto object-contain" />
                             </div>
                         </div>
 
