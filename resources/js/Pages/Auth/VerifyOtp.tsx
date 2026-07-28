@@ -11,6 +11,7 @@ interface Props {
 export default function VerifyOtp({ email }: Props) {
     const { flash } = usePage<{ flash: { status?: string; error?: string } }>().props;
     const [resendCooldown, setResendCooldown] = useState(30);
+    const [isResending, setIsResending] = useState(false);
     const [isShaking, setIsShaking] = useState(false);
     const [isAutoSubmitting, setIsAutoSubmitting] = useState(false);
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -158,8 +159,9 @@ export default function VerifyOtp({ email }: Props) {
     };
 
     const handleResend = () => {
-        if (resendCooldown > 0 || processing) return;
+        if (resendCooldown > 0 || isSubmitting || isResending) return;
 
+        setIsResending(true);
         router.post(
             LoginOtpController.resend.url(),
             {},
@@ -168,6 +170,9 @@ export default function VerifyOtp({ email }: Props) {
                 onSuccess: () => {
                     setResendCooldown(30);
                     clearErrors('code');
+                },
+                onFinish: () => {
+                    setIsResending(false);
                 },
             },
         );
@@ -314,7 +319,12 @@ export default function VerifyOtp({ email }: Props) {
                         <div className="mt-7 text-center">
                             <p className="text-xs text-slate-400">
                                 Didn&apos;t receive the code?{' '}
-                                {resendCooldown > 0 ? (
+                                {isResending ? (
+                                    <span className="inline-flex items-center gap-1.5 font-semibold text-indigo-400">
+                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                        <span>Sending code...</span>
+                                    </span>
+                                ) : resendCooldown > 0 ? (
                                     <span className="font-semibold text-slate-300 tabular-nums">
                                         Resend in <span className="text-indigo-400">{formattedTimer}</span>
                                     </span>
@@ -322,8 +332,8 @@ export default function VerifyOtp({ email }: Props) {
                                     <button
                                         type="button"
                                         onClick={handleResend}
-                                        disabled={processing}
-                                        className="font-bold text-indigo-400 transition-colors hover:text-indigo-300 hover:underline"
+                                        disabled={isSubmitting || isResending}
+                                        className="font-bold text-indigo-400 transition-colors hover:text-indigo-300 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         Resend code
                                     </button>
