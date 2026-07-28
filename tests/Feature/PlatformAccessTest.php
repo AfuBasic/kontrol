@@ -21,7 +21,7 @@ beforeEach(function () {
 });
 
 test('platform detection service identifies capacitor native app', function () {
-    $detection = new PlatformDetectionService();
+    $detection = new PlatformDetectionService;
 
     // Via header
     $requestHeader = Request::create('/', 'GET', [], [], [], ['HTTP_X_CAPACITOR_APP' => 'true']);
@@ -35,7 +35,7 @@ test('platform detection service identifies capacitor native app', function () {
 });
 
 test('platform detection service identifies installed PWA standalone mode', function () {
-    $detection = new PlatformDetectionService();
+    $detection = new PlatformDetectionService;
 
     // Via header
     $requestHeader = Request::create('/', 'GET', [], [], [], ['HTTP_X_PWA_STANDALONE' => 'true']);
@@ -54,19 +54,19 @@ test('administrative roles have unrestricted access across all platforms', funct
     setPermissionsTeamId($estate->id);
     $admin->assignRole('admin');
 
-    $policy = new RolePlatformPolicy();
+    $policy = new RolePlatformPolicy;
 
     // Desktop request
     $requestDesktop = Request::create('/admin/dashboard', 'GET', [], [], [], [
         'HTTP_USER_AGENT' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
     ]);
-    $detection = new PlatformDetectionService();
+    $detection = new PlatformDetectionService;
     $contextDesktop = $detection->detect($requestDesktop);
 
     expect($policy->isAllowed($admin, $contextDesktop))->toBeTrue();
 });
 
-test('operational roles are blocked on desktop browsers and redirected to unsupported page', function () {
+test('operational roles are allowed on desktop browsers without redirection', function () {
     $estate = Estate::factory()->create();
     $resident = User::factory()->create();
     setPermissionsTeamId($estate->id);
@@ -79,11 +79,10 @@ test('operational roles are blocked on desktop browsers and redirected to unsupp
     $service = app(PlatformAccessService::class);
     $result = $service->evaluate($requestDesktop, $resident);
 
-    expect($result->allowed)->toBeFalse();
-    expect($result->redirectUrl)->toBe(route('platform.unsupported'));
+    expect($result->allowed)->toBeTrue();
 });
 
-test('operational roles on android mobile browsers are redirected to android install experience', function () {
+test('operational roles on android mobile browsers land directly on dashboard without forced redirects', function () {
     $estate = Estate::factory()->create();
     $resident = User::factory()->create();
     setPermissionsTeamId($estate->id);
@@ -96,8 +95,7 @@ test('operational roles on android mobile browsers are redirected to android ins
     $service = app(PlatformAccessService::class);
     $result = $service->evaluate($requestAndroidBrowser, $resident);
 
-    expect($result->allowed)->toBeFalse();
-    expect($result->redirectUrl)->toBe(route('platform.install.android'));
+    expect($result->allowed)->toBeTrue();
 });
 
 test('operational roles on installed android PWA are allowed', function () {
