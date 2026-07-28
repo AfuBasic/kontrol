@@ -54,6 +54,14 @@ class RolePlatformPolicy
         }
 
         if ($context->isMobileBrowser) {
+            if ($context->operatingSystem === 'ios') {
+                return (bool) ($policies['ios_browser'] ?? false);
+            }
+
+            if ($context->operatingSystem === 'android') {
+                return (bool) ($policies['android_browser'] ?? true);
+            }
+
             return (bool) ($policies['mobile_browser'] ?? true);
         }
 

@@ -98,6 +98,23 @@ test('operational roles on android mobile browsers land directly on dashboard wi
     expect($result->allowed)->toBeTrue();
 });
 
+test('operational roles on iphone mobile browsers are restricted and redirected to ios app store experience', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole('resident');
+
+    $requestIosBrowser = Request::create('/resident/home', 'GET', [], [], [], [
+        'HTTP_USER_AGENT' => 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
+    ]);
+
+    $service = app(PlatformAccessService::class);
+    $result = $service->evaluate($requestIosBrowser, $resident);
+
+    expect($result->allowed)->toBeFalse();
+    expect($result->redirectUrl)->toBe(route('platform.install.ios'));
+});
+
 test('operational roles on installed android PWA are allowed', function () {
     $estate = Estate::factory()->create();
     $resident = User::factory()->create();

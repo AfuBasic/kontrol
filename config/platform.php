@@ -38,12 +38,16 @@ return [
         'administrative' => [
             'desktop_browser' => true,
             'mobile_browser' => true,
+            'ios_browser' => true,
+            'android_browser' => true,
             'installed_pwa' => true,
             'native_app' => true,
         ],
         'operational' => [
             'desktop_browser' => true,
             'mobile_browser' => true,
+            'ios_browser' => false,
+            'android_browser' => true,
             'installed_pwa' => true,
             'native_app' => true,
         ],
