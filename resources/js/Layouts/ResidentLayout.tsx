@@ -31,6 +31,7 @@ import PullToRefresh from '@/Components/PullToRefresh';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
 import type { Notification } from '@/Components/Resident/NotificationDetailSheet';
+import PwaInstallModal from '@/Components/PwaInstallModal';
 import SosButton from '@/Components/SosButton';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
 import { useFeature } from '@/Hooks/useFeature';
@@ -906,6 +907,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <PwaInstallModal />
         </div>
     );
 }
