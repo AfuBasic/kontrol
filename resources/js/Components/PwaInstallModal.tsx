@@ -1,14 +1,13 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Download, X, CheckCircle2, ChevronRight, Compass, Sparkles, ArrowLeft } from 'lucide-react';
+import { Download, X, CheckCircle2, ChevronRight, Compass, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useInstallPrompt } from '@/Hooks/useInstallPrompt';
 import { getBrowserName, getOperatingSystem } from '@/Utils/platform';
 
 const STORAGE_KEY = 'kontrol_pwa_modal_dismissed_at_v2';
-const COOLDOWN_DAYS = 7; // Reshow after 7 days if dismissed
 
 export default function PwaInstallModal() {
-    const { canPrompt, isInstalled, promptInstall } = useInstallPrompt();
+    const { canPrompt, isChecking, isInstalled, promptInstall } = useInstallPrompt();
     const [isOpen, setIsOpen] = useState(false);
     const [showGuideModal, setShowGuideModal] = useState(false);
     const [isInstalling, setIsInstalling] = useState(false);
@@ -25,7 +24,7 @@ export default function PwaInstallModal() {
         if (!isInstalled) {
             const timer = setTimeout(() => {
                 setIsOpen(true);
-            }, 1200);
+            }, 1000);
 
             return () => clearTimeout(timer);
         }
@@ -124,28 +123,23 @@ export default function PwaInstallModal() {
                                 </div>
                             </div>
 
-                            {/* Prominent Action Buttons */}
-                            <div className="mt-6 flex flex-col gap-2.5">
-                                {canPrompt ? (
-                                    <>
-                                        <button
-                                            onClick={handleInstallClick}
-                                            disabled={isInstalling}
-                                            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 text-sm font-extrabold text-white shadow-xl shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-indigo-400 active:scale-[0.98] disabled:opacity-50"
-                                        >
-                                            <Download className="h-5 w-5" />
-                                            <span>{isInstalling ? 'Installing Kontrol...' : 'Install App'}</span>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </button>
-
-                                        <button
-                                            onClick={() => setShowGuideModal(true)}
-                                            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-indigo-500/30 bg-indigo-950/40 px-5 text-xs font-bold text-indigo-300 transition-colors hover:bg-indigo-900/40 hover:text-white"
-                                        >
-                                            <Compass className="h-4 w-4 text-indigo-400" />
-                                            <span>View Step-by-Step Guide</span>
-                                        </button>
-                                    </>
+                            {/* Single Primary Action Slot with Initial Loading State */}
+                            <div className="mt-6 flex flex-col gap-3">
+                                {isChecking ? (
+                                    <div className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl border border-indigo-500/20 bg-indigo-950/40 px-6 text-xs font-bold text-indigo-300 backdrop-blur-md">
+                                        <Loader2 className="h-4 w-4 animate-spin text-indigo-400" />
+                                        <span>Checking install compatibility...</span>
+                                    </div>
+                                ) : canPrompt ? (
+                                    <button
+                                        onClick={handleInstallClick}
+                                        disabled={isInstalling}
+                                        className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-500 px-6 text-sm font-extrabold text-white shadow-xl shadow-indigo-600/30 transition-all hover:from-indigo-500 hover:to-indigo-400 active:scale-[0.98] disabled:opacity-50"
+                                    >
+                                        <Download className="h-5 w-5" />
+                                        <span>{isInstalling ? 'Installing Kontrol...' : 'Install App'}</span>
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
                                 ) : (
                                     <button
                                         onClick={() => setShowGuideModal(true)}
@@ -160,7 +154,7 @@ export default function PwaInstallModal() {
                                 {/* Secondary Action */}
                                 <button
                                     onClick={handleDismiss}
-                                    className="flex h-12 w-full items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/60 px-6 text-xs font-bold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
+                                    className="flex h-14 w-full items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/60 px-6 text-sm font-bold text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
                                 >
                                     Continue on Web
                                 </button>

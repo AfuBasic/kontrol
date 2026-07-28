@@ -9,6 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 export function useInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [isInstalled, setIsInstalled] = useState<boolean>(false);
+    const [isChecking, setIsChecking] = useState<boolean>(true);
 
     useEffect(() => {
         setIsInstalled(isInstalledPwa());
@@ -16,19 +17,27 @@ export function useInstallPrompt() {
         const handleBeforeInstallPrompt = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e as BeforeInstallPromptEvent);
+            setIsChecking(false);
         };
 
         const handleAppInstalled = () => {
             setIsInstalled(true);
             setDeferredPrompt(null);
+            setIsChecking(false);
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         window.addEventListener('appinstalled', handleAppInstalled);
 
+        // Give browser up to 1.8s to emit beforeinstallprompt if supported
+        const timer = setTimeout(() => {
+            setIsChecking(false);
+        }, 1800);
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
             window.removeEventListener('appinstalled', handleAppInstalled);
+            clearTimeout(timer);
         };
     }, []);
 
@@ -50,6 +59,7 @@ export function useInstallPrompt() {
 
     return {
         canPrompt: !!deferredPrompt,
+        isChecking,
         isInstalled,
         promptInstall,
     };
