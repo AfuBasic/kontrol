@@ -21,21 +21,8 @@ export default function PwaInstallModal() {
         // STRICTLY ANDROID ONLY per user directive
         if (os !== 'android') return;
 
-        // Check 7-day dismissal cooldown
-        const dismissedAt = localStorage.getItem(STORAGE_KEY);
-        let isDismissed = false;
-
-        if (dismissedAt) {
-            const dismissedTimestamp = parseInt(dismissedAt, 10);
-            if (!isNaN(dismissedTimestamp)) {
-                const daysPassed = (Date.now() - dismissedTimestamp) / (1000 * 60 * 60 * 24);
-                if (daysPassed < COOLDOWN_DAYS) {
-                    isDismissed = true;
-                }
-            }
-        }
-
-        if (!isInstalled && !isDismissed) {
+        // Dismissal check temporarily bypassed for design review per user directive
+        if (!isInstalled) {
             const timer = setTimeout(() => {
                 setIsOpen(true);
             }, 1200);

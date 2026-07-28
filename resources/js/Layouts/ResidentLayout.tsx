@@ -81,26 +81,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
     // Force logout if account is disabled
     useForceLogout(auth?.user?.id);
 
-    // Redirect to download app if accessing on a non-native web browser
-    useEffect(() => {
-        const path = getPathFromUrl(currentPath);
-        const isBillingRoute = path.startsWith('/resident/billing') || path.startsWith('/billing');
-
-        const timer = setTimeout(() => {
-            const isNative =
-                Capacitor.isNativePlatform() ||
-                (window as any).Capacitor?.platform === 'ios' ||
-                (window as any).Capacitor?.platform === 'android' ||
-                (window as any).webkit?.messageHandlers !== undefined;
-
-            if (!isNative && !isBillingRoute) {
-                router.visit('/download-app');
-            }
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [currentPath]);
-
     const { flash } = usePage<SharedData>().props;
 
     useEffect(() => {
