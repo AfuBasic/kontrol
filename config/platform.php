@@ -37,15 +37,15 @@ return [
     'platform_policy' => [
         'administrative' => [
             'desktop_browser' => true,
-            'mobile_browser'  => true,
-            'installed_pwa'   => true,
-            'native_app'      => true,
+            'mobile_browser' => true,
+            'installed_pwa' => true,
+            'native_app' => true,
         ],
         'operational' => [
-            'desktop_browser' => false,
-            'mobile_browser'  => false,
-            'installed_pwa'   => true,
-            'native_app'      => true,
+            'desktop_browser' => true,
+            'mobile_browser' => true,
+            'installed_pwa' => true,
+            'native_app' => true,
         ],
     ],
 
