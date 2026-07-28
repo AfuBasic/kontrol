@@ -1,10 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { Smartphone, Download, X, CheckCircle2, ChevronRight, Compass, Sparkles } from 'lucide-react';
+import { Download, X, CheckCircle2, ChevronRight, Compass, Sparkles } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useInstallPrompt } from '@/Hooks/useInstallPrompt';
 import { getBrowserName, getOperatingSystem } from '@/Utils/platform';
 
-const STORAGE_KEY = 'kontrol_pwa_modal_dismissed_v1';
+const STORAGE_KEY = 'kontrol_pwa_modal_dismissed_at_v2';
+const COOLDOWN_DAYS = 7; // Reshow after 7 days if dismissed
 
 export default function PwaInstallModal() {
     const { canPrompt, isInstalled, promptInstall } = useInstallPrompt();
@@ -13,17 +14,31 @@ export default function PwaInstallModal() {
     const [isInstalling, setIsInstalling] = useState(false);
 
     useEffect(() => {
-        // Only run client-side
         if (typeof window === 'undefined') return;
 
         const os = getOperatingSystem();
-        const dismissed = localStorage.getItem(STORAGE_KEY) === 'true';
 
-        // Prompt operational users on Android (or mobile web browsers) if not already installed and not dismissed
-        if ((os === 'android' || os === 'ios') && !isInstalled && !dismissed) {
+        // STRICTLY ANDROID ONLY per user directive
+        if (os !== 'android') return;
+
+        // Check 7-day dismissal cooldown
+        const dismissedAt = localStorage.getItem(STORAGE_KEY);
+        let isDismissed = false;
+
+        if (dismissedAt) {
+            const dismissedTimestamp = parseInt(dismissedAt, 10);
+            if (!isNaN(dismissedTimestamp)) {
+                const daysPassed = (Date.now() - dismissedTimestamp) / (1000 * 60 * 60 * 24);
+                if (daysPassed < COOLDOWN_DAYS) {
+                    isDismissed = true;
+                }
+            }
+        }
+
+        if (!isInstalled && !isDismissed) {
             const timer = setTimeout(() => {
                 setIsOpen(true);
-            }, 1200); // Gentle delay after dashboard load
+            }, 1200);
 
             return () => clearTimeout(timer);
         }
@@ -38,7 +53,6 @@ export default function PwaInstallModal() {
                 setIsOpen(false);
             }
         } else {
-            // Toggles step-by-step instructions if browser prompt is not active
             setShowGuide(!showGuide);
         }
     };
@@ -46,7 +60,7 @@ export default function PwaInstallModal() {
     const handleDismiss = () => {
         setIsOpen(false);
         try {
-            localStorage.setItem(STORAGE_KEY, 'true');
+            localStorage.setItem(STORAGE_KEY, Date.now().toString());
         } catch {
             // Ignore storage errors
         }
@@ -89,8 +103,8 @@ export default function PwaInstallModal() {
 
                         {/* App Icon & Branding */}
                         <div className="flex items-start gap-4">
-                            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-500/20 to-indigo-600/05 shadow-inner shadow-indigo-500/20">
-                                <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol" className="h-7 w-auto object-contain" />
+                            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-500/20 to-indigo-600/05 p-2.5 shadow-inner shadow-indigo-500/20">
+                                <img src="/assets/images/app-icon.png" alt="Kontrol Icon" className="h-full w-full object-contain rounded-xl" />
                                 <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow">
                                     <Sparkles className="h-3 w-3" />
                                 </div>
@@ -98,7 +112,7 @@ export default function PwaInstallModal() {
 
                             <div className="pr-6">
                                 <span className="inline-block text-[10px] font-bold uppercase tracking-widest text-indigo-400">
-                                    App Experience Available
+                                    Android App Available
                                 </span>
                                 <h3 className="text-lg font-black tracking-tight text-white sm:text-xl">Install Kontrol on your phone</h3>
                             </div>

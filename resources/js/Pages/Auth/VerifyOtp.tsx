@@ -214,8 +214,8 @@ export default function VerifyOtp({ email }: Props) {
                     >
                         {/* Official Kontrol Logo */}
                         <div className="mb-6 flex justify-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/15 to-indigo-600/05 p-3.5 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
-                                <img src="/assets/images/kontrol-white-logo-new.png" alt="Kontrol Logo" className="h-8 w-auto object-contain" />
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/15 to-indigo-600/05 p-2.5 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
+                                <img src="/assets/images/app-icon.png" alt="Kontrol Icon" className="h-full w-full object-contain rounded-xl" />
                             </div>
                         </div>
 
