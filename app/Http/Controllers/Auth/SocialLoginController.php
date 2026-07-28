@@ -108,7 +108,9 @@ class SocialLoginController
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if (! $user) {
-            return redirect()->route('login')->with('error', 'No account found for this email. We don\'t allow signup with Google. Please contact your administrator to create an account.');
+            $email = $googleUser->getEmail();
+
+            return redirect()->route('login')->with('error', "No account found for {$email}. Google sign up is not permitted. Please contact your estate administrator to get onboarded.");
         }
 
         if (! $user->google_id || ! $user->email_verified_at) {
