@@ -17,7 +17,7 @@ body {
     -webkit-user-select: none;
     user-select: none;
     overflow-x: hidden;
-    overscroll-behavior-y: auto; /* Restore native bounce */
+    overscroll-behavior-y: none; /* Prevent browser rubber-band scrolling into blank whitespace */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
 }
