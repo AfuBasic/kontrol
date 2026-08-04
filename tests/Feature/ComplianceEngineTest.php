@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\User;
@@ -11,9 +12,12 @@ uses(RefreshDatabase::class);
 it('raises violation, evaluates policy stages, and protects visitor passes', function () {
     $estate = Estate::factory()->create();
     $user = User::factory()->create();
+    $collection = Collection::factory()->create([
+        'estate_id' => $estate->id,
+    ]);
 
     $assignment = CollectionAssignment::create([
-        'collection_id' => 1,
+        'collection_id' => $collection->id,
         'estate_id' => $estate->id,
         'user_id' => $user->id,
         'amount_due' => 5000000,
