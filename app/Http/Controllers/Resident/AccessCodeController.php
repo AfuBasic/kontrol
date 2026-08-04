@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Services\Resident\AccessCodeService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,8 +65,8 @@ class AccessCodeController extends Controller
      */
     public function calendarEvents(Request $request): JsonResponse
     {
-        $startDate = $request->input('start') ? \Carbon\Carbon::parse($request->input('start')) : now()->startOfMonth();
-        $endDate = $request->input('end') ? \Carbon\Carbon::parse($request->input('end')) : now()->endOfMonth();
+        $startDate = $request->input('start') ? Carbon::parse($request->input('start')) : now()->startOfMonth();
+        $endDate = $request->input('end') ? Carbon::parse($request->input('end')) : now()->endOfMonth();
 
         $events = $this->accessCodeService->getCalendarEvents(
             $startDate,
