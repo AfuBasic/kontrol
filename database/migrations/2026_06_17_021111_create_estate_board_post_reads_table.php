@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('estate_board_post_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
-            
+
             $table->unique(['estate_board_post_id', 'user_id']);
         });
     }
