@@ -414,8 +414,8 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
         [journey.payment_activity],
     );
 
+    // Extra bottom space clears the floating CTA + resident dock (bottom-6 + pill + FAB)
     return (
-        {/* Extra bottom space: floating CTA + resident dock (bottom-6 + pill + FAB) */}
         <div className="flex flex-col gap-10 pb-[calc(11.5rem+env(safe-area-inset-bottom,0px))] sm:pb-16">
             <Head title={assignment.collection.name} />
 
