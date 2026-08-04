@@ -4,6 +4,7 @@ use App\Http\Controllers\Resident\AccessCodeController;
 use App\Http\Controllers\Resident\ActivityController;
 use App\Http\Controllers\Resident\BillingController;
 use App\Http\Controllers\Resident\CollectionController;
+use App\Http\Controllers\Resident\ComplianceController;
 use App\Http\Controllers\Resident\CouponController;
 use App\Http\Controllers\Resident\EmergencyContactController;
 use App\Http\Controllers\Resident\EstateBoardCommentController;
@@ -49,6 +50,10 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 
     // New consumer-style home
     Route::get('/home', HomeController::class)->name('resident.home');
+
+    // Resident Compliance Dashboard & Timeline
+    Route::get('/compliance', [ComplianceController::class, 'index'])->name('resident.compliance.index');
+    Route::get('/compliance/violations/{violation}/timeline', [ComplianceController::class, 'timeline'])->name('resident.compliance.timeline');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('resident.profile');
