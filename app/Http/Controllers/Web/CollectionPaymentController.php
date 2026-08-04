@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\ResidentSubscription;
 use App\Models\User;
 use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
+use App\Services\Compliance\ComplianceEngine;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -228,11 +229,11 @@ class CollectionPaymentController extends Controller
                             'paid_at' => now(),
                             'external_reference' => $reference,
                         ]);
-                        app(\App\Services\Compliance\ComplianceEngine::class)->resolveCompliance($assignment, 'Paid in Full');
+                        app(ComplianceEngine::class)->resolveCompliance($assignment, 'Paid in Full');
                     } else {
                         $assignment->update(['status' => 'partial']);
                         // Re-evaluate compliance for partial payment balance reduction
-                        app(\App\Services\Compliance\ComplianceEngine::class)->raiseViolation($assignment);
+                        app(ComplianceEngine::class)->raiseViolation($assignment);
                     }
 
                     $assignment->loadMissing('collection.creator');
