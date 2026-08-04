@@ -20,11 +20,12 @@ Schedule::command('kontrol:check-resident-subscriptions')->daily();
 // Schedule::command('kontrol:process-auto-billing')->dailyAt('02:00');
 // Schedule::command('kontrol:send-billing-reminders')->dailyAt('08:00');
 
-// Collections system
+// Collections system & Compliance Engine evaluation
 Schedule::job(new RecurringAssignmentJob)->dailyAt('00:05');
 Schedule::job(new UpdateAssignmentStatusesJob)->dailyAt('01:05');
+Schedule::job(new \App\Jobs\Compliance\EvaluateViolationsJob)->dailyAt('04:00');
 
-// Daily payment reminders
+// Daily payment reminders & compliance sync
 Schedule::job(new SendCollectionRemindersJob)->dailyAt('08:00');
 
 // Generate public sitemap daily at 3:00 AM
