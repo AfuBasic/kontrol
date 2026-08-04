@@ -58,22 +58,15 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        // Validate custom partial amount if provided by resident (frontend sends kobo, convert to NGN/kobo units)
-        $customAmount = $request->input('amount'); // amount in kobo or NGN
-        $paymentAmount = $remainingBalance;
+        // Validate custom partial amount (frontend sends kobo)
+        // $remainingBalance is in KOBO (e.g. 10000000 kobo = NGN 100,000)
+        $customAmountKobo = $request->input('amount');
+        $paymentAmountKobo = $remainingBalance;
 
-        if (! empty($customAmount)) {
-            $customAmountInt = (int) $customAmount;
-            // If custom amount sent in kobo is larger than remaining balance in NGN, convert kobo to NGN (or vice-versa)
-            // Note: $remainingBalance in model is in kobo (e.g. 5000000 = 50,000 NGN)
-            if ($customAmountInt > 0 && $customAmountInt <= $assignment->amount_due) {
-                // If frontend sends kobo (e.g. 2000000 for NGN 20,000)
-                if ($customAmountInt <= $remainingBalance) {
-                    $paymentAmount = $customAmountInt;
-                } else {
-                    // Fallback if sent in NGN
-                    $paymentAmount = min($remainingBalance, $customAmountInt * 100);
-                }
+        if (! empty($customAmountKobo)) {
+            $parsedKobo = (int) $customAmountKobo;
+            if ($parsedKobo > 0 && $parsedKobo <= $remainingBalance) {
+                $paymentAmountKobo = $parsedKobo;
             }
         }
 
@@ -172,23 +165,23 @@ class CollectionPaymentController extends Controller
             'user_id' => $user->id,
             'estate_id' => $assignment->estate_id,
             'collection_assignment_id' => $assignment->id,
-            'amount' => $paymentAmount,
+            'amount' => $paymentAmountKobo,
             'reference' => $reference,
             'status' => 'initiated',
         ]);
 
-        // 5. Calculate Exact Fees for Exact Split
-        $baseAmount = $payment->amount;
+        // 5. Calculate Exact Fees for Exact Split ($payment->amount is in KOBO, convert to NGN for fee calculation)
+        $baseAmountNaira = (float) ($payment->amount / 100);
         $hasActiveSubscription = $this->hasActiveSubscription($user->id);
 
-        $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
+        $fees = $this->calculateFees($baseAmountNaira, $hasActiveSubscription);
 
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
             'email' => $user->email,
-            'amount' => $fees['total_amount'], // Pass the total charged amount to frontend
-            'base_amount' => $baseAmount,
+            'amount' => $fees['total_amount'], // Pass the total charged amount in NGN to frontend
+            'base_amount' => $baseAmountNaira,
             'kontrol_fee' => $fees['kontrol_fee'],
             'paystack_fee' => $fees['paystack_fee'],
             'subaccount' => $subaccount,
