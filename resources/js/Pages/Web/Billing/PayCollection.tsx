@@ -50,9 +50,11 @@ declare global {
 export default function PayCollection({ assignment, paystackKey, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [paymentMode, setPaymentMode] = useState<'full' | 'partial'>('full');
     const [customAmount, setCustomAmount] = useState<string>('');
 
+    // assignment.amount_due / amount_paid are stored and displayed in NGN
     const amountToPay = Math.max(0, assignment.amount_due - assignment.amount_paid);
     const parsedCustom = parseFloat(customAmount) || 0;
     const effectivePaymentAmount = paymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
@@ -71,20 +73,24 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
 
     const handlePayment = async () => {
         setIsProcessing(true);
+        setErrorMessage(null);
 
         try {
             const response = await fetch(CollectionPaymentController.initiate.url(assignment.ulid), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({
-                    amount: Math.round(effectivePaymentAmount * 100), // send in kobo
+                    // Send amount in NGN (same unit as amount_due)
+                    amount: Math.round(effectivePaymentAmount),
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (data.already_paid) {
                 setPaymentStatus('success');
@@ -95,37 +101,60 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                 return;
             }
 
-            const { reference, email, amount, amount_kobo, subaccount } = data;
-
-            if (!window.PaystackPop) {
-                alert('Payment gateway is not ready. Please refresh the page.');
+            if (!response.ok) {
+                setErrorMessage(data.message || 'Could not start payment. Please try again.');
                 setIsProcessing(false);
                 return;
             }
 
-            const cleanSubaccount =
-                subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
+            const amountKobo = Number(data.amount_kobo);
+            if (!Number.isFinite(amountKobo) || amountKobo < 100) {
+                setErrorMessage('Payment amount is invalid. Please refresh and try again.');
+                setIsProcessing(false);
+                return;
+            }
 
-            const validEmail = email && email.includes('@') ? email : assignment.user?.email || 'support@usekontrol.com';
+            if (!paystackKey) {
+                setErrorMessage('Payment gateway is not configured. Please contact support.');
+                setIsProcessing(false);
+                return;
+            }
 
-            const paystackAmountKobo = amount_kobo || Math.round(Number(amount) * 100);
+            if (!window.PaystackPop) {
+                setErrorMessage('Payment gateway is not ready. Please refresh the page.');
+                setIsProcessing(false);
+                return;
+            }
 
-            const handler = window.PaystackPop.setup({
+            const subaccount =
+                data.subaccount &&
+                !String(data.subaccount).startsWith('ACCT_estate') &&
+                !String(data.subaccount).startsWith('ACCT_landlord')
+                    ? data.subaccount
+                    : null;
+
+            const validEmail =
+                data.email && String(data.email).includes('@')
+                    ? data.email
+                    : assignment.user?.email || 'support@usekontrol.com';
+
+            const setupOptions: Record<string, unknown> = {
                 key: paystackKey,
                 email: validEmail,
-                amount: paystackAmountKobo,
-                ref: reference,
-                subaccount: cleanSubaccount,
-                channels: ['bank_transfer'],
+                amount: amountKobo,
+                ref: data.reference,
+                channels: ['bank_transfer', 'card'],
                 onClose: () => {
                     setIsProcessing(false);
                 },
-                callback: (response: any) => {
-                    fetch(CollectionPaymentController.verify.url(response.reference), {
+                callback: (paystackResponse: { reference: string }) => {
+                    fetch(CollectionPaymentController.verify.url(paystackResponse.reference), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            Accept: 'application/json',
                             'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+                            'X-Requested-With': 'XMLHttpRequest',
                         },
                     }).then(() => {
                         setPaymentStatus('success');
@@ -135,11 +164,22 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                         }, 3000);
                     });
                 },
-            });
+            };
 
+            // Only pass split params when a real Paystack subaccount is configured
+            if (subaccount) {
+                setupOptions.subaccount = subaccount;
+                setupOptions.bearer = data.bearer || 'account';
+                if (data.transaction_charge) {
+                    setupOptions.transaction_charge = data.transaction_charge;
+                }
+            }
+
+            const handler = window.PaystackPop.setup(setupOptions);
             handler.openIframe();
         } catch (error) {
             console.error('Payment initiation failed', error);
+            setErrorMessage('Payment initiation failed. Please try again.');
             setPaymentStatus('error');
             setIsProcessing(false);
         }
@@ -423,6 +463,13 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
 
                 {/* 6. PAY BUTTON */}
                 <section className="space-y-4 pt-4">
+                    {errorMessage && (
+                        <div className="flex items-start gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-medium text-rose-300">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>{errorMessage}</span>
+                        </div>
+                    )}
+
                     {amountToPay > 0 ? (
                         <button
                             onClick={handlePayment}
