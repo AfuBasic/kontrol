@@ -49,7 +49,6 @@ declare global {
 
 export default function PayCollection({ assignment, paystackKey, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
-    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [paymentMode, setPaymentMode] = useState<'full' | 'partial'>('full');
     const [customAmount, setCustomAmount] = useState<string>('');
@@ -93,11 +92,8 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
             const data = await response.json().catch(() => ({}));
 
             if (data.already_paid) {
-                setPaymentStatus('success');
-                setIsProcessing(false);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
+                // Already settled — send them to a receipt-like reload of this bill
+                window.location.reload();
                 return;
             }
 
@@ -138,31 +134,21 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     ? data.email
                     : assignment.user?.email || 'support@usekontrol.com';
 
+            const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
+
             const setupOptions: Record<string, unknown> = {
                 key: paystackKey,
                 email: validEmail,
                 amount: amountKobo,
                 ref: data.reference,
                 channels: ['bank_transfer'],
+                callback_url: statusUrlFor(data.reference),
                 onClose: () => {
                     setIsProcessing(false);
                 },
                 callback: (paystackResponse: { reference: string }) => {
-                    fetch(CollectionPaymentController.verify.url(paystackResponse.reference), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Accept: 'application/json',
-                            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                    }).then(() => {
-                        setPaymentStatus('success');
-                        setIsProcessing(false);
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 3000);
-                    });
+                    // Redirect to receipt/status page — it syncs with Paystack and shows full/partial outcome
+                    window.location.href = statusUrlFor(paystackResponse.reference);
                 },
             };
 
@@ -180,38 +166,9 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
         } catch (error) {
             console.error('Payment initiation failed', error);
             setErrorMessage('Payment initiation failed. Please try again.');
-            setPaymentStatus('error');
             setIsProcessing(false);
         }
     };
-
-    if (paymentStatus === 'success') {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-16 text-slate-900">
-                <Head title="Payment Successful" />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-lg rounded-[2.5rem] bg-white p-12 text-center shadow-2xl"
-                >
-                    <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 text-emerald-500">
-                        <CheckCircle2 className="h-10 w-10" />
-                    </div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Payment Successful</h1>
-                    <p className="mt-4 text-base font-medium text-slate-500">
-                        Your payment for <span className="font-bold text-slate-900">{assignment.collection.name}</span> has been processed.
-                    </p>
-                    <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 text-left">
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Payer</p>
-                        <p className="mt-0.5 text-sm font-bold text-slate-900">{assignment.user.name}</p>
-                        <p className="mt-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">Estate</p>
-                        <p className="mt-0.5 text-sm font-bold text-slate-900">{assignment.estate.name}</p>
-                    </div>
-                    <p className="mt-8 text-xs font-bold tracking-widest text-slate-400 uppercase">You may close this window</p>
-                </motion.div>
-            </div>
-        );
-    }
 
     return (
         <div className="flex min-h-screen flex-col justify-between bg-[#0F172A] text-slate-100 selection:bg-blue-500 selection:text-white">
