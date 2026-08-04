@@ -1,13 +1,17 @@
 <?php
 
 use App\Enums\AccessCodeStatus;
+use App\Events\Resident\VisitorCheckedOutBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\User;
+use App\Notifications\VisitorCheckedOutNotification;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -16,8 +20,8 @@ beforeEach(function () {
 });
 
 it('performs a visitor checkout when settings are enabled', function () {
-    \Illuminate\Support\Facades\Notification::fake();
-    \Illuminate\Support\Facades\Event::fake([\App\Events\Resident\VisitorCheckedOutBroadcast::class]);
+    Notification::fake();
+    Event::fake([VisitorCheckedOutBroadcast::class]);
 
     $estate = Estate::factory()->create();
     $securityUser = User::factory()->create();
@@ -97,15 +101,15 @@ it('performs a visitor checkout when settings are enabled', function () {
     expect($log->checked_out_by)->toBe($securityUser->id);
 
     // Assert notification sent
-    \Illuminate\Support\Facades\Notification::assertSentTo(
+    Notification::assertSentTo(
         $resident,
-        \App\Notifications\VisitorCheckedOutNotification::class,
+        VisitorCheckedOutNotification::class,
         fn ($notification) => $notification->accessCode->id === $accessCode->id
     );
 
     // Assert broadcast event dispatched
-    \Illuminate\Support\Facades\Event::assertDispatched(
-        \App\Events\Resident\VisitorCheckedOutBroadcast::class,
+    Event::assertDispatched(
+        VisitorCheckedOutBroadcast::class,
         fn ($event) => $event->user->id === $resident->id && $event->accessCode->id === $accessCode->id
     );
 
