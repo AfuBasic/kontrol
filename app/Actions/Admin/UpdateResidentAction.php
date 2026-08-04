@@ -2,9 +2,11 @@
 
 namespace App\Actions\Admin;
 
+use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class UpdateResidentAction
@@ -27,14 +29,14 @@ class UpdateResidentAction
                 $updateData['password'] = null;
 
                 $cacheKey = "email_changes_{$resident->id}";
-                $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
-                \Illuminate\Support\Facades\Cache::put($cacheKey, $changesCount + 1, now()->addYear());
+                $changesCount = Cache::get($cacheKey, 0);
+                Cache::put($cacheKey, $changesCount + 1, now()->addYear());
             }
 
             $resident->update($updateData);
 
             if ($emailChanged) {
-                event(new \App\Events\Admin\ResidentCreated($resident, $estate, true));
+                event(new ResidentCreated($resident, $estate, true));
             }
 
             $resident->profile()->updateOrCreate(
