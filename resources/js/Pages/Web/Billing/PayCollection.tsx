@@ -225,45 +225,90 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     </div>
 
                     <div className="space-y-6">
-                        {/* Payment Type Selector: Full or Partial */}
-                        <div className="rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-100 space-y-4">
+                        {/* Prominent Payment Type & Custom Amount Card */}
+                        <div className="rounded-3xl bg-blue-50/50 p-6 ring-2 ring-blue-500/20 space-y-5">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs font-black tracking-widest text-slate-400 uppercase">Payment Mode</span>
-                                <div className="flex bg-slate-200 p-1 rounded-2xl">
+                                <div>
+                                    <span className="text-[10px] font-black tracking-widest text-blue-600 uppercase block">Payment Options</span>
+                                    <h4 className="text-base font-black text-slate-900">Choose Payment Amount</h4>
+                                </div>
+                                <div className="flex bg-slate-200/80 p-1.5 rounded-2xl shadow-inner">
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setPaymentMode('full');
                                             setCustomAmount('');
                                         }}
-                                        className={`px-3 py-1 text-xs font-black rounded-xl transition ${paymentMode === 'full' ? 'bg-white text-slate-900 shadow' : 'text-slate-600'}`}
+                                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${paymentMode === 'full' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
-                                        Full Payment
+                                        Full Amount
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => setPaymentMode('partial')}
-                                        className={`px-3 py-1 text-xs font-black rounded-xl transition ${paymentMode === 'partial' ? 'bg-white font-bold text-blue-600 shadow' : 'text-slate-600'}`}
+                                        onClick={() => {
+                                            setPaymentMode('partial');
+                                            if (!customAmount) {
+                                                setCustomAmount(Math.round(amountToPay / 2).toString());
+                                            }
+                                        }}
+                                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${paymentMode === 'partial' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 hover:text-slate-900'}`}
                                     >
-                                        Pay in Parts
+                                        Pay Part
                                     </button>
                                 </div>
                             </div>
 
                             {paymentMode === 'partial' && (
-                                <div className="space-y-2 pt-2 border-t border-slate-200">
-                                    <label className="block text-xs font-bold text-slate-600">Enter Partial Amount (NGN)</label>
+                                <div className="space-y-3 pt-3 border-t border-blue-100">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-xs font-black tracking-wider text-slate-700 uppercase">
+                                            Custom Partial Amount (NGN)
+                                        </label>
+                                        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-lg">
+                                            Max: {formatCurrency(amountToPay)}
+                                        </span>
+                                    </div>
+
+                                    {/* Prominent Monetary Input */}
                                     <div className="relative">
-                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">₦</span>
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
+                                            <span className="text-xl font-black text-blue-600">₦</span>
+                                        </div>
                                         <input
                                             type="number"
+                                            min="1"
+                                            max={amountToPay}
+                                            step="1"
                                             value={customAmount}
-                                            onChange={(e) => setCustomAmount(e.target.value)}
-                                            placeholder={`Min: ₦1, Max: ${formatCurrency(amountToPay)}`}
-                                            className="w-full rounded-2xl border-slate-200 pl-9 pr-4 py-3 text-sm font-bold text-slate-900 focus:border-blue-500 focus:ring-blue-500"
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val === '') {
+                                                    setCustomAmount('');
+                                                    return;
+                                                }
+                                                const num = parseFloat(val);
+                                                if (num > amountToPay) {
+                                                    setCustomAmount(amountToPay.toString());
+                                                } else {
+                                                    setCustomAmount(val);
+                                                }
+                                            }}
+                                            placeholder={`Enter amount up to ${formatCurrency(amountToPay)}`}
+                                            className="w-full rounded-2xl border-2 border-blue-500/40 bg-white py-4 pl-12 pr-24 text-2xl font-black text-slate-900 shadow-lg shadow-blue-500/5 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
                                         />
+                                        <button
+                                            type="button"
+                                            onClick={() => setCustomAmount(amountToPay.toString())}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl bg-blue-100 px-3 py-1.5 text-xs font-black text-blue-700 hover:bg-blue-200 transition"
+                                        >
+                                            SET MAX
+                                        </button>
                                     </div>
-                                    <p className="text-[11px] text-slate-500">You can pay little by little. Any remaining balance will stay open.</p>
+
+                                    <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
+                                        <span>Paying: <strong className="text-slate-900 font-bold">{formatCurrency(effectivePaymentAmount)}</strong></span>
+                                        <span>Remaining: <strong className="text-amber-600 font-bold">{formatCurrency(Math.max(0, amountToPay - effectivePaymentAmount))}</strong></span>
+                                    </div>
                                 </div>
                             )}
                         </div>
