@@ -176,10 +176,12 @@ class CollectionPaymentController extends Controller
 
         $fees = $this->calculateFees($baseAmountNaira, $hasActiveSubscription);
 
+        $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : ($assignment->user?->email ?? 'billing@kontrol.ng');
+
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
-            'email' => $user->email,
+            'email' => $payerEmail,
             'amount' => $fees['total_amount'], // Pass the total charged amount in NGN to frontend
             'base_amount' => $baseAmountNaira,
             'kontrol_fee' => $fees['kontrol_fee'],

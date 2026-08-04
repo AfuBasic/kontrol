@@ -106,9 +106,11 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
             const cleanSubaccount =
                 subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
 
+            const validEmail = (email && email.includes('@')) ? email : (assignment.user?.email || 'resident@kontrol.ng');
+
             const handler = window.PaystackPop.setup({
                 key: paystackKey,
-                email: email,
+                email: validEmail,
                 amount: Math.round(amount * 100), // data.amount is returned in NGN from backend, convert to kobo for Paystack
                 ref: reference,
                 subaccount: cleanSubaccount,
