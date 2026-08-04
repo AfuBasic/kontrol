@@ -52,9 +52,11 @@ class ResolutionManager
      */
     public function resolveForViolatable(ViolatableInterface $violatable, string $reason = 'Compliance Restored'): void
     {
+        $violatableId = method_exists($violatable, 'getKey') ? $violatable->getKey() : null;
+
         $violation = Violation::query()
             ->where('violatable_type', get_class($violatable))
-            ->where('violatable_id', $violatable->getComplianceUserId()) // fallback or ID check
+            ->when($violatableId, fn ($q) => $q->where('violatable_id', $violatableId))
             ->whereIn('status', ['open', 'under_restriction', 'escalated', 'on_payment_plan'])
             ->first();
 

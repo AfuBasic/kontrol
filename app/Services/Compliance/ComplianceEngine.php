@@ -22,7 +22,7 @@ class ComplianceEngine
     /**
      * Raise a compliance violation for a domain model.
      */
-    public function raiseViolation(ViolatableInterface&Model $violatable): Violation
+    public function raiseViolation(ViolatableInterface&Model $violatable): ?Violation
     {
         return $this->violations->createViolation($violatable);
     }

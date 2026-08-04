@@ -22,8 +22,13 @@ class ViolationManager
     /**
      * Create or retrieve a violation for a violatable entity.
      */
-    public function createViolation(ViolatableInterface&Model $violatable): Violation
+    public function createViolation(ViolatableInterface&Model $violatable): ?Violation
     {
+        // Guard: Property owner collections do NOT trigger compliance violations or account restrictions
+        if (method_exists($violatable, 'isEstateLevelCollection') && ! $violatable->isEstateLevelCollection()) {
+            return null;
+        }
+
         $existing = Violation::query()
             ->where('violatable_type', get_class($violatable))
             ->where('violatable_id', $violatable->getKey())
