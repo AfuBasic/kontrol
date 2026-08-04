@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\IncidentComment;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 
@@ -103,7 +104,7 @@ class IncidentService
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('body', 'like', "%{$search}%")
                     ->orWhere('location', 'like', "%{$search}%")
-                    ->orWhereHasMorph('reporter', [\App\Models\User::class], function ($sub) use ($search) {
+                    ->orWhereHasMorph('reporter', [User::class], function ($sub) use ($search) {
                         $sub->where('name', 'like', "%{$search}%");
                     });
             });
