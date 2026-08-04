@@ -35,6 +35,7 @@ class DetermineUserRedirect
         // Partner portal members
         if ($user->user_type === 'affiliate') {
             setPermissionsTeamId(0);
+
             return route('partner.dashboard');
         }
 
