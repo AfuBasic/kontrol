@@ -74,6 +74,23 @@ class CollectionAssignment extends Model implements ViolatableInterface
         return $this->status === 'overdue';
     }
 
+    public function isEstateLevelCollection(): bool
+    {
+        if (! $this->relationLoaded('collection')) {
+            $this->load('collection.creator.roles');
+        }
+
+        $creator = $this->collection?->creator;
+        if (! $creator) {
+            return true;
+        }
+
+        return ! $creator->roles()
+            ->where('name', 'property_owner')
+            ->where('model_has_roles.estate_id', $this->estate_id)
+            ->exists();
+    }
+
     /* --- ViolatableInterface Implementation --- */
 
     public function getComplianceViolationType(): string
