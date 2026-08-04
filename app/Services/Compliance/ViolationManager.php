@@ -49,10 +49,10 @@ class ViolationManager
             ->where('violation_type', $violationType)
             ->where('is_active', true)
             ->first() ?? CompliancePolicy::query()
-                ->whereNull('estate_id')
-                ->where('violation_type', $violationType)
-                ->where('is_active', true)
-                ->first();
+            ->whereNull('estate_id')
+            ->where('violation_type', $violationType)
+            ->where('is_active', true)
+            ->first();
 
         // Create initial default policy if none exists
         if (! $policy) {
@@ -126,7 +126,7 @@ class ViolationManager
             $violation,
             'payment_plan_created',
             'Payment Plan Approved',
-            "Approved payment plan of ".number_format($installmentAmount, 2)." ({$frequency}).",
+            'Approved payment plan of '.number_format($installmentAmount, 2)." ({$frequency}).",
             ['plan_id' => $plan->id, 'approved_by' => $approvedById]
         );
 

@@ -66,6 +66,7 @@ class RestrictionManager
             if ($existing->status === 'suspended_by_payment_plan') {
                 $existing->update(['status' => 'active']);
             }
+
             return $existing;
         }
 

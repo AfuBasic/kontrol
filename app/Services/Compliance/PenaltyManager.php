@@ -82,7 +82,7 @@ class PenaltyManager
             $violation,
             'penalty_applied',
             'Financial Penalty Applied',
-            "A {$type} penalty of ".number_format($amount, 2)." was applied.",
+            "A {$type} penalty of ".number_format($amount, 2).' was applied.',
             ['amount' => $amount, 'penalty_type' => $type, 'record_id' => $record->id]
         );
 

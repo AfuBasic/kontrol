@@ -28,6 +28,7 @@ class SendCollectionRemindersJob implements ShouldQueue
         foreach ($assignments as $assignment) {
             if ($assignment->isComplianceResolved()) {
                 $engine->resolveCompliance($assignment, 'Collection Paid');
+
                 continue;
             }
 

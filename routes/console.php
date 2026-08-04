@@ -3,6 +3,7 @@
 use App\Jobs\Admin\RecurringAssignmentJob;
 use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
+use App\Jobs\Compliance\EvaluateViolationsJob;
 use App\Jobs\GenerateMonthlyPartnerEarningsJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -23,7 +24,7 @@ Schedule::command('kontrol:check-resident-subscriptions')->daily();
 // Collections system & Compliance Engine evaluation
 Schedule::job(new RecurringAssignmentJob)->dailyAt('00:05');
 Schedule::job(new UpdateAssignmentStatusesJob)->dailyAt('01:05');
-Schedule::job(new \App\Jobs\Compliance\EvaluateViolationsJob)->dailyAt('04:00');
+Schedule::job(new EvaluateViolationsJob)->dailyAt('04:00');
 
 // Daily payment reminders & compliance sync
 Schedule::job(new SendCollectionRemindersJob)->dailyAt('08:00');

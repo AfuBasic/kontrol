@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Services\Compliance\Contracts\ViolatableInterface;
 use App\Traits\GeneratesUlid;
-use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
