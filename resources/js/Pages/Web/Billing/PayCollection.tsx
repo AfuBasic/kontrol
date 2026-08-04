@@ -1,7 +1,7 @@
-import { Head, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Head } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, Sparkles, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 type Collection = {
@@ -56,6 +56,10 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
     const amountToPay = Math.max(0, assignment.amount_due - assignment.amount_paid);
     const parsedCustom = parseFloat(customAmount) || 0;
     const effectivePaymentAmount = paymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
+    const remainingAfterPayment = Math.max(0, amountToPay - effectivePaymentAmount);
+
+    const kontrolFee = hasSubscription ? 0 : effectivePaymentAmount * 0.005;
+    const totalChargeToday = effectivePaymentAmount + kontrolFee;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -69,7 +73,6 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
         setIsProcessing(true);
 
         try {
-            // 1. Initiate payment on backend to get reference
             const response = await fetch(CollectionPaymentController.initiate.url(assignment.ulid), {
                 method: 'POST',
                 headers: {
@@ -94,14 +97,12 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
 
             const { reference, email, amount, subaccount } = data;
 
-            // 2. Open Paystack Popup
             if (!window.PaystackPop) {
                 alert('Payment gateway is not ready. Please refresh the page.');
                 setIsProcessing(false);
                 return;
             }
 
-            // Filter out dummy test subaccounts so Paystack widget opens successfully in local environment
             const cleanSubaccount =
                 subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
 
@@ -116,7 +117,6 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     setIsProcessing(false);
                 },
                 callback: (response: any) => {
-                    // 3. Verify payment on backend for immediate feedback
                     fetch(CollectionPaymentController.verify.url(response.reference), {
                         method: 'POST',
                         headers: {
@@ -126,7 +126,6 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     }).then(() => {
                         setPaymentStatus('success');
                         setIsProcessing(false);
-                        // Redirect back to mobile app or success page after a delay
                         setTimeout(() => {
                             window.location.reload();
                         }, 3000);
@@ -144,291 +143,313 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
 
     if (paymentStatus === 'success') {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+            <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-16 text-slate-900">
                 <Head title="Payment Successful" />
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md rounded-[3rem] bg-white p-12 text-center shadow-2xl ring-1 shadow-emerald-500/10 ring-slate-100"
+                    className="w-full max-w-lg rounded-[2.5rem] bg-white p-12 text-center shadow-2xl"
                 >
-                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-4xl bg-emerald-50 text-emerald-500">
-                        <CheckCircle2 className="h-12 w-12" />
+                    <div className="mx-auto mb-8 flex h-20 w-20 items-center justify-center rounded-3xl bg-emerald-50 text-emerald-500">
+                        <CheckCircle2 className="h-10 w-10" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tight text-slate-900">Payment Successful</h1>
-                    <p className="mt-4 font-medium text-slate-500">
-                        Your payment for <span className="font-bold text-slate-900">{assignment.collection.name}</span> has been processed
-                        successfully.
+                    <p className="mt-4 text-base font-medium text-slate-500">
+                        Your payment for <span className="font-bold text-slate-900">{assignment.collection.name}</span> has been processed.
                     </p>
-                    <div className="mt-8 rounded-2xl bg-slate-50 p-6">
-                        <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Transaction Reference</p>
-                        <p className="mt-1 font-mono text-sm font-bold tracking-tighter text-slate-900 uppercase">
-                            REF-{Math.random().toString(36).substr(2, 9).toUpperCase()}
-                        </p>
+                    <div className="mt-8 rounded-2xl bg-slate-50 p-6 text-left border border-slate-100">
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Payer</p>
+                        <p className="text-sm font-bold text-slate-900 mt-0.5">{assignment.user.name}</p>
+                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mt-4">Estate</p>
+                        <p className="text-sm font-bold text-slate-900 mt-0.5">{assignment.estate.name}</p>
                     </div>
-                    <p className="mt-8 text-xs font-bold tracking-widest text-slate-400 uppercase">You can now close this window</p>
+                    <p className="mt-8 text-xs font-bold tracking-widest text-slate-400 uppercase">You may close this window</p>
                 </motion.div>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 py-12 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col justify-between selection:bg-blue-500 selection:text-white">
             <Head title={`Pay for ${assignment.collection.name}`} />
 
-            <div className="w-full max-w-4xl overflow-hidden rounded-[3rem] bg-white shadow-2xl ring-1 shadow-slate-200/50 ring-slate-100 lg:flex">
-                {/* Left Side: Summary */}
-                <div className="relative bg-slate-900 p-8 text-white lg:w-1/2 lg:p-16">
-                    <div className="relative z-10 flex h-full flex-col justify-between">
-                        <div>
-                            <div className="mb-12 flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-600 shadow-xl shadow-blue-500/20">
-                                <Wallet className="h-8 w-8" />
-                            </div>
-                            <h2 className="text-4xl leading-tight font-black tracking-tight">Secure Checkout</h2>
-                            <p className="mt-4 max-w-xs text-lg font-medium text-slate-400">
-                                Review your payment details and proceed to settle your obligation.
-                            </p>
-                        </div>
-
-                        <div className="mt-12 space-y-8">
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-                                    <Building2 className="h-6 w-6 text-slate-400" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Estate</p>
-                                    <p className="font-black text-slate-200 uppercase">{assignment.estate.name}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10">
-                                    <User className="h-6 w-6 text-slate-400" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black tracking-widest text-slate-500 uppercase">Payer</p>
-                                    <p className="font-black text-slate-200">{assignment.user.name}</p>
-                                </div>
-                            </div>
-                        </div>
+            {/* Top Navigation / Brand Header */}
+            <header className="px-6 py-8 max-w-4xl mx-auto w-full flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-500/20">
+                        <Wallet className="h-5 w-5 text-white" />
                     </div>
-
-                    {/* Decorative Elements */}
-                    <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
-                    <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-indigo-600/10 blur-3xl" />
+                    <span className="text-lg font-black tracking-tight text-white uppercase">{assignment.estate.name}</span>
                 </div>
+                {hasSubscription && (
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span>Premium Member</span>
+                    </div>
+                )}
+            </header>
 
-                {/* Right Side: Action */}
-                <div className="p-8 lg:w-1/2 lg:p-16">
-                    <div className="mb-12">
-                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Payment For</span>
-                        <h3 className="mt-1 text-2xl font-black tracking-tight text-slate-900">{assignment.collection.name}</h3>
-                        <p className="mt-2 font-medium text-slate-500">{assignment.collection.description || 'Estate levy settlement.'}</p>
+            {/* Main Checkout Container */}
+            <main className="max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 space-y-12">
+                
+                {/* 1. BILL INFORMATION (Spacious & Clean Header Anchor) */}
+                <section className="space-y-6 text-center sm:text-left">
+                    <div className="space-y-2">
+                        <span className="text-xs font-black tracking-widest text-blue-400 uppercase">Collection Notice</span>
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">{assignment.collection.name}</h1>
+                        <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xl">
+                            {assignment.collection.description || 'Estate levy & obligation settlement.'}
+                        </p>
                     </div>
 
-                    <div className="space-y-6">
-                        {/* Prominent Payment Type & Custom Amount Card */}
-                        <div className="rounded-3xl bg-blue-50/50 p-6 ring-2 ring-blue-500/20 space-y-5">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <span className="text-[10px] font-black tracking-widest text-blue-600 uppercase block">Payment Options</span>
-                                    <h4 className="text-base font-black text-slate-900">Choose Payment Amount</h4>
+                    {/* Primary Visual Financial Anchor */}
+                    <div className="pt-4 pb-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                        <div>
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Outstanding Balance</span>
+                            <span className="text-5xl sm:text-6xl font-black tracking-tight text-white mt-1 block">
+                                {formatCurrency(amountToPay)}
+                            </span>
+                        </div>
+                        <div className="text-left sm:text-right space-y-1">
+                            <span className="text-xs font-semibold text-slate-400 block">Assigned Resident</span>
+                            <span className="text-sm font-bold text-slate-200 block">{assignment.user.name}</span>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 2. PAYMENT METHOD (Primary Decision: Large Cards) */}
+                <section className="space-y-4">
+                    <div className="flex justify-between items-center px-1">
+                        <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Payment Method</h2>
+                        <span className="text-xs text-slate-500 font-medium">Select how you want to pay</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Option 1: Full Amount */}
+                        <div
+                            onClick={() => {
+                                setPaymentMode('full');
+                                setCustomAmount('');
+                            }}
+                            className={`cursor-pointer rounded-3xl p-6 transition-all duration-200 border-2 relative flex flex-col justify-between ${
+                                paymentMode === 'full'
+                                    ? 'bg-slate-800/90 border-blue-500 shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/30'
+                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                            }`}
+                        >
+                            <div className="flex justify-between items-start mb-4">
+                                <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition ${
+                                    paymentMode === 'full' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
+                                }`}>
+                                    {paymentMode === 'full' && <div className="h-2 w-2 rounded-full bg-white" />}
                                 </div>
-                                <div className="flex bg-slate-200/80 p-1.5 rounded-2xl shadow-inner">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setPaymentMode('full');
-                                            setCustomAmount('');
-                                        }}
-                                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${paymentMode === 'full' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 hover:text-slate-900'}`}
-                                    >
-                                        Full Amount
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setPaymentMode('partial');
-                                            if (!customAmount) {
-                                                setCustomAmount(Math.round(amountToPay / 2).toString());
+                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                    Recommended
+                                </span>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white">Pay Full Amount</h3>
+                                <p className="text-xs font-medium text-slate-400 mt-1 leading-relaxed">
+                                    Settle the entire outstanding balance today and clear this bill completely.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Option 2: Pay Part */}
+                        <div
+                            onClick={() => {
+                                setPaymentMode('partial');
+                                if (!customAmount) {
+                                    setCustomAmount(Math.round(amountToPay / 2).toString());
+                                }
+                            }}
+                            className={`cursor-pointer rounded-3xl p-6 transition-all duration-200 border-2 relative flex flex-col justify-between ${
+                                paymentMode === 'partial'
+                                    ? 'bg-slate-800/90 border-blue-500 shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/30'
+                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                            }`}
+                        >
+                            <div className="flex justify-between items-start mb-4">
+                                <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition ${
+                                    paymentMode === 'partial' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
+                                }`}>
+                                    {paymentMode === 'partial' && <div className="h-2 w-2 rounded-full bg-white" />}
+                                </div>
+                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                    Flexible
+                                </span>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-black text-white">Pay Part of Bill</h3>
+                                <p className="text-xs font-medium text-slate-400 mt-1 leading-relaxed">
+                                    Pay any amount today. Remaining balance stays open for future settlement.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 3. PARTIAL PAYMENT EXPERIENCE (Smooth Expansion) */}
+                <AnimatePresence>
+                    {paymentMode === 'partial' && (
+                        <motion.section
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.25, ease: 'easeInOut' }}
+                            className="overflow-hidden space-y-4 pt-2"
+                        >
+                            <div className="rounded-3xl bg-slate-900/80 p-6 sm:p-8 border border-blue-500/30 space-y-6">
+                                <div className="flex justify-between items-center">
+                                    <label className="text-xs font-black tracking-widest text-blue-400 uppercase">
+                                        Amount Paying Today
+                                    </label>
+                                    <span className="text-xs font-bold text-slate-400">
+                                        Max: {formatCurrency(amountToPay)}
+                                    </span>
+                                </div>
+
+                                {/* Prominent Monetary Input */}
+                                <div className="relative">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6">
+                                        <span className="text-3xl font-black text-blue-400">₦</span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max={amountToPay}
+                                        value={customAmount}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '') {
+                                                setCustomAmount('');
+                                                return;
+                                            }
+                                            const num = parseFloat(val);
+                                            if (num > amountToPay) {
+                                                setCustomAmount(amountToPay.toString());
+                                            } else {
+                                                setCustomAmount(val);
                                             }
                                         }}
-                                        className={`px-4 py-2 text-xs font-black rounded-xl transition-all ${paymentMode === 'partial' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'text-slate-600 hover:text-slate-900'}`}
+                                        placeholder={`Up to ${formatCurrency(amountToPay)}`}
+                                        className="w-full rounded-2xl border-2 border-slate-700 bg-slate-950 py-5 pl-14 pr-24 text-3xl font-black text-white shadow-inner focus:border-blue-500 focus:outline-none transition"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setCustomAmount(amountToPay.toString())}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 px-3 py-2 text-xs font-black text-blue-400 border border-blue-500/30 transition"
                                     >
-                                        Pay Part
+                                        SET MAX
                                     </button>
                                 </div>
-                            </div>
 
-                            {paymentMode === 'partial' && (
-                                <div className="space-y-3 pt-3 border-t border-blue-100">
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-xs font-black tracking-wider text-slate-700 uppercase">
-                                            Custom Partial Amount (NGN)
-                                        </label>
-                                        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-lg">
-                                            Max: {formatCurrency(amountToPay)}
-                                        </span>
+                                {/* Dynamic Realtime Breakdown */}
+                                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs">
+                                    <div>
+                                        <span className="text-slate-500 block font-medium">Paying Today</span>
+                                        <span className="text-base font-bold text-white mt-0.5 block">{formatCurrency(effectivePaymentAmount)}</span>
                                     </div>
-
-                                    {/* Prominent Monetary Input */}
-                                    <div className="relative">
-                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5">
-                                            <span className="text-xl font-black text-blue-600">₦</span>
-                                        </div>
-                                        <input
-                                            type="number"
-                                            min="1"
-                                            max={amountToPay}
-                                            step="1"
-                                            value={customAmount}
-                                            onChange={(e) => {
-                                                const val = e.target.value;
-                                                if (val === '') {
-                                                    setCustomAmount('');
-                                                    return;
-                                                }
-                                                const num = parseFloat(val);
-                                                if (num > amountToPay) {
-                                                    setCustomAmount(amountToPay.toString());
-                                                } else {
-                                                    setCustomAmount(val);
-                                                }
-                                            }}
-                                            placeholder={`Enter amount up to ${formatCurrency(amountToPay)}`}
-                                            className="w-full rounded-2xl border-2 border-blue-500/40 bg-white py-4 pl-12 pr-24 text-2xl font-black text-slate-900 shadow-lg shadow-blue-500/5 transition focus:border-blue-600 focus:outline-none focus:ring-4 focus:ring-blue-500/20"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setCustomAmount(amountToPay.toString())}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl bg-blue-100 px-3 py-1.5 text-xs font-black text-blue-700 hover:bg-blue-200 transition"
-                                        >
-                                            SET MAX
-                                        </button>
-                                    </div>
-
-                                    <div className="flex items-center justify-between text-xs font-medium text-slate-500 px-1">
-                                        <span>Paying: <strong className="text-slate-900 font-bold">{formatCurrency(effectivePaymentAmount)}</strong></span>
-                                        <span>Remaining: <strong className="text-amber-600 font-bold">{formatCurrency(Math.max(0, amountToPay - effectivePaymentAmount))}</strong></span>
+                                    <div className="border-l border-slate-800 pl-4">
+                                        <span className="text-slate-500 block font-medium">Remaining Balance</span>
+                                        <span className="text-base font-bold text-amber-400 mt-0.5 block">{formatCurrency(remainingAfterPayment)}</span>
                                     </div>
                                 </div>
+                            </div>
+                        </motion.section>
+                    )}
+                </AnimatePresence>
+
+                {/* 4. LIVE PAYMENT SUMMARY (Clean Hierarchy, No Box Crowding) */}
+                <section className="space-y-4 pt-4 border-t border-slate-800">
+                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase px-1">Payment Summary</h2>
+
+                    <div className="space-y-3 text-sm">
+                        <div className="flex justify-between items-center text-slate-400 font-medium">
+                            <span>Outstanding Balance</span>
+                            <span className="text-slate-200 font-bold">{formatCurrency(amountToPay)}</span>
+                        </div>
+
+                        {paymentMode === 'partial' && (
+                            <>
+                                <div className="flex justify-between items-center text-slate-400 font-medium">
+                                    <span>Paying Today</span>
+                                    <span className="text-blue-400 font-bold">{formatCurrency(effectivePaymentAmount)}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-slate-400 font-medium">
+                                    <span>Remaining After Payment</span>
+                                    <span className="text-amber-400 font-bold">{formatCurrency(remainingAfterPayment)}</span>
+                                </div>
+                            </>
+                        )}
+
+                        <div className="flex justify-between items-center text-slate-400 font-medium">
+                            <span>Processing Fee (0.5%)</span>
+                            {hasSubscription ? (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-slate-500 line-through font-bold">{formatCurrency(effectivePaymentAmount * 0.005)}</span>
+                                    <span className="text-emerald-400 text-xs font-bold">✓ Waived for Premium</span>
+                                </div>
+                            ) : (
+                                <span className="text-slate-200 font-bold">{formatCurrency(kontrolFee)}</span>
                             )}
                         </div>
 
-                        <div className="rounded-3xl bg-slate-50 p-8 ring-1 ring-slate-100">
-                            <div className="mb-6 space-y-4 border-b border-slate-200 pb-6">
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="font-bold text-slate-500">Total Outstanding</span>
-                                    <span className="font-black text-slate-900">{formatCurrency(amountToPay)}</span>
-                                </div>
-
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="font-bold text-slate-500">Selected Amount</span>
-                                    <span className="font-black text-blue-600">{formatCurrency(effectivePaymentAmount)}</span>
-                                </div>
-
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="font-bold text-slate-500">Processing Fee (0.5%)</span>
-                                    {hasSubscription ? (
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-black text-emerald-600 line-through decoration-emerald-500/30">
-                                                {formatCurrency(effectivePaymentAmount * 0.005)}
-                                            </span>
-                                            <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
-                                                WAIVED
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <span className="font-black text-slate-900">{formatCurrency(effectivePaymentAmount * 0.005)}</span>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm font-bold tracking-widest text-slate-400 uppercase">Total to pay now</span>
-                                <span className="text-4xl font-black tracking-tight text-slate-900">{formatCurrency(effectivePaymentAmount + (hasSubscription ? 0 : effectivePaymentAmount * 0.005))}</span>
-                            </div>
-                        </div>
-
-                        {!hasSubscription && amountToPay > 0 && (
-                            <div className="flex items-center gap-3 rounded-2xl bg-amber-50/80 p-4 text-amber-700 ring-1 ring-amber-200/50">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600">
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        />
-                                    </svg>
-                                </div>
-                                <p className="text-xs leading-relaxed font-bold">
-                                    <span className="block text-amber-800">Processing Fee Applied</span>
-                                    This 0.5% processing fee could be avoided if you had an active Kontrol subscription.
-                                </p>
-                            </div>
-                        )}
-
-                        {hasSubscription && amountToPay > 0 && (
-                            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50/80 p-4 text-emerald-700 ring-1 ring-emerald-200/50">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                </div>
-                                <p className="text-xs leading-relaxed font-bold">
-                                    <span className="block text-emerald-800">Premium Benefit Applied</span>
-                                    Your 0.5% processing fee has been cancelled because you are an active premium subscriber.
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="flex items-center gap-3 rounded-2xl bg-blue-50/50 p-4 text-blue-700">
-                            <ShieldCheck className="h-5 w-5 shrink-0" />
-                            <p className="text-xs leading-relaxed font-bold">
-                                Your payment is processed securely via Paystack. We do not store your card details.
-                            </p>
-                        </div>
-
-                        {amountToPay > 0 ? (
-                            <button
-                                onClick={handlePayment}
-                                disabled={isProcessing}
-                                className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-3xl bg-[#1F6FDB] py-6 text-lg font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-blue-700 active:scale-95 disabled:opacity-50"
-                            >
-                                {isProcessing ? (
-                                    <Loader2 className="h-6 w-6 animate-spin" />
-                                ) : (
-                                    <>
-                                        Complete Payment
-                                        <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                                    </>
-                                )}
-                            </button>
-                        ) : (
-                            <div className="flex w-full items-center justify-center gap-3 rounded-3xl bg-emerald-500 py-6 text-lg font-black text-white shadow-2xl shadow-emerald-500/30">
-                                <CheckCircle2 className="h-6 w-6" />
-                                Payment Completed
-                            </div>
-                        )}
-
-                        <div className="flex flex-col items-center gap-3 pt-4">
-                            <div className="flex items-center gap-2">
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    className="h-3.5 w-3.5 text-emerald-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                >
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                </svg>
-                                <span className="text-xs font-medium text-slate-400">Secure Payment Gateway</span>
-                            </div>
-                            <p className="text-[10px] font-medium text-slate-300">Automated transaction system</p>
+                        {/* Total Highlight */}
+                        <div className="pt-4 border-t border-slate-800 flex justify-between items-baseline">
+                            <span className="text-base font-black text-white">Total Charge Today</span>
+                            <span className="text-4xl font-black text-white tracking-tight">{formatCurrency(totalChargeToday)}</span>
                         </div>
                     </div>
-                </div>
-            </div>
+                </section>
+
+                {/* 5. BENEFITS (Lightweight Success Banner / Fee Note) */}
+                {hasSubscription ? (
+                    <div className="flex items-center gap-2.5 text-xs text-emerald-400 font-semibold px-1">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        <span>✓ Premium Member — 0.5% processing fee has been waived on this payment.</span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2.5 text-xs text-slate-400 font-medium px-1">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-slate-500" />
+                        <span>A 0.5% processing fee applies. Free for active Kontrol premium subscribers.</span>
+                    </div>
+                )}
+
+                {/* 6. PAY BUTTON */}
+                <section className="space-y-4 pt-4">
+                    {amountToPay > 0 ? (
+                        <button
+                            onClick={handlePayment}
+                            disabled={isProcessing || effectivePaymentAmount <= 0}
+                            className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-3xl bg-blue-600 py-6 text-lg font-black text-white shadow-2xl shadow-blue-600/30 transition-all hover:bg-blue-500 active:scale-[0.98] disabled:opacity-50"
+                        >
+                            {isProcessing ? (
+                                <Loader2 className="h-6 w-6 animate-spin" />
+                            ) : (
+                                <>
+                                    <span>Pay {formatCurrency(totalChargeToday)} Now</span>
+                                    <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                                </>
+                            )}
+                        </button>
+                    ) : (
+                        <div className="flex w-full items-center justify-center gap-3 rounded-3xl bg-emerald-500 py-6 text-lg font-black text-white shadow-2xl shadow-emerald-500/20">
+                            <CheckCircle2 className="h-6 w-6" />
+                            <span>Bill Fully Settled</span>
+                        </div>
+                    )}
+
+                    <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 pt-2">
+                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                        <span>Encrypted SSL Gateway via Paystack</span>
+                    </div>
+                </section>
+            </main>
+
+            <footer className="px-6 py-6 text-center text-xs text-slate-600 font-medium border-t border-slate-800/50">
+                Kontrol Compliance & Automated Billing System
+            </footer>
         </div>
     );
 }
