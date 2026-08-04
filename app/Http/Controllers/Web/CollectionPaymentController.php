@@ -58,15 +58,21 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        // Validate custom partial amount (frontend sends kobo)
-        // $remainingBalance is in KOBO (e.g. 10000000 kobo = NGN 100,000)
-        $customAmountKobo = $request->input('amount');
+        // Validate custom partial amount
+        // $remainingBalance is in KOBO (e.g. 1000000 kobo = NGN 1,000)
+        $rawAmount = $request->input('amount');
         $paymentAmountKobo = $remainingBalance;
 
-        if (! empty($customAmountKobo)) {
-            $parsedKobo = (int) $customAmountKobo;
-            if ($parsedKobo > 0 && $parsedKobo <= $remainingBalance) {
-                $paymentAmountKobo = $parsedKobo;
+        if (! empty($rawAmount)) {
+            $parsedInt = (int) $rawAmount;
+            if ($parsedInt > 0) {
+                // If amount is sent in kobo (e.g. 100000 for NGN 1,000)
+                if ($parsedInt <= $remainingBalance) {
+                    $paymentAmountKobo = $parsedInt;
+                } elseif ($parsedInt * 100 <= $remainingBalance) {
+                    // Fallback if sent in NGN (e.g. 1000 for NGN 1,000)
+                    $paymentAmountKobo = $parsedInt * 100;
+                }
             }
         }
 
