@@ -29,13 +29,18 @@ class CollectionPaymentController extends Controller
 
         $assignment->load(['collection', 'estate', 'user']);
 
-        $baseAmount = max(0, $assignment->amount_due - $assignment->amount_paid);
+        // Convert assignment amount fields from Kobo to NGN for Web UI
+        $assignmentNaira = clone $assignment;
+        $assignmentNaira->amount_due = (float) ($assignment->amount_due / 100);
+        $assignmentNaira->amount_paid = (float) ($assignment->amount_paid / 100);
+
+        $baseAmount = max(0, $assignmentNaira->amount_due - $assignmentNaira->amount_paid);
         $hasActiveSubscription = $this->hasActiveSubscription($assignment->user_id);
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
         return Inertia::render('Web/Billing/PayCollection', [
-            'assignment' => $assignment,
+            'assignment' => $assignmentNaira,
             'paystackKey' => config('services.paystack.public_key'),
             'feeBreakdown' => $fees,
             'hasSubscription' => $hasActiveSubscription,
@@ -58,7 +63,7 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        // Validate custom partial amount
+        // Validate custom partial amount (frontend sends amount in kobo or NGN)
         // $remainingBalance is stored in KOBO in database (e.g. 10000000 kobo = NGN 100,000)
         $rawAmount = $request->input('amount');
         $paymentAmountKobo = $remainingBalance;
@@ -66,15 +71,11 @@ class CollectionPaymentController extends Controller
         if (! empty($rawAmount)) {
             $parsedAmount = (float) $rawAmount;
             if ($parsedAmount > 0) {
-                // Check if frontend sent amount in Kobo (e.g. 10000000) or NGN (e.g. 100000)
+                // If amount is sent in kobo (e.g. 10000000 kobo for NGN 100,000)
                 if ($parsedAmount <= $remainingBalance) {
-                    // Check if it matches kobo range directly
                     $paymentAmountKobo = (int) round($parsedAmount);
-                } elseif (round($parsedAmount / 100) <= ($remainingBalance / 100)) {
-                    // Sent in kobo but slightly exceeds due to rounding
-                    $paymentAmountKobo = min($remainingBalance, (int) round($parsedAmount));
                 } else {
-                    // Fallback: sent in NGN float
+                    // Sent in NGN (e.g. 100000 NGN)
                     $paymentAmountKobo = min($remainingBalance, (int) round($parsedAmount * 100));
                 }
             }
