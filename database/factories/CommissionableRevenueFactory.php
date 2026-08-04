@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\CommissionPlan;
 use App\Models\CommissionableRevenue;
+use App\Models\CommissionPlan;
 use App\Models\Estate;
 use App\Models\Partner;
 use App\Models\User;

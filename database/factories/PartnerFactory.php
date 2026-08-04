@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Partner;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -29,7 +30,7 @@ class PartnerFactory extends Factory
     public function configure(): self
     {
         return $this->afterCreating(function (Partner $partner) {
-            $user = \App\Models\User::factory()->create([
+            $user = User::factory()->create([
                 'name' => $partner->name,
                 'email' => fake()->unique()->companyEmail(),
                 'user_type' => 'affiliate',
