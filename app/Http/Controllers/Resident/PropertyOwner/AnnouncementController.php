@@ -271,9 +271,11 @@ class AnnouncementController extends Controller
         $formattedTargets = $announcement->targets->map(function ($target) {
             if ($target->target_type === 'user') {
                 $user = User::find($target->target_id);
+
                 return ['type' => 'Resident', 'name' => $user ? $user->name : 'Unknown'];
             } else {
                 $property = Property::find($target->target_id);
+
                 return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
             }
         })->values()->all();
