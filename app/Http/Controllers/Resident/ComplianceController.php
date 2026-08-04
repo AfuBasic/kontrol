@@ -25,7 +25,15 @@ class ComplianceController extends Controller
 
         $violations = Violation::query()
             ->where('user_id', $user->id)
-            ->with(['currentStage', 'activeRestrictions', 'activePaymentPlan', 'timeline'])
+            ->with([
+                'currentStage',
+                'activeRestrictions',
+                'activePaymentPlan',
+                'timeline',
+                'violatable.payments' => function ($query) {
+                    $query->where('status', 'success')->orderBy('created_at', 'desc');
+                },
+            ])
             ->orderBy('created_at', 'desc')
             ->get();
 
