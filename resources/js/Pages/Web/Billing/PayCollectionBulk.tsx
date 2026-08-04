@@ -1,5 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, FileText } from 'lucide-react';
 import { useState } from 'react';
 
@@ -49,7 +48,6 @@ declare global {
 
 export default function PayCollectionBulk({ assignments, paystackKey, totalAmount, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
-    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const firstAssignment = assignments[0];
@@ -84,11 +82,7 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
             const data = await response.json().catch(() => ({}));
 
             if (data.already_paid) {
-                setPaymentStatus('success');
-                setIsProcessing(false);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
+                window.location.reload();
                 return;
             }
 
@@ -129,31 +123,20 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                     ? data.email
                     : firstAssignment.user?.email || 'support@usekontrol.com';
 
+            const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
+
             const setupOptions: Record<string, unknown> = {
                 key: paystackKey,
                 email: validEmail,
                 amount: amountKobo,
                 ref: data.reference,
                 channels: ['bank_transfer'],
+                callback_url: statusUrlFor(data.reference),
                 onClose: () => {
                     setIsProcessing(false);
                 },
                 callback: (paystackResponse: { reference: string }) => {
-                    fetch(`/billing/collection/verify/${paystackResponse.reference}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Accept: 'application/json',
-                            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                    }).then(() => {
-                        setPaymentStatus('success');
-                        setIsProcessing(false);
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 3000);
-                    });
+                    window.location.href = statusUrlFor(paystackResponse.reference);
                 },
             };
 
@@ -170,39 +153,9 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
         } catch (error) {
             console.error('Payment initiation failed', error);
             setErrorMessage('Payment initiation failed. Please try again.');
-            setPaymentStatus('error');
             setIsProcessing(false);
         }
     };
-
-    if (paymentStatus === 'success') {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-                <Head title="Payment Successful" />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md rounded-[3rem] bg-white p-12 text-center shadow-2xl ring-1 shadow-emerald-500/10 ring-slate-100"
-                >
-                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-4xl bg-emerald-50 text-emerald-500">
-                        <CheckCircle2 className="h-12 w-12" />
-                    </div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Payment Successful</h1>
-                    <p className="mt-4 font-medium text-slate-500">
-                        Your payment for <span className="font-bold text-slate-900">{assignments.length} outstanding bills</span> has been processed
-                        successfully.
-                    </p>
-                    <div className="mt-8 rounded-2xl bg-slate-50 p-6">
-                        <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Transaction Reference</p>
-                        <p className="mt-1 font-mono text-sm font-bold tracking-tighter text-slate-900 uppercase">
-                            REF-{Math.random().toString(36).substr(2, 9).toUpperCase()}
-                        </p>
-                    </div>
-                    <p className="mt-8 text-xs font-bold tracking-widest text-slate-400 uppercase">You can now close this window</p>
-                </motion.div>
-            </div>
-        );
-    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 py-12 sm:px-6 lg:px-8">
