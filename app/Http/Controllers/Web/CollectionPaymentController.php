@@ -321,6 +321,105 @@ class CollectionPaymentController extends Controller
         return response()->json(['message' => $result['message']], $result['status']);
     }
 
+    /**
+     * Receipt / status page after Paystack Inline callback (or webhook-confirmed payment).
+     * Syncs with Paystack when the local payment is not yet marked success.
+     */
+    public function status(string $reference, PaystackService $paystackService): Response
+    {
+        $payment = Payment::where('reference', $reference)->firstOrFail();
+        setPermissionsTeamId($payment->estate_id);
+
+        if ($payment->status !== 'success') {
+            try {
+                $verification = $paystackService->verifyPayment($reference);
+                $paystackStatus = $verification['status'] ?? null;
+
+                if ($paystackStatus === 'success') {
+                    $this->verify($reference);
+                    $payment->refresh();
+                } elseif (in_array($paystackStatus, ['failed', 'abandoned', 'reversed'], true)) {
+                    $payment->update(['status' => 'failed']);
+                }
+            } catch (\Exception $e) {
+                Log::info("Payment status page could not verify Ref={$reference}: ".$e->getMessage());
+            }
+        }
+
+        $payment->loadMissing([
+            'user:id,name,email',
+            'estate:id,name',
+            'assignment.collection:id,name,description',
+            'assignment.user:id,name,email',
+            'assignment.estate:id,name',
+        ]);
+
+        $assignment = $payment->assignment;
+        $isBulk = (bool) data_get($payment->raw_payload, 'is_bulk', false)
+            || (is_array(data_get($payment->raw_payload, 'assignment_ids')) && $payment->collection_assignment_id === null);
+
+        $amountPaid = (int) $payment->amount;
+        $amountDue = $assignment ? (int) $assignment->amount_due : $amountPaid;
+        $amountAlreadyPaid = $assignment ? (int) $assignment->amount_paid : $amountPaid;
+        $remainingBalance = $assignment ? max(0, $amountDue - $amountAlreadyPaid) : 0;
+
+        $status = match (true) {
+            $payment->status === 'success' && $remainingBalance <= 0 && ! $isBulk => 'paid_in_full',
+            $payment->status === 'success' && $isBulk => 'paid_in_full',
+            $payment->status === 'success' && $remainingBalance > 0 => 'partial',
+            $payment->status === 'failed' => 'failed',
+            default => 'pending',
+        };
+
+        $bulkAssignments = [];
+        if ($isBulk) {
+            $assignmentIds = data_get($payment->raw_payload, 'assignment_ids', []);
+            $bulkAssignments = CollectionAssignment::whereIn('id', $assignmentIds)
+                ->with(['collection:id,name', 'estate:id,name'])
+                ->get()
+                ->map(fn (CollectionAssignment $a) => [
+                    'ulid' => $a->ulid,
+                    'name' => $a->collection?->name,
+                    'amount_due' => (int) $a->amount_due,
+                    'amount_paid' => (int) $a->amount_paid,
+                    'remaining' => max(0, (int) $a->amount_due - (int) $a->amount_paid),
+                    'status' => $a->status,
+                ])
+                ->values()
+                ->all();
+        }
+
+        $payAgainUrl = null;
+        if ($status === 'partial' && $assignment) {
+            $payAgainUrl = route('web.billing.collection.show', ['assignment' => $assignment->ulid]);
+        }
+
+        return Inertia::render('Web/Billing/PaymentStatus', [
+            'reference' => $payment->reference,
+            'status' => $status,
+            'paymentStatus' => $payment->status,
+            'amountPaid' => $amountPaid,
+            'amountDue' => $amountDue,
+            'amountAlreadyPaid' => $amountAlreadyPaid,
+            'remainingBalance' => $remainingBalance,
+            'paidAt' => $payment->paid_at?->toIso8601String(),
+            'isBulk' => $isBulk,
+            'collectionName' => $assignment?->collection?->name
+                ?? ($isBulk ? 'Multiple bills' : 'Collection payment'),
+            'payerName' => $payment->user?->name
+                ?? $assignment?->user?->name
+                ?? 'Resident',
+            'estateName' => $payment->estate?->name
+                ?? $assignment?->estate?->name
+                ?? 'Estate',
+            'payAgainUrl' => $payAgainUrl,
+            'bulkAssignments' => $bulkAssignments,
+            'checkoutUrl' => $assignment
+                ? route('web.billing.collection.show', ['assignment' => $assignment->ulid])
+                : null,
+        ]);
+    }
+
     public function showBulk(Request $request): Response
     {
         $ulids = explode(',', $request->query('assignments', ''));
