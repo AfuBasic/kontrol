@@ -415,7 +415,8 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
     );
 
     return (
-        <div className="flex flex-col gap-10 pb-36">
+        {/* Extra bottom space: floating CTA + resident dock (bottom-6 + pill + FAB) */}
+        <div className="flex flex-col gap-10 pb-[calc(11.5rem+env(safe-area-inset-bottom,0px))] sm:pb-16">
             <Head title={assignment.collection.name} />
 
             {/* Back */}
@@ -687,20 +688,26 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 )}
             </section>
 
-            {/* CTA */}
+            {/* CTA — sits above the resident floating dock (z-40, bottom-6 + pill + FAB) */}
             {!isSettled && journey.cta_label && (
-                <section className="fixed right-0 bottom-0 left-0 z-20 border-t border-slate-100/80 bg-white/90 px-4 pt-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
-                    <div className="mx-auto max-w-lg space-y-3 sm:max-w-none">
+                <section
+                    className="pointer-events-none fixed inset-x-0 z-30 px-4 sm:static sm:mt-2 sm:px-0 sm:pb-0"
+                    style={{
+                        // Dock is bottom-6; pill ~3.5rem; FAB protrudes ~2.5rem → clear ~7.5–8rem
+                        bottom: 'calc(7.75rem + env(safe-area-inset-bottom, 0px))',
+                    }}
+                >
+                    <div className="pointer-events-auto mx-auto max-w-lg space-y-2 sm:max-w-none">
                         <button
                             type="button"
                             onClick={handleSettle}
-                            className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-[1.75rem] bg-[#1F6FDB] py-5 text-base font-black text-white shadow-2xl shadow-blue-500/25 transition-all active:scale-[0.98]"
+                            className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-[1.75rem] bg-[#1F6FDB] py-4 text-base font-black text-white shadow-2xl shadow-blue-500/30 transition-all active:scale-[0.98]"
                         >
                             {journey.cta_label}
                             <ExternalLink className="h-5 w-5" />
                         </button>
                         <div className="flex items-center justify-center gap-2 text-center">
-                            <ShieldCheck className="h-4 w-4 text-slate-400" />
+                            <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
                             <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                 Secure bank transfer via Paystack
                             </p>
