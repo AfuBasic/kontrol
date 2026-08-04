@@ -87,9 +87,6 @@ class Incident extends Model
         return $this->belongsTo(Estate::class);
     }
 
-    /**
-     * @return MorphTo
-     */
     public function reporter(): MorphTo
     {
         return $this->morphTo();
@@ -141,8 +138,10 @@ class Incident extends Model
             if ($reporter->hasRole('property_owner')) {
                 return 'Property Owner';
             }
+
             return 'Resident';
         }
+
         return class_basename($reporter);
     }
 
