@@ -192,7 +192,8 @@ class CollectionPaymentController extends Controller
             'already_paid' => false,
             'reference' => $payment->reference,
             'email' => $payerEmail,
-            'amount' => $fees['total_amount'], // Pass the total charged amount in NGN to frontend
+            'amount' => $fees['total_amount'], // Pass total charged amount in NGN float
+            'amount_kobo' => (int) round($fees['total_amount'] * 100), // Exact integer in kobo for Paystack setup
             'base_amount' => $baseAmountNaira,
             'kontrol_fee' => $fees['kontrol_fee'],
             'paystack_fee' => $fees['paystack_fee'],

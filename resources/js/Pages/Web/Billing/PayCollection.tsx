@@ -95,7 +95,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                 return;
             }
 
-            const { reference, email, amount, subaccount } = data;
+            const { reference, email, amount, amount_kobo, subaccount } = data;
 
             if (!window.PaystackPop) {
                 alert('Payment gateway is not ready. Please refresh the page.');
@@ -106,12 +106,14 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
             const cleanSubaccount =
                 subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
 
-            const validEmail = (email && email.includes('@')) ? email : (assignment.user?.email || 'resident@kontrol.ng');
+            const validEmail = email && email.includes('@') ? email : assignment.user?.email || 'support@usekontrol.com';
+
+            const paystackAmountKobo = amount_kobo || Math.round(Number(amount) * 100);
 
             const handler = window.PaystackPop.setup({
                 key: paystackKey,
                 email: validEmail,
-                amount: Math.round(amount * 100), // data.amount is returned in NGN from backend, convert to kobo for Paystack
+                amount: paystackAmountKobo,
                 ref: reference,
                 subaccount: cleanSubaccount,
                 channels: ['bank_transfer'],
@@ -159,11 +161,11 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     <p className="mt-4 text-base font-medium text-slate-500">
                         Your payment for <span className="font-bold text-slate-900">{assignment.collection.name}</span> has been processed.
                     </p>
-                    <div className="mt-8 rounded-2xl bg-slate-50 p-6 text-left border border-slate-100">
+                    <div className="mt-8 rounded-2xl border border-slate-100 bg-slate-50 p-6 text-left">
                         <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Payer</p>
-                        <p className="text-sm font-bold text-slate-900 mt-0.5">{assignment.user.name}</p>
-                        <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase mt-4">Estate</p>
-                        <p className="text-sm font-bold text-slate-900 mt-0.5">{assignment.estate.name}</p>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900">{assignment.user.name}</p>
+                        <p className="mt-4 text-[10px] font-black tracking-widest text-slate-400 uppercase">Estate</p>
+                        <p className="mt-0.5 text-sm font-bold text-slate-900">{assignment.estate.name}</p>
                     </div>
                     <p className="mt-8 text-xs font-bold tracking-widest text-slate-400 uppercase">You may close this window</p>
                 </motion.div>
@@ -172,11 +174,11 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
     }
 
     return (
-        <div className="min-h-screen bg-[#0F172A] text-slate-100 flex flex-col justify-between selection:bg-blue-500 selection:text-white">
+        <div className="flex min-h-screen flex-col justify-between bg-[#0F172A] text-slate-100 selection:bg-blue-500 selection:text-white">
             <Head title={`Pay for ${assignment.collection.name}`} />
 
             {/* Top Navigation / Brand Header */}
-            <header className="px-6 py-8 max-w-4xl mx-auto w-full flex items-center justify-between">
+            <header className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-8">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-500/20">
                         <Wallet className="h-5 w-5 text-white" />
@@ -184,7 +186,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     <span className="text-lg font-black tracking-tight text-white uppercase">{assignment.estate.name}</span>
                 </div>
                 {hasSubscription && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
+                    <div className="flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-400">
                         <Sparkles className="h-3.5 w-3.5" />
                         <span>Premium Member</span>
                     </div>
@@ -192,66 +194,67 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
             </header>
 
             {/* Main Checkout Container */}
-            <main className="max-w-2xl mx-auto w-full px-4 sm:px-6 py-6 space-y-12">
-                
+            <main className="mx-auto w-full max-w-2xl space-y-12 px-4 py-6 sm:px-6">
                 {/* 1. BILL INFORMATION (Spacious & Clean Header Anchor) */}
                 <section className="space-y-6 text-center sm:text-left">
                     <div className="space-y-2">
                         <span className="text-xs font-black tracking-widest text-blue-400 uppercase">Collection Notice</span>
-                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">{assignment.collection.name}</h1>
-                        <p className="text-slate-400 text-base font-medium leading-relaxed max-w-xl">
+                        <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{assignment.collection.name}</h1>
+                        <p className="max-w-xl text-base leading-relaxed font-medium text-slate-400">
                             {assignment.collection.description || 'Estate levy & obligation settlement.'}
                         </p>
                     </div>
 
                     {/* Primary Visual Financial Anchor */}
-                    <div className="pt-4 pb-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                    <div className="flex flex-col justify-between gap-2 border-b border-slate-800 pt-4 pb-6 sm:flex-row sm:items-baseline">
                         <div>
-                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">Outstanding Balance</span>
-                            <span className="text-5xl sm:text-6xl font-black tracking-tight text-white mt-1 block">
+                            <span className="block text-xs font-bold tracking-widest text-slate-400 uppercase">Outstanding Balance</span>
+                            <span className="mt-1 block text-5xl font-black tracking-tight text-white sm:text-6xl">
                                 {formatCurrency(amountToPay)}
                             </span>
                         </div>
-                        <div className="text-left sm:text-right space-y-1">
-                            <span className="text-xs font-semibold text-slate-400 block">Assigned Resident</span>
-                            <span className="text-sm font-bold text-slate-200 block">{assignment.user.name}</span>
+                        <div className="space-y-1 text-left sm:text-right">
+                            <span className="block text-xs font-semibold text-slate-400">Assigned Resident</span>
+                            <span className="block text-sm font-bold text-slate-200">{assignment.user.name}</span>
                         </div>
                     </div>
                 </section>
 
                 {/* 2. PAYMENT METHOD (Primary Decision: Large Cards) */}
                 <section className="space-y-4">
-                    <div className="flex justify-between items-center px-1">
+                    <div className="flex items-center justify-between px-1">
                         <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Payment Method</h2>
-                        <span className="text-xs text-slate-500 font-medium">Select how you want to pay</span>
+                        <span className="text-xs font-medium text-slate-500">Select how you want to pay</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {/* Option 1: Full Amount */}
                         <div
                             onClick={() => {
                                 setPaymentMode('full');
                                 setCustomAmount('');
                             }}
-                            className={`cursor-pointer rounded-3xl p-6 transition-all duration-200 border-2 relative flex flex-col justify-between ${
+                            className={`relative flex cursor-pointer flex-col justify-between rounded-3xl border-2 p-6 transition-all duration-200 ${
                                 paymentMode === 'full'
-                                    ? 'bg-slate-800/90 border-blue-500 shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/30'
-                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                                    ? 'border-blue-500 bg-slate-800/90 shadow-xl ring-1 shadow-blue-500/10 ring-blue-500/30'
+                                    : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900/80'
                             }`}
                         >
-                            <div className="flex justify-between items-start mb-4">
-                                <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition ${
-                                    paymentMode === 'full' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
-                                }`}>
+                            <div className="mb-4 flex items-start justify-between">
+                                <div
+                                    className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
+                                        paymentMode === 'full' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
+                                    }`}
+                                >
                                     {paymentMode === 'full' && <div className="h-2 w-2 rounded-full bg-white" />}
                                 </div>
-                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                                <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-400">
                                     Recommended
                                 </span>
                             </div>
                             <div>
                                 <h3 className="text-lg font-black text-white">Pay Full Amount</h3>
-                                <p className="text-xs font-medium text-slate-400 mt-1 leading-relaxed">
+                                <p className="mt-1 text-xs leading-relaxed font-medium text-slate-400">
                                     Settle the entire outstanding balance today and clear this bill completely.
                                 </p>
                             </div>
@@ -265,25 +268,27 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                                     setCustomAmount(Math.round(amountToPay / 2).toString());
                                 }
                             }}
-                            className={`cursor-pointer rounded-3xl p-6 transition-all duration-200 border-2 relative flex flex-col justify-between ${
+                            className={`relative flex cursor-pointer flex-col justify-between rounded-3xl border-2 p-6 transition-all duration-200 ${
                                 paymentMode === 'partial'
-                                    ? 'bg-slate-800/90 border-blue-500 shadow-xl shadow-blue-500/10 ring-1 ring-blue-500/30'
-                                    : 'bg-slate-900/50 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80'
+                                    ? 'border-blue-500 bg-slate-800/90 shadow-xl ring-1 shadow-blue-500/10 ring-blue-500/30'
+                                    : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900/80'
                             }`}
                         >
-                            <div className="flex justify-between items-start mb-4">
-                                <div className={`h-6 w-6 rounded-full border-2 flex items-center justify-center transition ${
-                                    paymentMode === 'partial' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
-                                }`}>
+                            <div className="mb-4 flex items-start justify-between">
+                                <div
+                                    className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
+                                        paymentMode === 'partial' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
+                                    }`}
+                                >
                                     {paymentMode === 'partial' && <div className="h-2 w-2 rounded-full bg-white" />}
                                 </div>
-                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-300">
                                     Flexible
                                 </span>
                             </div>
                             <div>
                                 <h3 className="text-lg font-black text-white">Pay Part of Bill</h3>
-                                <p className="text-xs font-medium text-slate-400 mt-1 leading-relaxed">
+                                <p className="mt-1 text-xs leading-relaxed font-medium text-slate-400">
                                     Pay any amount today. Remaining balance stays open for future settlement.
                                 </p>
                             </div>
@@ -299,16 +304,12 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
                             transition={{ duration: 0.25, ease: 'easeInOut' }}
-                            className="overflow-hidden space-y-4 pt-2"
+                            className="space-y-4 overflow-hidden pt-2"
                         >
-                            <div className="rounded-3xl bg-slate-900/80 p-6 sm:p-8 border border-blue-500/30 space-y-6">
-                                <div className="flex justify-between items-center">
-                                    <label className="text-xs font-black tracking-widest text-blue-400 uppercase">
-                                        Amount Paying Today
-                                    </label>
-                                    <span className="text-xs font-bold text-slate-400">
-                                        Max: {formatCurrency(amountToPay)}
-                                    </span>
+                            <div className="space-y-6 rounded-3xl border border-blue-500/30 bg-slate-900/80 p-6 sm:p-8">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-black tracking-widest text-blue-400 uppercase">Amount Paying Today</label>
+                                    <span className="text-xs font-bold text-slate-400">Max: {formatCurrency(amountToPay)}</span>
                                 </div>
 
                                 {/* Prominent Monetary Input with Formatted Commas & Dynamic Font Scaling */}
@@ -333,32 +334,30 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                                                 setCustomAmount(num.toString());
                                             }
                                         }}
-                                        className={`w-full rounded-2xl border-2 border-slate-700 bg-slate-950 py-5 pl-14 pr-24 font-black text-white shadow-inner focus:border-blue-500 focus:outline-none transition ${
-                                            (customAmount?.length || 0) > 9
-                                                ? 'text-xl'
-                                                : (customAmount?.length || 0) > 6
-                                                ? 'text-2xl'
-                                                : 'text-3xl'
+                                        className={`w-full rounded-2xl border-2 border-slate-700 bg-slate-950 py-5 pr-24 pl-14 font-black text-white shadow-inner transition focus:border-blue-500 focus:outline-none ${
+                                            (customAmount?.length || 0) > 9 ? 'text-xl' : (customAmount?.length || 0) > 6 ? 'text-2xl' : 'text-3xl'
                                         }`}
                                     />
                                     <button
                                         type="button"
                                         onClick={() => setCustomAmount(amountToPay.toString())}
-                                        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 px-3 py-2 text-xs font-black text-blue-400 border border-blue-500/30 transition"
+                                        className="absolute top-1/2 right-4 -translate-y-1/2 rounded-xl border border-blue-500/30 bg-blue-600/20 px-3 py-2 text-xs font-black text-blue-400 transition hover:bg-blue-600/30"
                                     >
                                         SET MAX
                                     </button>
                                 </div>
 
                                 {/* Dynamic Realtime Breakdown */}
-                                <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs">
+                                <div className="grid grid-cols-2 gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-xs">
                                     <div>
-                                        <span className="text-slate-500 block font-medium">Paying Today</span>
-                                        <span className="text-base font-bold text-white mt-0.5 block">{formatCurrency(effectivePaymentAmount)}</span>
+                                        <span className="block font-medium text-slate-500">Paying Today</span>
+                                        <span className="mt-0.5 block text-base font-bold text-white">{formatCurrency(effectivePaymentAmount)}</span>
                                     </div>
                                     <div className="border-l border-slate-800 pl-4">
-                                        <span className="text-slate-500 block font-medium">Remaining Balance</span>
-                                        <span className="text-base font-bold text-amber-400 mt-0.5 block">{formatCurrency(remainingAfterPayment)}</span>
+                                        <span className="block font-medium text-slate-500">Remaining Balance</span>
+                                        <span className="mt-0.5 block text-base font-bold text-amber-400">
+                                            {formatCurrency(remainingAfterPayment)}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -367,56 +366,56 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                 </AnimatePresence>
 
                 {/* 4. LIVE PAYMENT SUMMARY (Clean Hierarchy, No Box Crowding) */}
-                <section className="space-y-4 pt-4 border-t border-slate-800">
-                    <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase px-1">Payment Summary</h2>
+                <section className="space-y-4 border-t border-slate-800 pt-4">
+                    <h2 className="px-1 text-xs font-black tracking-widest text-slate-400 uppercase">Payment Summary</h2>
 
                     <div className="space-y-3 text-sm">
-                        <div className="flex justify-between items-center text-slate-400 font-medium">
+                        <div className="flex items-center justify-between font-medium text-slate-400">
                             <span>Outstanding Balance</span>
-                            <span className="text-slate-200 font-bold">{formatCurrency(amountToPay)}</span>
+                            <span className="font-bold text-slate-200">{formatCurrency(amountToPay)}</span>
                         </div>
 
                         {paymentMode === 'partial' && (
                             <>
-                                <div className="flex justify-between items-center text-slate-400 font-medium">
+                                <div className="flex items-center justify-between font-medium text-slate-400">
                                     <span>Paying Today</span>
-                                    <span className="text-blue-400 font-bold">{formatCurrency(effectivePaymentAmount)}</span>
+                                    <span className="font-bold text-blue-400">{formatCurrency(effectivePaymentAmount)}</span>
                                 </div>
-                                <div className="flex justify-between items-center text-slate-400 font-medium">
+                                <div className="flex items-center justify-between font-medium text-slate-400">
                                     <span>Remaining After Payment</span>
-                                    <span className="text-amber-400 font-bold">{formatCurrency(remainingAfterPayment)}</span>
+                                    <span className="font-bold text-amber-400">{formatCurrency(remainingAfterPayment)}</span>
                                 </div>
                             </>
                         )}
 
-                        <div className="flex justify-between items-center text-slate-400 font-medium">
+                        <div className="flex items-center justify-between font-medium text-slate-400">
                             <span>Processing Fee (0.5%)</span>
                             {hasSubscription ? (
                                 <div className="flex items-center gap-2">
-                                    <span className="text-slate-500 line-through font-bold">{formatCurrency(effectivePaymentAmount * 0.005)}</span>
-                                    <span className="text-emerald-400 text-xs font-bold">✓ Waived for Premium</span>
+                                    <span className="font-bold text-slate-500 line-through">{formatCurrency(effectivePaymentAmount * 0.005)}</span>
+                                    <span className="text-xs font-bold text-emerald-400">✓ Waived for Premium</span>
                                 </div>
                             ) : (
-                                <span className="text-slate-200 font-bold">{formatCurrency(kontrolFee)}</span>
+                                <span className="font-bold text-slate-200">{formatCurrency(kontrolFee)}</span>
                             )}
                         </div>
 
                         {/* Total Highlight */}
-                        <div className="pt-4 border-t border-slate-800 flex justify-between items-baseline">
+                        <div className="flex items-baseline justify-between border-t border-slate-800 pt-4">
                             <span className="text-base font-black text-white">Total Charge Today</span>
-                            <span className="text-4xl font-black text-white tracking-tight">{formatCurrency(totalChargeToday)}</span>
+                            <span className="text-4xl font-black tracking-tight text-white">{formatCurrency(totalChargeToday)}</span>
                         </div>
                     </div>
                 </section>
 
                 {/* 5. BENEFITS (Lightweight Success Banner / Fee Note) */}
                 {hasSubscription ? (
-                    <div className="flex items-center gap-2.5 text-xs text-emerald-400 font-semibold px-1">
+                    <div className="flex items-center gap-2.5 px-1 text-xs font-semibold text-emerald-400">
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        <span>✓ Premium Member — 0.5% processing fee has been waived on this payment.</span>
+                        <span>✓ Premium Member - 0.5% processing fee has been waived on this payment.</span>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-2.5 text-xs text-slate-400 font-medium px-1">
+                    <div className="flex items-center gap-2.5 px-1 text-xs font-medium text-slate-400">
                         <AlertCircle className="h-4 w-4 shrink-0 text-slate-500" />
                         <span>A 0.5% processing fee applies. Free for active Kontrol premium subscribers.</span>
                     </div>
@@ -446,14 +445,14 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                         </div>
                     )}
 
-                    <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-500 pt-2">
+                    <div className="flex items-center justify-center gap-2 pt-2 text-xs font-medium text-slate-500">
                         <ShieldCheck className="h-4 w-4 text-emerald-500" />
                         <span>Encrypted SSL Gateway via Paystack</span>
                     </div>
                 </section>
             </main>
 
-            <footer className="px-6 py-6 text-center text-xs text-slate-600 font-medium border-t border-slate-800/50">
+            <footer className="border-t border-slate-800/50 px-6 py-6 text-center text-xs font-medium text-slate-600">
                 Kontrol Compliance & Automated Billing System
             </footer>
         </div>
