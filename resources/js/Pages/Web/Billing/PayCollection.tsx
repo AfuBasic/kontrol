@@ -50,8 +50,12 @@ declare global {
 export default function PayCollection({ assignment, paystackKey, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [paymentMode, setPaymentMode] = useState<'full' | 'partial'>('full');
+    const [customAmount, setCustomAmount] = useState<string>('');
 
     const amountToPay = Math.max(0, assignment.amount_due - assignment.amount_paid);
+    const parsedCustom = parseFloat(customAmount) || 0;
+    const effectivePaymentAmount = paymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -72,6 +76,9 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
                 },
+                body: JSON.stringify({
+                    amount: Math.round(effectivePaymentAmount * 100), // send in kobo
+                }),
             });
 
             const data = await response.json();
@@ -218,11 +225,59 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                     </div>
 
                     <div className="space-y-6">
+                        {/* Payment Type Selector: Full or Partial */}
+                        <div className="rounded-3xl bg-slate-50 p-6 ring-1 ring-slate-100 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-black tracking-widest text-slate-400 uppercase">Payment Mode</span>
+                                <div className="flex bg-slate-200 p-1 rounded-2xl">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPaymentMode('full');
+                                            setCustomAmount('');
+                                        }}
+                                        className={`px-3 py-1 text-xs font-black rounded-xl transition ${paymentMode === 'full' ? 'bg-white text-slate-900 shadow' : 'text-slate-600'}`}
+                                    >
+                                        Full Payment
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setPaymentMode('partial')}
+                                        className={`px-3 py-1 text-xs font-black rounded-xl transition ${paymentMode === 'partial' ? 'bg-white font-bold text-blue-600 shadow' : 'text-slate-600'}`}
+                                    >
+                                        Pay in Parts
+                                    </button>
+                                </div>
+                            </div>
+
+                            {paymentMode === 'partial' && (
+                                <div className="space-y-2 pt-2 border-t border-slate-200">
+                                    <label className="block text-xs font-bold text-slate-600">Enter Partial Amount (NGN)</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">₦</span>
+                                        <input
+                                            type="number"
+                                            value={customAmount}
+                                            onChange={(e) => setCustomAmount(e.target.value)}
+                                            placeholder={`Min: ₦1, Max: ${formatCurrency(amountToPay)}`}
+                                            className="w-full rounded-2xl border-slate-200 pl-9 pr-4 py-3 text-sm font-bold text-slate-900 focus:border-blue-500 focus:ring-blue-500"
+                                        />
+                                    </div>
+                                    <p className="text-[11px] text-slate-500">You can pay little by little. Any remaining balance will stay open.</p>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="rounded-3xl bg-slate-50 p-8 ring-1 ring-slate-100">
                             <div className="mb-6 space-y-4 border-b border-slate-200 pb-6">
                                 <div className="flex items-center justify-between text-sm">
-                                    <span className="font-bold text-slate-500">Base Due</span>
+                                    <span className="font-bold text-slate-500">Total Outstanding</span>
                                     <span className="font-black text-slate-900">{formatCurrency(amountToPay)}</span>
+                                </div>
+
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="font-bold text-slate-500">Selected Amount</span>
+                                    <span className="font-black text-blue-600">{formatCurrency(effectivePaymentAmount)}</span>
                                 </div>
 
                                 <div className="flex items-center justify-between text-sm">
@@ -230,26 +285,21 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                                     {hasSubscription ? (
                                         <div className="flex items-center gap-2">
                                             <span className="font-black text-emerald-600 line-through decoration-emerald-500/30">
-                                                {formatCurrency(amountToPay * 0.005)}
+                                                {formatCurrency(effectivePaymentAmount * 0.005)}
                                             </span>
                                             <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">
                                                 WAIVED
                                             </span>
                                         </div>
                                     ) : (
-                                        <span className="font-black text-slate-900">{formatCurrency(feeBreakdown.kontrol_fee)}</span>
+                                        <span className="font-black text-slate-900">{formatCurrency(effectivePaymentAmount * 0.005)}</span>
                                     )}
-                                </div>
-
-                                <div className="flex items-center justify-between text-sm">
-                                    <span className="font-bold text-slate-500">Gateway Fee (Paystack)</span>
-                                    <span className="font-black text-slate-900">{formatCurrency(feeBreakdown.paystack_fee)}</span>
                                 </div>
                             </div>
 
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-bold tracking-widest text-slate-400 uppercase">Total to pay</span>
-                                <span className="text-4xl font-black tracking-tight text-slate-900">{formatCurrency(feeBreakdown.total_amount)}</span>
+                                <span className="text-sm font-bold tracking-widest text-slate-400 uppercase">Total to pay now</span>
+                                <span className="text-4xl font-black tracking-tight text-slate-900">{formatCurrency(effectivePaymentAmount + (hasSubscription ? 0 : effectivePaymentAmount * 0.005))}</span>
                             </div>
                         </div>
 
