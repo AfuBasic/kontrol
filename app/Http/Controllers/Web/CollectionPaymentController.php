@@ -58,14 +58,16 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        // Validate custom partial amount (frontend sends amount in Kobo e.g. 10000000)
+        // Collection amounts are stored in NGN (same unit as admin/PO create forms).
+        // Frontend sends the amount to charge in NGN. Legacy clients may still send kobo.
+        $paymentAmountNaira = (int) $remainingBalance;
         $rawAmount = $request->input('amount');
-        $paymentAmountKobo = (int) $remainingBalance;
 
-        if (! empty($rawAmount)) {
-            $parsedAmount = (int) $rawAmount;
+        if ($rawAmount !== null && $rawAmount !== '') {
+            $parsedAmount = (float) $rawAmount;
             if ($parsedAmount > 0) {
-                $paymentAmountKobo = min((int) $remainingBalance, $parsedAmount);
+                $parsedNaira = $this->normalizePaymentAmountToNaira($parsedAmount, (float) $remainingBalance);
+                $paymentAmountNaira = (int) min($remainingBalance, max(1, round($parsedNaira)));
             }
         }
 
@@ -156,6 +158,7 @@ class CollectionPaymentController extends Controller
         }
 
         // 4. Generate a NEW UNIQUE payment record for this attempt
+        // Payment.amount is stored in NGN (same unit as amount_due / amount_paid).
         $totalAttempts = Payment::where('collection_assignment_id', $assignment->id)->count();
         $suffix = '-a'.($totalAttempts + 1).'-'.Str::random(4);
         $reference = 'COLL-'.$assignment->ulid.$suffix;
@@ -164,16 +167,22 @@ class CollectionPaymentController extends Controller
             'user_id' => $user->id,
             'estate_id' => $assignment->estate_id,
             'collection_assignment_id' => $assignment->id,
-            'amount' => $paymentAmountKobo,
+            'amount' => $paymentAmountNaira,
             'reference' => $reference,
             'status' => 'initiated',
         ]);
 
-        // 5. Calculate Exact Fees for Exact Split ($payment->amount is in KOBO, convert to NGN for fee calculation)
-        $baseAmountNaira = (float) ($payment->amount / 100);
+        // 5. Calculate fees in NGN, convert to kobo only for Paystack Inline
+        $baseAmountNaira = (float) $payment->amount;
         $hasActiveSubscription = $this->hasActiveSubscription($user->id);
-
         $fees = $this->calculateFees($baseAmountNaira, $hasActiveSubscription);
+        $amountKobo = (int) round($fees['total_amount'] * 100);
+
+        if ($amountKobo < 100) {
+            return response()->json([
+                'message' => 'Payment amount is too small to process. Minimum charge is ₦1.00.',
+            ], 400);
+        }
 
         $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : ($assignment->user?->email ?? 'billing@kontrol.ng');
 
@@ -181,14 +190,14 @@ class CollectionPaymentController extends Controller
             'already_paid' => false,
             'reference' => $payment->reference,
             'email' => $payerEmail,
-            'amount' => $fees['total_amount'], // Pass total charged amount in NGN float
-            'amount_kobo' => (int) round($fees['total_amount'] * 100), // Exact integer in kobo for Paystack setup
+            'amount' => $fees['total_amount'], // Total charged in NGN
+            'amount_kobo' => $amountKobo, // Integer kobo for PaystackPop.setup({ amount })
             'base_amount' => $baseAmountNaira,
             'kontrol_fee' => $fees['kontrol_fee'],
             'paystack_fee' => $fees['paystack_fee'],
             'subaccount' => $subaccount,
             'bearer' => 'account', // Kontrol bears the Paystack charge
-            'transaction_charge' => $fees['transaction_charge'], // Exact flat amount for Kontrol to keep
+            'transaction_charge' => $fees['transaction_charge'], // Integer kobo kept by main account
         ]);
     }
 
@@ -554,23 +563,32 @@ class CollectionPaymentController extends Controller
             ],
         ]);
 
-        // 3. Calculate Exact Fees for Exact Split
-        $baseAmount = $payment->amount;
+        // 3. Calculate fees in NGN (payment.amount is NGN), convert to kobo for Paystack
+        $baseAmount = (float) $payment->amount;
         $hasActiveSubscription = $this->hasActiveSubscription($user->id);
-
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
+        $amountKobo = (int) round($fees['total_amount'] * 100);
+
+        if ($amountKobo < 100) {
+            return response()->json([
+                'message' => 'Payment amount is too small to process. Minimum charge is ₦1.00.',
+            ], 400);
+        }
+
+        $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : 'billing@kontrol.ng';
 
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
-            'email' => $user->email,
-            'amount' => $fees['total_amount'], // Pass the total charged amount to frontend
+            'email' => $payerEmail,
+            'amount' => $fees['total_amount'],
+            'amount_kobo' => $amountKobo,
             'base_amount' => $baseAmount,
             'kontrol_fee' => $fees['kontrol_fee'],
             'paystack_fee' => $fees['paystack_fee'],
             'subaccount' => $firstSubaccount,
-            'bearer' => 'account', // Kontrol bears the Paystack charge
-            'transaction_charge' => $fees['transaction_charge'], // Exact flat amount for Kontrol to keep
+            'bearer' => 'account',
+            'transaction_charge' => $fees['transaction_charge'],
         ]);
     }
 
@@ -607,7 +625,30 @@ class CollectionPaymentController extends Controller
     }
 
     /**
+     * Normalize a client-supplied amount to NGN.
+     *
+     * Preferred: NGN (e.g. 1000). Legacy clients may send kobo (e.g. 100000 for ₦1,000).
+     */
+    private function normalizePaymentAmountToNaira(float $rawAmount, float $remainingBalanceNaira): float
+    {
+        if ($rawAmount <= $remainingBalanceNaira) {
+            return $rawAmount;
+        }
+
+        $asNairaFromKobo = $rawAmount / 100;
+
+        // Treat as kobo when converting yields a plausible NGN amount within the balance.
+        if ($asNairaFromKobo > 0 && $asNairaFromKobo <= $remainingBalanceNaira) {
+            return $asNairaFromKobo;
+        }
+
+        return $remainingBalanceNaira;
+    }
+
+    /**
      * Calculate exact Kontrol and Paystack fees.
+     *
+     * @return array{kontrol_fee: float, paystack_fee: float, total_amount: float, transaction_charge: int}
      */
     private function calculateFees(float $baseAmount, bool $hasActiveSubscription): array
     {
