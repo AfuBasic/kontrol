@@ -16,10 +16,20 @@ interface TimelineEvent {
     created_at: string;
 }
 
+interface Payment {
+    id: number;
+    reference: string;
+    amount: number;
+    status: string;
+    paid_at?: string;
+    created_at: string;
+}
+
 interface Violation {
     id: number;
     violation_type: string;
     status: string;
+    original_amount: number;
     outstanding_amount: number;
     total_penalties_applied: number;
     current_stage?: {
@@ -27,6 +37,12 @@ interface Violation {
     };
     active_restrictions: Restriction[];
     timeline: TimelineEvent[];
+    violatable?: {
+        id: number;
+        amount_due: number;
+        amount_paid: number;
+        payments?: Payment[];
+    };
 }
 
 interface Props {
@@ -97,6 +113,43 @@ export default function ResidentComplianceIndex({ violations, activeRestrictions
                                     <span className="text-md font-bold text-slate-900">₦{Number(violation.outstanding_amount).toLocaleString()}</span>
                                 </div>
                             </div>
+
+                            {/* Partial Payment Pattern Breakdown */}
+                            {violation.violatable?.payments && violation.violatable.payments.length > 0 && (
+                                <div className="p-4 bg-slate-50/70 border-b border-slate-100 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-wider">
+                                            Payment Pattern & Partial Receipts ({violation.violatable.payments.length})
+                                        </h4>
+                                        <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                                            Paid ₦{(Number(violation.violatable.amount_paid) / 100).toLocaleString()} of ₦{(Number(violation.violatable.amount_due) / 100).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {violation.violatable.payments.map((p, idx) => (
+                                            <div key={p.id} className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200/80 text-xs">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-7 w-7 rounded-lg bg-emerald-50 text-emerald-600 font-black flex items-center justify-center text-[10px]">
+                                                        #{violation.violatable!.payments!.length - idx}
+                                                    </div>
+                                                    <div>
+                                                        <span className="font-bold text-slate-800 block">Partial Installment Received</span>
+                                                        <span className="font-mono text-[10px] text-slate-400">{p.reference}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="font-black text-emerald-600 block text-sm">
+                                                        +₦{(Number(p.amount) / 100).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-[10px] text-slate-400 block">
+                                                        {new Date(p.paid_at || p.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Timeline */}
                             <div className="p-4 space-y-3">
