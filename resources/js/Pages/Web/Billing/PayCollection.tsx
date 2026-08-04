@@ -109,7 +109,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
             const handler = window.PaystackPop.setup({
                 key: paystackKey,
                 email: email,
-                amount: amount * 100, // Paystack requires amount in kobo
+                amount: Math.round(amount * 100), // data.amount is returned in NGN from backend, convert to kobo for Paystack
                 ref: reference,
                 subaccount: cleanSubaccount,
                 channels: ['bank_transfer'],

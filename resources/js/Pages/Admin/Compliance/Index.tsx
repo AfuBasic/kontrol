@@ -147,7 +147,7 @@ export default function AdminComplianceIndex({ violations, metrics }: Props) {
                                                     <div className="flex justify-between items-center text-slate-500 font-semibold">
                                                         <span>Partial Payment History ({violation.violatable.payments.length} installments)</span>
                                                         <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">
-                                                            Paid ₦{(Number(violation.violatable.amount_paid) / 100).toLocaleString()} of ₦{(Number(violation.violatable.amount_due) / 100).toLocaleString()}
+                                                            Paid ₦{Number(violation.violatable.amount_paid).toLocaleString()} of ₦{Number(violation.violatable.amount_due).toLocaleString()}
                                                         </span>
                                                     </div>
                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -158,7 +158,7 @@ export default function AdminComplianceIndex({ violations, metrics }: Props) {
                                                                     <span className="font-mono text-[9px] text-slate-400">{p.reference}</span>
                                                                 </div>
                                                                 <div className="text-right">
-                                                                    <span className="font-bold text-emerald-600 block">+₦{(Number(p.amount) / 100).toLocaleString()}</span>
+                                                                    <span className="font-bold text-emerald-600 block">+₦{Number(p.amount).toLocaleString()}</span>
                                                                     <span className="text-[9px] text-slate-400 block">{new Date(p.paid_at || p.created_at).toLocaleDateString()}</span>
                                                                 </div>
                                                             </div>

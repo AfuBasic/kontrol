@@ -122,7 +122,7 @@ export default function ResidentComplianceIndex({ violations, activeRestrictions
                                             Payment Pattern & Partial Receipts ({violation.violatable.payments.length})
                                         </h4>
                                         <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                                            Paid ₦{(Number(violation.violatable.amount_paid) / 100).toLocaleString()} of ₦{(Number(violation.violatable.amount_due) / 100).toLocaleString()}
+                                            Paid ₦{Number(violation.violatable.amount_paid).toLocaleString()} of ₦{Number(violation.violatable.amount_due).toLocaleString()}
                                         </span>
                                     </div>
                                     <div className="space-y-2">
@@ -139,7 +139,7 @@ export default function ResidentComplianceIndex({ violations, activeRestrictions
                                                 </div>
                                                 <div className="text-right">
                                                     <span className="font-black text-emerald-600 block text-sm">
-                                                        +₦{(Number(p.amount) / 100).toLocaleString()}
+                                                        +₦{Number(p.amount).toLocaleString()}
                                                     </span>
                                                     <span className="text-[10px] text-slate-400 block">
                                                         {new Date(p.paid_at || p.created_at).toLocaleDateString()}
