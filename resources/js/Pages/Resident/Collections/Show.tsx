@@ -104,7 +104,7 @@ type Journey = {
 
 type Props = {
     assignment: Assignment;
-    journey: Journey;
+    journey?: Journey | null;
 };
 
 const formatCurrency = (amount: number) =>
@@ -127,6 +127,145 @@ function statusChipClasses(statusLabel: string): string {
         default:
             return 'bg-amber-50 text-amber-700 ring-amber-100';
     }
+}
+
+/**
+ * Client-side fallback when the journey prop is missing (stale bundle, partial
+ * reload, or older server response). Keeps the page from crashing.
+ */
+function buildFallbackJourney(assignment: Assignment): Journey {
+    const originalAmount = Number(assignment.amount_due) || 0;
+    const totalPaid = Number(assignment.amount_paid) || 0;
+    const remainingBalance = Math.max(0, originalAmount - totalPaid);
+    const percentagePaid =
+        originalAmount > 0 ? Math.round(Math.min(100, (totalPaid / originalAmount) * 100) * 10) / 10 : totalPaid > 0 ? 100 : 0;
+
+    const payments = [...(assignment.payments ?? [])].sort((a, b) => {
+        const aTime = a.paid_at ? new Date(a.paid_at).getTime() : 0;
+        const bTime = b.paid_at ? new Date(b.paid_at).getTime() : 0;
+        return aTime - bTime;
+    });
+
+    let runningPaid = 0;
+    const paymentActivity: PaymentActivityItem[] = payments.map((payment, index) => {
+        runningPaid += Number(payment.amount) || 0;
+        const remainingAfter = Math.max(0, originalAmount - runningPaid);
+
+        return {
+            id: payment.id,
+            sequence: index + 1,
+            type: remainingAfter <= 0 ? 'full_payment' : 'partial_payment',
+            label: `Payment #${index + 1}`,
+            status: 'completed',
+            amount: Number(payment.amount) || 0,
+            remaining_balance_after: remainingAfter,
+            provider: payment.provider || 'paystack',
+            reference: payment.reference,
+            paid_at: payment.paid_at,
+            paid_at_label: payment.paid_at
+                ? new Date(payment.paid_at).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                  })
+                : null,
+        };
+    });
+
+    const statusLabel =
+        assignment.status === 'paid' || remainingBalance <= 0
+            ? 'Paid'
+            : assignment.status === 'partial' || totalPaid > 0
+              ? 'Partially Paid'
+              : assignment.status === 'overdue'
+                ? 'Overdue'
+                : assignment.status === 'cancelled'
+                  ? 'Cancelled'
+                  : 'Outstanding';
+
+    const formattedRemaining = formatCurrency(remainingBalance);
+    const ctaLabel =
+        remainingBalance <= 0
+            ? null
+            : totalPaid > 0
+              ? `Pay Remaining ${formattedRemaining}`
+              : `Pay ${formattedRemaining}`;
+
+    return {
+        status_label: statusLabel,
+        payment_count: paymentActivity.length,
+        total_paid: totalPaid,
+        remaining_balance: remainingBalance,
+        percentage_paid: percentagePaid,
+        completion_date: assignment.paid_at,
+        total_transactions: paymentActivity.length,
+        original_amount: originalAmount,
+        late_fees: Number(assignment.collection?.late_fee) || 0,
+        discounts: 0,
+        total_outstanding: remainingBalance,
+        contextual_insight:
+            remainingBalance <= 0
+                ? 'This bill has been completely paid.'
+                : paymentActivity.length === 0
+                  ? 'No payments have been made yet.'
+                  : percentagePaid >= 50
+                    ? `You've settled ${Math.round(percentagePaid)}% of this bill.`
+                    : `You've completed ${paymentActivity.length} payment${paymentActivity.length === 1 ? '' : 's'}.`,
+        cta_label: ctaLabel,
+        billing_cycle_label: assignment.period || 'One-Time',
+        payment_activity: paymentActivity,
+        timeline: [
+            {
+                id: 'invoice-created',
+                type: 'invoice_created',
+                label: 'Invoice Created',
+                description: assignment.collection?.name ?? null,
+                amount: originalAmount,
+                remaining_balance_after: originalAmount,
+                occurred_at: assignment.created_at ?? null,
+                occurred_at_label: null,
+                state: 'complete',
+            },
+            ...paymentActivity.map((activity) => ({
+                id: `payment-${activity.id}`,
+                type: activity.type,
+                label: 'Payment Received',
+                description: activity.label,
+                amount: activity.amount,
+                remaining_balance_after: activity.remaining_balance_after,
+                occurred_at: activity.paid_at,
+                occurred_at_label: activity.paid_at_label,
+                state: 'complete' as const,
+                meta: {
+                    provider: activity.provider,
+                    reference: activity.reference,
+                },
+            })),
+            remainingBalance > 0
+                ? {
+                      id: 'balance-outstanding',
+                      type: 'balance_outstanding',
+                      label: 'Balance Outstanding',
+                      description: null,
+                      amount: remainingBalance,
+                      remaining_balance_after: remainingBalance,
+                      occurred_at: null,
+                      occurred_at_label: null,
+                      state: 'current' as const,
+                  }
+                : {
+                      id: 'fully-settled',
+                      type: 'fully_settled',
+                      label: 'Fully Settled',
+                      description: 'This bill has been completely paid.',
+                      amount: originalAmount,
+                      remaining_balance_after: 0,
+                      occurred_at: assignment.paid_at,
+                      occurred_at_label: null,
+                      state: 'complete' as const,
+                  },
+        ],
+    };
 }
 
 function AnimatedNumber({ value }: { value: number }) {
@@ -212,12 +351,24 @@ function PaymentActivityCard({ payment, defaultOpen = false }: { payment: Paymen
     );
 }
 
-export default function CollectionShow({ assignment, journey }: Props) {
+export default function CollectionShow({ assignment, journey: journeyProp }: Props) {
     const { app_url: appUrl } = usePage<SharedData>().props;
     const [showTimeline, setShowTimeline] = useState(true);
 
-    const percentage = Math.min(100, Math.max(0, journey.percentage_paid));
-    const isSettled = journey.remaining_balance <= 0 || assignment.status === 'paid';
+    const journey = useMemo<Journey>(() => {
+        if (journeyProp && typeof journeyProp.percentage_paid === 'number') {
+            return {
+                ...journeyProp,
+                payment_activity: Array.isArray(journeyProp.payment_activity) ? journeyProp.payment_activity : [],
+                timeline: Array.isArray(journeyProp.timeline) ? journeyProp.timeline : [],
+            };
+        }
+
+        return buildFallbackJourney(assignment);
+    }, [assignment, journeyProp]);
+
+    const percentage = Math.min(100, Math.max(0, Number(journey.percentage_paid) || 0));
+    const isSettled = (Number(journey.remaining_balance) || 0) <= 0 || assignment.status === 'paid';
 
     const rawPaymentUrl = CollectionPaymentController.show.url(assignment.ulid);
     const paymentUrl = rawPaymentUrl.startsWith('http') ? rawPaymentUrl : new URL(rawPaymentUrl, appUrl).href;
