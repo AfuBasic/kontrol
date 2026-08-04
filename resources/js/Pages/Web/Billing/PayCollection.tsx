@@ -143,7 +143,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                 email: validEmail,
                 amount: amountKobo,
                 ref: data.reference,
-                channels: ['bank_transfer', 'card'],
+                channels: ['bank_transfer'],
                 onClose: () => {
                     setIsProcessing(false);
                 },

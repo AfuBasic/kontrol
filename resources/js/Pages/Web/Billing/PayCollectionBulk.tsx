@@ -134,7 +134,7 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                 email: validEmail,
                 amount: amountKobo,
                 ref: data.reference,
-                channels: ['bank_transfer', 'card'],
+                channels: ['bank_transfer'],
                 onClose: () => {
                     setIsProcessing(false);
                 },
