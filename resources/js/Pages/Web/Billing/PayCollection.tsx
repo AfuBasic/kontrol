@@ -309,31 +309,35 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                                     </span>
                                 </div>
 
-                                {/* Prominent Monetary Input */}
+                                {/* Prominent Monetary Input with Formatted Commas & Dynamic Font Scaling */}
                                 <div className="relative">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6">
                                         <span className="text-3xl font-black text-blue-400">₦</span>
                                     </div>
                                     <input
-                                        type="number"
-                                        min="1"
-                                        max={amountToPay}
-                                        value={customAmount}
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={customAmount ? Number(customAmount.replace(/,/g, '')).toLocaleString('en-US') : ''}
                                         onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (val === '') {
+                                            const rawVal = e.target.value.replace(/[^0-9]/g, '');
+                                            if (rawVal === '') {
                                                 setCustomAmount('');
                                                 return;
                                             }
-                                            const num = parseFloat(val);
+                                            const num = parseFloat(rawVal);
                                             if (num > amountToPay) {
                                                 setCustomAmount(amountToPay.toString());
                                             } else {
-                                                setCustomAmount(val);
+                                                setCustomAmount(num.toString());
                                             }
                                         }}
-                                        placeholder={`Up to ${formatCurrency(amountToPay)}`}
-                                        className="w-full rounded-2xl border-2 border-slate-700 bg-slate-950 py-5 pl-14 pr-24 text-3xl font-black text-white shadow-inner focus:border-blue-500 focus:outline-none transition"
+                                        className={`w-full rounded-2xl border-2 border-slate-700 bg-slate-950 py-5 pl-14 pr-24 font-black text-white shadow-inner focus:border-blue-500 focus:outline-none transition ${
+                                            (customAmount?.length || 0) > 9
+                                                ? 'text-xl'
+                                                : (customAmount?.length || 0) > 6
+                                                ? 'text-2xl'
+                                                : 'text-3xl'
+                                        }`}
                                     />
                                     <button
                                         type="button"
