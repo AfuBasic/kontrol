@@ -41,18 +41,31 @@ class CollectionPaymentController extends Controller
         ]);
     }
 
-    public function initiate(CollectionAssignment $assignment, PaystackService $paystackService): JsonResponse
+    public function initiate(CollectionAssignment $assignment, PaystackService $paystackService, Request $request): JsonResponse
     {
         setPermissionsTeamId($assignment->estate_id);
         $assignment->loadMissing(['user', 'collection.creator.profile']);
         $user = $assignment->user;
 
+        $remainingBalance = max(0, $assignment->amount_due - $assignment->amount_paid);
+
         // 1. If assignment is already paid, return early
-        if ($assignment->isPaid() || ($assignment->amount_due - $assignment->amount_paid) <= 0) {
+        if ($assignment->isPaid() || $remainingBalance <= 0) {
             return response()->json([
                 'already_paid' => true,
                 'message' => 'Payment already completed.',
             ]);
+        }
+
+        // Validate custom partial amount if provided by resident (in kobo or NGN)
+        $customAmount = $request->input('amount'); // optional custom amount in kobo (or NGN)
+        $paymentAmount = $remainingBalance;
+
+        if (! empty($customAmount)) {
+            $customAmountInt = (int) $customAmount;
+            if ($customAmountInt > 0 && $customAmountInt <= $remainingBalance) {
+                $paymentAmount = $customAmountInt;
+            }
         }
 
         // 2. Resolve subaccount & check configuration
@@ -141,7 +154,7 @@ class CollectionPaymentController extends Controller
             }
         }
 
-        // 4. Generate a NEW UNIQUE payment record for this attempt to prevent reference collisions on Paystack
+        // 4. Generate a NEW UNIQUE payment record for this attempt
         $totalAttempts = Payment::where('collection_assignment_id', $assignment->id)->count();
         $suffix = '-a'.($totalAttempts + 1).'-'.Str::random(4);
         $reference = 'COLL-'.$assignment->ulid.$suffix;
@@ -150,7 +163,7 @@ class CollectionPaymentController extends Controller
             'user_id' => $user->id,
             'estate_id' => $assignment->estate_id,
             'collection_assignment_id' => $assignment->id,
-            'amount' => $assignment->amount_due - $assignment->amount_paid,
+            'amount' => $paymentAmount,
             'reference' => $reference,
             'status' => 'initiated',
         ]);
@@ -215,8 +228,11 @@ class CollectionPaymentController extends Controller
                             'paid_at' => now(),
                             'external_reference' => $reference,
                         ]);
+                        app(\App\Services\Compliance\ComplianceEngine::class)->resolveCompliance($assignment, 'Paid in Full');
                     } else {
                         $assignment->update(['status' => 'partial']);
+                        // Re-evaluate compliance for partial payment balance reduction
+                        app(\App\Services\Compliance\ComplianceEngine::class)->raiseViolation($assignment);
                     }
 
                     $assignment->loadMissing('collection.creator');
