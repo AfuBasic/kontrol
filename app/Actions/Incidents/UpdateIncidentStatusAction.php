@@ -72,7 +72,7 @@ class UpdateIncidentStatusAction
             if (array_key_exists('priority', $data)) {
                 if ($incident->priority?->value !== $data['priority']) {
                     $incident->priority = $data['priority'];
-                    $loggedActions[] = "updated incident priority to: " . ucfirst($data['priority']);
+                    $loggedActions[] = 'updated incident priority to: '.ucfirst($data['priority']);
                 }
             }
 
@@ -80,7 +80,7 @@ class UpdateIncidentStatusAction
             if (array_key_exists('category', $data)) {
                 if ($incident->category?->value !== $data['category']) {
                     $incident->category = $data['category'];
-                    $loggedActions[] = "updated incident category to: " . str_replace('_', ' ', $data['category']);
+                    $loggedActions[] = 'updated incident category to: '.str_replace('_', ' ', $data['category']);
                 }
             }
 
