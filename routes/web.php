@@ -97,6 +97,7 @@ Route::post('/webhooks/paystack', PaystackWebhookController::class)->name('webho
 | Web-based Collection Payments
 |--------------------------------------------------------------------------
 */
+Route::get('/billing/collection/status/{reference}', [CollectionPaymentController::class, 'status'])->name('web.billing.collection.status');
 Route::get('/billing/collection/{assignment}', [CollectionPaymentController::class, 'show'])->name('web.billing.collection.show');
 Route::get('/billing/collections/bulk', [CollectionPaymentController::class, 'showBulk'])->name('web.billing.collections.show_bulk');
 Route::post('/billing/collection/{assignment}/initiate', [CollectionPaymentController::class, 'initiate'])->name('web.billing.collection.initiate');
