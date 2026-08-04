@@ -17,10 +17,15 @@ class SendCollectionRemindersJob implements ShouldQueue
 
     public function handle(ComplianceEngine $engine): void
     {
-        // Find all unpaid assignments on active collections
+        // Find all unpaid assignments on active estate-level collections (excluding Property Owner collections)
         $assignments = CollectionAssignment::query()
             ->whereIn('status', ['pending', 'grace', 'overdue', 'partial'])
-            ->whereHas('collection', fn ($q) => $q->where('status', 'active'))
+            ->whereHas('collection', function ($q) {
+                $q->where('status', 'active')
+                    ->whereDoesntHave('creator.roles', function ($sq) {
+                        $sq->where('name', 'property_owner');
+                    });
+            })
             ->get();
 
         $count = 0;
