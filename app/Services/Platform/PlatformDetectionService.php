@@ -12,13 +12,13 @@ class PlatformDetectionService
     public function detect(Request $request): PlatformContext
     {
         $ua = $request->header('User-Agent') ?? '';
-        
+
         $isNativeApp = $this->detectNativeApp($request, $ua);
         $isInstalledPwa = $this->detectInstalledPwa($request);
         $operatingSystem = $this->detectOperatingSystem($ua);
         $browserName = $this->detectBrowserName($ua);
         $deviceType = $this->detectDeviceType($ua);
-        
+
         $isDesktopBrowser = ($deviceType === 'desktop') && ! $isNativeApp && ! $isInstalledPwa;
         $isMobileBrowser = ($deviceType !== 'desktop') && ! $isNativeApp && ! $isInstalledPwa;
 
