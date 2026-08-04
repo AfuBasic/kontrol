@@ -758,20 +758,20 @@ class AccessCodeService
                 });
         });
 
-        if (!empty($filters['purpose'])) {
+        if (! empty($filters['purpose'])) {
             $query->where('purpose', $filters['purpose']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
-        if (!empty($filters['search'])) {
-            $term = '%' . $filters['search'] . '%';
+        if (! empty($filters['search'])) {
+            $term = '%'.$filters['search'].'%';
             $query->where(function ($q) use ($term) {
                 $q->where('visitor_name', 'like', $term)
                     ->orWhere('visitor_phone', 'like', $term)
@@ -804,7 +804,7 @@ class AccessCodeService
                     'host_name' => $code->user?->name ?? 'Resident',
                     'used_at' => $code->used_at ? $code->used_at->toIso8601String() : null,
                     'expires_at' => $code->expires_at ? $code->expires_at->toIso8601String() : null,
-                    'is_valid' => in_array($code->status instanceof AccessCodeStatus ? $code->status->value : (string) $code->status, ['active', 'scheduled']) && (!$code->expires_at || $code->expires_at->isFuture()),
+                    'is_valid' => in_array($code->status instanceof AccessCodeStatus ? $code->status->value : (string) $code->status, ['active', 'scheduled']) && (! $code->expires_at || $code->expires_at->isFuture()),
                 ],
             ];
         })->toArray();
