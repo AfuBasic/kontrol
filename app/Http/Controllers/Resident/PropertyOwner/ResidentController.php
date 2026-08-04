@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Resident\PropertyOwner;
 
+use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
@@ -12,6 +13,7 @@ use App\Models\UserProfile;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -155,7 +157,7 @@ class ResidentController extends Controller
                 function ($attribute, $value, $fail) use ($resident) {
                     if ($value !== $resident->email) {
                         $cacheKey = "email_changes_{$resident->id}";
-                        $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
+                        $changesCount = Cache::get($cacheKey, 0);
                         if ($changesCount >= 3) {
                             $fail('The email address can only be changed 3 times within a year.');
                         }
@@ -184,15 +186,15 @@ class ResidentController extends Controller
             $updateData['password'] = null;
 
             $cacheKey = "email_changes_{$resident->id}";
-            $changesCount = \Illuminate\Support\Facades\Cache::get($cacheKey, 0);
-            \Illuminate\Support\Facades\Cache::put($cacheKey, $changesCount + 1, now()->addYear());
+            $changesCount = Cache::get($cacheKey, 0);
+            Cache::put($cacheKey, $changesCount + 1, now()->addYear());
         }
 
         $resident->update($updateData);
 
         if ($emailChanged) {
             $estate = $this->estateContext->getEstate();
-            event(new \App\Events\Admin\ResidentCreated($resident, $estate, true));
+            event(new ResidentCreated($resident, $estate, true));
         }
 
         $resident->profile()->update([
@@ -231,7 +233,7 @@ class ResidentController extends Controller
     /**
      * Resend invitation for the managed resident.
      */
-    public function resendInvitation(User $resident, \App\Actions\Admin\ResendResidentInvitationAction $action): RedirectResponse
+    public function resendInvitation(User $resident, ResendResidentInvitationAction $action): RedirectResponse
     {
         $user = auth()->user();
         $estate = $this->estateContext->getEstate();
