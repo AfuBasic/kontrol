@@ -58,14 +58,22 @@ class CollectionPaymentController extends Controller
             ]);
         }
 
-        // Validate custom partial amount if provided by resident (in kobo or NGN)
-        $customAmount = $request->input('amount'); // optional custom amount in kobo (or NGN)
+        // Validate custom partial amount if provided by resident (frontend sends kobo, convert to NGN/kobo units)
+        $customAmount = $request->input('amount'); // amount in kobo or NGN
         $paymentAmount = $remainingBalance;
 
         if (! empty($customAmount)) {
             $customAmountInt = (int) $customAmount;
-            if ($customAmountInt > 0 && $customAmountInt <= $remainingBalance) {
-                $paymentAmount = $customAmountInt;
+            // If custom amount sent in kobo is larger than remaining balance in NGN, convert kobo to NGN (or vice-versa)
+            // Note: $remainingBalance in model is in kobo (e.g. 5000000 = 50,000 NGN)
+            if ($customAmountInt > 0 && $customAmountInt <= $assignment->amount_due) {
+                // If frontend sends kobo (e.g. 2000000 for NGN 20,000)
+                if ($customAmountInt <= $remainingBalance) {
+                    $paymentAmount = $customAmountInt;
+                } else {
+                    // Fallback if sent in NGN
+                    $paymentAmount = min($remainingBalance, $customAmountInt * 100);
+                }
             }
         }
 
