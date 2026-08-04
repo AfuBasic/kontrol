@@ -26,7 +26,17 @@ class ComplianceController extends Controller
         $estateId = $estate?->id;
 
         $violationsQuery = Violation::query()
-            ->with(['user', 'property', 'policy', 'currentStage', 'activeRestrictions', 'activePaymentPlan'])
+            ->with([
+                'user',
+                'property',
+                'policy',
+                'currentStage',
+                'activeRestrictions',
+                'activePaymentPlan',
+                'violatable.payments' => function ($query) {
+                    $query->where('status', 'success')->orderBy('created_at', 'desc');
+                },
+            ])
             ->when($estateId, fn ($q) => $q->where('estate_id', $estateId));
 
         // Filters
