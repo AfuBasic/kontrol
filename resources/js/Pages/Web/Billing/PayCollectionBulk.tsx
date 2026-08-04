@@ -50,6 +50,7 @@ declare global {
 export default function PayCollectionBulk({ assignments, paystackKey, totalAmount, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const firstAssignment = assignments[0];
     const ulidsString = assignments.map((a) => a.ulid).join(',');
@@ -64,21 +65,23 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
 
     const handlePayment = async () => {
         setIsProcessing(true);
+        setErrorMessage(null);
 
         try {
-            // 1. Initiate payment on backend to get reference
             const response = await fetch('/billing/collections/bulk/initiate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({
                     assignments: ulidsString,
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (data.already_paid) {
                 setPaymentStatus('success');
@@ -89,51 +92,84 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                 return;
             }
 
-            const { reference, email, amount, subaccount } = data;
-
-            // 2. Open Paystack Popup
-            if (!window.PaystackPop) {
-                alert('Payment gateway is not ready. Please refresh the page.');
+            if (!response.ok) {
+                setErrorMessage(data.message || 'Could not start payment. Please try again.');
                 setIsProcessing(false);
                 return;
             }
 
-            // Filter out dummy test subaccounts so Paystack widget opens successfully in local environment
-            const cleanSubaccount =
-                subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
+            const amountKobo = Number(data.amount_kobo ?? Math.round(Number(data.amount) * 100));
+            if (!Number.isFinite(amountKobo) || amountKobo < 100) {
+                setErrorMessage('Payment amount is invalid. Please refresh and try again.');
+                setIsProcessing(false);
+                return;
+            }
 
-            const handler = window.PaystackPop.setup({
+            if (!paystackKey) {
+                setErrorMessage('Payment gateway is not configured. Please contact support.');
+                setIsProcessing(false);
+                return;
+            }
+
+            if (!window.PaystackPop) {
+                setErrorMessage('Payment gateway is not ready. Please refresh the page.');
+                setIsProcessing(false);
+                return;
+            }
+
+            const subaccount =
+                data.subaccount &&
+                !String(data.subaccount).startsWith('ACCT_estate') &&
+                !String(data.subaccount).startsWith('ACCT_landlord')
+                    ? data.subaccount
+                    : null;
+
+            const validEmail =
+                data.email && String(data.email).includes('@')
+                    ? data.email
+                    : firstAssignment.user?.email || 'support@usekontrol.com';
+
+            const setupOptions: Record<string, unknown> = {
                 key: paystackKey,
-                email: email,
-                amount: amount * 100, // Paystack requires amount in kobo
-                ref: reference,
-                subaccount: cleanSubaccount,
-                channels: ['bank_transfer'],
+                email: validEmail,
+                amount: amountKobo,
+                ref: data.reference,
+                channels: ['bank_transfer', 'card'],
                 onClose: () => {
                     setIsProcessing(false);
                 },
-                callback: (response: any) => {
-                    // 3. Verify payment on backend for immediate feedback
-                    fetch(`/billing/collection/verify/${response.reference}`, {
+                callback: (paystackResponse: { reference: string }) => {
+                    fetch(`/billing/collection/verify/${paystackResponse.reference}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            Accept: 'application/json',
                             'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+                            'X-Requested-With': 'XMLHttpRequest',
                         },
                     }).then(() => {
                         setPaymentStatus('success');
                         setIsProcessing(false);
-                        // Reload or redirect
                         setTimeout(() => {
                             window.location.reload();
                         }, 3000);
                     });
                 },
-            });
+            };
 
+            if (subaccount) {
+                setupOptions.subaccount = subaccount;
+                setupOptions.bearer = data.bearer || 'account';
+                if (data.transaction_charge) {
+                    setupOptions.transaction_charge = data.transaction_charge;
+                }
+            }
+
+            const handler = window.PaystackPop.setup(setupOptions);
             handler.openIframe();
         } catch (error) {
             console.error('Payment initiation failed', error);
+            setErrorMessage('Payment initiation failed. Please try again.');
             setPaymentStatus('error');
             setIsProcessing(false);
         }
@@ -309,6 +345,12 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                                 Your payment is processed securely via Paystack. We do not store your card details.
                             </p>
                         </div>
+
+                        {errorMessage && (
+                            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                                {errorMessage}
+                            </div>
+                        )}
 
                         {totalAmount > 0 ? (
                             <button
