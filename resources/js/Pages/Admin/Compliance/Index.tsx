@@ -9,6 +9,15 @@ interface MetricSummary {
     escalated_count: number;
 }
 
+interface Payment {
+    id: number;
+    reference: string;
+    amount: number;
+    status: string;
+    paid_at?: string;
+    created_at: string;
+}
+
 interface Violation {
     id: number;
     violation_type: string;
@@ -24,6 +33,12 @@ interface Violation {
         stage_name: string;
     };
     created_at: string;
+    violatable?: {
+        id: number;
+        amount_due: number;
+        amount_paid: number;
+        payments?: Payment[];
+    };
 }
 
 interface Props {
@@ -104,26 +119,56 @@ export default function AdminComplianceIndex({ violations, metrics }: Props) {
                             </tr>
                         ) : (
                             violations.data.map(violation => (
-                                <tr key={violation.id} className="hover:bg-slate-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm font-medium text-slate-900">{violation.user?.name || 'Resident'}</div>
-                                        <div className="text-xs text-slate-500">{violation.user?.email}</div>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 capitalize">
-                                        {violation.violation_type.replace('_', ' ')}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
-                                        {violation.current_stage?.stage_name || 'Initial'}
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize bg-slate-100 text-slate-800">
-                                            {violation.status.replace('_', ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">
-                                        ₦{Number(violation.outstanding_amount).toLocaleString()}
-                                    </td>
-                                </tr>
+                                <React.Fragment key={violation.id}>
+                                    <tr className="hover:bg-slate-50">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="text-sm font-medium text-slate-900">{violation.user?.name || 'Resident'}</div>
+                                            <div className="text-xs text-slate-500">{violation.user?.email}</div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700 capitalize">
+                                            {violation.violation_type.replace('_', ' ')}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-700">
+                                            {violation.current_stage?.stage_name || 'Initial'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold capitalize bg-slate-100 text-slate-800">
+                                                {violation.status.replace('_', ' ')}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-900">
+                                            ₦{Number(violation.outstanding_amount).toLocaleString()}
+                                        </td>
+                                    </tr>
+                                    {violation.violatable?.payments && violation.violatable.payments.length > 0 && (
+                                        <tr className="bg-slate-50/70 border-b">
+                                            <td colSpan={5} className="px-6 py-3">
+                                                <div className="text-xs space-y-2">
+                                                    <div className="flex justify-between items-center text-slate-500 font-semibold">
+                                                        <span>Partial Payment History ({violation.violatable.payments.length} installments)</span>
+                                                        <span className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded">
+                                                            Paid ₦{(Number(violation.violatable.amount_paid) / 100).toLocaleString()} of ₦{(Number(violation.violatable.amount_due) / 100).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                        {violation.violatable.payments.map((p, idx) => (
+                                                            <div key={p.id} className="flex justify-between items-center p-2 rounded bg-white border border-slate-200 text-[11px]">
+                                                                <div>
+                                                                    <span className="font-bold text-slate-700 block">Installment #{violation.violatable!.payments!.length - idx}</span>
+                                                                    <span className="font-mono text-[9px] text-slate-400">{p.reference}</span>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className="font-bold text-emerald-600 block">+₦{(Number(p.amount) / 100).toLocaleString()}</span>
+                                                                    <span className="text-[9px] text-slate-400 block">{new Date(p.paid_at || p.created_at).toLocaleDateString()}</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
                             ))
                         )}
                     </tbody>
