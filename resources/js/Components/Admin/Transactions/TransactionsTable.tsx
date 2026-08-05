@@ -156,7 +156,7 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         </td>
                                         <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.resident?.name || '—'}</td>
                                         <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.collection?.name || '—'}</td>
-                                        <td className="px-4 py-3 text-xs font-black text-slate-950">{formatCurrency(tx.amount, tx.direction)}</td>
+                                        <td className="px-4 py-3 text-xs font-black text-slate-950">{formatCurrency(tx.amount, tx.currency || 'NGN')}</td>
                                         <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '—'}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
