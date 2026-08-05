@@ -12,6 +12,10 @@ class UpdateEstateSettingsAction
      */
     public function execute(EstateSettings $settings, array $data): void
     {
+        if (isset($data['minimum_partial_payment_amount'])) {
+            $data['minimum_partial_payment_amount'] = (int) round(((float) $data['minimum_partial_payment_amount']) * 100);
+        }
+
         $settings->update($data);
 
         activity()
