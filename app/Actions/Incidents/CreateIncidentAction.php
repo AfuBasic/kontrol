@@ -94,19 +94,24 @@ class CreateIncidentAction
             // Load relations
             $incident->load(['reporter', 'estate']);
 
-            // Send notification to all active admins in the estate
-            $admins = User::forEstate($estate->id)
-                ->active()
-                ->where('id', '!=', $user->id)
-                ->get()
-                ->filter(function ($u) use ($estate) {
-                    setPermissionsTeamId($estate->id);
+            // Send notification to all active admins if enabled or if incident is critical
+            $shouldNotifyAdmins = ! $settings->notify_admins_immediately_for_critical_incidents
+                || in_array(strtolower($incident->priority), ['critical', 'high']);
 
-                    return $u->hasRole('admin');
-                });
+            if ($shouldNotifyAdmins) {
+                $admins = User::forEstate($estate->id)
+                    ->active()
+                    ->where('id', '!=', $user->id)
+                    ->get()
+                    ->filter(function ($u) use ($estate) {
+                        setPermissionsTeamId($estate->id);
 
-            if ($admins->isNotEmpty()) {
-                Notification::send($admins, new IncidentCreatedNotification($incident));
+                        return $u->hasRole('admin');
+                    });
+
+                if ($admins->isNotEmpty()) {
+                    Notification::send($admins, new IncidentCreatedNotification($incident));
+                }
             }
 
             return $incident;
