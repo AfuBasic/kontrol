@@ -160,7 +160,8 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '—'}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                                tx.status === 'successful' || tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
+                                                tx.status === 'success' || tx.status === 'successful' || tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
+                                                tx.status === 'partial' ? 'bg-blue-50 text-blue-700' :
                                                 tx.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
                                             }`}>
                                                 {tx.status_label || tx.status}
