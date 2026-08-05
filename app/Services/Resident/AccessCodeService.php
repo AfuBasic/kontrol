@@ -48,10 +48,11 @@ class AccessCodeService
             ]);
         }
 
-        // Block if vehicle information is required by estate policies but not provided
-        if ($settings->require_vehicle_information && empty($data['vehicle_plate']) && empty($data['vehicle_info'])) {
+        // Block if vehicle information is required by estate policies for vehicle passes but not provided
+        $hasVehicle = ! empty($data['has_vehicle']);
+        if ($settings->require_vehicle_information && $hasVehicle && empty($data['vehicle_plate']) && empty($data['vehicle_info'])) {
             throw ValidationException::withMessages([
-                'vehicle_info' => ['Vehicle information (license plate or details) is required by estate policy.'],
+                'vehicle_info' => ['Vehicle information (license plate or details) is required by estate policy when arriving with a vehicle.'],
             ]);
         }
 
