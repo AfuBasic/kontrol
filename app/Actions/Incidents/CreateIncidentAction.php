@@ -5,6 +5,7 @@ namespace App\Actions\Incidents;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Models\Estate;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentCreatedNotification;
@@ -12,6 +13,7 @@ use App\Services\CloudinaryService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 
 class CreateIncidentAction
 {
@@ -50,11 +52,11 @@ class CreateIncidentAction
                 $isPrivate = true;
             }
 
-            $settings = \App\Models\EstateSettings::forEstate($estate->id);
+            $settings = EstateSettings::forEstate($estate->id);
 
             // Require photo evidence if mandated by estate operational policy
             if ($settings->require_photo_evidence_for_incidents && empty($data['attachment_url'])) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'attachment' => ['Photo evidence is required for incident reports by estate policy.'],
                 ]);
             }
