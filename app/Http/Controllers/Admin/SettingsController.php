@@ -34,23 +34,37 @@ class SettingsController extends Controller
 
         return Inertia::render('Admin/Settings/Index', [
             'settings' => [
-                'access_codes_enabled' => $settings->access_codes_enabled,
-                'access_code_min_lifespan_minutes' => $settings->access_code_min_lifespan_minutes,
-                'access_code_max_lifespan_minutes' => $settings->access_code_max_lifespan_minutes,
-                'access_code_single_use' => $settings->access_code_single_use,
-                'visitor_checkout_enabled' => $settings->visitor_checkout_enabled,
-                'access_code_grace_period_minutes' => $settings->access_code_grace_period_minutes,
-                'access_code_daily_limit_per_resident' => $settings->access_code_daily_limit_per_resident,
-                'access_code_require_confirmation' => $settings->access_code_require_confirmation,
-                'free_trial_enabled' => $settings->free_trial_enabled,
-                'free_trial_days' => $settings->free_trial_days,
-                'grace_period_days' => $settings->grace_period_days,
-                'contacts' => $settings->contacts ?? [],
-                'bank_name' => $settings->bank_name,
-                'bank_code' => $settings->bank_code,
-                'account_number' => $settings->account_number,
-                'account_name' => $settings->account_name,
-                'paystack_subaccount_code' => $settings->paystack_subaccount_code,
+                // 1. Visitor Access
+                'access_codes_enabled' => (bool) $settings->access_codes_enabled,
+                'access_code_min_lifespan_minutes' => (int) ($settings->access_code_min_lifespan_minutes ?: 30),
+                'access_code_max_lifespan_minutes' => (int) ($settings->access_code_max_lifespan_minutes ?: 1440),
+                'access_code_single_use' => (bool) $settings->access_code_single_use,
+                'require_vehicle_information' => (bool) $settings->require_vehicle_information,
+                'allow_residents_to_extend_visitor_passes' => (bool) $settings->allow_residents_to_extend_visitor_passes,
+                'visitor_checkout_enabled' => (bool) $settings->visitor_checkout_enabled,
+
+                // 2. Security Operations
+                'incident_categories' => $settings->incident_categories ?: [
+                    'Theft',
+                    'Noise Complaint',
+                    'Vandalism',
+                    'Unauthorized Entry',
+                    'Property Damage',
+                    'Medical Emergency',
+                ],
+                'default_incident_severity' => $settings->default_incident_severity ?: 'Low',
+                'require_photo_evidence_for_incidents' => (bool) $settings->require_photo_evidence_for_incidents,
+                'require_resolution_notes_for_incidents' => (bool) $settings->require_resolution_notes_for_incidents,
+                'allow_residents_to_report_incidents' => (bool) $settings->allow_residents_to_report_incidents,
+                'notify_admins_immediately_for_critical_incidents' => (bool) $settings->notify_admins_immediately_for_critical_incidents,
+
+                // 3. Collections & Billing
+                'allow_partial_payments' => (bool) $settings->allow_partial_payments,
+                'minimum_partial_payment_amount' => $settings->minimum_partial_payment_amount ? round($settings->minimum_partial_payment_amount / 100, 2) : 0,
+                'minimum_partial_payment_percentage' => (int) ($settings->minimum_partial_payment_percentage ?: 0),
+                'collection_reminder_frequency' => $settings->collection_reminder_frequency ?: 'weekly',
+                'collection_maximum_reminder_attempts' => (int) ($settings->collection_maximum_reminder_attempts ?: 3),
+                'send_reminder_before_due_date_days' => (int) ($settings->send_reminder_before_due_date_days ?: 1),
             ],
         ]);
     }
