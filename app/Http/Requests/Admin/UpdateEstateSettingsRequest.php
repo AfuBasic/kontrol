@@ -44,8 +44,7 @@ class UpdateEstateSettingsRequest extends FormRequest
 
             // 3. Collections & Billing
             'allow_partial_payments' => ['required', 'boolean'],
-            'minimum_partial_payment_amount' => ['nullable', 'numeric', 'min:0'],
-            'minimum_partial_payment_percentage' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'minimum_partial_payment_percentage' => ['nullable', 'integer', 'min:10', 'max:90'],
             'collection_reminder_frequency' => ['required', 'string', 'in:daily,3_days,weekly,custom'],
             'collection_maximum_reminder_attempts' => ['required', 'integer', 'min:1', 'max:20'],
             'send_reminder_before_due_date_days' => ['required', 'integer', 'min:0', 'max:30'],
