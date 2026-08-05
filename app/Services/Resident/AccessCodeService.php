@@ -40,6 +40,21 @@ class AccessCodeService
 
         $subscription = $subject->residentSubscription;
 
+        // Block if access codes are disabled for the estate
+        $settings = EstateSettings::forEstate($estate->id);
+        if (! $settings->access_codes_enabled) {
+            throw ValidationException::withMessages([
+                'access_code' => ['Access code generation is currently disabled for this estate.'],
+            ]);
+        }
+
+        // Block if vehicle information is required by estate policies but not provided
+        if ($settings->require_vehicle_information && empty($data['vehicle_plate']) && empty($data['vehicle_info'])) {
+            throw ValidationException::withMessages([
+                'vehicle_info' => ['Vehicle information (license plate or details) is required by estate policy.'],
+            ]);
+        }
+
         // Block if subscription is expired/invalid (only if estate charges residents)
         if ($estate->settings->charge_type === 'residents' && (! $subscription || ! $subscription->isActive())) {
             $message = $user->isHouseholdMember()
