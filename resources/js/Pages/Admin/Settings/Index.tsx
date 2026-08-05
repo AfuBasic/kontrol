@@ -75,7 +75,6 @@ export default function Settings({ settings }: SettingsProps) {
 
         // Collections & Billing
         allow_partial_payments: settings.allow_partial_payments,
-        minimum_partial_payment_amount: settings.minimum_partial_payment_amount,
         minimum_partial_payment_percentage: settings.minimum_partial_payment_percentage,
         collection_reminder_frequency: settings.collection_reminder_frequency || 'weekly',
         collection_maximum_reminder_attempts: settings.collection_maximum_reminder_attempts || 3,
@@ -518,26 +517,7 @@ export default function Settings({ settings }: SettingsProps) {
 
                             {/* Partial Payment Thresholds */}
                             {data.allow_partial_payments && (
-                                <div className="grid gap-6 sm:grid-cols-2 rounded-xl border border-primary-100 bg-primary-50/30 p-4 dark:border-primary-900/40 dark:bg-primary-950/20">
-                                    <div>
-                                        <label htmlFor="min_partial_amount" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                                            Minimum Partial Amount (NGN &#8358;)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            id="min_partial_amount"
-                                            min="0"
-                                            step="100"
-                                            value={data.minimum_partial_payment_amount || ''}
-                                            onChange={(e) => setData('minimum_partial_payment_amount', parseFloat(e.target.value) || 0)}
-                                            placeholder="e.g. 5000"
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                        />
-                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            Absolute minimum NGN Naira amount required per installment.
-                                        </p>
-                                    </div>
-
+                                <div className="rounded-xl border border-primary-100 bg-primary-50/30 p-4 dark:border-primary-900/40 dark:bg-primary-950/20">
                                     <div>
                                         <label htmlFor="min_partial_percent" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                             Minimum Partial Percentage (%)
