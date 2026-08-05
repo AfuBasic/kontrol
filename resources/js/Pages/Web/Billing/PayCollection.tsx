@@ -1,8 +1,11 @@
 import { Head } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, Sparkles, AlertCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+
+/** Partial payments are only offered when remaining balance is at least this amount (NGN). */
+const MIN_BALANCE_FOR_PARTIAL_PAYMENT = 20_000;
 
 type Collection = {
     name: string;
@@ -55,12 +58,22 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
 
     // assignment.amount_due / amount_paid are stored and displayed in NGN
     const amountToPay = Math.max(0, assignment.amount_due - assignment.amount_paid);
+    const allowsPartialPayment = amountToPay >= MIN_BALANCE_FOR_PARTIAL_PAYMENT;
+    const activePaymentMode = allowsPartialPayment ? paymentMode : 'full';
     const parsedCustom = parseFloat(customAmount) || 0;
-    const effectivePaymentAmount = paymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
+    const effectivePaymentAmount =
+        activePaymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
     const remainingAfterPayment = Math.max(0, amountToPay - effectivePaymentAmount);
 
     const kontrolFee = hasSubscription ? 0 : effectivePaymentAmount * 0.005;
     const totalChargeToday = effectivePaymentAmount + kontrolFee;
+
+    useEffect(() => {
+        if (!allowsPartialPayment && paymentMode === 'partial') {
+            setPaymentMode('full');
+            setCustomAmount('');
+        }
+    }, [allowsPartialPayment, paymentMode]);
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('en-NG', {
@@ -221,10 +234,23 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                 <section className="space-y-4">
                     <div className="flex items-center justify-between px-1">
                         <h2 className="text-xs font-black tracking-widest text-slate-400 uppercase">Payment Method</h2>
-                        <span className="text-xs font-medium text-slate-500">Select how you want to pay</span>
+                        <span className="text-xs font-medium text-slate-500">
+                            {allowsPartialPayment ? 'Select how you want to pay' : 'Full payment required'}
+                        </span>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {!allowsPartialPayment && amountToPay > 0 && (
+                        <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs font-medium text-amber-200/90">
+                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
+                            <span>
+                                Partial payments are only available when the remaining balance is{' '}
+                                {formatCurrency(MIN_BALANCE_FOR_PARTIAL_PAYMENT)} or more. Please settle the full{' '}
+                                {formatCurrency(amountToPay)} now.
+                            </span>
+                        </div>
+                    )}
+
+                    <div className={`grid grid-cols-1 gap-4 ${allowsPartialPayment ? 'sm:grid-cols-2' : ''}`}>
                         {/* Option 1: Full Amount */}
                         <div
                             onClick={() => {
@@ -232,7 +258,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                                 setCustomAmount('');
                             }}
                             className={`relative flex cursor-pointer flex-col justify-between rounded-3xl border-2 p-6 transition-all duration-200 ${
-                                paymentMode === 'full'
+                                activePaymentMode === 'full'
                                     ? 'border-blue-500 bg-slate-800/90 shadow-xl ring-1 shadow-blue-500/10 ring-blue-500/30'
                                     : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900/80'
                             }`}
@@ -240,13 +266,13 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                             <div className="mb-4 flex items-start justify-between">
                                 <div
                                     className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
-                                        paymentMode === 'full' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
+                                        activePaymentMode === 'full' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
                                     }`}
                                 >
-                                    {paymentMode === 'full' && <div className="h-2 w-2 rounded-full bg-white" />}
+                                    {activePaymentMode === 'full' && <div className="h-2 w-2 rounded-full bg-white" />}
                                 </div>
                                 <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 text-xs font-bold text-blue-400">
-                                    Recommended
+                                    {allowsPartialPayment ? 'Recommended' : 'Required'}
                                 </span>
                             </div>
                             <div>
@@ -257,45 +283,47 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                             </div>
                         </div>
 
-                        {/* Option 2: Pay Part */}
-                        <div
-                            onClick={() => {
-                                setPaymentMode('partial');
-                                if (!customAmount) {
-                                    setCustomAmount(Math.round(amountToPay / 2).toString());
-                                }
-                            }}
-                            className={`relative flex cursor-pointer flex-col justify-between rounded-3xl border-2 p-6 transition-all duration-200 ${
-                                paymentMode === 'partial'
-                                    ? 'border-blue-500 bg-slate-800/90 shadow-xl ring-1 shadow-blue-500/10 ring-blue-500/30'
-                                    : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900/80'
-                            }`}
-                        >
-                            <div className="mb-4 flex items-start justify-between">
-                                <div
-                                    className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
-                                        paymentMode === 'partial' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
-                                    }`}
-                                >
-                                    {paymentMode === 'partial' && <div className="h-2 w-2 rounded-full bg-white" />}
+                        {/* Option 2: Pay Part — only when remaining balance ≥ ₦20,000 */}
+                        {allowsPartialPayment && (
+                            <div
+                                onClick={() => {
+                                    setPaymentMode('partial');
+                                    if (!customAmount) {
+                                        setCustomAmount(Math.round(amountToPay / 2).toString());
+                                    }
+                                }}
+                                className={`relative flex cursor-pointer flex-col justify-between rounded-3xl border-2 p-6 transition-all duration-200 ${
+                                    activePaymentMode === 'partial'
+                                        ? 'border-blue-500 bg-slate-800/90 shadow-xl ring-1 shadow-blue-500/10 ring-blue-500/30'
+                                        : 'border-slate-800 bg-slate-900/50 hover:border-slate-700 hover:bg-slate-900/80'
+                                }`}
+                            >
+                                <div className="mb-4 flex items-start justify-between">
+                                    <div
+                                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 transition ${
+                                            activePaymentMode === 'partial' ? 'border-blue-500 bg-blue-500' : 'border-slate-600'
+                                        }`}
+                                    >
+                                        {activePaymentMode === 'partial' && <div className="h-2 w-2 rounded-full bg-white" />}
+                                    </div>
+                                    <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-300">
+                                        Flexible
+                                    </span>
                                 </div>
-                                <span className="rounded-full border border-slate-700 bg-slate-800 px-2.5 py-0.5 text-xs font-bold text-slate-300">
-                                    Flexible
-                                </span>
+                                <div>
+                                    <h3 className="text-lg font-black text-white">Pay Part of Bill</h3>
+                                    <p className="mt-1 text-xs leading-relaxed font-medium text-slate-400">
+                                        Pay any amount today. Remaining balance stays open for future settlement.
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 className="text-lg font-black text-white">Pay Part of Bill</h3>
-                                <p className="mt-1 text-xs leading-relaxed font-medium text-slate-400">
-                                    Pay any amount today. Remaining balance stays open for future settlement.
-                                </p>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </section>
 
                 {/* 3. PARTIAL PAYMENT EXPERIENCE (Smooth Expansion) */}
                 <AnimatePresence>
-                    {paymentMode === 'partial' && (
+                    {activePaymentMode === 'partial' && allowsPartialPayment && (
                         <motion.section
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
@@ -372,7 +400,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                             <span className="font-bold text-slate-200">{formatCurrency(amountToPay)}</span>
                         </div>
 
-                        {paymentMode === 'partial' && (
+                        {activePaymentMode === 'partial' && allowsPartialPayment && (
                             <>
                                 <div className="flex items-center justify-between font-medium text-slate-400">
                                     <span>Paying Today</span>
