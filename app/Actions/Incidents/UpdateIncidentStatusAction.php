@@ -3,10 +3,12 @@
 namespace App\Actions\Incidents;
 
 use App\Enums\IncidentStatus;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Notifications\Incidents\IncidentStatusUpdatedNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class UpdateIncidentStatusAction
 {
@@ -41,19 +43,28 @@ class UpdateIncidentStatusAction
                         if (! $incident->resolving_at) {
                             $incident->resolving_at = now();
                         }
-                    } elseif ($newStatus === IncidentStatus::Solved) {
-                        if (! $incident->acknowledged_at) {
-                            $incident->acknowledged_at = now();
+                    } elseif ($newStatus === IncidentStatus::Solved || $newStatus === IncidentStatus::Closed) {
+                        $settings = EstateSettings::forEstate($incident->estate_id);
+                        if ($settings->require_resolution_notes_for_incidents && empty($data['resolution_notes']) && empty($data['comment'])) {
+                            throw ValidationException::withMessages([
+                                'resolution_notes' => ['Resolution notes or comments are required by estate policy when resolving an incident.'],
+                            ]);
                         }
-                        if (! $incident->resolving_at) {
-                            $incident->resolving_at = now();
-                        }
-                        if (! $incident->solved_at) {
-                            $incident->solved_at = now();
-                        }
-                    } elseif ($newStatus === IncidentStatus::Closed) {
-                        if (! $incident->closed_at) {
-                            $incident->closed_at = now();
+
+                        if ($newStatus === IncidentStatus::Solved) {
+                            if (! $incident->acknowledged_at) {
+                                $incident->acknowledged_at = now();
+                            }
+                            if (! $incident->resolving_at) {
+                                $incident->resolving_at = now();
+                            }
+                            if (! $incident->solved_at) {
+                                $incident->solved_at = now();
+                            }
+                        } else {
+                            if (! $incident->closed_at) {
+                                $incident->closed_at = now();
+                            }
                         }
                     }
                 }
