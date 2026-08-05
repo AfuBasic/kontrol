@@ -82,6 +82,8 @@ export default function PayCollection({
     const kontrolFee = hasSubscription ? 0 : effectivePaymentAmount * 0.005;
     const totalChargeToday = effectivePaymentAmount + kontrolFee;
 
+    const minRequiredPartialAmount = Math.max(minPartialAmount, Math.ceil((amountToPay * minPartialPercentage) / 100));
+
     useEffect(() => {
         if (!allowsPartialPayment && paymentMode === 'partial') {
             setPaymentMode('full');
@@ -291,8 +293,8 @@ export default function PayCollection({
                             <div
                                 onClick={() => {
                                     setPaymentMode('partial');
-                                    if (!customAmount) {
-                                        setCustomAmount(Math.round(amountToPay / 2).toString());
+                                    if (!customAmount || parseFloat(customAmount) < minRequiredPartialAmount) {
+                                        setCustomAmount(minRequiredPartialAmount.toString());
                                     }
                                 }}
                                 className={`relative flex cursor-pointer flex-col justify-between rounded-3xl border-2 p-6 transition-all duration-200 ${
