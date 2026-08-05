@@ -135,6 +135,42 @@ class EstateSettings extends Model
         );
     }
 
+    /**
+     * Resolve incident categories for an estate, ensuring defaults and 'Other' option.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function resolveCategoriesForEstate(int $estateId): array
+    {
+        $settings = self::forEstate($estateId);
+        $configured = $settings->incident_categories ?: [
+            'Theft',
+            'Noise Complaint',
+            'Vandalism',
+            'Unauthorized Entry',
+            'Property Damage',
+            'Medical Emergency',
+        ];
+
+        // Ensure 'Other' is always present as an option
+        $hasOther = false;
+        foreach ($configured as $cat) {
+            if (strtolower(trim($cat)) === 'other') {
+                $hasOther = true;
+                break;
+            }
+        }
+
+        if (! $hasOther) {
+            $configured[] = 'Other';
+        }
+
+        return collect($configured)->map(fn ($cat) => [
+            'value' => $cat,
+            'label' => $cat,
+        ])->values()->toArray();
+    }
+
     protected static function booted(): void
     {
         static::saved(fn ($settings) => Cache::forget("estate_settings:{$settings->estate_id}"));
