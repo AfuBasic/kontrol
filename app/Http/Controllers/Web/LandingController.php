@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Actions\Auth\DetermineUserRedirect;
 use App\Actions\Public\StoreEstateApplicationAction;
+use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Mail\SupportRequestMail;
 use App\Models\EstateApplication;
@@ -119,6 +120,7 @@ class LandingController extends Controller
 
         Auth::loginUsingId($userId);
         $request->session()->regenerate();
+        ForceLogout::dispatchSafely($userId);
 
         $redirect = $request->query('redirect');
         if ($redirect && (str_starts_with($redirect, '/') || parse_url($redirect, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST))) {

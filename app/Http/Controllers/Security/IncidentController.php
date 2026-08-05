@@ -6,6 +6,7 @@ use App\Actions\Incidents\CreateIncidentAction;
 use App\Enums\IncidentCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\IncidentUpvote;
@@ -39,10 +40,7 @@ class IncidentController extends Controller
         $filters = request()->only(['category', 'status', 'tab', 'search', 'sort']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
         return Inertia::render('Security/Incidents/Index', [
             'incidents' => $incidents,
@@ -59,10 +57,7 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
         return Inertia::render('Security/Incidents/Create', [
             'categories' => $categories,

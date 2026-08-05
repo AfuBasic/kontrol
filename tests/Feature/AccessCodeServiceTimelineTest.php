@@ -56,13 +56,13 @@ describe('AccessCode::effective_visit_at', function () {
         $startsAt = now()->addDay();
 
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Scheduled,
-            'type'       => 'single_use',
-            'starts_at'  => $startsAt,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Scheduled,
+            'type' => 'single_use',
+            'starts_at' => $startsAt,
             'expires_at' => $startsAt->copy()->addHour(),
-            'code'       => 'TST001',
+            'code' => 'TST001',
         ]);
 
         expect($code->effective_visit_at->toDateString())
@@ -73,13 +73,13 @@ describe('AccessCode::effective_visit_at', function () {
         $expiresAt = now()->addHours(3);
 
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
-            'starts_at'  => null,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
+            'starts_at' => null,
             'expires_at' => $expiresAt,
-            'code'       => 'TST002',
+            'code' => 'TST002',
         ]);
 
         expect($code->effective_visit_at->toDateString())
@@ -90,14 +90,14 @@ describe('AccessCode::effective_visit_at', function () {
         $expiresAt = now()->addHours(5);
 
         $code = makeCode([
-            'estate_id'   => $this->estate->id,
-            'user_id'     => $this->resident->id,
-            'status'      => AccessCodeStatus::Active,
-            'type'        => 'event',
-            'starts_at'   => null,
-            'expires_at'  => $expiresAt,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'event',
+            'starts_at' => null,
+            'expires_at' => $expiresAt,
             'guest_limit' => 10,
-            'code'        => 'TST003',
+            'code' => 'TST003',
         ]);
 
         expect($code->effective_visit_at->toDateString())
@@ -108,13 +108,13 @@ describe('AccessCode::effective_visit_at', function () {
         Carbon::setTestNow('2026-07-20 09:00:00');
 
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'long_lived',
-            'starts_at'  => null,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'long_lived',
+            'starts_at' => null,
             'expires_at' => null,
-            'code'       => 'TST004',
+            'code' => 'TST004',
         ]);
 
         Carbon::setTestNow();
@@ -129,12 +129,12 @@ describe('AccessCode::effective_visit_at', function () {
 describe('AccessCode::completion_at', function () {
     it('returns null for active passes', function () {
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
             'expires_at' => now()->addHour(),
-            'code'       => 'CMP001',
+            'code' => 'CMP001',
         ]);
 
         expect($code->completion_at)->toBeNull();
@@ -144,13 +144,13 @@ describe('AccessCode::completion_at', function () {
         $usedAt = now()->subHour();
 
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Used,
-            'type'       => 'single_use',
-            'used_at'    => $usedAt,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Used,
+            'type' => 'single_use',
+            'used_at' => $usedAt,
             'expires_at' => now()->subMinutes(30),
-            'code'       => 'CMP002',
+            'code' => 'CMP002',
         ]);
         $code->load('accessLogs');
 
@@ -162,14 +162,14 @@ describe('AccessCode::completion_at', function () {
         $revokedAt = now()->subHours(2);
 
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Revoked,
-            'type'       => 'single_use',
-            'used_at'    => null,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Revoked,
+            'type' => 'single_use',
+            'used_at' => null,
             'revoked_at' => $revokedAt,
             'expires_at' => now()->subHour(),
-            'code'       => 'CMP003',
+            'code' => 'CMP003',
         ]);
         $code->load('accessLogs');
 
@@ -181,14 +181,14 @@ describe('AccessCode::completion_at', function () {
         $expiresAt = now()->subHours(3);
 
         $code = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Expired,
-            'type'       => 'single_use',
-            'used_at'    => null,
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Expired,
+            'type' => 'single_use',
+            'used_at' => null,
             'revoked_at' => null,
             'expires_at' => $expiresAt,
-            'code'       => 'CMP004',
+            'code' => 'CMP004',
         ]);
         $code->load('accessLogs');
 
@@ -202,31 +202,31 @@ describe('AccessCode::completion_at', function () {
 describe('AccessCodeService::getUpcomingTimeline', function () {
     it('returns only active and scheduled passes', function () {
         $active = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
             'expires_at' => now()->addHour(),
-            'code'       => 'UP001',
+            'code' => 'UP001',
         ]);
 
         $scheduled = makeCode([
             'estate_id' => $this->estate->id,
-            'user_id'   => $this->resident->id,
-            'status'    => AccessCodeStatus::Scheduled,
-            'type'      => 'long_lived',
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Scheduled,
+            'type' => 'long_lived',
             'starts_at' => now()->addDay(),
-            'code'      => 'UP002',
+            'code' => 'UP002',
         ]);
 
         // Should NOT appear in upcoming
         $expired = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Expired,
-            'type'       => 'single_use',
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Expired,
+            'type' => 'single_use',
             'expires_at' => now()->subHour(),
-            'code'       => 'UP003',
+            'code' => 'UP003',
         ]);
 
         $result = $this->service->getUpcomingTimeline();
@@ -241,23 +241,23 @@ describe('AccessCodeService::getUpcomingTimeline', function () {
         Carbon::setTestNow('2026-07-22 10:00:00');
 
         $later = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
-            'starts_at'  => now()->addDays(3),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
+            'starts_at' => now()->addDays(3),
             'expires_at' => now()->addDays(3)->addHour(),
-            'code'       => 'ORD001',
+            'code' => 'ORD001',
         ]);
 
         $sooner = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
-            'starts_at'  => now()->addHour(),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
+            'starts_at' => now()->addHour(),
             'expires_at' => now()->addHours(2),
-            'code'       => 'ORD002',
+            'code' => 'ORD002',
         ]);
 
         // Keep clock frozen so both passes remain active during the query.
@@ -276,31 +276,31 @@ describe('AccessCodeService::getUpcomingTimeline', function () {
 describe('AccessCodeService::getHistoryTimeline', function () {
     it('returns only completed passes', function () {
         $active = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
             'expires_at' => now()->addHour(),
-            'code'       => 'HIS000',
+            'code' => 'HIS000',
         ]);
 
         $used = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Used,
-            'type'       => 'single_use',
-            'used_at'    => now()->subHour(),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Used,
+            'type' => 'single_use',
+            'used_at' => now()->subHour(),
             'expires_at' => now()->subMinutes(30),
-            'code'       => 'HIS001',
+            'code' => 'HIS001',
         ]);
 
         $revoked = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Revoked,
-            'type'       => 'single_use',
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Revoked,
+            'type' => 'single_use',
             'revoked_at' => now()->subHours(2),
-            'code'       => 'HIS002',
+            'code' => 'HIS002',
         ]);
 
         $result = $this->service->getHistoryTimeline();
@@ -313,23 +313,23 @@ describe('AccessCodeService::getHistoryTimeline', function () {
 
     it('orders history by completion timestamp descending', function () {
         $older = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Used,
-            'type'       => 'single_use',
-            'used_at'    => now()->subDays(3),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Used,
+            'type' => 'single_use',
+            'used_at' => now()->subDays(3),
             'expires_at' => now()->subDays(3)->addHour(),
-            'code'       => 'HIST01',
+            'code' => 'HIST01',
         ]);
 
         $newer = makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Used,
-            'type'       => 'single_use',
-            'used_at'    => now()->subHour(),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Used,
+            'type' => 'single_use',
+            'used_at' => now()->subHour(),
             'expires_at' => now()->addHour(),
-            'code'       => 'HIST02',
+            'code' => 'HIST02',
         ]);
 
         $result = $this->service->getHistoryTimeline();
@@ -344,12 +344,12 @@ describe('AccessCodeService::getHistoryTimeline', function () {
 describe('GET /resident/visitors (timeline)', function () {
     it('exposes upcomingTimeline and historyTimeline — not activeCodes or historyCodes', function () {
         makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
             'expires_at' => now()->addHour(),
-            'code'       => 'CTL001',
+            'code' => 'CTL001',
         ]);
 
         $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
@@ -368,13 +368,13 @@ describe('GET /resident/visitors (timeline)', function () {
         Carbon::setTestNow('2026-07-22 14:00:00');
 
         makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Active,
-            'type'       => 'single_use',
-            'starts_at'  => now()->addHours(2),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Active,
+            'type' => 'single_use',
+            'starts_at' => now()->addHours(2),
             'expires_at' => now()->addHours(3),
-            'code'       => 'TF001',
+            'code' => 'TF001',
         ]);
 
         // Keep clock frozen so the pass remains active when the controller queries it.
@@ -394,13 +394,13 @@ describe('GET /resident/visitors (timeline)', function () {
 
     it('exposes completion_at, completion_date, and completion_time on history items', function () {
         makeCode([
-            'estate_id'  => $this->estate->id,
-            'user_id'    => $this->resident->id,
-            'status'     => AccessCodeStatus::Used,
-            'type'       => 'single_use',
-            'used_at'    => now()->subHour(),
+            'estate_id' => $this->estate->id,
+            'user_id' => $this->resident->id,
+            'status' => AccessCodeStatus::Used,
+            'type' => 'single_use',
+            'used_at' => now()->subHour(),
             'expires_at' => now()->subMinutes(30),
-            'code'       => 'TF002',
+            'code' => 'TF002',
         ]);
 
         $this->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])

@@ -1,5 +1,4 @@
 import { Head } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, FileText } from 'lucide-react';
 import { useState } from 'react';
 
@@ -49,7 +48,7 @@ declare global {
 
 export default function PayCollectionBulk({ assignments, paystackKey, totalAmount, feeBreakdown, hasSubscription }: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
-    const [paymentStatus, setPaymentStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const firstAssignment = assignments[0];
     const ulidsString = assignments.map((a) => a.ulid).join(',');
@@ -64,109 +63,99 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
 
     const handlePayment = async () => {
         setIsProcessing(true);
+        setErrorMessage(null);
 
         try {
-            // 1. Initiate payment on backend to get reference
             const response = await fetch('/billing/collections/bulk/initiate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Accept: 'application/json',
                     'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
+                    'X-Requested-With': 'XMLHttpRequest',
                 },
                 body: JSON.stringify({
                     assignments: ulidsString,
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
 
             if (data.already_paid) {
-                setPaymentStatus('success');
-                setIsProcessing(false);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
+                window.location.reload();
                 return;
             }
 
-            const { reference, email, amount, subaccount } = data;
+            if (!response.ok) {
+                setErrorMessage(data.message || 'Could not start payment. Please try again.');
+                setIsProcessing(false);
+                return;
+            }
 
-            // 2. Open Paystack Popup
+            const amountKobo = Number(data.amount_kobo ?? Math.round(Number(data.amount) * 100));
+            if (!Number.isFinite(amountKobo) || amountKobo < 100) {
+                setErrorMessage('Payment amount is invalid. Please refresh and try again.');
+                setIsProcessing(false);
+                return;
+            }
+
+            if (!paystackKey) {
+                setErrorMessage('Payment gateway is not configured. Please contact support.');
+                setIsProcessing(false);
+                return;
+            }
+
             if (!window.PaystackPop) {
-                alert('Payment gateway is not ready. Please refresh the page.');
+                setErrorMessage('Payment gateway is not ready. Please refresh the page.');
                 setIsProcessing(false);
                 return;
             }
 
-            // Filter out dummy test subaccounts so Paystack widget opens successfully in local environment
-            const cleanSubaccount =
-                subaccount && !subaccount.startsWith('ACCT_estate') && !subaccount.startsWith('ACCT_landlord') ? subaccount : undefined;
+            const subaccount =
+                data.subaccount &&
+                !String(data.subaccount).startsWith('ACCT_estate') &&
+                !String(data.subaccount).startsWith('ACCT_landlord')
+                    ? data.subaccount
+                    : null;
 
-            const handler = window.PaystackPop.setup({
+            const validEmail =
+                data.email && String(data.email).includes('@')
+                    ? data.email
+                    : firstAssignment.user?.email || 'support@usekontrol.com';
+
+            const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
+
+            const setupOptions: Record<string, unknown> = {
                 key: paystackKey,
-                email: email,
-                amount: amount * 100, // Paystack requires amount in kobo
-                ref: reference,
-                subaccount: cleanSubaccount,
+                email: validEmail,
+                amount: amountKobo,
+                ref: data.reference,
                 channels: ['bank_transfer'],
+                callback_url: statusUrlFor(data.reference),
                 onClose: () => {
                     setIsProcessing(false);
                 },
-                callback: (response: any) => {
-                    // 3. Verify payment on backend for immediate feedback
-                    fetch(`/billing/collection/verify/${response.reference}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as any)?.content,
-                        },
-                    }).then(() => {
-                        setPaymentStatus('success');
-                        setIsProcessing(false);
-                        // Reload or redirect
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 3000);
-                    });
+                callback: (paystackResponse: { reference: string }) => {
+                    window.location.href = statusUrlFor(paystackResponse.reference);
                 },
-            });
+            };
 
+            if (subaccount) {
+                setupOptions.subaccount = subaccount;
+                setupOptions.bearer = data.bearer || 'account';
+                if (data.transaction_charge) {
+                    setupOptions.transaction_charge = data.transaction_charge;
+                }
+            }
+
+            const handler = window.PaystackPop.setup(setupOptions);
             handler.openIframe();
         } catch (error) {
             console.error('Payment initiation failed', error);
-            setPaymentStatus('error');
+            setErrorMessage('Payment initiation failed. Please try again.');
             setIsProcessing(false);
         }
     };
-
-    if (paymentStatus === 'success') {
-        return (
-            <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-                <Head title="Payment Successful" />
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md rounded-[3rem] bg-white p-12 text-center shadow-2xl ring-1 shadow-emerald-500/10 ring-slate-100"
-                >
-                    <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-4xl bg-emerald-50 text-emerald-500">
-                        <CheckCircle2 className="h-12 w-12" />
-                    </div>
-                    <h1 className="text-3xl font-black tracking-tight text-slate-900">Payment Successful</h1>
-                    <p className="mt-4 font-medium text-slate-500">
-                        Your payment for <span className="font-bold text-slate-900">{assignments.length} outstanding bills</span> has been processed
-                        successfully.
-                    </p>
-                    <div className="mt-8 rounded-2xl bg-slate-50 p-6">
-                        <p className="text-xs font-bold tracking-widest text-slate-400 uppercase">Transaction Reference</p>
-                        <p className="mt-1 font-mono text-sm font-bold tracking-tighter text-slate-900 uppercase">
-                            REF-{Math.random().toString(36).substr(2, 9).toUpperCase()}
-                        </p>
-                    </div>
-                    <p className="mt-8 text-xs font-bold tracking-widest text-slate-400 uppercase">You can now close this window</p>
-                </motion.div>
-            </div>
-        );
-    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 py-12 sm:px-6 lg:px-8">
@@ -309,6 +298,12 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                                 Your payment is processed securely via Paystack. We do not store your card details.
                             </p>
                         </div>
+
+                        {errorMessage && (
+                            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                                {errorMessage}
+                            </div>
+                        )}
 
                         {totalAmount > 0 ? (
                             <button

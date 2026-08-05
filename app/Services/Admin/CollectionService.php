@@ -6,6 +6,7 @@ use App\Jobs\Admin\PublishCollectionJob;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Notifications\Resident\CollectionReminderNotification;
 use Carbon\Carbon;
@@ -122,16 +123,26 @@ class CollectionService
 
     public function sendReminders(Collection $collection): int
     {
+        $settings = EstateSettings::forEstate($collection->estate_id);
+        $maxAttempts = (int) ($settings->collection_maximum_reminder_attempts ?: 3);
+
         $assignments = $collection->assignments()
             ->where('status', '!=', 'paid')
+            ->where(function ($q) use ($maxAttempts) {
+                $q->whereNull('reminder_count')
+                  ->orWhere('reminder_count', '<', $maxAttempts);
+            })
             ->with('user')
             ->get();
 
+        $sentCount = 0;
         foreach ($assignments as $assignment) {
             $assignment->user->notify(new CollectionReminderNotification($assignment));
+            $assignment->increment('reminder_count');
+            $sentCount++;
         }
 
-        return $assignments->count();
+        return $sentCount;
     }
 
     public function exportActivity(Collection $collection): string

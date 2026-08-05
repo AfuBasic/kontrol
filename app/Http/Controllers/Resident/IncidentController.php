@@ -6,6 +6,7 @@ use App\Actions\Incidents\CreateIncidentAction;
 use App\Enums\IncidentCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\IncidentUpvote;
@@ -39,15 +40,13 @@ class IncidentController extends Controller
         $filters = request()->only(['category', 'status', 'tab', 'search', 'sort']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $settings = EstateSettings::forEstate($estateId);
 
         return Inertia::render('Resident/Incidents/Index', [
             'incidents' => $incidents,
             'filters' => $filters,
             'categories' => $categories,
+            'allowResidentReporting' => (bool) $settings->allow_residents_to_report_incidents,
         ]);
     }
 
@@ -59,13 +58,16 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $settings = EstateSettings::forEstate($estate->id);
+        if (! $settings->allow_residents_to_report_incidents) {
+            abort(403, 'Resident incident reporting is currently disabled by estate policy.');
+        }
+
+        $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
         return Inertia::render('Resident/Incidents/Create', [
             'categories' => $categories,
+            'requirePhotoEvidence' => (bool) $settings->require_photo_evidence_for_incidents,
         ]);
     }
 
@@ -76,6 +78,11 @@ class IncidentController extends Controller
     {
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
+
+        $settings = EstateSettings::forEstate($estate->id);
+        if (! $settings->allow_residents_to_report_incidents) {
+            abort(403, 'Resident incident reporting is currently disabled by estate policy.');
+        }
 
         $incident = $this->createIncidentAction->execute($request->validated(), $estate);
 

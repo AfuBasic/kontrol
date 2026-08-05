@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
+use App\Models\EstateSettings;
 use App\Services\Resident\AccessCodeService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +32,15 @@ class AccessCodeController extends Controller
 
         $residentAddress = $this->resolveResidentAddress();
 
+        $estateId = null;
+        try {
+            $estateId = $this->estateContext->getEstateId();
+        } catch (\Throwable) {
+            $estateId = auth()->user()?->estate_id;
+        }
+
+        $settings = $estateId ? EstateSettings::forEstate($estateId) : null;
+
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
                 'search_upcoming' => $searchUpcoming,
@@ -41,6 +52,7 @@ class AccessCodeController extends Controller
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
             'visitorStats' => $this->accessCodeService->getHomeStats(),
+            'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
         ]);
     }
 
@@ -64,8 +76,8 @@ class AccessCodeController extends Controller
      */
     public function calendarEvents(Request $request): JsonResponse
     {
-        $startDate = $request->input('start') ? \Carbon\Carbon::parse($request->input('start')) : now()->startOfMonth();
-        $endDate = $request->input('end') ? \Carbon\Carbon::parse($request->input('end')) : now()->endOfMonth();
+        $startDate = $request->input('start') ? Carbon::parse($request->input('start')) : now()->startOfMonth();
+        $endDate = $request->input('end') ? Carbon::parse($request->input('end')) : now()->endOfMonth();
 
         $events = $this->accessCodeService->getCalendarEvents(
             $startDate,
@@ -144,10 +156,21 @@ class AccessCodeController extends Controller
         $subscription = $user->residentSubscription;
         $isSubscriptionActive = $subscription ? $subscription->isActive() : false;
 
+        $estateId = null;
+        try {
+            $estateId = $this->estateContext->getEstateId();
+        } catch (\Throwable) {
+            $estateId = $user?->estate_id;
+        }
+
+        $settings = $estateId ? EstateSettings::forEstate($estateId) : null;
+
         return Inertia::render('Resident/Visitors/Create', [
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
             'isSubscriptionActive' => $isSubscriptionActive,
+            'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
+            'requireVehicleInfo' => $settings ? (bool) $settings->require_vehicle_information : false,
         ]);
     }
 
@@ -277,6 +300,7 @@ class AccessCodeController extends Controller
             ],
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
+            'allowExtendPasses' => (bool) (EstateSettings::forEstate($userCode->estate_id)->allow_residents_to_extend_visitor_passes ?? true),
         ]);
     }
 
@@ -285,6 +309,13 @@ class AccessCodeController extends Controller
      */
     public function extend(AccessCode $accessCode, Request $request): RedirectResponse
     {
+        $estate = $this->estateContext->getEstate();
+        $settings = EstateSettings::forEstate($estate->id);
+
+        if (! $settings->allow_residents_to_extend_visitor_passes) {
+            return back()->withErrors(['access_code' => 'Pass extensions are currently disabled by estate policy.']);
+        }
+
         $userCode = $this->accessCodeService->getCode($accessCode->id);
 
         if (! $userCode) {

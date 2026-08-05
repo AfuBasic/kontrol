@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CollectionAnalyticsController;
 use App\Http\Controllers\Admin\CollectionController;
+use App\Http\Controllers\Admin\ComplianceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EstateBoardCommentController;
 use App\Http\Controllers\Admin\EstateBoardController;
@@ -42,6 +43,15 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(function (): void {
+    // Compliance & Enforcement Engine
+    Route::prefix('compliance')->name('compliance.')->group(function (): void {
+        Route::get('/', [ComplianceController::class, 'index'])->name('index');
+        Route::get('/policies', [ComplianceController::class, 'policies'])->name('policies');
+        Route::post('/policies/{policy}', [ComplianceController::class, 'updatePolicy'])->name('policies.update');
+        Route::post('/violations/{violation}/payment-plan', [ComplianceController::class, 'approvePaymentPlan'])->name('violations.payment-plan');
+        Route::post('/violations/{violation}/resolve', [ComplianceController::class, 'resolveViolation'])->name('violations.resolve');
+    });
+
     // Legacy dashboard redirect
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 

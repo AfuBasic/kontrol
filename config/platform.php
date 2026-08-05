@@ -16,11 +16,11 @@ return [
             'super_admin',
             'estate_admin',
             'estate_manager',
-            'property_owner',
             'affiliate',
         ],
         'operational' => [
             'resident',
+            'property_owner',
             'household_member',
             'security',
         ],

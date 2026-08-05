@@ -5,6 +5,7 @@ namespace App\Actions\Incidents;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Models\Estate;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentCreatedNotification;
@@ -12,6 +13,7 @@ use App\Services\CloudinaryService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 
 class CreateIncidentAction
 {
@@ -50,6 +52,19 @@ class CreateIncidentAction
                 $isPrivate = true;
             }
 
+            $settings = EstateSettings::forEstate($estate->id);
+
+            // Require photo evidence if mandated by estate operational policy
+            if ($settings->require_photo_evidence_for_incidents && empty($data['attachment_url'])) {
+                throw ValidationException::withMessages([
+                    'attachment' => ['Photo evidence is required for incident reports by estate policy.'],
+                ]);
+            }
+
+            // Fallback priority to estate default incident severity if not specified
+            $defaultPriority = strtolower($settings->default_incident_severity ?: 'low');
+            $priority = $data['priority'] ?? $defaultPriority;
+
             $incident = new Incident([
                 'estate_id' => $estate->id,
                 'reporter_id' => $reporterId,
@@ -58,7 +73,7 @@ class CreateIncidentAction
                 'title' => $data['title'],
                 'body' => $data['body'],
                 'category' => $data['category'],
-                'priority' => $data['priority'] ?? 'medium',
+                'priority' => $priority,
                 'status' => IncidentStatus::Pending,
                 'assigned_to' => $data['assigned_to'] ?? null,
                 'attachment_url' => $data['attachment_url'] ?? null,
@@ -79,19 +94,24 @@ class CreateIncidentAction
             // Load relations
             $incident->load(['reporter', 'estate']);
 
-            // Send notification to all active admins in the estate
-            $admins = User::forEstate($estate->id)
-                ->active()
-                ->where('id', '!=', $user->id)
-                ->get()
-                ->filter(function ($u) use ($estate) {
-                    setPermissionsTeamId($estate->id);
+            // Send notification to all active admins if enabled or if incident is critical
+            $shouldNotifyAdmins = ! $settings->notify_admins_immediately_for_critical_incidents
+                || in_array(strtolower($incident->priority), ['critical', 'high']);
 
-                    return $u->hasRole('admin');
-                });
+            if ($shouldNotifyAdmins) {
+                $admins = User::forEstate($estate->id)
+                    ->active()
+                    ->where('id', '!=', $user->id)
+                    ->get()
+                    ->filter(function ($u) use ($estate) {
+                        setPermissionsTeamId($estate->id);
 
-            if ($admins->isNotEmpty()) {
-                Notification::send($admins, new IncidentCreatedNotification($incident));
+                        return $u->hasRole('admin');
+                    });
+
+                if ($admins->isNotEmpty()) {
+                    Notification::send($admins, new IncidentCreatedNotification($incident));
+                }
             }
 
             return $incident;

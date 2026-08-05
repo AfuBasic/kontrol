@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\DetermineUserRedirect;
+use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Mail\Resident\WelcomeMail;
 use App\Models\User;
@@ -38,6 +39,8 @@ class EmailVerificationController extends Controller
 
         if ($status === 'accepted') {
             Auth::login($user);
+            $request->session()->regenerate();
+            ForceLogout::dispatchSafely($user->id);
 
             // Send Welcome Email only to residents
             if ($user->user_type === 'user') {

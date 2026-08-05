@@ -70,6 +70,19 @@ class EstateSettings extends Model
         'account_number',
         'account_name',
         'paystack_subaccount_code',
+        'require_vehicle_information',
+        'allow_residents_to_extend_visitor_passes',
+        'incident_categories',
+        'default_incident_severity',
+        'require_photo_evidence_for_incidents',
+        'require_resolution_notes_for_incidents',
+        'allow_residents_to_report_incidents',
+        'notify_admins_immediately_for_critical_incidents',
+        'allow_partial_payments',
+        'minimum_partial_payment_percentage',
+        'collection_reminder_frequency',
+        'collection_maximum_reminder_attempts',
+        'send_reminder_before_due_date_days',
     ];
 
     /**
@@ -82,6 +95,17 @@ class EstateSettings extends Model
             'access_code_single_use' => 'boolean',
             'access_code_require_confirmation' => 'boolean',
             'visitor_checkout_enabled' => 'boolean',
+            'require_vehicle_information' => 'boolean',
+            'allow_residents_to_extend_visitor_passes' => 'boolean',
+            'incident_categories' => 'array',
+            'require_photo_evidence_for_incidents' => 'boolean',
+            'require_resolution_notes_for_incidents' => 'boolean',
+            'allow_residents_to_report_incidents' => 'boolean',
+            'notify_admins_immediately_for_critical_incidents' => 'boolean',
+            'allow_partial_payments' => 'boolean',
+            'minimum_partial_payment_percentage' => 'integer',
+            'collection_maximum_reminder_attempts' => 'integer',
+            'send_reminder_before_due_date_days' => 'integer',
             'free_trial_enabled' => 'boolean',
             'free_trial_days' => 'integer',
             'grace_period_days' => 'integer',
@@ -107,6 +131,42 @@ class EstateSettings extends Model
             now()->addMinutes(15),
             fn () => self::firstOrCreate(['estate_id' => $estateId])->refresh()
         );
+    }
+
+    /**
+     * Resolve incident categories for an estate, ensuring defaults and 'Other' option.
+     *
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function resolveCategoriesForEstate(int $estateId): array
+    {
+        $settings = self::forEstate($estateId);
+        $configured = $settings->incident_categories ?: [
+            'Theft',
+            'Noise Complaint',
+            'Vandalism',
+            'Unauthorized Entry',
+            'Property Damage',
+            'Medical Emergency',
+        ];
+
+        // Ensure 'Other' is always present as an option
+        $hasOther = false;
+        foreach ($configured as $cat) {
+            if (strtolower(trim($cat)) === 'other') {
+                $hasOther = true;
+                break;
+            }
+        }
+
+        if (! $hasOther) {
+            $configured[] = 'Other';
+        }
+
+        return collect($configured)->map(fn ($cat) => [
+            'value' => $cat,
+            'label' => $cat,
+        ])->values()->toArray();
     }
 
     protected static function booted(): void

@@ -100,13 +100,6 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     const currentPath = new URL(page.url, 'http://localhost').pathname;
     const { isOnline } = useOnlineStatus();
 
-    // Redirect to download app if accessing on a non-native web browser
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform()) {
-            router.visit('/download-app');
-        }
-    }, []);
-
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState<'success' | 'error'>('success');

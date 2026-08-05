@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Security\ValidateAccessCodeRequest;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
+use App\Models\EstateSettings;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,10 +31,14 @@ class VerifyController extends Controller
     {
         $user = $request->user();
         $estate = $user->getCurrentEstate();
+        $settings = EstateSettings::forEstate($estate->id);
 
         return Inertia::render('Security/Verify', [
             'estateName' => $estate->name,
             'gateName' => 'Main Entrance',
+            'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
+            'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
+            'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
         ]);
     }
 

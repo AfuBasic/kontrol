@@ -19,7 +19,7 @@ class StoreIncidentRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'min:5', 'max:150'],
             'body' => ['required', 'string', 'min:20', 'max:5000'],
-            'category' => ['required', Rule::enum(IncidentCategory::class)],
+            'category' => ['required', 'string', 'max:100'],
             'priority' => ['nullable', Rule::enum(IncidentPriority::class)],
             'attachment_url' => ['nullable', 'string', 'url'],
             'attachment_type' => ['nullable', 'string', 'in:image,video'],

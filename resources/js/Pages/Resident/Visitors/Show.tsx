@@ -15,9 +15,10 @@ type Props = {
         date: string | null;
     };
     durationOptions?: DurationOption[];
+    allowExtendPasses?: boolean;
 };
 
-export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }: Props) {
+export default function CodeShow({ accessCode, usageLogs, durationOptions = [], allowExtendPasses = true }: Props) {
     const [copied, setCopied] = useState(false);
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
     const [selectedDuration, setSelectedDuration] = useState<number>(durationOptions[0]?.minutes || 120);
@@ -170,13 +171,15 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
                             </div>
 
                             {/* Repositioned Prominent Extend Pass Action Button */}
-                            <button
-                                onClick={() => setIsExtendModalOpen(true)}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 py-2.5 text-xs font-bold text-primary-700 border border-primary-100 transition-all hover:bg-primary-100 active:scale-98"
-                            >
-                                <Clock className="h-3.5 w-3.5 text-primary-600" />
-                                <span>Extend Pass Duration</span>
-                            </button>
+                            {allowExtendPasses && (
+                                <button
+                                    onClick={() => setIsExtendModalOpen(true)}
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 py-2.5 text-xs font-bold text-primary-700 border border-primary-100 transition-all hover:bg-primary-100 active:scale-98"
+                                >
+                                    <Clock className="h-3.5 w-3.5 text-primary-600" />
+                                    <span>Extend Pass Duration</span>
+                                </button>
+                            )}
                         </div>
                     )}
 
@@ -194,7 +197,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
                 </div>
 
                 {/* Extend Pass Confirmation Modal */}
-                {isExtendModalOpen && (
+                {isExtendModalOpen && allowExtendPasses && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
                         <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl animate-in fade-in zoom-in duration-150">
                             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -220,7 +223,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [] }
                                         value={selectedDuration}
                                         onChange={(e) => setSelectedDuration(Number(e.target.value))}
                                         disabled={processing}
-                                        className="w-full rounded-xl border-slate-200 text-xs font-medium focus:border-primary-500 focus:ring-primary-500 disabled:opacity-50"
+                                        className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-900 shadow-xs focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
                                     >
                                         {durationOptions.length > 0 ? (
                                             durationOptions.map((opt) => (

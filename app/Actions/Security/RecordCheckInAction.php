@@ -63,6 +63,17 @@ class RecordCheckInAction
             $settings = EstateSettings::forEstate($estateId);
             $forceSingleUse = $settings->access_code_single_use;
 
+            // Enforce vehicle information at security gate check-in if policy is active and visitor has a vehicle
+            $visitorHasVehicle = (bool) ($accessCode->has_vehicle || ! empty($vehicleData['has_vehicle']) || ! empty($vehicleData['vehicle_plate']));
+            if ($settings->require_vehicle_information && $visitorHasVehicle) {
+                $providedPlate = $vehicleData['vehicle_plate'] ?? $accessCode->vehicle_plate;
+                if (empty($providedPlate)) {
+                    throw ValidationException::withMessages([
+                        'vehicle_plate' => ['Vehicle plate details are required by estate policy for vehicle check-in.'],
+                    ]);
+                }
+            }
+
             $isEventFull = false;
             if ($accessCode->type === 'event' && $accessCode->guest_limit !== null) {
                 $currentCount = $accessCode->accessLogs()->count();

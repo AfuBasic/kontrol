@@ -32,6 +32,7 @@ type Props = {
         search_upcoming?: string;
         search_history?: string;
     };
+    accessCodesEnabled?: boolean;
 };
 
 type Tab = 'schedule' | 'history';
@@ -154,6 +155,11 @@ export default function Visitors({
             <Head title="Visitors" />
 
             <div className="mx-auto max-w-xl px-2 py-3 space-y-4 pb-20">
+                {!accessCodesEnabled && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs font-semibold text-amber-900 shadow-xs">
+                        Visitor access pass generation and code sharing are currently disabled by estate management policy.
+                    </div>
+                )}
                 {/* Header */}
                 <div className="flex items-center justify-between pt-1 pb-1">
                     <div>
@@ -167,13 +173,15 @@ export default function Visitors({
                             <Calendar className="h-4 w-4 text-primary-600" />
                             <span>Calendar</span>
                         </Link>
-                        <button
-                            onClick={() => setShowCreateSheet(true)}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-95"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>Invite</span>
-                        </button>
+                        {accessCodesEnabled && (
+                            <button
+                                onClick={() => setShowCreateSheet(true)}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-95"
+                            >
+                                <Plus className="h-4 w-4" />
+                                <span>Invite</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 

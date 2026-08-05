@@ -295,6 +295,44 @@ class TransactionOverviewService
             'audits.user',
         ]);
 
+        $paymentBreakdown = null;
+        if ($transaction->collection_assignment_id && $transaction->assignment) {
+            $assignment = $transaction->assignment;
+
+            $priorTransactions = EstateTransaction::query()
+                ->where('collection_assignment_id', $assignment->id)
+                ->where('status', TransactionStatus::Success)
+                ->where('id', '!=', $transaction->id)
+                ->where('created_at', '<', $transaction->created_at)
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            $previousPayments = $priorTransactions->map(function ($tx) {
+                return [
+                    'reference' => $tx->reference_number,
+                    'amount' => $tx->amount,
+                    'paid_at' => $tx->paid_at ? $tx->paid_at->format('M j, Y g:i A') : $tx->created_at?->format('M j, Y g:i A'),
+                ];
+            })->all();
+
+            $previousTotal = (int) $priorTransactions->sum('amount');
+            $originalBillKobo = (int) round($assignment->amount_due * 100);
+            $currentPaymentKobo = (int) $transaction->amount;
+            $totalPaidToDateKobo = $previousTotal + $currentPaymentKobo;
+            $remainingBalanceKobo = max(0, $originalBillKobo - $totalPaidToDateKobo);
+            $isPartial = $remainingBalanceKobo > 0;
+
+            $paymentBreakdown = [
+                'is_partial' => $isPartial,
+                'original_bill_amount' => $originalBillKobo,
+                'previous_payments_total' => $previousTotal,
+                'previous_payments' => $previousPayments,
+                'current_payment_amount' => $currentPaymentKobo,
+                'total_paid_to_date' => $totalPaidToDateKobo,
+                'remaining_balance' => $remainingBalanceKobo,
+            ];
+        }
+
         return array_merge($this->formatTransaction($transaction), [
             'metadata' => $transaction->metadata,
             'gateway_response' => $transaction->gateway_response,
@@ -319,6 +357,7 @@ class TransactionOverviewService
                 'invoice_number' => $transaction->invoice->invoice_number,
                 'amount' => $transaction->invoice->amount,
             ] : null,
+            'payment_breakdown' => $paymentBreakdown,
         ]);
     }
 

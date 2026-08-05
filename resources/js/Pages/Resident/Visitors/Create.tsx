@@ -40,11 +40,13 @@ const getLocalISOString = (date: Date) => {
 };
 
 const CreateAccessCode = () => {
-    const { durationOptions, durationConstraints, estate_plan, isSubscriptionActive } = usePage<
+    const { durationOptions, durationConstraints, estate_plan, isSubscriptionActive, accessCodesEnabled = true, requireVehicleInfo = false } = usePage<
         SharedData & {
             durationOptions: { minutes: number; label: string }[];
             durationConstraints: { min: number; max: number };
             isSubscriptionActive: boolean;
+            accessCodesEnabled?: boolean;
+            requireVehicleInfo?: boolean;
         }
     >().props;
     const { isOnline, isServerReachable } = useNetworkQuality();
@@ -835,7 +837,9 @@ const CreateAccessCode = () => {
                                                 <p
                                                     className={`mt-0.5 text-[13px] font-medium ${form.data.has_vehicle ? 'text-slate-300' : 'text-slate-500'}`}
                                                 >
-                                                    Security will log license plates
+                                                    {requireVehicleInfo
+                                                        ? 'Mandatory: Gate security will require vehicle plate details at check-in'
+                                                        : 'Security will log license plates'}
                                                 </p>
                                             </div>
                                             <div

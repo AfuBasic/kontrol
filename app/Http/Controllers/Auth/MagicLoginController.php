@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Models\MagicLoginToken;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +34,7 @@ class MagicLoginController extends Controller
 
         // 4. Regenerate session for security
         $request->session()->regenerate();
+        ForceLogout::dispatchSafely($magicToken->user->id);
 
         // 5. Redirect to destination or default dashboard
         $destination = $magicToken->destination_url ?: route('home');

@@ -27,8 +27,13 @@ class ValidateAccessCodeAction
      */
     public function execute(string $code, int $estateId): array
     {
-        // Fetch Settings early to use for grace period
+        // Fetch Settings early to use for feature toggles & grace period
         $settings = EstateSettings::forEstate($estateId);
+
+        if (! $settings->access_codes_enabled) {
+            return $this->denied('Visitor pass verification is currently disabled by estate policy', 'disabled');
+        }
+
         $gracePeriod = $settings->access_code_grace_period_minutes ?? 0;
 
         $passUuid = null;

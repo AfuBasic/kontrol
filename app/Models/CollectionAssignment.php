@@ -2,56 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\Compliance\Contracts\ViolatableInterface;
 use App\Traits\GeneratesUlid;
-use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/**
- * @property int $id
- * @property int $collection_id
- * @property int $estate_id
- * @property int $user_id
- * @property string|null $period
- * @property int $amount_due
- * @property int $amount_paid
- * @property string $status
- * @property CarbonImmutable $due_date
- * @property CarbonImmutable|null $grace_until
- * @property CarbonImmutable|null $paid_at
- * @property string|null $external_reference
- * @property CarbonImmutable|null $created_at
- * @property CarbonImmutable|null $updated_at
- * @property-read Collection $collection
- * @property-read Estate $estate
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
- * @property-read int|null $payments_count
- * @property-read User $user
- *
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereAmountDue($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereAmountPaid($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereCollectionId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereDueDate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereEstateId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereExternalReference($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereGraceUntil($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment wherePaidAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment wherePeriod($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|CollectionAssignment whereUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|CollectionAssignment where($column, $operator = null, $value = null, $boolean = 'and')
- *
- * @mixin \Eloquent
- */
-class CollectionAssignment extends Model
+class CollectionAssignment extends Model implements ViolatableInterface
 {
     use GeneratesUlid, HasFactory;
 
@@ -114,5 +72,69 @@ class CollectionAssignment extends Model
     public function isOverdue(): bool
     {
         return $this->status === 'overdue';
+    }
+
+    public function isEstateLevelCollection(): bool
+    {
+        if (! $this->relationLoaded('collection')) {
+            $this->load('collection.creator.roles');
+        }
+
+        $creator = $this->collection?->creator;
+        if (! $creator) {
+            return true;
+        }
+
+        return ! $creator->roles()
+            ->where('name', 'property_owner')
+            ->where('model_has_roles.estate_id', $this->estate_id)
+            ->exists();
+    }
+
+    /* --- ViolatableInterface Implementation --- */
+
+    public function getComplianceViolationType(): string
+    {
+        return 'collection_overdue';
+    }
+
+    public function getComplianceUserId(): int
+    {
+        return $this->user_id;
+    }
+
+    public function getComplianceEstateId(): int
+    {
+        return $this->estate_id;
+    }
+
+    public function getCompliancePropertyId(): ?int
+    {
+        return $this->property_id;
+    }
+
+    public function getComplianceOriginalAmount(): float
+    {
+        return (float) ($this->amount_due / 100);
+    }
+
+    public function getComplianceOutstandingAmount(): float
+    {
+        return (float) max(0, ($this->amount_due - $this->amount_paid) / 100);
+    }
+
+    public function getComplianceDueAt(): ?\DateTimeInterface
+    {
+        return $this->due_date;
+    }
+
+    public function isComplianceResolved(): bool
+    {
+        return $this->isPaid() || ($this->amount_paid >= $this->amount_due);
+    }
+
+    public function syncCompliancePenalty(float $totalPenalties): void
+    {
+        // Optionally update penalty adjustments if needed
     }
 }

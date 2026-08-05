@@ -9,11 +9,13 @@ use App\Models\Payment;
 use App\Models\ResidentSubscription;
 use App\Models\User;
 use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
+use App\Services\Compliance\ComplianceEngine;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,26 +34,75 @@ class CollectionPaymentController extends Controller
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
+        $settings = EstateSettings::forEstate($assignment->estate_id);
+        $allowPartialPayments = (bool) ($settings->allow_partial_payments ?? true);
+        $minPartialAmount = $settings->minimum_partial_payment_amount ? round($settings->minimum_partial_payment_amount / 100, 2) : 0;
+        $minPartialPercentage = (int) ($settings->minimum_partial_payment_percentage ?? 10);
+
         return Inertia::render('Web/Billing/PayCollection', [
             'assignment' => $assignment,
             'paystackKey' => config('services.paystack.public_key'),
             'feeBreakdown' => $fees,
             'hasSubscription' => $hasActiveSubscription,
+            'allowPartialPayments' => $allowPartialPayments,
+            'minPartialAmount' => $minPartialAmount,
+            'minPartialPercentage' => $minPartialPercentage,
         ]);
     }
 
-    public function initiate(CollectionAssignment $assignment, PaystackService $paystackService): JsonResponse
+    public function initiate(CollectionAssignment $assignment, PaystackService $paystackService, Request $request): JsonResponse
     {
         setPermissionsTeamId($assignment->estate_id);
         $assignment->loadMissing(['user', 'collection.creator.profile']);
         $user = $assignment->user;
 
+        $remainingBalance = max(0, $assignment->amount_due - $assignment->amount_paid);
+
         // 1. If assignment is already paid, return early
-        if ($assignment->isPaid() || ($assignment->amount_due - $assignment->amount_paid) <= 0) {
+        if ($assignment->isPaid() || $remainingBalance <= 0) {
             return response()->json([
                 'already_paid' => true,
                 'message' => 'Payment already completed.',
             ]);
+        }
+
+        // Collection amounts are stored in NGN (same unit as admin/PO create forms).
+        // Frontend sends the amount to charge in NGN. Legacy clients may still send kobo.
+        $paymentAmountNaira = (int) $remainingBalance;
+        $rawAmount = $request->input('amount');
+
+        if ($rawAmount !== null && $rawAmount !== '') {
+            $parsedAmount = (float) $rawAmount;
+            if ($parsedAmount > 0) {
+                $parsedNaira = $this->normalizePaymentAmountToNaira($parsedAmount, (float) $remainingBalance);
+                $paymentAmountNaira = (int) min($remainingBalance, max(1, round($parsedNaira)));
+            }
+        }
+
+        // Enforce Estate Operational Policies for Partial Payments
+        if ($paymentAmountNaira < $remainingBalance) {
+            $settings = EstateSettings::forEstate($assignment->estate_id);
+
+            if (! $settings->allow_partial_payments) {
+                return response()->json([
+                    'message' => 'Partial payments are currently disabled by estate policy. Please pay the full outstanding amount.',
+                ], 400);
+            }
+
+            $minAmountNaira = $settings->minimum_partial_payment_amount ? (int) round($settings->minimum_partial_payment_amount / 100) : 0;
+            if ($minAmountNaira > 0 && $paymentAmountNaira < $minAmountNaira) {
+                return response()->json([
+                    'message' => 'The minimum partial payment amount allowed by estate policy is ₦'.number_format($minAmountNaira, 2).'.',
+                ], 400);
+            }
+
+            $minPct = $settings->minimum_partial_payment_percentage ?? 10;
+            $minPctNaira = (int) ceil(($assignment->amount_due * $minPct) / 100);
+            if ($minPctNaira > 0 && $paymentAmountNaira < $minPctNaira) {
+                return response()->json([
+                    'message' => "Partial payments must be at least {$minPct}% of the total bill (₦".number_format($minPctNaira, 2).').',
+                ], 400);
+            }
         }
 
         // 2. Resolve subaccount & check configuration
@@ -70,17 +121,19 @@ class CollectionPaymentController extends Controller
             ], 400);
         }
 
-        // 3. Check all initiated/pending payments to see if any succeeded on Paystack
+        // 3. Check all initiated/pending payments with Paystack
         $initiatedPayments = Payment::where('collection_assignment_id', $assignment->id)
             ->where('status', '!=', 'success')
+            ->orderByDesc('created_at')
             ->get();
 
         foreach ($initiatedPayments as $p) {
             try {
                 // Verify status with Paystack
                 $verification = $paystackService->verifyPayment($p->reference);
+                $status = $verification['status'] ?? null;
 
-                if ($verification['status'] === 'success') {
+                if ($status === 'success') {
                     DB::transaction(function () use ($p, $assignment) {
                         $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
                         $lockedAssignment = CollectionAssignment::where('id', $assignment->id)->lockForUpdate()->first();
@@ -126,53 +179,59 @@ class CollectionPaymentController extends Controller
                         'already_paid' => true,
                         'message' => 'Payment already completed.',
                     ]);
+                } elseif (in_array($status, ['ongoing', 'pending', 'processing'])) {
+                    return response()->json([
+                        'message' => 'Your previous payment attempt is currently pending confirmation from Paystack. Please wait a few moments or check back later.',
+                    ], 400);
+                } elseif (in_array($status, ['failed', 'abandoned', 'reversed'])) {
+                    $p->update(['status' => 'failed']);
                 }
             } catch (\Exception $e) {
-                // Ignore and check the next one
+                // Ignore verification errors if reference was never submitted to Paystack
             }
         }
 
-        // 4. Find the latest initiated payment to reuse for idempotency
-        $existing = $initiatedPayments->sortByDesc('created_at')->first();
+        // 4. Generate a NEW UNIQUE payment record for this attempt
+        // Payment.amount is stored in NGN (same unit as amount_due / amount_paid).
+        $totalAttempts = Payment::where('collection_assignment_id', $assignment->id)->count();
+        $suffix = '-a'.($totalAttempts + 1).'-'.Str::random(4);
+        $reference = 'COLL-'.$assignment->ulid.$suffix;
 
-        if ($existing) {
-            $payment = $existing;
-        } else {
-            // Generate a stable reference using assignment ULID and success count
-            $successCount = Payment::where('collection_assignment_id', $assignment->id)
-                ->where('status', 'success')
-                ->count();
+        $payment = Payment::create([
+            'user_id' => $user->id,
+            'estate_id' => $assignment->estate_id,
+            'collection_assignment_id' => $assignment->id,
+            'amount' => $paymentAmountNaira,
+            'reference' => $reference,
+            'status' => 'initiated',
+        ]);
 
-            $reference = 'COLL-'.$assignment->ulid.($successCount > 0 ? '-'.($successCount + 1) : '');
+        // 5. Calculate fees in NGN, convert to kobo only for Paystack Inline
+        $baseAmountNaira = (float) $payment->amount;
+        $hasActiveSubscription = $this->hasActiveSubscription($user->id);
+        $fees = $this->calculateFees($baseAmountNaira, $hasActiveSubscription);
+        $amountKobo = (int) round($fees['total_amount'] * 100);
 
-            // Create a new pending payment record
-            $payment = Payment::create([
-                'user_id' => $user->id,
-                'estate_id' => $assignment->estate_id,
-                'collection_assignment_id' => $assignment->id,
-                'amount' => $assignment->amount_due - $assignment->amount_paid,
-                'reference' => $reference,
-                'status' => 'initiated',
-            ]);
+        if ($amountKobo < 100) {
+            return response()->json([
+                'message' => 'Payment amount is too small to process. Minimum charge is ₦1.00.',
+            ], 400);
         }
 
-        // 5. Calculate Exact Fees for Exact Split
-        $baseAmount = $payment->amount;
-        $hasActiveSubscription = $this->hasActiveSubscription($user->id);
-
-        $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
+        $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : ($assignment->user?->email ?? 'billing@kontrol.ng');
 
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
-            'email' => $user->email,
-            'amount' => $fees['total_amount'], // Pass the total charged amount to frontend
-            'base_amount' => $baseAmount,
+            'email' => $payerEmail,
+            'amount' => $fees['total_amount'], // Total charged in NGN
+            'amount_kobo' => $amountKobo, // Integer kobo for PaystackPop.setup({ amount })
+            'base_amount' => $baseAmountNaira,
             'kontrol_fee' => $fees['kontrol_fee'],
             'paystack_fee' => $fees['paystack_fee'],
             'subaccount' => $subaccount,
             'bearer' => 'account', // Kontrol bears the Paystack charge
-            'transaction_charge' => $fees['transaction_charge'], // Exact flat amount for Kontrol to keep
+            'transaction_charge' => $fees['transaction_charge'], // Integer kobo kept by main account
         ]);
     }
 
@@ -216,8 +275,11 @@ class CollectionPaymentController extends Controller
                             'paid_at' => now(),
                             'external_reference' => $reference,
                         ]);
+                        app(ComplianceEngine::class)->resolveCompliance($assignment, 'Paid in Full');
                     } else {
                         $assignment->update(['status' => 'partial']);
+                        // Re-evaluate compliance for partial payment balance reduction
+                        app(ComplianceEngine::class)->raiseViolation($assignment);
                     }
 
                     $assignment->loadMissing('collection.creator');
@@ -291,6 +353,105 @@ class CollectionPaymentController extends Controller
         }
 
         return response()->json(['message' => $result['message']], $result['status']);
+    }
+
+    /**
+     * Receipt / status page after Paystack Inline callback (or webhook-confirmed payment).
+     * Syncs with Paystack when the local payment is not yet marked success.
+     */
+    public function status(string $reference, PaystackService $paystackService): Response
+    {
+        $payment = Payment::where('reference', $reference)->firstOrFail();
+        setPermissionsTeamId($payment->estate_id);
+
+        if ($payment->status !== 'success') {
+            try {
+                $verification = $paystackService->verifyPayment($reference);
+                $paystackStatus = $verification['status'] ?? null;
+
+                if ($paystackStatus === 'success') {
+                    $this->verify($reference);
+                    $payment->refresh();
+                } elseif (in_array($paystackStatus, ['failed', 'abandoned', 'reversed'], true)) {
+                    $payment->update(['status' => 'failed']);
+                }
+            } catch (\Exception $e) {
+                Log::info("Payment status page could not verify Ref={$reference}: ".$e->getMessage());
+            }
+        }
+
+        $payment->loadMissing([
+            'user:id,name,email',
+            'estate:id,name',
+            'assignment.collection:id,name,description',
+            'assignment.user:id,name,email',
+            'assignment.estate:id,name',
+        ]);
+
+        $assignment = $payment->assignment;
+        $isBulk = (bool) data_get($payment->raw_payload, 'is_bulk', false)
+            || (is_array(data_get($payment->raw_payload, 'assignment_ids')) && $payment->collection_assignment_id === null);
+
+        $amountPaid = (int) $payment->amount;
+        $amountDue = $assignment ? (int) $assignment->amount_due : $amountPaid;
+        $amountAlreadyPaid = $assignment ? (int) $assignment->amount_paid : $amountPaid;
+        $remainingBalance = $assignment ? max(0, $amountDue - $amountAlreadyPaid) : 0;
+
+        $status = match (true) {
+            $payment->status === 'success' && $remainingBalance <= 0 && ! $isBulk => 'paid_in_full',
+            $payment->status === 'success' && $isBulk => 'paid_in_full',
+            $payment->status === 'success' && $remainingBalance > 0 => 'partial',
+            $payment->status === 'failed' => 'failed',
+            default => 'pending',
+        };
+
+        $bulkAssignments = [];
+        if ($isBulk) {
+            $assignmentIds = data_get($payment->raw_payload, 'assignment_ids', []);
+            $bulkAssignments = CollectionAssignment::whereIn('id', $assignmentIds)
+                ->with(['collection:id,name', 'estate:id,name'])
+                ->get()
+                ->map(fn (CollectionAssignment $a) => [
+                    'ulid' => $a->ulid,
+                    'name' => $a->collection?->name,
+                    'amount_due' => (int) $a->amount_due,
+                    'amount_paid' => (int) $a->amount_paid,
+                    'remaining' => max(0, (int) $a->amount_due - (int) $a->amount_paid),
+                    'status' => $a->status,
+                ])
+                ->values()
+                ->all();
+        }
+
+        $payAgainUrl = null;
+        if ($status === 'partial' && $assignment) {
+            $payAgainUrl = route('web.billing.collection.show', ['assignment' => $assignment->ulid]);
+        }
+
+        return Inertia::render('Web/Billing/PaymentStatus', [
+            'reference' => $payment->reference,
+            'status' => $status,
+            'paymentStatus' => $payment->status,
+            'amountPaid' => $amountPaid,
+            'amountDue' => $amountDue,
+            'amountAlreadyPaid' => $amountAlreadyPaid,
+            'remainingBalance' => $remainingBalance,
+            'paidAt' => $payment->paid_at?->toIso8601String(),
+            'isBulk' => $isBulk,
+            'collectionName' => $assignment?->collection?->name
+                ?? ($isBulk ? 'Multiple bills' : 'Collection payment'),
+            'payerName' => $payment->user?->name
+                ?? $assignment?->user?->name
+                ?? 'Resident',
+            'estateName' => $payment->estate?->name
+                ?? $assignment?->estate?->name
+                ?? 'Estate',
+            'payAgainUrl' => $payAgainUrl,
+            'bulkAssignments' => $bulkAssignments,
+            'checkoutUrl' => $assignment
+                ? route('web.billing.collection.show', ['assignment' => $assignment->ulid])
+                : null,
+        ]);
     }
 
     public function showBulk(Request $request): Response
@@ -535,23 +696,32 @@ class CollectionPaymentController extends Controller
             ],
         ]);
 
-        // 3. Calculate Exact Fees for Exact Split
-        $baseAmount = $payment->amount;
+        // 3. Calculate fees in NGN (payment.amount is NGN), convert to kobo for Paystack
+        $baseAmount = (float) $payment->amount;
         $hasActiveSubscription = $this->hasActiveSubscription($user->id);
-
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
+        $amountKobo = (int) round($fees['total_amount'] * 100);
+
+        if ($amountKobo < 100) {
+            return response()->json([
+                'message' => 'Payment amount is too small to process. Minimum charge is ₦1.00.',
+            ], 400);
+        }
+
+        $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : 'billing@kontrol.ng';
 
         return response()->json([
             'already_paid' => false,
             'reference' => $payment->reference,
-            'email' => $user->email,
-            'amount' => $fees['total_amount'], // Pass the total charged amount to frontend
+            'email' => $payerEmail,
+            'amount' => $fees['total_amount'],
+            'amount_kobo' => $amountKobo,
             'base_amount' => $baseAmount,
             'kontrol_fee' => $fees['kontrol_fee'],
             'paystack_fee' => $fees['paystack_fee'],
             'subaccount' => $firstSubaccount,
-            'bearer' => 'account', // Kontrol bears the Paystack charge
-            'transaction_charge' => $fees['transaction_charge'], // Exact flat amount for Kontrol to keep
+            'bearer' => 'account',
+            'transaction_charge' => $fees['transaction_charge'],
         ]);
     }
 
@@ -588,7 +758,30 @@ class CollectionPaymentController extends Controller
     }
 
     /**
+     * Normalize a client-supplied amount to NGN.
+     *
+     * Preferred: NGN (e.g. 1000). Legacy clients may send kobo (e.g. 100000 for ₦1,000).
+     */
+    private function normalizePaymentAmountToNaira(float $rawAmount, float $remainingBalanceNaira): float
+    {
+        if ($rawAmount <= $remainingBalanceNaira) {
+            return $rawAmount;
+        }
+
+        $asNairaFromKobo = $rawAmount / 100;
+
+        // Treat as kobo when converting yields a plausible NGN amount within the balance.
+        if ($asNairaFromKobo > 0 && $asNairaFromKobo <= $remainingBalanceNaira) {
+            return $asNairaFromKobo;
+        }
+
+        return $remainingBalanceNaira;
+    }
+
+    /**
      * Calculate exact Kontrol and Paystack fees.
+     *
+     * @return array{kontrol_fee: float, paystack_fee: float, total_amount: float, transaction_charge: int}
      */
     private function calculateFees(float $baseAmount, bool $hasActiveSubscription): array
     {

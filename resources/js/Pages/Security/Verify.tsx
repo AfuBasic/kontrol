@@ -110,7 +110,7 @@ function cameraErrorMessage(err: unknown): string {
 }
 
 export default function SecurityVerify() {
-    const { flash } = usePage<PageProps>().props;
+    const { flash, accessCodesEnabled = true, visitorCheckoutEnabled = true, requireVehicleInformation = false } = usePage<PageProps>().props;
     const { quality, isOnline, isServerReachable } = useNetworkQuality();
     const { pendingCount, isSyncing, syncNow } = useSyncStatus();
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
@@ -565,6 +565,23 @@ export default function SecurityVerify() {
                                         {securityPendingCount} Queue
                                     </span>
                                 )}
+                            </div>
+                        </motion.div>
+                    )}
+                    {!accessCodesEnabled && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0, y: -10 }}
+                            animate={{ height: 'auto', opacity: 1, y: 0 }}
+                            className="mb-6 overflow-hidden"
+                        >
+                            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-center shadow-sm">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 mb-3">
+                                    <ShieldX className="h-6 w-6" />
+                                </div>
+                                <h3 className="text-base font-extrabold text-slate-900">Visitor Pass Verification Disabled</h3>
+                                <p className="mt-1 text-xs text-slate-600 font-medium max-w-sm mx-auto">
+                                    Visitor access code generation and gate verification are currently turned off by estate management policy.
+                                </p>
                             </div>
                         </motion.div>
                     )}

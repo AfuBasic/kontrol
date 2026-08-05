@@ -8,6 +8,7 @@ use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
 use App\Services\EstateContextService;
@@ -39,10 +40,7 @@ class IncidentController extends Controller
         $filters = request()->only(['category', 'status', 'tab', 'search', 'sort', 'view', 'priority', 'assignee_id', 'reporter_id', 'sla_status']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
         $statuses = collect(IncidentStatus::cases())->map(fn ($stat) => [
             'value' => $stat->value,
@@ -215,13 +213,7 @@ class IncidentController extends Controller
             ->values()
             ->toArray();
 
-        $categories = collect(IncidentCategory::cases())
-            ->map(fn ($c) => [
-                'value' => $c->value,
-                'label' => $c->label(),
-            ])
-            ->values()
-            ->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
         return Inertia::render('Admin/Incidents/Show', [
             'incident' => $loadedIncident,
@@ -252,10 +244,7 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
         $admins = User::forEstate($estate->id)
             ->active()

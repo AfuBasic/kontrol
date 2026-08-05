@@ -40,6 +40,22 @@ class AccessCodeService
 
         $subscription = $subject->residentSubscription;
 
+        // Block if access codes are disabled for the estate
+        $settings = EstateSettings::forEstate($estate->id);
+        if (! $settings->access_codes_enabled) {
+            throw ValidationException::withMessages([
+                'access_code' => ['Access code generation is currently disabled for this estate.'],
+            ]);
+        }
+
+        // Block if vehicle information is required by estate policies for vehicle passes but not provided
+        $hasVehicle = ! empty($data['has_vehicle']);
+        if ($settings->require_vehicle_information && $hasVehicle && empty($data['vehicle_plate']) && empty($data['vehicle_info'])) {
+            throw ValidationException::withMessages([
+                'vehicle_info' => ['Vehicle information (license plate or details) is required by estate policy when arriving with a vehicle.'],
+            ]);
+        }
+
         // Block if subscription is expired/invalid (only if estate charges residents)
         if ($estate->settings->charge_type === 'residents' && (! $subscription || ! $subscription->isActive())) {
             $message = $user->isHouseholdMember()
@@ -66,15 +82,21 @@ class AccessCodeService
             }
         }
 
+        $settings = EstateSettings::forEstate($estate->id);
+        $min = $settings->access_code_min_lifespan_minutes ?: 15;
+        $max = $settings->access_code_max_lifespan_minutes ?: 1440;
+
         if (! empty($data['expires_at'])) {
             $expiresAt = Carbon::parse($data['expires_at']);
+            $baseStart = $startsAt ?? now();
+            $duration = $baseStart->diffInMinutes($expiresAt);
+            if ($duration < $min) {
+                $expiresAt = $baseStart->copy()->addMinutes($min);
+            } elseif ($duration > $max) {
+                $expiresAt = $baseStart->copy()->addMinutes($max);
+            }
         } elseif ($type === 'single_use' || $type === 'event') {
-            $minutes = $data['duration_minutes'] ?? 60; // Default fallback
-
-            // Enforce Estate Settings Constraints
-            $settings = EstateSettings::forEstate($estate->id);
-            $min = $settings->access_code_min_lifespan_minutes;
-            $max = $settings->access_code_max_lifespan_minutes;
+            $minutes = $data['duration_minutes'] ?? $min;
 
             if ($minutes < $min) {
                 $minutes = $min;
@@ -758,20 +780,20 @@ class AccessCodeService
                 });
         });
 
-        if (!empty($filters['purpose'])) {
+        if (! empty($filters['purpose'])) {
             $query->where('purpose', $filters['purpose']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['type'])) {
+        if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
         }
 
-        if (!empty($filters['search'])) {
-            $term = '%' . $filters['search'] . '%';
+        if (! empty($filters['search'])) {
+            $term = '%'.$filters['search'].'%';
             $query->where(function ($q) use ($term) {
                 $q->where('visitor_name', 'like', $term)
                     ->orWhere('visitor_phone', 'like', $term)
@@ -804,7 +826,7 @@ class AccessCodeService
                     'host_name' => $code->user?->name ?? 'Resident',
                     'used_at' => $code->used_at ? $code->used_at->toIso8601String() : null,
                     'expires_at' => $code->expires_at ? $code->expires_at->toIso8601String() : null,
-                    'is_valid' => in_array($code->status instanceof AccessCodeStatus ? $code->status->value : (string) $code->status, ['active', 'scheduled']) && (!$code->expires_at || $code->expires_at->isFuture()),
+                    'is_valid' => in_array($code->status instanceof AccessCodeStatus ? $code->status->value : (string) $code->status, ['active', 'scheduled']) && (! $code->expires_at || $code->expires_at->isFuture()),
                 ],
             ];
         })->toArray();

@@ -10,6 +10,7 @@ import { SyncStatus } from '@/Resilience/SyncStatus';
 
 type Props = {
     categories: Array<{ value: string; label: string }>;
+    requirePhotoEvidence?: boolean;
 };
 
 async function getFileHash(file: File): Promise<string> {
@@ -26,7 +27,7 @@ async function getFileHash(file: File): Promise<string> {
     return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
-export default function Create({ categories }: Props) {
+export default function Create({ categories, requirePhotoEvidence = false }: Props) {
     const { data, setData, processing, errors } = useForm<{
         title: string;
         body: string;
@@ -398,7 +399,9 @@ export default function Create({ categories }: Props) {
 
                     {/* Attachment Upload */}
                     <div>
-                        <label className="mb-2 block text-xs font-black tracking-wider text-slate-400 uppercase">Attach Photo or Video</label>
+                        <label className="mb-2 block text-xs font-black tracking-wider text-slate-400 uppercase">
+                            Attach Photo or Video {requirePhotoEvidence && <span className="text-red-500">* (Mandatory by Estate Policy)</span>}
+                        </label>
                         <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
 
                         {!attachmentPreview ? (

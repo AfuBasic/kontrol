@@ -3,7 +3,7 @@
 namespace App\Jobs\Admin;
 
 use App\Models\CollectionAssignment;
-use App\Notifications\Resident\CollectionReminderNotification;
+use App\Services\Compliance\ComplianceEngine;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,48 +15,37 @@ class SendCollectionRemindersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle(): void
+    public function handle(?ComplianceEngine $engine = null): void
     {
-        $now = now()->startOfDay();
-
-        // Find all unpaid assignments on active collections
+        $engine = $engine ?? app(ComplianceEngine::class);
+        // Find all unpaid assignments on active estate-level collections (excluding Property Owner collections)
         $assignments = CollectionAssignment::query()
             ->whereIn('status', ['pending', 'grace', 'overdue', 'partial'])
-            ->whereHas('collection', fn ($q) => $q->where('status', 'active'))
-            ->with(['user', 'collection', 'estate'])
+            ->whereHas('collection', function ($q) {
+                $q->where('status', 'active')
+                    ->whereDoesntHave('creator.roles', function ($sq) {
+                        $sq->where('name', 'property_owner');
+                    });
+            })
             ->get();
 
         $count = 0;
 
         foreach ($assignments as $assignment) {
-            if (! $assignment->due_date) {
+            if ($assignment->isComplianceResolved()) {
+                $engine->resolveCompliance($assignment, 'Collection Paid');
+
                 continue;
             }
 
-            $dueDate = $assignment->due_date->startOfDay();
-            $daysDiff = (int) $now->diffInDays($dueDate, false);
-
-            $shouldNotify = false;
-
-            // 1. Due in exactly 3 days (pre-due reminder)
-            if ($daysDiff === 3) {
-                $shouldNotify = true;
-            }
-            // 2. Due today
-            elseif ($daysDiff === 0) {
-                $shouldNotify = true;
-            }
-            // 3. Overdue by a multiple of 3 days (e.g. 3, 6, 9 days overdue)
-            elseif ($daysDiff < 0 && abs($daysDiff) % 3 === 0) {
-                $shouldNotify = true;
-            }
-
-            if ($shouldNotify) {
-                $assignment->user->notify(new CollectionReminderNotification($assignment));
-                $count++;
-            }
+            // Raise / sync violation in ComplianceEngine
+            $engine->raiseViolation($assignment);
+            $count++;
         }
 
-        Log::info("SendCollectionRemindersJob: sent {$count} reminders.");
+        // Run platform-wide policy evaluation for all active open violations
+        $evaluatedCount = $engine->evaluateAllOpenViolations();
+
+        Log::info("SendCollectionRemindersJob (ComplianceEngine): synced {$count} assignments, evaluated {$evaluatedCount} violations.");
     }
 }

@@ -15,11 +15,11 @@ return new class extends Migration
         Schema::table('incidents', function (Blueprint $table) {
             // Drop foreign key first
             $table->dropForeign(['reporter_id']);
-            
+
             // Add polymorphic type and source
             $table->string('reporter_type')->after('reporter_id')->nullable();
             $table->string('source')->after('reporter_type')->nullable();
-            
+
             $table->index(['reporter_type', 'reporter_id']);
         });
 
@@ -38,7 +38,7 @@ return new class extends Migration
         Schema::table('incidents', function (Blueprint $table) {
             $table->dropIndex(['reporter_type', 'reporter_id']);
             $table->dropColumn(['reporter_type', 'source']);
-            
+
             $table->foreign('reporter_id')->references('id')->on('users')->cascadeOnDelete();
         });
     }
