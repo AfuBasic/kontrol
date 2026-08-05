@@ -1,61 +1,116 @@
+import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { 
+    Key, 
+    ShieldAlert, 
+    CreditCard, 
+    Check, 
+    Plus, 
+    X, 
+    Clock, 
+    Car, 
+    QrCode, 
+    Camera, 
+    FileText, 
+    AlertTriangle, 
+    Bell, 
+    Percent, 
+    Coins, 
+    Calendar,
+    Save
+} from 'lucide-react';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 
-type Settings = {
-    access_codes_enabled: boolean;
-    access_code_min_lifespan_minutes: number;
-    access_code_max_lifespan_minutes: number;
-    access_code_single_use: boolean;
-    visitor_checkout_enabled: boolean;
-    access_code_grace_period_minutes: number;
-    access_code_daily_limit_per_resident: number | null;
-    access_code_require_confirmation: boolean;
-    free_trial_enabled: boolean;
-    free_trial_days: number;
-    grace_period_days: number;
-};
+type SettingsProps = {
+    settings: {
+        // 1. Visitor Access
+        access_codes_enabled: boolean;
+        access_code_min_lifespan_minutes: number;
+        access_code_max_lifespan_minutes: number;
+        access_code_single_use: boolean;
+        require_vehicle_information: boolean;
+        allow_residents_to_extend_visitor_passes: boolean;
+        visitor_checkout_enabled: boolean;
 
-type Props = {
-    settings: Settings;
+        // 2. Security Operations
+        incident_categories: string[];
+        default_incident_severity: string;
+        require_photo_evidence_for_incidents: boolean;
+        require_resolution_notes_for_incidents: boolean;
+        allow_residents_to_report_incidents: boolean;
+        notify_admins_immediately_for_critical_incidents: boolean;
+
+        // 3. Collections & Billing
+        allow_partial_payments: boolean;
+        minimum_partial_payment_amount: number;
+        minimum_partial_payment_percentage: number;
+        collection_reminder_frequency: string;
+        collection_maximum_reminder_attempts: number;
+        send_reminder_before_due_date_days: number;
+    };
 };
 
 function formatDuration(minutes: number): string {
     if (minutes < 1) return '';
-
     const days = Math.floor(minutes / 1440);
     const hours = Math.floor((minutes % 1440) / 60);
     const mins = minutes % 60;
 
     const parts: string[] = [];
-
-    if (days > 0) {
-        parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
-    }
-    if (hours > 0) {
-        parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
-    }
-    if (mins > 0 && days === 0) {
-        parts.push(`${mins} ${mins === 1 ? 'minute' : 'minutes'}`);
-    }
+    if (days > 0) parts.push(`${days} ${days === 1 ? 'day' : 'days'}`);
+    if (hours > 0) parts.push(`${hours} ${hours === 1 ? 'hour' : 'hours'}`);
+    if (mins > 0 && days === 0) parts.push(`${mins} ${mins === 1 ? 'minute' : 'minutes'}`);
 
     return parts.length > 0 ? `= ${parts.join(', ')}` : '';
 }
 
-export default function Settings({ settings }: Props) {
+export default function Settings({ settings }: SettingsProps) {
     const { data, setData, put, processing, errors } = useForm({
+        // Visitor Access
         access_codes_enabled: settings.access_codes_enabled,
         access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
         access_code_max_lifespan_minutes: settings.access_code_max_lifespan_minutes,
         access_code_single_use: settings.access_code_single_use,
+        require_vehicle_information: settings.require_vehicle_information,
+        allow_residents_to_extend_visitor_passes: settings.allow_residents_to_extend_visitor_passes,
         visitor_checkout_enabled: settings.visitor_checkout_enabled,
-        access_code_grace_period_minutes: settings.access_code_grace_period_minutes,
-        access_code_daily_limit_per_resident: settings.access_code_daily_limit_per_resident,
-        access_code_require_confirmation: settings.access_code_require_confirmation,
-        free_trial_enabled: settings.free_trial_enabled,
-        free_trial_days: settings.free_trial_days,
-        grace_period_days: settings.grace_period_days,
+
+        // Security Operations
+        incident_categories: settings.incident_categories || [],
+        default_incident_severity: settings.default_incident_severity || 'Low',
+        require_photo_evidence_for_incidents: settings.require_photo_evidence_for_incidents,
+        require_resolution_notes_for_incidents: settings.require_resolution_notes_for_incidents,
+        allow_residents_to_report_incidents: settings.allow_residents_to_report_incidents,
+        notify_admins_immediately_for_critical_incidents: settings.notify_admins_immediately_for_critical_incidents,
+
+        // Collections & Billing
+        allow_partial_payments: settings.allow_partial_payments,
+        minimum_partial_payment_amount: settings.minimum_partial_payment_amount,
+        minimum_partial_payment_percentage: settings.minimum_partial_payment_percentage,
+        collection_reminder_frequency: settings.collection_reminder_frequency || 'weekly',
+        collection_maximum_reminder_attempts: settings.collection_maximum_reminder_attempts || 3,
+        send_reminder_before_due_date_days: settings.send_reminder_before_due_date_days || 1,
     });
+
+    const [newCategoryInput, setNewCategoryInput] = useState('');
+
+    function handleAddCategory(e: React.KeyboardEvent | React.MouseEvent) {
+        if ('key' in e && e.key !== 'Enter') return;
+        e.preventDefault();
+        const trimmed = newCategoryInput.trim();
+        if (trimmed && !data.incident_categories.includes(trimmed)) {
+            setData('incident_categories', [...data.incident_categories, trimmed]);
+            setNewCategoryInput('');
+        }
+    }
+
+    function handleRemoveCategory(categoryToRemove: string) {
+        setData(
+            'incident_categories',
+            data.incident_categories.filter((cat) => cat !== categoryToRemove)
+        );
+    }
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -64,235 +119,510 @@ export default function Settings({ settings }: Props) {
 
     return (
         <>
-            <Head title="Settings" />
+            <Head title="Estate Operational Policies" />
 
-            {/* Page Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-8"
-            >
-                <h1 className="text-2xl font-semibold text-gray-900">Estate Settings</h1>
-                <p className="mt-1 text-gray-500">Configure access code behavior and estate-wide preferences.</p>
-            </motion.div>
-
-            <form onSubmit={handleSubmit}>
-                {/* Access Code System Toggle */}
+            <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+                {/* Header */}
                 <motion.div
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
-                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
+                    transition={{ duration: 0.4 }}
+                    className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
                 >
-                    <div className="flex items-start justify-between">
-                        <div>
-                            <h2 className="text-lg font-medium text-gray-900">Access Code System</h2>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Master toggle for the access code feature. When disabled, no new codes can be generated and existing codes are
-                                temporarily invalid.
-                            </p>
-                        </div>
-                        <label className="relative inline-flex cursor-pointer items-center">
-                            <input
-                                type="checkbox"
-                                checked={data.access_codes_enabled}
-                                onChange={(e) => setData('access_codes_enabled', e.target.checked)}
-                                className="peer sr-only"
-                            />
-                            <div className="peer h-6 w-11 rounded-full bg-gray-200 peer-checked:bg-primary-600 peer-focus:ring-4 peer-focus:ring-primary-100 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
-                        </label>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
+                            Estate Operational Policies
+                        </h1>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                            Define core administrative behaviors, security controls, and billing workflows for your estate.
+                        </p>
                     </div>
-                    {!data.access_codes_enabled && (
-                        <div className="mt-4 rounded-lg bg-amber-50 p-3">
-                            <p className="text-sm text-amber-800">
-                                <span className="font-medium">Warning:</span> Access codes are currently disabled. Residents cannot generate new codes
-                                and existing codes will not work.
-                            </p>
-                        </div>
-                    )}
-                </motion.div>
 
-                {/* Access Code Configuration */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
-                >
-                    <h2 className="mb-6 text-lg font-medium text-gray-900">Access Code Configuration</h2>
-
-                    <div className="space-y-6">
-                        {/* Lifespan Range */}
-                        <div className="grid gap-6 sm:grid-cols-2">
-                            <div>
-                                <label htmlFor="min_lifespan" className="block text-sm font-medium text-gray-700">
-                                    Minimum Lifespan (minutes)
-                                </label>
-                                <input
-                                    type="number"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    id="min_lifespan"
-                                    min="1"
-                                    max="10080"
-                                    value={data.access_code_min_lifespan_minutes}
-                                    onChange={(e) => setData('access_code_min_lifespan_minutes', parseInt(e.target.value) || 1)}
-                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                />
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Shortest allowed code validity (1 min to 7 days)
-                                    {data.access_code_min_lifespan_minutes > 0 && (
-                                        <span className="ml-1 font-medium text-primary-600">
-                                            {formatDuration(data.access_code_min_lifespan_minutes)}
-                                        </span>
-                                    )}
-                                </p>
-                                {errors.access_code_min_lifespan_minutes && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.access_code_min_lifespan_minutes}</p>
-                                )}
-                            </div>
-                            <div>
-                                <label htmlFor="max_lifespan" className="block text-sm font-medium text-gray-700">
-                                    Maximum Lifespan (minutes)
-                                </label>
-                                <input
-                                    type="number"
-                                    inputMode="numeric"
-                                    pattern="[0-9]*"
-                                    id="max_lifespan"
-                                    min="1"
-                                    max="10080"
-                                    value={data.access_code_max_lifespan_minutes}
-                                    onChange={(e) => setData('access_code_max_lifespan_minutes', parseInt(e.target.value) || 1)}
-                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                />
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Longest allowed code validity (must be ≥ minimum)
-                                    {data.access_code_max_lifespan_minutes > 0 && (
-                                        <span className="ml-1 font-medium text-primary-600">
-                                            {formatDuration(data.access_code_max_lifespan_minutes)}
-                                        </span>
-                                    )}
-                                </p>
-                                {errors.access_code_max_lifespan_minutes && (
-                                    <p className="mt-1 text-sm text-red-600">{errors.access_code_max_lifespan_minutes}</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Grace Period */}
-                        <div>
-                            <label htmlFor="grace_period" className="block text-sm font-medium text-gray-700">
-                                Grace Period (minutes)
-                            </label>
-                            <input
-                                type="number"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                id="grace_period"
-                                min="0"
-                                max="60"
-                                value={data.access_code_grace_period_minutes}
-                                onChange={(e) => setData('access_code_grace_period_minutes', parseInt(e.target.value) || 0)}
-                                className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">
-                                Buffer time after expiry to account for real-world delays (0-60 minutes)
-                                {data.access_code_grace_period_minutes > 0 && (
-                                    <span className="ml-1 font-medium text-primary-600">{formatDuration(data.access_code_grace_period_minutes)}</span>
-                                )}
-                            </p>
-                            {errors.access_code_grace_period_minutes && (
-                                <p className="mt-1 text-sm text-red-600">{errors.access_code_grace_period_minutes}</p>
-                            )}
-                        </div>
-
-                        {/* Daily Limit */}
-                        <div>
-                            <label htmlFor="daily_limit" className="block text-sm font-medium text-gray-700">
-                                Daily Limit per Resident
-                            </label>
-                            <input
-                                type="number"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                id="daily_limit"
-                                min="1"
-                                max="100"
-                                value={data.access_code_daily_limit_per_resident ?? ''}
-                                onChange={(e) => setData('access_code_daily_limit_per_resident', e.target.value ? parseInt(e.target.value) : null)}
-                                placeholder="Unlimited"
-                                className="mt-1 block w-full max-w-xs rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">Maximum codes a resident can generate per day. Leave empty for unlimited.</p>
-                            {errors.access_code_daily_limit_per_resident && (
-                                <p className="mt-1 text-sm text-red-600">{errors.access_code_daily_limit_per_resident}</p>
-                            )}
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Access Code Behavior */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
-                    className="mb-6 rounded-xl border border-gray-200 bg-white p-6"
-                >
-                    <h2 className="mb-6 text-lg font-medium text-gray-900">Access Code Behavior</h2>
-
-                    <div className="space-y-4">
-                        {/* Single Use */}
-                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
-                            <input
-                                type="checkbox"
-                                checked={data.access_code_single_use}
-                                onChange={(e) => setData('access_code_single_use', e.target.checked)}
-                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            <div>
-                                <span className="block text-sm font-medium text-gray-900">Single-use codes</span>
-                                <span className="block text-sm text-gray-500">
-                                    When enabled, an access code becomes invalid after first successful use
-                                </span>
-                            </div>
-                        </label>
-
-                        {/* Visitor Checkout */}
-                        <label className="flex cursor-pointer items-start gap-4 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50">
-                            <input
-                                type="checkbox"
-                                checked={data.visitor_checkout_enabled}
-                                onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
-                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                            />
-                            <div>
-                                <span className="block text-sm font-medium text-gray-900">Visitor checkout tracking</span>
-                                <span className="block text-sm text-gray-500">
-                                    When enabled, security guards can scan visitor codes upon exit to track and record their exit time.
-                                </span>
-                            </div>
-                        </label>
-                    </div>
-                </motion.div>
-
-                {/* Save Button */}
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
-                    className="flex justify-end"
-                >
                     <button
-                        type="submit"
+                        type="button"
+                        onClick={handleSubmit}
                         disabled={processing}
-                        className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
                     >
-                        {processing ? 'Saving...' : 'Save Settings'}
+                        <Save className="h-4 w-4" />
+                        {processing ? 'Saving Changes...' : 'Save Policies'}
                     </button>
                 </motion.div>
-            </form>
+
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* SECTION 1: VISITOR ACCESS */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.05 }}
+                        className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60"
+                    >
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-5 dark:border-slate-800/80">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                                <Key className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">1. Visitor Access</h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Configure entry code lifespans, verification rules, and gate security policies.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 space-y-6">
+                            {/* Master Toggle */}
+                            <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-800/20">
+                                <div>
+                                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                                        Enable Access Code System
+                                    </span>
+                                    <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                        Master switch for visitor entry codes. When disabled, residents cannot generate new access codes.
+                                    </span>
+                                </div>
+                                <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.access_codes_enabled}
+                                        onChange={(e) => setData('access_codes_enabled', e.target.checked)}
+                                        className="peer sr-only"
+                                    />
+                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-emerald-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-emerald-500"></div>
+                                </label>
+                            </div>
+
+                            {/* Lifespan Configuration */}
+                            <div className="grid gap-6 sm:grid-cols-2">
+                                <div>
+                                    <label htmlFor="min_lifespan" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        Minimum Code Lifespan (Minutes)
+                                    </label>
+                                    <div className="relative mt-2">
+                                        <input
+                                            type="number"
+                                            id="min_lifespan"
+                                            min="1"
+                                            max="10080"
+                                            value={data.access_code_min_lifespan_minutes}
+                                            onChange={(e) => setData('access_code_min_lifespan_minutes', parseInt(e.target.value) || 1)}
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        Shortest validity period allowed{' '}
+                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {formatDuration(data.access_code_min_lifespan_minutes)}
+                                        </span>
+                                    </p>
+                                    {errors.access_code_min_lifespan_minutes && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.access_code_min_lifespan_minutes}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="max_lifespan" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                        Maximum Code Lifespan (Minutes)
+                                    </label>
+                                    <div className="relative mt-2">
+                                        <input
+                                            type="number"
+                                            id="max_lifespan"
+                                            min="1"
+                                            max="10080"
+                                            value={data.access_code_max_lifespan_minutes}
+                                            onChange={(e) => setData('access_code_max_lifespan_minutes', parseInt(e.target.value) || 1)}
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-400">
+                                        Longest validity period allowed (Must be &ge; Minimum){' '}
+                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                            {formatDuration(data.access_code_max_lifespan_minutes)}
+                                        </span>
+                                    </p>
+                                    {errors.access_code_max_lifespan_minutes && (
+                                        <p className="mt-1 text-xs text-red-500">{errors.access_code_max_lifespan_minutes}</p>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Visitor Access Policies */}
+                            <div className="space-y-4 pt-2">
+                                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Visitor Policies
+                                </h3>
+
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.access_code_single_use}
+                                            onChange={(e) => setData('access_code_single_use', e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-medium text-slate-900 dark:text-white">Single-use Access Codes</span>
+                                            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                Code automatically expires immediately after first successful gate entry scan.
+                                            </span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.require_vehicle_information}
+                                            onChange={(e) => setData('require_vehicle_information', e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Vehicle Information</span>
+                                            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                Mandate vehicle license plate or driver details when residents invite driving visitors.
+                                            </span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.allow_residents_to_extend_visitor_passes}
+                                            onChange={(e) => setData('allow_residents_to_extend_visitor_passes', e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-medium text-slate-900 dark:text-white">Allow Pass Extensions</span>
+                                            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                Permit residents to extend active visitor pass durations directly from their mobile portal.
+                                            </span>
+                                        </div>
+                                    </label>
+
+                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.visitor_checkout_enabled}
+                                            onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                        />
+                                        <div>
+                                            <span className="block text-sm font-medium text-slate-900 dark:text-white">Visitor Checkout Tracking</span>
+                                            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                Security guards scan visitor codes upon exit to record exact departure timestamps.
+                                            </span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    {/* SECTION 2: SECURITY OPERATIONS */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.1 }}
+                        className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60"
+                    >
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-5 dark:border-slate-800/80">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
+                                <ShieldAlert className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">2. Security Operations</h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Configure incident categories, report requirements, severity defaults, and alert escalations.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 space-y-6">
+                            {/* Incident Categories Manager */}
+                            <div>
+                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    Allowed Incident Categories
+                                </label>
+                                <div className="mt-2 flex flex-wrap gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30">
+                                    {data.incident_categories.map((category) => (
+                                        <span
+                                            key={category}
+                                            className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                        >
+                                            {category}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveCategory(category)}
+                                                className="text-slate-400 hover:text-red-500"
+                                            >
+                                                <X className="h-3.5 w-3.5" />
+                                            </button>
+                                        </span>
+                                    ))}
+
+                                    <div className="inline-flex items-center gap-1.5">
+                                        <input
+                                            type="text"
+                                            value={newCategoryInput}
+                                            onChange={(e) => setNewCategoryInput(e.target.value)}
+                                            onKeyDown={handleAddCategory}
+                                            placeholder="Add category & press Enter..."
+                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddCategory}
+                                            className="rounded-lg bg-amber-500 p-1 text-white hover:bg-amber-600"
+                                        >
+                                            <Plus className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Default Incident Severity Select */}
+                            <div>
+                                <label htmlFor="default_severity" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    Default Incident Severity
+                                </label>
+                                <select
+                                    id="default_severity"
+                                    value={data.default_incident_severity}
+                                    onChange={(e) => setData('default_incident_severity', e.target.value)}
+                                    className="mt-2 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                >
+                                    <option value="Low">Low (Informational / Minor)</option>
+                                    <option value="Medium">Medium (Requires Review)</option>
+                                    <option value="High">High (Urgent Response Needed)</option>
+                                    <option value="Critical">Critical (Immediate Security Dispatch)</option>
+                                </select>
+                            </div>
+
+                            {/* Incident Evidence & Reporting Toggles */}
+                            <div className="grid gap-4 sm:grid-cols-2 pt-2">
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.allow_residents_to_report_incidents}
+                                        onChange={(e) => setData('allow_residents_to_report_incidents', e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                    />
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">Allow Resident Incident Reporting</span>
+                                        <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                            Residents can submit security reports directly from their mobile portal.
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.notify_admins_immediately_for_critical_incidents}
+                                        onChange={(e) => setData('notify_admins_immediately_for_critical_incidents', e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                    />
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">Notify Admins on Critical Incidents</span>
+                                        <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                            Send immediate high-priority alerts to estate managers for Critical severity reports.
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.require_photo_evidence_for_incidents}
+                                        onChange={(e) => setData('require_photo_evidence_for_incidents', e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                    />
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Photo Evidence</span>
+                                        <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                            Mandate photo attachment before an incident report can be submitted.
+                                        </span>
+                                    </div>
+                                </label>
+
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.require_resolution_notes_for_incidents}
+                                        onChange={(e) => setData('require_resolution_notes_for_incidents', e.target.checked)}
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                    />
+                                    <div>
+                                        <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Resolution Notes</span>
+                                        <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                            Require security personnel to type detailed notes before closing an incident ticket.
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    {/* SECTION 3: COLLECTIONS & BILLING */}
+                    <motion.section
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.15 }}
+                        className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60"
+                    >
+                        <div className="flex items-center gap-3 border-b border-slate-100 pb-5 dark:border-slate-800/80">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                                <CreditCard className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">3. Collections &amp; Billing</h2>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                    Manage partial payment thresholds and automated collection reminder policies.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 space-y-6">
+                            {/* Partial Payments Toggle */}
+                            <div className="flex items-start justify-between gap-4 rounded-xl border border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-800/20">
+                                <div>
+                                    <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                                        Allow Partial Payments
+                                    </span>
+                                    <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                        Permit residents to pay bills in flexible installments rather than requiring full lump-sum payment.
+                                    </span>
+                                </div>
+                                <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={data.allow_partial_payments}
+                                        onChange={(e) => setData('allow_partial_payments', e.target.checked)}
+                                        className="peer sr-only"
+                                    />
+                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-blue-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-blue-500"></div>
+                                </label>
+                            </div>
+
+                            {/* Partial Payment Thresholds */}
+                            {data.allow_partial_payments && (
+                                <div className="grid gap-6 sm:grid-cols-2 rounded-xl border border-blue-100 bg-blue-50/30 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
+                                    <div>
+                                        <label htmlFor="min_partial_amount" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                                            Minimum Partial Amount (NGN &#8358;)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="min_partial_amount"
+                                            min="0"
+                                            step="100"
+                                            value={data.minimum_partial_payment_amount || ''}
+                                            onChange={(e) => setData('minimum_partial_payment_amount', parseFloat(e.target.value) || 0)}
+                                            placeholder="e.g. 5000"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                            Absolute minimum NGN Naira amount required per installment.
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="min_partial_percent" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                                            Minimum Partial Percentage (%)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="min_partial_percent"
+                                            min="1"
+                                            max="100"
+                                            value={data.minimum_partial_payment_percentage || ''}
+                                            onChange={(e) => setData('minimum_partial_payment_percentage', parseInt(e.target.value) || 0)}
+                                            placeholder="e.g. 20"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                            Minimum percentage of bill balance required per partial installment (1-100%).
+                                        </p>
+                                        {errors.minimum_partial_payment_percentage && (
+                                            <p className="mt-1 text-xs text-red-500">{errors.minimum_partial_payment_percentage}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Collection Reminder Policy */}
+                            <div className="space-y-4 pt-2">
+                                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Collection Reminder Policy
+                                </h3>
+
+                                <div className="grid gap-6 sm:grid-cols-3">
+                                    <div>
+                                        <label htmlFor="reminder_freq" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                            Reminder Frequency
+                                        </label>
+                                        <select
+                                            id="reminder_freq"
+                                            value={data.collection_reminder_frequency}
+                                            onChange={(e) => setData('collection_reminder_frequency', e.target.value)}
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        >
+                                            <option value="daily">Daily</option>
+                                            <option value="3_days">Every 3 Days</option>
+                                            <option value="weekly">Weekly</option>
+                                            <option value="custom">Custom Interval</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="max_reminder_attempts" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                            Maximum Reminder Attempts
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="max_reminder_attempts"
+                                            min="1"
+                                            max="20"
+                                            value={data.collection_maximum_reminder_attempts}
+                                            onChange={(e) => setData('collection_maximum_reminder_attempts', parseInt(e.target.value) || 1)}
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="reminder_before_due" className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                            Send Reminder Before Due Date (Days)
+                                        </label>
+                                        <input
+                                            type="number"
+                                            id="reminder_before_due"
+                                            min="0"
+                                            max="30"
+                                            value={data.send_reminder_before_due_date_days}
+                                            onChange={(e) => setData('send_reminder_before_due_date_days', parseInt(e.target.value) || 0)}
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+
+                    {/* Bottom Save Bar */}
+                    <div className="flex items-center justify-between border-t border-slate-200/80 pt-6 dark:border-slate-800">
+                        <p className="text-xs text-slate-400">
+                            Changes take effect immediately across all active estate devices.
+                        </p>
+                        <button
+                            type="submit"
+                            disabled={processing}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                        >
+                            <Save className="h-4 w-4" />
+                            {processing ? 'Saving Changes...' : 'Save Settings'}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </>
     );
 }
