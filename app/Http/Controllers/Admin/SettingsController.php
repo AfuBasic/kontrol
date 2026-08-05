@@ -60,8 +60,7 @@ class SettingsController extends Controller
 
                 // 3. Collections & Billing
                 'allow_partial_payments' => (bool) $settings->allow_partial_payments,
-                'minimum_partial_payment_amount' => $settings->minimum_partial_payment_amount ? round($settings->minimum_partial_payment_amount / 100, 2) : 0,
-                'minimum_partial_payment_percentage' => (int) ($settings->minimum_partial_payment_percentage ?: 0),
+                'minimum_partial_payment_percentage' => (int) ($settings->minimum_partial_payment_percentage ?: 10),
                 'collection_reminder_frequency' => $settings->collection_reminder_frequency ?: 'weekly',
                 'collection_maximum_reminder_attempts' => (int) ($settings->collection_maximum_reminder_attempts ?: 3),
                 'send_reminder_before_due_date_days' => (int) ($settings->send_reminder_before_due_date_days ?: 1),
