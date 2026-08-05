@@ -30,10 +30,14 @@ class VerifyController extends Controller
     {
         $user = $request->user();
         $estate = $user->getCurrentEstate();
+        $settings = \App\Models\EstateSettings::forEstate($estate->id);
 
         return Inertia::render('Security/Verify', [
             'estateName' => $estate->name,
             'gateName' => 'Main Entrance',
+            'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
+            'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
+            'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
         ]);
     }
 
