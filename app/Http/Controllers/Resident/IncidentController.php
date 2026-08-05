@@ -40,12 +40,13 @@ class IncidentController extends Controller
         $filters = request()->only(['category', 'status', 'tab', 'search', 'sort']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
-        $categories = EstateSettings::resolveCategoriesForEstate($estateId);
+        $settings = EstateSettings::forEstate($estateId);
 
         return Inertia::render('Resident/Incidents/Index', [
             'incidents' => $incidents,
             'filters' => $filters,
             'categories' => $categories,
+            'allowResidentReporting' => (bool) $settings->allow_residents_to_report_incidents,
         ]);
     }
 
@@ -66,6 +67,7 @@ class IncidentController extends Controller
 
         return Inertia::render('Resident/Incidents/Create', [
             'categories' => $categories,
+            'requirePhotoEvidence' => (bool) $settings->require_photo_evidence_for_incidents,
         ]);
     }
 
