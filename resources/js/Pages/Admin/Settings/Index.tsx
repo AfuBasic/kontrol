@@ -75,7 +75,7 @@ export default function Settings({ settings }: SettingsProps) {
 
         // Collections & Billing
         allow_partial_payments: settings.allow_partial_payments,
-        minimum_partial_payment_percentage: settings.minimum_partial_payment_percentage,
+        minimum_partial_payment_percentage: settings.minimum_partial_payment_percentage ?? 10,
         collection_reminder_frequency: settings.collection_reminder_frequency || 'weekly',
         collection_maximum_reminder_attempts: settings.collection_maximum_reminder_attempts || 3,
         send_reminder_before_due_date_days: settings.send_reminder_before_due_date_days || 1,
@@ -527,9 +527,20 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="min_partial_percent"
                                             min="1"
                                             max="100"
-                                            value={data.minimum_partial_payment_percentage || ''}
-                                            onChange={(e) => setData('minimum_partial_payment_percentage', parseInt(e.target.value) || 0)}
-                                            placeholder="e.g. 20"
+                                            step="1"
+                                            value={data.minimum_partial_payment_percentage}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                if (val === '') {
+                                                    setData('minimum_partial_payment_percentage', 10);
+                                                } else {
+                                                    const parsed = Math.floor(parseFloat(val));
+                                                    if (!isNaN(parsed)) {
+                                                        setData('minimum_partial_payment_percentage', Math.max(1, Math.min(100, parsed)));
+                                                    }
+                                                }
+                                            }}
+                                            placeholder="10"
                                             className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
