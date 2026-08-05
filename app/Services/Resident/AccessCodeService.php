@@ -81,15 +81,21 @@ class AccessCodeService
             }
         }
 
+        $settings = EstateSettings::forEstate($estate->id);
+        $min = $settings->access_code_min_lifespan_minutes ?: 15;
+        $max = $settings->access_code_max_lifespan_minutes ?: 1440;
+
         if (! empty($data['expires_at'])) {
             $expiresAt = Carbon::parse($data['expires_at']);
+            $baseStart = $startsAt ?? now();
+            $duration = $baseStart->diffInMinutes($expiresAt);
+            if ($duration < $min) {
+                $expiresAt = $baseStart->copy()->addMinutes($min);
+            } elseif ($duration > $max) {
+                $expiresAt = $baseStart->copy()->addMinutes($max);
+            }
         } elseif ($type === 'single_use' || $type === 'event') {
-            $minutes = $data['duration_minutes'] ?? 60; // Default fallback
-
-            // Enforce Estate Settings Constraints
-            $settings = EstateSettings::forEstate($estate->id);
-            $min = $settings->access_code_min_lifespan_minutes;
-            $max = $settings->access_code_max_lifespan_minutes;
+            $minutes = $data['duration_minutes'] ?? $min;
 
             if ($minutes < $min) {
                 $minutes = $min;
