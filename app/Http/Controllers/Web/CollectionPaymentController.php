@@ -71,13 +71,30 @@ class CollectionPaymentController extends Controller
             }
         }
 
-        // Partial payments are only allowed when remaining balance is at least 20% of the original bill.
-        $originalBill = max(0, (int) $assignment->amount_due);
-        $minRemainingForPartial = (int) ceil($originalBill * 0.2);
-        if ($paymentAmountNaira < $remainingBalance && $remainingBalance < $minRemainingForPartial) {
-            return response()->json([
-                'message' => 'Partial payments are only available when at least 20% of the bill remains unpaid. Please pay the full outstanding amount.',
-            ], 400);
+        // Enforce Estate Operational Policies for Partial Payments
+        if ($paymentAmountNaira < $remainingBalance) {
+            $settings = EstateSettings::forEstate($assignment->estate_id);
+
+            if (! $settings->allow_partial_payments) {
+                return response()->json([
+                    'message' => 'Partial payments are currently disabled by estate policy. Please pay the full outstanding amount.',
+                ], 400);
+            }
+
+            $minAmountNaira = $settings->minimum_partial_payment_amount ? (int) round($settings->minimum_partial_payment_amount / 100) : 0;
+            if ($minAmountNaira > 0 && $paymentAmountNaira < $minAmountNaira) {
+                return response()->json([
+                    'message' => 'The minimum partial payment amount allowed by estate policy is ₦'.number_format($minAmountNaira, 2).'.',
+                ], 400);
+            }
+
+            $minPct = $settings->minimum_partial_payment_percentage ?? 10;
+            $minPctNaira = (int) ceil(($assignment->amount_due * $minPct) / 100);
+            if ($minPctNaira > 0 && $paymentAmountNaira < $minPctNaira) {
+                return response()->json([
+                    'message' => "Partial payments must be at least {$minPct}% of the total bill (₦".number_format($minPctNaira, 2).').',
+                ], 400);
+            }
         }
 
         // 2. Resolve subaccount & check configuration
