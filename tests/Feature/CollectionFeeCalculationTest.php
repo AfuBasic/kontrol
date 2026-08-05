@@ -185,7 +185,7 @@ it('resolves the correct subaccount for property owner collections', function ()
     ]);
 });
 
-it('accepts partial payment amounts in NGN when remaining balance is at least 20000', function () {
+it('accepts partial payment amounts when remaining balance is at least 20% of the bill', function () {
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     setPermissionsTeamId($estate->id);
@@ -203,20 +203,21 @@ it('accepts partial payment amounts in NGN when remaining balance is at least 20
     $collection = Collection::factory()->create([
         'estate_id' => $estate->id,
         'created_by' => $admin->id,
-        'amount' => 50000,
+        'amount' => 100000,
     ]);
 
+    // 50% still outstanding → partial allowed
     $assignment = CollectionAssignment::factory()->create([
         'collection_id' => $collection->id,
         'estate_id' => $estate->id,
         'user_id' => $resident->id,
-        'amount_due' => 50000,
-        'amount_paid' => 0,
-        'status' => 'pending',
+        'amount_due' => 100000,
+        'amount_paid' => 50000,
+        'status' => 'partial',
     ]);
 
     $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
-        'amount' => 25000, // NGN partial payment
+        'amount' => 25000,
     ]);
 
     $response->assertSuccessful()
@@ -227,7 +228,7 @@ it('accepts partial payment amounts in NGN when remaining balance is at least 20
     expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(25000);
 });
 
-it('rejects partial payments when remaining balance is below 20000', function () {
+it('rejects partial payments when remaining balance is below 20% of the bill', function () {
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     setPermissionsTeamId($estate->id);
@@ -245,16 +246,17 @@ it('rejects partial payments when remaining balance is below 20000', function ()
     $collection = Collection::factory()->create([
         'estate_id' => $estate->id,
         'created_by' => $admin->id,
-        'amount' => 15000,
+        'amount' => 100000,
     ]);
 
+    // Only 15% remaining → partial blocked
     $assignment = CollectionAssignment::factory()->create([
         'collection_id' => $collection->id,
         'estate_id' => $estate->id,
         'user_id' => $resident->id,
-        'amount_due' => 15000,
-        'amount_paid' => 0,
-        'status' => 'pending',
+        'amount_due' => 100000,
+        'amount_paid' => 85000,
+        'status' => 'partial',
     ]);
 
     $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
@@ -263,13 +265,13 @@ it('rejects partial payments when remaining balance is below 20000', function ()
 
     $response->assertStatus(400)
         ->assertJsonFragment([
-            'message' => 'Partial payments are only available when the remaining balance is ₦20,000 or more. Please pay the full outstanding amount.',
+            'message' => 'Partial payments are only available when at least 20% of the bill remains unpaid. Please pay the full outstanding amount.',
         ]);
 
     expect(Payment::where('collection_assignment_id', $assignment->id)->count())->toBe(0);
 });
 
-it('still allows full payment when remaining balance is below 20000', function () {
+it('still allows full payment when remaining balance is below 20% of the bill', function () {
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     setPermissionsTeamId($estate->id);
@@ -287,16 +289,16 @@ it('still allows full payment when remaining balance is below 20000', function (
     $collection = Collection::factory()->create([
         'estate_id' => $estate->id,
         'created_by' => $admin->id,
-        'amount' => 15000,
+        'amount' => 100000,
     ]);
 
     $assignment = CollectionAssignment::factory()->create([
         'collection_id' => $collection->id,
         'estate_id' => $estate->id,
         'user_id' => $resident->id,
-        'amount_due' => 15000,
-        'amount_paid' => 0,
-        'status' => 'pending',
+        'amount_due' => 100000,
+        'amount_paid' => 85000,
+        'status' => 'partial',
     ]);
 
     $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
@@ -327,14 +329,14 @@ it('normalizes legacy kobo amounts from the client into NGN when partial is allo
     $collection = Collection::factory()->create([
         'estate_id' => $estate->id,
         'created_by' => $admin->id,
-        'amount' => 40000,
+        'amount' => 100000,
     ]);
 
     $assignment = CollectionAssignment::factory()->create([
         'collection_id' => $collection->id,
         'estate_id' => $estate->id,
         'user_id' => $resident->id,
-        'amount_due' => 40000,
+        'amount_due' => 100000,
         'amount_paid' => 0,
         'status' => 'pending',
     ]);
