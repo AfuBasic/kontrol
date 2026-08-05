@@ -71,6 +71,14 @@ class CollectionPaymentController extends Controller
             }
         }
 
+        // Partial payments are only allowed when remaining balance is at least ₦20,000.
+        $minBalanceForPartial = 20000;
+        if ($paymentAmountNaira < $remainingBalance && $remainingBalance < $minBalanceForPartial) {
+            return response()->json([
+                'message' => 'Partial payments are only available when the remaining balance is ₦20,000 or more. Please pay the full outstanding amount.',
+            ], 400);
+        }
+
         // 2. Resolve subaccount & check configuration
         $subaccount = $this->resolveSubaccount($assignment);
         if (empty($subaccount)) {
