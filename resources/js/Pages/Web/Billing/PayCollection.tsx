@@ -253,16 +253,6 @@ export default function PayCollection({
                         </span>
                     </div>
 
-                    {!allowsPartialPayment && amountToPay > 0 && (
-                        <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs font-medium text-amber-200/90">
-                            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
-                            <span>
-                                Partial payments are only available when at least 20% of the bill remains unpaid. Your
-                                remaining balance is {formatCurrency(amountToPay)} — please settle it in full.
-                            </span>
-                        </div>
-                    )}
-
                     <div className={`grid grid-cols-1 gap-4 ${allowsPartialPayment ? 'sm:grid-cols-2' : ''}`}>
                         {/* Option 1: Full Amount */}
                         <div
