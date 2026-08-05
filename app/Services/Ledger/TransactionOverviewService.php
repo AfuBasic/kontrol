@@ -303,7 +303,7 @@ class TransactionOverviewService
                 ->where('collection_assignment_id', $assignment->id)
                 ->where('status', TransactionStatus::Success)
                 ->where('id', '!=', $transaction->id)
-                ->where('created_at', '<=', $transaction->created_at)
+                ->where('created_at', '<', $transaction->created_at)
                 ->orderBy('created_at', 'asc')
                 ->get();
 
@@ -318,9 +318,9 @@ class TransactionOverviewService
             $previousTotal = (int) $priorTransactions->sum('amount');
             $originalBillKobo = (int) round($assignment->amount_due * 100);
             $currentPaymentKobo = (int) $transaction->amount;
-            $totalPaidToDateKobo = (int) round($assignment->amount_paid * 100);
+            $totalPaidToDateKobo = $previousTotal + $currentPaymentKobo;
             $remainingBalanceKobo = max(0, $originalBillKobo - $totalPaidToDateKobo);
-            $isPartial = $remainingBalanceKobo > 0 || $assignment->status === 'partial';
+            $isPartial = $remainingBalanceKobo > 0;
 
             $paymentBreakdown = [
                 'is_partial' => $isPartial,
