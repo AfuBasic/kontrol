@@ -191,15 +191,23 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="min_lifespan"
                                             min="1"
                                             max="10080"
-                                            value={data.access_code_min_lifespan_minutes}
-                                            onChange={(e) => setData('access_code_min_lifespan_minutes', parseInt(e.target.value) || 1)}
+                                            value={data.access_code_min_lifespan_minutes ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setData('access_code_min_lifespan_minutes', val === '' ? ('' as any) : parseInt(val, 10));
+                                            }}
+                                            onBlur={() => {
+                                                if (!data.access_code_min_lifespan_minutes) {
+                                                    setData('access_code_min_lifespan_minutes', 60);
+                                                }
+                                            }}
                                             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
                                         Shortest validity period allowed{' '}
                                         <span className="font-semibold text-primary-600 dark:text-primary-400">
-                                            {formatDuration(data.access_code_min_lifespan_minutes)}
+                                            {formatDuration(Number(data.access_code_min_lifespan_minutes) || 0)}
                                         </span>
                                     </p>
                                     {errors.access_code_min_lifespan_minutes && (
@@ -217,8 +225,16 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="max_lifespan"
                                             min="1"
                                             max="10080"
-                                            value={data.access_code_max_lifespan_minutes}
-                                            onChange={(e) => setData('access_code_max_lifespan_minutes', parseInt(e.target.value) || 1)}
+                                            value={data.access_code_max_lifespan_minutes ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setData('access_code_max_lifespan_minutes', val === '' ? ('' as any) : parseInt(val, 10));
+                                            }}
+                                            onBlur={() => {
+                                                if (!data.access_code_max_lifespan_minutes) {
+                                                    setData('access_code_max_lifespan_minutes', 1440);
+                                                }
+                                            }}
                                             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
@@ -528,16 +544,17 @@ export default function Settings({ settings }: SettingsProps) {
                                             min="10"
                                             max="90"
                                             step="1"
-                                            value={data.minimum_partial_payment_percentage}
+                                            value={data.minimum_partial_payment_percentage ?? ''}
                                             onChange={(e) => {
                                                 const val = e.target.value;
-                                                if (val === '') {
+                                                setData('minimum_partial_payment_percentage', val === '' ? ('' as any) : parseInt(val, 10));
+                                            }}
+                                            onBlur={() => {
+                                                const val = Number(data.minimum_partial_payment_percentage);
+                                                if (!val || val < 10) {
                                                     setData('minimum_partial_payment_percentage', 10);
-                                                } else {
-                                                    const parsed = Math.floor(parseFloat(val));
-                                                    if (!isNaN(parsed)) {
-                                                        setData('minimum_partial_payment_percentage', Math.max(10, Math.min(90, parsed)));
-                                                    }
+                                                } else if (val > 90) {
+                                                    setData('minimum_partial_payment_percentage', 90);
                                                 }
                                             }}
                                             placeholder="10"
@@ -586,8 +603,16 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="max_reminder_attempts"
                                             min="1"
                                             max="20"
-                                            value={data.collection_maximum_reminder_attempts}
-                                            onChange={(e) => setData('collection_maximum_reminder_attempts', parseInt(e.target.value) || 1)}
+                                            value={data.collection_maximum_reminder_attempts ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setData('collection_maximum_reminder_attempts', val === '' ? ('' as any) : parseInt(val, 10));
+                                            }}
+                                            onBlur={() => {
+                                                if (!data.collection_maximum_reminder_attempts) {
+                                                    setData('collection_maximum_reminder_attempts', 3);
+                                                }
+                                            }}
                                             className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
@@ -601,8 +626,16 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="reminder_before_due"
                                             min="0"
                                             max="30"
-                                            value={data.send_reminder_before_due_date_days}
-                                            onChange={(e) => setData('send_reminder_before_due_date_days', parseInt(e.target.value) || 0)}
+                                            value={data.send_reminder_before_due_date_days ?? ''}
+                                            onChange={(e) => {
+                                                const val = e.target.value;
+                                                setData('send_reminder_before_due_date_days', val === '' ? ('' as any) : parseInt(val, 10));
+                                            }}
+                                            onBlur={() => {
+                                                if (data.send_reminder_before_due_date_days === '' || data.send_reminder_before_due_date_days === undefined) {
+                                                    setData('send_reminder_before_due_date_days', 1);
+                                                }
+                                            }}
                                             className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
