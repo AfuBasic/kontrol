@@ -5,19 +5,8 @@ import {
     Key, 
     ShieldAlert, 
     CreditCard, 
-    Check, 
     Plus, 
     X, 
-    Clock, 
-    Car, 
-    QrCode, 
-    Camera, 
-    FileText, 
-    AlertTriangle, 
-    Bell, 
-    Percent, 
-    Coins, 
-    Calendar,
     Save
 } from 'lucide-react';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
@@ -142,7 +131,7 @@ export default function Settings({ settings }: SettingsProps) {
                         type="button"
                         onClick={handleSubmit}
                         disabled={processing}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
                     >
                         <Save className="h-4 w-4" />
                         {processing ? 'Saving Changes...' : 'Save Settings'}
@@ -253,65 +242,77 @@ export default function Settings({ settings }: SettingsProps) {
                                 </h3>
 
                                 <div className="grid gap-4 sm:grid-cols-2">
-                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.access_code_single_use}
-                                            onChange={(e) => setData('access_code_single_use', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                        />
+                                    <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Single-use Access Codes</span>
                                             <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                                 Code automatically expires immediately after first successful gate entry scan.
                                             </span>
                                         </div>
-                                    </label>
+                                        <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.access_code_single_use}
+                                                onChange={(e) => setData('access_code_single_use', e.target.checked)}
+                                                className="peer sr-only"
+                                            />
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        </label>
+                                    </div>
 
-                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.require_vehicle_information}
-                                            onChange={(e) => setData('require_vehicle_information', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                        />
+                                    <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Vehicle Information</span>
                                             <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                                 Mandate vehicle license plate or driver details when residents invite driving visitors.
                                             </span>
                                         </div>
-                                    </label>
+                                        <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.require_vehicle_information}
+                                                onChange={(e) => setData('require_vehicle_information', e.target.checked)}
+                                                className="peer sr-only"
+                                            />
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        </label>
+                                    </div>
 
-                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.allow_residents_to_extend_visitor_passes}
-                                            onChange={(e) => setData('allow_residents_to_extend_visitor_passes', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                        />
+                                    <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Allow Pass Extensions</span>
                                             <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                                 Permit residents to extend active visitor pass durations directly from their mobile portal.
                                             </span>
                                         </div>
-                                    </label>
+                                        <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.allow_residents_to_extend_visitor_passes}
+                                                onChange={(e) => setData('allow_residents_to_extend_visitor_passes', e.target.checked)}
+                                                className="peer sr-only"
+                                            />
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        </label>
+                                    </div>
 
-                                    <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.visitor_checkout_enabled}
-                                            onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                        />
+                                    <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Visitor Checkout Tracking</span>
                                             <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                                 Security guards scan visitor codes upon exit to record exact departure timestamps.
                                             </span>
                                         </div>
-                                    </label>
+                                        <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.visitor_checkout_enabled}
+                                                onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
+                                                className="peer sr-only"
+                                            />
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -371,7 +372,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         <button
                                             type="button"
                                             onClick={handleAddCategory}
-                                            className="rounded-lg bg-primary-600 p-1 text-white hover:bg-primary-700"
+                                            className="rounded-lg bg-primary-600 p-1 text-white hover:bg-primary-700 active:scale-95"
                                         >
                                             <Plus className="h-4 w-4" />
                                         </button>
@@ -399,65 +400,77 @@ export default function Settings({ settings }: SettingsProps) {
 
                             {/* Incident Evidence & Reporting Toggles */}
                             <div className="grid gap-4 sm:grid-cols-2 pt-2">
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.allow_residents_to_report_incidents}
-                                        onChange={(e) => setData('allow_residents_to_report_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    />
+                                <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Allow Resident Incident Reporting</span>
                                         <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                             Residents can submit security reports directly from their mobile portal.
                                         </span>
                                     </div>
-                                </label>
+                                    <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.allow_residents_to_report_incidents}
+                                            onChange={(e) => setData('allow_residents_to_report_incidents', e.target.checked)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                    </label>
+                                </div>
 
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.notify_admins_immediately_for_critical_incidents}
-                                        onChange={(e) => setData('notify_admins_immediately_for_critical_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    />
+                                <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Notify Admins on Critical Incidents</span>
                                         <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                             Send immediate high-priority alerts to estate managers for Critical severity reports.
                                         </span>
                                     </div>
-                                </label>
+                                    <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.notify_admins_immediately_for_critical_incidents}
+                                            onChange={(e) => setData('notify_admins_immediately_for_critical_incidents', e.target.checked)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                    </label>
+                                </div>
 
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.require_photo_evidence_for_incidents}
-                                        onChange={(e) => setData('require_photo_evidence_for_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    />
+                                <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Photo Evidence</span>
                                         <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                             Mandate photo attachment before an incident report can be submitted.
                                         </span>
                                     </div>
-                                </label>
+                                    <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.require_photo_evidence_for_incidents}
+                                            onChange={(e) => setData('require_photo_evidence_for_incidents', e.target.checked)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                    </label>
+                                </div>
 
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
-                                    <input
-                                        type="checkbox"
-                                        checked={data.require_resolution_notes_for_incidents}
-                                        onChange={(e) => setData('require_resolution_notes_for_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
-                                    />
+                                <div className="flex items-start justify-between gap-3 rounded-xl border border-slate-200/60 p-4 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40">
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Resolution Notes</span>
                                         <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
                                             Require security personnel to type detailed notes before closing an incident ticket.
                                         </span>
                                     </div>
-                                </label>
+                                    <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            checked={data.require_resolution_notes_for_incidents}
+                                            onChange={(e) => setData('require_resolution_notes_for_incidents', e.target.checked)}
+                                            className="peer sr-only"
+                                        />
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </motion.section>
@@ -615,7 +628,7 @@ export default function Settings({ settings }: SettingsProps) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
                         >
                             <Save className="h-4 w-4" />
                             {processing ? 'Saving Changes...' : 'Save Settings'}
