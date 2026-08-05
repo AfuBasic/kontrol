@@ -525,8 +525,8 @@ export default function Settings({ settings }: SettingsProps) {
                                         <input
                                             type="number"
                                             id="min_partial_percent"
-                                            min="1"
-                                            max="100"
+                                            min="10"
+                                            max="90"
                                             step="1"
                                             value={data.minimum_partial_payment_percentage}
                                             onChange={(e) => {
@@ -536,7 +536,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 } else {
                                                     const parsed = Math.floor(parseFloat(val));
                                                     if (!isNaN(parsed)) {
-                                                        setData('minimum_partial_payment_percentage', Math.max(1, Math.min(100, parsed)));
+                                                        setData('minimum_partial_payment_percentage', Math.max(10, Math.min(90, parsed)));
                                                     }
                                                 }
                                             }}
@@ -544,7 +544,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                            Minimum percentage of bill balance required per partial installment (1-100%).
+                                            Minimum percentage of bill balance required per partial installment (10-90%).
                                         </p>
                                         {errors.minimum_partial_payment_percentage && (
                                             <p className="mt-1 text-xs text-red-500">{errors.minimum_partial_payment_percentage}</p>
