@@ -43,6 +43,7 @@ class AccessCodeController extends Controller
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
             'visitorStats' => $this->accessCodeService->getHomeStats(),
+            'accessCodesEnabled' => (bool) (EstateSettings::forEstate($this->estateContext->getEstateId())->access_codes_enabled ?? true),
         ]);
     }
 
@@ -146,10 +147,14 @@ class AccessCodeController extends Controller
         $subscription = $user->residentSubscription;
         $isSubscriptionActive = $subscription ? $subscription->isActive() : false;
 
+        $settings = EstateSettings::forEstate($this->estateContext->getEstateId());
+
         return Inertia::render('Resident/Visitors/Create', [
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
             'isSubscriptionActive' => $isSubscriptionActive,
+            'accessCodesEnabled' => (bool) ($settings->access_codes_enabled ?? true),
+            'requireVehicleInfo' => (bool) ($settings->require_vehicle_information ?? false),
         ]);
     }
 
