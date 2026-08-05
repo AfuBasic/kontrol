@@ -42,6 +42,9 @@ type Props = {
         transaction_charge: number;
     };
     hasSubscription: boolean;
+    allowPartialPayments?: boolean;
+    minPartialAmount?: number;
+    minPartialPercentage?: number;
 };
 
 declare global {
@@ -50,7 +53,15 @@ declare global {
     }
 }
 
-export default function PayCollection({ assignment, paystackKey, feeBreakdown, hasSubscription }: Props) {
+export default function PayCollection({
+    assignment,
+    paystackKey,
+    feeBreakdown,
+    hasSubscription,
+    allowPartialPayments = true,
+    minPartialAmount = 0,
+    minPartialPercentage = 10,
+}: Props) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [paymentMode, setPaymentMode] = useState<'full' | 'partial'>('full');
@@ -59,8 +70,9 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
     // assignment.amount_due / amount_paid are stored and displayed in NGN
     const originalBill = Math.max(0, Number(assignment.amount_due) || 0);
     const amountToPay = Math.max(0, originalBill - (Number(assignment.amount_paid) || 0));
-    const minRemainingForPartial = originalBill * MIN_REMAINING_RATIO_FOR_PARTIAL;
-    const allowsPartialPayment = originalBill > 0 && amountToPay >= minRemainingForPartial;
+    const minPctAmount = (originalBill * minPartialPercentage) / 100;
+    const minThreshold = Math.max(minPartialAmount, minPctAmount);
+    const allowsPartialPayment = allowPartialPayments && originalBill > 0 && amountToPay >= minThreshold;
     const activePaymentMode = allowsPartialPayment ? paymentMode : 'full';
     const parsedCustom = parseFloat(customAmount) || 0;
     const effectivePaymentAmount =

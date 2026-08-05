@@ -34,11 +34,19 @@ class CollectionPaymentController extends Controller
 
         $fees = $this->calculateFees($baseAmount, $hasActiveSubscription);
 
+        $settings = EstateSettings::forEstate($assignment->estate_id);
+        $allowPartialPayments = (bool) ($settings->allow_partial_payments ?? true);
+        $minPartialAmount = $settings->minimum_partial_payment_amount ? round($settings->minimum_partial_payment_amount / 100, 2) : 0;
+        $minPartialPercentage = (int) ($settings->minimum_partial_payment_percentage ?? 10);
+
         return Inertia::render('Web/Billing/PayCollection', [
             'assignment' => $assignment,
             'paystackKey' => config('services.paystack.public_key'),
             'feeBreakdown' => $fees,
             'hasSubscription' => $hasActiveSubscription,
+            'allowPartialPayments' => $allowPartialPayments,
+            'minPartialAmount' => $minPartialAmount,
+            'minPartialPercentage' => $minPartialPercentage,
         ]);
     }
 
