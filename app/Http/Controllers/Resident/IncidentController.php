@@ -40,10 +40,7 @@ class IncidentController extends Controller
         $filters = request()->only(['category', 'status', 'tab', 'search', 'sort']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
         return Inertia::render('Resident/Incidents/Index', [
             'incidents' => $incidents,
@@ -65,10 +62,7 @@ class IncidentController extends Controller
             abort(403, 'Resident incident reporting is currently disabled by estate policy.');
         }
 
-        $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
-            'value' => $cat->value,
-            'label' => $cat->label(),
-        ])->toArray();
+        $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
         return Inertia::render('Resident/Incidents/Create', [
             'categories' => $categories,
