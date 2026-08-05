@@ -6,6 +6,7 @@ use App\Actions\Incidents\CreateIncidentAction;
 use App\Enums\IncidentCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\IncidentUpvote;
@@ -59,7 +60,7 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
-        $settings = \App\Models\EstateSettings::forEstate($estate->id);
+        $settings = EstateSettings::forEstate($estate->id);
         if (! $settings->allow_residents_to_report_incidents) {
             abort(403, 'Resident incident reporting is currently disabled by estate policy.');
         }
@@ -82,7 +83,7 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
-        $settings = \App\Models\EstateSettings::forEstate($estate->id);
+        $settings = EstateSettings::forEstate($estate->id);
         if (! $settings->allow_residents_to_report_incidents) {
             return back()->withErrors(['incident' => 'Resident incident reporting is currently disabled by estate policy.']);
         }
