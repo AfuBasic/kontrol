@@ -279,6 +279,7 @@ class AccessCodeController extends Controller
             ],
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
+            'allowExtendPasses' => (bool) (EstateSettings::forEstate($userCode->estate_id)->allow_residents_to_extend_visitor_passes ?? true),
         ]);
     }
 
