@@ -4,8 +4,8 @@ import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User
 import { useEffect, useState } from 'react';
 import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
-/** Partial payments are only offered when remaining balance is at least this amount (NGN). */
-const MIN_BALANCE_FOR_PARTIAL_PAYMENT = 20_000;
+/** Partial payments are only offered when remaining balance is at least this share of the original bill. */
+const MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;
 
 type Collection = {
     name: string;
@@ -57,8 +57,10 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
     const [customAmount, setCustomAmount] = useState<string>('');
 
     // assignment.amount_due / amount_paid are stored and displayed in NGN
-    const amountToPay = Math.max(0, assignment.amount_due - assignment.amount_paid);
-    const allowsPartialPayment = amountToPay >= MIN_BALANCE_FOR_PARTIAL_PAYMENT;
+    const originalBill = Math.max(0, Number(assignment.amount_due) || 0);
+    const amountToPay = Math.max(0, originalBill - (Number(assignment.amount_paid) || 0));
+    const minRemainingForPartial = originalBill * MIN_REMAINING_RATIO_FOR_PARTIAL;
+    const allowsPartialPayment = originalBill > 0 && amountToPay >= minRemainingForPartial;
     const activePaymentMode = allowsPartialPayment ? paymentMode : 'full';
     const parsedCustom = parseFloat(customAmount) || 0;
     const effectivePaymentAmount =
@@ -243,9 +245,8 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                         <div className="flex items-start gap-2.5 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-xs font-medium text-amber-200/90">
                             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-400" />
                             <span>
-                                Partial payments are only available when the remaining balance is{' '}
-                                {formatCurrency(MIN_BALANCE_FOR_PARTIAL_PAYMENT)} or more. Please settle the full{' '}
-                                {formatCurrency(amountToPay)} now.
+                                Partial payments are only available when at least 20% of the bill remains unpaid. Your
+                                remaining balance is {formatCurrency(amountToPay)} — please settle it in full.
                             </span>
                         </div>
                     )}
@@ -283,7 +284,7 @@ export default function PayCollection({ assignment, paystackKey, feeBreakdown, h
                             </div>
                         </div>
 
-                        {/* Option 2: Pay Part — only when remaining balance ≥ ₦20,000 */}
+                        {/* Option 2: Pay Part — only when remaining balance ≥ 20% of original bill */}
                         {allowsPartialPayment && (
                             <div
                                 onClick={() => {
