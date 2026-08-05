@@ -15,8 +15,9 @@ class SendCollectionRemindersJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function handle(ComplianceEngine $engine): void
+    public function handle(?ComplianceEngine $engine = null): void
     {
+        $engine = $engine ?? app(ComplianceEngine::class);
         // Find all unpaid assignments on active estate-level collections (excluding Property Owner collections)
         $assignments = CollectionAssignment::query()
             ->whereIn('status', ['pending', 'grace', 'overdue', 'partial'])

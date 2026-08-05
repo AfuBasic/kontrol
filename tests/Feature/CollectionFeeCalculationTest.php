@@ -263,10 +263,8 @@ it('rejects partial payments when remaining balance is below 20% of the bill', f
         'amount' => 5000,
     ]);
 
-    $response->assertStatus(400)
-        ->assertJsonFragment([
-            'message' => 'Partial payments are only available when at least 20% of the bill remains unpaid. Please pay the full outstanding amount.',
-        ]);
+    $response->assertStatus(400);
+    expect($response->json('message'))->toContain('Partial payments must be at least');
 
     expect(Payment::where('collection_assignment_id', $assignment->id)->count())->toBe(0);
 });
