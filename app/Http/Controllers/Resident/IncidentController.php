@@ -59,6 +59,11 @@ class IncidentController extends Controller
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
 
+        $settings = \App\Models\EstateSettings::forEstate($estate->id);
+        if (! $settings->allow_residents_to_report_incidents) {
+            abort(403, 'Resident incident reporting is currently disabled by estate policy.');
+        }
+
         $categories = collect(IncidentCategory::cases())->map(fn ($cat) => [
             'value' => $cat->value,
             'label' => $cat->label(),
@@ -76,6 +81,11 @@ class IncidentController extends Controller
     {
         $estate = $this->estateContext->getEstate();
         $this->authorize('create', [Incident::class, $estate]);
+
+        $settings = \App\Models\EstateSettings::forEstate($estate->id);
+        if (! $settings->allow_residents_to_report_incidents) {
+            return back()->withErrors(['incident' => 'Resident incident reporting is currently disabled by estate policy.']);
+        }
 
         $incident = $this->createIncidentAction->execute($request->validated(), $estate);
 
