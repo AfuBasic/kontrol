@@ -37,6 +37,7 @@ type Props = {
         sort?: string;
     };
     categories: Array<{ value: string; label: string }>;
+    allowResidentReporting?: boolean;
 };
 
 const getStatusStyles = (status: IncidentStatus) => {
@@ -103,7 +104,7 @@ const getCategoryIcon = (category: IncidentCategory) => {
     }
 };
 
-export default function Index({ incidents, filters, categories }: Props) {
+export default function Index({ incidents, filters, categories, allowResidentReporting = true }: Props) {
     const { auth } = usePage<SharedData>().props;
     const authUser = auth?.user;
     const { operations, retryOperation, syncNow, isSyncing } = useSyncStatus();
@@ -328,13 +329,19 @@ export default function Index({ incidents, filters, categories }: Props) {
                         </p>
                     </div>
                     <div>
-                        <Link
-                            href="/resident/incidents/create"
-                            className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-indigo-500/20 transition-all hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/30 active:scale-95"
-                        >
-                            <Plus className="h-4 w-4" strokeWidth={3} />
-                            Report Incident
-                        </Link>
+                        {allowResidentReporting ? (
+                            <Link
+                                href="/resident/incidents/create"
+                                className="inline-flex min-h-[44px] items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-600 px-5 py-2.5 text-xs font-black text-white shadow-lg shadow-indigo-500/20 transition-all hover:from-indigo-600 hover:to-violet-700 hover:shadow-indigo-500/30 active:scale-95"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={3} />
+                                Report Incident
+                            </Link>
+                        ) : (
+                            <span className="inline-flex items-center rounded-xl bg-slate-800 px-3 py-1.5 text-[11px] font-bold text-slate-300">
+                                Reporting Disabled
+                            </span>
+                        )}
                     </div>
                 </div>
             </div>
