@@ -32,6 +32,15 @@ class AccessCodeController extends Controller
 
         $residentAddress = $this->resolveResidentAddress();
 
+        $estateId = null;
+        try {
+            $estateId = $this->estateContext->getEstateId();
+        } catch (\Throwable) {
+            $estateId = auth()->user()?->estate_id;
+        }
+
+        $settings = $estateId ? EstateSettings::forEstate($estateId) : null;
+
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
                 'search_upcoming' => $searchUpcoming,
@@ -43,7 +52,7 @@ class AccessCodeController extends Controller
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
             'visitorStats' => $this->accessCodeService->getHomeStats(),
-            'accessCodesEnabled' => (bool) (EstateSettings::forEstate($this->estateContext->getEstateId())->access_codes_enabled ?? true),
+            'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
         ]);
     }
 
@@ -147,14 +156,21 @@ class AccessCodeController extends Controller
         $subscription = $user->residentSubscription;
         $isSubscriptionActive = $subscription ? $subscription->isActive() : false;
 
-        $settings = EstateSettings::forEstate($this->estateContext->getEstateId());
+        $estateId = null;
+        try {
+            $estateId = $this->estateContext->getEstateId();
+        } catch (\Throwable) {
+            $estateId = $user?->estate_id;
+        }
+
+        $settings = $estateId ? EstateSettings::forEstate($estateId) : null;
 
         return Inertia::render('Resident/Visitors/Create', [
             'durationOptions' => $this->accessCodeService->getDurationOptions(),
             'durationConstraints' => $this->accessCodeService->getDurationConstraints(),
             'isSubscriptionActive' => $isSubscriptionActive,
-            'accessCodesEnabled' => (bool) ($settings->access_codes_enabled ?? true),
-            'requireVehicleInfo' => (bool) ($settings->require_vehicle_information ?? false),
+            'accessCodesEnabled' => $settings ? (bool) $settings->access_codes_enabled : true,
+            'requireVehicleInfo' => $settings ? (bool) $settings->require_vehicle_information : false,
         ]);
     }
 
