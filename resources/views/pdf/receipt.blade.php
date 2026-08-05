@@ -76,6 +76,34 @@
             color: #b45309;
         }
 
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            margin-bottom: 25px;
+        }
+
+        .details-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .label {
+            color: #64748b;
+            font-weight: 500;
+            text-align: left;
+            width: 40%;
+        }
+
+        .value {
+            font-weight: bold;
+            color: #0f172a;
+            text-align: right;
+            width: 60%;
+            word-break: break-all;
+        }
+
         .breakdown-box {
             margin-top: 25px;
             background: #f8fafc;
