@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
+use App\Models\EstateSettings;
 use App\Services\Resident\AccessCodeService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -286,6 +287,13 @@ class AccessCodeController extends Controller
      */
     public function extend(AccessCode $accessCode, Request $request): RedirectResponse
     {
+        $estate = $this->estateContext->getEstate();
+        $settings = EstateSettings::forEstate($estate->id);
+
+        if (! $settings->allow_residents_to_extend_visitor_passes) {
+            return back()->withErrors(['access_code' => 'Pass extensions are currently disabled by estate policy.']);
+        }
+
         $userCode = $this->accessCodeService->getCode($accessCode->id);
 
         if (! $userCode) {

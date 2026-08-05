@@ -50,6 +50,19 @@ class CreateIncidentAction
                 $isPrivate = true;
             }
 
+            $settings = \App\Models\EstateSettings::forEstate($estate->id);
+
+            // Require photo evidence if mandated by estate operational policy
+            if ($settings->require_photo_evidence_for_incidents && empty($data['attachment_url'])) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'attachment' => ['Photo evidence is required for incident reports by estate policy.'],
+                ]);
+            }
+
+            // Fallback priority to estate default incident severity if not specified
+            $defaultPriority = strtolower($settings->default_incident_severity ?: 'low');
+            $priority = $data['priority'] ?? $defaultPriority;
+
             $incident = new Incident([
                 'estate_id' => $estate->id,
                 'reporter_id' => $reporterId,
@@ -58,7 +71,7 @@ class CreateIncidentAction
                 'title' => $data['title'],
                 'body' => $data['body'],
                 'category' => $data['category'],
-                'priority' => $data['priority'] ?? 'medium',
+                'priority' => $priority,
                 'status' => IncidentStatus::Pending,
                 'assigned_to' => $data['assigned_to'] ?? null,
                 'attachment_url' => $data['attachment_url'] ?? null,
