@@ -79,7 +79,7 @@ class IncidentController extends Controller
 
         $settings = EstateSettings::forEstate($estate->id);
         if (! $settings->allow_residents_to_report_incidents) {
-            return back()->withErrors(['incident' => 'Resident incident reporting is currently disabled by estate policy.']);
+            abort(403, 'Resident incident reporting is currently disabled by estate policy.');
         }
 
         $incident = $this->createIncidentAction->execute($request->validated(), $estate);
