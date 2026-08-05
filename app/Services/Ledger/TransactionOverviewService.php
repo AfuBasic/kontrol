@@ -301,7 +301,7 @@ class TransactionOverviewService
 
             $priorTransactions = EstateTransaction::query()
                 ->where('collection_assignment_id', $assignment->id)
-                ->where('status', TransactionStatus::Completed)
+                ->where('status', TransactionStatus::Success)
                 ->where('id', '!=', $transaction->id)
                 ->where('created_at', '<=', $transaction->created_at)
                 ->orderBy('created_at', 'asc')
