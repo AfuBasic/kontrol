@@ -185,7 +185,7 @@ it('resolves the correct subaccount for property owner collections', function ()
     ]);
 });
 
-it('accepts partial payment amounts in NGN and returns a valid paystack amount_kobo', function () {
+it('accepts partial payment amounts in NGN when remaining balance is at least 20000', function () {
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     setPermissionsTeamId($estate->id);
@@ -203,68 +203,150 @@ it('accepts partial payment amounts in NGN and returns a valid paystack amount_k
     $collection = Collection::factory()->create([
         'estate_id' => $estate->id,
         'created_by' => $admin->id,
-        'amount' => 10000,
-    ]);
-
-    $assignment = CollectionAssignment::factory()->create([
-        'collection_id' => $collection->id,
-        'estate_id' => $estate->id,
-        'user_id' => $resident->id,
-        'amount_due' => 10000,
-        'amount_paid' => 0,
-        'status' => 'pending',
-    ]);
-
-    $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
-        'amount' => 2500, // NGN partial payment
-    ]);
-
-    $response->assertSuccessful()
-        ->assertJsonPath('base_amount', 2500)
-        ->assertJsonPath('already_paid', false);
-
-    expect($response->json('amount_kobo'))->toBeInt()->toBeGreaterThanOrEqual(100);
-    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(2500);
-});
-
-it('normalizes legacy kobo amounts from the client into NGN', function () {
-    $estate = Estate::factory()->create();
-    $admin = User::factory()->create();
-    setPermissionsTeamId($estate->id);
-    $admin->assignRole('admin');
-    $estate->users()->attach($admin->id, ['status' => 'accepted']);
-
-    EstateSettings::forEstate($estate->id)->update([
-        'paystack_subaccount_code' => 'ACCT_ESTATE_123',
-    ]);
-
-    $resident = User::factory()->create();
-    $resident->assignRole('resident');
-    $estate->users()->attach($resident->id, ['status' => 'accepted']);
-
-    $collection = Collection::factory()->create([
-        'estate_id' => $estate->id,
-        'created_by' => $admin->id,
-        'amount' => 1000,
-    ]);
-
-    $assignment = CollectionAssignment::factory()->create([
-        'collection_id' => $collection->id,
-        'estate_id' => $estate->id,
-        'user_id' => $resident->id,
-        'amount_due' => 1000,
-        'amount_paid' => 0,
-        'status' => 'pending',
-    ]);
-
-    // Legacy client sends NGN 500 as 50000 kobo
-    $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
         'amount' => 50000,
     ]);
 
-    $response->assertSuccessful()
-        ->assertJsonPath('base_amount', 500);
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 50000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
 
-    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(500);
+    $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
+        'amount' => 25000, // NGN partial payment
+    ]);
+
+    $response->assertSuccessful()
+        ->assertJsonPath('base_amount', 25000)
+        ->assertJsonPath('already_paid', false);
+
+    expect($response->json('amount_kobo'))->toBeInt()->toBeGreaterThanOrEqual(100);
+    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(25000);
+});
+
+it('rejects partial payments when remaining balance is below 20000', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $estate->users()->attach($admin->id, ['status' => 'accepted']);
+
+    EstateSettings::forEstate($estate->id)->update([
+        'paystack_subaccount_code' => 'ACCT_ESTATE_123',
+    ]);
+
+    $resident = User::factory()->create();
+    $resident->assignRole('resident');
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $estate->id,
+        'created_by' => $admin->id,
+        'amount' => 15000,
+    ]);
+
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 15000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
+
+    $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
+        'amount' => 5000,
+    ]);
+
+    $response->assertStatus(400)
+        ->assertJsonFragment([
+            'message' => 'Partial payments are only available when the remaining balance is ₦20,000 or more. Please pay the full outstanding amount.',
+        ]);
+
+    expect(Payment::where('collection_assignment_id', $assignment->id)->count())->toBe(0);
+});
+
+it('still allows full payment when remaining balance is below 20000', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $estate->users()->attach($admin->id, ['status' => 'accepted']);
+
+    EstateSettings::forEstate($estate->id)->update([
+        'paystack_subaccount_code' => 'ACCT_ESTATE_123',
+    ]);
+
+    $resident = User::factory()->create();
+    $resident->assignRole('resident');
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $estate->id,
+        'created_by' => $admin->id,
+        'amount' => 15000,
+    ]);
+
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 15000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
+
+    $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
+        'amount' => 15000,
+    ]);
+
+    $response->assertSuccessful()
+        ->assertJsonPath('base_amount', 15000);
+
+    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(15000);
+});
+
+it('normalizes legacy kobo amounts from the client into NGN when partial is allowed', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $estate->users()->attach($admin->id, ['status' => 'accepted']);
+
+    EstateSettings::forEstate($estate->id)->update([
+        'paystack_subaccount_code' => 'ACCT_ESTATE_123',
+    ]);
+
+    $resident = User::factory()->create();
+    $resident->assignRole('resident');
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $estate->id,
+        'created_by' => $admin->id,
+        'amount' => 40000,
+    ]);
+
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 40000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
+
+    // Legacy client sends NGN 15000 as 1_500_000 kobo
+    $response = $this->postJson(route('web.billing.collection.initiate', ['assignment' => $assignment->ulid]), [
+        'amount' => 1_500_000,
+    ]);
+
+    $response->assertSuccessful()
+        ->assertJsonPath('base_amount', 15000);
+
+    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(15000);
     expect($response->json('amount_kobo'))->toBeInt()->toBeGreaterThanOrEqual(100);
 });
