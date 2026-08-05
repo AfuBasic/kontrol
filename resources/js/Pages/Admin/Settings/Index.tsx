@@ -142,10 +142,10 @@ export default function Settings({ settings }: SettingsProps) {
                         type="button"
                         onClick={handleSubmit}
                         disabled={processing}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
                     >
                         <Save className="h-4 w-4" />
-                        {processing ? 'Saving Changes...' : 'Save Policies'}
+                        {processing ? 'Saving Changes...' : 'Save Settings'}
                     </button>
                 </motion.div>
 
@@ -158,7 +158,7 @@ export default function Settings({ settings }: SettingsProps) {
                         className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60"
                     >
                         <div className="flex items-center gap-3 border-b border-slate-100 pb-5 dark:border-slate-800/80">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400">
                                 <Key className="h-5 w-5" />
                             </div>
                             <div>
@@ -187,7 +187,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         onChange={(e) => setData('access_codes_enabled', e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-emerald-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-emerald-500"></div>
+                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                 </label>
                             </div>
 
@@ -205,12 +205,12 @@ export default function Settings({ settings }: SettingsProps) {
                                             max="10080"
                                             value={data.access_code_min_lifespan_minutes}
                                             onChange={(e) => setData('access_code_min_lifespan_minutes', parseInt(e.target.value) || 1)}
-                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
                                         Shortest validity period allowed{' '}
-                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <span className="font-semibold text-primary-600 dark:text-primary-400">
                                             {formatDuration(data.access_code_min_lifespan_minutes)}
                                         </span>
                                     </p>
@@ -231,12 +231,12 @@ export default function Settings({ settings }: SettingsProps) {
                                             max="10080"
                                             value={data.access_code_max_lifespan_minutes}
                                             onChange={(e) => setData('access_code_max_lifespan_minutes', parseInt(e.target.value) || 1)}
-                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
                                         Longest validity period allowed (Must be &ge; Minimum){' '}
-                                        <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                                        <span className="font-semibold text-primary-600 dark:text-primary-400">
                                             {formatDuration(data.access_code_max_lifespan_minutes)}
                                         </span>
                                     </p>
@@ -258,7 +258,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             type="checkbox"
                                             checked={data.access_code_single_use}
                                             onChange={(e) => setData('access_code_single_use', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                         />
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Single-use Access Codes</span>
@@ -273,7 +273,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             type="checkbox"
                                             checked={data.require_vehicle_information}
                                             onChange={(e) => setData('require_vehicle_information', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                         />
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Vehicle Information</span>
@@ -288,7 +288,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             type="checkbox"
                                             checked={data.allow_residents_to_extend_visitor_passes}
                                             onChange={(e) => setData('allow_residents_to_extend_visitor_passes', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                         />
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Allow Pass Extensions</span>
@@ -303,7 +303,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             type="checkbox"
                                             checked={data.visitor_checkout_enabled}
                                             onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
-                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                                            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                         />
                                         <div>
                                             <span className="block text-sm font-medium text-slate-900 dark:text-white">Visitor Checkout Tracking</span>
@@ -325,7 +325,7 @@ export default function Settings({ settings }: SettingsProps) {
                         className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60"
                     >
                         <div className="flex items-center gap-3 border-b border-slate-100 pb-5 dark:border-slate-800/80">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400">
                                 <ShieldAlert className="h-5 w-5" />
                             </div>
                             <div>
@@ -366,12 +366,12 @@ export default function Settings({ settings }: SettingsProps) {
                                             onChange={(e) => setNewCategoryInput(e.target.value)}
                                             onKeyDown={handleAddCategory}
                                             placeholder="Add category & press Enter..."
-                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleAddCategory}
-                                            className="rounded-lg bg-amber-500 p-1 text-white hover:bg-amber-600"
+                                            className="rounded-lg bg-primary-600 p-1 text-white hover:bg-primary-700"
                                         >
                                             <Plus className="h-4 w-4" />
                                         </button>
@@ -388,7 +388,7 @@ export default function Settings({ settings }: SettingsProps) {
                                     id="default_severity"
                                     value={data.default_incident_severity}
                                     onChange={(e) => setData('default_incident_severity', e.target.value)}
-                                    className="mt-2 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                    className="mt-2 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                 >
                                     <option value="Low">Low (Informational / Minor)</option>
                                     <option value="Medium">Medium (Requires Review)</option>
@@ -404,7 +404,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         type="checkbox"
                                         checked={data.allow_residents_to_report_incidents}
                                         onChange={(e) => setData('allow_residents_to_report_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Allow Resident Incident Reporting</span>
@@ -419,7 +419,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         type="checkbox"
                                         checked={data.notify_admins_immediately_for_critical_incidents}
                                         onChange={(e) => setData('notify_admins_immediately_for_critical_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Notify Admins on Critical Incidents</span>
@@ -434,7 +434,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         type="checkbox"
                                         checked={data.require_photo_evidence_for_incidents}
                                         onChange={(e) => setData('require_photo_evidence_for_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Photo Evidence</span>
@@ -449,7 +449,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         type="checkbox"
                                         checked={data.require_resolution_notes_for_incidents}
                                         onChange={(e) => setData('require_resolution_notes_for_incidents', e.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
                                     />
                                     <div>
                                         <span className="block text-sm font-medium text-slate-900 dark:text-white">Require Resolution Notes</span>
@@ -470,7 +470,7 @@ export default function Settings({ settings }: SettingsProps) {
                         className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60"
                     >
                         <div className="flex items-center gap-3 border-b border-slate-100 pb-5 dark:border-slate-800/80">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400">
                                 <CreditCard className="h-5 w-5" />
                             </div>
                             <div>
@@ -499,13 +499,13 @@ export default function Settings({ settings }: SettingsProps) {
                                         onChange={(e) => setData('allow_partial_payments', e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-blue-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-blue-500"></div>
+                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                 </label>
                             </div>
 
                             {/* Partial Payment Thresholds */}
                             {data.allow_partial_payments && (
-                                <div className="grid gap-6 sm:grid-cols-2 rounded-xl border border-blue-100 bg-blue-50/30 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
+                                <div className="grid gap-6 sm:grid-cols-2 rounded-xl border border-primary-100 bg-primary-50/30 p-4 dark:border-primary-900/40 dark:bg-primary-950/20">
                                     <div>
                                         <label htmlFor="min_partial_amount" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                                             Minimum Partial Amount (NGN &#8358;)
@@ -518,7 +518,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             value={data.minimum_partial_payment_amount || ''}
                                             onChange={(e) => setData('minimum_partial_payment_amount', parseFloat(e.target.value) || 0)}
                                             placeholder="e.g. 5000"
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                                             Absolute minimum NGN Naira amount required per installment.
@@ -537,7 +537,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             value={data.minimum_partial_payment_percentage || ''}
                                             onChange={(e) => setData('minimum_partial_payment_percentage', parseInt(e.target.value) || 0)}
                                             placeholder="e.g. 20"
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                                             Minimum percentage of bill balance required per partial installment (1-100%).
@@ -564,7 +564,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="reminder_freq"
                                             value={data.collection_reminder_frequency}
                                             onChange={(e) => setData('collection_reminder_frequency', e.target.value)}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         >
                                             <option value="daily">Daily</option>
                                             <option value="3_days">Every 3 Days</option>
@@ -584,7 +584,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             max="20"
                                             value={data.collection_maximum_reminder_attempts}
                                             onChange={(e) => setData('collection_maximum_reminder_attempts', parseInt(e.target.value) || 1)}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
 
@@ -599,7 +599,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             max="30"
                                             value={data.send_reminder_before_due_date_days}
                                             onChange={(e) => setData('send_reminder_before_due_date_days', parseInt(e.target.value) || 0)}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                 </div>
@@ -615,7 +615,7 @@ export default function Settings({ settings }: SettingsProps) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
                         >
                             <Save className="h-4 w-4" />
                             {processing ? 'Saving Changes...' : 'Save Settings'}
