@@ -52,17 +52,6 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 
-                Route::domain('www.'.config('domains.root'))
-                    ->middleware('web')
-                    ->group(function (): void {
-                        Route::fallback(function (Request $request) {
-                            return redirect()->to(
-                                $request->getScheme().'://'.config('domains.root').$request->getRequestUri(),
-                                301
-                            );
-                        });
-                    });
-
                 Route::domain(config('domains.app'))
                     ->middleware('web')
                     ->group(base_path('routes/app.php'));
@@ -71,17 +60,6 @@ return Application::configure(basePath: dirname(__DIR__))
                 Route::domain(config('domains.root'))
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
-
-                Route::domain('www.'.config('domains.root'))
-                    ->middleware('web')
-                    ->group(function (): void {
-                        Route::fallback(function (Request $request) {
-                            return redirect()->to(
-                                $request->getScheme().'://'.config('domains.root').$request->getRequestUri(),
-                                301
-                            );
-                        });
-                    });
 
                 Route::domain(config('domains.app'))
                     ->middleware('web')
