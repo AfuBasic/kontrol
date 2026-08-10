@@ -48,11 +48,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($domainRoutingEnabled && ! $isLocal) {
                 // Production / Staging: Full domain-based routing
-                Route::domain(config('domains.root'))
-                    ->middleware('web')
-                    ->group(base_path('routes/public.php'));
+                $rootDomainRegex = '(www\.)?'.preg_quote(config('domains.root'), '/');
 
-                Route::domain(config('domains.www'))
+                Route::domain('{domain}')
+                    ->where(['domain' => $rootDomainRegex])
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 
@@ -61,11 +60,10 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->group(base_path('routes/app.php'));
             } elseif ($domainRoutingEnabled && $isLocal && config('domains.app_subdomain')) {
                 // Local with subdomain simulation (e.g., app.usekontrol.test)
-                Route::domain(config('domains.root'))
-                    ->middleware('web')
-                    ->group(base_path('routes/public.php'));
+                $rootDomainRegex = '(www\.)?'.preg_quote(config('domains.root'), '/');
 
-                Route::domain(config('domains.www'))
+                Route::domain('{domain}')
+                    ->where(['domain' => $rootDomainRegex])
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 
