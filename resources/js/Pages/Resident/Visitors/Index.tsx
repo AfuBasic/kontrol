@@ -58,6 +58,7 @@ export default function Visitors({
     upcomingTimeline,
     historyTimeline,
     recentVisitors = [],
+    accessCodesEnabled = true,
 }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
