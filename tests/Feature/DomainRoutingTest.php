@@ -18,16 +18,14 @@ test('root domain loads public marketing landing page', function () {
     $response->assertInertia(fn ($page) => $page->component('Public/Home'));
 });
 
-test('www domain loads public marketing landing page', function () {
-    $this->seed(FeatureSeeder::class);
-    $this->seed(PlanSeeder::class);
-
+test('www domain redirects 301 to root domain', function () {
     $domain = config('domains.www');
+    $rootDomain = config('domains.root');
 
-    $response = $this->get("http://{$domain}/");
+    $response = $this->get("http://{$domain}/support");
 
-    $response->assertOk();
-    $response->assertInertia(fn ($page) => $page->component('Public/Home'));
+    $response->assertRedirect("http://{$rootDomain}/support");
+    $response->assertStatus(301);
 });
 
 test('app domain loads app login page when unauthenticated', function () {
