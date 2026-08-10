@@ -52,12 +52,20 @@ return Application::configure(basePath: dirname(__DIR__))
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 
+                Route::domain(config('domains.www'))
+                    ->middleware('web')
+                    ->group(base_path('routes/public.php'));
+
                 Route::domain(config('domains.app'))
                     ->middleware('web')
                     ->group(base_path('routes/app.php'));
             } elseif ($domainRoutingEnabled && $isLocal && config('domains.app_subdomain')) {
                 // Local with subdomain simulation (e.g., app.usekontrol.test)
                 Route::domain(config('domains.root'))
+                    ->middleware('web')
+                    ->group(base_path('routes/public.php'));
+
+                Route::domain(config('domains.www'))
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 

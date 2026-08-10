@@ -31,6 +31,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | WWW Root Domain Alias
+    |--------------------------------------------------------------------------
+    |
+    | The www subdomain alias for the marketing/public site.
+    | Examples: www.usekontrol.com (production), www.usekontrol.test (local)
+    |
+    */
+    'www' => 'www.'.env('APP_DOMAIN', 'localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
     | App Subdomain
     |--------------------------------------------------------------------------
     |
