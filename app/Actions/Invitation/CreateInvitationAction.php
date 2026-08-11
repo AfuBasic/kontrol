@@ -34,7 +34,7 @@ class CreateInvitationAction
             $isMember = DB::table('estate_users_membership')
                 ->where('user_id', $existingUser->id)
                 ->where('estate_id', $estate->id)
-                ->where('status', 'active')
+                ->whereIn('status', ['accepted', 'active'])
                 ->exists();
 
             if ($isMember) {
