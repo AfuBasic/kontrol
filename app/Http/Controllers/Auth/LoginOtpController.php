@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\AuthenticateUser;
-use App\Actions\Auth\DetermineUserRedirect;
 use App\Actions\Auth\GenerateLoginOtp;
 use App\Actions\Auth\VerifyLoginOtp;
 use App\Events\ForceLogout;
@@ -48,8 +47,7 @@ class LoginOtpController extends Controller
     public function verify(
         VerifyLoginOtpRequest $request,
         VerifyLoginOtp $verifyOtp,
-        AuthenticateUser $authenticateUser,
-        DetermineUserRedirect $determineRedirect,
+        AuthenticateUser $authenticateUser
     ): RedirectResponse {
         $userId = $request->session()->get('otp_user_id');
 
@@ -86,9 +84,7 @@ class LoginOtpController extends Controller
 
         $authenticateUser->logActivity($user);
 
-        $redirectUrl = $determineRedirect->execute($user);
-
-        return redirect()->intended($redirectUrl);
+        return redirect()->intended(route('context.select'));
     }
 
     /**

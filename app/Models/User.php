@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Auth\AuthorizationResolver;
+use App\Auth\ContextManager;
 use App\Mail\Auth\PasswordResetMail;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
@@ -399,6 +400,13 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function getCurrentEstate(): Estate
     {
+        $context = app(ContextManager::class)->current();
+
+        if ($context) {
+            return Estate::findOrFail($context->estateId);
+        }
+
+        // Fallback to legacy behavior if context is not established yet
         return $this->estates()
             ->wherePivot('status', 'accepted')
             ->firstOrFail();

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Actions\Auth\DetermineUserRedirect;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Mail\Resident\WelcomeMail;
@@ -47,10 +46,7 @@ class EmailVerificationController extends Controller
                 Mail::to($user->email)->send(new WelcomeMail($user));
             }
 
-            $redirectAction = new DetermineUserRedirect;
-            $redirectUrl = $redirectAction->execute($user);
-
-            return redirect($redirectUrl)->with('success', 'Email verified successfully! Welcome to the platform.');
+            return redirect(route('context.select'))->with('success', 'Email verified successfully! Welcome to the platform.');
         }
 
         return redirect()->route('login')->with('success', 'Email verified successfully! Your account is pending admin approval. Please contact your estate admin for estate access approval.');

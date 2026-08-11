@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Actions\Auth\DetermineUserRedirect;
 use App\Actions\Public\StoreEstateApplicationAction;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
@@ -106,7 +105,7 @@ class LandingController extends Controller
     /**
      * Autologin from mobile app deep links.
      */
-    public function autologin(Request $request, DetermineUserRedirect $determineRedirect)
+    public function autologin(Request $request)
     {
         $token = $request->query('token');
         if (! $token) {
@@ -126,7 +125,7 @@ class LandingController extends Controller
         if ($redirect && (str_starts_with($redirect, '/') || parse_url($redirect, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST))) {
             $redirectUrl = $redirect;
         } else {
-            $redirectUrl = $determineRedirect->execute(Auth::user());
+            $redirectUrl = route('context.select');
         }
 
         return redirect()->intended($redirectUrl);

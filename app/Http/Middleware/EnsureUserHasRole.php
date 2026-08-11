@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Actions\Auth\DetermineUserRedirect;
 use App\Services\Platform\PlatformAccessService;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,9 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserHasRole
 {
-    public function __construct(
-        protected DetermineUserRedirect $determineRedirect
-    ) {}
+    public function __construct() {}
 
     /**
      * Handle an incoming request.
@@ -62,16 +59,7 @@ class EnsureUserHasRole
             }
         }
 
-        // User doesn't have the required role - redirect to their appropriate module
-        $correctRedirect = $this->determineRedirect->execute($user);
-        $correctPath = '/'.ltrim(parse_url($correctRedirect, PHP_URL_PATH), '/');
-        $currentPath = '/'.ltrim($request->path(), '/');
-
-        // Prevent redirect loop: if we would redirect to the same path, show 403 instead
-        if ($correctPath === $currentPath) {
-            abort(403, 'You do not have permission to access this resource.');
-        }
-
-        return redirect($correctRedirect);
+        // User doesn't have the required role
+        abort(403, 'You do not have permission to access this resource.');
     }
 }
