@@ -59,9 +59,56 @@ class ContextManager
         $user->unsetRelation('permissions');
 
         // Establish Spatie authorization state
-        setPermissionsTeamId($this->currentContext->estateId);
+        // Establish Spatie authorization state
+        $this->setSystemContext($this->currentContext->estateId, $user);
 
         return $this->currentContext;
+    }
+
+    /**
+     * Safely establish the Spatie context without an HTTP session.
+     * Used heavily in background jobs and notifications.
+     */
+    public function setSystemContext(int $estateId, ?User $user = null): void
+    {
+        setPermissionsTeamId($estateId);
+
+        if ($user) {
+            $user->unsetRelation('roles');
+            $user->unsetRelation('permissions');
+        }
+    }
+
+    /**
+     * Resolve the headless context for a user.
+     * Useful for Telegram bots where there is no session but we must determine their estate.
+     */
+    public function resolveSystemContextForUser(User $user): \App\Models\Estate
+    {
+        // First try the currently authenticated ContextManager context if present
+        if ($this->currentContext) {
+            return \App\Models\Estate::findOrFail($this->currentContext->estateId);
+        }
+
+        // Fetch their active assignments across all estates
+        $assignments = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get();
+
+        if ($assignments->count() === 1) {
+            $estateId = $assignments->first()->estate_id;
+            $this->setSystemContext($estateId, $user);
+            return \App\Models\Estate::findOrFail($estateId);
+        }
+
+        if ($assignments->count() > 1) {
+            // Wait to see if they have an active membership at all.
+            // A more robust implementation would throw an AmbiguousContextException here
+            // so the telegram bot can ask the user which estate to interact with.
+            throw new \Exception('Ambiguous Context: User belongs to multiple estates. Please specify estate.');
+        }
+
+        throw new \Exception('No active contexts available for user.');
     }
 
     public function activate(AdministrativeAssignment $assignment): void

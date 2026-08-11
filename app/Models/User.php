@@ -428,18 +428,9 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the current active estate for the user.
      */
-    public function getCurrentEstate(): Estate
+    public function getCurrentEstate(): \App\Models\Estate
     {
-        $context = app(ContextManager::class)->current();
-
-        if ($context) {
-            return Estate::findOrFail($context->estateId);
-        }
-
-        // Fallback to legacy behavior if context is not established yet
-        return $this->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
+        return app(\App\Auth\ContextManager::class)->resolveSystemContextForUser($this);
     }
 
     /**
