@@ -19,6 +19,7 @@ class Property extends Model
 
     protected $fillable = [
         'estate_id',
+        'zone_id',
         'property_owner_id',
         'name',
         'archived_at',
