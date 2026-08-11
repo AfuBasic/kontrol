@@ -2,9 +2,11 @@
 
 namespace App\Actions\Zeus;
 
+use App\Enums\AssignmentScope;
 use App\Enums\CommissionStatus;
 use App\Enums\PartnerStatus;
 use App\Events\Zeus\EstateCreated;
+use App\Models\AdministrativeAssignment;
 use App\Models\CommissionPlan;
 use App\Models\Estate;
 use App\Models\Partner;
@@ -58,7 +60,17 @@ class CreateEstateAction
             $allPermissions = PermissionSeeder::getAllPermissionNames();
             $adminRole->syncPermissions($allPermissions);
 
-            $user->assignRole('admin');
+            $user->assignRole($adminRole);
+
+            // 4.1. Write to AdministrativeAssignment as the source of truth for ContextManager
+            AdministrativeAssignment::create([
+                'user_id' => $user->id,
+                'estate_id' => $estate->id,
+                'role_id' => $adminRole->id,
+                'scope_type' => AssignmentScope::Estate,
+                'is_active' => true,
+                'is_primary' => true,
+            ]);
 
             // 5. Create the subscription
             if ($plan) {
