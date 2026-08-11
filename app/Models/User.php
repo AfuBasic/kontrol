@@ -179,6 +179,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return HasMany<AdministrativeAssignment, $this>
+     */
+    public function administrativeAssignments(): HasMany
+    {
+        return $this->hasMany(AdministrativeAssignment::class);
+    }
+
+    /**
      * @return HasOne<UserProfile, $this>
      */
     public function profile(): HasOne
