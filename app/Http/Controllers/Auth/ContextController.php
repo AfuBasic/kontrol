@@ -28,10 +28,8 @@ class ContextController extends Controller
             return redirect()->route('partner.dashboard');
         }
 
-        $assignments = AdministrativeAssignment::with(['estate', 'role', 'zone'])
-            ->where('user_id', $user->id)
-            ->where('is_active', true)
-            ->get();
+        $contextManager = app(ContextManager::class);
+        $assignments = $contextManager->getValidAssignments($user);
 
         if ($assignments->isEmpty()) {
             $hasPending = EstateMembership::where('user_id', $user->id)
@@ -94,7 +92,7 @@ class ContextController extends Controller
 
         $redirectUrl = $activateContext->execute($user, $assignment);
 
-        if (! $redirectUrl) {
+        if (! $redirectUrl || $redirectUrl === url('/')) {
             abort(403, 'Context activation failed or assignment invalid.');
         }
 

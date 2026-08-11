@@ -53,7 +53,7 @@ class ContextManager
             ->with(['estate', 'role', 'zone'])
             ->find($assignmentId);
 
-        if (! $this->isValid($assignment, $user)) {
+        if (! $this->isValidAssignment($assignment, $user)) {
             if ($request) {
                 $request->session()->forget('active_context_assignment_id');
             } else {
@@ -138,7 +138,7 @@ class ContextManager
             throw new \Exception('User is null');
         }
 
-        if (! $this->isValid($assignment, $user)) {
+        if (! $this->isValidAssignment($assignment, $user)) {
             throw new \Exception('isValid returned false');
         }
 
@@ -162,7 +162,18 @@ class ContextManager
         $this->currentContext = null;
     }
 
-    private function isValid(?AdministrativeAssignment $assignment, User $user): bool
+    public function getValidAssignments(User $user)
+    {
+        return AdministrativeAssignment::withoutGlobalScope(ZoneScope::class)
+            ->with(['estate', 'role', 'zone'])
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->get()
+            ->filter(fn ($assignment) => $this->isValidAssignment($assignment, $user))
+            ->values();
+    }
+
+    public function isValidAssignment(?AdministrativeAssignment $assignment, User $user): bool
     {
         if (! $assignment) {
             return false;

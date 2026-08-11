@@ -12,14 +12,11 @@ class ActivateContext
 
     /**
      * Establish the context for a given assignment, and return the dashboard route.
-     * If assignment is null, it evaluates all available contexts and decides the next route.
      */
     public function execute(User $user, ?AdministrativeAssignment $assignment = null): string
     {
         if ($assignment === null) {
-            $assignments = AdministrativeAssignment::where('user_id', $user->id)
-                ->where('is_active', true)
-                ->get();
+            $assignments = $this->contextManager->getValidAssignments($user);
 
             if ($assignments->count() === 0) {
                 return url('/');
