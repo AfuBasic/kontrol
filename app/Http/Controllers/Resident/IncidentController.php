@@ -119,15 +119,10 @@ class IncidentController extends Controller
         $this->authorize('delete', $incident);
 
         // Fetch admins of this estate to notify
-        $adminIds = User::forEstate($incident->estate_id)
-            ->active()
-            ->get()
-            ->filter(function ($u) use ($incident) {
-                setPermissionsTeamId($incident->estate_id);
-
-                return $u->hasRole('admin');
-            })
-            ->pluck('id')
+        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $incident->estate_id)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->pluck('user_id')
             ->toArray();
 
         // Fetch upvoters of this incident
