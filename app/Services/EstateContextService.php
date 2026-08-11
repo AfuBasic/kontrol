@@ -39,11 +39,4 @@ class EstateContextService
         return $this->getEstate()->id;
     }
 
-    /**
-     * Set the current estate for the user (e.g. in session).
-     */
-    public function setEstate(Estate $estate): void
-    {
-        session(['current_estate_id' => $estate->id]);
-    }
 }

@@ -48,8 +48,8 @@ class ValidateEstateContext
             abort(403, 'No access to this estate');
         }
 
-        // Verify user has appropriate role for the route prefix
-        $this->validateUserRoleForRoute($user, $estate, $request);
+        // Verify context matches the required route prefix
+        $this->validateUserRoleForRoute($request);
 
         // Bind estate to request attributes for use in controllers
         $request->attributes->set('estate', $estate);
@@ -63,30 +63,38 @@ class ValidateEstateContext
     }
 
     /**
-     * Basic role validation based on route path prefixes.
+     * Validate the active context against the requested route.
      */
-    private function validateUserRoleForRoute($user, $estate, Request $request): void
+    private function validateUserRoleForRoute($request): void
     {
         $path = $request->path();
+        $context = app(\App\Auth\ContextManager::class)->current();
 
-        // Admin routes require admin role on this estate
+        if (!$context) {
+            abort(403, 'No active context');
+        }
+
+        $role = \Spatie\Permission\Models\Role::find($context->roleId);
+        $roleName = strtolower($role ? $role->name : '');
+
+        // Admin routes require an admin-like role in the active context
         if (str_starts_with($path, 'admin/')) {
-            if (! $user->hasRole('admin', $estate->id)) {
-                abort(403, 'Admin role required for this estate context.');
+            if (!str_contains($roleName, 'admin')) {
+                abort(403, 'Admin context required for this route.');
             }
         }
 
-        // Resident routes require resident role on this estate
+        // Resident routes require a resident-like role in the active context
         if (str_starts_with($path, 'resident/')) {
-            if (! $user->hasRole('resident', $estate->id)) {
-                abort(403, 'Resident role required for this estate context.');
+            if (!str_contains($roleName, 'resident') && !str_contains($roleName, 'household')) {
+                abort(403, 'Resident context required for this route.');
             }
         }
 
-        // Security routes require security role on this estate
+        // Security routes require a security role in the active context
         if (str_starts_with($path, 'security/')) {
-            if (! $user->hasRole('security', $estate->id)) {
-                abort(403, 'Security role required for this estate context.');
+            if (!str_contains($roleName, 'security')) {
+                abort(403, 'Security context required for this route.');
             }
         }
     }
