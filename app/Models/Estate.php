@@ -386,4 +386,9 @@ class Estate extends Model
     {
         return $this->hasMany(CollectionAssignment::class);
     }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
+    }
 }
