@@ -13,10 +13,22 @@ class IncidentPolicy
 {
     use HandlesAuthorization;
 
-    private function hasValidContextForEstate(int $estateId): bool
+    private function hasValidContextForEstate(int $estateId, ?int $zoneId = null): bool
     {
         $context = app(ContextManager::class)->current();
-        return $context !== null && $context->estateId === $estateId;
+        if ($context === null || $context->estateId !== $estateId) {
+            return false;
+        }
+
+        if ($context->isZoneScoped()) {
+            // Some models (like incident feed) might not pass a zone_id, 
+            // but if they do, we enforce the check.
+            if ($zoneId !== null && $context->zoneId !== $zoneId) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -32,7 +44,7 @@ class IncidentPolicy
      */
     public function view(User $user, Incident $incident): bool
     {
-        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+        if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
 
@@ -61,7 +73,7 @@ class IncidentPolicy
      */
     public function comment(User $user, Incident $incident): bool
     {
-        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+        if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
 
@@ -85,7 +97,7 @@ class IncidentPolicy
             return false;
         }
 
-        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+        if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
 
@@ -99,7 +111,7 @@ class IncidentPolicy
      */
     public function updateStatus(User $user, Incident $incident): bool
     {
-        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+        if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
 
@@ -111,7 +123,7 @@ class IncidentPolicy
      */
     public function close(User $user, Incident $incident): bool
     {
-        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+        if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
 
@@ -124,7 +136,7 @@ class IncidentPolicy
      */
     public function delete(User $user, Incident $incident): bool
     {
-        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+        if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
 
