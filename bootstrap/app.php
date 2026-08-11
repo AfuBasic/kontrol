@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
 use App\Http\Middleware\ValidateEstateContext;
 use Illuminate\Auth\AuthenticationException;
@@ -98,6 +99,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(
             append: [
                 AuthenticateSession::class,
+                ResolveContext::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
             ],
