@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Zeus;
 
+use App\Actions\Auth\ActivateContext;
 use App\Actions\Zeus\AcceptInvitationAction;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
@@ -63,24 +64,21 @@ class InvitationController extends Controller
         $request->session()->regenerate();
         ForceLogout::dispatchSafely($user->id);
 
-        // Redirect based on role
         if ($user->user_type === 'affiliate') {
             setPermissionsTeamId(0);
 
             return redirect()->route('partner.dashboard');
         }
 
-        if ($estate = $user->estates()->first()) {
-            setPermissionsTeamId($estate->id);
-            // Reload roles to ensure proper scope
-            $user->unsetRelation('roles');
-        }
+        $activateContext = app(ActivateContext::class);
+        $redirectUrl = $activateContext->execute($user);
 
-        if ($user->hasRole(['security', 'resident'])) {
+        // Security and Resident roles should see the success page
+        if ($user->hasRole(['security', 'resident', 'household_member'])) {
             return redirect()->route('invitation.success');
         }
 
-        return redirect()->route('admin.dashboard');
+        return redirect()->intended($redirectUrl);
     }
 
     public function success(): Response
