@@ -3,6 +3,7 @@
 namespace App\Mail\Admin;
 
 use App\Models\Estate;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -19,12 +20,12 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
     public string $invitationUrl;
 
     public function __construct(
-        public User $user,
+        public Invitation $invitation,
         public Estate $estate,
         public bool $isPasswordReset = false,
     ) {
-        // Generate signed URL on app domain that expires in 72 hours
-        $parameters = ['user' => $user->id];
+        // Use the secure token for the URL
+        $parameters = ['token' => $this->invitation->token];
         if ($this->isPasswordReset) {
             $parameters['password_reset'] = 1;
         }
@@ -34,11 +35,8 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
         URL::forceRootUrl("{$scheme}://{$appDomain}");
 
-        $this->invitationUrl = URL::temporarySignedRoute(
-            'invitation.accept',
-            now()->addHours(72),
-            $parameters
-        );
+        // The token is secure, so we can use a standard route, but we'll use route() and rely on the controller to validate expiration
+        $this->invitationUrl = route('invitation.accept', $parameters);
 
         URL::forceRootUrl(null);
     }
@@ -56,11 +54,13 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        $userName = User::where('email', $this->invitation->email)->value('name') ?? 'Resident';
+
         return new Content(
             view: 'mail.admin.resident-invitation',
             with: [
                 'estateName' => $this->estate->name,
-                'userName' => $this->user->name,
+                'userName' => $userName,
                 'invitationUrl' => $this->invitationUrl,
                 'isPasswordReset' => $this->isPasswordReset,
             ],
