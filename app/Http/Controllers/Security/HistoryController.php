@@ -17,7 +17,7 @@ class HistoryController extends Controller
     public function index(Request $request): Response
     {
         $user = auth()->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
 
         $filters = $request->only(['search', 'date', 'vehicle_plate', 'host_id']);
 

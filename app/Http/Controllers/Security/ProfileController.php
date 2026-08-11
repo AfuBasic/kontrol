@@ -18,7 +18,7 @@ class ProfileController extends Controller
     public function edit(): Response
     {
         $user = auth()->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
 
         return Inertia::render('Security/Profile', [
             'user' => [

@@ -15,7 +15,7 @@ class HouseholdMemberService
      */
     public function getHouseholdMembers(User $primaryResident): Collection
     {
-        $estateId = $primaryResident->getCurrentEstateId();
+        $estateId = $primaryResident->resolveHeadlessEstateId();
 
         return HouseholdMember::where('estate_id', $estateId)
             ->where('primary_resident_id', $primaryResident->id)

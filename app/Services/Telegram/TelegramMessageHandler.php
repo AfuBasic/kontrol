@@ -45,7 +45,7 @@ class TelegramMessageHandler
     {
         $estateName = 'your estate';
         try {
-            $estate = $user->getCurrentEstate();
+            $estate = $user->resolveHeadlessEstate();
             $estateName = $estate->name;
         } catch (ModelNotFoundException) {
             // User has no accepted estate yet
@@ -81,7 +81,7 @@ class TelegramMessageHandler
             // Get estate name safely
             $estateName = 'your estate';
             try {
-                $estate = $user->getCurrentEstate();
+                $estate = $user->resolveHeadlessEstate();
                 $estateName = $estate->name;
             } catch (ModelNotFoundException) {
                 // User has no accepted estate yet, use default message

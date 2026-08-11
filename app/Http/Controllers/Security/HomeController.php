@@ -13,7 +13,7 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $user = auth()->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
 
         $today = now()->startOfDay();
 

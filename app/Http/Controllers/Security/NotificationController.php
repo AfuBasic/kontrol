@@ -19,7 +19,7 @@ class NotificationController extends Controller
     public function index(): Response
     {
         $user = Auth::user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
         $notifications = $this->fetchNotificationsAction->execute($user);
         $formatted = $this->fetchNotificationsAction->formatForFrontend($notifications);
 

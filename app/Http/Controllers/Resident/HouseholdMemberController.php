@@ -47,7 +47,7 @@ class HouseholdMemberController extends Controller
     public function store(StoreHouseholdMemberRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
 
         if (! $estate->canAddMoreHouseholdMembers($user)) {
             $limit = $estate->getFeatureLimit('household-management');
@@ -70,7 +70,7 @@ class HouseholdMemberController extends Controller
     public function destroy(Request $request, HouseholdMember $householdMember): RedirectResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
 
         // Ensure the household member belongs to this primary resident
         if ($householdMember->primary_resident_id !== $user->id || $householdMember->estate_id !== $estate->id) {
@@ -88,7 +88,7 @@ class HouseholdMemberController extends Controller
     public function resetPassword(Request $request, HouseholdMember $householdMember): RedirectResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(\App\Services\EstateContextService::class)->getEstate();
 
         // Ensure the household member belongs to this primary resident
         if ($householdMember->primary_resident_id !== $user->id || $householdMember->estate_id !== $estate->id) {
