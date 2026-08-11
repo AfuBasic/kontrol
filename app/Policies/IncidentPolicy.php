@@ -7,17 +7,24 @@ use App\Models\Estate;
 use App\Models\Incident;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Auth\ContextManager;
 
 class IncidentPolicy
 {
     use HandlesAuthorization;
+
+    private function hasValidContextForEstate(int $estateId): bool
+    {
+        $context = app(ContextManager::class)->current();
+        return $context !== null && $context->estateId === $estateId;
+    }
 
     /**
      * Determine if the user can view the incident feed.
      */
     public function viewAny(User $user): bool
     {
-        return $user->estates()->wherePivot('status', 'accepted')->exists();
+        return app(ContextManager::class)->hasContext();
     }
 
     /**
@@ -25,19 +32,12 @@ class IncidentPolicy
      */
     public function view(User $user, Incident $incident): bool
     {
-        $hasEstateAccess = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->where('estates.id', $incident->estate_id)
-            ->exists();
-
-        if (! $hasEstateAccess) {
+        if (! $this->hasValidContextForEstate($incident->estate_id)) {
             return false;
         }
 
         if ($incident->is_private) {
-            setPermissionsTeamId($incident->estate_id);
-
-            return $incident->reporter_id === $user->id || $user->hasRole('admin');
+            return $incident->reporter_id === $user->id || $user->contextHasRole('admin');
         }
 
         return true;
@@ -48,21 +48,12 @@ class IncidentPolicy
      */
     public function create(User $user, Estate $estate): bool
     {
-        $hasEstateAccess = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->where('estates.id', $estate->id)
-            ->exists();
-
-        if (! $hasEstateAccess) {
+        if (! $this->hasValidContextForEstate($estate->id)) {
             return false;
         }
 
-        setPermissionsTeamId($estate->id);
-
-        // Residents, Property Owners, Security, and Admins can report incidents.
-        // Household members cannot.
-        return ($user->hasRole('resident') || $user->hasRole('property_owner') || $user->hasRole('security') || $user->hasRole('admin'))
-            && ! $user->hasRole('household_member');
+        return ($user->contextHasRole(['resident', 'property_owner', 'security', 'admin']))
+            && ! $user->contextHasRole('household_member');
     }
 
     /**
@@ -70,19 +61,12 @@ class IncidentPolicy
      */
     public function comment(User $user, Incident $incident): bool
     {
-        $hasEstateAccess = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->where('estates.id', $incident->estate_id)
-            ->exists();
-
-        if (! $hasEstateAccess) {
+        if (! $this->hasValidContextForEstate($incident->estate_id)) {
             return false;
         }
 
         if ($incident->is_private) {
-            setPermissionsTeamId($incident->estate_id);
-
-            return $incident->reporter_id === $user->id || $user->hasRole('admin');
+            return $incident->reporter_id === $user->id || $user->contextHasRole('admin');
         }
 
         return true;
@@ -101,21 +85,13 @@ class IncidentPolicy
             return false;
         }
 
-        $hasEstateAccess = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->where('estates.id', $incident->estate_id)
-            ->exists();
-
-        if (! $hasEstateAccess) {
+        if (! $this->hasValidContextForEstate($incident->estate_id)) {
             return false;
         }
 
-        setPermissionsTeamId($incident->estate_id);
-
-        // Only Residents and Property Owners can upvote incidents.
-        return ($user->hasRole('resident') || $user->hasRole('property_owner'))
-            && ! $user->hasRole('admin')
-            && ! $user->hasRole('household_member');
+        return ($user->contextHasRole(['resident', 'property_owner']))
+            && ! $user->contextHasRole('admin')
+            && ! $user->contextHasRole('household_member');
     }
 
     /**
@@ -123,9 +99,11 @@ class IncidentPolicy
      */
     public function updateStatus(User $user, Incident $incident): bool
     {
-        setPermissionsTeamId($incident->estate_id);
+        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+            return false;
+        }
 
-        return $user->hasRole('admin');
+        return $user->contextHasRole('admin');
     }
 
     /**
@@ -133,6 +111,10 @@ class IncidentPolicy
      */
     public function close(User $user, Incident $incident): bool
     {
+        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+            return false;
+        }
+
         return $incident->reporter_id === $user->id
             && $incident->status === IncidentStatus::Solved;
     }
@@ -142,6 +124,10 @@ class IncidentPolicy
      */
     public function delete(User $user, Incident $incident): bool
     {
+        if (! $this->hasValidContextForEstate($incident->estate_id)) {
+            return false;
+        }
+
         return $incident->reporter_id === $user->id
             && $incident->status === IncidentStatus::Pending;
     }
