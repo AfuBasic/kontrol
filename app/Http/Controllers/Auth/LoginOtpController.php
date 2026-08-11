@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\ActivateContext;
 use App\Actions\Auth\AuthenticateUser;
 use App\Actions\Auth\GenerateLoginOtp;
 use App\Actions\Auth\VerifyLoginOtp;
@@ -84,7 +85,8 @@ class LoginOtpController extends Controller
 
         $authenticateUser->logActivity($user);
 
-        $action = app(\App\Actions\Auth\ActivateContext::class);
+        $action = app(ActivateContext::class);
+
         return redirect()->intended($action->execute($user));
     }
 
