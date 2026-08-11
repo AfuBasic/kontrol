@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Auth\AuthorizationResolver;
 use App\Auth\ContextManager;
-use App\Models\AdministrativeAssignment;
 use App\Mail\Auth\PasswordResetMail;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
@@ -188,6 +187,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public function estateMembershipFor(Estate|int $estate): ?EstateMembership
     {
         $estateId = $estate instanceof Estate ? $estate->id : $estate;
+
         return EstateMembership::where('user_id', $this->id)->where('estate_id', $estateId)->first();
     }
 
@@ -304,7 +304,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function contextHasRole(string|array $roles): bool
     {
-        return app(AuthorizationResolver::class)->hasRole($roles);
+        return app(AuthorizationResolver::class)->hasRole($roles, $this);
     }
 
     /**

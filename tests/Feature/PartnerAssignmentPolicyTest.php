@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Zeus\UpdatePartnerAssignmentAction;
+use App\Auth\ContextManager;
 use App\Models\Activity;
 use App\Models\Estate;
 use App\Models\Partner;
@@ -31,6 +32,7 @@ beforeEach(function () {
 
 it('allows only authorized admins to change partner assignment', function () {
     setPermissionsTeamId($this->estate->id);
+    app(ContextManager::class)->resolve();
 
     expect(Gate::forUser($this->authorizedAdmin)->allows('update', $this->estate))->toBeTrue()
         ->and(Gate::forUser($this->unauthorizedAdmin)->allows('update', $this->estate))->toBeFalse();

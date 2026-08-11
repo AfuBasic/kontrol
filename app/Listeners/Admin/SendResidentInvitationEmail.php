@@ -2,8 +2,8 @@
 
 namespace App\Listeners\Admin;
 
-use App\Events\Admin\ResidentCreated;
 use App\Auth\ContextManager;
+use App\Events\Admin\ResidentCreated;
 use App\Mail\Admin\PropertyOwnerInvitationMail;
 use App\Mail\Admin\ResidentInvitationMail;
 use Illuminate\Contracts\Queue\ShouldQueue;

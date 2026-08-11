@@ -2,8 +2,8 @@
 
 namespace App\Actions\Admin;
 
-use App\Events\Admin\SecurityCreated;
 use App\Auth\ContextManager;
+use App\Events\Admin\SecurityCreated;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
 use App\Auth\ContextManager;
+use App\Http\Controllers\Controller;
 use App\Models\Estate;
 use App\Models\EstateInviteLink;
 use App\Models\User;

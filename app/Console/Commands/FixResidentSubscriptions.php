@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Estate;
 use App\Auth\ContextManager;
+use App\Models\Estate;
 use App\Models\User;
 use App\Services\ResidentSubscriptionService;
 use Illuminate\Console\Command;
@@ -75,13 +75,12 @@ class FixResidentSubscriptions extends Command
             }
 
             foreach ($users as $user) {
-                app(ContextManager::class)->setSystemContext($estate->id);
+                app(ContextManager::class)->setSystemContext($estate->id, $user);
                 if ($user->hasRole('household_member') || ! $user->hasRole('resident')) {
                     continue;
                 }
 
                 $sub = $user->residentSubscription()->where('estate_id', $estate->id)->first();
-
                 if (! $sub) {
                     // 1. Create subscription
                     $subscriptionService->createForUser($user, $estate);

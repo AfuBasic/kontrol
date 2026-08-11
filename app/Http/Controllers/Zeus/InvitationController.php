@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Actions\Auth\ActivateContext;
-use App\Auth\ContextManager;
 use App\Actions\Invitation\AcceptInvitationAction;
+use App\Auth\ContextManager;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
@@ -26,7 +26,7 @@ class InvitationController extends Controller
         }
 
         $user = User::where('email', $invitation->email)->first();
-        
+
         // If the user is logged in but doesn't match the invitation email, log them out.
         if (Auth::check() && strtolower(Auth::user()->email) !== strtolower($invitation->email)) {
             Auth::logout();
@@ -80,6 +80,7 @@ class InvitationController extends Controller
 
         if ($user->user_type === 'affiliate') {
             app(ContextManager::class)->setSystemContext(0);
+
             return redirect()->route('partner.dashboard');
         }
 

@@ -2,8 +2,8 @@
 
 namespace App\Actions\Incidents;
 
-use App\Enums\IncidentStatus;
 use App\Auth\ContextManager;
+use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentStatusUpdatedNotification;

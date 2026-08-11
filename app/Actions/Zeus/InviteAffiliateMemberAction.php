@@ -2,8 +2,8 @@
 
 namespace App\Actions\Zeus;
 
-use App\Mail\Zeus\AffiliateMemberInvitationMail;
 use App\Auth\ContextManager;
+use App\Mail\Zeus\AffiliateMemberInvitationMail;
 use App\Models\Affiliate;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;

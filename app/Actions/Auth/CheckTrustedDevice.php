@@ -2,8 +2,8 @@
 
 namespace App\Actions\Auth;
 
-use App\Models\User;
 use App\Auth\ContextManager;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CheckTrustedDevice

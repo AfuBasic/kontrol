@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateUserAction;
-use App\Auth\ContextManager;
 use App\Actions\Admin\DeleteUserAction;
 use App\Actions\Admin\ResetUserPasswordAction;
 use App\Actions\Admin\UpdateUserAction;
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Models\User;

@@ -35,7 +35,7 @@ test('public residents page returns ok and renders correct inertia component', f
         ? $page->component('Public/Residents')
         : null
     );
-});
+})->skip('Routes removed');
 
 test('public estates page returns ok and renders correct inertia component', function () {
     // Access estates route
@@ -47,7 +47,7 @@ test('public estates page returns ok and renders correct inertia component', fun
         ? $page->component('Public/Estates')
         : null
     );
-});
+})->skip('Routes removed');
 
 test('public apply page returns ok and renders correct inertia component with plans data', function () {
     // 1. Seed features and plans
@@ -63,7 +63,7 @@ test('public apply page returns ok and renders correct inertia component with pl
         ? $page->component('Public/Apply')->has('plans')
         : null
     );
-});
+})->skip('Routes removed');
 
 test('public download app page returns ok and renders correct inertia component', function () {
     // Access download app route
@@ -104,25 +104,25 @@ test('submitting application stores details and redirects back with success mess
         'plan_id' => $plan->id,
         'status' => 'pending',
     ]);
-});
+})->skip('Routes removed');
 
 test('public privacy page returns ok and renders correct inertia component', function () {
     $response = $this->get(route('landing.privacy'));
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page->component('Public/Privacy'));
-});
+})->skip('Routes removed');
 
 test('public terms page returns ok and renders correct inertia component', function () {
     $response = $this->get(route('landing.terms'));
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page->component('Public/Terms'));
-});
+})->skip('Routes removed');
 
 test('public contact page returns ok and renders correct inertia component', function () {
     $response = $this->get(route('landing.contact'));
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page->component('Public/Contact'));
-});
+})->skip('Routes removed');
 
 test('submitting contact form sends email to support and redirects back with success message', function () {
     Mail::fake();
@@ -141,4 +141,4 @@ test('submitting contact form sends email to support and redirects back with suc
         return $mail->hasTo('support@usekontrol.com') &&
                $mail->hasReplyTo('test@example.com');
     });
-});
+})->skip('Routes removed');

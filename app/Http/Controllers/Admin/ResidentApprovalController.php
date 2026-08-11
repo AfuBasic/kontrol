@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Auth\ContextManager;
+use App\Http\Controllers\Controller;
 use App\Mail\Resident\WelcomeMail;
 use App\Models\User;
 use App\Notifications\ResidentApproved;

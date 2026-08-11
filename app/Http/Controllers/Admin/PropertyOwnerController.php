@@ -320,7 +320,7 @@ class PropertyOwnerController extends Controller
     /**
      * View residents managed by the Property Owner.
      */
-    public function residents(User $propertyOwner): Response
+    public function residents(Request $request, User $propertyOwner): Response
     {
         $this->authorize('property_owners.view');
         $estate = $this->estateContext->getEstate();
@@ -336,15 +336,15 @@ class PropertyOwnerController extends Controller
                 ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
                 ->orderBy('name')
                 ->get()
-                ->map(fn ($user) => [
-                    'id' => $user->id,
-                    'ulid' => $user->ulid,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->profile?->phone,
-                    'property' => $user->profile?->property?->name,
-                    'status' => $user->estates->first()?->pivot?->status ?? 'pending',
-                    'suspended_at' => $user->suspended_at,
+                ->map(fn ($resident) => [
+                    'id' => $resident->id,
+                    'ulid' => $resident->ulid,
+                    'name' => $resident->name,
+                    'email' => $resident->email,
+                    'phone' => $resident->profile?->phone,
+                    'property' => $resident->profile?->property?->name,
+                    'status' => $resident->estates->first()?->pivot?->status ?? 'pending',
+                    'suspended_at' => $resident->suspended_at,
                 ])),
         ]);
     }
@@ -380,15 +380,17 @@ class PropertyOwnerController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->with('estates.propertyOwner') // Include current property owner info if any
+            ->with(['estates' => fn ($q) => $q->where('estates.id', $estate->id)])
             ->orderBy('name')
-            ->limit(20) // Limit results to ensure quick response in modal
+            ->limit(20)
             ->get()
-            ->map(fn ($user) => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'current_owner' => clone ($user)->getPropertyOwnerForEstate($estate)?->name,
+            ->map(fn ($resident) => [
+                'id' => $resident->id,
+                'name' => $resident->name,
+                'email' => $resident->email,
+                'current_owner' => $resident->estateMembershipFor($estate)?->property_owner_id
+                    ? User::find($resident->estateMembershipFor($estate)->property_owner_id)?->name
+                    : null,
             ]);
 
         return response()->json($residents);

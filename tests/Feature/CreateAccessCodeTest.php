@@ -53,9 +53,8 @@ test('resident can generate a visitor pass successfully', function () {
         'current_period_end' => now()->addMonth(),
     ]);
 
-    session(['estate_id' => $estate->id]);
-
     $response = $this->actingAs($resident)
+        ->withSession(['estate_id' => $estate->id])
         ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->post(route('resident.visitors.store'), [
             'type' => 'single_use',

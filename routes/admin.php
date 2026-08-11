@@ -107,30 +107,30 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         });
 
         Route::resource('residents', ResidentController::class)->except(['show'])->middleware('feature:resident-directory');
+    });
 
-        // Property Owners management
-        Route::middleware('permission:property_owners.view')->group(function (): void {
-            Route::middleware('feature:secure-invitations')->group(function (): void {
-                Route::post('property-owners/bulk-invite', [PropertyOwnerController::class, 'bulkInvite'])->name('property-owners.bulk-invite');
-                Route::get('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'index'])->name('property-owners.invite-link.index');
-                Route::post('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'store'])->name('property-owners.invite-link.store');
-                Route::post('property-owners/invite-link/toggle', [PropertyOwnerInviteLinkController::class, 'toggle'])->name('property-owners.invite-link.toggle');
-                Route::post('property-owners/invite-link/regenerate', [PropertyOwnerInviteLinkController::class, 'regenerate'])->name('property-owners.invite-link.regenerate');
-                Route::delete('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'destroy'])->name('property-owners.invite-link.destroy');
-            });
-
-            Route::delete('property-owners/bulk-delete', [PropertyOwnerController::class, 'bulkDelete'])->name('property-owners.bulk-delete');
-            Route::post('property-owners/bulk-suspend', [PropertyOwnerController::class, 'bulkSuspend'])->name('property-owners.bulk-suspend');
-            Route::post('property-owners/bulk-activate', [PropertyOwnerController::class, 'bulkActivate'])->name('property-owners.bulk-activate');
-            Route::post('property-owners/bulk-resend-invitation', [PropertyOwnerController::class, 'bulkResendInvitation'])->name('property-owners.bulk-resend-invitation');
-            Route::patch('property-owners/{propertyOwner}/suspend', [PropertyOwnerController::class, 'suspend'])->name('property-owners.suspend');
-            Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');
-            Route::get('property-owners/{propertyOwner}/available-residents', [PropertyOwnerController::class, 'availableResidents'])->name('property-owners.available-residents');
-            Route::post('property-owners/{propertyOwner}/assign-residents', [PropertyOwnerController::class, 'assignResidents'])->name('property-owners.assign-residents');
-            Route::post('property-owners/{propertyOwner}/make-resident', [PropertyOwnerController::class, 'makeResident'])->name('property-owners.make-resident');
-            Route::get('property-owners/{propertyOwner}/properties', [PropertyOwnerController::class, 'properties'])->name('property-owners.properties');
-            Route::resource('property-owners', PropertyOwnerController::class)->except(['show']);
+    // Property Owners management
+    Route::middleware('permission:property_owners.view')->group(function (): void {
+        Route::middleware('feature:secure-invitations')->group(function (): void {
+            Route::post('property-owners/bulk-invite', [PropertyOwnerController::class, 'bulkInvite'])->name('property-owners.bulk-invite');
+            Route::get('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'index'])->name('property-owners.invite-link.index');
+            Route::post('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'store'])->name('property-owners.invite-link.store');
+            Route::post('property-owners/invite-link/toggle', [PropertyOwnerInviteLinkController::class, 'toggle'])->name('property-owners.invite-link.toggle');
+            Route::post('property-owners/invite-link/regenerate', [PropertyOwnerInviteLinkController::class, 'regenerate'])->name('property-owners.invite-link.regenerate');
+            Route::delete('property-owners/invite-link', [PropertyOwnerInviteLinkController::class, 'destroy'])->name('property-owners.invite-link.destroy');
         });
+
+        Route::delete('property-owners/bulk-delete', [PropertyOwnerController::class, 'bulkDelete'])->name('property-owners.bulk-delete');
+        Route::post('property-owners/bulk-suspend', [PropertyOwnerController::class, 'bulkSuspend'])->name('property-owners.bulk-suspend');
+        Route::post('property-owners/bulk-activate', [PropertyOwnerController::class, 'bulkActivate'])->name('property-owners.bulk-activate');
+        Route::post('property-owners/bulk-resend-invitation', [PropertyOwnerController::class, 'bulkResendInvitation'])->name('property-owners.bulk-resend-invitation');
+        Route::patch('property-owners/{propertyOwner}/suspend', [PropertyOwnerController::class, 'suspend'])->name('property-owners.suspend');
+        Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');
+        Route::get('property-owners/{propertyOwner}/available-residents', [PropertyOwnerController::class, 'availableResidents'])->name('property-owners.available-residents');
+        Route::post('property-owners/{propertyOwner}/assign-residents', [PropertyOwnerController::class, 'assignResidents'])->name('property-owners.assign-residents');
+        Route::post('property-owners/{propertyOwner}/make-resident', [PropertyOwnerController::class, 'makeResident'])->name('property-owners.make-resident');
+        Route::get('property-owners/{propertyOwner}/properties', [PropertyOwnerController::class, 'properties'])->name('property-owners.properties');
+        Route::resource('property-owners', PropertyOwnerController::class)->except(['show']);
     });
 
     // Visitor Logs & Calendar

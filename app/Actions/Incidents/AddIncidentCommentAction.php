@@ -2,8 +2,8 @@
 
 namespace App\Actions\Incidents;
 
-use App\Models\Incident;
 use App\Auth\ContextManager;
+use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\IncidentUpvote;
 use App\Models\User;

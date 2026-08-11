@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\Admin\ResidentCreated;
 use App\Auth\ContextManager;
+use App\Events\Admin\ResidentCreated;
 use App\Notifications\Admin\ResidentInvited;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Auth;

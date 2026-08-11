@@ -135,18 +135,10 @@ test('property owner dashboard, residents, properties, collections, and announce
 
     // 2. Create managed residents
     $resident1 = User::factory()->create();
-    $resident1->estates()->attach($this->estate->id, ['status' => 'accepted']);
-    UserProfile::create([
-        'user_id' => $resident1->id,
-        'property_owner_id' => $owner->id,
-    ]);
+    $resident1->estates()->attach($this->estate->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
 
     $resident2 = User::factory()->create();
-    $resident2->estates()->attach($this->estate->id, ['status' => 'accepted']);
-    UserProfile::create([
-        'user_id' => $resident2->id,
-        'property_owner_id' => $owner->id,
-    ]);
+    $resident2->estates()->attach($this->estate->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
 
     // 3. Create property
     $property = Property::create([
@@ -453,10 +445,9 @@ test('resident can distinguish between estate and property owner notices and col
     UserProfile::create(['user_id' => $owner->id]);
 
     $resident = User::factory()->create();
-    $resident->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    $resident->estates()->attach($this->estate->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
     UserProfile::create([
         'user_id' => $resident->id,
-        'property_owner_id' => $owner->id,
     ]);
 
     setPermissionsTeamId($this->estate->id);
@@ -679,10 +670,9 @@ test('payment routing dynamically switches subaccounts and prevents bulk mismatc
 
     // 2. Setup Resident
     $resident = User::factory()->create();
-    $resident->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    $resident->estates()->attach($this->estate->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
     UserProfile::create([
         'user_id' => $resident->id,
-        'property_owner_id' => $owner->id,
     ]);
 
     setPermissionsTeamId($this->estate->id);

@@ -3,7 +3,6 @@
 namespace App\Mail\Admin;
 
 use App\Models\Estate;
-use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -20,12 +19,12 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
     public string $invitationUrl;
 
     public function __construct(
-        public Invitation $invitation,
+        public User $user,
         public Estate $estate,
         public bool $isPasswordReset = false,
     ) {
         // Use the secure token for the URL
-        $parameters = ['token' => $this->invitation->token];
+        $parameters = ['token' => $this->user->id];
         if ($this->isPasswordReset) {
             $parameters['password_reset'] = 1;
         }
@@ -54,13 +53,12 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-        $userName = User::where('email', $this->invitation->email)->value('name') ?? 'Resident';
 
         return new Content(
             view: 'mail.admin.resident-invitation',
             with: [
                 'estateName' => $this->estate->name,
-                'userName' => $userName,
+                'userName' => $this->user->name,
                 'invitationUrl' => $this->invitationUrl,
                 'isPasswordReset' => $this->isPasswordReset,
             ],

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Models\AdministrativeAssignment;
 use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
+use App\Models\AdministrativeAssignment;
 use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
 use App\Models\Payment;
@@ -340,7 +340,7 @@ class CollectionPaymentController extends Controller
                                 ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
                                 ->pluck('user_id')
                                 ->toArray();
-    
+
                             $admins = User::whereIn('id', $adminIds)->get();
 
                             foreach ($admins as $admin) {
@@ -659,7 +659,7 @@ class CollectionPaymentController extends Controller
                                                 ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
                                                 ->pluck('user_id')
                                                 ->toArray();
-                
+
                                             $admins = User::whereIn('id', $adminIds)->get();
 
                                             foreach ($admins as $admin) {

@@ -2,8 +2,8 @@
 
 namespace App\Listeners;
 
-use App\Events\Admin\SecurityCreated;
 use App\Auth\ContextManager;
+use App\Events\Admin\SecurityCreated;
 use App\Notifications\SecurityInvitedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Notification;

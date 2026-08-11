@@ -2,8 +2,8 @@
 
 namespace App\Actions\Admin;
 
-use App\Events\Admin\ResidentCreated;
 use App\Auth\ContextManager;
+use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;

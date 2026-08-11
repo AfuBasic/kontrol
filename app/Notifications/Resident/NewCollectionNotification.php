@@ -2,8 +2,8 @@
 
 namespace App\Notifications\Resident;
 
-use App\Channels\TelegramChannel;
 use App\Auth\ContextManager;
+use App\Channels\TelegramChannel;
 use App\Models\CollectionAssignment;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;

@@ -2,8 +2,8 @@
 
 namespace App\Actions\Resident;
 
-use App\Events\Resident\HouseholdMemberCreated;
 use App\Auth\ContextManager;
+use App\Events\Resident\HouseholdMemberCreated;
 use App\Models\Estate;
 use App\Models\HouseholdMember;
 use App\Models\User;

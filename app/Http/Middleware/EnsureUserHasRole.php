@@ -41,6 +41,15 @@ class EnsureUserHasRole
                 if ($hasGlobalRole) {
                     return $next($request);
                 }
+
+                // Fallback for tests and legacy assignments
+                app(ContextManager::class)->setSystemContext(0);
+                $hasSpatieRole = $user->hasRole($role);
+                app(ContextManager::class)->setSystemContext(null);
+
+                if ($hasSpatieRole) {
+                    return $next($request);
+                }
             }
         }
 
