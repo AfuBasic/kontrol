@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Authorization;
 
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateMembership;
 use App\Models\User;
@@ -17,8 +18,7 @@ class PolicyHardeningTest extends TestCase
     {
         parent::setUp();
         
-        // Ensure the global admin role exists (used for checking permissions)
-        Role::firstOrCreate(['name' => 'admin', 'estate_id' => null, 'guard_name' => 'web']);
+        $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
     }
 
     public function test_admin_cannot_update_role_from_different_estate()
@@ -27,34 +27,41 @@ class PolicyHardeningTest extends TestCase
         $estateA = Estate::factory()->create();
         $adminA = User::factory()->create();
         
-        // Assign Admin A to Estate A
-        $membershipA = EstateMembership::factory()->create([
+        EstateMembership::create([
             'estate_id' => $estateA->id,
             'user_id' => $adminA->id,
-            'role' => 'admin',
+            'status' => 'accepted'
         ]);
-        $adminA->roles()->attach(Role::where('name', 'admin')->first(), ['team_id' => $estateA->id]);
+        
+        $adminRole = Role::where('name', 'admin')->first();
+        
+        $assignmentA = AdministrativeAssignment::create([
+            'user_id' => $adminA->id,
+            'estate_id' => $estateA->id,
+            'role_id' => $adminRole->id,
+            'scope_type' => \App\Enums\AssignmentScope::Estate,
+            'is_active' => true,
+        ]);
+        
+        $adminA->roles()->attach($adminRole, ['estate_id' => $estateA->id]);
 
         // Estate B
         $estateB = Estate::factory()->create();
         
-        // A custom role belonging to Estate B
         $roleB = Role::create([
             'name' => 'custom-role-b',
             'estate_id' => $estateB->id,
             'guard_name' => 'web'
         ]);
 
-        // Admin A logs in and accesses Estate A context
-        $this->actingAs($adminA)->withSession(['active_context' => $membershipA->id]);
+        
+        $this->actingAs($adminA)->withSession(['active_context_assignment_id' => $assignmentA->id]);
 
-        // Admin A attempts to update Role B via spoofing
         $response = $this->put(route('admin.roles.update', $roleB), [
             'name' => 'hacked-role-name',
             'permissions' => []
         ]);
 
-        // Should be forbidden by the RolePolicy because roleB->team_id !== estateA->id
         $response->assertForbidden();
     }
 
@@ -62,21 +69,32 @@ class PolicyHardeningTest extends TestCase
     {
         $estateA = Estate::factory()->create();
         $adminA = User::factory()->create();
-        $membershipA = EstateMembership::factory()->create([
+        EstateMembership::create([
             'estate_id' => $estateA->id,
             'user_id' => $adminA->id,
-            'role' => 'admin',
+            'status' => 'accepted'
         ]);
-        $adminA->roles()->attach(Role::where('name', 'admin')->first(), ['team_id' => $estateA->id]);
+        
+        $adminRole = Role::where('name', 'admin')->first();
+        
+        $assignmentA = AdministrativeAssignment::create([
+            'user_id' => $adminA->id,
+            'estate_id' => $estateA->id,
+            'role_id' => $adminRole->id,
+            'scope_type' => \App\Enums\AssignmentScope::Estate,
+            'is_active' => true,
+        ]);
+        $adminA->roles()->attach($adminRole, ['estate_id' => $estateA->id]);
 
         $estateB = Estate::factory()->create();
         $roleB = Role::create([
             'name' => 'custom-role-b',
-            'estate_id' => $estateB->id, // or team_id depending on config, but role factory typically handles it
+            'estate_id' => $estateB->id,
             'guard_name' => 'web'
         ]);
 
-        $this->actingAs($adminA)->withSession(['active_context' => $membershipA->id]);
+        
+        $this->actingAs($adminA)->withSession(['active_context_assignment_id' => $assignmentA->id]);
 
         $response = $this->delete(route('admin.roles.destroy', $roleB));
         $response->assertForbidden();
@@ -86,26 +104,35 @@ class PolicyHardeningTest extends TestCase
     {
         $estateA = Estate::factory()->create();
         $adminA = User::factory()->create();
-        $membershipA = EstateMembership::factory()->create([
+        EstateMembership::create([
             'estate_id' => $estateA->id,
             'user_id' => $adminA->id,
-            'role' => 'admin',
+            'status' => 'accepted'
         ]);
-        $adminA->roles()->attach(Role::where('name', 'admin')->first(), ['team_id' => $estateA->id]);
+        
+        $adminRole = Role::where('name', 'admin')->first();
+        
+        $assignmentA = AdministrativeAssignment::create([
+            'user_id' => $adminA->id,
+            'estate_id' => $estateA->id,
+            'role_id' => $adminRole->id,
+            'scope_type' => \App\Enums\AssignmentScope::Estate,
+            'is_active' => true,
+        ]);
+        $adminA->roles()->attach($adminRole, ['estate_id' => $estateA->id]);
 
-        // A custom role belonging to Estate A
         $roleA = Role::create([
             'name' => 'custom-role-a',
             'estate_id' => $estateA->id,
             'guard_name' => 'web'
         ]);
 
-        $this->actingAs($adminA)->withSession(['active_context' => $membershipA->id]);
+        
+        $this->actingAs($adminA)->withSession(['active_context_assignment_id' => $assignmentA->id]);
 
-        // Valid update payload based on typical controller requirements
         $response = $this->put(route('admin.roles.update', $roleA), [
             'name' => 'updated-role-name',
-            'permissions' => [] // empty permissions for simplicity
+            'permissions' => []
         ]);
 
         $response->assertRedirect(route('admin.roles.index'));
