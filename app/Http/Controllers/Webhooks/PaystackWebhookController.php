@@ -67,14 +67,16 @@ class PaystackWebhookController extends Controller
 
                                     $assignment->loadMissing('collection.creator');
                                     $creator = $assignment->collection?->creator;
-                                    if ($creator && $creator->hasRole('property_owner')) {
+                                    if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                                         $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
                                     } else {
-                                        $admins = User::role('admin')
-                                            ->whereHas('estates', function ($query) use ($assignment) {
-                                                $query->where('estates.id', $assignment->estate_id);
-                                            })
-                                            ->get();
+                                        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                            ->where('is_active', true)
+                                            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                            ->pluck('user_id')
+                                            ->toArray();
+
+                                        $admins = User::whereIn('id', $adminIds)->get();
 
                                         foreach ($admins as $admin) {
                                             $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
@@ -106,14 +108,16 @@ class PaystackWebhookController extends Controller
 
                                         $assignment->loadMissing('collection.creator');
                                         $creator = $assignment->collection?->creator;
-                                        if ($creator && $creator->hasRole('property_owner')) {
+                                        if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                                             $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
                                         } else {
-                                            $admins = User::role('admin')
-                                                ->whereHas('estates', function ($query) use ($assignment) {
-                                                    $query->where('estates.id', $assignment->estate_id);
-                                                })
-                                                ->get();
+                                            $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                                ->where('is_active', true)
+                                                ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                                ->pluck('user_id')
+                                                ->toArray();
+    
+                                            $admins = User::whereIn('id', $adminIds)->get();
 
                                             foreach ($admins as $admin) {
                                                 $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));
