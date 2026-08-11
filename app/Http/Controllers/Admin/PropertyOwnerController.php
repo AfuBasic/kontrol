@@ -455,10 +455,21 @@ class PropertyOwnerController extends Controller
             ->whereNull('estate_id')
             ->firstOrFail();
 
-        setPermissionsTeamId($estate->id);
+        $hasResidentRole = \App\Models\AdministrativeAssignment::where('user_id', $propertyOwner->id)
+            ->where('estate_id', $estate->id)
+            ->where('is_active', true)
+            ->where('role_id', $residentRole->id)
+            ->exists();
 
-        if (! $propertyOwner->hasRole($residentRole)) {
-            $propertyOwner->assignRole($residentRole);
+        if (! $hasResidentRole) {
+            \App\Models\AdministrativeAssignment::create([
+                'user_id' => $propertyOwner->id,
+                'estate_id' => $estate->id,
+                'role_id' => $residentRole->id,
+                'scope_type' => \App\Enums\AssignmentScope::Estate,
+                'is_primary' => false,
+                'is_active' => true,
+            ]);
 
             return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
         }
