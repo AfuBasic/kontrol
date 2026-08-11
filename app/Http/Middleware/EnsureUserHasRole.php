@@ -28,27 +28,29 @@ class EnsureUserHasRole
         $globalRoles = ['affiliate'];
 
         // Check platform-wide roles first (stored against estate_id = 0)
+        // We look directly at assignments for platform roles
         foreach ($roles as $role) {
             if (in_array($role, $globalRoles, true)) {
-                setPermissionsTeamId(0);
-                $user->unsetRelation('roles'); // Clear cached roles to apply the new team context
+                $hasGlobalRole = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+                    ->where('estate_id', 0)
+                    ->whereHas('role', fn($q) => $q->where('name', $role))
+                    ->exists();
 
-                if ($user->hasRole($role)) {
+                if ($hasGlobalRole) {
                     return $next($request);
                 }
             }
         }
 
-        // Set the team context for Spatie Permission (use user's first accepted estate)
-        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
-        if ($estate) {
-            setPermissionsTeamId($estate->id);
-            $user->unsetRelation('roles'); // Clear cached roles to apply the estate context
+        // We should ensure the context is loaded before checking roles
+        $context = app(\App\Auth\ContextManager::class)->current();
+        if (! $context) {
+            abort(403, 'No active estate context.');
         }
 
-        // Check if user has any of the allowed roles
+        // Check if user has any of the allowed roles using context
         foreach ($roles as $role) {
-            if ($user->hasRole($role)) {
+            if ($user->contextHasRole($role)) {
                 // Evaluate platform access via centralized PlatformAccessService
                 $accessResult = app(PlatformAccessService::class)->evaluate($request, $user);
                 if (! $accessResult->allowed && $accessResult->redirectUrl) {
