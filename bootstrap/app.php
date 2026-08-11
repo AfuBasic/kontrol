@@ -83,6 +83,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(
             append: [
                 AuthenticateSession::class,
+                \App\Http\Middleware\ResolveContext::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
             ],
