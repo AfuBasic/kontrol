@@ -6,6 +6,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\EstateMembership;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
+use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -50,7 +51,7 @@ class ContextManager
         }
 
         $assignment = AdministrativeAssignment::withoutGlobalScope(ZoneScope::class)
-            ->with(['estate', 'role', 'zone'])
+            ->with(['estate', 'role', 'zone' => fn ($q) => $q->withoutGlobalScope(ZoneScope::class)])
             ->find($assignmentId);
 
         if (! $this->isValidAssignment($assignment, $user)) {
@@ -165,7 +166,7 @@ class ContextManager
     public function getValidAssignments(User $user)
     {
         return AdministrativeAssignment::withoutGlobalScope(ZoneScope::class)
-            ->with(['estate', 'role', 'zone'])
+            ->with(['estate', 'role', 'zone' => fn ($q) => $q->withoutGlobalScope(ZoneScope::class)])
             ->where('user_id', $user->id)
             ->where('is_active', true)
             ->get()
@@ -207,8 +208,9 @@ class ContextManager
         }
 
         // 10. If assignment has zone_id: zone belongs to assignment.estate_id.
-        if ($assignment->zone_id && $assignment->zone) {
-            if ($assignment->zone->estate_id !== $assignment->estate_id) {
+        if ($assignment->zone_id) {
+            $zone = $assignment->zone ?: Zone::withoutGlobalScope(ZoneScope::class)->find($assignment->zone_id);
+            if (! $zone || $zone->estate_id !== $assignment->estate_id) {
                 return false;
             }
         }
