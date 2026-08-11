@@ -44,6 +44,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SmsService::class, function ($app) {
             return new SmsService($app->make(SMSProvider::class));
         });
+        
+        $this->app->scoped(\App\Auth\ContextManager::class, fn () => new \App\Auth\ContextManager());
     }
 
     /**
