@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\ContextManager;
 use App\Events\Billing\InvoiceGenerated;
 use App\Events\Billing\PaymentReceived;
 use App\Listeners\Billing\SendInvoiceEmail;
@@ -44,8 +45,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SmsService::class, function ($app) {
             return new SmsService($app->make(SMSProvider::class));
         });
-        
-        $this->app->scoped(\App\Auth\ContextManager::class, fn () => new \App\Auth\ContextManager());
+
+        $this->app->scoped(ContextManager::class, fn () => new ContextManager);
     }
 
     /**
