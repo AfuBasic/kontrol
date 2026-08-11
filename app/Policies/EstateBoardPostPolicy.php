@@ -42,14 +42,16 @@ class EstateBoardPostPolicy
             return true;
         }
 
-        $profile = $user->profile;
-        if (! $profile || $profile->property_owner_id !== $post->property_owner_id) {
+        $propertyOwner = $user->getPropertyOwnerForEstate($post->estate_id);
+        if (! $propertyOwner || $propertyOwner->id !== $post->property_owner_id) {
             return false;
         }
 
         if ($post->applies_to === 'all') {
             return true;
         }
+
+        $profile = $user->profile;
 
         return $post->targets()
             ->where(function ($q) use ($user, $profile) {
