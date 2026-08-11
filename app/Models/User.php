@@ -287,7 +287,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isHouseholdMember(): bool
     {
-        return $this->hasRole('household_member');
+        return $this->contextHasRole('household_member');
     }
 
     /**
@@ -295,7 +295,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isPrimaryResident(): bool
     {
-        return $this->hasRole('resident') && ! $this->hasRole('household_member');
+        return $this->contextHasRole('resident') && ! $this->contextHasRole('household_member');
     }
 
     /**
