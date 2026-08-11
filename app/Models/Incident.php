@@ -8,6 +8,7 @@ use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Traits\GeneratesUlid;
 use App\Traits\HasHashid;
+use App\Traits\ZoneScoped;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,7 @@ class Incident extends Model
     use HasFactory;
     use LogsActivity;
     use SoftDeletes;
+    use ZoneScoped;
 
     protected $fillable = [
         'estate_id',

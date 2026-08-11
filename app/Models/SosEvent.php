@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ZoneScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -37,6 +38,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class SosEvent extends Model
 {
+    use ZoneScoped;
+
     protected $guarded = [];
 
     protected function casts(): array
