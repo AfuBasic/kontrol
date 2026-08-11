@@ -78,6 +78,12 @@ class InvitationAcceptanceController extends Controller
         $email = strtolower(trim($invitation->email));
         $user = Auth::user();
 
+        if ($user && strtolower($user->email) !== $email) {
+            return redirect()->back()->withErrors([
+                'email' => "You are logged in as {$user->email}, but this invitation was sent to {$invitation->email}. Please switch accounts to accept.",
+            ]);
+        }
+
         if (! $user) {
             // Unauthenticated user flow
             $existingUser = User::where('email', $email)->first();
