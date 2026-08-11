@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Auth\ContextManager;
 use App\Http\Controllers\Partner\NotificationController;
+use App\Models\AdministrativeAssignment;
 use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
@@ -60,9 +61,9 @@ class HandleInertiaRequests extends Middleware
                 // The ContextManager has already established the Spatie team ID and cleared caches
                 $estate = Estate::find($currentContext->estateId);
                 $user->loadMissing('profile');
-                
-                $assignment = \App\Models\AdministrativeAssignment::with('role.permissions')->find($currentContext->assignmentId);
-                
+
+                $assignment = AdministrativeAssignment::with('role.permissions')->find($currentContext->assignmentId);
+
                 if ($assignment && $assignment->role) {
                     $permissions = $assignment->role->permissions->map(fn ($p) => ['name' => $p->name])->values()->all();
                     $roles = [$assignment->role->name];
