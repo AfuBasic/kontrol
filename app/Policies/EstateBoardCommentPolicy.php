@@ -6,20 +6,24 @@ use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Auth\ContextManager;
 
 class EstateBoardCommentPolicy
 {
     use HandlesAuthorization;
+
+    private function hasValidContextForEstate(int $estateId): bool
+    {
+        $context = app(ContextManager::class)->current();
+        return $context !== null && $context->estateId === $estateId;
+    }
 
     /**
      * Determine if the user can create a comment.
      */
     public function create(User $user, EstateBoardPost $post): bool
     {
-        return $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->where('estates.id', $post->estate_id)
-            ->exists();
+        return $this->hasValidContextForEstate($post->estate_id);
     }
 
     /**
@@ -27,10 +31,12 @@ class EstateBoardCommentPolicy
      */
     public function delete(User $user, EstateBoardComment $comment): bool
     {
-        setPermissionsTeamId($comment->estate_id);
+        if (! $this->hasValidContextForEstate($comment->estate_id)) {
+            return false;
+        }
 
         return $comment->user_id === $user->id
-            || $user->hasRole('admin')
-            || $user->hasPermissionTo('board.moderate');
+            || $user->contextHasRole('admin')
+            || $user->contextCan('board.moderate');
     }
 }
