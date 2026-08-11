@@ -118,7 +118,7 @@ class RecurringAssignmentJob implements ShouldQueue
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
-                $userIds = User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $collection->estate_id)->where('estate_users_membership.property_owner_id', $creator->id))
                     ->pluck('users.id')
                     ->toArray();
             } else {

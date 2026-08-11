@@ -114,7 +114,7 @@ class EstateBoardController extends Controller
             // Need to estimate total users for this post
             if ($postData->property_owner_id) {
                 $targetsCount = User::query()
-                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $postData->property_owner_id))
+                    ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.property_owner_id', $postData->property_owner_id))
                     ->forEstate($estateId)
                     ->active()
                     ->count();
