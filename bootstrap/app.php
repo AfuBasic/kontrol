@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
 use App\Http\Middleware\ValidateEstateContext;
 use Illuminate\Auth\AuthenticationException;
@@ -32,50 +33,49 @@ return Application::configure(basePath: dirname(__DIR__))
         using: function (): void {
             $domainRoutingEnabled = config('domains.routing_enabled', true);
             $isLocal = app()->environment('local');
+            $useDomainRouting = $domainRoutingEnabled && (! $isLocal || filled(config('domains.app_subdomain')));
 
             /*
             |------------------------------------------------------------------
             | Domain-Based Routing
             |------------------------------------------------------------------
             |
-            | When domain routing is enabled and we're not in local environment
-            | (or local with subdomain simulation), use domain constraints.
+            | Register domains from config only — never from request()->getHost().
+            | Request-derived domains break php artisan route:cache (CLI has no
+            | Host header), which is what made www.usekontrol.com 404 in production.
             |
-            | PUBLIC domain (usekontrol.com): Marketing routes
-            | APP domain (app.usekontrol.com): Application routes
+            | PUBLIC domains (root + www): Marketing routes
+            | APP domain (app.*): Application routes
             |
             */
 
-            if ($domainRoutingEnabled && ! $isLocal) {
-                // Production / Staging: Full domain-based routing
-                $host = request()->getHost();
+            if ($useDomainRouting) {
                 $appDomain = config('domains.app');
-                $rootDomain = config('domains.root');
 
-                $publicDomain = ($host !== $appDomain && str_ends_with($host, $rootDomain))
-                    ? $host
-                    : $rootDomain;
+                // Static public hosts (apex + www alias). Safe under route:cache.
+                $publicDomains = collect([
+                    config('domains.root'),
+                    config('domains.www'),
+                ])
+                    ->filter(fn (?string $domain): bool => filled($domain) && $domain !== $appDomain)
+                    ->unique()
+                    ->values();
 
-                Route::domain($publicDomain)
-                    ->middleware('web')
-                    ->group(base_path('routes/public.php'));
+                $isPrimaryPublicDomain = true;
 
-                Route::domain($appDomain)
-                    ->middleware('web')
-                    ->group(base_path('routes/app.php'));
-            } elseif ($domainRoutingEnabled && $isLocal && config('domains.app_subdomain')) {
-                // Local with subdomain simulation (e.g., app.usekontrol.test)
-                $host = request()->getHost();
-                $appDomain = config('domains.app');
-                $rootDomain = config('domains.root');
+                foreach ($publicDomains as $publicDomain) {
+                    $group = Route::domain($publicDomain)->middleware('web');
 
-                $publicDomain = ($host !== $appDomain && str_ends_with($host, $rootDomain))
-                    ? $host
-                    : $rootDomain;
+                    // Canonical route names stay on the primary (root) domain only.
+                    // Alias domains get a name prefix so route:cache does not fail
+                    // on duplicate named routes (landing.home, etc.).
+                    if (! $isPrimaryPublicDomain) {
+                        $group->name('www.');
+                    }
 
-                Route::domain($publicDomain)
-                    ->middleware('web')
-                    ->group(base_path('routes/public.php'));
+                    $group->group(base_path('routes/public.php'));
+                    $isPrimaryPublicDomain = false;
+                }
 
                 Route::domain($appDomain)
                     ->middleware('web')
@@ -99,6 +99,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(
             append: [
                 AuthenticateSession::class,
+                ResolveContext::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
             ],
