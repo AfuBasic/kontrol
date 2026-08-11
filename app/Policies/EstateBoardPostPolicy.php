@@ -7,15 +7,9 @@ use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use App\Auth\ContextManager;
 
-class EstateBoardPostPolicy
+class EstateBoardPostPolicy extends BaseContextPolicy
 {
-    use HandlesAuthorization;
 
-    private function hasValidContextForEstate(int $estateId): bool
-    {
-        $context = app(ContextManager::class)->current();
-        return $context !== null && $context->estateId === $estateId;
-    }
 
     /**
      * Determine if the user can view posts (feed).
