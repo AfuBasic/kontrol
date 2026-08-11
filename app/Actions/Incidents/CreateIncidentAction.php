@@ -37,10 +37,17 @@ class CreateIncidentAction
             if (isset($data['source'])) {
                 $source = $data['source'];
             } else {
-                setPermissionsTeamId($estate->id);
-                if ($user->hasRole('admin')) {
+                $assignment = \App\Models\AdministrativeAssignment::with('role')
+                    ->where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->where('is_active', true)
+                    ->first();
+                
+                $roleName = $assignment?->role?->name;
+
+                if ($roleName === 'admin') {
                     $source = IncidentSource::EstateManagement;
-                } elseif ($user->hasRole('security')) {
+                } elseif ($roleName === 'security') {
                     $source = IncidentSource::SecurityReport;
                 } else {
                     $source = IncidentSource::ResidentReport;
@@ -99,15 +106,16 @@ class CreateIncidentAction
                 || in_array(strtolower($incident->priority), ['critical', 'high']);
 
             if ($shouldNotifyAdmins) {
-                $admins = User::forEstate($estate->id)
+                $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $estate->id)
+                    ->where('is_active', true)
+                    ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                    ->pluck('user_id')
+                    ->toArray();
+
+                $admins = User::whereIn('id', $adminIds)
                     ->active()
                     ->where('id', '!=', $user->id)
-                    ->get()
-                    ->filter(function ($u) use ($estate) {
-                        setPermissionsTeamId($estate->id);
-
-                        return $u->hasRole('admin');
-                    });
+                    ->get();
 
                 if ($admins->isNotEmpty()) {
                     Notification::send($admins, new IncidentCreatedNotification($incident));
