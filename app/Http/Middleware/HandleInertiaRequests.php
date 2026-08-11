@@ -51,15 +51,21 @@ class HandleInertiaRequests extends Middleware
         $partnerUnreadCount = 0;
 
         if ($user) {
-            // Set team context for permission check
-            $estate = $user->estates()->wherePivot('status', 'accepted')->first();
-            if ($estate) {
-                setPermissionsTeamId($estate->id);
-            }
+            $contextManager = app(\App\Auth\ContextManager::class);
+            $currentContext = $contextManager->current();
 
-            $user->loadMissing('profile');
-            $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
-            $roles = $user->getRoleNames()->toArray();
+            if ($currentContext) {
+                // The ContextManager has already established the Spatie team ID and cleared caches
+                $estate = \App\Models\Estate::find($currentContext->estateId);
+                $user->loadMissing('profile');
+                $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
+                $roles = $user->getRoleNames()->toArray();
+            } else {
+                // If no active context, safely provide empty roles/permissions
+                $user->loadMissing('profile');
+                $permissions = [];
+                $roles = [];
+            }
 
             if ($user->partner_id) {
                 $user->loadMissing('partner');
