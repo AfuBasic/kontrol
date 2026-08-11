@@ -282,6 +282,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Determine if the user has a specific role type within their active assignment.
+     */
+    public function contextHasRole(string|array $roles): bool
+    {
+        return app(\App\Auth\AuthorizationResolver::class)->hasRole($roles);
+    }
+
+    /**
+     * Determine if the user has a specific permission within their active assignment.
+     */
+    public function contextCan(string $permission): bool
+    {
+        return app(\App\Auth\AuthorizationResolver::class)->can($permission);
+    }
+
+    /**
      * Scope: Users belonging to a specific estate.
      *
      * @param  Builder<User>  $query
