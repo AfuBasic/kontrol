@@ -28,6 +28,7 @@ import NotificationController from '@/actions/App/Http/Controllers/Resident/Noti
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
+import ContextSwitcher from '@/Components/ContextSwitcher';
 import SubscriptionBanner from '@/Components/Resident/Dashboard/SubscriptionBanner';
 import NotificationDetailSheet from '@/Components/Resident/NotificationDetailSheet';
 import type { Notification } from '@/Components/Resident/NotificationDetailSheet';
@@ -561,17 +562,20 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         </span>
                                     )}
                                 </div>
-                                <Link
-                                    href="/resident/activity?tab=notifications"
-                                    className="relative rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-50 active:scale-95"
-                                >
-                                    <Bell className="h-6 w-6" />
-                                    {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
-                                            {unreadCount}
-                                        </span>
-                                    )}
-                                </Link>
+                                <div className="flex items-center gap-3">
+                                    <ContextSwitcher />
+                                    <Link
+                                        href="/resident/activity?tab=notifications"
+                                        className="relative rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-50 active:scale-95"
+                                    >
+                                        <Bell className="h-6 w-6" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-black text-white ring-1 ring-white">
+                                                {unreadCount}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </header>

@@ -44,6 +44,7 @@ import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLo
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
+import ContextSwitcher from '@/Components/ContextSwitcher';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
@@ -696,6 +697,7 @@ export default function AdminLayout({ children, title }: Props) {
                             <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">{title || 'Dashboard'}</span>
                         </div>
                         <div className="flex items-center gap-3">
+                            <ContextSwitcher />
                             <SystemHealthMonitor hideWhenHealthy />
                         <div className="relative">
                             <button
