@@ -45,10 +45,18 @@ class UpdateResidentAction
                     'phone' => $data['phone'] ?? null,
                     'unit_number' => $data['unit_number'] ?? null,
                     'address' => $data['address'] ?? null,
-                    'property_owner_id' => $data['property_owner_id'] ?? null,
                     'property_id' => $data['property_id'] ?? null,
                 ]
             );
+
+            if (array_key_exists('property_owner_id', $data)) {
+                DB::table('estate_users_membership')
+                    ->where('user_id', $resident->id)
+                    ->where('estate_id', $estate->id)
+                    ->update([
+                        'property_owner_id' => $data['property_owner_id'],
+                    ]);
+            }
 
             activity()
                 ->performedOn($resident)

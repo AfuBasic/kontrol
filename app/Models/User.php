@@ -176,8 +176,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function estates(): BelongsToMany
     {
         return $this->belongsToMany(Estate::class, 'estate_users_membership', 'user_id', 'estate_id')
-            ->withPivot('status')
+            ->using(EstateMembership::class)
+            ->withPivot(['status', 'zone_id', 'relationship_type', 'property_owner_id'])
             ->withTimestamps();
+    }
+
+    /**
+     * Get the estate membership pivot model for a specific estate.
+     */
+    public function estateMembershipFor(Estate|int $estate): ?EstateMembership
+    {
+        $estateId = $estate instanceof Estate ? $estate->id : $estate;
+        return EstateMembership::where('user_id', $this->id)->where('estate_id', $estateId)->first();
+    }
+
+    /**
+     * Get the property owner for this user in a specific estate.
+     */
+    public function getPropertyOwnerForEstate(Estate|int $estate): ?User
+    {
+        return $this->estateMembershipFor($estate)?->propertyOwner;
     }
 
     /**
@@ -204,14 +222,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Property::class, 'property_owner_id');
     }
 
-    /**
-     * Residents managed by this user (if property owner).
-     */
     public function managedResidents()
     {
         return $this->hasManyThrough(
             User::class,
-            UserProfile::class,
+            EstateMembership::class,
             'property_owner_id',
             'id',
             'id',

@@ -19,7 +19,6 @@ class AssignResidentsToPropertyOwnerAction
     {
         DB::transaction(function () use ($propertyOwner, $residentIds, $estate) {
             // Ensure all residents actually belong to this estate
-            // and have a profile.
             $validResidentIds = User::query()
                 ->whereIn('users.id', $residentIds)
                 ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
@@ -30,10 +29,23 @@ class AssignResidentsToPropertyOwnerAction
                 return;
             }
 
-            // Update profiles to belong to the property owner
-            UserProfile::whereIn('user_id', $validResidentIds)->update([
-                'property_owner_id' => $propertyOwner->id,
-            ]);
+            // Ensure property owner also belongs to this estate
+            $propertyOwnerMembership = DB::table('estate_users_membership')
+                ->where('user_id', $propertyOwner->id)
+                ->where('estate_id', $estate->id)
+                ->first();
+
+            if (! $propertyOwnerMembership) {
+                throw new \InvalidArgumentException("Property owner does not belong to the estate.");
+            }
+
+            // Update estate_users_membership to belong to the property owner
+            DB::table('estate_users_membership')
+                ->whereIn('user_id', $validResidentIds)
+                ->where('estate_id', $estate->id)
+                ->update([
+                    'property_owner_id' => $propertyOwner->id,
+                ]);
 
             activity()
                 ->performedOn($propertyOwner)
