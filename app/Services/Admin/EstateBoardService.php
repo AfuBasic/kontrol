@@ -22,11 +22,8 @@ class EstateBoardService
     public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null, ?string $category = null, ?string $priority = null): CursorPaginator
     {
         $user = auth()->user();
-        if ($user) {
-            setPermissionsTeamId($estateId);
-        }
-        $isAdmin = $user && $user->hasRole('admin');
-        $isPropertyOwner = $user && $user->hasRole('property_owner');
+        $isAdmin = $user && $user->contextHasRole('admin');
+        $isPropertyOwner = $user && $user->contextHasRole('property_owner');
         $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
 
@@ -114,11 +111,8 @@ class EstateBoardService
     public function getPost(int $postId, int $estateId, ?array $audiences = null): ?EstateBoardPost
     {
         $user = auth()->user();
-        if ($user) {
-            setPermissionsTeamId($estateId);
-        }
-        $isAdmin = $user && $user->hasRole('admin');
-        $isPropertyOwner = $user && $user->hasRole('property_owner');
+        $isAdmin = $user && $user->contextHasRole('admin');
+        $isPropertyOwner = $user && $user->contextHasRole('property_owner');
         $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
 
