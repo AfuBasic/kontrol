@@ -19,18 +19,18 @@ beforeEach(function () {
     $this->action = app(CreateAdministrativeAssignmentAction::class);
     $this->user = User::factory()->create();
     $this->estate = Estate::factory()->create();
-    
+
     // Add valid membership
     EstateMembership::create([
         'user_id' => $this->user->id,
         'estate_id' => $this->estate->id,
-        'status' => 'accepted'
+        'status' => 'accepted',
     ]);
-    
+
     $this->estateRole = Role::create([
         'name' => 'custom-role',
         'guard_name' => 'web',
-        'estate_id' => $this->estate->id
+        'estate_id' => $this->estate->id,
     ]);
 });
 
@@ -41,7 +41,7 @@ it('creates valid estate scoped assignment', function () {
         $this->estateRole,
         AssignmentScope::Estate
     );
-    
+
     expect($assignment->id)->not->toBeNull()
         ->and($assignment->scope_type)->toBe(AssignmentScope::Estate)
         ->and($assignment->zone_id)->toBeNull();
@@ -49,7 +49,7 @@ it('creates valid estate scoped assignment', function () {
 
 it('creates valid zone scoped assignment', function () {
     $zone = Zone::create(['name' => 'Zone 1', 'estate_id' => $this->estate->id]);
-    
+
     $assignment = $this->action->execute(
         $this->user,
         $this->estate,
@@ -57,7 +57,7 @@ it('creates valid zone scoped assignment', function () {
         AssignmentScope::Zone,
         $zone
     );
-    
+
     expect($assignment->id)->not->toBeNull()
         ->and($assignment->scope_type)->toBe(AssignmentScope::Zone)
         ->and($assignment->zone_id)->toBe($zone->id);
@@ -65,7 +65,7 @@ it('creates valid zone scoped assignment', function () {
 
 it('rejects global role injection', function () {
     $globalRole = Role::create(['name' => 'global-admin', 'guard_name' => 'web']);
-    
+
     expect(fn () => $this->action->execute(
         $this->user,
         $this->estate,
@@ -77,7 +77,7 @@ it('rejects global role injection', function () {
 it('rejects cross estate role injection', function () {
     $estateB = Estate::factory()->create();
     $roleB = Role::create(['name' => 'role-b', 'guard_name' => 'web', 'estate_id' => $estateB->id]);
-    
+
     expect(fn () => $this->action->execute(
         $this->user,
         $this->estate,
@@ -88,7 +88,7 @@ it('rejects cross estate role injection', function () {
 
 it('rejects estate scope with zone', function () {
     $zone = Zone::create(['name' => 'Zone 1', 'estate_id' => $this->estate->id]);
-    
+
     expect(fn () => $this->action->execute(
         $this->user,
         $this->estate,
@@ -110,7 +110,7 @@ it('rejects zone scope without zone', function () {
 it('rejects zone escape from another estate', function () {
     $estateB = Estate::factory()->create();
     $zoneB = Zone::create(['name' => 'Zone B', 'estate_id' => $estateB->id]);
-    
+
     expect(fn () => $this->action->execute(
         $this->user,
         $this->estate,
@@ -122,7 +122,7 @@ it('rejects zone escape from another estate', function () {
 
 it('rejects assignment for non member', function () {
     $nonMember = User::factory()->create();
-    
+
     expect(fn () => $this->action->execute(
         $nonMember,
         $this->estate,
@@ -141,9 +141,9 @@ it('prevents multiple active primary assignments', function () {
         true, // isPrimary
         true  // isActive
     );
-    
+
     $role2 = Role::create(['name' => 'role-2', 'guard_name' => 'web', 'estate_id' => $this->estate->id]);
-    
+
     // Attempt second primary assignment
     expect(fn () => $this->action->execute(
         $this->user,
@@ -163,14 +163,14 @@ it('prevents duplicate estate assignment', function () {
         $this->estateRole,
         AssignmentScope::Estate
     );
-    
+
     expect(fn () => $this->action->execute(
         $this->user,
         $this->estate,
         $this->estateRole,
         AssignmentScope::Estate
     ))->toThrow(ValidationException::class, 'This administrative assignment already exists');
-    
+
     // Also test DB level unique constraint
     expect(fn () => AdministrativeAssignment::create([
         'user_id' => $this->user->id,
@@ -182,7 +182,7 @@ it('prevents duplicate estate assignment', function () {
 
 it('prevents duplicate zone assignment', function () {
     $zone = Zone::create(['name' => 'Zone 1', 'estate_id' => $this->estate->id]);
-    
+
     $this->action->execute(
         $this->user,
         $this->estate,
@@ -190,7 +190,7 @@ it('prevents duplicate zone assignment', function () {
         AssignmentScope::Zone,
         $zone
     );
-    
+
     expect(fn () => $this->action->execute(
         $this->user,
         $this->estate,
@@ -198,62 +198,62 @@ it('prevents duplicate zone assignment', function () {
         AssignmentScope::Zone,
         $zone
     ))->toThrow(ValidationException::class, 'This administrative assignment already exists');
-    
+
     // Also test DB level unique constraint
     expect(fn () => AdministrativeAssignment::create([
         'user_id' => $this->user->id,
         'estate_id' => $this->estate->id,
         'role_id' => $this->estateRole->id,
         'scope_type' => 'zone',
-        'zone_id' => $zone->id
+        'zone_id' => $zone->id,
     ]))->toThrow(Exception::class);
 });
 
 it('backfills safely from model_has_roles', function () {
     $user2 = User::factory()->create();
     EstateMembership::create(['user_id' => $user2->id, 'estate_id' => $this->estate->id, 'status' => 'accepted']);
-    
+
     $globalRole = Role::create(['name' => 'global', 'guard_name' => 'web']);
     $role3 = Role::create(['name' => 'role-3', 'guard_name' => 'web', 'estate_id' => $this->estate->id]);
-    
+
     // Valid Spatie assignment
     DB::table('model_has_roles')->insert([
         'role_id' => $this->estateRole->id,
         'model_type' => User::class,
         'model_id' => $this->user->id,
-        'estate_id' => $this->estate->id
+        'estate_id' => $this->estate->id,
     ]);
-    
+
     // Global role assignment (should be skipped)
     DB::table('model_has_roles')->insert([
         'role_id' => $globalRole->id,
         'model_type' => User::class,
         'model_id' => $this->user->id,
-        'estate_id' => $this->estate->id
+        'estate_id' => $this->estate->id,
     ]);
-    
+
     // Cross estate assignment (should be skipped)
     $estateB = Estate::factory()->create();
     DB::table('model_has_roles')->insert([
         'role_id' => $role3->id,
         'model_type' => User::class,
         'model_id' => $user2->id,
-        'estate_id' => $estateB->id
+        'estate_id' => $estateB->id,
     ]);
-    
+
     $exitCode = Artisan::call('kontrol:backfill-administrative-assignments');
-    
+
     expect($exitCode)->toBe(0);
-    
+
     // Only 1 assignment should be migrated
     expect(AdministrativeAssignment::count())->toBe(1);
-    
+
     $assignment = AdministrativeAssignment::first();
     expect($assignment->user_id)->toBe($this->user->id)
         ->and($assignment->role_id)->toBe($this->estateRole->id)
         ->and($assignment->estate_id)->toBe($this->estate->id)
         ->and($assignment->scope_type)->toBe(AssignmentScope::Estate);
-        
+
     // Test Idempotency
     Artisan::call('kontrol:backfill-administrative-assignments');
     expect(AdministrativeAssignment::count())->toBe(1);

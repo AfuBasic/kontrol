@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AssignmentScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
@@ -13,7 +14,7 @@ class AdministrativeAssignment extends Model
     protected $guarded = [];
 
     protected $casts = [
-        'scope_type' => \App\Enums\AssignmentScope::class,
+        'scope_type' => AssignmentScope::class,
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
     ];
