@@ -44,7 +44,7 @@ class AcceptInvitationAction
                 UserProfile::firstOrCreate(['user_id' => $user->id]);
 
                 $user->estates()->attach($estateId, [
-                    'status' => 'active',
+                    'status' => 'accepted',
                     'zone_id' => $invitation->zone_id,
                     'relationship_type' => $invitation->relationship_type,
                 ]);
@@ -54,7 +54,7 @@ class AcceptInvitationAction
                     ->where('user_id', $user->id)
                     ->where('estate_id', $estateId)
                     ->update([
-                        'status' => 'active',
+                        'status' => 'accepted',
                         // Optional: update relationship/zone if appropriate based on product semantics
                         'zone_id' => $invitation->zone_id,
                         'relationship_type' => $invitation->relationship_type,

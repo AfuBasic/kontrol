@@ -45,7 +45,7 @@ class CreateInvitationAction
 
         // 3. Validation: Zone belongs to Estate
         if ($zoneId) {
-            $zoneExists = $estate->zones()->where('id', $zoneId)->exists();
+            $zoneExists = \App\Models\Zone::where('id', $zoneId)->where('estate_id', $estate->id)->exists();
             if (! $zoneExists) {
                 throw new \InvalidArgumentException("Zone {$zoneId} does not belong to Estate {$estate->id}.");
             }

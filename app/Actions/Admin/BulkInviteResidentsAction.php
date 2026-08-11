@@ -22,12 +22,6 @@ class BulkInviteResidentsAction
         $uniqueEmails = array_unique($normalizedEmails);
         $duplicateCount = count($emails) - count($uniqueEmails);
 
-        // Get the resident role
-        $role = Role::where('name', 'resident')
-            ->where('guard_name', 'web')
-            ->whereNull('estate_id')
-            ->firstOrFail();
-
         $invitedIds = [];
         $alreadyMembers = 0;
         
@@ -40,7 +34,7 @@ class BulkInviteResidentsAction
                 email: $email,
                 estate: $estate,
                 relationshipType: 'resident',
-                role: $role,
+                role: null,
                 zoneId: null,
                 scopeType: 'estate',
                 createdBy: $user
