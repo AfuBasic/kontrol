@@ -3,31 +3,49 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Actions\Auth\ActivateContext;
-use App\Actions\Zeus\AcceptInvitationAction;
+use App\Actions\Invitation\AcceptInvitationAction;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InvitationController extends Controller
 {
-    public function show(Request $request, User $user): Response|RedirectResponse
+    public function show(Request $request, string $token): Response|RedirectResponse
     {
-        $isPasswordReset = $request->boolean('password_reset');
+        $invitation = Invitation::where('token', $token)->first();
 
-        $hasPendingInvitations = DB::table('estate_users_membership')
-            ->where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->exists();
-
-        // Check if invitation was already used
-        if (! $isPasswordReset && ! $hasPendingInvitations && $user->email_verified_at !== null) {
+        if (! $invitation || ! $invitation->isPending()) {
             return redirect()->route('invitation.invalid');
+        }
+
+        $user = User::where('email', $invitation->email)->first();
+        
+        // If the user is logged in but doesn't match the invitation email, log them out.
+        if (Auth::check() && strtolower(Auth::user()->email) !== strtolower($invitation->email)) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        if (! $user) {
+            // New user: Needs to register. We can redirect to the join form using the token.
+            // Wait, we have InviteRegistrationController which uses `EstateInviteLink`. Let's just use Inertia Auth/Join.
+            // Since this is for specific invitations, we could just redirect them to a registration flow, or render a specific view here.
+            // But to keep it simple, we'll render 'Invitation/Register' if it existed, or we can use the same view if the frontend handles it, but since we are modifying backend:
+            // For now, let's just pass `user => null` to tell the frontend they need to register.
+            // Or better yet, we redirect them to standard register with pre-filled email.
+            return redirect()->route('register', ['email' => $invitation->email, 'invitation_token' => $token]);
+        }
+
+        // If user is not logged in but exists, they must log in to accept.
+        if (! Auth::check()) {
+            return redirect()->route('login', ['email' => $invitation->email, 'invitation_token' => $token]);
         }
 
         return Inertia::render('Invitation/Accept', [
@@ -36,37 +54,31 @@ class InvitationController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-            'isPasswordReset' => $isPasswordReset,
+            'isPasswordReset' => false,
+            'token' => $token,
         ]);
     }
 
-    public function store(Request $request, User $user, AcceptInvitationAction $action): RedirectResponse
+    public function store(Request $request, string $token, AcceptInvitationAction $action): RedirectResponse
     {
-        $isPasswordReset = $request->boolean('password_reset');
+        $invitation = Invitation::where('token', $token)->first();
 
-        $hasPendingInvitations = DB::table('estate_users_membership')
-            ->where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->exists();
-
-        // Check if invitation was already used
-        if (! $isPasswordReset && ! $hasPendingInvitations && $user->email_verified_at !== null) {
+        if (! $invitation || ! $invitation->isPending()) {
             return redirect()->route('invitation.invalid');
         }
 
-        $action->execute($user, [
-            'password_reset' => $request->boolean('password_reset'),
-        ]);
+        $user = Auth::user();
+        if (! $user || strtolower($user->email) !== strtolower($invitation->email)) {
+            return redirect()->route('invitation.invalid');
+        }
 
-        // Log the user in
-        Auth::login($user);
+        $action->execute($invitation, $user);
 
         $request->session()->regenerate();
         ForceLogout::dispatchSafely($user->id);
 
         if ($user->user_type === 'affiliate') {
             setPermissionsTeamId(0);
-
             return redirect()->route('partner.dashboard');
         }
 

@@ -83,8 +83,8 @@ Route::prefix('push')->name('push.')->group(function (): void {
 */
 Route::prefix('invitation')->name('invitation.')->group(function (): void {
     Route::get('/success', [InvitationController::class, 'success'])->name('success');
-    Route::get('/{user}', [InvitationController::class, 'show'])->middleware('signed')->name('accept');
-    Route::post('/{user}', [InvitationController::class, 'store'])->middleware('signed')->name('store');
+    Route::get('/{token}', [InvitationController::class, 'show'])->name('accept');
+    Route::post('/{token}', [InvitationController::class, 'store'])->name('store');
     Route::get('/error/invalid', [InvitationController::class, 'invalid'])->name('invalid');
 });
 
