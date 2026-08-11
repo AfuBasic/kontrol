@@ -131,15 +131,21 @@ class Incident extends Model
             return 'System';
         }
         if ($reporter instanceof User) {
-            setPermissionsTeamId($this->estate_id);
-            if ($reporter->hasRole('admin')) {
-                return 'Estate Administrator';
-            }
-            if ($reporter->hasRole('security')) {
-                return 'Security Personnel';
-            }
-            if ($reporter->hasRole('property_owner')) {
-                return 'Property Owner';
+            $assignment = \App\Models\AdministrativeAssignment::with('role')
+                ->where('user_id', $reporter->id)
+                ->where('estate_id', $this->estate_id)
+                ->where('is_active', true)
+                ->first();
+
+            if ($assignment && $assignment->role) {
+                return match ($assignment->role->name) {
+                    'admin' => 'Estate Administrator',
+                    'security' => 'Security Personnel',
+                    'property_owner' => 'Property Owner',
+                    'household_member' => 'Household Member',
+                    'resident' => 'Resident',
+                    default => 'Resident',
+                };
             }
 
             return 'Resident';
