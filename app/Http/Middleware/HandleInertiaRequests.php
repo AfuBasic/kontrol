@@ -151,7 +151,7 @@ class HandleInertiaRequests extends Middleware
                     'current_estate_id' => $estate?->id,
                     'current_estate_ulid' => $estate?->ulid,
                     'estate_name' => $estate?->name,
-                    'property_owner_id' => $user->profile?->property_owner_id,
+                    'property_owner_id' => $estate ? $user->getPropertyOwnerForEstate($estate)?->id : null,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
                     'has_active_coupons' => $estate ? (function () use ($user, $estate) {
                         return Coupon::query()
