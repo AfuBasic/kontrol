@@ -84,7 +84,8 @@ class LoginOtpController extends Controller
 
         $authenticateUser->logActivity($user);
 
-        return redirect()->intended(route('context.select'));
+        $action = app(\App\Actions\Auth\ActivateContext::class);
+        return redirect()->intended($action->execute($user));
     }
 
     /**
@@ -111,7 +112,7 @@ class LoginOtpController extends Controller
         return back()->with('status', 'A new verification code has been sent to your email.');
     }
 
-    /**
+    /*
      * Mask an email address for display (e.g. "a***@gmail.com").
      */
     private function maskEmail(string $email): string

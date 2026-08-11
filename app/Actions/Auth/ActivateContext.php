@@ -12,20 +12,36 @@ class ActivateContext
 
     /**
      * Establish the context for a given assignment, and return the dashboard route.
-     * Throws an exception or returns null if invalid.
+     * If assignment is null, it evaluates all available contexts and decides the next route.
      */
-    public function execute(User $user, AdministrativeAssignment $assignment): ?string
+    public function execute(User $user, ?AdministrativeAssignment $assignment = null): string
     {
+        if ($assignment === null) {
+            $assignments = AdministrativeAssignment::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->get();
+
+            if ($assignments->count() === 0) {
+                return url('/');
+            }
+
+            if ($assignments->count() === 1) {
+                $assignment = $assignments->first();
+                // continue to activation
+            } else {
+                return route('context.select');
+            }
+        }
         // Use the context manager to validate and activate the assignment
         try {
             $this->contextManager->activate($assignment);
         } catch (\Exception $e) {
-            return null;
+            return url('/');
         }
 
         // Return the dashboard route appropriate for this role
         if (! $assignment->role) {
-            return null;
+            return url('/');
         }
 
         return $this->getRouteForRole($assignment->role->name);
