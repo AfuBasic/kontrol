@@ -31,6 +31,7 @@ class Incident extends Model
 
     protected $fillable = [
         'estate_id',
+        'zone_id',
         'reporter_id',
         'reporter_type',
         'source',
