@@ -16,7 +16,7 @@ class RolePlatformPolicy
         // Administrative check
         $adminRoles = $categories['administrative'] ?? [];
         foreach ($adminRoles as $role) {
-            if ($user->hasRole($role)) {
+            if ($user->contextHasRole($role)) {
                 return 'administrative';
             }
         }
@@ -24,7 +24,7 @@ class RolePlatformPolicy
         // Operational check
         $operationalRoles = $categories['operational'] ?? [];
         foreach ($operationalRoles as $role) {
-            if ($user->hasRole($role)) {
+            if ($user->contextHasRole($role)) {
                 return 'operational';
             }
         }
