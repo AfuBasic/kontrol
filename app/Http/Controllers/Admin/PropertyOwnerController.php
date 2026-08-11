@@ -329,7 +329,7 @@ class PropertyOwnerController extends Controller
                 'name' => $propertyOwner->name,
             ],
             'residents' => Inertia::defer(fn () => User::query()
-                ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $propertyOwner->id))
+                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $propertyOwner->id))
                 ->forEstate($estate->id)
                 ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
                 ->orderBy('name')
@@ -368,9 +368,9 @@ class PropertyOwnerController extends Controller
                     ->where('roles.name', 'property_owner')
                     ->where('model_has_roles.estate_id', $estate->id);
             })
-            ->where(function ($query) use ($propertyOwner) {
-                $query->whereHas('profile', fn ($q) => $q->where('property_owner_id', '!=', $propertyOwner->id)->orWhereNull('property_owner_id'))
-                    ->orWhereDoesntHave('profile');
+            ->where(function ($query) use ($propertyOwner, $estate) {
+                $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', '!=', $propertyOwner->id)->orWhereNull('estate_users_membership.property_owner_id'))
+                    ->orWhereDoesntHave('estates', fn ($q) => $q->where('estates.id', $estate->id));
             })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -378,7 +378,7 @@ class PropertyOwnerController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->with('profile.propertyOwner') // Include current property owner info if any
+            ->with('estates.propertyOwner') // Include current property owner info if any
             ->orderBy('name')
             ->limit(20) // Limit results to ensure quick response in modal
             ->get()
@@ -386,7 +386,7 @@ class PropertyOwnerController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'current_owner' => $user->profile?->propertyOwner?->name,
+                'current_owner' => clone($user)->getPropertyOwnerForEstate($estate)?->name,
             ]);
 
         return response()->json($residents);
