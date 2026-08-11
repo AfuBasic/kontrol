@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Estate;
 use App\Services\ResidentSubscriptionService;
+use App\Auth\ContextManager;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,14 +23,17 @@ class EnsureResidentSubscriptionActive
             return $next($request);
         }
 
-        if ($user->hasRole('admin') || $user->hasRole('property_owner')) {
+        if ($user->contextHasRole(['admin', 'property_owner'])) {
             return $next($request);
         }
 
-        // Get the current estate from the request or session
-        // Assuming current_estate_id is stored in session or we can infer it
-        $estateId = $request->route('estate')?->id ?? session('current_estate_id');
-        $estate = $estateId ? Estate::find($estateId) : $user->estates()->first();
+        $context = app(ContextManager::class)->current();
+        if (! $context) {
+            return $next($request);
+        }
+
+        $estateId = $context->estateId;
+        $estate = Estate::find($estateId);
 
         if ($estate && $estate->settings->charge_type === 'residents') {
             // Determine whose subscription we are checking
