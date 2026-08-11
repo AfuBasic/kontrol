@@ -1,10 +1,8 @@
 <?php
 
-use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Invitation\AcceptInvitationAction;
 use App\Actions\Invitation\CreateInvitationAction;
-use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
@@ -14,11 +12,12 @@ use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     $this->estateA = Estate::factory()->create(['name' => 'Estate A']);
     $this->estateB = Estate::factory()->create(['name' => 'Estate B']);
@@ -131,15 +130,17 @@ test('10. Re-importing the same email does not create uncontrolled duplicate pen
         relationshipType: 'resident'
     );
 
+    $token1 = $invitation1->token;
+
     $invitation2 = $action->execute(
         email: 'repeat@example.com',
         estate: $this->estateA,
         relationshipType: 'resident'
     );
 
-    expect($invitation1->fresh()->isCancelled())->toBeTrue();
+    expect($invitation2->token)->not->toBe($token1);
     expect($invitation2->isPending())->toBeTrue();
-    expect(Invitation::where('estate_id', $this->estateA->id)->where('email', 'repeat@example.com')->where('status', 'pending')->count())->toBe(1);
+    expect(Invitation::where('estate_id', $this->estateA->id)->where('email', 'repeat@example.com')->count())->toBe(1);
 });
 
 test('11. Estate A cannot create Estate B invitations and 12. cannot assign Estate B zones and 13. cannot assign Estate B roles', function () {
@@ -153,18 +154,20 @@ test('11. Estate A cannot create Estate B invitations and 12. cannot assign Esta
         estate: $this->estateA,
         relationshipType: 'resident',
         zoneId: $zoneB->id
-    ))->toThrow(\InvalidArgumentException::class);
+    ))->toThrow(InvalidArgumentException::class);
 
     expect(fn () => $action->execute(
         email: 'test@example.com',
         estate: $this->estateA,
         relationshipType: 'resident',
         role: $roleB
-    ))->toThrow(\InvalidArgumentException::class);
+    ))->toThrow(InvalidArgumentException::class);
 });
 
 test('14. Invalid token rejected and 15. Expired token rejected and 16. Cancelled token rejected and 17. Accepted token cannot be reused', function () {
-    $user = User::factory()->create();
+    $userExpired = User::factory()->create(['email' => 'expired@example.com']);
+    $userCancelled = User::factory()->create(['email' => 'cancelled@example.com']);
+    $userAccepted = User::factory()->create(['email' => 'accepted@example.com']);
 
     // 14. Invalid token
     $responseInvalid = $this->get(route('invitations.show', ['token' => 'invalid-token-xyz']));
@@ -173,36 +176,36 @@ test('14. Invalid token rejected and 15. Expired token rejected and 16. Cancelle
     // 15. Expired token
     $expiredInv = Invitation::create([
         'estate_id' => $this->estateA->id,
-        'email' => $user->email,
+        'email' => 'expired@example.com',
         'token' => 'expired-token-123',
         'status' => 'pending',
         'expires_at' => now()->subDay(),
     ]);
 
-    expect(fn () => app(AcceptInvitationAction::class)->execute($expiredInv, $user))
-        ->toThrow(\Exception::class);
+    expect(fn () => app(AcceptInvitationAction::class)->execute($expiredInv, $userExpired))
+        ->toThrow(Exception::class);
 
     // 16. Cancelled token
     $cancelledInv = Invitation::create([
         'estate_id' => $this->estateA->id,
-        'email' => $user->email,
+        'email' => 'cancelled@example.com',
         'token' => 'cancelled-token-123',
         'status' => 'cancelled',
     ]);
 
-    expect(fn () => app(AcceptInvitationAction::class)->execute($cancelledInv, $user))
-        ->toThrow(\Exception::class);
+    expect(fn () => app(AcceptInvitationAction::class)->execute($cancelledInv, $userCancelled))
+        ->toThrow(Exception::class);
 
     // 17. Accepted token reuse
     $acceptedInv = Invitation::create([
         'estate_id' => $this->estateA->id,
-        'email' => $user->email,
+        'email' => 'accepted@example.com',
         'token' => 'accepted-token-123',
         'status' => 'accepted',
     ]);
 
-    expect(fn () => app(AcceptInvitationAction::class)->execute($acceptedInv, $user))
-        ->toThrow(\Exception::class);
+    expect(fn () => app(AcceptInvitationAction::class)->execute($acceptedInv, $userAccepted))
+        ->toThrow(Exception::class);
 });
 
 test('18. Existing user can have estate-local property-owner relationships without modifying another estate relationship', function () {

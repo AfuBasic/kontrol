@@ -6,6 +6,7 @@ use App\Actions\Auth\ActivateContext;
 use App\Actions\Invitation\AcceptInvitationAction;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ class InvitationAcceptanceController extends Controller
      */
     public function show(string $token): Response|RedirectResponse
     {
-        $invitation = Invitation::with(['estate', 'zone', 'role'])->where('token', $token)->first();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->with(['estate', 'zone', 'role'])->where('token', $token)->first();
 
         if (! $invitation) {
             abort(404, 'Invitation link is invalid or does not exist.');
@@ -68,7 +69,7 @@ class InvitationAcceptanceController extends Controller
      */
     public function accept(Request $request, string $token, AcceptInvitationAction $acceptAction): RedirectResponse
     {
-        $invitation = Invitation::where('token', $token)->firstOrFail();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->firstOrFail();
 
         if (! $invitation->isPending()) {
             return redirect()->route('login')->with('error', 'This invitation is no longer valid.');
