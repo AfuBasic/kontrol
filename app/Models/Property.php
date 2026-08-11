@@ -17,6 +17,8 @@ class Property extends Model
     use SoftDeletes;
     use ZoneScoped;
 
+    const DELETED_AT = 'archived_at';
+
     protected $fillable = [
         'estate_id',
         'zone_id',
