@@ -86,7 +86,7 @@ class InvitationController extends Controller
         $redirectUrl = $activateContext->execute($user);
 
         // Security and Resident roles should see the success page
-        if ($user->hasRole(['security', 'resident', 'household_member'])) {
+        if ($user->contextHasRole(['security', 'resident', 'household_member'])) {
             return redirect()->route('invitation.success');
         }
 
