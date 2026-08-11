@@ -13,6 +13,7 @@ class AdministrativeAssignment extends Model
     protected $guarded = [];
 
     protected $casts = [
+        'scope_type' => \App\Enums\AssignmentScope::class,
         'is_primary' => 'boolean',
         'is_active' => 'boolean',
     ];
