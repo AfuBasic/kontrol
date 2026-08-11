@@ -4,6 +4,7 @@ namespace App\Actions\Incidents;
 
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\Incident;
@@ -37,12 +38,12 @@ class CreateIncidentAction
             if (isset($data['source'])) {
                 $source = $data['source'];
             } else {
-                $assignment = \App\Models\AdministrativeAssignment::with('role')
+                $assignment = AdministrativeAssignment::with('role')
                     ->where('user_id', $user->id)
                     ->where('estate_id', $estate->id)
                     ->where('is_active', true)
                     ->first();
-                
+
                 $roleName = $assignment?->role?->name;
 
                 if ($roleName === 'admin') {
@@ -106,7 +107,7 @@ class CreateIncidentAction
                 || in_array(strtolower($incident->priority), ['critical', 'high']);
 
             if ($shouldNotifyAdmins) {
-                $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $estate->id)
+                $adminIds = AdministrativeAssignment::where('estate_id', $estate->id)
                     ->where('is_active', true)
                     ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
                     ->pluck('user_id')

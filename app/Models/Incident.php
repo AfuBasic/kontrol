@@ -131,7 +131,7 @@ class Incident extends Model
             return 'System';
         }
         if ($reporter instanceof User) {
-            $assignment = \App\Models\AdministrativeAssignment::with('role')
+            $assignment = AdministrativeAssignment::with('role')
                 ->where('user_id', $reporter->id)
                 ->where('estate_id', $this->estate_id)
                 ->where('is_active', true)

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Zeus;
 
+use App\Models\AdministrativeAssignment;
 use App\Models\User;
 use App\Notifications\Admin\PropertyOwnerResidentJoinedAdminNotification;
 use App\Notifications\Admin\ResidentAcceptedInvitation;
@@ -45,7 +46,7 @@ class AcceptInvitationAction
             $isPasswordReset = $data['password_reset'] ?? false;
 
             if ($estate) {
-                $assignment = \App\Models\AdministrativeAssignment::with('role')
+                $assignment = AdministrativeAssignment::with('role')
                     ->where('user_id', $user->id)
                     ->where('estate_id', $estate->id)
                     ->where('is_active', true)

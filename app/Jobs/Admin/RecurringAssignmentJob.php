@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Admin;
 
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Property;
@@ -114,7 +115,7 @@ class RecurringAssignmentJob implements ShouldQueue
         $creator = $collection->creator;
         $isPropertyOwner = false;
         if ($creator) {
-            $assignment = \App\Models\AdministrativeAssignment::with('role')
+            $assignment = AdministrativeAssignment::with('role')
                 ->where('user_id', $creator->id)
                 ->where('estate_id', $collection->estate_id)
                 ->where('is_active', true)

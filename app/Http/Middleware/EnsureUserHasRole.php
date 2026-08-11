@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Auth\ContextManager;
+use App\Models\AdministrativeAssignment;
 use App\Services\Platform\PlatformAccessService;
 use Closure;
 use Illuminate\Http\Request;
@@ -31,9 +33,9 @@ class EnsureUserHasRole
         // We look directly at assignments for platform roles
         foreach ($roles as $role) {
             if (in_array($role, $globalRoles, true)) {
-                $hasGlobalRole = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+                $hasGlobalRole = AdministrativeAssignment::where('user_id', $user->id)
                     ->where('estate_id', 0)
-                    ->whereHas('role', fn($q) => $q->where('name', $role))
+                    ->whereHas('role', fn ($q) => $q->where('name', $role))
                     ->exists();
 
                 if ($hasGlobalRole) {
@@ -43,7 +45,7 @@ class EnsureUserHasRole
         }
 
         // We should ensure the context is loaded before checking roles
-        $context = app(\App\Auth\ContextManager::class)->current();
+        $context = app(ContextManager::class)->current();
         if (! $context) {
             abort(403, 'No active estate context.');
         }
