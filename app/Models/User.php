@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Auth\AuthorizationResolver;
 use App\Mail\Auth\PasswordResetMail;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
@@ -286,7 +287,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function contextHasRole(string|array $roles): bool
     {
-        return app(\App\Auth\AuthorizationResolver::class)->hasRole($roles);
+        return app(AuthorizationResolver::class)->hasRole($roles);
     }
 
     /**
@@ -294,7 +295,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function contextCan(string $permission): bool
     {
-        return app(\App\Auth\AuthorizationResolver::class)->can($permission);
+        return app(AuthorizationResolver::class)->can($permission);
     }
 
     /**
