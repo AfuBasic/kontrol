@@ -13,4 +13,13 @@ trait ZoneScoped
     {
         static::addGlobalScope(new ZoneScope);
     }
+
+    /**
+     * An explicit, intentional bypass of the zone isolation scope.
+     * This should ONLY be used in administrative/system-level processes, NEVER in standard controllers.
+     */
+    public static function withoutZoneIsolation()
+    {
+        return static::withoutGlobalScope(ZoneScope::class);
+    }
 }
