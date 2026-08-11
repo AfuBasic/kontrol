@@ -9,6 +9,7 @@ use App\Listeners\Billing\SendInvoiceEmail;
 use App\Listeners\Billing\SendInvoiceGeneratedNotification;
 use App\Listeners\Billing\SendPaymentReceivedNotification;
 use App\Listeners\WarmEstateSettings;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
@@ -16,6 +17,7 @@ use App\Models\Payment;
 use App\Models\PaymentTransaction;
 use App\Observers\PaymentObserver;
 use App\Observers\PaymentTransactionObserver;
+use App\Policies\AdministrativeAssignmentPolicy;
 use App\Policies\EstateBoardCommentPolicy;
 use App\Policies\EstateBoardPostPolicy;
 use App\Policies\PartnerAssignmentPolicy;
@@ -98,6 +100,7 @@ class AppServiceProvider extends ServiceProvider
     protected function registerPolicies(): void
     {
         Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(AdministrativeAssignment::class, AdministrativeAssignmentPolicy::class);
         Gate::policy(EstateBoardPost::class, EstateBoardPostPolicy::class);
         Gate::policy(EstateBoardComment::class, EstateBoardCommentPolicy::class);
         Gate::policy(Estate::class, PartnerAssignmentPolicy::class);

@@ -15,6 +15,7 @@ import {
     UserGroupIcon,
     UsersIcon,
     XMarkIcon,
+    BuildingOfficeIcon,
     ClipboardDocumentListIcon,
     CurrencyDollarIcon,
     MegaphoneIcon,
@@ -26,6 +27,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
+import AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
@@ -98,7 +100,15 @@ const baseNav: NavItem[] = [
     { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
     { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view' },
     { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
+    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
+    {
+        name: 'Assignments',
+        href: AdministrativeAssignmentController.index.url(),
+        icon: UserGroupIcon,
+        role: 'admin',
+        feature: 'user-access-control',
+    },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
 ];
 

@@ -2,6 +2,7 @@
 
 namespace App\Auth;
 
+use App\Enums\AssignmentScope;
 use App\Models\AdministrativeAssignment;
 use App\Models\EstateMembership;
 use App\Models\Scopes\ZoneScope;
@@ -207,10 +208,22 @@ class ContextManager
             return false;
         }
 
-        // 10. If assignment has zone_id: zone belongs to assignment.estate_id.
+        // 10. Scope alignment check: estate-scoped assignments must have no zone_id; zone-scoped assignments require zone_id.
+        $scopeValue = $assignment->scope_type instanceof AssignmentScope
+            ? $assignment->scope_type->value
+            : (string) $assignment->scope_type;
+
+        if ($scopeValue === 'estate' && $assignment->zone_id !== null) {
+            return false;
+        }
+
+        if ($scopeValue === 'zone' && $assignment->zone_id === null) {
+            return false;
+        }
+
         if ($assignment->zone_id) {
-            $zone = $assignment->zone ?: Zone::withoutGlobalScope(ZoneScope::class)->find($assignment->zone_id);
-            if (! $zone || $zone->estate_id !== $assignment->estate_id) {
+            $zone = $assignment->zone ?: Zone::withoutGlobalScope(ZoneScope::class)->withTrashed()->find($assignment->zone_id);
+            if (! $zone || $zone->estate_id !== $assignment->estate_id || $zone->trashed() || ! $zone->is_active) {
                 return false;
             }
         }
