@@ -2,42 +2,25 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
 use App\Models\User;
-use App\Models\UserProfile;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class BulkInviteResidentsAction
 {
     /**
      * @param  array<string>  $emails
-     * @return array{invited: int, skipped: int, skipped_emails: array<string>}
+     * @return array{invited: int, skipped: int, duplicates: int}
      */
     public function execute(array $emails, Estate $estate): array
     {
-        // Normalize all emails
-        $emails = array_map(fn ($email) => strtolower(trim($email)), $emails);
-        $emails = array_unique($emails);
-
-        // Get existing emails
-        $existingEmails = User::whereIn('email', $emails)->pluck('email')->toArray();
-
-        // Filter to only new emails
-        $newEmails = array_diff($emails, $existingEmails);
-
-        // suspend operations since there's no new residents to create
-        if (empty($newEmails)) {
-            return [
-                'invited' => 0,
-                'skipped' => count($existingEmails),
-                'skipped_emails' => $existingEmails,
-            ];
-        }
+        // 1. Normalize and deduplicate emails from the input
+        $normalizedEmails = array_map(fn ($email) => strtolower(trim($email)), $emails);
+        $uniqueEmails = array_unique($normalizedEmails);
+        $duplicateCount = count($emails) - count($uniqueEmails);
 
         // Get the resident role
         $role = Role::where('name', 'resident')
@@ -45,100 +28,51 @@ class BulkInviteResidentsAction
             ->whereNull('estate_id')
             ->firstOrFail();
 
-        $now = Carbon::now();
-        $invitedUserIds = [];
+        $invitedIds = [];
+        $alreadyMembers = 0;
+        
+        $createAction = app(CreateInvitationAction::class);
+        $user = Auth::user();
 
-        DB::transaction(function () use ($newEmails, $estate, $role, $now, &$invitedUserIds) {
-            // Prepare users data for batch insert
-            $usersData = [];
-            foreach ($newEmails as $email) {
-                $usersData[] = [
-                    'ulid' => (string) Str::ulid(),
-                    'name' => $this->extractNameFromEmail($email),
-                    'email' => $email,
-                    'password' => null,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
+        // 2. Iterate and create invitations
+        foreach ($uniqueEmails as $email) {
+            $invitation = $createAction->execute(
+                email: $email,
+                estate: $estate,
+                relationshipType: 'resident',
+                role: $role,
+                zoneId: null,
+                scopeType: 'estate',
+                createdBy: $user
+            );
+
+            if ($invitation === null) {
+                // The user is already an active member of this estate
+                $alreadyMembers++;
+            } else {
+                $invitedIds[] = $invitation->id;
             }
+        }
 
-            User::insert($usersData);
-
-            // Get the IDs of newly created users
-            $newUsers = User::whereIn('email', $newEmails)->get(['id', 'email']);
-            $invitedUserIds = $newUsers->pluck('id')->toArray();
-
-            // Bulk attach users to estate with pending status
-            $estateUserData = [];
-            foreach ($invitedUserIds as $userId) {
-                $estateUserData[$userId] = ['status' => 'pending'];
-            }
-            $estate->users()->attach($estateUserData);
-
-            // Bulk assign roles (direct insert for team-scoped permissions)
-            $roleAssignments = [];
-            foreach ($invitedUserIds as $userId) {
-                $roleAssignments[] = [
-                    'role_id' => $role->id,
-                    'model_type' => User::class,
-                    'model_id' => $userId,
-                    'estate_id' => $estate->id,
-                ];
-            }
-            DB::table('model_has_roles')->insert($roleAssignments);
-
-            // Bulk insert user profiles
-            $profilesData = [];
-            foreach ($invitedUserIds as $userId) {
-                $profilesData[] = [
-                    'user_id' => $userId,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-            UserProfile::insert($profilesData);
-
-            // Log activity for bulk invite
+        // 3. Log activity for bulk invite
+        if (count($invitedIds) > 0) {
             activity()
-                ->causedBy(Auth::user())
+                ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estate->id,
                     'bulk_invite' => true,
-                    'count' => count($invitedUserIds),
-                    'emails' => $newEmails,
+                    'count' => count($invitedIds),
                 ])
-                ->log('bulk invited '.count($invitedUserIds).' residents');
-        });
+                ->log('bulk invited '.count($invitedIds).' residents');
 
-        // Dispatch single job for all invitations (outside transaction)
-        if (! empty($invitedUserIds)) {
-            SendBulkResidentInvitationsJob::dispatch($invitedUserIds, $estate->id);
+            // Dispatch single job for all invitations
+            SendBulkResidentInvitationsJob::dispatch($invitedIds, $estate->id);
         }
 
         return [
-            'invited' => count($invitedUserIds),
-            'skipped' => count($existingEmails),
-            'skipped_emails' => $existingEmails,
+            'invited' => count($invitedIds),
+            'skipped' => $alreadyMembers,
+            'duplicates' => $duplicateCount,
         ];
-    }
-
-    /**
-     * Extract a reasonable name from an email address.
-     */
-    private function extractNameFromEmail(string $email): string
-    {
-        $localPart = explode('@', $email)[0];
-
-        // Replace common separators with spaces
-        $name = str_replace(['.', '_', '-', '+'], ' ', $localPart);
-
-        // Strip any HTML tags and non-printable characters (defense-in-depth)
-        $name = strip_tags($name);
-        $name = preg_replace('/[^\p{L}\p{N}\s]/u', '', $name);
-
-        // Capitalize each word and trim
-        $name = ucwords(trim($name));
-
-        return $name ?: 'Resident';
     }
 }
