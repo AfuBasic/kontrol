@@ -9,27 +9,9 @@ use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use App\Auth\ContextManager;
 
-class IncidentPolicy
+class IncidentPolicy extends BaseContextPolicy
 {
-    use HandlesAuthorization;
 
-    private function hasValidContextForEstate(int $estateId, ?int $zoneId = null): bool
-    {
-        $context = app(ContextManager::class)->current();
-        if ($context === null || $context->estateId !== $estateId) {
-            return false;
-        }
-
-        if ($context->isZoneScoped()) {
-            // Some models (like incident feed) might not pass a zone_id, 
-            // but if they do, we enforce the check.
-            if ($zoneId !== null && $context->zoneId !== $zoneId) {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     /**
      * Determine if the user can view the incident feed.
