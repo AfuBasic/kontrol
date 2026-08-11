@@ -30,7 +30,7 @@ class ResidentService
             ->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'property_owner');
             })
-            ->with(['roles', 'profile.propertyOwner', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['roles', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
             ->withCount('householdMembers')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -61,10 +61,10 @@ class ResidentService
                     $query->withRole('property_owner', $estate->id);
                 } elseif ($role === 'tenant') {
                     $query->withRole('resident', $estate->id)
-                        ->whereHas('profile', fn ($q) => $q->whereNotNull('property_owner_id'));
+                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->whereNotNull('estate_users_membership.property_owner_id'));
                 } elseif ($role === 'resident') {
                     $query->withRole('resident', $estate->id)
-                        ->whereHas('profile', fn ($q) => $q->whereNull('property_owner_id'));
+                        ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->whereNull('estate_users_membership.property_owner_id'));
                 }
             })
             ->when($filters['property'] ?? null, function ($query, $property) {

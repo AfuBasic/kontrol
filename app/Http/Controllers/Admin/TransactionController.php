@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Auth\ContextManager;
 use App\Enums\PaymentMethod;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
@@ -43,7 +44,7 @@ class TransactionController extends Controller
         $this->authorize('transactions.view');
 
         $estate = $this->estateContext->getEstate();
-        setPermissionsTeamId($estate->id);
+        app(ContextManager::class)->setSystemContext($estate->id);
 
         $this->ledgerService->ensureEstateLedgerSynced($estate);
 

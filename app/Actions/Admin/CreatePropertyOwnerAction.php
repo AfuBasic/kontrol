@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Auth\ContextManager;
 use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
@@ -41,7 +42,7 @@ class CreatePropertyOwnerAction
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $user->assignRole($residentRole);
             $user->assignRole($poRole);
 

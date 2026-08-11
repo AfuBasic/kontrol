@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ZoneScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,8 +36,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AccessLog extends Model
 {
+    use ZoneScoped;
+
     protected $fillable = [
         'estate_id',
+        'zone_id',
         'access_code_id',
         'verified_by',
         'verified_at',

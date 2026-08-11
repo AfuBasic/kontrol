@@ -36,8 +36,8 @@ class MagicLoginController extends Controller
         $request->session()->regenerate();
         ForceLogout::dispatchSafely($magicToken->user->id);
 
-        // 5. Redirect to destination or default dashboard
-        $destination = $magicToken->destination_url ?: route('home');
+        // 5. Redirect to destination or default context picker
+        $destination = $magicToken->destination_url ?: route('context.select');
 
         return redirect()->to($destination)
             ->with('success', 'Successfully logged in via magic link.');

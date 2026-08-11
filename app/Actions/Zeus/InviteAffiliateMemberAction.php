@@ -2,6 +2,7 @@
 
 namespace App\Actions\Zeus;
 
+use App\Auth\ContextManager;
 use App\Mail\Zeus\AffiliateMemberInvitationMail;
 use App\Models\Affiliate;
 use App\Models\User;
@@ -21,7 +22,7 @@ class InviteAffiliateMemberAction
             ]);
 
             // Assign affiliate role (global team scope)
-            setPermissionsTeamId(0);
+            app(ContextManager::class)->setSystemContext(0);
             $user->assignRole('affiliate');
 
             // Send invitation email

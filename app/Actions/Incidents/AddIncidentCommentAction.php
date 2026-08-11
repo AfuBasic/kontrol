@@ -2,6 +2,7 @@
 
 namespace App\Actions\Incidents;
 
+use App\Auth\ContextManager;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\IncidentUpvote;
@@ -21,7 +22,7 @@ class AddIncidentCommentAction
         return DB::transaction(function () use ($incident, $data) {
             $user = Auth::user();
 
-            setPermissionsTeamId($incident->estate_id);
+            app(ContextManager::class)->setSystemContext($incident->estate_id);
             $isOfficial = $user->hasRole('admin');
 
             $comment = IncidentComment::create([
@@ -45,7 +46,7 @@ class AddIncidentCommentAction
                 ->active()
                 ->get()
                 ->filter(function ($u) use ($incident) {
-                    setPermissionsTeamId($incident->estate_id);
+                    app(ContextManager::class)->setSystemContext($incident->estate_id);
 
                     return $u->hasRole('admin');
                 })

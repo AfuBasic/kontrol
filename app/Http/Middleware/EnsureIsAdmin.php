@@ -21,13 +21,17 @@ class EnsureIsAdmin
         }
 
         // If user is a resident or household member, redirect to resident area
-        if (($user->hasRole('resident') || $user->hasRole('household_member')) && ! $user->hasRole('admin')) {
+        if (($user->contextHasRole('resident') || $user->contextHasRole('household_member')) && ! $user->contextHasRole('admin')) {
             return redirect()->route('resident.home');
         }
 
         // If user is security, redirect to security area
-        if ($user->hasRole('security') && ! $user->hasRole('admin')) {
+        if ($user->contextHasRole('security') && ! $user->contextHasRole('admin')) {
             return redirect()->route('security.dashboard');
+        }
+
+        if (! $user->contextHasRole('admin')) {
+            abort(403, 'Unauthorized access.');
         }
 
         return $next($request);

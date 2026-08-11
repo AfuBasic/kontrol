@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Security;
 use App\Actions\Security\UpdateSecurityProfileAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Security\UpdateProfileRequest;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,7 +19,7 @@ class ProfileController extends Controller
     public function edit(): Response
     {
         $user = auth()->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         return Inertia::render('Security/Profile', [
             'user' => [

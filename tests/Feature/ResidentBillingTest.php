@@ -210,10 +210,9 @@ test('property owners can create recurring collections successfully', function (
     $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
     $resident = User::factory()->create();
     $resident->assignRole($residentRole);
-    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+    $estate->users()->attach($resident->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
     UserProfile::create([
         'user_id' => $resident->id,
-        'property_owner_id' => $owner->id,
     ]);
 
     // 2. Act: Post to the store route as the property owner
@@ -264,10 +263,9 @@ test('property owners can create collections and include themselves in the assig
     // Create resident managed by this property owner
     $resident = User::factory()->create();
     $resident->assignRole($residentRole);
-    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+    $estate->users()->attach($resident->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
     UserProfile::create([
         'user_id' => $resident->id,
-        'property_owner_id' => $owner->id,
     ]);
 
     // 2. Act: Post to the store route with include_creator = true
@@ -330,12 +328,10 @@ test('collection notifications and emails reflect property owner and house name 
 
     $resident = User::factory()->create(['name' => 'Alice Resident']);
     $resident->assignRole($residentRole);
-    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+    $estate->users()->attach($resident->id, ['status' => 'accepted', 'property_owner_id' => $owner->id, 'property_id' => $property->id]);
 
     UserProfile::create([
         'user_id' => $resident->id,
-        'property_owner_id' => $owner->id,
-        'property_id' => $property->id,
     ]);
 
     $collection = Collection::create([

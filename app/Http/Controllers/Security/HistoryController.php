@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Security;
 use App\Http\Controllers\Controller;
 use App\Models\AccessLog;
 use App\Models\User;
+use App\Services\EstateContextService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,7 +18,7 @@ class HistoryController extends Controller
     public function index(Request $request): Response
     {
         $user = auth()->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         $filters = $request->only(['search', 'date', 'vehicle_plate', 'host_id']);
 

@@ -66,9 +66,9 @@ function makeResidentBillContext(array $assignmentOverrides = [], array $collect
 
 function asResidentWithEstate(User $resident, Estate $estate): mixed
 {
-    session(['estate_id' => $estate->id]);
-
-    return test()->actingAs($resident)->withHeaders(['X-Bypass-Mobile-Restrict' => 'true']);
+    return test()->actingAs($resident)
+        ->withSession(['estate_id' => $estate->id])
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true']);
 }
 
 it('renders the payment journey for an unpaid bill', function () {

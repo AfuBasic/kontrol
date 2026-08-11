@@ -8,6 +8,7 @@ use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\AdministrativeAssignment;
 use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
@@ -119,14 +120,15 @@ class IncidentController extends Controller
         }
 
         // 4. Fetch active admins for assignments
-        $admins = User::forEstate($estateId)
+        $adminIds = AdministrativeAssignment::where('estate_id', $estateId)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->pluck('user_id')
+            ->toArray();
+
+        $admins = User::whereIn('id', $adminIds)
             ->active()
             ->get()
-            ->filter(function ($u) use ($estateId) {
-                setPermissionsTeamId($estateId);
-
-                return $u->hasRole('admin');
-            })
             ->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
@@ -189,14 +191,15 @@ class IncidentController extends Controller
         $loadedIncident = $this->incidentService->getIncident($incident->id, $estateId);
 
         // Fetch active admins in this estate for assignments
-        $admins = User::forEstate($estateId)
+        $adminIds = AdministrativeAssignment::where('estate_id', $estateId)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->pluck('user_id')
+            ->toArray();
+
+        $admins = User::whereIn('id', $adminIds)
             ->active()
             ->get()
-            ->filter(function ($u) use ($estateId) {
-                setPermissionsTeamId($estateId);
-
-                return $u->hasRole('admin');
-            })
             ->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,
@@ -246,14 +249,15 @@ class IncidentController extends Controller
 
         $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
-        $admins = User::forEstate($estate->id)
+        $adminIds = AdministrativeAssignment::where('estate_id', $estate->id)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->pluck('user_id')
+            ->toArray();
+
+        $admins = User::whereIn('id', $adminIds)
             ->active()
             ->get()
-            ->filter(function ($u) use ($estate) {
-                setPermissionsTeamId($estate->id);
-
-                return $u->hasRole('admin');
-            })
             ->map(fn ($u) => [
                 'id' => $u->id,
                 'name' => $u->name,

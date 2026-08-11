@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
+use App\Models\AdministrativeAssignment;
 use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
 use App\Models\Payment;
@@ -52,7 +54,7 @@ class CollectionPaymentController extends Controller
 
     public function initiate(CollectionAssignment $assignment, PaystackService $paystackService, Request $request): JsonResponse
     {
-        setPermissionsTeamId($assignment->estate_id);
+        app(ContextManager::class)->setSystemContext($assignment->estate_id);
         $assignment->loadMissing(['user', 'collection.creator.profile']);
         $user = $assignment->user;
 
@@ -110,7 +112,7 @@ class CollectionPaymentController extends Controller
         if (empty($subaccount)) {
             $collection = $assignment->collection;
             $creator = $collection->creator;
-            if ($creator && $creator->hasRole('property_owner')) {
+            if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                 return response()->json([
                     'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
                 ], 400);
@@ -159,14 +161,16 @@ class CollectionPaymentController extends Controller
 
                             $lockedAssignment->loadMissing('collection.creator');
                             $creator = $lockedAssignment->collection?->creator;
-                            if ($creator && $creator->hasRole('property_owner')) {
+                            if ($creator && $creator->getRoleNameForEstate($lockedAssignment->estate_id) === 'property_owner') {
                                 $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
                             } else {
-                                $admins = User::role('admin')
-                                    ->whereHas('estates', function ($query) use ($lockedAssignment) {
-                                        $query->where('estates.id', $lockedAssignment->estate_id);
-                                    })
-                                    ->get();
+                                $adminIds = AdministrativeAssignment::where('estate_id', $lockedAssignment->estate_id)
+                                    ->where('is_active', true)
+                                    ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                    ->pluck('user_id')
+                                    ->toArray();
+
+                                $admins = User::whereIn('id', $adminIds)->get();
 
                                 foreach ($admins as $admin) {
                                     $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
@@ -248,7 +252,7 @@ class CollectionPaymentController extends Controller
                 return ['error' => 'Payment not found', 'status' => 404];
             }
 
-            setPermissionsTeamId($payment->estate_id);
+            app(ContextManager::class)->setSystemContext($payment->estate_id);
 
             // 2. If already success, just return success
             if ($payment->status === 'success') {
@@ -284,14 +288,16 @@ class CollectionPaymentController extends Controller
 
                     $assignment->loadMissing('collection.creator');
                     $creator = $assignment->collection?->creator;
-                    if ($creator && $creator->hasRole('property_owner')) {
+                    if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                         $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
                     } else {
-                        $admins = User::role('admin')
-                            ->whereHas('estates', function ($query) use ($assignment) {
-                                $query->where('estates.id', $assignment->estate_id);
-                            })
-                            ->get();
+                        $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                            ->where('is_active', true)
+                            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                            ->pluck('user_id')
+                            ->toArray();
+
+                        $admins = User::whereIn('id', $adminIds)->get();
 
                         foreach ($admins as $admin) {
                             $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
@@ -326,14 +332,16 @@ class CollectionPaymentController extends Controller
 
                         $assignment->loadMissing('collection.creator');
                         $creator = $assignment->collection?->creator;
-                        if ($creator && $creator->hasRole('property_owner')) {
+                        if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                             $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
                         } else {
-                            $admins = User::role('admin')
-                                ->whereHas('estates', function ($query) use ($assignment) {
-                                    $query->where('estates.id', $assignment->estate_id);
-                                })
-                                ->get();
+                            $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                ->where('is_active', true)
+                                ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                ->pluck('user_id')
+                                ->toArray();
+
+                            $admins = User::whereIn('id', $adminIds)->get();
 
                             foreach ($admins as $admin) {
                                 $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));
@@ -362,7 +370,7 @@ class CollectionPaymentController extends Controller
     public function status(string $reference, PaystackService $paystackService): Response
     {
         $payment = Payment::where('reference', $reference)->firstOrFail();
-        setPermissionsTeamId($payment->estate_id);
+        app(ContextManager::class)->setSystemContext($payment->estate_id);
 
         if ($payment->status !== 'success') {
             try {
@@ -464,13 +472,13 @@ class CollectionPaymentController extends Controller
         abort_if($assignments->isEmpty(), 404, 'No outstanding bills found.');
 
         $first = $assignments->first();
-        setPermissionsTeamId($first->estate_id);
+        app(ContextManager::class)->setSystemContext($first->estate_id);
         $firstSubaccount = $this->resolveSubaccount($first);
 
         if (empty($firstSubaccount)) {
             $collection = $first->collection;
             $creator = $collection->creator;
-            if ($creator && $creator->hasRole('property_owner')) {
+            if ($creator && $creator->getRoleNameForEstate($first->estate_id) === 'property_owner') {
                 abort(400, 'Landlord settlement account is not configured. Please contact the landlord.');
             }
             abort(400, 'Estate settlement account is not configured.');
@@ -486,7 +494,7 @@ class CollectionPaymentController extends Controller
             if (empty($currentSubaccount)) {
                 $collection = $a->collection;
                 $creator = $collection->creator;
-                if ($creator && $creator->hasRole('property_owner')) {
+                if ($creator && $creator->getRoleNameForEstate($a->estate_id) === 'property_owner') {
                     abort(400, 'Landlord settlement account is not configured. Please contact the landlord.');
                 }
                 abort(400, 'Estate settlement account is not configured.');
@@ -523,7 +531,7 @@ class CollectionPaymentController extends Controller
         }
 
         $first = $assignments->first();
-        setPermissionsTeamId($first->estate_id);
+        app(ContextManager::class)->setSystemContext($first->estate_id);
         $user = $first->user;
         $estateId = $first->estate_id;
         $firstSubaccount = $this->resolveSubaccount($first);
@@ -552,7 +560,7 @@ class CollectionPaymentController extends Controller
             if (empty($currentSubaccount)) {
                 $collection = $a->collection;
                 $creator = $collection->creator;
-                if ($creator && $creator->hasRole('property_owner')) {
+                if ($creator && $creator->getRoleNameForEstate($a->estate_id) === 'property_owner') {
                     return response()->json([
                         'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
                     ], 400);
@@ -643,14 +651,16 @@ class CollectionPaymentController extends Controller
 
                                         $lockedAssignment->loadMissing('collection.creator');
                                         $creator = $lockedAssignment->collection ?? null ? $lockedAssignment->collection->creator : null;
-                                        if ($creator && $creator->hasRole('property_owner')) {
+                                        if ($creator && $creator->getRoleNameForEstate($lockedAssignment->estate_id) === 'property_owner') {
                                             $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
                                         } else {
-                                            $admins = User::role('admin')
-                                                ->whereHas('estates', function ($query) use ($lockedAssignment) {
-                                                    $query->where('estates.id', $lockedAssignment->estate_id);
-                                                })
-                                                ->get();
+                                            $adminIds = AdministrativeAssignment::where('estate_id', $lockedAssignment->estate_id)
+                                                ->where('is_active', true)
+                                                ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                                ->pluck('user_id')
+                                                ->toArray();
+
+                                            $admins = User::whereIn('id', $adminIds)->get();
 
                                             foreach ($admins as $admin) {
                                                 $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
@@ -748,7 +758,7 @@ class CollectionPaymentController extends Controller
         $collection = $assignment->collection;
         $creator = $collection->creator;
 
-        if ($creator && $creator->hasRole('property_owner')) {
+        if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
             return $creator->profile?->paystack_subaccount_code;
         }
 

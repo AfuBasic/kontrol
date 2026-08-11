@@ -2,7 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Actions\Auth\DetermineUserRedirect;
+use App\Auth\ContextManager;
+use App\Models\AdministrativeAssignment;
 use App\Services\Platform\PlatformAccessService;
 use Closure;
 use Illuminate\Http\Request;
@@ -10,9 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserHasRole
 {
-    public function __construct(
-        protected DetermineUserRedirect $determineRedirect
-    ) {}
+    public function __construct() {}
 
     /**
      * Handle an incoming request.
@@ -31,27 +30,38 @@ class EnsureUserHasRole
         $globalRoles = ['affiliate'];
 
         // Check platform-wide roles first (stored against estate_id = 0)
+        // We look directly at assignments for platform roles
         foreach ($roles as $role) {
             if (in_array($role, $globalRoles, true)) {
-                setPermissionsTeamId(0);
-                $user->unsetRelation('roles'); // Clear cached roles to apply the new team context
+                $hasGlobalRole = AdministrativeAssignment::where('user_id', $user->id)
+                    ->where('estate_id', 0)
+                    ->whereHas('role', fn ($q) => $q->where('name', $role))
+                    ->exists();
 
-                if ($user->hasRole($role)) {
+                if ($hasGlobalRole) {
+                    return $next($request);
+                }
+
+                // Fallback for tests and legacy assignments
+                app(ContextManager::class)->setSystemContext(0);
+                $hasSpatieRole = $user->hasRole($role);
+                app(ContextManager::class)->setSystemContext(null);
+
+                if ($hasSpatieRole) {
                     return $next($request);
                 }
             }
         }
 
-        // Set the team context for Spatie Permission (use user's first accepted estate)
-        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
-        if ($estate) {
-            setPermissionsTeamId($estate->id);
-            $user->unsetRelation('roles'); // Clear cached roles to apply the estate context
+        // We should ensure the context is loaded before checking roles
+        $context = app(ContextManager::class)->current();
+        if (! $context) {
+            abort(403, 'No active estate context.');
         }
 
-        // Check if user has any of the allowed roles
+        // Check if user has any of the allowed roles using context
         foreach ($roles as $role) {
-            if ($user->hasRole($role)) {
+            if ($user->contextHasRole($role)) {
                 // Evaluate platform access via centralized PlatformAccessService
                 $accessResult = app(PlatformAccessService::class)->evaluate($request, $user);
                 if (! $accessResult->allowed && $accessResult->redirectUrl) {
@@ -62,16 +72,7 @@ class EnsureUserHasRole
             }
         }
 
-        // User doesn't have the required role - redirect to their appropriate module
-        $correctRedirect = $this->determineRedirect->execute($user);
-        $correctPath = '/'.ltrim(parse_url($correctRedirect, PHP_URL_PATH), '/');
-        $currentPath = '/'.ltrim($request->path(), '/');
-
-        // Prevent redirect loop: if we would redirect to the same path, show 403 instead
-        if ($correctPath === $currentPath) {
-            abort(403, 'You do not have permission to access this resource.');
-        }
-
-        return redirect($correctRedirect);
+        // User doesn't have the required role
+        abort(403, 'You do not have permission to access this resource.');
     }
 }

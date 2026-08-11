@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Resident\StoreHouseholdMemberRequest;
 use App\Mail\Resident\HouseholdMemberInvitationMail;
 use App\Models\HouseholdMember;
+use App\Models\User;
+use App\Services\EstateContextService;
 use App\Services\Resident\HouseholdMemberService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,7 +49,7 @@ class HouseholdMemberController extends Controller
     public function store(StoreHouseholdMemberRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         if (! $estate->canAddMoreHouseholdMembers($user)) {
             $limit = $estate->getFeatureLimit('household-management');
@@ -70,7 +72,7 @@ class HouseholdMemberController extends Controller
     public function destroy(Request $request, HouseholdMember $householdMember): RedirectResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         // Ensure the household member belongs to this primary resident
         if ($householdMember->primary_resident_id !== $user->id || $householdMember->estate_id !== $estate->id) {
@@ -88,7 +90,7 @@ class HouseholdMemberController extends Controller
     public function resetPassword(Request $request, HouseholdMember $householdMember): RedirectResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         // Ensure the household member belongs to this primary resident
         if ($householdMember->primary_resident_id !== $user->id || $householdMember->estate_id !== $estate->id) {

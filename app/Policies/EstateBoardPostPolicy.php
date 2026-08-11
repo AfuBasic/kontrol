@@ -5,17 +5,18 @@ namespace App\Policies;
 use App\Models\EstateBoardPost;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use App\Auth\ContextManager;
 
-class EstateBoardPostPolicy
+class EstateBoardPostPolicy extends BaseContextPolicy
 {
-    use HandlesAuthorization;
+
 
     /**
      * Determine if the user can view posts (feed).
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return app(ContextManager::class)->hasContext();
     }
 
     /**
@@ -23,12 +24,7 @@ class EstateBoardPostPolicy
      */
     public function view(User $user, EstateBoardPost $post): bool
     {
-        $hasEstateAccess = $user->estates()
-            ->wherePivot('status', 'accepted')
-            ->where('estates.id', $post->estate_id)
-            ->exists();
-
-        if (! $hasEstateAccess) {
+        if (! $this->hasValidContextForEstate($post->estate_id)) {
             return false;
         }
 
@@ -36,19 +32,20 @@ class EstateBoardPostPolicy
             return true;
         }
 
-        setPermissionsTeamId($post->estate_id);
-        if ($user->hasRole('admin') || $post->property_owner_id === $user->id) {
+        if ($user->contextHasRole('admin') || $post->property_owner_id === $user->id) {
             return true;
         }
 
-        $profile = $user->profile;
-        if (! $profile || $profile->property_owner_id !== $post->property_owner_id) {
+        $propertyOwner = $user->getPropertyOwnerForEstate($post->estate_id);
+        if (! $propertyOwner || $propertyOwner->id !== $post->property_owner_id) {
             return false;
         }
 
         if ($post->applies_to === 'all') {
             return true;
         }
+
+        $profile = $user->profile;
 
         return $post->targets()
             ->where(function ($q) use ($user, $profile) {
@@ -63,15 +60,13 @@ class EstateBoardPostPolicy
      */
     public function create(User $user): bool
     {
-        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
-
-        if (! $estate) {
+        $context = app(ContextManager::class)->current();
+        
+        if (! $context) {
             return false;
         }
 
-        setPermissionsTeamId($estate->id);
-
-        return $user->hasRole('admin') || $user->hasPermissionTo('estate-board.create');
+        return $user->contextHasRole('admin') || $user->contextCan('estate-board.create');
     }
 
     /**
@@ -79,11 +74,13 @@ class EstateBoardPostPolicy
      */
     public function update(User $user, EstateBoardPost $post): bool
     {
-        setPermissionsTeamId($post->estate_id);
+        if (! $this->hasValidContextForEstate($post->estate_id)) {
+            return false;
+        }
 
         return $post->user_id === $user->id
-            || $user->hasRole('admin')
-            || $user->hasPermissionTo('estate-board.edit');
+            || $user->contextHasRole('admin')
+            || $user->contextCan('estate-board.edit');
     }
 
     /**
@@ -95,10 +92,12 @@ class EstateBoardPostPolicy
             return false;
         }
 
-        setPermissionsTeamId($post->estate_id);
+        if (! $this->hasValidContextForEstate($post->estate_id)) {
+            return false;
+        }
 
         return $post->user_id === $user->id
-            || $user->hasRole('admin')
-            || $user->hasPermissionTo('estate-board.delete');
+            || $user->contextHasRole('admin')
+            || $user->contextCan('estate-board.delete');
     }
 }

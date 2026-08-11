@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -26,15 +27,14 @@ class MarkResidentAsPropertyOwnerAction
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $resident->assignRole($poRole);
 
             // Null out their property_owner_id since they are now a property owner themselves
-            if ($resident->profile) {
-                $resident->profile->update([
-                    'property_owner_id' => null,
-                ]);
-            }
+            DB::table('estate_users_membership')
+                ->where('user_id', $resident->id)
+                ->where('estate_id', $estate->id)
+                ->update(['property_owner_id' => null]);
 
             // Log the activity
             activity()

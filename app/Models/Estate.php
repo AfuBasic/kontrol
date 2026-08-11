@@ -99,6 +99,14 @@ class Estate extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<AdministrativeAssignment, $this>
+     */
+    public function administrativeAssignments(): HasMany
+    {
+        return $this->hasMany(AdministrativeAssignment::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -377,5 +385,10 @@ class Estate extends Model
     public function collectionAssignments(): HasMany
     {
         return $this->hasMany(CollectionAssignment::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\ActivateContext;
 use App\Actions\Auth\AuthenticateUser;
 use App\Actions\Auth\CheckTrustedDevice;
 use App\Actions\Auth\GenerateLoginOtp;
@@ -145,9 +146,10 @@ class SocialLoginController
         ForceLogout::dispatchSafely($user->id);
         $this->storePasswordHashInSession($user);
 
-        $redirectUrl = $this->getRedirectUrl($user);
+        $action = app(ActivateContext::class);
+        $redirectUrl = $action->execute($user);
 
-        return redirect($redirectUrl);
+        return redirect()->intended($redirectUrl);
     }
 
     /**
@@ -156,21 +158,5 @@ class SocialLoginController
     private function storePasswordHashInSession(User $user): void
     {
         session(['password_hash_web' => $user->getAuthPassword()]);
-    }
-
-    /**
-     * Get the redirect URL based on user role.
-     */
-    private function getRedirectUrl(User $user): string
-    {
-        if ($user->hasRole('resident')) {
-            return route('resident.home');
-        }
-
-        if ($user->hasRole('security')) {
-            return route('security.dashboard');
-        }
-
-        return route('admin.dashboard');
     }
 }

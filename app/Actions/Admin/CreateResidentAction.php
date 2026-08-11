@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Auth\ContextManager;
 use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
@@ -28,7 +29,10 @@ class CreateResidentAction
             ]);
 
             // 2. Attach user to estate with pending status (invitation pending acceptance)
-            $estate->users()->attach($user->id, ['status' => 'pending']);
+            $estate->users()->attach($user->id, [
+                'status' => 'pending',
+                'property_owner_id' => $data['property_owner_id'] ?? null,
+            ]);
 
             // 3. Assign global resident role scoped to this estate
             $role = Role::where('name', 'resident')
@@ -36,7 +40,7 @@ class CreateResidentAction
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $user->assignRole($role);
 
             // 4. Create user profile with additional data
@@ -45,7 +49,6 @@ class CreateResidentAction
                 'phone' => $data['phone'] ?? null,
                 'unit_number' => $data['unit_number'] ?? null,
                 'address' => $data['address'] ?? null,
-                'property_owner_id' => $data['property_owner_id'] ?? null,
                 'property_id' => $data['property_id'] ?? null,
             ]);
 

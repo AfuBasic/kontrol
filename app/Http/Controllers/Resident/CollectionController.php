@@ -26,7 +26,7 @@ class CollectionController extends Controller
         abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to dues or collections.');
 
         $estate = $this->estateContext->getEstate();
-        $propertyOwnerId = $user->profile?->property_owner_id;
+        $propertyOwnerId = $user->getPropertyOwnerForEstate($estate)?->id;
         $searchPaid = request()->query('search_paid');
         $sourcePaid = request()->query('source_paid');
 
@@ -106,7 +106,7 @@ class CollectionController extends Controller
             },
         ]);
 
-        $propertyOwnerId = $user->profile?->property_owner_id;
+        $propertyOwnerId = $user->getPropertyOwnerForEstate($this->estateContext->getEstate())?->id;
         $isPoBill = (bool) ($propertyOwnerId && $assignment->collection->created_by == $propertyOwnerId);
         $assignment->is_property_owner_bill = $isPoBill;
         $assignment->billing_source = $isPoBill ? 'property_owner' : 'estate';

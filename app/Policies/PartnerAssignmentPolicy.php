@@ -12,8 +12,11 @@ class PartnerAssignmentPolicy
 
     public function update(User $user, Estate $estate): bool
     {
-        setPermissionsTeamId($estate->id);
+        $context = app(\App\Auth\ContextManager::class)->current();
+        if ($context === null || $context->estateId !== $estate->id) {
+            return false;
+        }
 
-        return $user->hasPermissionTo('change-partner-assignment');
+        return $user->contextCan('change-partner-assignment');
     }
 }

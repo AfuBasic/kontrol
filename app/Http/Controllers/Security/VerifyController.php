@@ -11,6 +11,7 @@ use App\Http\Requests\Security\ValidateAccessCodeRequest;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
+use App\Services\EstateContextService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class VerifyController extends Controller
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         return Inertia::render('Security/Verify', [
@@ -45,7 +46,7 @@ class VerifyController extends Controller
     public function validate(ValidateAccessCodeRequest $request): RedirectResponse|JsonResponse
     {
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         $result = $this->validateAccessCodeAction->execute(
             code: $request->validated('code'),
@@ -116,7 +117,7 @@ class VerifyController extends Controller
         ]);
 
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         activity()
             ->causedBy($user)
@@ -172,7 +173,7 @@ class VerifyController extends Controller
 
         try {
             $user = $request->user();
-            $estate = $user->getCurrentEstate();
+            $estate = app(EstateContextService::class)->getEstate();
 
             $activeCodes = AccessCode::query()
                 ->forEstate($estate->id)
@@ -232,7 +233,7 @@ class VerifyController extends Controller
         ]);
 
         $user = $request->user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
         $syncedCount = 0;
         $failedCount = 0;
         $errors = [];

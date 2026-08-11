@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Mail\Resident\WelcomeMail;
 use App\Models\User;
@@ -33,7 +34,7 @@ class ResidentApprovalController extends Controller
         $filters['status'] = 'pending';
 
         $estate = $this->estateContext->getEstate();
-        setPermissionsTeamId($estate->id);
+        app(ContextManager::class)->setSystemContext($estate->id);
 
         $paginated = $this->residentService->getPaginatedResidents(15, $filters);
         $paginated->load('roles');

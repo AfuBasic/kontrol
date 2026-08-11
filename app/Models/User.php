@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Auth\AuthorizationResolver;
+use App\Auth\ContextManager;
 use App\Mail\Auth\PasswordResetMail;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
@@ -173,9 +175,36 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function estates(): BelongsToMany
     {
-        return $this->belongsToMany(Estate::class, 'estate_users_membership')
-            ->withPivot('status')
+        return $this->belongsToMany(Estate::class, 'estate_users_membership', 'user_id', 'estate_id')
+            ->using(EstateMembership::class)
+            ->withPivot(['status', 'zone_id', 'relationship_type', 'property_owner_id'])
             ->withTimestamps();
+    }
+
+    /**
+     * Get the estate membership pivot model for a specific estate.
+     */
+    public function estateMembershipFor(Estate|int $estate): ?EstateMembership
+    {
+        $estateId = $estate instanceof Estate ? $estate->id : $estate;
+
+        return EstateMembership::where('user_id', $this->id)->where('estate_id', $estateId)->first();
+    }
+
+    /**
+     * Get the property owner for this user in a specific estate.
+     */
+    public function getPropertyOwnerForEstate(Estate|int $estate): ?User
+    {
+        return $this->estateMembershipFor($estate)?->propertyOwner;
+    }
+
+    /**
+     * @return HasMany<AdministrativeAssignment, $this>
+     */
+    public function administrativeAssignments(): HasMany
+    {
+        return $this->hasMany(AdministrativeAssignment::class);
     }
 
     /**
@@ -194,14 +223,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Property::class, 'property_owner_id');
     }
 
-    /**
-     * Residents managed by this user (if property owner).
-     */
     public function managedResidents()
     {
         return $this->hasManyThrough(
             User::class,
-            UserProfile::class,
+            EstateMembership::class,
             'property_owner_id',
             'id',
             'id',
@@ -262,7 +288,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isHouseholdMember(): bool
     {
-        return $this->hasRole('household_member');
+        return $this->contextHasRole('household_member');
     }
 
     /**
@@ -270,7 +296,37 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function isPrimaryResident(): bool
     {
-        return $this->hasRole('resident') && ! $this->hasRole('household_member');
+        return $this->contextHasRole('resident') && ! $this->contextHasRole('household_member');
+    }
+
+    /**
+     * Determine if the user has a specific role type within their active assignment.
+     */
+    public function contextHasRole(string|array $roles): bool
+    {
+        return app(AuthorizationResolver::class)->hasRole($roles, $this);
+    }
+
+    /**
+     * Get the name of the role assigned to the user for a specific estate.
+     */
+    public function getRoleNameForEstate(int $estateId): ?string
+    {
+        $assignment = AdministrativeAssignment::with('role')
+            ->where('user_id', $this->id)
+            ->where('estate_id', $estateId)
+            ->where('is_active', true)
+            ->first();
+
+        return $assignment?->role?->name;
+    }
+
+    /**
+     * Determine if the user has a specific permission within their active assignment.
+     */
+    public function contextCan(string $permission): bool
+    {
+        return app(AuthorizationResolver::class)->can($permission);
     }
 
     /**
@@ -372,19 +428,17 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the current active estate for the user.
      */
-    public function getCurrentEstate(): Estate
+    public function resolveHeadlessEstate(): Estate
     {
-        return $this->estates()
-            ->wherePivot('status', 'accepted')
-            ->firstOrFail();
+        return app(ContextManager::class)->resolveSystemContextForUser($this);
     }
 
     /**
      * Get the ID of the current active estate.
      */
-    public function getCurrentEstateId(): int
+    public function resolveHeadlessEstateId(): int
     {
-        return $this->getCurrentEstate()->id;
+        return $this->resolveHeadlessEstate()->id;
     }
 
     /**

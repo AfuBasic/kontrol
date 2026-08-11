@@ -8,6 +8,7 @@ use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Traits\GeneratesUlid;
 use App\Traits\HasHashid;
+use App\Traits\ZoneScoped;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,9 +27,11 @@ class Incident extends Model
     use HasFactory;
     use LogsActivity;
     use SoftDeletes;
+    use ZoneScoped;
 
     protected $fillable = [
         'estate_id',
+        'zone_id',
         'reporter_id',
         'reporter_type',
         'source',
@@ -128,15 +131,21 @@ class Incident extends Model
             return 'System';
         }
         if ($reporter instanceof User) {
-            setPermissionsTeamId($this->estate_id);
-            if ($reporter->hasRole('admin')) {
-                return 'Estate Administrator';
-            }
-            if ($reporter->hasRole('security')) {
-                return 'Security Personnel';
-            }
-            if ($reporter->hasRole('property_owner')) {
-                return 'Property Owner';
+            $assignment = AdministrativeAssignment::with('role')
+                ->where('user_id', $reporter->id)
+                ->where('estate_id', $this->estate_id)
+                ->where('is_active', true)
+                ->first();
+
+            if ($assignment && $assignment->role) {
+                return match ($assignment->role->name) {
+                    'admin' => 'Estate Administrator',
+                    'security' => 'Security Personnel',
+                    'property_owner' => 'Property Owner',
+                    'household_member' => 'Household Member',
+                    'resident' => 'Resident',
+                    default => 'Resident',
+                };
             }
 
             return 'Resident';

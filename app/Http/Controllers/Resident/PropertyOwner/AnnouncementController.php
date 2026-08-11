@@ -120,7 +120,7 @@ class AnnouncementController extends Controller
         $user = auth()->user();
 
         $residents = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
             ->forEstate($estate->id)
             ->get(['id', 'name']);
 
@@ -178,7 +178,7 @@ class AnnouncementController extends Controller
                     // Security check: ensure target user or property is owned/managed by the Property Owner
                     if ($t['type'] === 'user') {
                         $targetUser = User::find($t['id']);
-                        if (! $targetUser || $targetUser->profile?->property_owner_id !== $user->id) {
+                        if (! $targetUser || $targetUser->getPropertyOwnerForEstate($estate)?->id !== $user->id) {
                             continue;
                         }
                     } else {
@@ -201,7 +201,7 @@ class AnnouncementController extends Controller
 
             if ($post->applies_to === 'all') {
                 $usersToNotify = User::query()
-                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+                    ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
                     ->forEstate($estate->id)
                     ->active()
                     ->get();
@@ -209,12 +209,12 @@ class AnnouncementController extends Controller
                 foreach ($validated['targets'] as $t) {
                     if ($t['type'] === 'user') {
                         $targetUser = User::find($t['id']);
-                        if ($targetUser && $targetUser->profile?->property_owner_id === $user->id) {
+                        if ($targetUser && $targetUser->getPropertyOwnerForEstate($estate)?->id === $user->id) {
                             $usersToNotify->push($targetUser);
                         }
                     } else {
-                        $propertyUsers = User::query()
-                            ->whereHas('profile', fn ($q) => $q->where('property_id', $t['id'])->where('property_owner_id', $user->id))
+                        $propertyUsers = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                            ->whereHas('profile', fn ($q) => $q->where('property_id', $t['id']))
                             ->active()
                             ->get();
                         $usersToNotify = $usersToNotify->merge($propertyUsers);
@@ -246,8 +246,7 @@ class AnnouncementController extends Controller
         // Calculate delivery insights
         $targetsCount = 0;
         if ($announcement->applies_to === 'all') {
-            $targetsCount = User::query()
-                ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            $targetsCount = User::whereHas('estates', fn ($q) => $q->where('estates.id', $announcement->estate_id)->where('estate_users_membership.property_owner_id', $user->id))
                 ->forEstate($announcement->estate_id)
                 ->active()
                 ->count();
@@ -256,8 +255,8 @@ class AnnouncementController extends Controller
                 if ($target->target_type === 'user') {
                     $targetsCount += 1;
                 } else {
-                    $propertyUsersCount = User::query()
-                        ->whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id)->where('property_owner_id', $user->id))
+                    $propertyUsersCount = User::whereHas('estates', fn ($q) => $q->where('estates.id', $announcement->estate_id)->where('estate_users_membership.property_owner_id', $user->id))
+                        ->whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
                         ->active()
                         ->count();
                     $targetsCount += $propertyUsersCount;

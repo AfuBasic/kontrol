@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\User;
 use App\Services\ResidentSubscriptionService;
@@ -74,13 +75,12 @@ class FixResidentSubscriptions extends Command
             }
 
             foreach ($users as $user) {
-                setPermissionsTeamId($estate->id);
+                app(ContextManager::class)->setSystemContext($estate->id, $user);
                 if ($user->hasRole('household_member') || ! $user->hasRole('resident')) {
                     continue;
                 }
 
                 $sub = $user->residentSubscription()->where('estate_id', $estate->id)->first();
-
                 if (! $sub) {
                     // 1. Create subscription
                     $subscriptionService->createForUser($user, $estate);

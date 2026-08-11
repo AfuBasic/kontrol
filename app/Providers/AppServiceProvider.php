@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Auth\ContextManager;
 use App\Events\Billing\InvoiceGenerated;
 use App\Events\Billing\PaymentReceived;
 use App\Listeners\Billing\SendInvoiceEmail;
@@ -18,6 +19,7 @@ use App\Observers\PaymentTransactionObserver;
 use App\Policies\EstateBoardCommentPolicy;
 use App\Policies\EstateBoardPostPolicy;
 use App\Policies\PartnerAssignmentPolicy;
+use App\Policies\RolePolicy;
 use App\Services\SMS\SMSProvider;
 use App\Services\SMS\SmsService;
 use App\Services\SMS\TermiiProvider;
@@ -32,6 +34,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Permission\Models\Role;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +47,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SmsService::class, function ($app) {
             return new SmsService($app->make(SMSProvider::class));
         });
+
+        $this->app->scoped(ContextManager::class, fn () => new ContextManager);
     }
 
     /**
@@ -66,12 +71,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Allow admins to bypass all permission checks
-        Gate::before(function ($user, $_ability) {
-            if ($user && $user->hasRole('admin')) {
-                return true;
-            }
-        });
     }
 
     protected function configureTunnelSupport(): void
@@ -98,6 +97,7 @@ class AppServiceProvider extends ServiceProvider
 
     protected function registerPolicies(): void
     {
+        Gate::policy(Role::class, RolePolicy::class);
         Gate::policy(EstateBoardPost::class, EstateBoardPostPolicy::class);
         Gate::policy(EstateBoardComment::class, EstateBoardCommentPolicy::class);
         Gate::policy(Estate::class, PartnerAssignmentPolicy::class);

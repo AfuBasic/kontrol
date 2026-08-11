@@ -57,9 +57,10 @@ class IncidentCommentNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $commenterName = $this->comment->author?->name ?? 'A user';
-        $actionUrl = $notifiable->hasRole('admin')
+        $roleName = $notifiable->getRoleNameForEstate($this->incident->estate_id);
+        $actionUrl = $roleName === 'admin'
             ? '/admin/incidents/'.$this->incident->hashid
-            : ($notifiable->hasRole('security')
+            : ($roleName === 'security'
                 ? '/security/incidents/'.$this->incident->hashid
                 : '/resident/incidents/'.$this->incident->hashid);
 
@@ -150,9 +151,10 @@ class IncidentCommentNotification extends Notification implements ShouldQueue
     public function toTelegram(object $notifiable): array
     {
         $commenterName = $this->comment->author?->name ?? 'A user';
-        $actionUrl = $notifiable->hasRole('admin')
+        $roleName = $notifiable->getRoleNameForEstate($this->incident->estate_id);
+        $actionUrl = $roleName === 'admin'
             ? '/admin/incidents/'.$this->incident->hashid
-            : ($notifiable->hasRole('security')
+            : ($roleName === 'security'
                 ? '/security/incidents/'.$this->incident->hashid
                 : '/resident/incidents/'.$this->incident->hashid);
 

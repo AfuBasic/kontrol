@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Auth\ContextManager;
 use App\Events\Admin\UserCreated;
 use App\Models\Estate;
 use App\Models\User;
@@ -31,7 +32,7 @@ class CreateUserAction
             }
 
             // 3. Assign Role scoped to this estate
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
 
             if (! $user->hasRole($data['role'])) {
                 $user->assignRole($data['role']);

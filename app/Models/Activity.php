@@ -70,7 +70,7 @@ class Activity extends SpatieActivity
             // Fallback: try to get estate_id from the causer (for non-web contexts like Telegram)
             if ($activity->causer && method_exists($activity->causer, 'getCurrentEstate')) {
                 try {
-                    $activity->estate_id = $activity->causer->getCurrentEstate()->id;
+                    $activity->estate_id = $activity->causer->resolveHeadlessEstate()->id;
 
                     return;
                 } catch (\Throwable) {

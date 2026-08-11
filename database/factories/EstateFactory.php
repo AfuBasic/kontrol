@@ -45,7 +45,7 @@ class EstateFactory extends Factory
                 'allow_residents_to_report_incidents' => true,
                 'notify_admins_immediately_for_critical_incidents' => true,
                 'allow_partial_payments' => true,
-                'minimum_partial_payment_amount' => 100000,
+
                 'minimum_partial_payment_percentage' => 10,
                 'collection_reminder_frequency' => 'weekly',
                 'collection_maximum_reminder_attempts' => 3,

@@ -22,7 +22,7 @@ test('it fixes missing resident subscriptions and clears sessions', function () 
         'estate_id' => $estate->id,
         'plan_id' => $plan->id,
     ]);
-    $estate->settings()->create([
+    $estate->settings()->update([
         'charge_type' => 'residents',
         'free_trial_enabled' => true,
         'free_trial_days' => 7,

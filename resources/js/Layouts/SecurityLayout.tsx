@@ -12,6 +12,7 @@ import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryCo
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
 import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import ContextSwitcher from '@/Components/ContextSwitcher';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import PwaInstallModal from '@/Components/PwaInstallModal';
@@ -330,6 +331,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     </Link>
 
                     <div className="flex items-center gap-2">
+                        <ContextSwitcher />
                         <SystemHealthMonitor size="md" />
                         <div
                             className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${

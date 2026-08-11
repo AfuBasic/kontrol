@@ -20,8 +20,7 @@ class IncidentService
     {
         $user = Auth::user();
         $userId = Auth::id();
-        setPermissionsTeamId($estateId);
-        $isAdmin = $user && $user->hasRole('admin');
+        $isAdmin = $user && $user->contextHasRole('admin');
 
         $query = Incident::query()
             ->forEstate($estateId)

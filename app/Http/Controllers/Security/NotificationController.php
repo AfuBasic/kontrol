@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Security;
 
 use App\Actions\Security\FetchSecurityNotificationsAction;
 use App\Http\Controllers\Controller;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ class NotificationController extends Controller
     public function index(): Response
     {
         $user = Auth::user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(EstateContextService::class)->getEstate();
         $notifications = $this->fetchNotificationsAction->execute($user);
         $formatted = $this->fetchNotificationsAction->formatForFrontend($notifications);
 

@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Resident;
 
+use App\Auth\ContextManager;
 use App\Channels\TelegramChannel;
 use App\Models\CollectionAssignment;
 use Illuminate\Bus\Queueable;
@@ -51,7 +52,7 @@ class NewCollectionNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $creator = $this->assignment->collection->creator;
-        setPermissionsTeamId($this->assignment->estate_id);
+        app(ContextManager::class)->setSystemContext($this->assignment->estate_id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
         $propertyName = $notifiable->profile?->property?->name;
 
@@ -68,7 +69,7 @@ class NewCollectionNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         $creator = $this->assignment->collection->creator;
-        setPermissionsTeamId($this->assignment->estate_id);
+        app(ContextManager::class)->setSystemContext($this->assignment->estate_id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
         $propertyName = $notifiable->profile?->property?->name;
         $houseInfo = $propertyName ? "for your house ({$propertyName})" : 'for your house';

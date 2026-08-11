@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Webhooks;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
+use App\Models\AdministrativeAssignment;
 use App\Models\CollectionAssignment;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -42,7 +44,7 @@ class PaystackWebhookController extends Controller
                     if (str_starts_with($reference, 'COLL-')) {
                         $payment = Payment::where('reference', $reference)->first();
                         if ($payment && $payment->status !== 'success') {
-                            setPermissionsTeamId($payment->estate_id);
+                            app(ContextManager::class)->setSystemContext($payment->estate_id);
                             $assignmentIds = data_get($payment->raw_payload, 'assignment_ids');
 
                             $payment->update([
@@ -67,14 +69,16 @@ class PaystackWebhookController extends Controller
 
                                     $assignment->loadMissing('collection.creator');
                                     $creator = $assignment->collection?->creator;
-                                    if ($creator && $creator->hasRole('property_owner')) {
+                                    if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                                         $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
                                     } else {
-                                        $admins = User::role('admin')
-                                            ->whereHas('estates', function ($query) use ($assignment) {
-                                                $query->where('estates.id', $assignment->estate_id);
-                                            })
-                                            ->get();
+                                        $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                            ->where('is_active', true)
+                                            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                            ->pluck('user_id')
+                                            ->toArray();
+
+                                        $admins = User::whereIn('id', $adminIds)->get();
 
                                         foreach ($admins as $admin) {
                                             $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
@@ -106,14 +110,16 @@ class PaystackWebhookController extends Controller
 
                                         $assignment->loadMissing('collection.creator');
                                         $creator = $assignment->collection?->creator;
-                                        if ($creator && $creator->hasRole('property_owner')) {
+                                        if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                                             $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
                                         } else {
-                                            $admins = User::role('admin')
-                                                ->whereHas('estates', function ($query) use ($assignment) {
-                                                    $query->where('estates.id', $assignment->estate_id);
-                                                })
-                                                ->get();
+                                            $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                                ->where('is_active', true)
+                                                ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+                                                ->pluck('user_id')
+                                                ->toArray();
+
+                                            $admins = User::whereIn('id', $adminIds)->get();
 
                                             foreach ($admins as $admin) {
                                                 $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));

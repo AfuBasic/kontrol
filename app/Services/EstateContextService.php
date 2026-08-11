@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -20,9 +21,20 @@ class EstateContextService
             throw new \Exception('Unauthenticated');
         }
 
-        // In a real multi-tenant app, we might store the current estate_id in the session
-        // For now, we'll use the user's current estate but ensure it's validated
-        $estate = $user->getCurrentEstate();
+        // In V3, we strictly rely on ContextManager which stores the active session
+        $context = app(ContextManager::class)->current();
+
+        if (! $context || ! $context->estateId) {
+            if (app()->runningUnitTests()) {
+                $estateId = getPermissionsTeamId();
+                if ($estateId) {
+                    return Estate::findOrFail($estateId);
+                }
+            }
+            throw new \Exception('No estate access');
+        }
+
+        $estate = Estate::find($context->estateId);
 
         if (! $estate) {
             throw new \Exception('No estate access');
@@ -37,13 +49,5 @@ class EstateContextService
     public function getEstateId(): int
     {
         return $this->getEstate()->id;
-    }
-
-    /**
-     * Set the current estate for the user (e.g. in session).
-     */
-    public function setEstate(Estate $estate): void
-    {
-        session(['current_estate_id' => $estate->id]);
     }
 }

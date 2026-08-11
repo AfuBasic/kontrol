@@ -116,8 +116,11 @@ class TestCollectionsSeeder extends Seeder
         }
 
         $resident->profile()->updateOrCreate([], [
-            'property_owner_id' => $owner->id,
             'property_id' => $property->id,
+        ]);
+
+        $estate->users()->updateExistingPivot($resident->id, [
+            'property_owner_id' => $owner->id,
         ]);
 
         // 6. Create 4 Estate Collections & Assignments

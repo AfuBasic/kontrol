@@ -57,10 +57,8 @@ beforeEach(function () {
 
     $this->resident = User::factory()->create();
     $this->resident->assignRole($this->residentRole);
-    $this->resident->profile()->updateOrCreate([], [
-        'property_owner_id' => $this->owner->id,
-    ]);
-    $this->estate->users()->attach($this->resident->id, ['status' => 'accepted']);
+    $this->resident->profile()->updateOrCreate([], []);
+    $this->estate->users()->attach($this->resident->id, ['status' => 'accepted', 'property_owner_id' => $this->owner->id]);
 });
 
 test('resident cannot initiate bulk payment for mixed estate and landlord bills', function () {

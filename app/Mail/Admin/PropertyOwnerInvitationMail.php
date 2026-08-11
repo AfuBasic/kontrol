@@ -24,7 +24,7 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
         public bool $isPasswordReset = false,
     ) {
         // Generate signed URL on app domain that expires in 72 hours
-        $parameters = ['user' => $user->id];
+        $parameters = ['token' => $user->id];
         if ($this->isPasswordReset) {
             $parameters['password_reset'] = 1;
         }

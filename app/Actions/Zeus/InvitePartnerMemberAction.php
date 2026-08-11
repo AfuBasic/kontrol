@@ -2,6 +2,7 @@
 
 namespace App\Actions\Zeus;
 
+use App\Auth\ContextManager;
 use App\Mail\Zeus\PartnerMemberInvitationMail;
 use App\Models\Partner;
 use App\Models\User;
@@ -20,7 +21,7 @@ class InvitePartnerMemberAction
                 'partner_id' => $partner->id,
             ]);
 
-            setPermissionsTeamId(0);
+            app(ContextManager::class)->setSystemContext(0);
             $user->assignRole('affiliate');
 
             Mail::to($user->email)->send(new PartnerMemberInvitationMail($user, $partner));

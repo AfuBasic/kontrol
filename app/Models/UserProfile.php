@@ -63,13 +63,6 @@ class UserProfile extends Model
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * @return BelongsTo<User, $this>
-     */
-    public function propertyOwner(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'property_owner_id');
-    }
 
     /**
      * @return BelongsTo<Property, $this>

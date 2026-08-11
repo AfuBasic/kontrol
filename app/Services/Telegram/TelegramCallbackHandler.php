@@ -78,7 +78,7 @@ class TelegramCallbackHandler
      */
     private function handleMainMenu(string $chatId, int $messageId, User $user): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
 
         $text = "🏠 <b>{$estate->name}</b>\n\n";
         $text .= "Hello, <b>{$user->name}</b>! 👋\n\n";
@@ -92,7 +92,7 @@ class TelegramCallbackHandler
      */
     private function handleGenerateCode(string $chatId, int $messageId, User $user): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
         $options = $this->accessCodeService->getDurationOptions($estate);
 
         $text = "🎟️ <b>Generate Access Code</b>\n\n";
@@ -106,7 +106,7 @@ class TelegramCallbackHandler
      */
     private function handleSelectDuration(string $chatId, int $messageId, User $user, int $minutes): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
 
         try {
             $code = $this->accessCodeService->createCode($user, $estate, [
@@ -137,7 +137,7 @@ class TelegramCallbackHandler
      */
     private function handleViewCodes(string $chatId, int $messageId, User $user): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
         $codes = $this->accessCodeService->getActiveCodes($user, $estate);
 
         if ($codes->isEmpty()) {
@@ -170,7 +170,7 @@ class TelegramCallbackHandler
      */
     private function handleRevokeCode(string $chatId, int $messageId, User $user, int $codeId): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
         $code = $this->accessCodeService->getCode($user, $estate, $codeId);
 
         if (! $code) {
@@ -193,7 +193,7 @@ class TelegramCallbackHandler
      */
     private function handleConfirmRevoke(string $chatId, int $messageId, User $user, int $codeId): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
         $success = $this->accessCodeService->revokeCode($user, $estate, $codeId);
 
         if ($success) {
@@ -221,7 +221,7 @@ class TelegramCallbackHandler
      */
     private function handleEstateInfo(string $chatId, int $messageId, User $user): void
     {
-        $estate = $user->getCurrentEstate();
+        $estate = $user->resolveHeadlessEstate();
         $profile = $user->profile;
 
         $text = "🏠 <b>{$estate->name}</b>\n\n";

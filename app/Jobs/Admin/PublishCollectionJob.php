@@ -2,6 +2,7 @@
 
 namespace App\Jobs\Admin;
 
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Property;
@@ -84,13 +85,20 @@ class PublishCollectionJob implements ShouldQueue
     private function getTargetUserIds(Collection $collection, $estate): array
     {
         $creator = $collection->creator;
-        setPermissionsTeamId($estate->id);
-        $isPropertyOwner = $creator && $creator->hasRole('property_owner');
+        $isPropertyOwner = false;
+        if ($creator) {
+            $assignment = AdministrativeAssignment::with('role')
+                ->where('user_id', $creator->id)
+                ->where('estate_id', $estate->id)
+                ->where('is_active', true)
+                ->first();
+            $isPropertyOwner = $assignment?->role?->name === 'property_owner';
+        }
         $userIds = [];
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
-                $userIds = User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $creator->id))
                     ->active()
                     ->acceptedInvitation()
                     ->pluck('users.id')

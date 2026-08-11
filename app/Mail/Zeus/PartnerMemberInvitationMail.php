@@ -30,7 +30,7 @@ class PartnerMemberInvitationMail extends Mailable implements ShouldQueue
         $this->invitationUrl = URL::temporarySignedRoute(
             'invitation.accept',
             now()->addHours(72),
-            ['user' => $user->id]
+            ['token' => $user->id]
         );
 
         URL::forceRootUrl(null);

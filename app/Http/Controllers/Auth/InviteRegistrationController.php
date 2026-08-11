@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\Estate;
 use App\Models\EstateInviteLink;
@@ -74,7 +75,7 @@ class InviteRegistrationController extends Controller
                 'user_type' => 'user',
             ]);
 
-            setPermissionsTeamId($inviteLink->estate_id);
+            app(ContextManager::class)->setSystemContext($inviteLink->estate_id);
 
             // Assign roles scoped to this estate
             $residentRole = Role::where('name', 'resident')

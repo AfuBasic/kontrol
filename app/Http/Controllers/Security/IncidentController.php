@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Security;
 
 use App\Actions\Incidents\CreateIncidentAction;
-use App\Enums\IncidentCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\AdministrativeAssignment;
 use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\IncidentComment;
@@ -103,15 +103,10 @@ class IncidentController extends Controller
         $this->authorize('delete', $incident);
 
         // Fetch admins of this estate to notify
-        $adminIds = User::forEstate($incident->estate_id)
-            ->active()
-            ->get()
-            ->filter(function ($u) use ($incident) {
-                setPermissionsTeamId($incident->estate_id);
-
-                return $u->hasRole('admin');
-            })
-            ->pluck('id')
+        $adminIds = AdministrativeAssignment::where('estate_id', $incident->estate_id)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->pluck('user_id')
             ->toArray();
 
         // Fetch upvoters of this incident

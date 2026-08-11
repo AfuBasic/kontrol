@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Auth\ContextManager;
 use App\Events\Admin\SecurityCreated;
 use App\Notifications\SecurityInvitedNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,7 +17,7 @@ class NotifyAdminsOfNewSecurity implements ShouldQueue
         }
 
         // Set team context for role check
-        setPermissionsTeamId($event->estate->id);
+        app(ContextManager::class)->setSystemContext($event->estate->id);
 
         // Get all admin users for this estate
         $admins = $event->estate->users()

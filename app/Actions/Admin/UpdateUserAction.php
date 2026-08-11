@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +23,7 @@ class UpdateUserAction
 
             if (isset($data['role'])) {
                 // Ensure estate context is set
-                setPermissionsTeamId($estate->id);
+                app(ContextManager::class)->setSystemContext($estate->id);
                 $user->syncRoles([$data['role']]);
             }
 

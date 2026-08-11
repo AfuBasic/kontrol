@@ -4,7 +4,7 @@ namespace App\Jobs\Admin;
 
 use App\Mail\Admin\ResidentInvitationMail;
 use App\Models\Estate;
-use App\Models\User;
+use App\Models\Invitation;
 use Illuminate\Bus\Batchable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -15,10 +15,10 @@ class SendBulkResidentInvitationsJob implements ShouldQueue
     use Batchable, Queueable;
 
     /**
-     * @param  array<int>  $userIds
+     * @param  array<int>  $invitationIds
      */
     public function __construct(
-        public array $userIds,
+        public array $invitationIds,
         public int $estateId,
     ) {}
 
@@ -33,12 +33,12 @@ class SendBulkResidentInvitationsJob implements ShouldQueue
             return;
         }
 
-        // Process users in chunks to avoid memory issues
-        User::whereIn('id', $this->userIds)
+        // Process invitations in chunks to avoid memory issues
+        Invitation::whereIn('id', $this->invitationIds)
             ->cursor()
-            ->each(function (User $user) use ($estate) {
-                Mail::to($user->email)->queue(
-                    new ResidentInvitationMail($user, $estate, false)
+            ->each(function (Invitation $invitation) use ($estate) {
+                Mail::to($invitation->email)->queue(
+                    new ResidentInvitationMail($invitation, $estate, false)
                 );
             });
     }

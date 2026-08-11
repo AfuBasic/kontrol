@@ -44,6 +44,7 @@ import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLo
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
+import ContextSwitcher from '@/Components/ContextSwitcher';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
@@ -95,7 +96,7 @@ const baseNav: NavItem[] = [
         feature: 'payment-collection',
     },
     { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
-    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon },
+    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view' },
     { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
@@ -696,6 +697,7 @@ export default function AdminLayout({ children, title }: Props) {
                             <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">{title || 'Dashboard'}</span>
                         </div>
                         <div className="flex items-center gap-3">
+                            <ContextSwitcher />
                             <SystemHealthMonitor hideWhenHealthy />
                         <div className="relative">
                             <button

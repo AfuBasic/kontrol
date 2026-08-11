@@ -2,6 +2,7 @@
 
 namespace App\Actions\Admin;
 
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -13,7 +14,7 @@ class DeleteUserAction
     {
         DB::transaction(function () use ($user, $estate) {
             // Detach all roles for this estate
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $user->syncRoles([]);
 
             // Detach from estate key membership

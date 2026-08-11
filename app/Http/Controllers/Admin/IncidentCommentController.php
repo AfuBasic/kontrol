@@ -32,9 +32,7 @@ class IncidentCommentController extends Controller
      */
     public function destroy(IncidentComment $comment): RedirectResponse
     {
-        setPermissionsTeamId($comment->incident->estate_id);
-
-        if (! auth()->user()->hasRole('admin')) {
+        if (! auth()->user()->contextHasRole('admin')) {
             abort(403, 'Only administrators can moderate comments.');
         }
 
