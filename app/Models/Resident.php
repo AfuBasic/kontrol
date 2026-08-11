@@ -13,6 +13,14 @@ class Resident extends User
     protected $table = 'users';
 
     /**
+     * Ensure polymorphic relations (like Spatie Roles) use the base User class.
+     */
+    public function getMorphClass()
+    {
+        return User::class;
+    }
+
+    /**
      * Boot the Resident model, applying global scopes for residency and zone isolation.
      */
     protected static function booted(): void
