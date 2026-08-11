@@ -175,7 +175,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function estates(): BelongsToMany
     {
-        return $this->belongsToMany(Estate::class, 'estate_users_membership')
+        return $this->belongsToMany(Estate::class, 'estate_users_membership', 'user_id', 'estate_id')
             ->withPivot('status')
             ->withTimestamps();
     }
