@@ -96,7 +96,7 @@ const baseNav: NavItem[] = [
         feature: 'payment-collection',
     },
     { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
-    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon },
+    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view' },
     { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
     { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
     { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
