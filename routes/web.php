@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\ContextController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\InviteRegistrationController;
 use App\Http\Controllers\Auth\LoginController;
@@ -55,9 +56,12 @@ Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 've
     ->middleware(['signed', 'throttle:6,1'])
     ->name('verification.verify');
 
-Route::post('/logout', [LoginController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+    Route::get('/context/select', [ContextController::class, 'index'])->name('context.select');
+    Route::post('/context/switch', [ContextController::class, 'switch'])->name('context.switch');
+});
 
 /*
 |--------------------------------------------------------------------------

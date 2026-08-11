@@ -53,6 +53,9 @@ class HandleInertiaRequests extends Middleware
         $partnerNotifications = [];
         $partnerUnreadCount = 0;
 
+        $contextData = null;
+        $availableContexts = [];
+
         if ($user) {
             $contextManager = app(ContextManager::class);
             $currentContext = $contextManager->current();
@@ -71,6 +74,28 @@ class HandleInertiaRequests extends Middleware
                     $permissions = [];
                     $roles = [];
                 }
+
+                $contextData = [
+                    'id' => $currentContext->assignmentId,
+                    'estate_id' => $currentContext->estateId,
+                    'estate_name' => $estate?->name,
+                    'role_name' => $assignment?->role?->name ?? 'Unknown',
+                    'scope_type' => $currentContext->scopeType?->value ?? 'estate',
+                    'zone_id' => $currentContext->zoneId,
+                    'zone_name' => $assignment?->zone?->name,
+                ];
+
+                $availableContexts = AdministrativeAssignment::with(['estate', 'role', 'zone'])
+                    ->where('user_id', $user->id)
+                    ->where('is_active', true)
+                    ->get()
+                    ->map(fn ($a) => [
+                        'id' => $a->id,
+                        'estate_name' => $a->estate->name,
+                        'role_name' => $a->role?->name ?? 'Unknown',
+                        'scope_type' => $a->scope_type,
+                        'zone_name' => $a->zone?->name,
+                    ])->all();
             } else {
                 // If no active context, safely provide empty roles/permissions
                 $user->loadMissing('profile');
@@ -121,6 +146,8 @@ class HandleInertiaRequests extends Middleware
                     'email' => $user->email,
                     'permissions' => $permissions,
                     'roles' => $roles,
+                    'context' => $contextData,
+                    'available_contexts' => $availableContexts,
                     'current_estate_id' => $estate?->id,
                     'current_estate_ulid' => $estate?->ulid,
                     'estate_name' => $estate?->name,

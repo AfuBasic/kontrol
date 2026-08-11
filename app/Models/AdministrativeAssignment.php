@@ -3,14 +3,14 @@
 namespace App\Models;
 
 use App\Enums\AssignmentScope;
-use App\Traits\ZoneScoped;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 
 class AdministrativeAssignment extends Model
 {
-    use HasFactory, ZoneScoped;
+    use HasFactory;
 
     protected $guarded = [];
 
