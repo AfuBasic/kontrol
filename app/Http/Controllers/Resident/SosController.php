@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Auth\ContextManager;
 use App\Events\SosTriggered;
 use App\Http\Controllers\Controller;
 use App\Jobs\ProcessSOSAlert;
@@ -21,7 +22,7 @@ class SosController extends Controller
     {
         /** @var User $user */
         $user = Auth::user();
-        $estate = $user->getCurrentEstate();
+        $estate = app(ContextManager::class)->getEstate();
 
         // Rate Limiting: 1 per 60s, 3 per 10m
         $executed = RateLimiter::attempt(
@@ -80,7 +81,8 @@ class SosController extends Controller
         $user = Auth::user();
 
         // Ensure user is authorized for this estate and has correct role
-        if (! $user->hasRole(['security', 'admin']) || $user->getCurrentEstateId() !== $sosEvent->estate_id) {
+        $activeEstateId = app(ContextManager::class)->getEstateId();
+        if (! $user->contextHasRole(['security', 'admin']) || $activeEstateId !== $sosEvent->estate_id) {
             abort(403);
         }
 
