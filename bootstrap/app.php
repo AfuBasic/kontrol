@@ -49,30 +49,36 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($domainRoutingEnabled && ! $isLocal) {
                 // Production / Staging: Full domain-based routing
-                Route::domain(config('domains.root'))
+                $host = request()->getHost();
+                $appDomain = config('domains.app');
+                $rootDomain = config('domains.root');
+
+                $publicDomain = ($host !== $appDomain && str_ends_with($host, $rootDomain))
+                    ? $host
+                    : $rootDomain;
+
+                Route::domain($publicDomain)
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 
-                // www alias — same public routes
-                Route::domain(config('domains.www'))
-                    ->middleware('web')
-                    ->group(base_path('routes/public.php'));
-
-                Route::domain(config('domains.app'))
+                Route::domain($appDomain)
                     ->middleware('web')
                     ->group(base_path('routes/app.php'));
             } elseif ($domainRoutingEnabled && $isLocal && config('domains.app_subdomain')) {
                 // Local with subdomain simulation (e.g., app.usekontrol.test)
-                Route::domain(config('domains.root'))
+                $host = request()->getHost();
+                $appDomain = config('domains.app');
+                $rootDomain = config('domains.root');
+
+                $publicDomain = ($host !== $appDomain && str_ends_with($host, $rootDomain))
+                    ? $host
+                    : $rootDomain;
+
+                Route::domain($publicDomain)
                     ->middleware('web')
                     ->group(base_path('routes/public.php'));
 
-                // www alias — same public routes
-                Route::domain(config('domains.www'))
-                    ->middleware('web')
-                    ->group(base_path('routes/public.php'));
-
-                Route::domain(config('domains.app'))
+                Route::domain($appDomain)
                     ->middleware('web')
                     ->group(base_path('routes/app.php'));
             } else {
