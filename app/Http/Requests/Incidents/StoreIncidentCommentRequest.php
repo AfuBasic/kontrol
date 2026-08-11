@@ -21,7 +21,7 @@ class StoreIncidentCommentRequest extends FormRequest
             'body' => ['required', 'string', 'min:2', 'max:2000'],
         ];
 
-        if ($this->user()?->hasRole('admin')) {
+        if ($this->user()?->contextHasRole('admin')) {
             $rules['parent_id'] = ['nullable', 'integer', 'exists:incident_comments,id'];
         } else {
             $rules['parent_id'] = ['prohibited'];
