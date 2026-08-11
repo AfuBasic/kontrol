@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Auth\AuthorizationResolver;
 use App\Auth\ContextManager;
+use App\Models\AdministrativeAssignment;
 use App\Mail\Auth\PasswordResetMail;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
@@ -304,6 +305,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function contextHasRole(string|array $roles): bool
     {
         return app(AuthorizationResolver::class)->hasRole($roles);
+    }
+
+    /**
+     * Get the name of the role assigned to the user for a specific estate.
+     */
+    public function getRoleNameForEstate(int $estateId): ?string
+    {
+        $assignment = AdministrativeAssignment::with('role')
+            ->where('user_id', $this->id)
+            ->where('estate_id', $estateId)
+            ->where('is_active', true)
+            ->first();
+
+        return $assignment?->role?->name;
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\AdministrativeAssignment;
 use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
@@ -119,7 +120,7 @@ class IncidentController extends Controller
         }
 
         // 4. Fetch active admins for assignments
-        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $estateId)
+        $adminIds = AdministrativeAssignment::where('estate_id', $estateId)
             ->where('is_active', true)
             ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
             ->pluck('user_id')
@@ -190,7 +191,7 @@ class IncidentController extends Controller
         $loadedIncident = $this->incidentService->getIncident($incident->id, $estateId);
 
         // Fetch active admins in this estate for assignments
-        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $estateId)
+        $adminIds = AdministrativeAssignment::where('estate_id', $estateId)
             ->where('is_active', true)
             ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
             ->pluck('user_id')
@@ -248,7 +249,7 @@ class IncidentController extends Controller
 
         $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
-        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $estate->id)
+        $adminIds = AdministrativeAssignment::where('estate_id', $estate->id)
             ->where('is_active', true)
             ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
             ->pluck('user_id')

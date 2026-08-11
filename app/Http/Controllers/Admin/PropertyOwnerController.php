@@ -8,7 +8,9 @@ use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendResidentAction;
+use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
+use App\Models\AdministrativeAssignment;
 use App\Models\Property;
 use App\Models\User;
 use App\Services\EstateContextService;
@@ -386,7 +388,7 @@ class PropertyOwnerController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'current_owner' => clone($user)->getPropertyOwnerForEstate($estate)?->name,
+                'current_owner' => clone ($user)->getPropertyOwnerForEstate($estate)?->name,
             ]);
 
         return response()->json($residents);
@@ -455,18 +457,18 @@ class PropertyOwnerController extends Controller
             ->whereNull('estate_id')
             ->firstOrFail();
 
-        $hasResidentRole = \App\Models\AdministrativeAssignment::where('user_id', $propertyOwner->id)
+        $hasResidentRole = AdministrativeAssignment::where('user_id', $propertyOwner->id)
             ->where('estate_id', $estate->id)
             ->where('is_active', true)
             ->where('role_id', $residentRole->id)
             ->exists();
 
         if (! $hasResidentRole) {
-            \App\Models\AdministrativeAssignment::create([
+            AdministrativeAssignment::create([
                 'user_id' => $propertyOwner->id,
                 'estate_id' => $estate->id,
                 'role_id' => $residentRole->id,
-                'scope_type' => \App\Enums\AssignmentScope::Estate,
+                'scope_type' => AssignmentScope::Estate,
                 'is_primary' => false,
                 'is_active' => true,
             ]);

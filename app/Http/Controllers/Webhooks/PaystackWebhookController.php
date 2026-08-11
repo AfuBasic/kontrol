@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdministrativeAssignment;
 use App\Models\CollectionAssignment;
 use App\Models\Invoice;
 use App\Models\Payment;
@@ -70,7 +71,7 @@ class PaystackWebhookController extends Controller
                                     if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                                         $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
                                     } else {
-                                        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                        $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
                                             ->where('is_active', true)
                                             ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
                                             ->pluck('user_id')
@@ -111,12 +112,12 @@ class PaystackWebhookController extends Controller
                                         if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
                                             $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
                                         } else {
-                                            $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $assignment->estate_id)
+                                            $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
                                                 ->where('is_active', true)
                                                 ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
                                                 ->pluck('user_id')
                                                 ->toArray();
-    
+
                                             $admins = User::whereIn('id', $adminIds)->get();
 
                                             foreach ($admins as $admin) {

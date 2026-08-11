@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Actions\Incidents\CreateIncidentAction;
-use App\Enums\IncidentCategory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Incidents\StoreIncidentRequest;
+use App\Models\AdministrativeAssignment;
 use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\IncidentComment;
@@ -119,7 +119,7 @@ class IncidentController extends Controller
         $this->authorize('delete', $incident);
 
         // Fetch admins of this estate to notify
-        $adminIds = \App\Models\AdministrativeAssignment::where('estate_id', $incident->estate_id)
+        $adminIds = AdministrativeAssignment::where('estate_id', $incident->estate_id)
             ->where('is_active', true)
             ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
             ->pluck('user_id')
