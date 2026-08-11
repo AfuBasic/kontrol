@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Actions\Auth\ActivateContext;
 use App\Http\Controllers\Controller;
 use App\Models\AdministrativeAssignment;
+use App\Models\EstateMembership;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -32,6 +33,16 @@ class ContextController extends Controller
             ->get();
 
         if ($assignments->isEmpty()) {
+            $hasPending = EstateMembership::where('user_id', $user->id)
+                ->where('status', 'pending')
+                ->exists();
+
+            if ($hasPending) {
+                return Inertia::render('Auth/AccessDenied', [
+                    'message' => 'You have pending invitations. Please check your email and click the invitation link to gain access.',
+                ]);
+            }
+
             return Inertia::render('Auth/AccessDenied', [
                 'message' => 'You do not have any active assignments or estate memberships. Please contact your administrator.',
             ]);
