@@ -1,4 +1,3 @@
-import AdminLayout from '@/Layouts/AdminLayout';
 import {
     ArchiveBoxIcon,
     BuildingOfficeIcon,
@@ -102,7 +101,7 @@ export default function ZonesIndex({ zones }: Props) {
     const totalAssignments = zones.reduce((acc, z) => acc + (z.assignments_count || 0), 0);
 
     return (
-        <AdminLayout title="Zone Management">
+        <>
             <Head title="Zone Management - Kontrol" />
 
             <div className="space-y-6">
@@ -289,7 +288,7 @@ export default function ZonesIndex({ zones }: Props) {
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             {search
                                 ? 'No zones match your search query.'
-                                ? 'Get started by creating your estate’s first zone.'}
+                                : 'Get started by creating your estate’s first zone.'}
                         </p>
                         {!search && (
                             <button
@@ -494,6 +493,6 @@ export default function ZonesIndex({ zones }: Props) {
                     </motion.div>
                 </div>
             )}
-        </AdminLayout>
+        </>
     );
 }
