@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Security;
 
 use App\Http\Controllers\Controller;
+use App\Services\EstateContextService;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use Inertia\Inertia;
@@ -13,7 +14,7 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         $user = auth()->user();
-        $estate = app(\App\Services\EstateContextService::class)->getEstate();
+        $estate = app(EstateContextService::class)->getEstate();
 
         $today = now()->startOfDay();
 

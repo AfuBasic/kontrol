@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Auth\ContextManager;
 use App\Models\SosEvent;
 use App\Models\User;
 use App\Notifications\Admin\SosIntrusionNotification;
@@ -36,7 +37,7 @@ class ProcessSOSAlert implements ShouldQueue
         $address = $subject->profile->address ?? 'N/A';
 
         // Set Spatie permissions team ID for this estate to ensure roles are correctly scoped
-        setPermissionsTeamId($estate->id);
+        app(ContextManager::class)->setSystemContext($estate->id);
 
         // 1. Notify Security (High Priority)
         $securityPersonnel = User::withRole('security', $estate->id)->active()->get();
@@ -79,7 +80,7 @@ class ProcessSOSAlert implements ShouldQueue
         }
 
         // Reset team ID after processing
-        setPermissionsTeamId(null);
+        app(ContextManager::class)->setSystemContext(null);
 
         $this->sosEvent->update(['status' => 'completed']);
     }

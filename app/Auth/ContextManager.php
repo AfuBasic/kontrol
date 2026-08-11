@@ -69,7 +69,7 @@ class ContextManager
      * Safely establish the Spatie context without an HTTP session.
      * Used heavily in background jobs and notifications.
      */
-    public function setSystemContext(int $estateId, ?User $user = null): void
+    public function setSystemContext(?int $estateId, ?User $user = null): void
     {
         setPermissionsTeamId($estateId);
 
@@ -83,22 +83,22 @@ class ContextManager
      * Resolve the headless context for a user.
      * Useful for Telegram bots where there is no session but we must determine their estate.
      */
-    public function resolveSystemContextForUser(User $user): \App\Models\Estate
+    public function resolveSystemContextForUser(User $user): Estate
     {
         // First try the currently authenticated ContextManager context if present
         if ($this->currentContext) {
-            return \App\Models\Estate::findOrFail($this->currentContext->estateId);
+            return Estate::findOrFail($this->currentContext->estateId);
         }
 
         // Fetch their active assignments across all estates
-        $assignments = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+        $assignments = AdministrativeAssignment::where('user_id', $user->id)
             ->where('is_active', true)
             ->get();
 
         if ($assignments->count() === 1) {
             $estateId = $assignments->first()->estate_id;
             $this->setSystemContext($estateId, $user);
-            return \App\Models\Estate::findOrFail($estateId);
+            return Estate::findOrFail($estateId);
         }
 
         if ($assignments->count() > 1) {

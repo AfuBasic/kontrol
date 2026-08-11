@@ -428,17 +428,17 @@ class User extends Authenticatable implements MustVerifyEmail
     /**
      * Get the current active estate for the user.
      */
-    public function getCurrentEstate(): \App\Models\Estate
+    public function resolveHeadlessEstate(): Estate
     {
-        return app(\App\Auth\ContextManager::class)->resolveSystemContextForUser($this);
+        return app(ContextManager::class)->resolveSystemContextForUser($this);
     }
 
     /**
      * Get the ID of the current active estate.
      */
-    public function getCurrentEstateId(): int
+    public function resolveHeadlessEstateId(): int
     {
-        return $this->getCurrentEstate()->id;
+        return $this->resolveHeadlessEstate()->id;
     }
 
     /**
