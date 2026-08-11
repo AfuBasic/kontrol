@@ -60,8 +60,16 @@ class HandleInertiaRequests extends Middleware
                 // The ContextManager has already established the Spatie team ID and cleared caches
                 $estate = Estate::find($currentContext->estateId);
                 $user->loadMissing('profile');
-                $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
-                $roles = $user->getRoleNames()->toArray();
+                
+                $assignment = \App\Models\AdministrativeAssignment::with('role.permissions')->find($currentContext->assignmentId);
+                
+                if ($assignment && $assignment->role) {
+                    $permissions = $assignment->role->permissions->map(fn ($p) => ['name' => $p->name])->values()->all();
+                    $roles = [$assignment->role->name];
+                } else {
+                    $permissions = [];
+                    $roles = [];
+                }
             } else {
                 // If no active context, safely provide empty roles/permissions
                 $user->loadMissing('profile');
