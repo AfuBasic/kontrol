@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Partner\NotificationController;
 use App\Models\Coupon;
+use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\ZeusNotification;
 use App\Services\Platform\AndroidMigrationService;
@@ -51,12 +53,12 @@ class HandleInertiaRequests extends Middleware
         $partnerUnreadCount = 0;
 
         if ($user) {
-            $contextManager = app(\App\Auth\ContextManager::class);
+            $contextManager = app(ContextManager::class);
             $currentContext = $contextManager->current();
 
             if ($currentContext) {
                 // The ContextManager has already established the Spatie team ID and cleared caches
-                $estate = \App\Models\Estate::find($currentContext->estateId);
+                $estate = Estate::find($currentContext->estateId);
                 $user->loadMissing('profile');
                 $permissions = $user->getAllPermissions()->map(fn ($p) => ['name' => $p['name']])->values()->all();
                 $roles = $user->getRoleNames()->toArray();
