@@ -30,11 +30,10 @@ class MarkResidentAsPropertyOwnerAction
             $resident->assignRole($poRole);
 
             // Null out their property_owner_id since they are now a property owner themselves
-            if ($resident->profile) {
-                $resident->profile->update([
-                    'property_owner_id' => null,
-                ]);
-            }
+            DB::table('estate_users_membership')
+                ->where('user_id', $resident->id)
+                ->where('estate_id', $estate->id)
+                ->update(['property_owner_id' => null]);
 
             // Log the activity
             activity()
