@@ -27,7 +27,7 @@ class EstateBoardService
         }
         $isAdmin = $user && $user->hasRole('admin');
         $isPropertyOwner = $user && $user->hasRole('property_owner');
-        $propertyOwnerId = $user?->profile?->property_owner_id;
+        $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
 
         return EstateBoardPost::query()
@@ -119,7 +119,7 @@ class EstateBoardService
         }
         $isAdmin = $user && $user->hasRole('admin');
         $isPropertyOwner = $user && $user->hasRole('property_owner');
-        $propertyOwnerId = $user?->profile?->property_owner_id;
+        $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
 
         return EstateBoardPost::query()

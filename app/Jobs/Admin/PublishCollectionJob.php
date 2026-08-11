@@ -90,7 +90,7 @@ class PublishCollectionJob implements ShouldQueue
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
-                $userIds = User::whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $creator->id))
                     ->active()
                     ->acceptedInvitation()
                     ->pluck('users.id')
