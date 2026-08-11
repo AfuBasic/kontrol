@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\ActivateContext;
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\AdministrativeAssignment;
 use App\Models\EstateMembership;
@@ -22,7 +23,7 @@ class ContextController extends Controller
 
         // Partner portal members are outside the normal estate context logic.
         if ($user->user_type === 'affiliate') {
-            setPermissionsTeamId(0);
+            app(ContextManager::class)->setSystemContext(0);
 
             return redirect()->route('partner.dashboard');
         }

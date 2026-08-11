@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Webhooks;
 
 use App\Http\Controllers\Controller;
+use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\CollectionAssignment;
 use App\Models\Invoice;
@@ -43,7 +44,7 @@ class PaystackWebhookController extends Controller
                     if (str_starts_with($reference, 'COLL-')) {
                         $payment = Payment::where('reference', $reference)->first();
                         if ($payment && $payment->status !== 'success') {
-                            setPermissionsTeamId($payment->estate_id);
+                            app(ContextManager::class)->setSystemContext($payment->estate_id);
                             $assignmentIds = data_get($payment->raw_payload, 'assignment_ids');
 
                             $payment->update([

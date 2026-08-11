@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\Admin\ResidentCreated;
+use App\Auth\ContextManager;
 use App\Notifications\Admin\ResidentInvited;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,7 @@ class NotifyAdminsOfNewResident implements ShouldQueue
         }
 
         // Set team context for role check
-        setPermissionsTeamId($event->estate->id);
+        app(ContextManager::class)->setSystemContext($event->estate->id);
 
         // Get all admin users for this estate except the current user (the inviter)
         $admins = $event->estate->users()

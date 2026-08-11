@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateUserAction;
+use App\Auth\ContextManager;
 use App\Actions\Admin\DeleteUserAction;
 use App\Actions\Admin\ResetUserPasswordAction;
 use App\Actions\Admin\UpdateUserAction;
@@ -96,7 +97,7 @@ class UserController extends Controller
         $roles = $this->roleService->getManageableRoles();
 
         // Load roles for the user in the context of this estate
-        setPermissionsTeamId($estateId);
+        app(ContextManager::class)->setSystemContext($estateId);
         $currentRole = $user->roles->first()?->name;
 
         return Inertia::render('Admin/Users/Edit', [

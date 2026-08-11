@@ -3,6 +3,7 @@
 namespace App\Actions\Admin;
 
 use App\Events\Admin\SecurityCreated;
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -34,7 +35,7 @@ class CreateSecurityAction
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $user->assignRole($role);
 
             // 4. Create user profile with additional data

@@ -3,6 +3,7 @@
 namespace App\Actions\Admin;
 
 use App\Models\Estate;
+use App\Auth\ContextManager;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +27,7 @@ class MarkResidentAsPropertyOwnerAction
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $resident->assignRole($poRole);
 
             // Null out their property_owner_id since they are now a property owner themselves

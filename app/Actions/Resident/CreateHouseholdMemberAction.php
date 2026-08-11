@@ -3,6 +3,7 @@
 namespace App\Actions\Resident;
 
 use App\Events\Resident\HouseholdMemberCreated;
+use App\Auth\ContextManager;
 use App\Models\Estate;
 use App\Models\HouseholdMember;
 use App\Models\User;
@@ -33,7 +34,7 @@ class CreateHouseholdMemberAction
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $user->assignRole($role);
 
             $primaryProfile = $primaryResident->profile;

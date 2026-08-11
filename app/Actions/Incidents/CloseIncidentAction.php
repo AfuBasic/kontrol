@@ -3,6 +3,7 @@
 namespace App\Actions\Incidents;
 
 use App\Enums\IncidentStatus;
+use App\Auth\ContextManager;
 use App\Models\Incident;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentStatusUpdatedNotification;
@@ -40,7 +41,7 @@ class CloseIncidentAction
                 ->active()
                 ->get()
                 ->filter(function ($u) use ($incident) {
-                    setPermissionsTeamId($incident->estate_id);
+                    app(ContextManager::class)->setSystemContext($incident->estate_id);
 
                     return $u->hasRole('admin');
                 });

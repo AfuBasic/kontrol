@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Models\AdministrativeAssignment;
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
@@ -53,7 +54,7 @@ class CollectionPaymentController extends Controller
 
     public function initiate(CollectionAssignment $assignment, PaystackService $paystackService, Request $request): JsonResponse
     {
-        setPermissionsTeamId($assignment->estate_id);
+        app(ContextManager::class)->setSystemContext($assignment->estate_id);
         $assignment->loadMissing(['user', 'collection.creator.profile']);
         $user = $assignment->user;
 
@@ -251,7 +252,7 @@ class CollectionPaymentController extends Controller
                 return ['error' => 'Payment not found', 'status' => 404];
             }
 
-            setPermissionsTeamId($payment->estate_id);
+            app(ContextManager::class)->setSystemContext($payment->estate_id);
 
             // 2. If already success, just return success
             if ($payment->status === 'success') {
@@ -369,7 +370,7 @@ class CollectionPaymentController extends Controller
     public function status(string $reference, PaystackService $paystackService): Response
     {
         $payment = Payment::where('reference', $reference)->firstOrFail();
-        setPermissionsTeamId($payment->estate_id);
+        app(ContextManager::class)->setSystemContext($payment->estate_id);
 
         if ($payment->status !== 'success') {
             try {
@@ -471,7 +472,7 @@ class CollectionPaymentController extends Controller
         abort_if($assignments->isEmpty(), 404, 'No outstanding bills found.');
 
         $first = $assignments->first();
-        setPermissionsTeamId($first->estate_id);
+        app(ContextManager::class)->setSystemContext($first->estate_id);
         $firstSubaccount = $this->resolveSubaccount($first);
 
         if (empty($firstSubaccount)) {
@@ -530,7 +531,7 @@ class CollectionPaymentController extends Controller
         }
 
         $first = $assignments->first();
-        setPermissionsTeamId($first->estate_id);
+        app(ContextManager::class)->setSystemContext($first->estate_id);
         $user = $first->user;
         $estateId = $first->estate_id;
         $firstSubaccount = $this->resolveSubaccount($first);

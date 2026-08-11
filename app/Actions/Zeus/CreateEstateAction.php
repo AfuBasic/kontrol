@@ -3,6 +3,7 @@
 namespace App\Actions\Zeus;
 
 use App\Enums\AssignmentScope;
+use App\Auth\ContextManager;
 use App\Enums\CommissionStatus;
 use App\Enums\PartnerStatus;
 use App\Events\Zeus\EstateCreated;
@@ -53,7 +54,7 @@ class CreateEstateAction
             $estate->users()->attach($user->id, ['status' => 'pending']);
 
             // 4. Assign admin role scoped to this estate
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $adminRole = Role::firstOrCreate(['name' => 'admin', 'estate_id' => $estate->id, 'guard_name' => 'web']);
 
             // Sync all permissions to the new estate-specific admin role

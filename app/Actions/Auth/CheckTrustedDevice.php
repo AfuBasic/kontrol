@@ -3,6 +3,7 @@
 namespace App\Actions\Auth;
 
 use App\Models\User;
+use App\Auth\ContextManager;
 use Illuminate\Http\Request;
 
 class CheckTrustedDevice
@@ -16,7 +17,7 @@ class CheckTrustedDevice
         // Set team context so Spatie Permission can resolve estate-scoped role assignments
         $estate = $user->estates()->wherePivot('status', 'accepted')->first();
         if ($estate) {
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
         }
 
         if (! $user->hasRole('resident') && ! $user->hasRole('household_member')) {

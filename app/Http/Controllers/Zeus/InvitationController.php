@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Zeus;
 
 use App\Actions\Auth\ActivateContext;
+use App\Auth\ContextManager;
 use App\Actions\Invitation\AcceptInvitationAction;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
@@ -78,7 +79,7 @@ class InvitationController extends Controller
         ForceLogout::dispatchSafely($user->id);
 
         if ($user->user_type === 'affiliate') {
-            setPermissionsTeamId(0);
+            app(ContextManager::class)->setSystemContext(0);
             return redirect()->route('partner.dashboard');
         }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resident\PropertyOwner;
 
 use App\Actions\Admin\ResendResidentInvitationAction;
+use App\Auth\ContextManager;
 use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
@@ -335,7 +336,7 @@ class ResidentController extends Controller
                 ->whereNull('estate_id')
                 ->firstOrFail();
 
-            setPermissionsTeamId($estate->id);
+            app(ContextManager::class)->setSystemContext($estate->id);
             $resident->assignRole($role);
 
             UserProfile::create([
