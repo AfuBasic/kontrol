@@ -13,19 +13,19 @@ class ContextManager
 {
     private ?ActiveContext $currentContext = null;
 
-    public function resolve(Request $request): ?ActiveContext
+    public function resolve(?Request $request = null): ?ActiveContext
     {
         $this->clear();
 
         /** @var User $user */
-        $user = $request->user();
+        $user = $request ? $request->user() : Auth::user();
 
         if (! $user) {
 
             return null;
         }
 
-        $assignmentId = $request->session()->get('active_context_assignment_id');
+        $assignmentId = $request ? $request->session()->get('active_context_assignment_id') : session('active_context_assignment_id');
 
         if (! $assignmentId) {
 
@@ -37,8 +37,11 @@ class ContextManager
             ->find($assignmentId);
 
         if (! $this->isValid($assignment, $user)) {
-
-            $request->session()->forget('active_context_assignment_id');
+            if ($request) {
+                $request->session()->forget('active_context_assignment_id');
+            } else {
+                session()->forget('active_context_assignment_id');
+            }
 
             return null;
         }
@@ -66,11 +69,17 @@ class ContextManager
         /** @var User $user */
         $user = Auth::user();
 
-        if (! $user || ! $this->isValid($assignment, $user)) {
-            throw new \Exception('Invalid context or unauthorized.');
+        if (! $user) {
+            throw new \Exception('User is null');
+        }
+        
+        if (! $this->isValid($assignment, $user)) {
+            throw new \Exception('isValid returned false');
         }
 
         session(['active_context_assignment_id' => $assignment->id]);
+        
+        $this->resolve();
     }
 
     public function current(): ?ActiveContext
@@ -91,43 +100,40 @@ class ContextManager
     private function isValid(?AdministrativeAssignment $assignment, User $user): bool
     {
         if (! $assignment) {
-            return false;
+            throw new \Exception('failed assignment null');
         }
 
         // 3. AdministrativeAssignment exists (checked above)
         // 4. AdministrativeAssignment is active.
         if (! $assignment->is_active) {
-            return false;
+            throw new \Exception('failed active');
         }
 
         // 5. Assignment.user_id === authenticated user.id.
         if ($assignment->user_id !== $user->id) {
-            return false;
+            throw new \Exception('failed user id');
         }
 
         // 6. Assignment.estate_id === selected estate.id. (Implicit in Eloquent model if we check $assignment->estate)
         if (! $assignment->estate) {
-
-            return false;
+            throw new \Exception('failed estate');
         }
 
         // 7. Assignment.role_id references a valid role.
         if (! $assignment->role) {
-
-            return false;
+            throw new \Exception('failed role');
         }
 
         // 8. Role is estate-scoped (or global dictionary role).
         // 9. Role.estate_id === assignment.estate_id (if not a global role).
         if ($assignment->role->estate_id !== null && $assignment->role->estate_id !== $assignment->estate_id) {
-
-            return false;
+            throw new \Exception('failed role estate');
         }
 
         // 10. If assignment has zone_id: zone belongs to assignment.estate_id.
         if ($assignment->zone_id && $assignment->zone) {
             if ($assignment->zone->estate_id !== $assignment->estate_id) {
-                return false;
+                throw new \Exception('failed zone');
             }
         }
 

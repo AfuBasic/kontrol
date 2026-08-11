@@ -30,6 +30,10 @@ class EnsureIsAdmin
             return redirect()->route('security.dashboard');
         }
 
+        if (! $user->contextHasRole('admin')) {
+            abort(403, 'Unauthorized access.');
+        }
+
         return $next($request);
     }
 }
