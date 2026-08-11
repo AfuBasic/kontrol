@@ -33,7 +33,9 @@ class SosIntrusionNotification extends Notification implements ShouldBroadcast, 
     {
         $channels = ['database', 'broadcast'];
 
-        if ($notifiable->hasRole('admin')) {
+        $roleName = $notifiable->getRoleNameForEstate($this->sosEvent->estate_id);
+
+        if ($roleName === 'admin') {
             $channels[] = 'mail';
         }
 
@@ -72,7 +74,7 @@ class SosIntrusionNotification extends Notification implements ShouldBroadcast, 
             ->badge('/assets/images/app-icon.png')
             ->tag('sos-alert-'.$this->sosEvent->id)
             ->data([
-                'url' => $notifiable->hasRole('admin') ? '/admin' : '/security',
+                'url' => $notifiable->getRoleNameForEstate($this->sosEvent->estate_id) === 'admin' ? '/admin' : '/security',
                 'sos_event_id' => $this->sosEvent->id,
             ])
             ->options([
@@ -88,7 +90,7 @@ class SosIntrusionNotification extends Notification implements ShouldBroadcast, 
     {
         $title = '🚨 SOS ALERT';
         $body = "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}";
-        $url = $notifiable->hasRole('admin') ? '/admin' : '/security';
+        $url = $notifiable->getRoleNameForEstate($this->sosEvent->estate_id) === 'admin' ? '/admin' : '/security';
 
         return FcmMessage::create()
             ->notification(FcmNotification::create()
@@ -185,7 +187,7 @@ class SosIntrusionNotification extends Notification implements ShouldBroadcast, 
             'message' => "SOS triggered by {$this->sosEvent->user->name} in {$this->sosEvent->estate->name}",
             'sos_event_id' => $this->sosEvent->id,
             'type' => 'sos_intrusion',
-            'action_url' => $notifiable->hasRole('admin') ? '/admin' : '/security',
+            'action_url' => $notifiable->getRoleNameForEstate($this->sosEvent->estate_id) === 'admin' ? '/admin' : '/security',
         ];
     }
 }
