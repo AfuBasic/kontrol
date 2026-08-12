@@ -130,7 +130,7 @@ class CollectionService
             ->where('status', '!=', 'paid')
             ->where(function ($q) use ($maxAttempts) {
                 $q->whereNull('reminder_count')
-                  ->orWhere('reminder_count', '<', $maxAttempts);
+                    ->orWhere('reminder_count', '<', $maxAttempts);
             })
             ->with('user')
             ->get();
