@@ -30,7 +30,7 @@ export default function ContextPicker({ availableContexts }: Props) {
         e.preventDefault();
         
         if (selectedContext) {
-            router.post(switchMethod().url(), {
+            router.post(switchMethod.url(), {
                 assignment_id: selectedContext
             });
         }
