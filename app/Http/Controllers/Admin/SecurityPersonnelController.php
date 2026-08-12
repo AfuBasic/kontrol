@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Admin\SecurityService;
 use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -25,7 +26,8 @@ class SecurityPersonnelController extends Controller
     public function __construct(
         protected SecurityService $securityService,
         protected UserService $userService,
-        protected EstateContextService $estateContext
+        protected EstateContextService $estateContext,
+        protected ZoneAudienceResolver $zoneAudience,
     ) {}
 
     /**
@@ -82,7 +84,9 @@ class SecurityPersonnelController extends Controller
     {
         $this->authorize('security.create');
 
-        return Inertia::render('Admin/Security/Create');
+        return Inertia::render('Admin/Security/Create', [
+            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+        ]);
     }
 
     /**

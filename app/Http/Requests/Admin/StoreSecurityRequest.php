@@ -63,6 +63,11 @@ class StoreSecurityRequest extends FormRequest
             ],
             'phone' => ['nullable', 'string', 'max:20'],
             'badge_number' => ['nullable', 'string', 'max:50'],
+            'zone_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', $estateId),
+            ],
         ];
     }
 

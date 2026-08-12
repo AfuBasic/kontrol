@@ -3,12 +3,18 @@ import { motion } from 'framer-motion';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
-export default function CreateSecurity() {
+type ZoneOption = {
+    id: number;
+    name: string;
+};
+
+export default function CreateSecurity({ zones = [] }: { zones?: ZoneOption[] }) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
         phone: '',
         badge_number: '',
+        zone_id: '',
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -89,6 +95,30 @@ export default function CreateSecurity() {
                             />
                             {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                         </div>
+
+                        {/* Assigned Zone */}
+                        {zones.length > 0 && (
+                            <div>
+                                <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700">
+                                    Assigned Zone <span className="text-gray-400">(optional)</span>
+                                </label>
+                                <select
+                                    id="zone_id"
+                                    value={data.zone_id}
+                                    onChange={(e) => setData('zone_id', e.target.value)}
+                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                >
+                                    <option value="">Entire estate</option>
+                                    {zones.map((zone) => (
+                                        <option key={zone.id} value={zone.id}>
+                                            {zone.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <p className="mt-1 text-xs text-gray-500">Restrict this staff member to logs, visitors, and incidents in one zone.</p>
+                                {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
+                            </div>
+                        )}
 
                         {/* Badge Number */}
                         <div>

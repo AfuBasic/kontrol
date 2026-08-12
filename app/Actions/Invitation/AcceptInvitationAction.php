@@ -67,33 +67,35 @@ class AcceptInvitationAction
                     ]);
             }
 
-            // 2. Assign Spatie Role (if any)
-            if ($invitation->role_id) {
-                // Assign role via AdministrativeAssignment if not already exists
-                $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
-                $role = Role::find($invitation->role_id);
-                $estate = Estate::find($estateId);
-                $zone = $invitation->zone_id ? Zone::find($invitation->zone_id) : null;
-                $scopeType = AssignmentScope::tryFrom($invitation->scope_type) ?? AssignmentScope::Estate;
-                $zoneIdCoalesced = $zone ? $zone->id : 0;
+            // 2. Assign Spatie Role / administrative assignment
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+            $estate = Estate::find($estateId);
+            $zone = $invitation->zone_id ? Zone::find($invitation->zone_id) : null;
+            $scopeType = AssignmentScope::tryFrom($invitation->scope_type) ?? AssignmentScope::Estate;
+            $zoneIdCoalesced = $zone ? $zone->id : 0;
 
-                if ($role && $estate) {
-                    $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
-                        ->where('estate_id', $estate->id)
-                        ->where('role_id', $role->id)
-                        ->where('zone_id_coalesced', $zoneIdCoalesced)
-                        ->exists();
+            $role = $invitation->role_id
+                ? Role::find($invitation->role_id)
+                : ($invitation->relationship_type === 'security'
+                    ? Role::where('name', 'security')->where('guard_name', 'web')->whereNull('estate_id')->first()
+                    : null);
 
-                    if (! $assignmentExists) {
-                        $assignmentAction->execute(
-                            user: $user,
-                            estate: $estate,
-                            role: $role,
-                            scopeType: $scopeType,
-                            zone: $zone,
-                            isPrimary: true
-                        );
-                    }
+            if ($role && $estate) {
+                $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->where('role_id', $role->id)
+                    ->where('zone_id_coalesced', $zoneIdCoalesced)
+                    ->exists();
+
+                if (! $assignmentExists) {
+                    $assignmentAction->execute(
+                        user: $user,
+                        estate: $estate,
+                        role: $role,
+                        scopeType: $scopeType,
+                        zone: $zone,
+                        isPrimary: true
+                    );
                 }
             }
 

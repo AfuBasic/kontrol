@@ -2,7 +2,6 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
@@ -11,6 +10,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\Zone;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -18,7 +18,7 @@ use Spatie\Permission\Models\Role;
 class CreateSecurityAction
 {
     /**
-     * @param  array{name: string, email: string, phone?: string|null, badge_number?: string|null}  $data
+     * @param  array{name: string, email: string, phone?: string|null, badge_number?: string|null, zone_id?: int|null}  $data
      */
     public function execute(array $data, Estate $estate): User
     {
@@ -38,16 +38,23 @@ class CreateSecurityAction
                 ->where('user_id', $user->id)
                 ->first();
 
+            $zone = ! empty($data['zone_id'])
+                ? Zone::query()->where('id', $data['zone_id'])->where('estate_id', $estate->id)->first()
+                : null;
+            $scopeType = $zone ? AssignmentScope::Zone : AssignmentScope::Estate;
+
             if (! $membership) {
                 $estate->users()->attach($user->id, [
                     'status' => 'pending',
                     'relationship_type' => 'security',
+                    'zone_id' => $zone?->id,
                 ]);
             } else {
                 DB::table('estate_users_membership')
                     ->where('id', $membership->id)
                     ->update([
                         'relationship_type' => 'security',
+                        'zone_id' => $zone?->id,
                     ]);
             }
 
@@ -58,22 +65,28 @@ class CreateSecurityAction
                 ->firstOrFail();
 
             app(ContextManager::class)->setSystemContext($estate->id);
-            
+
             // Assign the role via the AdministrativeAssignment system to create a valid context
             $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+            $membershipIsAccepted = DB::table('estate_users_membership')
+                ->where('estate_id', $estate->id)
+                ->where('user_id', $user->id)
+                ->where('status', 'accepted')
+                ->exists();
+
             $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
                 ->where('estate_id', $estate->id)
                 ->where('role_id', $role->id)
-                ->where('zone_id_coalesced', 0)
+                ->where('zone_id_coalesced', $zone?->id ?? 0)
                 ->exists();
 
-            if (! $assignmentExists) {
+            if ($membershipIsAccepted && ! $assignmentExists) {
                 $assignmentAction->execute(
                     user: $user,
                     estate: $estate,
                     role: $role,
-                    scopeType: AssignmentScope::Estate,
-                    zone: null,
+                    scopeType: $scopeType,
+                    zone: $zone,
                     isPrimary: false
                 );
             }
@@ -94,14 +107,14 @@ class CreateSecurityAction
                 estate: $estate,
                 relationshipType: 'security',
                 role: null, // Security personnel don't get an explicit Spatie role assignment in Invitations, they are handled generically
-                zoneId: null,
-                scopeType: AssignmentScope::Estate->value,
+                zoneId: $zone?->id,
+                scopeType: $scopeType->value,
                 createdBy: Auth::user()
             );
 
             // 6. Dispatch event for side effects (invitation email)
             if ($invitation) {
-                event(new SecurityCreated($invitation, $estate, false));
+                event(new SecurityCreated($user, $estate, false));
             }
 
             activity()
