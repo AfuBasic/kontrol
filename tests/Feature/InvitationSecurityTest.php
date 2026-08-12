@@ -5,6 +5,7 @@ use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Models\Estate;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -80,7 +81,7 @@ test('invited property owner has pending membership status and cannot log in', f
     $response->assertSessionHasErrors('email');
 });
 
-test('bulk invited residents have pending membership status', function () {
+test('bulk invited residents have pending invitation status', function () {
     $estate = Estate::factory()->create();
 
     $action = app(BulkInviteResidentsAction::class);
@@ -93,20 +94,13 @@ test('bulk invited residents have pending membership status', function () {
     $action->execute($emails, $estate);
 
     foreach ($emails as $email) {
-        $user = User::where('email', $email)->first();
-        expect($user)->not->toBeNull();
-
-        $status = DB::table('estate_users_membership')
-            ->where('user_id', $user->id)
-            ->where('estate_id', $estate->id)
-            ->value('status');
-
-        expect($status)->toBe('pending');
-        expect($user->email_verified_at)->toBeNull();
+        $invitation = Invitation::where('email', $email)->where('estate_id', $estate->id)->first();
+        expect($invitation)->not->toBeNull();
+        expect($invitation->status)->toBe('pending');
     }
 });
 
-test('bulk invited property owners have pending membership status', function () {
+test('bulk invited property owners have pending invitation status', function () {
     $estate = Estate::factory()->create();
 
     $action = app(BulkInvitePropertyOwnersAction::class);
@@ -119,15 +113,8 @@ test('bulk invited property owners have pending membership status', function () 
     $action->execute($emails, $estate);
 
     foreach ($emails as $email) {
-        $user = User::where('email', $email)->first();
-        expect($user)->not->toBeNull();
-
-        $status = DB::table('estate_users_membership')
-            ->where('user_id', $user->id)
-            ->where('estate_id', $estate->id)
-            ->value('status');
-
-        expect($status)->toBe('pending');
-        expect($user->email_verified_at)->toBeNull();
+        $invitation = Invitation::where('email', $email)->where('estate_id', $estate->id)->first();
+        expect($invitation)->not->toBeNull();
+        expect($invitation->status)->toBe('pending');
     }
 });
