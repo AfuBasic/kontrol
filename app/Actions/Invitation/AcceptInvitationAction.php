@@ -4,12 +4,14 @@ namespace App\Actions\Invitation;
 
 use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Enums\AssignmentScope;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\Zone;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -22,12 +24,12 @@ class AcceptInvitationAction
     {
         // 1. Validation: Invitation must be pending
         if (! $invitation->isPending()) {
-            throw new \Exception('This invitation is not valid or has expired.');
+            throw new Exception('This invitation is not valid or has expired.');
         }
 
         // 2. Validation: User email must match invitation email
         if (strtolower($user->email) !== strtolower($invitation->email)) {
-            throw new \Exception('This invitation belongs to a different email address.');
+            throw new Exception('This invitation belongs to a different email address.');
         }
 
         DB::transaction(function () use ($invitation, $user) {
@@ -76,7 +78,7 @@ class AcceptInvitationAction
                 $zoneIdCoalesced = $zone ? $zone->id : 0;
 
                 if ($role && $estate) {
-                    $assignmentExists = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+                    $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
                         ->where('estate_id', $estate->id)
                         ->where('role_id', $role->id)
                         ->where('zone_id_coalesced', $zoneIdCoalesced)

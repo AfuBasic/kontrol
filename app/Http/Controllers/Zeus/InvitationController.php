@@ -10,9 +10,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,7 +24,7 @@ class InvitationController extends Controller
     {
         $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
 
-        if (! $invitation || ! $invitation->isPending()) {
+        if (!$invitation || !$invitation->isPending()) {
             return redirect()->route('invitation.invalid');
         }
 
@@ -35,7 +37,7 @@ class InvitationController extends Controller
             $request->session()->regenerateToken();
         }
 
-        if (! $user) {
+        if (!$user) {
             $user = User::firstOrCreate(
                 ['email' => strtolower($invitation->email)],
                 [
@@ -61,12 +63,12 @@ class InvitationController extends Controller
     {
         $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
 
-        if (! $invitation || ! $invitation->isPending()) {
+        if (!$invitation || !$invitation->isPending()) {
             return redirect()->route('invitation.invalid');
         }
 
         $user = Auth::user();
-        if (! $user) {
+        if (!$user) {
             $existingUser = User::where('email', strtolower($invitation->email))->first();
             if ($existingUser) {
                 Auth::login($existingUser);
@@ -74,11 +76,16 @@ class InvitationController extends Controller
             }
         }
 
-        if (! $user || strtolower($user->email) !== strtolower($invitation->email)) {
+        if (!$user || strtolower($user->email) !== strtolower($invitation->email)) {
             return redirect()->route('invitation.invalid');
         }
 
-        $action->execute($invitation, $user);
+        try {
+            $action->execute($invitation, $user);
+        } catch (Exception $e) {
+            Log::error('Zeus AcceptInvitationAction failed: ' . $e->getMessage(), ['exception' => $e]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         $request->session()->regenerate();
         ForceLogout::dispatchSafely($user->id);

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Auth;
 
 use App\Actions\Auth\ActivateContext;
@@ -8,9 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,7 +24,7 @@ class InvitationAcceptanceController extends Controller
     {
         $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->with(['estate', 'zone', 'role'])->where('token', $token)->first();
 
-        if (! $invitation) {
+        if (!$invitation) {
             abort(404, 'Invitation link is invalid or does not exist.');
         }
 
@@ -76,7 +77,7 @@ class InvitationAcceptanceController extends Controller
     {
         $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->firstOrFail();
 
-        if (! $invitation->isPending()) {
+        if (!$invitation->isPending()) {
             return redirect()->route('login')->with('error', 'This invitation is no longer valid.');
         }
 
@@ -89,7 +90,7 @@ class InvitationAcceptanceController extends Controller
             ]);
         }
 
-        if (! $user) {
+        if (!$user) {
             $user = User::firstOrCreate(
                 ['email' => $email],
                 [
@@ -101,10 +102,10 @@ class InvitationAcceptanceController extends Controller
             Auth::login($user);
         }
 
-        // Execute V3 AcceptInvitationAction
         try {
             $acceptAction->execute($invitation, $user);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
+            Log::error('AcceptInvitationAction failed: ' . $e->getMessage(), ['exception' => $e]);
             return redirect()->back()->with('error', $e->getMessage());
         }
 
