@@ -22,7 +22,7 @@ return new class extends Migration
 
         // Backfill property_owner_id from user_profiles to estate_users_membership
         if (DB::getDriverName() === 'sqlite') {
-            DB::statement("
+            DB::statement('
                 UPDATE estate_users_membership 
                 SET property_owner_id = (
                     SELECT property_owner_id FROM user_profiles 
@@ -34,14 +34,14 @@ return new class extends Migration
                     WHERE user_profiles.user_id = estate_users_membership.user_id 
                     AND property_owner_id IS NOT NULL
                 )
-            ");
+            ');
         } else {
-            DB::statement("
+            DB::statement('
                 UPDATE estate_users_membership eum
                 JOIN user_profiles up ON eum.user_id = up.user_id
                 SET eum.property_owner_id = up.property_owner_id
                 WHERE up.property_owner_id IS NOT NULL
-            ");
+            ');
         }
     }
 

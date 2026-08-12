@@ -1,8 +1,8 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 return new class extends Migration
 {
@@ -25,7 +25,7 @@ return new class extends Migration
             $propertyOwnerId = $profile->property_owner_id;
 
             // Find the estates that both the resident and the property owner belong to
-            // A property owner belongs to an estate if they have an active/accepted membership 
+            // A property owner belongs to an estate if they have an active/accepted membership
             // OR if they have a role for that estate.
             // In Kontrol, a property owner typically has a role of 'property_owner' for the estate,
             // or an estate membership. Let's find common estates via `estate_users_membership`.
@@ -39,10 +39,10 @@ return new class extends Migration
             if (empty($sharedEstates)) {
                 // If they don't share any estate in memberships, maybe the property owner only has a role?
                 $sharedEstates = DB::table('estate_users_membership as resident_eum')
-                    ->join('model_has_roles', function($join) use ($propertyOwnerId) {
+                    ->join('model_has_roles', function ($join) use ($propertyOwnerId) {
                         $join->on('resident_eum.estate_id', '=', 'model_has_roles.estate_id')
-                             ->where('model_has_roles.model_id', $propertyOwnerId)
-                             ->where('model_has_roles.model_type', \App\Models\User::class);
+                            ->where('model_has_roles.model_id', $propertyOwnerId)
+                            ->where('model_has_roles.model_type', User::class);
                     })
                     ->where('resident_eum.user_id', $residentId)
                     ->pluck('resident_eum.estate_id')
@@ -55,11 +55,11 @@ return new class extends Migration
                     ->where('user_id', $residentId)
                     ->where('estate_id', $sharedEstates[0])
                     ->update(['property_owner_id' => $propertyOwnerId]);
-            } else if (count($sharedEstates) > 1) {
-                // Ambiguous: they share multiple estates. We can't automatically know which one the 
+            } elseif (count($sharedEstates) > 1) {
+                // Ambiguous: they share multiple estates. We can't automatically know which one the
                 // legacy global property_owner_id was intended for.
-                \Illuminate\Support\Facades\Log::warning(
-                    "Ambiguous property_owner backfill for user {$residentId} with owner {$propertyOwnerId}. Shared estates: " . implode(',', $sharedEstates)
+                Log::warning(
+                    "Ambiguous property_owner backfill for user {$residentId} with owner {$propertyOwnerId}. Shared estates: ".implode(',', $sharedEstates)
                 );
             }
         }
@@ -75,11 +75,11 @@ return new class extends Migration
         // matches what was there before this correction.
         DB::table('estate_users_membership')->update(['property_owner_id' => null]);
 
-        DB::statement("
+        DB::statement('
             UPDATE estate_users_membership eum
             JOIN user_profiles up ON eum.user_id = up.user_id
             SET eum.property_owner_id = up.property_owner_id
             WHERE up.property_owner_id IS NOT NULL
-        ");
+        ');
     }
 };
