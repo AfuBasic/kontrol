@@ -2,21 +2,19 @@
 
 namespace Tests\Feature\Architecture;
 
+use App\Auth\ActiveContext;
 use App\Auth\ContextManager;
-use App\Models\AccessLog;
+use App\Enums\IncidentCategory;
+use App\Enums\IncidentPriority;
+use App\Enums\IncidentSource;
+use App\Enums\IncidentStatus;
 use App\Models\Estate;
 use App\Models\Incident;
-use App\Models\Property;
 use App\Models\Resident;
-use App\Models\SosEvent;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
-use App\Enums\IncidentSource;
-use App\Enums\IncidentCategory;
-use App\Enums\IncidentPriority;
-use App\Enums\IncidentStatus;
 use Tests\TestCase;
 
 class ZoneIsolationTest extends TestCase
@@ -24,14 +22,19 @@ class ZoneIsolationTest extends TestCase
     use RefreshDatabase;
 
     protected Estate $estateA;
+
     protected Estate $estateB;
+
     protected Zone $zoneA1;
+
     protected Zone $zoneA2;
+
     protected Zone $zoneB1;
-    
+
     protected User $securityZoneA1;
+
     protected User $adminEstateA;
-    
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -49,7 +52,7 @@ class ZoneIsolationTest extends TestCase
             'zone_id' => $this->zoneA1->id,
             'relationship_type' => 'security',
         ]);
-        
+
         $this->adminEstateA = User::factory()->create();
         $this->adminEstateA->estates()->attach($this->estateA, [
             'status' => 'accepted',
@@ -58,8 +61,6 @@ class ZoneIsolationTest extends TestCase
 
         Role::firstOrCreate(['name' => 'resident']);
 
-
-        
         // Ensure residents
         $resA1 = User::factory()->create();
         $resA1->estates()->attach($this->estateA, [
@@ -77,7 +78,7 @@ class ZoneIsolationTest extends TestCase
             'relationship_type' => 'resident',
         ]);
         $resA2->assignRole('resident');
-        
+
         $resB1 = User::factory()->create();
         $resB1->estates()->attach($this->estateB, [
             'status' => 'accepted',
@@ -128,7 +129,7 @@ class ZoneIsolationTest extends TestCase
 
     public function test_zone_a1_user_can_only_see_zone_a1_records()
     {
-        $context = new \App\Auth\ActiveContext(
+        $context = new ActiveContext(
             $this->securityZoneA1->id,
             $this->estateA->id,
             1,
@@ -145,7 +146,6 @@ class ZoneIsolationTest extends TestCase
         $this->assertCount(1, $incidents);
         $this->assertEquals($this->zoneA1->id, $incidents->first()->zone_id);
 
-
         $residents = Resident::all();
         $this->assertCount(1, $residents);
 
@@ -153,7 +153,7 @@ class ZoneIsolationTest extends TestCase
 
     public function test_estate_admin_sees_all_estate_zones_but_not_other_estates()
     {
-        $context = new \App\Auth\ActiveContext(
+        $context = new ActiveContext(
             $this->adminEstateA->id,
             $this->estateA->id,
             1,
@@ -194,7 +194,7 @@ class ZoneIsolationTest extends TestCase
 
     public function test_direct_id_access_fails_closed_for_out_of_zone_records()
     {
-        $context = new \App\Auth\ActiveContext(
+        $context = new ActiveContext(
             $this->securityZoneA1->id,
             $this->estateA->id,
             1,
@@ -208,7 +208,7 @@ class ZoneIsolationTest extends TestCase
         setPermissionsTeamId($context->estateId);
 
         $outOfZoneIncident = Incident::withoutZoneIsolation()->where('zone_id', $this->zoneA2->id)->first();
-        
+
         $this->assertNull(Incident::find($outOfZoneIncident->id));
     }
 }
