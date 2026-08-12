@@ -580,7 +580,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <ContextSwitcher />
+                                    <ContextSwitcher variant="light" />
                                     <Link
                                         href="/resident/activity?tab=notifications"
                                         className="relative rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-50 active:scale-95"
