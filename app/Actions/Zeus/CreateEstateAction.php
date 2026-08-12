@@ -10,14 +10,17 @@ use App\Events\Zeus\EstateCreated;
 use App\Models\AdministrativeAssignment;
 use App\Models\CommissionPlan;
 use App\Models\Estate;
+use App\Models\Invitation;
 use App\Models\Partner;
 use App\Models\Plan;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use App\Services\Billing\InitializeTrialService;
 use App\Services\Commission\PartnerAttributionService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class CreateEstateAction
@@ -72,6 +75,23 @@ class CreateEstateAction
                 'is_active' => true,
                 'is_primary' => true,
             ]);
+
+            // Create pending invitation record for the primary admin user
+            Invitation::withoutGlobalScope(ZoneScope::class)->updateOrCreate(
+                ['estate_id' => $estate->id, 'email' => strtolower(trim($data['email']))],
+                [
+                    'relationship_type' => null,
+                    'role_id' => $adminRole->id,
+                    'scope_type' => AssignmentScope::Estate->value,
+                    'zone_id' => null,
+                    'token' => Str::random(64),
+                    'status' => 'pending',
+                    'expires_at' => now()->addDays(7),
+                    'accepted_at' => null,
+                    'cancelled_at' => null,
+                    'created_by' => auth()->id(),
+                ]
+            );
 
             // 5. Create the subscription
             if ($plan) {
