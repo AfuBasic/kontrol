@@ -13,7 +13,11 @@ interface ContextData {
     zone_name: string | null;
 }
 
-export default function ContextSwitcher() {
+interface Props {
+    variant?: 'light' | 'dark';
+}
+
+export default function ContextSwitcher({ variant = 'dark' }: Props) {
     const { auth } = usePage().props as any;
     const currentContext = auth.context as ContextData | null;
     const availableContexts = (auth.available_contexts || []) as ContextData[];
@@ -42,20 +46,37 @@ export default function ContextSwitcher() {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors border border-transparent hover:border-gray-700"
+                className={clsx(
+                    "flex items-center gap-2 md:gap-3 px-2 md:px-3 py-1.5 md:py-2 rounded-xl transition-colors border",
+                    variant === 'dark' 
+                        ? "hover:bg-gray-800 border-transparent hover:border-gray-700" 
+                        : "hover:bg-slate-100 border-slate-200 bg-white shadow-sm"
+                )}
             >
-                <div className="flex-shrink-0 bg-gray-800 p-1.5 rounded-md">
+                <div className={clsx(
+                    "flex-shrink-0 p-1.5 rounded-lg",
+                    variant === 'dark' ? "bg-gray-800" : "bg-slate-100"
+                )}>
                     {getRoleIcon(currentContext.role_name)}
                 </div>
                 <div className="text-left hidden md:block">
-                    <p className="text-sm font-medium text-white line-clamp-1">
+                    <p className={clsx(
+                        "text-sm font-bold line-clamp-1",
+                        variant === 'dark' ? "text-white" : "text-slate-900"
+                    )}>
                         {currentContext.estate_name}
                     </p>
-                    <p className="text-xs text-gray-400 capitalize">
+                    <p className={clsx(
+                        "text-xs font-semibold capitalize",
+                        variant === 'dark' ? "text-gray-400" : "text-slate-500"
+                    )}>
                         {currentContext.role_name.replace('_', ' ')}
                     </p>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-500 hidden md:block" />
+                <ChevronDown className={clsx(
+                    "w-4 h-4 hidden md:block",
+                    variant === 'dark' ? "text-gray-500" : "text-slate-400"
+                )} />
             </button>
 
             {isOpen && (
