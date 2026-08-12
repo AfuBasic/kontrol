@@ -8,6 +8,7 @@ use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendResidentAction;
+use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
 use App\Models\AdministrativeAssignment;
@@ -474,6 +475,11 @@ class PropertyOwnerController extends Controller
                 'is_primary' => false,
                 'is_active' => true,
             ]);
+
+            app(ContextManager::class)->setSystemContext($estate->id);
+            if (! $propertyOwner->hasRole('resident')) {
+                $propertyOwner->assignRole($residentRole);
+            }
 
             return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
         }

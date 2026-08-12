@@ -19,7 +19,7 @@ import {
     Home
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { properties, residents, create } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import { properties, residents, create, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -252,8 +252,12 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
         router.patch(`/admin/property-owners/${id}/suspend`, {}, { preserveScroll: true });
     };
 
-    const handleMakeResident = (id: number) => {
-        router.post(`/admin/property-owners/${id}/make-resident`, {}, { preserveScroll: true });
+    const handleMakeResident = (owner: PropertyOwner) => {
+        if (!confirm(`Grant ${owner.name} resident privileges? They will keep their property owner role.`)) {
+            return;
+        }
+
+        router.post(makeResident.url(owner.ulid), {}, { preserveScroll: true });
     };
 
     const handleDeleteOwner = (id: number) => {
@@ -591,6 +595,16 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                             </Link>
                                                         )}
 
+                                                        {!owner.is_resident && (
+                                                            <button
+                                                                onClick={() => handleMakeResident(owner)}
+                                                                className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                                                title="Mark as Resident"
+                                                            >
+                                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        )}
+
                                                         {/* Overflow menu */}
                                                         <button
                                                             onClick={() => setMenuOpenId(menuOpenId === owner.id ? null : owner.id)}
@@ -617,12 +631,12 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                                     {!owner.is_resident && (
                                                                         <button
                                                                             onClick={() => {
-                                                                                handleMakeResident(owner.id);
+                                                                                handleMakeResident(owner);
                                                                                 setMenuOpenId(null);
                                                                             }}
                                                                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                         >
-                                                                            <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                                                                             Mark as Resident
                                                                         </button>
                                                                     )}

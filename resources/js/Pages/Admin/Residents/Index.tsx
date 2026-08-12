@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
-import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { bulkDelete, index, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -293,8 +293,12 @@ export default function Residents({
         router.patch(`/admin/residents/${id}/suspend`, {}, { preserveScroll: true });
     };
 
-    const handleMarkAsPropertyOwner = (id: number) => {
-        router.patch(`/admin/residents/${id}/mark-as-property-owner`, {}, { preserveScroll: true });
+    const handleMarkAsPropertyOwner = (resident: Resident) => {
+        if (!confirm(`Convert ${resident.name} to a Property Owner (Landlord)? They will keep resident access.`)) {
+            return;
+        }
+
+        router.patch(markAsPropertyOwner.url(resident.ulid), {}, { preserveScroll: true });
     };
 
     const handleDeleteResident = (id: number) => {
@@ -702,6 +706,16 @@ export default function Residents({
                                                             </Link>
                                                         )}
 
+                                                        {!resident.is_property_owner && (
+                                                            <button
+                                                                onClick={() => handleMarkAsPropertyOwner(resident)}
+                                                                className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                                                title="Convert to Landlord"
+                                                            >
+                                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        )}
+
                                                         {/* Overflow menu */}
                                                         <button
                                                             onClick={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
@@ -730,12 +744,12 @@ export default function Residents({
                                                                     {!resident.is_property_owner && (
                                                                         <button
                                                                             onClick={() => {
-                                                                                handleMarkAsPropertyOwner(resident.id);
+                                                                                handleMarkAsPropertyOwner(resident);
                                                                                 setMenuOpenId(null);
                                                                             }}
                                                                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                         >
-                                                                            <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                                                                             Convert to Landlord
                                                                         </button>
                                                                     )}
