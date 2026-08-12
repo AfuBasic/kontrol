@@ -27,6 +27,8 @@ type SecurityPerson = {
     email: string;
     phone: string | null;
     badge_number: string | null;
+    zone_id?: number | null;
+    zone_name?: string | null;
     status: 'pending' | 'accepted' | 'inactive';
     suspended_at: string | null;
     created_at: string;
@@ -263,9 +265,9 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                     className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
                                                 />
                                             </th>
-                                        )}
-                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Guards</th>
+                                                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Guards</th>
                                         <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Contact</th>
+                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Coverage / Zone</th>
                                         <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Badge #</th>
                                         <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Status</th>
                                         <th className="w-20 px-6 py-3.5 text-right"></th>
@@ -315,6 +317,13 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                         <span className="mt-0.5 block text-[10px] font-bold text-slate-400">{person.phone || '—'}</span>
                                                     </div>
                                                 </td>
+
+                                                {/* Coverage / Zone */}
+                                                <td className="px-6 py-3.5 whitespace-nowrap">
+                                                    <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${person.zone_name && person.zone_name !== 'Entire estate' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-slate-100 text-slate-700'}`}>
+                                                        {person.zone_name || 'Entire estate'}
+                                                    </span>
+                                                </td>     </td>
 
                                                 {/* Badge */}
                                                 <td className="px-6 py-3.5 whitespace-nowrap">

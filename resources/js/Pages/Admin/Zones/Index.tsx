@@ -248,16 +248,22 @@ export default function ZonesIndex({ zones }: Props) {
 
                                     <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-slate-100 dark:border-slate-800">
                                         <div>
-                                            <span className="text-slate-400">Memberships:</span>{' '}
-                                            <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                                {zone.memberships_count || 0}
-                                            </span>
+                                            <span className="text-slate-400">Residents:</span>{' '}
+                                            <a 
+                                                href={`/admin/residents?zone=${zone.id}`}
+                                                className="font-semibold text-teal-600 hover:underline dark:text-teal-400"
+                                            >
+                                                {zone.memberships_count || 0} Residents →
+                                            </a>
                                         </div>
                                         <div>
-                                            <span className="text-slate-400">Assignments:</span>{' '}
-                                            <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                                {zone.assignments_count || 0}
-                                            </span>
+                                            <span className="text-slate-400">Security & Staff:</span>{' '}
+                                            <a 
+                                                href={`/admin/assignments?search=${encodeURIComponent(zone.name)}`}
+                                                className="font-semibold text-teal-600 hover:underline dark:text-teal-400"
+                                            >
+                                                {zone.assignments_count || 0} Assigned →
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

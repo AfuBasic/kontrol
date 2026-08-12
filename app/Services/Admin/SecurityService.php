@@ -25,7 +25,7 @@ class SecurityService
         return User::query()
             ->forEstate($estate->id)
             ->withRole('security', $estate->id)
-            ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id')])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

@@ -48,17 +48,24 @@ class SecurityPersonnelController extends Controller
         return Inertia::render('Admin/Security/Index', [
             'security' => Inertia::defer(fn () => $this->securityService
                 ->getPaginatedSecurity(15, $filters)
-                ->through(fn ($user) => [
-                    'ulid' => $user->ulid,
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->profile?->phone,
-                    'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
-                    'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
-                    'suspended_at' => $user->suspended_at,
-                    'created_at' => $user->created_at->format('M d, Y'),
-                ])),
+                ->through(function ($user) {
+                    $membership = $user->estates->first()?->pivot;
+                    $zone = $membership?->zone_id ? \App\Models\Zone::find($membership->zone_id) : null;
+
+                    return [
+                        'ulid' => $user->ulid,
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->profile?->phone,
+                        'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
+                        'zone_id' => $membership?->zone_id,
+                        'zone_name' => $zone?->name ?? 'Entire estate',
+                        'status' => $user->suspended_at ? 'inactive' : ($membership?->status ?? 'pending'),
+                        'suspended_at' => $user->suspended_at,
+                        'created_at' => $user->created_at->format('M d, Y'),
+                    ];
+                })),
             'filters' => $filters,
             'stats' => [
                 'total' => $totalSecurity,
