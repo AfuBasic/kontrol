@@ -328,7 +328,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                     <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                                                         person.suspended_at
                                                             ? 'bg-rose-50 text-rose-700'
-                                                            : (person.status === 'accepted' || person.status === 'active')
+                                                            : person.status === 'accepted'
                                                                 ? 'bg-emerald-50 text-emerald-700'
                                                                 : 'bg-amber-50 text-amber-700'
                                                     }`}>
