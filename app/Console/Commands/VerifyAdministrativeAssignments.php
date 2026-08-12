@@ -29,14 +29,14 @@ class VerifyAdministrativeAssignments extends Command
      */
     public function handle()
     {
-        $this->info("Verifying Administrative Assignments Invariants...");
+        $this->info('Verifying Administrative Assignments Invariants...');
 
         $assignments = AdministrativeAssignment::all();
         $violations = 0;
 
         foreach ($assignments as $assignment) {
             $this->info("Checking Assignment ID: {$assignment->id}");
-            
+
             // Invariant 1: User exists
             if (! User::where('id', $assignment->user_id)->exists()) {
                 $this->error("Violation (Invariant 1): User {$assignment->user_id} does not exist.");
@@ -54,6 +54,7 @@ class VerifyAdministrativeAssignments extends Command
             if (! $role) {
                 $this->error("Violation (Invariant 3): Role {$assignment->role_id} does not exist.");
                 $violations++;
+
                 continue;
             }
 
@@ -103,10 +104,12 @@ class VerifyAdministrativeAssignments extends Command
 
         if ($violations > 0) {
             $this->error("Verification failed with {$violations} violations.");
+
             return self::FAILURE;
         }
 
-        $this->info("All invariants passed successfully.");
+        $this->info('All invariants passed successfully.');
+
         return self::SUCCESS;
     }
 }
