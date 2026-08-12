@@ -1,5 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import clsx from 'clsx';
 import { Building, Shield, Home, Briefcase, ChevronDown, Check } from 'lucide-react';
 
@@ -29,8 +30,10 @@ export default function ContextSwitcher({ variant = 'dark' }: Props) {
 
     const switchContext = (assignmentId: number) => {
         setIsOpen(false);
-        router.post(route('context.switch'), {
+        router.post(ContextController.switch.url(), {
             assignment_id: assignmentId
+        }, {
+            preserveState: false,
         });
     };
 
