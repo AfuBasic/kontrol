@@ -69,7 +69,15 @@ class ResidentController extends Controller
         // Section 1: Overview stats
         $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
         $activeResidents = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingInvitations = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
+        $pendingMembership = User::query()
+            ->forEstate($estate->id)
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
+
+        $unacceptedInvitations = (clone $pendingMembership)->whereNull('email_verified_at')->count();
+        $awaitingApproval = (clone $pendingMembership)->whereNotNull('email_verified_at')->count();
+        $pendingAccess = $unacceptedInvitations + $awaitingApproval;
         $inactiveResidents = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
 
         $totalProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->count();
@@ -95,15 +103,22 @@ class ResidentController extends Controller
             'stats' => [
                 'total' => $totalResidents,
                 'active' => $activeResidents,
-                'pending' => $pendingInvitations,
+                'pending' => $pendingAccess,
                 'inactive' => $inactiveResidents,
                 'occupancy_rate' => $occupancyRate,
             ],
             // Heavier insight queries load after first paint
-            'insights' => Inertia::defer(function () use ($estate, $pendingInvitations, $totalProperties, $occupiedProperties) {
+            'insights' => Inertia::defer(function () use ($estate, $unacceptedInvitations, $awaitingApproval, $totalProperties, $occupiedProperties) {
                 $insights = [];
-                if ($pendingInvitations > 0) {
-                    $insights[] = "{$pendingInvitations} residents have not accepted their invitations.";
+                if ($awaitingApproval > 0) {
+                    $insights[] = $awaitingApproval === 1
+                        ? '1 resident is awaiting admin approval.'
+                        : "{$awaitingApproval} residents are awaiting admin approval.";
+                }
+                if ($unacceptedInvitations > 0) {
+                    $insights[] = $unacceptedInvitations === 1
+                        ? '1 resident has not accepted their invitation.'
+                        : "{$unacceptedInvitations} residents have not accepted their invitations.";
                 }
                 $vacantUnits = $totalProperties - $occupiedProperties;
                 if ($vacantUnits > 0) {

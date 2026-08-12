@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
-use App\Mail\Resident\WelcomeMail;
 use App\Models\User;
 use App\Notifications\ResidentApproved;
 use App\Notifications\ResidentRejected;
@@ -12,7 +11,6 @@ use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -71,11 +69,6 @@ class ResidentApprovalController extends Controller
 
         // Send ResidentApproved notification
         $user->notify(new ResidentApproved($estate));
-
-        // Send Welcome Email only to residents
-        if ($user->user_type === 'user') {
-            Mail::to($user->email)->send(new WelcomeMail($user));
-        }
 
         return back()->with('success', "{$user->name} has been approved as a resident.");
     }

@@ -293,7 +293,7 @@ class DashboardService
                 'count' => $residentsAwaitingApproval,
                 'severity' => 'warning',
                 'actionLabel' => 'Review Approvals',
-                'actionUrl' => route('admin.residents.index'),
+                'actionUrl' => route('admin.residents.approvals.index'),
                 'previews' => $pendingResidents,
             ];
         }

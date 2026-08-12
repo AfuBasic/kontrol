@@ -2,7 +2,6 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
@@ -62,7 +61,7 @@ class CreateResidentAction
                 ->firstOrFail();
 
             app(ContextManager::class)->setSystemContext($estate->id);
-            
+
             // Assign the role via the AdministrativeAssignment system to create a valid context
             $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
             $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)

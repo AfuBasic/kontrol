@@ -55,7 +55,7 @@ test('creating estate via zeus generates valid invitation record and working inv
     $acceptResponse = $this->post(route('invitations.accept', ['token' => $invitation->token]));
     $acceptResponse->assertRedirect();
     $acceptResponse->assertSessionHasNoErrors();
-    
+
     // Ensure invitation is marked accepted
     expect($invitation->fresh()->isAccepted())->toBeTrue();
 });

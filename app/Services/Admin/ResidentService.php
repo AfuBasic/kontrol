@@ -54,6 +54,8 @@ class ResidentService
                 } elseif ($status === 'pending_activation') {
                     $query->whereNotNull('password')
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
+                } elseif ($status === 'pending') {
+                    $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
             ->when($filters['role'] ?? null, function ($query, $role) use ($estate) {
