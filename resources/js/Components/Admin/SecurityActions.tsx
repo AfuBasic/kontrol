@@ -12,7 +12,7 @@ type SecurityPerson = {
     id: number;
     name: string;
     suspended_at: string | null;
-    status: 'pending' | 'accepted';
+    status: 'pending' | 'accepted' | 'inactive';
 };
 
 interface Props {
