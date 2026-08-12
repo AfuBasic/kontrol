@@ -2,8 +2,12 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
 use App\Events\Admin\SecurityCreated;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -19,15 +23,33 @@ class CreateSecurityAction
     public function execute(array $data, Estate $estate): User
     {
         return DB::transaction(function () use ($data, $estate) {
-            // 1. Create user with no password (invitation pending)
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => null,
-            ]);
+            // 1. Get or create user (invitation pending if new user)
+            $user = User::firstOrCreate(
+                ['email' => strtolower(trim($data['email']))],
+                [
+                    'name' => $data['name'],
+                    'password' => null,
+                ]
+            );
 
-            // 2. Attach user to estate with pending status
-            $estate->users()->attach($user->id, ['status' => 'pending']);
+            // 2. Attach user to estate with pending status (invitation pending acceptance) if not exist
+            $membership = DB::table('estate_users_membership')
+                ->where('estate_id', $estate->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $membership) {
+                $estate->users()->attach($user->id, [
+                    'status' => 'pending',
+                    'relationship_type' => 'security',
+                ]);
+            } else {
+                DB::table('estate_users_membership')
+                    ->where('id', $membership->id)
+                    ->update([
+                        'relationship_type' => 'security',
+                    ]);
+            }
 
             // 3. Assign global security role scoped to this estate
             $role = Role::where('name', 'security')
@@ -36,17 +58,51 @@ class CreateSecurityAction
                 ->firstOrFail();
 
             app(ContextManager::class)->setSystemContext($estate->id);
-            $user->assignRole($role);
+            
+            // Assign the role via the AdministrativeAssignment system to create a valid context
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+            $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
+                ->where('estate_id', $estate->id)
+                ->where('role_id', $role->id)
+                ->where('zone_id_coalesced', 0)
+                ->exists();
 
-            // 4. Create user profile with additional data
-            UserProfile::create([
-                'user_id' => $user->id,
-                'phone' => $data['phone'] ?? null,
-                'metadata' => isset($data['badge_number']) ? ['badge_number' => $data['badge_number']] : null,
-            ]);
+            if (! $assignmentExists) {
+                $assignmentAction->execute(
+                    user: $user,
+                    estate: $estate,
+                    role: $role,
+                    scopeType: AssignmentScope::Estate,
+                    zone: null,
+                    isPrimary: false
+                );
+            }
 
-            // 5. Dispatch event for side effects (invitation email)
-            event(new SecurityCreated($user, $estate, false));
+            // 4. Create or update user profile with additional data
+            UserProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'phone' => $data['phone'] ?? null,
+                    'metadata' => isset($data['badge_number']) ? ['badge_number' => $data['badge_number']] : null,
+                ]
+            );
+
+            // 5. Create an invitation record for the unified passwordless flow
+            $createInvitationAction = app(CreateInvitationAction::class);
+            $invitation = $createInvitationAction->execute(
+                email: $data['email'],
+                estate: $estate,
+                relationshipType: 'security',
+                role: null, // Security personnel don't get an explicit Spatie role assignment in Invitations, they are handled generically
+                zoneId: null,
+                scopeType: AssignmentScope::Estate->value,
+                createdBy: Auth::user()
+            );
+
+            // 6. Dispatch event for side effects (invitation email)
+            if ($invitation) {
+                event(new SecurityCreated($invitation, $estate, false));
+            }
 
             activity()
                 ->performedOn($user)
