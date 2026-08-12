@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Auth\EstateContext;
 use App\Models\User;
+use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -21,9 +21,7 @@ class StoreResidentRequest extends FormRequest
      */
     public function rules(): array
     {
-        /** @var EstateContext $estateContext */
-        $estateContext = app(EstateContext::class);
-        $estateId = $estateContext->getEstate()?->id;
+        $estateId = resolve(EstateContextService::class)->getEstateId();
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -40,8 +38,21 @@ class StoreResidentRequest extends FormRequest
                         $isAlreadyResident = DB::table('estate_users_membership')
                             ->where('user_id', $existingUser->id)
                             ->where('estate_id', $estateId)
-                            ->where('relationship_type', 'resident')
                             ->whereIn('status', ['accepted', 'active'])
+                            ->where(function ($query) {
+                                $query->where('relationship_type', 'resident')
+                                    ->orWhere(function ($subQuery) {
+                                        $subQuery->whereNull('relationship_type')
+                                            ->whereExists(function ($roleQuery) {
+                                                $roleQuery->select(DB::raw(1))
+                                                    ->from('model_has_roles')
+                                                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                                    ->whereColumn('model_has_roles.model_id', 'estate_users_membership.user_id')
+                                                    ->where('model_has_roles.model_type', User::class)
+                                                    ->where('roles.name', 'resident');
+                                            });
+                                    });
+                            })
                             ->exists();
 
                         if ($isAlreadyResident) {
