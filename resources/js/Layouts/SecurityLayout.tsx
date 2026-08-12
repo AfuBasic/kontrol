@@ -296,7 +296,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className={`pt-safe sticky top-0 z-40 border-b backdrop-blur-xl ${
+                className={`pt-safe sticky top-0 z-[60] border-b backdrop-blur-xl ${
                     isDark ? 'border-slate-800/80 bg-slate-950/95 text-white' : 'border-slate-100 bg-white/80 text-slate-900'
                 }`}
             >
