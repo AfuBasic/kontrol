@@ -315,7 +315,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                         className="flex items-center gap-2.5"
                     >
                         <img src="/assets/images/icon.png" alt="Kontrol" className="h-9 w-9 object-contain" />
-                        <div className="hidden sm:flex flex-col">
+                        <div className="flex flex-col">
                             <div className="flex items-center gap-1.5">
                                 <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Security</span>
                                 {is_local && (
@@ -331,7 +331,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        <ContextSwitcher variant={variant} />
+                        <div className="hidden sm:block">
+                            <ContextSwitcher variant={variant} />
+                        </div>
                         <SystemHealthMonitor size="md" />
                         <div
                             className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
