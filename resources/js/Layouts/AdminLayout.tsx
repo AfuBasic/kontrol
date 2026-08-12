@@ -24,6 +24,8 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Bell, Search, LayoutDashboard, Building, Users, Home, ClipboardList, Wallet, Ticket, Mail, Settings, Menu, X, ArrowLeftRight } from 'lucide-react';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
 import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
