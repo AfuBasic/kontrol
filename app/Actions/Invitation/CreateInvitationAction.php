@@ -48,7 +48,17 @@ class CreateInvitationAction
                     ->whereIn('status', ['accepted', 'active'])
                     ->where(function ($query) use ($relationshipType) {
                         $query->where('relationship_type', $relationshipType)
-                            ->orWhereNull('relationship_type');
+                            ->orWhere(function ($subQuery) use ($relationshipType) {
+                                $subQuery->whereNull('relationship_type')
+                                    ->whereExists(function ($roleQuery) use ($relationshipType) {
+                                        $roleQuery->select(DB::raw(1))
+                                            ->from('model_has_roles')
+                                            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                            ->whereColumn('model_has_roles.model_id', 'estate_users_membership.user_id')
+                                            ->where('model_has_roles.model_type', User::class)
+                                            ->where('roles.name', $relationshipType);
+                                    });
+                            });
                     })
                     ->exists();
             }
