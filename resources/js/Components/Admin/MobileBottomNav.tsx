@@ -36,7 +36,7 @@ export default function MobileBottomNav({ url, unreadNotifications = 0 }: Props)
             badge: unreadNotifications > 0 ? unreadNotifications : null,
         },
         {
-            name: 'More',
+            name: 'Settings',
             href: SettingsController.index.url(),
             icon: Cog6ToothIcon,
         },
