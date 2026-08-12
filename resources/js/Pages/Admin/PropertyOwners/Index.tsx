@@ -517,7 +517,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                 {/* Properties Count */}
                                                 <td className="px-4 py-3.5">
                                                     <Link 
-                                                        href={properties.url(owner.id)}
+                                                        href={properties.url(owner.ulid)}
                                                         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
                                                     >
                                                         <Building className="h-3.5 w-3.5 text-slate-400" />
@@ -528,7 +528,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                 {/* Residents Count */}
                                                 <td className="px-4 py-3.5">
                                                     <Link 
-                                                        href={residents.url(owner.id)}
+                                                        href={residents.url(owner.ulid)}
                                                         className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
                                                     >
                                                         <Users className="h-3.5 w-3.5 text-slate-400" />
@@ -549,11 +549,11 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                     <span className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                                                         owner.status === 'inactive'
                                                             ? 'bg-rose-50 text-rose-700'
-                                                            : (owner.status === 'accepted' || owner.status === 'active')
+                                                            : owner.status === 'accepted'
                                                                 ? 'bg-emerald-50 text-emerald-700'
                                                                 : 'bg-amber-50 text-amber-700'
                                                     }`}>
-                                                        {(owner.status === 'accepted' || owner.status === 'active') ? 'active' : owner.status}
+                                                        {owner.status === 'accepted' ? 'active' : owner.status}
                                                     </span>
                                                 </td>
 
