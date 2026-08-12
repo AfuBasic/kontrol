@@ -30,11 +30,26 @@ class CreateResidentAction
                 ]
             );
 
-            // 2. Attach user to estate with pending status (invitation pending acceptance)
-            $estate->users()->attach($user->id, [
-                'status' => 'pending',
-                'property_owner_id' => $data['property_owner_id'] ?? null,
-            ]);
+            // 2. Attach user to estate with pending status (invitation pending acceptance) if not exist
+            $membership = DB::table('estate_users_membership')
+                ->where('estate_id', $estate->id)
+                ->where('user_id', $user->id)
+                ->first();
+
+            if (! $membership) {
+                $estate->users()->attach($user->id, [
+                    'status' => 'pending',
+                    'property_owner_id' => $data['property_owner_id'] ?? null,
+                    'relationship_type' => 'resident',
+                ]);
+            } else {
+                DB::table('estate_users_membership')
+                    ->where('id', $membership->id)
+                    ->update([
+                        'property_owner_id' => $data['property_owner_id'] ?? $membership->property_owner_id,
+                        'relationship_type' => 'resident',
+                    ]);
+            }
 
             // 3. Assign global resident role scoped to this estate
             $role = Role::where('name', 'resident')
@@ -45,14 +60,16 @@ class CreateResidentAction
             app(ContextManager::class)->setSystemContext($estate->id);
             $user->assignRole($role);
 
-            // 4. Create user profile with additional data
-            UserProfile::create([
-                'user_id' => $user->id,
-                'phone' => $data['phone'] ?? null,
-                'unit_number' => $data['unit_number'] ?? null,
-                'address' => $data['address'] ?? null,
-                'property_id' => $data['property_id'] ?? null,
-            ]);
+            // 4. Create or update user profile with additional data
+            UserProfile::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'phone' => $data['phone'] ?? null,
+                    'unit_number' => $data['unit_number'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'property_id' => $data['property_id'] ?? null,
+                ]
+            );
 
             // 5. Dispatch event for side effects (invitation email)
             event(new ResidentCreated($user, $estate, false));
