@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Incidents;
 
 use App\Enums\IncidentPriority;
+use App\Services\EstateContextService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,6 +25,11 @@ class StoreIncidentRequest extends FormRequest
             'attachment_type' => ['nullable', 'string', 'in:image,video'],
             'attachment_hash' => ['nullable', 'string'],
             'location' => ['nullable', 'string', 'max:255'],
+            'zone_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', resolve(EstateContextService::class)->getEstateId()),
+            ],
             'is_private' => ['boolean'],
             'assigned_to' => ['nullable', 'integer', 'exists:users,id'],
             'tags' => ['nullable', 'array'],

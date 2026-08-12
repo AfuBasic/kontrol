@@ -2,6 +2,7 @@
 
 namespace App\Actions\Incidents;
 
+use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
 use App\Models\AdministrativeAssignment;
@@ -23,7 +24,7 @@ class CreateIncidentAction
     ) {}
 
     /**
-     * @param  array{title: string, body: string, category: string, attachment_url?: string|null, attachment_type?: string|null, attachment_hash?: string|null, priority?: string, assigned_to?: int|string|null, source?: string, reporter_id?: int, reporter_type?: string}  $data
+     * @param  array{title: string, body: string, category: string, attachment_url?: string|null, attachment_type?: string|null, attachment_hash?: string|null, priority?: string, assigned_to?: int|string|null, source?: string, reporter_id?: int, reporter_type?: string, zone_id?: int|null}  $data
      */
     public function execute(array $data, Estate $estate): Incident
     {
@@ -75,6 +76,7 @@ class CreateIncidentAction
 
             $incident = new Incident([
                 'estate_id' => $estate->id,
+                'zone_id' => $data['zone_id'] ?? null,
                 'reporter_id' => $reporterId,
                 'reporter_type' => $reporterType,
                 'source' => $source,
@@ -103,8 +105,12 @@ class CreateIncidentAction
             $incident->load(['reporter', 'estate']);
 
             // Send notification to all active admins if enabled or if incident is critical
+            $priorityValue = $incident->priority instanceof IncidentPriority
+                ? $incident->priority->value
+                : (string) $incident->priority;
+
             $shouldNotifyAdmins = ! $settings->notify_admins_immediately_for_critical_incidents
-                || in_array(strtolower($incident->priority), ['critical', 'high']);
+                || in_array(strtolower($priorityValue), ['critical', 'high']);
 
             if ($shouldNotifyAdmins) {
                 $adminIds = AdministrativeAssignment::where('estate_id', $estate->id)

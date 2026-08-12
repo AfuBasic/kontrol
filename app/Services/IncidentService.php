@@ -34,6 +34,18 @@ class IncidentService
                 $q->where('is_private', false)
                     ->orWhere('reporter_id', $userId);
             });
+
+            if ($user) {
+                $userZoneIds = app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId);
+                $query->where(function ($q) use ($userZoneIds, $userId) {
+                    $q->whereNull('zone_id')
+                        ->orWhere('reporter_id', $userId);
+
+                    if ($userZoneIds !== []) {
+                        $q->orWhereIn('zone_id', $userZoneIds);
+                    }
+                });
+            }
         }
 
         // Filter by category

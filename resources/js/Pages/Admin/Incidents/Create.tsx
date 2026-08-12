@@ -5,6 +5,7 @@ import React, { useRef, useState } from 'react';
 type Props = {
     categories: Array<{ value: string; label: string }>;
     admins: Array<{ id: number; name: string }>;
+    zones?: Array<{ id: number; name: string }>;
 };
 
 async function getFileHash(file: File): Promise<string> {
@@ -21,7 +22,7 @@ async function getFileHash(file: File): Promise<string> {
     return `${file.name}-${file.size}-${file.lastModified}`;
 }
 
-export default function AdminIncidentCreate({ categories, admins }: Props) {
+export default function AdminIncidentCreate({ categories, admins, zones = [] }: Props) {
     const { data, setData, processing, errors } = useForm<{
         title: string;
         body: string;
@@ -30,6 +31,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
         attachment: File | null;
         location: string;
         assigned_to: string;
+        zone_id: string;
         is_private: boolean;
     }>({
         title: '',
@@ -39,6 +41,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
         attachment: null,
         location: '',
         assigned_to: '',
+        zone_id: '',
         is_private: false,
     });
 
@@ -160,6 +163,7 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                     attachment_hash: attachmentHash,
                     location: data.location || null,
                     assigned_to: data.assigned_to || null,
+                    zone_id: data.zone_id || null,
                     is_private: data.is_private,
                 },
                 {
@@ -298,6 +302,30 @@ export default function AdminIncidentCreate({ categories, admins }: Props) {
                                     />
                                     {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
                                 </div>
+
+                                {/* Zone */}
+                                {zones.length > 0 && (
+                                    <div className="sm:col-span-2">
+                                        <label htmlFor="zone_id" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                            Zone (Optional)
+                                        </label>
+                                        <select
+                                            id="zone_id"
+                                            value={data.zone_id}
+                                            onChange={(e) => setData('zone_id', e.target.value)}
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                        >
+                                            <option value="">Entire estate</option>
+                                            {zones.map((zone) => (
+                                                <option key={zone.id} value={zone.id}>
+                                                    {zone.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.zone_id && <span className="mt-1 block text-xs font-medium text-red-600">{errors.zone_id}</span>}
+                                        <p className="mt-1.5 text-[10px] font-semibold text-slate-400">Residents outside this zone will not see the incident.</p>
+                                    </div>
+                                )}
 
                                 {/* Assignee */}
                                 <div>
