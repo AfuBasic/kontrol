@@ -71,8 +71,20 @@ class CreateResidentAction
                 ]
             );
 
-            // 5. Dispatch event for side effects (invitation email)
-            event(new ResidentCreated($user, $estate, false));
+            // 5. Create an invitation record for the unified passwordless flow
+            $createInvitationAction = app(\App\Actions\Invitation\CreateInvitationAction::class);
+            $invitation = $createInvitationAction->execute(
+                email: $data['email'],
+                estate: $estate,
+                relationshipType: 'resident',
+                role: null, // Residents don't get an explicit Spatie role assignment in Invitations, they are handled generically
+                zoneId: null,
+                scopeType: \App\Enums\AssignmentScope::Estate->value,
+                createdBy: Auth::user()
+            );
+
+            // 6. Dispatch event for side effects (invitation email)
+            event(new ResidentCreated($invitation ?: $user, $estate, false));
 
             activity()
                 ->performedOn($user)
