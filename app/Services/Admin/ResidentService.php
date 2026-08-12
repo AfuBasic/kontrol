@@ -30,8 +30,11 @@ class ResidentService
             ->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'property_owner');
             })
-            ->with(['roles', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with(['roles', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id')])
             ->withCount('householdMembers')
+            ->when($filters['zone'] ?? null, function ($query, $zoneId) use ($estate) {
+                $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.zone_id', $zoneId));
+            })
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")

@@ -34,6 +34,8 @@ type Resident = {
     email: string;
     phone: string | null;
     unit_number: string | null;
+    zone_id?: number | null;
+    zone_name?: string | null;
     property_owner_id: number | null;
     property_owner_name: string | null;
     property_id: number | null;
@@ -60,11 +62,13 @@ type PaginatedResidents = {
 
 type Props = {
     residents: PaginatedResidents & { next_page_url: string | null };
+    zones?: Array<{ id: number; name: string }>;
     filters: {
         search?: string;
         status?: string;
         role?: string;
         property?: string;
+        zone?: string;
         sort?: string;
     };
     stats: {
