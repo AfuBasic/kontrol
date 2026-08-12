@@ -13,7 +13,7 @@ class RolePolicy extends BaseContextPolicy
      */
     public function viewAny(User $user): bool
     {
-        return app(ContextManager::class)->hasContext() 
+        return app(ContextManager::class)->hasContext()
             && $user->contextHasRole('admin');
     }
 
@@ -22,7 +22,7 @@ class RolePolicy extends BaseContextPolicy
      */
     public function create(User $user): bool
     {
-        return app(ContextManager::class)->hasContext() 
+        return app(ContextManager::class)->hasContext()
             && $user->contextHasRole('admin');
     }
 
