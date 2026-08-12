@@ -63,6 +63,7 @@ class ResidentController extends Controller
                 'email_verified_at' => $user->email_verified_at,
                 'last_active' => $user->updated_at?->diffForHumans() ?? 'Never',
                 'created_at' => $user->created_at->format('M d, Y'),
+                'is_estate_creator' => $user->email === $estate->email,
             ]));
 
         // Section 1: Overview stats
@@ -218,6 +219,7 @@ class ResidentController extends Controller
                 'address' => $resident->profile?->address,
                 'property_owner_id' => $resident->profile?->property_owner_id,
                 'property_id' => $resident->profile?->property_id,
+                'is_estate_creator' => $resident->email === $estate->email,
             ],
             'propertyOwners' => User::query()
                 ->forEstate($estate->id)
