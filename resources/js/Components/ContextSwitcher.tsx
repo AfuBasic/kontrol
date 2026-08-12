@@ -19,8 +19,8 @@ interface Props {
 
 export default function ContextSwitcher({ variant = 'dark' }: Props) {
     const { auth } = usePage().props as any;
-    const currentContext = auth.context as ContextData | null;
-    const availableContexts = (auth.available_contexts || []) as ContextData[];
+    const currentContext = auth.user?.context as ContextData | null;
+    const availableContexts = (auth.user?.available_contexts || []) as ContextData[];
     const [isOpen, setIsOpen] = useState(false);
 
     if (!currentContext || availableContexts.length <= 1) {

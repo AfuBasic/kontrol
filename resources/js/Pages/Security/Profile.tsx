@@ -20,7 +20,7 @@ const PERMISSIONS = ['Validate visitor access codes', 'Acknowledge & dismiss ale
 
 export default function ProfilePage({ user, estateName }: Props) {
     const { auth } = usePage().props as any;
-    const availableContexts = auth?.available_contexts || [];
+    const availableContexts = auth?.user?.available_contexts || [];
     
     const [editOpen, setEditOpen] = useState(false);
     const [editMode, setEditMode] = useState<'profile' | 'password'>('profile');
