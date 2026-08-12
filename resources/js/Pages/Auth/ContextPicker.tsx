@@ -72,21 +72,21 @@ export default function ContextPicker({ availableContexts }: Props) {
                                         : "border-[#1a1a1a] bg-[#0f0f0f] hover:border-[#333] hover:bg-[#151515]"
                                 )}
                             >
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
                                     <div className={clsx(
                                         "p-2.5 rounded-lg flex-shrink-0 transition-colors",
                                         selectedContext === context.id ? "bg-green-500/20" : "bg-[#1a1a1a]"
                                     )}>
                                         {getRoleIcon(context.role_name)}
                                     </div>
-                                    <div>
-                                        <h3 className="font-medium text-white line-clamp-1">{context.estate_name}</h3>
-                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                            <span className="text-xs text-gray-400 capitalize">
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="font-medium text-white truncate">{context.estate_name}</h3>
+                                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 mt-0.5">
+                                            <span className="text-xs text-gray-400 capitalize whitespace-nowrap">
                                                 {context.role_name.replace('_', ' ')}
                                             </span>
-                                            <span className="text-gray-600 text-xs">•</span>
-                                            <span className="text-xs text-gray-400 capitalize">
+                                            <span className="text-gray-600 text-xs hidden xs:inline-block">•</span>
+                                            <span className="text-xs text-gray-400 capitalize whitespace-nowrap">
                                                 {context.zone_name ? `Zone: ${context.zone_name}` : 'Estate-wide'}
                                             </span>
                                         </div>
