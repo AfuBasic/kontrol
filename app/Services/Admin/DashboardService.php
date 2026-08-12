@@ -271,7 +271,7 @@ class DashboardService
             $pendingResidents = User::query()
                 ->forEstate($estateId)
                 ->withRole('resident', $estateId)
-                ->whereHas('estateMemberships', fn ($q) => $q->where('estate_id', $estateId)->where('status', 'pending'))
+                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.status', 'pending'))
                 ->with('profile')
                 ->latest()
                 ->take(5)
