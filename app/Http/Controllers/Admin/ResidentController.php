@@ -42,7 +42,7 @@ class ResidentController extends Controller
 
         $residents = Inertia::defer(fn () => $this->residentService
             ->getPaginatedResidents(15, $filters)
-            ->through(function ($user) {
+            ->through(function ($user) use ($estate) {
                 $membership = $user->estates->first()?->pivot;
                 $zone = $membership?->zone_id ? \App\Models\Zone::find($membership->zone_id) : null;
 

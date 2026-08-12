@@ -255,7 +255,6 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                         <div className="overflow-x-auto min-h-[280px]">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="bg-slate-50/70 border-b border-slate-100">
-                                    <tr>
                                         {can('security.delete') && (
                                             <th className="w-10 px-4 py-3.5 text-center">
                                                 <input
@@ -265,7 +264,8 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                     className="h-4 w-4 rounded border-slate-350 text-slate-900 focus:ring-slate-900"
                                                 />
                                             </th>
-                                                                            <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Guards</th>
+                                        )}
+                                        <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Guards</th>
                                         <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Contact</th>
                                         <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Coverage / Zone</th>
                                         <th className="px-6 py-3.5 text-left text-[9px] font-black tracking-widest text-slate-455 uppercase">Badge #</th>
