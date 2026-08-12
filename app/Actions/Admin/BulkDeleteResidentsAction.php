@@ -18,9 +18,10 @@ class BulkDeleteResidentsAction
         $deleted = 0;
         $detached = 0;
 
-        // Get residents that belong to this estate
+        // Get residents that belong to this estate, strictly excluding the estate creator
         $residents = User::whereIn('id', $residentIds)
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+            ->where('email', '!=', $estate->email)
             ->get();
 
         DB::transaction(function () use ($residents, $estate, &$deleted, &$detached) {
