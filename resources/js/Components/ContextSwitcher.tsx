@@ -69,36 +69,40 @@ export default function ContextSwitcher({ variant = 'dark' }: Props) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={clsx(
-                    "flex items-center gap-1.5 md:gap-2 px-1.5 py-1.5 md:px-2 md:py-1.5 rounded-full transition-all border",
+                    "flex items-center gap-1.5 px-2 py-1 rounded-xl transition-all group",
                     variant === 'dark' 
-                        ? "hover:bg-gray-800 border-gray-800 hover:border-gray-700 bg-[#0a0a0a]" 
-                        : "hover:bg-slate-100 border-slate-200 bg-white shadow-sm"
+                        ? "hover:bg-gray-800/60" 
+                        : "hover:bg-slate-100/60"
                 )}
             >
-                <div className={clsx(
-                    "flex-shrink-0 p-1.5 rounded-full",
-                    variant === 'dark' ? "bg-gray-800 text-gray-300" : "bg-slate-100 text-slate-600"
-                )}>
-                    {getRoleIcon(currentContext.role_name, "w-3.5 h-3.5 md:w-4 md:h-4")}
+                <div className="text-left flex flex-col justify-center">
+                    <div className="flex items-center gap-1">
+                        <p className={clsx(
+                            "text-sm font-bold leading-none truncate max-w-[110px] sm:max-w-[160px] md:max-w-[200px]",
+                            variant === 'dark' ? "text-white" : "text-slate-900"
+                        )}>
+                            {currentContext.estate_name}
+                        </p>
+                        <ChevronDown className={clsx(
+                            "w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-opacity",
+                            variant === 'dark' ? "text-white" : "text-slate-900"
+                        )} />
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                        <div className={clsx(
+                            "opacity-70",
+                            variant === 'dark' ? "text-gray-400" : "text-slate-500"
+                        )}>
+                            {getRoleIcon(currentContext.role_name, "w-3 h-3")}
+                        </div>
+                        <p className={clsx(
+                            "text-[10px] font-semibold capitalize leading-none",
+                            variant === 'dark' ? "text-gray-400" : "text-slate-500"
+                        )}>
+                            {currentContext.role_name.replace('_', ' ')}
+                        </p>
+                    </div>
                 </div>
-                <div className="text-left flex flex-col justify-center pr-1">
-                    <p className={clsx(
-                        "text-xs md:text-sm font-bold leading-none truncate max-w-[85px] sm:max-w-[120px] md:max-w-[200px]",
-                        variant === 'dark' ? "text-white" : "text-slate-900"
-                    )}>
-                        {currentContext.estate_name}
-                    </p>
-                    <p className={clsx(
-                        "text-[9px] md:text-xs font-semibold capitalize leading-tight mt-0.5",
-                        variant === 'dark' ? "text-gray-400" : "text-slate-500"
-                    )}>
-                        {currentContext.role_name.replace('_', ' ')}
-                    </p>
-                </div>
-                <ChevronDown className={clsx(
-                    "w-3.5 h-3.5 md:w-4 md:h-4 mr-1",
-                    variant === 'dark' ? "text-gray-500" : "text-slate-400"
-                )} />
             </button>
 
             {isOpen && (
