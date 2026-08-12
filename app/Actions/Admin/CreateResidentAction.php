@@ -2,8 +2,12 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
 use App\Events\Admin\ResidentCreated;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
@@ -58,7 +62,25 @@ class CreateResidentAction
                 ->firstOrFail();
 
             app(ContextManager::class)->setSystemContext($estate->id);
-            $user->assignRole($role);
+            
+            // Assign the role via the AdministrativeAssignment system to create a valid context
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+            $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
+                ->where('estate_id', $estate->id)
+                ->where('role_id', $role->id)
+                ->where('zone_id_coalesced', 0)
+                ->exists();
+
+            if (! $assignmentExists) {
+                $assignmentAction->execute(
+                    user: $user,
+                    estate: $estate,
+                    role: $role,
+                    scopeType: AssignmentScope::Estate,
+                    zone: null,
+                    isPrimary: false
+                );
+            }
 
             // 4. Create or update user profile with additional data
             UserProfile::updateOrCreate(
@@ -72,14 +94,14 @@ class CreateResidentAction
             );
 
             // 5. Create an invitation record for the unified passwordless flow
-            $createInvitationAction = app(\App\Actions\Invitation\CreateInvitationAction::class);
+            $createInvitationAction = app(CreateInvitationAction::class);
             $invitation = $createInvitationAction->execute(
                 email: $data['email'],
                 estate: $estate,
                 relationshipType: 'resident',
                 role: null, // Residents don't get an explicit Spatie role assignment in Invitations, they are handled generically
                 zoneId: null,
-                scopeType: \App\Enums\AssignmentScope::Estate->value,
+                scopeType: AssignmentScope::Estate->value,
                 createdBy: Auth::user()
             );
 

@@ -62,13 +62,8 @@ class BackfillAdministrativeAssignments extends Command
                 continue; // Orphaned role
             }
 
-            // 1. Reject Global Roles
-            if ($role->estate_id === null) {
-                $stats['invalid_global']++;
-                $this->warn("Skipped: Global role '{$role->name}' (User: {$assignment->model_id})");
-
-                continue;
-            }
+            // 1. (Legacy: Rejected global roles here, now permitted for residents/security in V3)
+            // Global roles are tracked in AdministrativeAssignments but apply to specific estates contextually.
 
             // 2. Resolve Estate
             $estateId = $assignment->estate_id;
@@ -97,7 +92,7 @@ class BackfillAdministrativeAssignments extends Command
             }
 
             // 4. Verify cross-estate
-            if ($role->estate_id !== $estate->id) {
+            if ($role->estate_id !== null && $role->estate_id !== $estate->id) {
                 $stats['conflicts']++;
                 $this->error("Conflict: Role {$role->name} (Estate {$role->estate_id}) assigned to Estate {$estate->id} (User: {$user->id})");
 
