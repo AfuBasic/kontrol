@@ -2,15 +2,12 @@
 
 namespace App\Policies;
 
+use App\Auth\ContextManager;
 use App\Models\EstateBoardPost;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use App\Auth\ContextManager;
 
 class EstateBoardPostPolicy extends BaseContextPolicy
 {
-
-
     /**
      * Determine if the user can view posts (feed).
      */
@@ -61,7 +58,7 @@ class EstateBoardPostPolicy extends BaseContextPolicy
     public function create(User $user): bool
     {
         $context = app(ContextManager::class)->current();
-        
+
         if (! $context) {
             return false;
         }
