@@ -8,6 +8,7 @@ use App\Auth\ContextManager;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,7 +20,7 @@ class InvitationController extends Controller
 {
     public function show(Request $request, string $token): Response|RedirectResponse
     {
-        $invitation = Invitation::where('token', $token)->first();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
 
         if (! $invitation || ! $invitation->isPending()) {
             return redirect()->route('invitation.invalid');
@@ -50,6 +51,7 @@ class InvitationController extends Controller
         }
 
         return Inertia::render('Invitation/Accept', [
+            'acceptUrl' => route('invitation.store', ['token' => $token]),
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -62,7 +64,7 @@ class InvitationController extends Controller
 
     public function store(Request $request, string $token, AcceptInvitationAction $action): RedirectResponse
     {
-        $invitation = Invitation::where('token', $token)->first();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
 
         if (! $invitation || ! $invitation->isPending()) {
             return redirect()->route('invitation.invalid');
