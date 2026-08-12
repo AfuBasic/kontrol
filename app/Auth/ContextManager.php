@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\PermissionRegistrar;
 
 class ContextManager
 {
@@ -91,6 +92,7 @@ class ContextManager
     public function setSystemContext(?int $estateId, ?User $user = null): void
     {
         setPermissionsTeamId($estateId);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         if ($user) {
             $user->unsetRelation('roles');

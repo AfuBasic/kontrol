@@ -71,6 +71,7 @@ class AuthorizationResolver
         }
 
         // Final sanity check: does Spatie agree?
+        $targetUser->unsetRelation('roles');
         if (! $targetUser->hasRole($assignment->role->name)) {
             return false;
         }
@@ -122,6 +123,7 @@ class AuthorizationResolver
         }
 
         // Final sanity check: does Spatie agree?
+        $user->unsetRelation('roles');
         if (! $user->hasRole($assignment->role->name)) {
             return false;
         }
