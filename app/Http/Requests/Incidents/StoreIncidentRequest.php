@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Incidents;
 
-use App\Enums\IncidentCategory;
 use App\Enums\IncidentPriority;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
