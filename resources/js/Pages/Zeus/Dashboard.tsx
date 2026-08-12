@@ -134,7 +134,7 @@ export default function Dashboard({
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+        show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
     };
 
     const MetricCard = ({ title, data, isCurrency = false }: { title: string; data: MetricData; isCurrency?: boolean }) => (
@@ -285,7 +285,7 @@ export default function Dashboard({
                                             }}
                                             itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
                                             cursor={{ stroke: 'rgba(148, 163, 184, 0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                            formatter={(value: number, name: string) => [
+                                            formatter={(value: any, name: any) => [
                                                 name === 'mrr' ? formatExactCurrency(value) : value,
                                                 name === 'mrr' ? 'Revenue' : 'Estates',
                                             ]}
