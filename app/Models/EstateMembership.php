@@ -2,13 +2,10 @@
 
 namespace App\Models;
 
-use App\Traits\ZoneScoped;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class EstateMembership extends Pivot
 {
-    use ZoneScoped;
-
     protected $table = 'estate_users_membership';
 
     public $incrementing = true;

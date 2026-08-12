@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\ContextController;
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\InvitationAcceptanceController;
 use App\Http\Controllers\Auth\InviteRegistrationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LoginOtpController;
@@ -50,6 +51,10 @@ Route::middleware('guest')->group(function (): void {
 Route::get('/auth/magic-login/{token}', [MagicLoginController::class, 'show'])
     ->middleware('signed')
     ->name('auth.magic-login');
+
+// Public Invitation Acceptance Routes
+Route::get('/invitations/{token}', [InvitationAcceptanceController::class, 'show'])->name('invitations.show');
+Route::post('/invitations/{token}/accept', [InvitationAcceptanceController::class, 'accept'])->name('invitations.accept');
 
 // Email Verification
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])

@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
+use App\Auth\ContextManager;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\Models\Activity as SpatieActivity;
 
 /**
@@ -57,18 +57,16 @@ class Activity extends SpatieActivity
     protected static function booted(): void
     {
         static::creating(function ($activity): void {
-            // Try to get estate_id from authenticated user
-            if (Auth::check()) {
-                $estate = Auth::user()->estates()->wherePivot('status', 'accepted')->first();
-                if ($estate) {
-                    $activity->estate_id = $estate->id;
+            // Try to get estate_id from active ContextManager
+            $context = app(ContextManager::class)->current();
+            if ($context && $context->estateId) {
+                $activity->estate_id = $context->estateId;
 
-                    return;
-                }
+                return;
             }
 
             // Fallback: try to get estate_id from the causer (for non-web contexts like Telegram)
-            if ($activity->causer && method_exists($activity->causer, 'getCurrentEstate')) {
+            if ($activity->causer && method_exists($activity->causer, 'resolveHeadlessEstate')) {
                 try {
                     $activity->estate_id = $activity->causer->resolveHeadlessEstate()->id;
 

@@ -4,14 +4,14 @@ namespace App\Actions\Invitation;
 
 use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Enums\AssignmentScope;
+use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Models\Estate;
 use App\Models\Zone;
-use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class AcceptInvitationAction
 {
@@ -43,10 +43,14 @@ class AcceptInvitationAction
                 // Ensure profile exists
                 UserProfile::firstOrCreate(['user_id' => $user->id]);
 
-                $user->estates()->attach($estateId, [
+                DB::table('estate_users_membership')->insert([
+                    'user_id' => $user->id,
+                    'estate_id' => $estateId,
                     'status' => 'accepted',
                     'zone_id' => $invitation->zone_id,
                     'relationship_type' => $invitation->relationship_type,
+                    'created_at' => Carbon::now(),
+                    'updated_at' => Carbon::now(),
                 ]);
             } else {
                 // Update existing membership (e.g. if it was pending or needs activating)
@@ -69,7 +73,7 @@ class AcceptInvitationAction
                 $estate = Estate::find($estateId);
                 $zone = $invitation->zone_id ? Zone::find($invitation->zone_id) : null;
                 $scopeType = AssignmentScope::tryFrom($invitation->scope_type) ?? AssignmentScope::Estate;
-                
+
                 if ($role && $estate) {
                     $assignmentAction->execute(
                         user: $user,
