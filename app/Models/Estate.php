@@ -107,6 +107,14 @@ class Estate extends Model
         return $this->hasMany(AdministrativeAssignment::class);
     }
 
+    /**
+     * @return HasMany<Zone, $this>
+     */
+    public function zones(): HasMany
+    {
+        return $this->hasMany(Zone::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

@@ -39,6 +39,14 @@ class Property extends Model
         return $this->belongsTo(Estate::class);
     }
 
+    /**
+     * @return BelongsTo<Zone, $this>
+     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
+    }
+
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'property_owner_id');
