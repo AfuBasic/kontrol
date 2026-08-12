@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
 use App\Models\Estate;
 use App\Models\EstateInviteLink;
@@ -77,11 +79,21 @@ class InviteRegistrationController extends Controller
 
             app(ContextManager::class)->setSystemContext($inviteLink->estate_id);
 
-            // Assign roles scoped to this estate
+            // Assign roles scoped to this estate via AdministrativeAssignment system
             $residentRole = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
                 ->whereNull('estate_id')
                 ->firstOrFail();
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+            
+            $assignmentAction->execute(
+                user: $user,
+                estate: $inviteLink->estate,
+                role: $residentRole,
+                scopeType: AssignmentScope::Estate,
+                zone: null,
+                isPrimary: false
+            );
             $user->assignRole($residentRole);
 
             if ($inviteLink->role === 'property_owner') {
@@ -89,6 +101,15 @@ class InviteRegistrationController extends Controller
                     ->where('guard_name', 'web')
                     ->whereNull('estate_id')
                     ->firstOrFail();
+                
+                $assignmentAction->execute(
+                    user: $user,
+                    estate: $inviteLink->estate,
+                    role: $poRole,
+                    scopeType: AssignmentScope::Estate,
+                    zone: null,
+                    isPrimary: false
+                );
                 $user->assignRole($poRole);
             }
 

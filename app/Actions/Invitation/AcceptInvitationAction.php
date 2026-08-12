@@ -74,11 +74,20 @@ class AcceptInvitationAction
             $scopeType = AssignmentScope::tryFrom($invitation->scope_type) ?? AssignmentScope::Estate;
             $zoneIdCoalesced = $zone ? $zone->id : 0;
 
-            $role = $invitation->role_id
-                ? Role::find($invitation->role_id)
-                : ($invitation->relationship_type === 'security'
-                    ? Role::where('name', 'security')->where('guard_name', 'web')->whereNull('estate_id')->first()
-                    : null);
+            $role = null;
+            if ($invitation->role_id) {
+                $role = Role::find($invitation->role_id);
+            } else {
+                $roleName = match ($invitation->relationship_type) {
+                    'security' => 'security',
+                    'resident' => 'resident',
+                    'property_owner' => 'property_owner',
+                    default => null,
+                };
+                if ($roleName) {
+                    $role = Role::where('name', $roleName)->where('guard_name', 'web')->whereNull('estate_id')->first();
+                }
+            }
 
             if ($role && $estate) {
                 $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)

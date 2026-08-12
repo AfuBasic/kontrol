@@ -73,45 +73,58 @@ type NavItem = {
     permission?: string;
     role?: string;
     feature?: string;
+    group?: string;
     comingSoon?: boolean;
 };
 
 const baseNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-    { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view', feature: 'resident-directory' },
-    { name: 'Property Owners', href: PropertyOwnerController.index.url(), icon: UsersIcon, permission: 'property_owners.view' },
+    
+    // People Group
+    { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view', feature: 'resident-directory', group: 'People' },
+    { name: 'Property Owners', href: PropertyOwnerController.index.url(), icon: UsersIcon, permission: 'property_owners.view', group: 'People' },
     {
         name: 'Security',
         href: SecurityPersonnelController.index.url(),
         icon: ShieldCheckIcon,
         permission: 'security.view',
         feature: 'security-personnel-management',
+        group: 'People',
     },
+
+    // Operations & Estate Group
+    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin', group: 'Estate' },
+    { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board', group: 'Estate' },
+    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view', group: 'Operations' },
+    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view', group: 'Operations' },
+
+    // Finance Group
     {
         name: 'Collections',
         href: CollectionController.index.url(),
         icon: BanknotesIcon,
         feature: 'payment-collection',
+        group: 'Finance',
     },
     {
         name: 'Transactions',
         href: TransactionController.index.url(),
         icon: CurrencyDollarIcon,
         feature: 'payment-collection',
+        group: 'Finance',
     },
-    { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
-    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view' },
-    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
-    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin' },
-    { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
+
+    // Governance & Access Group
     {
-        name: 'Assignments',
+        name: 'Staff & Authority',
         href: AdministrativeAssignmentController.index.url(),
         icon: UserGroupIcon,
         role: 'admin',
         feature: 'user-access-control',
+        group: 'Access',
     },
-    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
+    { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control', group: 'Access' },
+    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view', group: 'Access' },
 ];
 
 const primaryNav: NavItem[] = baseNav;
