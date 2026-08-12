@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
@@ -44,7 +45,7 @@ class ResidentController extends Controller
             ->getPaginatedResidents(15, $filters)
             ->through(function ($user) use ($estate) {
                 $membership = $user->estates->first()?->pivot;
-                $zone = $membership?->zone_id ? \App\Models\Zone::find($membership->zone_id) : null;
+                $zone = $membership?->zone_id ? Zone::find($membership->zone_id) : null;
 
                 return [
                     'id' => $user->id,
@@ -107,7 +108,7 @@ class ResidentController extends Controller
         return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
             'filters' => $filters,
-            'zones' => \App\Models\Zone::where('estate_id', $estate->id)->get(['id', 'name']),
+            'zones' => Zone::where('estate_id', $estate->id)->get(['id', 'name']),
             'stats' => [
                 'total' => $totalResidents,
                 'active' => $activeResidents,
