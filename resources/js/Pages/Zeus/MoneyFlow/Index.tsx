@@ -57,7 +57,7 @@ export default function MoneyFlowIndex({ friction, velocity, recentFailures }: P
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
-        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+        show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
     };
 
     return (
@@ -146,7 +146,7 @@ export default function MoneyFlowIndex({ friction, velocity, recentFailures }: P
                                             background: 'rgba(255, 255, 255, 0.9)',
                                             backdropFilter: 'blur(8px)',
                                         }}
-                                        formatter={(value: number) => [formatExactCurrency(value), 'Gross Volume']}
+                                        formatter={(value: any) => [formatExactCurrency(Number(value)), 'Gross Volume']}
                                         labelStyle={{ color: '#64748b', fontWeight: 600, fontSize: '12px', marginBottom: '4px' }}
                                     />
                                     <Bar dataKey="amount" radius={[4, 4, 0, 0]} fill="#10b981" maxBarSize={40} />
