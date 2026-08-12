@@ -36,18 +36,13 @@ class InvitationController extends Controller
         }
 
         if (! $user) {
-            // New user: Needs to register. We can redirect to the join form using the token.
-            // Wait, we have InviteRegistrationController which uses `EstateInviteLink`. Let's just use Inertia Auth/Join.
-            // Since this is for specific invitations, we could just redirect them to a registration flow, or render a specific view here.
-            // But to keep it simple, we'll render 'Invitation/Register' if it existed, or we can use the same view if the frontend handles it, but since we are modifying backend:
-            // For now, let's just pass `user => null` to tell the frontend they need to register.
-            // Or better yet, we redirect them to standard register with pre-filled email.
-            return redirect()->route('register', ['email' => $invitation->email, 'invitation_token' => $token]);
-        }
-
-        // If user is not logged in but exists, they must log in to accept.
-        if (! Auth::check()) {
-            return redirect()->route('login', ['email' => $invitation->email, 'invitation_token' => $token]);
+            $user = User::firstOrCreate(
+                ['email' => strtolower($invitation->email)],
+                [
+                    'name' => strstr($invitation->email, '@', true) ?: $invitation->email,
+                    'email_verified_at' => now(),
+                ]
+            );
         }
 
         return Inertia::render('Invitation/Accept', [
@@ -71,6 +66,14 @@ class InvitationController extends Controller
         }
 
         $user = Auth::user();
+        if (! $user) {
+            $existingUser = User::where('email', strtolower($invitation->email))->first();
+            if ($existingUser) {
+                Auth::login($existingUser);
+                $user = $existingUser;
+            }
+        }
+
         if (! $user || strtolower($user->email) !== strtolower($invitation->email)) {
             return redirect()->route('invitation.invalid');
         }
