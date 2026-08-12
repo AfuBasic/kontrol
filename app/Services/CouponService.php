@@ -72,6 +72,13 @@ class CouponService
             ];
         }
 
+        if ($coupon->zone_id !== null && ! app(ZoneAudienceResolver::class)->userBelongsToZone($user, $estate, (int) $coupon->zone_id)) {
+            return [
+                'status' => 'error',
+                'message' => 'This coupon is not valid for your zone.',
+            ];
+        }
+
         if ($plan && ! empty($coupon->eligible_plans) && ! in_array($plan->id, $coupon->eligible_plans)) {
             return [
                 'status' => 'error',

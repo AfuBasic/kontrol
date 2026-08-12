@@ -25,6 +25,7 @@ import ZeusLayout from '@/Layouts/ZeusLayout';
 interface Estate {
     id: number;
     name: string;
+    zones?: Array<{ id: number; name: string }>;
 }
 
 interface Resident {
@@ -55,6 +56,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
         value: '',
         scope: 'global',
         estate_id: '',
+        zone_id: '',
         user_ids: [] as string[],
         eligible_plans: [] as string[],
         expires_at: '',
@@ -215,14 +217,22 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
     }
 
     function selectEstate(estate: Estate) {
-        setData('estate_id', estate.id.toString());
+        setData((current) => ({
+            ...current,
+            estate_id: estate.id.toString(),
+            zone_id: '',
+        }));
         setSelectedEstateName(estate.name);
         setEstateQuery('');
         setLocalErrors((prev) => ({ ...prev, estate_id: '' }));
     }
 
     function clearEstateSelection() {
-        setData('estate_id', '');
+        setData((current) => ({
+            ...current,
+            estate_id: '',
+            zone_id: '',
+        }));
         setSelectedEstateName('');
         validateField('estate_id', '');
     }
@@ -590,6 +600,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                         ...d,
                                                         scope: scope.id,
                                                         estate_id: '',
+                                                        zone_id: '',
                                                         user_ids: [],
                                                     }));
                                                     clearEstateSelection();
@@ -661,6 +672,30 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                             )}
                                             {(localErrors.estate_id || errors.estate_id) && (
                                                 <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.estate_id || errors.estate_id}</p>
+                                            )}
+
+                                            {data.estate_id && (
+                                                <div className="mt-4">
+                                                    <label className="mb-2 block text-xs font-bold tracking-wider text-[#9297A8] uppercase">
+                                                        Target Zone (optional)
+                                                    </label>
+                                                    <select
+                                                        value={data.zone_id}
+                                                        onChange={(e) => setData('zone_id', e.target.value)}
+                                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3.5 text-sm text-[#F2F3F6] focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] focus:outline-none"
+                                                    >
+                                                        <option value="">Entire estate</option>
+                                                        {(estates.find((estate) => estate.id.toString() === data.estate_id)?.zones || []).map((zone) => (
+                                                            <option key={zone.id} value={zone.id}>
+                                                                {zone.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <p className="mt-1.5 text-[11px] font-medium text-[#9297A8]">
+                                                        Restrict redemption to residents whose property is in this zone.
+                                                    </p>
+                                                    {errors.zone_id && <p className="mt-1.5 text-xs font-semibold text-rose-500">{errors.zone_id}</p>}
+                                                </div>
                                             )}
                                         </motion.div>
                                     )}
