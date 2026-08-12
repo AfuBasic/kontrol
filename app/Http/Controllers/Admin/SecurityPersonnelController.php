@@ -11,6 +11,7 @@ use App\Actions\Admin\UpdateSecurityAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSecurityRequest;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Admin\SecurityService;
 use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
@@ -50,7 +51,7 @@ class SecurityPersonnelController extends Controller
                 ->getPaginatedSecurity(15, $filters)
                 ->through(function ($user) {
                     $membership = $user->estates->first()?->pivot;
-                    $zone = $membership?->zone_id ? \App\Models\Zone::find($membership->zone_id) : null;
+                    $zone = $membership?->zone_id ? Zone::find($membership->zone_id) : null;
 
                     return [
                         'ulid' => $user->ulid,

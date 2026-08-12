@@ -199,9 +199,9 @@ class ResidentController extends Controller
                 ->orderBy('name')
                 ->get(['users.id', 'users.name'])
                 ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
-            'properties' => Property::query()
+            'zones' => Zone::query()
                 ->where('estate_id', $estate->id)
-                ->whereNull('archived_at')
+                ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
         ]);
