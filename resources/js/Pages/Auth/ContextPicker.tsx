@@ -2,6 +2,7 @@ import { Head, router, useForm } from '@inertiajs/react';
 import { Building, Shield, Home, Briefcase, ArrowRight } from 'lucide-react';
 import { FormEventHandler, useState } from 'react';
 import clsx from 'clsx';
+import { contextSwitch } from '@/routes';
 
 interface ContextData {
     id: number;
@@ -29,7 +30,7 @@ export default function ContextPicker({ availableContexts }: Props) {
         e.preventDefault();
         
         if (selectedContext) {
-            router.post(route('context.switch'), {
+            router.post(contextSwitch().url(), {
                 assignment_id: selectedContext
             });
         }
