@@ -7,7 +7,6 @@ use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
 
 class BulkInviteResidentsAction
 {
@@ -24,7 +23,7 @@ class BulkInviteResidentsAction
 
         $invitedIds = [];
         $alreadyMembers = 0;
-        
+
         $createAction = app(CreateInvitationAction::class);
         $user = Auth::user();
 
