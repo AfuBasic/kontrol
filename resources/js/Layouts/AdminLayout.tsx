@@ -868,9 +868,22 @@ export default function AdminLayout({ children, title }: Props) {
                                 ))}
                             </nav>
                             <div className="border-t border-white/10 bg-black/20 p-4">
-                                <Link href={ProfileController.edit.url()} className="flex items-center gap-3 px-4 py-3 text-white/70">
+                                <Link href={ProfileController.edit.url()} className="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/10 rounded-xl transition-colors">
                                     <UserCircleIcon className="h-5 w-5" /> Profile
                                 </Link>
+                                
+                                {isAdmin && hasActivityLogs && (
+                                    <Link href={ActivityLogController.index.url()} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/10 rounded-xl transition-colors">
+                                        <ClipboardDocumentListIcon className="h-5 w-5" /> Activity Log
+                                    </Link>
+                                )}
+                                
+                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                    <Link href={ContextController.index.url()} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/10 rounded-xl transition-colors">
+                                        <BuildingOfficeIcon className="h-5 w-5" /> Switch Workspace
+                                    </Link>
+                                )}
+                                
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);
