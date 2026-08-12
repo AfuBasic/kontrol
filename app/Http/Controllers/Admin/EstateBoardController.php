@@ -12,9 +12,11 @@ use App\Http\Requests\EstateBoard\UpdatePostRequest;
 use App\Models\EstateBoardPost;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Admin\EstateBoardService;
 use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,7 +26,8 @@ class EstateBoardController extends Controller
     public function __construct(
         protected EstateBoardService $boardService,
         protected UserService $userService,
-        protected EstateContextService $estateContext
+        protected EstateContextService $estateContext,
+        protected ZoneAudienceResolver $zoneAudience,
     ) {}
 
     /**
@@ -56,6 +59,7 @@ class EstateBoardController extends Controller
                 'category' => $category ?? '',
                 'priority' => $priority ?? '',
             ],
+            'zones' => $this->zoneAudience->zonesForEstate($estateId),
         ]);
     }
 
@@ -81,7 +85,9 @@ class EstateBoardController extends Controller
     {
         $this->authorize('create', EstateBoardPost::class);
 
-        return Inertia::render('Admin/EstateBoard/Create');
+        return Inertia::render('Admin/EstateBoard/Create', [
+            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+        ]);
     }
 
     /**
@@ -149,11 +155,17 @@ class EstateBoardController extends Controller
                 $user = User::find($target->target_id);
 
                 return ['type' => 'Resident', 'name' => $user ? $user->name : 'Unknown'];
-            } else {
-                $property = Property::find($target->target_id);
-
-                return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
             }
+
+            if (in_array($target->target_type, ['zone', Zone::class, 'App\\Models\\Zone'], true)) {
+                $zone = Zone::find($target->target_id);
+
+                return ['type' => 'Zone', 'name' => $zone ? $zone->name : 'Unknown'];
+            }
+
+            $property = Property::find($target->target_id);
+
+            return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
         })->values()->all();
 
         return Inertia::render('Admin/EstateBoard/Show', [
@@ -175,10 +187,11 @@ class EstateBoardController extends Controller
     {
         $this->authorize('update', $post);
 
-        $post->load(['media']);
+        $post->load(['media', 'targets']);
 
         return Inertia::render('Admin/EstateBoard/Edit', [
             'post' => $post,
+            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
         ]);
     }
 

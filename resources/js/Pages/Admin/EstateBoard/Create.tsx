@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, FileEdit, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, Eye, FileEdit, MapPin, Trash2, Upload } from 'lucide-react';
 import { marked } from 'marked';
 import { useCallback, useRef, useState, lazy, Suspense } from 'react';
 
@@ -12,6 +12,11 @@ import type { PostAudience, PostCategory, PostPriority, PostStatus } from '@/typ
 
 const MarkdownEditor = lazy(() => import('@/Components/MarkdownEditor'));
 
+type ZoneOption = {
+    id: number;
+    name: string;
+};
+
 type FormData = {
     title: string;
     body: string;
@@ -19,10 +24,11 @@ type FormData = {
     priority: PostPriority;
     status: PostStatus;
     audience: PostAudience;
+    zone_ids: number[];
     images: File[];
 };
 
-export default function CreatePost() {
+export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [previews, setPreviews] = useState<string[]>([]);
 
@@ -33,6 +39,7 @@ export default function CreatePost() {
         priority: 'normal',
         status: 'published',
         audience: 'all',
+        zone_ids: [] as number[],
         images: [],
     });
 
@@ -303,6 +310,45 @@ export default function CreatePost() {
                                 </div>
                                 {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
                             </div>
+
+                            {zones.length > 0 && (
+                                <div>
+                                    <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Zone targeting</label>
+                                    <p className="mb-3 text-[11px] text-gray-500">Leave empty to reach the entire estate. Select zones to notify only residents in those areas.</p>
+                                    <div className="space-y-2">
+                                        {zones.map((zone) => {
+                                            const selected = data.zone_ids.includes(zone.id);
+                                            return (
+                                                <label
+                                                    key={zone.id}
+                                                    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
+                                                        selected
+                                                            ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                                            : 'border-gray-200 hover:bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selected}
+                                                        onChange={() => {
+                                                            setData(
+                                                                'zone_ids',
+                                                                selected
+                                                                    ? data.zone_ids.filter((id) => id !== zone.id)
+                                                                    : [...data.zone_ids, zone.id],
+                                                            );
+                                                        }}
+                                                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                    />
+                                                    <MapPin className="h-4 w-4 text-gray-500" />
+                                                    <span className="text-xs font-medium text-gray-900">{zone.name}</span>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                    {errors.zone_ids && <p className="mt-1 text-sm text-red-600">{errors.zone_ids}</p>}
+                                </div>
+                            )}
 
                             <div>
                                 <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Images</label>

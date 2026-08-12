@@ -21,7 +21,7 @@ class UpdatePostAction
     ) {}
 
     /**
-     * @param  array{title?: string|null, body: string, category: string, priority: string, status: string, audience: string, images?: array<UploadedFile>, remove_media_ids?: array<int>}  $data
+     * @param  array{title?: string|null, body: string, category: string, priority: string, status: string, audience: string, zone_ids?: array<int>, images?: array<UploadedFile>, remove_media_ids?: array<int>}  $data
      */
     public function execute(EstateBoardPost $post, array $data, Estate $estate): EstateBoardPost
     {
@@ -33,6 +33,8 @@ class UpdatePostAction
             $priority = EstateBoardPostPriority::from($data['priority']);
             $wasPublished = $post->status === EstateBoardPostStatus::Published;
 
+            $zoneIds = array_values(array_unique(array_filter($data['zone_ids'] ?? [])));
+
             $post->update([
                 'title' => $data['title'] ?? null,
                 'body' => $data['body'],
@@ -40,10 +42,19 @@ class UpdatePostAction
                 'priority' => $priority,
                 'status' => $status,
                 'audience' => $audience,
+                'applies_to' => $zoneIds === [] ? 'all' : 'custom',
                 'published_at' => $status === EstateBoardPostStatus::Published && ! $wasPublished
                     ? now()
                     : $post->published_at,
             ]);
+
+            $post->targets()->delete();
+            foreach ($zoneIds as $zoneId) {
+                $post->targets()->create([
+                    'target_type' => 'zone',
+                    'target_id' => $zoneId,
+                ]);
+            }
 
             if (! empty($data['remove_media_ids'])) {
                 $this->removeMedia($post, $data['remove_media_ids']);

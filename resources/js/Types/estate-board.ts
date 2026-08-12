@@ -35,6 +35,7 @@ export type EstateBoardPost = {
     updated_at: string;
     author: PostAuthor;
     media: PostMedia[];
+    targets?: Array<{ target_type: string; target_id: number }>;
     comments_count: number;
     reads_count?: number;
     media_count?: number;

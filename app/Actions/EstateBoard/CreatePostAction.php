@@ -13,6 +13,7 @@ use App\Models\EstateBoardPostMedia;
 use App\Models\User;
 use App\Notifications\EstateBoard\NewPostNotification;
 use App\Services\CloudinaryService;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +26,7 @@ class CreatePostAction
     ) {}
 
     /**
-     * @param  array{title?: string|null, body: string, category: string, priority: string, status: string, audience: string, images?: array<UploadedFile>}  $data
+     * @param  array{title?: string|null, body: string, category: string, priority: string, status: string, audience: string, zone_ids?: array<int>, images?: array<UploadedFile>}  $data
      */
     public function execute(array $data, Estate $estate): EstateBoardPost
     {
@@ -36,6 +37,8 @@ class CreatePostAction
             $category = EstateBoardPostCategory::from($data['category']);
             $priority = EstateBoardPostPriority::from($data['priority']);
 
+            $zoneIds = array_values(array_unique(array_filter($data['zone_ids'] ?? [])));
+
             $post = EstateBoardPost::create([
                 'estate_id' => $estate->id,
                 'user_id' => $user->id,
@@ -45,8 +48,16 @@ class CreatePostAction
                 'priority' => $priority,
                 'status' => $status,
                 'audience' => $audience,
+                'applies_to' => $zoneIds === [] ? 'all' : 'custom',
                 'published_at' => $status === EstateBoardPostStatus::Published ? now() : null,
             ]);
+
+            foreach ($zoneIds as $zoneId) {
+                $post->targets()->create([
+                    'target_type' => 'zone',
+                    'target_id' => $zoneId,
+                ]);
+            }
 
             if (! empty($data['images'])) {
                 $this->attachMedia($post, $data['images'], $estate);
@@ -72,6 +83,11 @@ class CreatePostAction
                     $query->role('resident');
                 } elseif ($audience === EstateBoardPostAudience::Security) {
                     $query->role('security');
+                }
+
+                if ($zoneIds !== []) {
+                    $zoneUserIds = app(ZoneAudienceResolver::class)->userIdsInZones($estate->id, $zoneIds);
+                    $query->whereIn('id', $zoneUserIds);
                 }
 
                 $users = $query->where('id', '!=', $user->id)->get();

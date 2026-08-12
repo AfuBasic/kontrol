@@ -35,6 +35,7 @@ type Props = {
         category: string;
         priority: string;
     };
+    zones?: Array<{ id: number; name: string }>;
 };
 
 const CATEGORIES: { value: PostCategory | 'all'; label: string }[] = [
@@ -46,7 +47,7 @@ const CATEGORIES: { value: PostCategory | 'all'; label: string }[] = [
     { value: 'event', label: 'Event' },
 ];
 
-export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
+export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }: Props) {
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const composerRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
@@ -165,7 +166,7 @@ export default function EstateBoardIndex({ posts, metrics, filters }: Props) {
 
             {/* Quick Composer Surface */}
             <div ref={composerRef}>
-                <QuickComposer lastBroadcastNote={metrics.last_broadcast} />
+                <QuickComposer lastBroadcastNote={metrics.last_broadcast} zones={zones} />
             </div>
 
             {/* Search & Category Filter Toolbar */}

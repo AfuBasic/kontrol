@@ -6,6 +6,7 @@ use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostCategory;
 use App\Enums\EstateBoardPostPriority;
 use App\Enums\EstateBoardPostStatus;
+use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -29,6 +30,11 @@ class StorePostRequest extends FormRequest
             'priority' => ['required', Rule::enum(EstateBoardPostPriority::class)],
             'status' => ['required', Rule::enum(EstateBoardPostStatus::class)],
             'audience' => ['required', Rule::enum(EstateBoardPostAudience::class)],
+            'zone_ids' => ['nullable', 'array'],
+            'zone_ids.*' => [
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', resolve(EstateContextService::class)->getEstateId()),
+            ],
             'images' => ['nullable', 'array', 'max:10'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'idempotency_key' => ['nullable', 'string', 'max:64'],
