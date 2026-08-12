@@ -18,9 +18,15 @@ interface Props {
         zone_name?: string | null;
     };
     isPasswordReset?: boolean;
+    flash?: {
+        success?: string;
+        error?: string;
+        info?: string;
+    };
+    errors?: Record<string, string>;
 }
 
-export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswordReset }: Props) {
+export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswordReset, flash, errors }: Props) {
     const { post, processing } = useForm();
 
     const name = user?.name || invitation?.email || 'there';
@@ -71,6 +77,12 @@ export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswo
                                     {estateName ? `You have been invited to join ${estateName} on Kontrol.` : 'You have been invited to join an estate on Kontrol.'}
                                 </p>
                             </div>
+
+                            {(flash?.error || (errors && Object.keys(errors).length > 0)) && (
+                                <div className="mb-6 rounded-lg bg-red-500/10 p-4 border border-red-500/20 text-sm text-red-400">
+                                    {flash?.error || Object.values(errors || {})[0]}
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <button
