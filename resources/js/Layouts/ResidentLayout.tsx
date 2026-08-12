@@ -567,7 +567,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             <div className="flex min-h-screen flex-1 flex-col">
                 {/* Header - Conditional Light Premium Header */}
                 {!hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) && (
-                    <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
+                    <header className="fixed inset-x-0 top-0 z-[60] border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
                         <div className="mx-auto max-w-lg px-6 sm:max-w-xl md:max-w-4xl lg:max-w-5xl">
                             <div className="flex h-16 items-center justify-between">
                                 <div className="flex items-center gap-2">
