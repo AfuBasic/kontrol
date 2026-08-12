@@ -10,6 +10,10 @@ class DeleteResidentAction
 {
     public function execute(User $resident, Estate $estate): void
     {
+        if ($resident->email === $estate->email) {
+            abort(403, 'The estate creator cannot be deleted.');
+        }
+
         activity()
             ->performedOn($resident)
             ->causedBy(Auth::user())
