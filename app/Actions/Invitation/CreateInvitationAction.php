@@ -2,6 +2,7 @@
 
 namespace App\Actions\Invitation;
 
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\Scopes\ZoneScope;
@@ -29,18 +30,31 @@ class CreateInvitationAction
         // 1. Normalize Email
         $email = strtolower(trim($email));
 
-        // 2. Validate Membership: Does the user already belong to this estate?
-        // We look for any existing user with this email who is already a member of the estate.
+        // 2. Validate Membership & Role: Does the user already hold this exact role/relationship in this estate?
         $existingUser = User::where('email', $email)->first();
         if ($existingUser) {
-            $isMember = DB::table('estate_users_membership')
-                ->where('user_id', $existingUser->id)
-                ->where('estate_id', $estate->id)
-                ->whereIn('status', ['accepted', 'active'])
-                ->exists();
+            $hasDuplicateRole = false;
 
-            if ($isMember) {
-                // Return null to signify that the invitation should be skipped because they are already a member.
+            if ($role) {
+                $hasDuplicateRole = AdministrativeAssignment::where('user_id', $existingUser->id)
+                    ->where('estate_id', $estate->id)
+                    ->where('role_id', $role->id)
+                    ->where('is_active', true)
+                    ->exists();
+            } else {
+                $hasDuplicateRole = DB::table('estate_users_membership')
+                    ->where('user_id', $existingUser->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['accepted', 'active'])
+                    ->where(function ($query) use ($relationshipType) {
+                        $query->where('relationship_type', $relationshipType)
+                            ->orWhereNull('relationship_type');
+                    })
+                    ->exists();
+            }
+
+            if ($hasDuplicateRole) {
+                // Return null to signify that the invitation should be skipped because they already hold this role.
                 return null;
             }
         }

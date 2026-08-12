@@ -21,12 +21,14 @@ class CreateResidentAction
     public function execute(array $data, Estate $estate): User
     {
         return DB::transaction(function () use ($data, $estate) {
-            // 1. Create user with no password (invitation pending)
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => null,
-            ]);
+            // 1. Get or create user (invitation pending if new user)
+            $user = User::firstOrCreate(
+                ['email' => strtolower(trim($data['email']))],
+                [
+                    'name' => $data['name'],
+                    'password' => null,
+                ]
+            );
 
             // 2. Attach user to estate with pending status (invitation pending acceptance)
             $estate->users()->attach($user->id, [

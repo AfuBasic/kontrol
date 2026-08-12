@@ -243,3 +243,32 @@ test('19. Invalid duplicate emails are reported and 20. Valid rows remain succes
     expect($result['duplicates'])->toBe(1);
     expect(Invitation::where('estate_id', $this->estateA->id)->count())->toBe(2);
 });
+
+test('20. Resident in estate can be invited as admin to same estate, but is skipped if invited as resident again', function () {
+    $user = User::factory()->create(['email' => 'multi_role@example.com']);
+    $this->estateA->users()->attach($user->id, ['status' => 'accepted', 'relationship_type' => 'resident']);
+
+    $adminRole = Role::create([
+        'name' => 'Estate Manager',
+        'guard_name' => 'web',
+        'estate_id' => $this->estateA->id,
+    ]);
+
+    // 1. Inviting as resident again -> skipped (returns null)
+    $residentInv = app(CreateInvitationAction::class)->execute(
+        email: 'multi_role@example.com',
+        estate: $this->estateA,
+        relationshipType: 'resident'
+    );
+    expect($residentInv)->toBeNull();
+
+    // 2. Inviting as admin (with admin role) -> allowed!
+    $adminInv = app(CreateInvitationAction::class)->execute(
+        email: 'multi_role@example.com',
+        estate: $this->estateA,
+        relationshipType: 'admin',
+        role: $adminRole
+    );
+    expect($adminInv)->not->toBeNull();
+    expect($adminInv->role_id)->toBe($adminRole->id);
+});
