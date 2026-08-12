@@ -11,11 +11,13 @@ use App\Models\User;
 use App\Services\Admin\CollectionService;
 use App\Services\EstateContextService;
 use App\Services\PaystackService;
+use App\Services\ZoneAudienceResolver;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,6 +28,7 @@ class CollectionController extends Controller
         private EstateContextService $estateContext,
         private CollectionService $collectionService,
         private PaystackService $paystackService,
+        private ZoneAudienceResolver $zoneAudience,
     ) {}
 
     public function index(Request $request): Response
@@ -306,6 +309,7 @@ class CollectionController extends Controller
 
         return Inertia::render('Admin/Collections/Create', [
             'residents' => $residents,
+            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
         ]);
     }
 
@@ -313,7 +317,7 @@ class CollectionController extends Controller
     {
         $this->ensureBankingIsSetup();
         $estate = $this->estateContext->getEstate();
-        $this->collectionService->createCollection($estate, $request->all());
+        $this->collectionService->createCollection($estate, $this->validatedCollectionPayload($request, $estate->id));
 
         return redirect()->route('admin.collections.index')
             ->with('success', 'Collection created successfully.');
@@ -452,6 +456,7 @@ class CollectionController extends Controller
         return Inertia::render('Admin/Collections/Edit', [
             'collection' => $collection,
             'residents' => $residents,
+            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
         ]);
     }
 
@@ -460,7 +465,7 @@ class CollectionController extends Controller
         $this->ensureBankingIsSetup();
         $this->authorizeCollection($collection);
         $this->ensureIsDraft($collection);
-        $this->collectionService->updateCollection($collection, $request->all());
+        $this->collectionService->updateCollection($collection, $this->validatedCollectionPayload($request, $collection->estate_id));
 
         return redirect()->route('admin.collections.index')
             ->with('success', 'Collection updated successfully.');
@@ -543,6 +548,30 @@ class CollectionController extends Controller
         if ($collection->status !== 'draft') {
             abort(403, 'Published collections cannot be modified.');
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validatedCollectionPayload(Request $request, int $estateId): array
+    {
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'amount' => ['required', 'numeric', 'min:1'],
+            'billing_type' => ['required', 'string', 'in:one_time,recurring'],
+            'recurring_interval' => ['nullable', 'string', 'in:weekly,monthly,yearly'],
+            'start_date' => ['required', 'date'],
+            'due_at' => ['nullable', 'date'],
+            'due_day' => ['nullable', 'integer', 'min:1', 'max:31'],
+            'grace_days' => ['nullable', 'integer', 'min:0'],
+            'late_fee' => ['nullable', 'numeric', 'min:0'],
+            'applies_to' => ['required', 'string', 'in:all,target,property_owner,zone'],
+            'targets' => ['required_if:applies_to,target', 'array'],
+            'targets.*' => ['integer', 'exists:users,id'],
+            'zones' => ['required_if:applies_to,zone', 'array', 'min:1'],
+            'zones.*' => ['integer', Rule::exists('zones', 'id')->where('estate_id', $estateId)],
+        ]);
     }
 
     private function ensureBankingIsSetup(): void
