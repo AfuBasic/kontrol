@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 
 interface Props {
@@ -21,7 +20,7 @@ const PERMISSIONS = ['Validate visitor access codes', 'Acknowledge & dismiss ale
 export default function ProfilePage({ user, estateName }: Props) {
     const { auth } = usePage().props as any;
     const availableContexts = auth?.user?.available_contexts || [];
-    
+
     const [editOpen, setEditOpen] = useState(false);
     const [editMode, setEditMode] = useState<'profile' | 'password'>('profile');
     const [logoutConfirm, setLogoutConfirm] = useState(false);
@@ -119,7 +118,7 @@ export default function ProfilePage({ user, estateName }: Props) {
                         setEditOpen(true);
                     }}
                 />
-                
+
                 {/* Switch Workspace */}
                 {availableContexts.length > 1 && (
                     <ActionRow
