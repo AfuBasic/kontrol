@@ -331,7 +331,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        <ContextSwitcher />
+                        <ContextSwitcher variant={variant} />
                         <SystemHealthMonitor size="md" />
                         <div
                             className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
