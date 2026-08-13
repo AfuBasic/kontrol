@@ -142,8 +142,7 @@ class CheckpointClaimService
      */
     public function getCurrentCheckpoint(int $estateId, User $user): ?string
     {
-        $userKey = $this->getUserKey($estateId, $user->id);
-        $checkpoint = Cache::get($userKey) ?: session('active_checkpoint');
+        $checkpoint = session('active_checkpoint');
 
         if (! $checkpoint) {
             return null;
@@ -153,14 +152,11 @@ class CheckpointClaimService
         $occupant = Cache::get($lockKey);
 
         if ($occupant !== null && (int) $occupant === $user->id) {
-            if (! session()->has('active_checkpoint')) {
-                session(['active_checkpoint' => $checkpoint]);
-            }
-
             return $checkpoint;
         }
 
         // Lock expired or taken by someone else
+        $userKey = $this->getUserKey($estateId, $user->id);
         Cache::forget($userKey);
         session()->forget('active_checkpoint');
 

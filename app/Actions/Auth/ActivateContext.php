@@ -31,9 +31,9 @@ class ActivateContext
             }
         }
 
-        // Release checkpoint for previous context if switching estates
+        // Release checkpoint whenever context or role is changed
         $currentContext = $this->contextManager->current();
-        if ($currentContext && $currentContext->estateId !== $assignment->estate_id) {
+        if ($currentContext) {
             app(CheckpointClaimService::class)->release($currentContext->estateId, $user);
         }
 
