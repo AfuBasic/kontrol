@@ -105,6 +105,32 @@ test('inviting a user that already exists in another estate dispatches invitatio
     expect($membershipStatus)->toBe('pending');
 });
 
+test('first time invited resident can accept invitation and activate membership', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    $estate = Estate::factory()->create();
+
+    $action = app(CreateResidentAction::class);
+    $user = $action->execute([
+        'name' => 'First Time Resident',
+        'email' => 'first.time@example.com',
+    ], $estate);
+
+    $invitation = Invitation::withoutGlobalScopes()->where('email', 'first.time@example.com')->first();
+    expect($invitation)->not->toBeNull();
+    expect($invitation->status)->toBe('pending');
+
+    $acceptAction = app(\App\Actions\Invitation\AcceptInvitationAction::class);
+    $acceptAction->execute($invitation, $user);
+
+    $status = DB::table('estate_users_membership')
+        ->where('user_id', $user->id)
+        ->where('estate_id', $estate->id)
+        ->value('status');
+
+    expect($status)->toBe('accepted');
+    expect($invitation->fresh()->status)->toBe('accepted');
+});
+
 test('bulk invited residents have pending invitation status', function () {
     $estate = Estate::factory()->create();
 
