@@ -77,6 +77,13 @@ class InviteRegistrationController extends Controller
                 'user_type' => 'user',
             ]);
 
+            // Create membership based on requires_approval setting
+            $status = $inviteLink->requires_approval ? 'pending' : 'accepted';
+
+            $user->estates()->attach($inviteLink->estate_id, [
+                'status' => $status,
+            ]);
+
             app(ContextManager::class)->setSystemContext($inviteLink->estate_id);
 
             // Assign roles scoped to this estate via AdministrativeAssignment system
@@ -120,13 +127,6 @@ class InviteRegistrationController extends Controller
             UserProfile::create([
                 'user_id' => $user->id,
                 'property_owner_id' => $inviteLink->user_id,
-            ]);
-
-            // Create membership based on requires_approval setting
-            $status = $inviteLink->requires_approval ? 'pending' : 'accepted';
-
-            $user->estates()->attach($inviteLink->estate_id, [
-                'status' => $status,
             ]);
 
             // Create resident subscription if required
