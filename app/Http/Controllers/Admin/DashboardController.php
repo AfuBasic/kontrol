@@ -21,14 +21,14 @@ class DashboardController extends Controller
         $estate = $this->estateContext->getEstate();
 
         return Inertia::render('Admin/Dashboard', [
-            // Eager — lightweight shell for instant paint
+            // Eager - lightweight shell for instant paint
             'estateShell' => [
                 'name' => $estate->name,
                 'address' => $estate->address,
             ],
             'stats' => $this->safe(fn () => $this->dashboardService->getOverviewStats()),
 
-            // Deferred — heavy sections load independently after first paint
+            // Deferred - heavy sections load independently after first paint
             'estateHealth' => Inertia::defer(fn () => $this->safe(
                 fn () => $this->dashboardService->getDetailedDashboardStats()['estateHealth']
             )),
