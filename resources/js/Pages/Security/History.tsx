@@ -25,6 +25,12 @@ type Log = {
     verified_at: string;
     verified_at_human: string;
     verifier_name: string;
+    gate?: string | null;
+    entry_point?: string | null;
+    exit_point?: string | null;
+    checked_out_at?: string | null;
+    checked_out_at_human?: string | null;
+    checkout_verifier_name?: string | null;
     vehicle: {
         make: string;
         model: string;
@@ -345,8 +351,8 @@ export default function History({ logs, filters, hosts }: Props) {
                                 </div>
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Entry Time</p>
-                                        <p className="text-sm font-bold text-slate-900">{selectedLog.verified_at}</p>
+                                        <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Entry Gate & Time</p>
+                                        <p className="text-sm font-bold text-slate-900">{selectedLog.entry_point || selectedLog.gate || 'Main Entrance'} • {selectedLog.verified_at}</p>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Validated By</p>
@@ -355,6 +361,21 @@ export default function History({ logs, filters, hosts }: Props) {
                                             <p className="text-sm font-bold text-slate-900">{selectedLog.verifier_name}</p>
                                         </div>
                                     </div>
+                                    {selectedLog.checked_out_at && (
+                                        <>
+                                            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
+                                                <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Exit Gate & Time</p>
+                                                <p className="text-sm font-bold text-slate-900">{selectedLog.exit_point || selectedLog.entry_point || selectedLog.gate || 'Main Entrance'} • {selectedLog.checked_out_at}</p>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Checkout Officer</p>
+                                                <div className="flex items-center gap-2">
+                                                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                                                    <p className="text-sm font-bold text-slate-900">{selectedLog.checkout_verifier_name || 'Security'}</p>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-4">
                                         <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Purpose</p>
                                         <p className="text-sm font-black text-indigo-600">{selectedLog.purpose}</p>
