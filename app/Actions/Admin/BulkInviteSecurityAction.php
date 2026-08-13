@@ -2,10 +2,11 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Invitation\CreateInvitationAction;
-use App\Jobs\Admin\SendBulkSecurityInvitationsJob;
 use App\Models\Estate;
+use App\Models\Invitation;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BulkInviteSecurityAction
 {
@@ -23,30 +24,46 @@ class BulkInviteSecurityAction
         $invitedIds = [];
         $alreadyMembers = 0;
 
-        $createAction = app(CreateInvitationAction::class);
+        $createSecurityAction = app(CreateSecurityAction::class);
         $user = Auth::user();
 
-        // 2. Iterate and create invitations via CreateInvitationAction
+        // 2. Iterate and create security records + invitations
         foreach ($uniqueEmails as $email) {
-            $invitation = $createAction->execute(
-                email: $email,
-                estate: $estate,
-                relationshipType: 'security',
-                role: null,
-                zoneId: $zoneId,
-                scopeType: $zoneId ? 'zone' : 'estate',
-                createdBy: $user
-            );
+            // Check if user is already an accepted member with security role in this estate
+            $existingUser = User::where('email', $email)->first();
+            if ($existingUser) {
+                $isAlreadyAccepted = DB::table('estate_users_membership')
+                    ->where('user_id', $existingUser->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['accepted', 'active'])
+                    ->where('relationship_type', 'security')
+                    ->exists();
 
-            if ($invitation === null) {
-                // Already an active/accepted member of this estate
-                $alreadyMembers++;
-            } else {
+                if ($isAlreadyAccepted) {
+                    $alreadyMembers++;
+
+                    continue;
+                }
+            }
+
+            // Create security personnel (user, pending membership, role assignment, profile, invitation token)
+            $createSecurityAction->execute([
+                'name' => strstr($email, '@', true) ?: $email,
+                'email' => $email,
+                'zone_id' => $zoneId,
+            ], $estate);
+
+            $invitation = Invitation::withoutGlobalScopes()
+                ->where('email', $email)
+                ->where('estate_id', $estate->id)
+                ->first();
+
+            if ($invitation) {
                 $invitedIds[] = $invitation->id;
             }
         }
 
-        // 3. Log activity and dispatch notification job
+        // 3. Log activity
         if (count($invitedIds) > 0) {
             activity()
                 ->causedBy($user)
@@ -56,8 +73,6 @@ class BulkInviteSecurityAction
                     'count' => count($invitedIds),
                 ])
                 ->log('bulk invited '.count($invitedIds).' security personnel');
-
-            SendBulkSecurityInvitationsJob::dispatch($invitedIds, $estate->id);
         }
 
         return [

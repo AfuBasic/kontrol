@@ -158,3 +158,43 @@ it('lists an existing user in security index after being invited as security', f
             ->where('stats.total', 1)
             ->where('stats.pending', 1));
 });
+
+it('bulk invites security personnel via paste or csv and lists them with pending status', function () {
+    Event::fake([SecurityCreated::class]);
+
+    $emails = ['bulk_sec1@example.com', 'bulk_sec2@example.com'];
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->post(route('admin.security.bulk-invite'), [
+            'emails' => $emails,
+            'zone_id' => $this->zone->id,
+        ])
+        ->assertRedirect(route('admin.security.index'))
+        ->assertSessionHas('success');
+
+    Event::assertDispatched(SecurityCreated::class, 2);
+
+    $this->assertDatabaseHas('estate_users_membership', [
+        'estate_id' => $this->estate->id,
+        'relationship_type' => 'security',
+        'zone_id' => $this->zone->id,
+        'status' => 'pending',
+    ]);
+
+    $this->assertDatabaseHas('invitations', [
+        'email' => 'bulk_sec1@example.com',
+        'estate_id' => $this->estate->id,
+        'relationship_type' => 'security',
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->get(route('admin.security.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Security/Index')
+            ->where('stats.total', 2)
+            ->where('stats.pending', 2));
+});
