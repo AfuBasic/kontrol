@@ -11,6 +11,7 @@ use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\Zone;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -85,7 +86,7 @@ class CreateResidentAction
             }
 
             // Provision trial subscription if estate requires resident subscriptions
-            app(\App\Services\ResidentSubscriptionService::class)->createForUser($user, $estate);
+            app(ResidentSubscriptionService::class)->createForUser($user, $estate);
 
             // 4. Create or update user profile with additional data
             UserProfile::updateOrCreate(
