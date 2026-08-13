@@ -166,11 +166,21 @@ class VerifyController extends Controller
 
         if ($request->input('decision') === 'checkout') {
             try {
-                $this->recordCheckOutAction->execute(
+                $log = $this->recordCheckOutAction->execute(
                     code: $request->input('code'),
                     estateId: $estate->id,
                     verifiedBy: $user
                 );
+
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'decision' => 'checkout',
+                        'checked_out_at' => $log->checked_out_at?->format('h:i A, M j'),
+                        'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
+                        'duration_minutes' => $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0,
+                    ]);
+                }
             } catch (ValidationException $e) {
                 if ($request->wantsJson()) {
                     return response()->json([
