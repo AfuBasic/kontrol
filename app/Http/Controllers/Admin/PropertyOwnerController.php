@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdministrativeAssignment;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -192,6 +193,11 @@ class PropertyOwnerController extends Controller
                 'zone_id' => $link->zone_id,
                 'zone_name' => $link->zone?->name ?? 'Entire Estate',
             ])->toArray(),
+            'zones' => Zone::query()
+                ->where('estate_id', $estate->id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
