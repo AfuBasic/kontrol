@@ -255,6 +255,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                         <div className="overflow-x-auto min-h-[280px]">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="bg-slate-50/70 border-b border-slate-100">
+                                    <tr>
                                         {can('security.delete') && (
                                             <th className="w-10 px-4 py-3.5 text-center">
                                                 <input
@@ -323,8 +324,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                     <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${person.zone_name && person.zone_name !== 'Entire estate' ? 'bg-blue-50 text-blue-700 border border-blue-100' : 'bg-slate-100 text-slate-700'}`}>
                                                         {person.zone_name || 'Entire estate'}
                                                     </span>
-                                                </td>     </td>
-
+                                                </td>
                                                 {/* Badge */}
                                                 <td className="px-6 py-3.5 whitespace-nowrap">
                                                     <span className="inline-flex rounded-full bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700">
