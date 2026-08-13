@@ -8,6 +8,15 @@ use Illuminate\Notifications\DatabaseNotification;
 
 class FetchSecurityNotificationsAction
 {
+    public const RESIDENT_NOTIFICATION_TYPES = [
+        \App\Notifications\VisitorCheckedOutNotification::class,
+        'App\Notifications\VisitorCheckedOutNotification',
+        'App\Notifications\VisitorArrivedNotification',
+        'App\Notifications\VisitorAccessGrantedNotification',
+        'App\Notifications\HouseholdMemberInvitedNotification',
+        'App\Notifications\ResidentSubscriptionNotification',
+    ];
+
     /**
      * Fetch paginated notifications for a security user.
      *
@@ -16,6 +25,7 @@ class FetchSecurityNotificationsAction
     public function execute(User $user, int $perPage = 20): LengthAwarePaginator
     {
         return $user->notifications()
+            ->whereNotIn('type', self::RESIDENT_NOTIFICATION_TYPES)
             ->latest()
             ->paginate($perPage);
     }
@@ -25,7 +35,9 @@ class FetchSecurityNotificationsAction
      */
     public function getUnreadCount(User $user): int
     {
-        return $user->unreadNotifications()->count();
+        return $user->unreadNotifications()
+            ->whereNotIn('type', self::RESIDENT_NOTIFICATION_TYPES)
+            ->count();
     }
 
     /**
