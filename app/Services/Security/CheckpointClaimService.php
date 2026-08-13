@@ -159,15 +159,26 @@ class CheckpointClaimService
      */
     public function getCheckpointStatuses(int $estateId, array $configuredEntryPoints, User $currentUser): array
     {
-        $statuses = [];
+        if (empty($configuredEntryPoints)) {
+            return [];
+        }
 
-        // Preload occupant users if any
-        $occupantIds = [];
+        $lockKeys = [];
         foreach ($configuredEntryPoints as $point) {
-            $lockKey = $this->getLockKey($estateId, $point);
-            $occupantId = Cache::get($lockKey);
+            $lockKeys[$point] = $this->getLockKey($estateId, $point);
+        }
+
+        // Batch fetch all lock values in a single cache call
+        $cachedLocks = Cache::many(array_values($lockKeys));
+
+        $occupantIds = [];
+        $pointLocks = [];
+        foreach ($lockKeys as $point => $key) {
+            $val = $cachedLocks[$key] ?? null;
+            $occupantId = $val !== null ? (int) $val : null;
+            $pointLocks[$point] = $occupantId;
             if ($occupantId) {
-                $occupantIds[] = (int) $occupantId;
+                $occupantIds[] = $occupantId;
             }
         }
 
@@ -175,9 +186,9 @@ class CheckpointClaimService
             ? User::whereIn('id', array_unique($occupantIds))->get()->keyBy('id')
             : collect();
 
+        $statuses = [];
         foreach ($configuredEntryPoints as $point) {
-            $lockKey = $this->getLockKey($estateId, $point);
-            $occupantId = Cache::get($lockKey) !== null ? (int) Cache::get($lockKey) : null;
+            $occupantId = $pointLocks[$point] ?? null;
             $isMine = $occupantId === $currentUser->id;
             $isAvailable = $occupantId === null || $isMine;
             $occupantUser = $occupantId ? $users->get($occupantId) : null;

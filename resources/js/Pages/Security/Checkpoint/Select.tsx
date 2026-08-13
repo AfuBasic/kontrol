@@ -26,7 +26,8 @@ interface PageProps {
 
 export default function CheckpointSelect() {
     const props = usePage<PageProps>().props;
-    const { estateName, checkpoints, currentCheckpoint, enforced, flash } = props;
+    const { estateName = '', checkpoints = [], currentCheckpoint = null, enforced = false, flash } = props;
+    const safeCheckpoints = Array.isArray(checkpoints) ? checkpoints : [];
     const [submitting, setSubmitting] = useState<string | null>(null);
 
     const handleClaim = (entryPoint: string) => {
@@ -117,16 +118,16 @@ export default function CheckpointSelect() {
                 <div className="space-y-3">
                     <div className="px-1">
                         <p className="text-[10px] font-bold tracking-[0.14em] text-slate-500 uppercase">
-                            Available Entry Points ({checkpoints.filter((c) => c.is_available).length}/{checkpoints.length})
+                            Available Entry Points ({safeCheckpoints.filter((c) => c.is_available).length}/{safeCheckpoints.length})
                         </p>
                     </div>
 
-                    {checkpoints.length === 0 ? (
+                    {safeCheckpoints.length === 0 ? (
                         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-xs text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                             No entry points configured for this estate. Please ask an estate admin to configure entry points in Estate Settings.
                         </div>
                     ) : (
-                        checkpoints.map((cp, idx) => {
+                        safeCheckpoints.map((cp, idx) => {
                             const isBusy = submitting === cp.name;
                             const canClaim = cp.is_available;
 
