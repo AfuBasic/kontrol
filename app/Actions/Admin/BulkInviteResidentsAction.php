@@ -74,8 +74,8 @@ class BulkInviteResidentsAction
                 ])
                 ->log('bulk invited '.count($invitedIds).' residents');
 
-            // Dispatch single job for all invitations
-            SendBulkResidentInvitationsJob::dispatch($invitedIds, $estate->id);
+            // The invitation emails are automatically queued by the ResidentCreated event 
+            // fired within CreateResidentAction, so we don't need a bulk dispatch here.
         }
 
         return [

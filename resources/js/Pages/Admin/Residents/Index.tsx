@@ -1012,7 +1012,7 @@ export default function Residents({
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="bg-red-655 inline-flex items-center gap-2 rounded-xl px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="bg-red-600 inline-flex items-center gap-2 rounded-xl px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {isDeleting ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : 'Yes, Delete Selected'}
                                 </button>

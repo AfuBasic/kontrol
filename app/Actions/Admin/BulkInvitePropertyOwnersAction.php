@@ -74,7 +74,8 @@ class BulkInvitePropertyOwnersAction
                 ])
                 ->log('bulk invited '.count($invitedIds).' property owners');
 
-            SendBulkPropertyOwnerInvitationsJob::dispatch($invitedIds, $estate->id);
+            // The invitation emails are automatically queued by the ResidentCreated event 
+            // fired within CreatePropertyOwnerAction, so we don't need a bulk dispatch here.
         }
 
         return [
