@@ -874,10 +874,20 @@ export default function Residents({
                                         />
                                         <button
                                             onClick={copyToClipboard}
-                                            className="text-slate-455 hover:bg-slate-150/50 shrink-0 rounded-lg p-1.5 transition hover:text-slate-800"
+                                            className="text-slate-455 hover:bg-slate-150/50 flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:text-slate-800"
                                             title="Copy Link"
                                         >
-                                            {copied ? <Check className="h-4.5 w-4.5 text-emerald-600" /> : <Copy className="h-4.5 w-4.5" />}
+                                            {copied ? (
+                                                <>
+                                                    <Check className="h-4.5 w-4.5 text-emerald-600" />
+                                                    <span className="text-xs font-semibold text-emerald-600">Copied!</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy className="h-4.5 w-4.5" />
+                                                    <span className="text-xs font-semibold">Copy</span>
+                                                </>
+                                            )}
                                         </button>
                                     </div>
                                 </div>

@@ -47,11 +47,16 @@ class BulkInviteResidentsAction
             }
 
             // Create resident (user, pending membership, role assignment, profile, invitation token)
-            $createResidentAction->execute([
-                'name' => strstr($email, '@', true) ?: $email,
-                'email' => $email,
-                'zone_id' => $zoneId,
-            ], $estate);
+            try {
+                $createResidentAction->execute([
+                    'name' => strstr($email, '@', true) ?: $email,
+                    'email' => $email,
+                    'zone_id' => $zoneId,
+                ], $estate);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                $alreadyMembers++;
+                continue;
+            }
 
             $invitation = Invitation::withoutGlobalScopes()
                 ->where('email', $email)

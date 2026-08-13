@@ -752,6 +752,16 @@ export default function AdminLayout({ children, title }: Props) {
                                                     Activity Log
                                                 </Link>
                                             )}
+                                            
+                                            <Link
+                                                href={ContextController.index.url()}
+                                                onClick={() => setUserMenuOpen(false)}
+                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                            >
+                                                <BuildingOfficeIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                Switch Workspace
+                                            </Link>
+
                                             <button
                                                 onClick={() => setShowLogoutConfirmation(true)}
                                                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
@@ -935,6 +945,12 @@ export default function AdminLayout({ children, title }: Props) {
                                 {isAdmin && hasActivityLogs && (
                                     <Link href={ActivityLogController.index.url()} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/10 rounded-xl transition-colors">
                                         <ClipboardDocumentListIcon className="h-5 w-5" /> Activity Log
+                                    </Link>
+                                )}
+                                
+                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                    <Link href={ContextController.index.url()} onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-white/70 hover:bg-white/10 rounded-xl transition-colors">
+                                        <BuildingOfficeIcon className="h-5 w-5" /> Switch Workspace
                                     </Link>
                                 )}
                                 
