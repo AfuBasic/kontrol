@@ -237,7 +237,7 @@ class CollectionController extends Controller
                 'id' => $a->id,
                 'ulid' => $a->ulid,
                 'resident_name' => $a->user->name,
-                'property_name' => $a->user->profile?->property?->name ?? '—',
+                'property_name' => $a->user->profile?->property?->name ?? '-',
                 'amount_due' => $a->amount_due,
                 'amount_paid' => $a->amount_paid,
                 'status' => $a->status,
