@@ -189,7 +189,7 @@ class AccessCodeService
      * frontend via the useVisitorTimeline hook.
      *
      * This method intentionally merges what were previously two separate "active"
-     * and "upcoming" buckets — the timeline uses time as its primary axis, not
+     * and "upcoming" buckets - the timeline uses time as its primary axis, not
      * pass state.
      *
      * @return Collection<int, AccessCode>
@@ -208,7 +208,7 @@ class AccessCodeService
             ->search($search)
             ->with('accessLogs')
             // Order by starts_at when present, then expires_at for single_use/event,
-            // then created_at — mirrors the effective_visit_at precedence in the model.
+            // then created_at - mirrors the effective_visit_at precedence in the model.
             ->orderByRaw('COALESCE(starts_at, CASE WHEN type IN (\'single_use\', \'event\') THEN expires_at ELSE NULL END, created_at) ASC')
             ->get();
     }
