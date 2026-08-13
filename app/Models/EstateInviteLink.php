@@ -47,6 +47,7 @@ class EstateInviteLink extends Model
         'max_usages',
         'requires_approval',
         'expires_at',
+        'zone_id',
     ];
 
     protected $casts = [
@@ -63,6 +64,14 @@ class EstateInviteLink extends Model
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
+    }
+
+    /**
+     * @return BelongsTo<Zone, $this>
+     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
     }
 
     public function isFull(): bool
