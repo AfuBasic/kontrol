@@ -94,7 +94,7 @@ test('bulk invited residents have pending invitation status', function () {
     $action->execute($emails, $estate);
 
     foreach ($emails as $email) {
-        $invitation = Invitation::where('email', $email)->where('estate_id', $estate->id)->first();
+        $invitation = Invitation::withoutGlobalScopes()->where('email', $email)->where('estate_id', $estate->id)->first();
         expect($invitation)->not->toBeNull();
         expect($invitation->status)->toBe('pending');
     }
@@ -113,7 +113,7 @@ test('bulk invited property owners have pending invitation status', function () 
     $action->execute($emails, $estate);
 
     foreach ($emails as $email) {
-        $invitation = Invitation::where('email', $email)->where('estate_id', $estate->id)->first();
+        $invitation = Invitation::withoutGlobalScopes()->where('email', $email)->where('estate_id', $estate->id)->first();
         expect($invitation)->not->toBeNull();
         expect($invitation->status)->toBe('pending');
     }
