@@ -104,6 +104,23 @@ class CheckpointClaimService
     }
 
     /**
+     * Release all active checkpoints for the user across all assigned estates.
+     */
+    public function releaseUserCheckpoints(User $user, ?int $estateId = null): void
+    {
+        if ($estateId) {
+            $this->release($estateId, $user);
+
+            return;
+        }
+
+        $assignments = $user->administrativeAssignments()->get();
+        foreach ($assignments as $assignment) {
+            $this->release($assignment->estate_id, $user);
+        }
+    }
+
+    /**
      * Refresh the TTL for the active claim.
      */
     public function refresh(int $estateId, User $user): void

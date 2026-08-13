@@ -11,6 +11,7 @@ interface ContextData {
     scope_type: string;
     zone_name: string | null;
     is_primary: boolean;
+    is_current?: boolean;
 }
 
 interface Props {
@@ -18,7 +19,12 @@ interface Props {
 }
 
 export default function ContextPicker({ availableContexts }: Props) {
-    const [selectedContext, setSelectedContext] = useState<number | null>(availableContexts.length > 0 ? availableContexts[0].id : null);
+    const defaultContextId =
+        availableContexts.find((c) => c.is_current)?.id ??
+        availableContexts.find((c) => c.is_primary)?.id ??
+        (availableContexts.length > 0 ? availableContexts[0].id : null);
+
+    const [selectedContext, setSelectedContext] = useState<number | null>(defaultContextId);
 
     const { post, processing } = useForm({
         assignment_id: selectedContext,
