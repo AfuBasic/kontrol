@@ -1,7 +1,7 @@
 import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
+import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 import PaymentHistoryController from '@/actions/App/Http/Controllers/Admin/PaymentHistoryController';
 import AdminLayout from '@/Layouts/AdminLayout';
 

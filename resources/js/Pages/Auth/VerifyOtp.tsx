@@ -2,7 +2,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, RefreshCw, AlertCircle, Check, ShieldCheck } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
+import * as LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
 
 interface Props {
     email: string;

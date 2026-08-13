@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Loader2, RefreshCw, ScanLine, ShieldCheck, Siren, Wifi, WifiOff, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
+import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import EmergencyServicesList from '@/Components/EmergencyServicesList';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';

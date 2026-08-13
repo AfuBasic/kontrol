@@ -15,7 +15,7 @@ import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import * as ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'expired';
 

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
-import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 import type { SharedData } from '@/types';
 
 type Collection = {

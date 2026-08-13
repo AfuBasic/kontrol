@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Filter, RotateCcw, Search } from 'lucide-react';
 import { useState } from 'react';
 
-import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import SearchableSelect from '@/Components/UI/SearchableSelect';
 
 interface FilterOption {

@@ -17,7 +17,7 @@ import {
 import { Head, Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useState } from 'react';
-import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
+import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 import Spinner from '@/Components/Spinner';
 import Toast from '@/Components/Toast';
 import AdminLayout from '@/Layouts/AdminLayout';

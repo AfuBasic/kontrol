@@ -2,10 +2,10 @@ import { Squares2X2Icon, UsersIcon, BellIcon, Cog6ToothIcon, BuildingOffice2Icon
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import * as EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
+import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import * as SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
 
 interface Props {
     url: string;

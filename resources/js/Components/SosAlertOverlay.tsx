@@ -4,7 +4,7 @@ import { router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check, Loader2, MapPin, Phone, ShieldAlert, Volume2, VolumeX } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import SosController from '@/actions/App/Http/Controllers/Resident/SosController';
+import * as SosController from '@/actions/App/Http/Controllers/Resident/SosController';
 
 type SosContact = { name: string; phone: string };
 

@@ -1,6 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
-import ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import clsx from 'clsx';
 import { Building, Shield, Home, Briefcase, ChevronDown, Check } from 'lucide-react';
 

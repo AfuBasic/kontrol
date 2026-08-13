@@ -32,7 +32,7 @@ import {
     recordPayment,
     destroy,
 } from '@/actions/App/Http/Controllers/Admin/CollectionController';
-import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
 import AdminLayout from '@/Layouts/AdminLayout';

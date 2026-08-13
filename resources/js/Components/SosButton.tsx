@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, X, AlertTriangle, Loader2, Hash, Check, Clock, Shield, Users, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
-import SosController from '@/actions/App/Http/Controllers/Resident/SosController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Resident/ProfileController';
+import * as SosController from '@/actions/App/Http/Controllers/Resident/SosController';
 import type { SharedData } from '@/types';
 
 interface Props {

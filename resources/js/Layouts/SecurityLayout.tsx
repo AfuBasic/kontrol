@@ -7,11 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User, History, ClipboardList } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 
-import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
+import * as EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
+import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
-import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
-import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import ContextSwitcher from '@/Components/ContextSwitcher';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';

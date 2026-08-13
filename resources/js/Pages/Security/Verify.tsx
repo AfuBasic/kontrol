@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
 import { ArrowLeft, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
+import * as VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import SecurityLayout from '@/Layouts/SecurityLayout';

@@ -2,7 +2,7 @@ import { ChevronLeftIcon, ChevronRightIcon, FunnelIcon } from '@heroicons/react/
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
+import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Invoice = {

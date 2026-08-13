@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
+import * as SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import AuthErrorSheet from '@/Components/AuthErrorSheet';
 import Toast from '@/Components/Toast';
 

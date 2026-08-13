@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, BellOff, Check, CheckCircle, ChevronDown, Info, ShieldX, Trash2, User as UserIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
 
 type NotificationType = 'validation' | 'denied' | 'visitor' | 'alert' | 'system' | 'info';
 type Severity = 'critical' | 'warning' | 'info';

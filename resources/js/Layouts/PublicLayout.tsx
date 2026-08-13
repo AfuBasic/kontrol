@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
+import * as LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
 import ThemeToggleIcon from '@/Components/Public/ThemeToggleIcon';
 import BrandPreloader from '@/Components/Public/BrandPreloader';
 

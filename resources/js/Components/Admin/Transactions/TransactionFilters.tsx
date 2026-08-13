@@ -2,7 +2,7 @@ import { router } from '@inertiajs/react';
 import { RotateCcw, Search } from 'lucide-react';
 import { useState } from 'react';
 
-import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 
 interface FilterOption {
     value: string;

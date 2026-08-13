@@ -2,7 +2,7 @@ import { Head } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, Sparkles, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 /** Partial payments are only offered when remaining balance is at least this share of the original bill. */
 const MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;

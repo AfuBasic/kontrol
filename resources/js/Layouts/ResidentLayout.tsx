@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import MarketController from '@/actions/App/Http/Controllers/Market/MarketController';
 import EmergencyController from '@/actions/App/Http/Controllers/Resident/EmergencyController';
 import MessagesController from '@/actions/App/Http/Controllers/Resident/MessagesController';
@@ -35,7 +35,7 @@ import HelpDeskController from '@/actions/App/Http/Controllers/Resident/HelpDesk
 import PollController from '@/actions/App/Http/Controllers/Resident/PollController';
 import DirectoryController from '@/actions/App/Http/Controllers/Resident/DirectoryController';
 import SettingsController from '@/actions/App/Http/Controllers/Resident/SettingsController';
-import ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';

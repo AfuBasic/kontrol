@@ -17,10 +17,10 @@ import {
     Clock,
 } from 'lucide-react';
 
-import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import * as CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { create as createPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import * as SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { CardSkeleton, FeedItemSkeleton, StatCardSkeleton } from '@/Components/Skeletons';
 import { ErrorState, OfflineState } from '@/Components/States';

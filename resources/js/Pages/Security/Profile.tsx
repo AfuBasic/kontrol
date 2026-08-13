@@ -3,8 +3,8 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
-import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 
 interface Props {
     user: {

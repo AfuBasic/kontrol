@@ -19,7 +19,7 @@ import {
     ShieldAlert,
 } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
-import EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
+import * as EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
