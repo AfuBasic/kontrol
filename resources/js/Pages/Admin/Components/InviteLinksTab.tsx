@@ -261,87 +261,81 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                             </div>
                             <div className="space-y-4 p-6">
                                 {/* Coverage Scope */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
-                                    <p className="mt-0.5 text-xs text-gray-500">
-                                        Determine whether this invite link is for the entire estate or a specific zone.
-                                    </p>
+                                {zones.length > 0 && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether this invite link is for the entire estate or a specific zone.
+                                        </p>
 
-                                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <label
-                                            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${
-                                                settings.zone_id === ''
-                                                    ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]'
-                                                    : 'border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="invite_modal_scope"
-                                                checked={settings.zone_id === ''}
-                                                onChange={() => setSettings({ ...settings, zone_id: '' })}
-                                                className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
-                                            />
-                                            <div>
-                                                <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                <span className="mt-0.5 block text-[11px] text-gray-500">
-                                                    Valid for any resident across the estate.
-                                                </span>
-                                            </div>
-                                        </label>
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${
+                                                    settings.zone_id === ''
+                                                        ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]'
+                                                        : 'border-gray-200 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="invite_modal_scope"
+                                                    checked={settings.zone_id === ''}
+                                                    onChange={() => setSettings({ ...settings, zone_id: '' })}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Valid for any resident across the estate.
+                                                    </span>
+                                                </div>
+                                            </label>
 
-                                        <label
-                                            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${
-                                                settings.zone_id !== ''
-                                                    ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]'
-                                                    : 'border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="invite_modal_scope"
-                                                checked={settings.zone_id !== ''}
-                                                onChange={() => setSettings({ ...settings, zone_id: zones[0]?.id.toString() || 'specific' })}
-                                                className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
-                                            />
-                                            <div>
-                                                <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
-                                                <span className="mt-0.5 block text-[11px] text-gray-500">
-                                                    Restricted to a specific phase or zone.
-                                                </span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    {/* Zone Selector Dropdown when Specific Zone is selected */}
-                                    {settings.zone_id !== '' && (
-                                        <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-3.5">
-                                            {zones.length > 0 ? (
-                                                <>
-                                                    <label htmlFor="invite_modal_zone_id" className="block text-xs font-semibold text-gray-700">
-                                                        Select Zone
-                                                    </label>
-                                                    <select
-                                                        id="invite_modal_zone_id"
-                                                        value={settings.zone_id === 'specific' ? zones[0]?.id.toString() || '' : settings.zone_id}
-                                                        onChange={(e) => setSettings({ ...settings, zone_id: e.target.value })}
-                                                        className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                    >
-                                                        {zones.map((zone) => (
-                                                            <option key={zone.id} value={zone.id}>
-                                                                {zone.name}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </>
-                                            ) : (
-                                                <p className="text-xs text-amber-700">
-                                                    No zones have been configured for this estate yet. You can manage zones in Estate Settings.
-                                                </p>
-                                            )}
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${
+                                                    settings.zone_id !== ''
+                                                        ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]'
+                                                        : 'border-gray-200 hover:bg-gray-50'
+                                                }`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="invite_modal_scope"
+                                                    checked={settings.zone_id !== ''}
+                                                    onChange={() => setSettings({ ...settings, zone_id: zones[0]?.id.toString() || 'specific' })}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Restricted to a specific phase or zone.
+                                                    </span>
+                                                </div>
+                                            </label>
                                         </div>
-                                    )}
-                                </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {settings.zone_id !== '' && (
+                                            <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-3.5">
+                                                <label htmlFor="invite_modal_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="invite_modal_zone_id"
+                                                    value={settings.zone_id === 'specific' ? zones[0]?.id.toString() || '' : settings.zone_id}
+                                                    onChange={(e) => setSettings({ ...settings, zone_id: e.target.value })}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Max Usages */}
                                 <div className="space-y-2">
