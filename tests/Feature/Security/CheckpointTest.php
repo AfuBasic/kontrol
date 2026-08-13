@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Security\RecordCheckInAction;
+use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
@@ -107,10 +108,14 @@ it('records claimed checkpoint on access log when visitor is checked in', functi
     $claimService->claim($this->estate->id, $this->guard, 'South Gate');
 
     $resident = User::factory()->create();
-    $accessCode = AccessCode::factory()->create([
+    $accessCode = AccessCode::create([
         'estate_id' => $this->estate->id,
         'user_id' => $resident->id,
         'code' => '998877',
+        'type' => 'single_use',
+        'visitor_name' => 'John Guest',
+        'status' => AccessCodeStatus::Active,
+        'expires_at' => now()->addHours(2),
     ]);
 
     $action = app(RecordCheckInAction::class);
