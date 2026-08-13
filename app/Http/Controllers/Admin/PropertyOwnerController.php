@@ -16,6 +16,7 @@ use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
 use App\Services\EstateContextService;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -495,7 +496,7 @@ class PropertyOwnerController extends Controller
                 $propertyOwner->assignRole($residentRole);
             }
 
-            app(\App\Services\ResidentSubscriptionService::class)->createForUser($propertyOwner, $estate);
+            app(ResidentSubscriptionService::class)->createForUser($propertyOwner, $estate);
 
             return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
         }
