@@ -79,11 +79,16 @@ class ResidentService
                     $query->whereHas('profile', fn ($q) => $q->whereNull('property_id'));
                 }
             })
-            ->when($filters['sort'] ?? null, function ($query, $sort) {
+            ->when($filters['sort'] ?? null, function ($query, $sort) use ($estate) {
                 if ($sort === 'name') {
                     $query->orderBy('name', 'asc');
                 } elseif ($sort === 'date_joined') {
-                    $query->orderBy('created_at', 'desc');
+                    $query->select('users.*')
+                        ->join('estate_users_membership as em_sort', function ($join) use ($estate) {
+                            $join->on('users.id', '=', 'em_sort.user_id')
+                                ->where('em_sort.estate_id', '=', $estate->id);
+                        })
+                        ->orderBy('em_sort.created_at', 'desc');
                 } elseif ($sort === 'recently_active') {
                     $query->orderBy('updated_at', 'desc');
                 } elseif ($sort === 'unit_number') {
@@ -91,8 +96,13 @@ class ResidentService
                         ->orderBy('user_profiles.unit_number', 'asc')
                         ->select('users.*');
                 }
-            }, function ($query) {
-                $query->latest();
+            }, function ($query) use ($estate) {
+                $query->select('users.*')
+                    ->join('estate_users_membership as em_sort', function ($join) use ($estate) {
+                        $join->on('users.id', '=', 'em_sort.user_id')
+                            ->where('em_sort.estate_id', '=', $estate->id);
+                    })
+                    ->orderBy('em_sort.created_at', 'desc');
             })
             ->paginate($perPage)
             ->withQueryString();
