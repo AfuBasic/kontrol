@@ -2,8 +2,6 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Invitation\CreateInvitationAction;
-use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
@@ -43,6 +41,7 @@ class BulkInviteResidentsAction
 
                 if ($isAlreadyAccepted) {
                     $alreadyMembers++;
+
                     continue;
                 }
             }
@@ -56,6 +55,7 @@ class BulkInviteResidentsAction
                 ], $estate);
             } catch (ValidationException $e) {
                 $alreadyMembers++;
+
                 continue;
             }
 
@@ -80,7 +80,7 @@ class BulkInviteResidentsAction
                 ])
                 ->log('bulk invited '.count($invitedIds).' residents');
 
-            // The invitation emails are automatically queued by the ResidentCreated event 
+            // The invitation emails are automatically queued by the ResidentCreated event
             // fired within CreateResidentAction, so we don't need a bulk dispatch here.
         }
 

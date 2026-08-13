@@ -5,13 +5,12 @@ namespace App\Actions\Security;
 use App\Events\Resident\VisitorCheckedOutBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Notifications\VisitorCheckedOutNotification;
+use App\Services\Security\CheckpointClaimService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
-
-use App\Models\EstateSettings;
-use App\Services\Security\CheckpointClaimService;
 use Illuminate\Validation\ValidationException;
 
 class RecordCheckOutAction

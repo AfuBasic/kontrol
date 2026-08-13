@@ -174,5 +174,5 @@ it('prevents visitor checkout from a different entry point when entry_point_chec
     $checkOutAction = app(RecordCheckOutAction::class);
 
     expect(fn () => $checkOutAction->execute('112233', $this->estate->id, $this->guard))
-        ->toThrow(\Illuminate\Validation\ValidationException::class);
+        ->toThrow(ValidationException::class);
 });

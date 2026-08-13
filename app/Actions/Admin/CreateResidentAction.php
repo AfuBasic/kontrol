@@ -36,7 +36,7 @@ class CreateResidentAction
 
                 if ($otherEstates) {
                     throw ValidationException::withMessages([
-                        'email' => "The email {$data['email']} already belongs to another estate."
+                        'email' => "The email {$data['email']} already belongs to another estate.",
                     ]);
                 }
             }

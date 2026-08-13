@@ -2,11 +2,15 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
 use App\Events\Admin\ResidentCreated;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\Zone;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -37,9 +41,9 @@ class CreatePropertyOwnerAction
                 ->first();
 
             $zone = ! empty($data['zone_id'])
-                ? \App\Models\Zone::query()->where('id', $data['zone_id'])->where('estate_id', $estate->id)->first()
+                ? Zone::query()->where('id', $data['zone_id'])->where('estate_id', $estate->id)->first()
                 : null;
-            $scopeType = $zone ? \App\Enums\AssignmentScope::Zone : \App\Enums\AssignmentScope::Estate;
+            $scopeType = $zone ? AssignmentScope::Zone : AssignmentScope::Estate;
 
             if (! $membership) {
                 $estate->users()->attach($user->id, [
@@ -70,7 +74,7 @@ class CreatePropertyOwnerAction
             app(ContextManager::class)->setSystemContext($estate->id);
 
             // Assign the roles via the AdministrativeAssignment system
-            $assignmentAction = app(\App\Actions\Admin\CreateAdministrativeAssignmentAction::class);
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
             $membershipIsAccepted = DB::table('estate_users_membership')
                 ->where('estate_id', $estate->id)
                 ->where('user_id', $user->id)
@@ -78,7 +82,7 @@ class CreatePropertyOwnerAction
                 ->exists();
 
             $assignRole = function ($role) use ($user, $estate, $zone, $scopeType, $assignmentAction, $membershipIsAccepted) {
-                $assignmentExists = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+                $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
                     ->where('estate_id', $estate->id)
                     ->where('role_id', $role->id)
                     ->where('zone_id_coalesced', $zone?->id ?? 0)
@@ -110,7 +114,7 @@ class CreatePropertyOwnerAction
             );
 
             // 5. Create an invitation record for the unified passwordless flow
-            $createInvitationAction = app(\App\Actions\Invitation\CreateInvitationAction::class);
+            $createInvitationAction = app(CreateInvitationAction::class);
             $invitation = $createInvitationAction->execute(
                 email: $data['email'],
                 estate: $estate,

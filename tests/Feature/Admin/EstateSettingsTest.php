@@ -54,7 +54,7 @@ it('rejects entry point checkout enabled if visitor checkout monitoring is off',
             'collection_reminder_frequency' => 'weekly',
             'collection_maximum_reminder_attempts' => 3,
             'send_reminder_before_due_date_days' => 1,
-            
+
             // Testing this specific logic
             'visitor_checkout_enabled' => false,
             'entry_point_checkout_enforced' => true,
@@ -84,7 +84,7 @@ it('rejects entry point checkout enabled if entry points array is empty', functi
             'collection_reminder_frequency' => 'weekly',
             'collection_maximum_reminder_attempts' => 3,
             'send_reminder_before_due_date_days' => 1,
-            
+
             // Testing this specific logic
             'visitor_checkout_enabled' => true,
             'entry_point_checkout_enforced' => true,
@@ -114,7 +114,7 @@ it('rejects duplicate entry points case-insensitively', function () {
             'collection_reminder_frequency' => 'weekly',
             'collection_maximum_reminder_attempts' => 3,
             'send_reminder_before_due_date_days' => 1,
-            
+
             // Testing this specific logic
             'visitor_checkout_enabled' => true,
             'entry_point_checkout_enforced' => true,
@@ -144,7 +144,7 @@ it('updates authorized settings and preserves lists', function () {
             'collection_reminder_frequency' => 'weekly',
             'collection_maximum_reminder_attempts' => 3,
             'send_reminder_before_due_date_days' => 1,
-            
+
             // Testing this specific logic
             'visitor_checkout_enabled' => true,
             'entry_point_checkout_enforced' => true,
@@ -184,11 +184,11 @@ it('preserves entry points when disabling visitor checkout tracking', function (
             'collection_reminder_frequency' => 'weekly',
             'collection_maximum_reminder_attempts' => 3,
             'send_reminder_before_due_date_days' => 1,
-            
+
             // Testing this specific logic
             'visitor_checkout_enabled' => false,
             'entry_point_checkout_enforced' => false,
-            'entry_points' => ['Main Gate', 'Back Gate'], 
+            'entry_points' => ['Main Gate', 'Back Gate'],
         ])
         ->assertValid()
         ->assertSessionHas('success');

@@ -3,27 +3,42 @@
 namespace App\Actions\Security;
 
 use App\Models\User;
+use App\Notifications\Resident\CollectionReminderNotification;
+use App\Notifications\Resident\CouponIssuedNotification;
+use App\Notifications\Resident\InvoicePaidNotification;
+use App\Notifications\Resident\NewCollectionNotification;
+use App\Notifications\Resident\NewInvoiceNotification;
+use App\Notifications\Resident\PaymentFailedNotification;
+use App\Notifications\Resident\SosResponderNotification;
+use App\Notifications\ResidentApproved;
+use App\Notifications\ResidentInvitedNotification;
+use App\Notifications\ResidentRejected;
+use App\Notifications\ResidentSubscriptionExpiredNotification;
+use App\Notifications\ResidentSubscriptionExpiringNotification;
+use App\Notifications\ResidentTrialEndingNotification;
+use App\Notifications\VisitorArrivedNotification;
+use App\Notifications\VisitorCheckedOutNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Notifications\DatabaseNotification;
 
 class FetchSecurityNotificationsAction
 {
     public const RESIDENT_NOTIFICATION_TYPES = [
-        \App\Notifications\VisitorCheckedOutNotification::class,
-        \App\Notifications\VisitorArrivedNotification::class,
-        \App\Notifications\ResidentApproved::class,
-        \App\Notifications\ResidentRejected::class,
-        \App\Notifications\ResidentInvitedNotification::class,
-        \App\Notifications\ResidentSubscriptionExpiringNotification::class,
-        \App\Notifications\ResidentSubscriptionExpiredNotification::class,
-        \App\Notifications\ResidentTrialEndingNotification::class,
-        \App\Notifications\Resident\NewCollectionNotification::class,
-        \App\Notifications\Resident\CollectionReminderNotification::class,
-        \App\Notifications\Resident\NewInvoiceNotification::class,
-        \App\Notifications\Resident\InvoicePaidNotification::class,
-        \App\Notifications\Resident\PaymentFailedNotification::class,
-        \App\Notifications\Resident\CouponIssuedNotification::class,
-        \App\Notifications\Resident\SosResponderNotification::class,
+        VisitorCheckedOutNotification::class,
+        VisitorArrivedNotification::class,
+        ResidentApproved::class,
+        ResidentRejected::class,
+        ResidentInvitedNotification::class,
+        ResidentSubscriptionExpiringNotification::class,
+        ResidentSubscriptionExpiredNotification::class,
+        ResidentTrialEndingNotification::class,
+        NewCollectionNotification::class,
+        CollectionReminderNotification::class,
+        NewInvoiceNotification::class,
+        InvoicePaidNotification::class,
+        PaymentFailedNotification::class,
+        CouponIssuedNotification::class,
+        SosResponderNotification::class,
         'App\Notifications\VisitorCheckedOutNotification',
         'App\Notifications\VisitorArrivedNotification',
         'App\Notifications\VisitorAccessGrantedNotification',

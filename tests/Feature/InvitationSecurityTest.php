@@ -4,11 +4,13 @@ use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\CreateResidentAction;
+use App\Actions\Invitation\AcceptInvitationAction;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -82,7 +84,7 @@ test('invited property owner has pending membership status and cannot log in', f
 });
 
 test('inviting a user that already exists in another estate dispatches invitation event and sets pending membership', function () {
-    \Illuminate\Support\Facades\Mail::fake();
+    Mail::fake();
     $estate1 = Estate::factory()->create();
     $estate2 = Estate::factory()->create();
 
@@ -106,7 +108,7 @@ test('inviting a user that already exists in another estate dispatches invitatio
 });
 
 test('first time invited resident can accept invitation and activate membership', function () {
-    \Illuminate\Support\Facades\Mail::fake();
+    Mail::fake();
     $estate = Estate::factory()->create();
 
     $action = app(CreateResidentAction::class);
@@ -119,7 +121,7 @@ test('first time invited resident can accept invitation and activate membership'
     expect($invitation)->not->toBeNull();
     expect($invitation->status)->toBe('pending');
 
-    $acceptAction = app(\App\Actions\Invitation\AcceptInvitationAction::class);
+    $acceptAction = app(AcceptInvitationAction::class);
     $acceptAction->execute($invitation, $user);
 
     $status = DB::table('estate_users_membership')

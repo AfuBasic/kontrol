@@ -134,42 +134,47 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                             <tbody className="divide-y divide-gray-200 bg-white">
                                 {inviteLinks.map((link) => (
                                     <tr key={link.id} className={!link.is_active || link.is_expired ? 'bg-gray-50' : ''}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            {link.zone_name}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 text-sm font-medium whitespace-nowrap text-gray-900">{link.zone_name}</td>
+                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                                             <div className="flex items-center gap-2">
                                                 <span className="font-mono text-xs">{link.token.substring(0, 12)}...</span>
                                                 <button
                                                     onClick={() => handleCopy(link.id, link.url)}
-                                                    className="text-gray-400 hover:text-gray-600"
+                                                    className={`flex items-center gap-1.5 rounded p-1 text-xs font-medium transition-colors ${
+                                                        isCopied === link.id
+                                                            ? 'bg-green-50 text-green-600'
+                                                            : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'
+                                                    }`}
                                                     title="Copy full URL"
                                                 >
                                                     {isCopied === link.id ? (
-                                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                                        <>
+                                                            <CheckCircle className="h-3.5 w-3.5" />
+                                                            <span>Copied!</span>
+                                                        </>
                                                     ) : (
-                                                        <Copy className="h-4 w-4" />
+                                                        <Copy className="h-3.5 w-3.5" />
                                                     )}
                                                 </button>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
                                             {link.usage_count} {link.max_usages ? `/ ${link.max_usages}` : ''}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span
-                                                className={`inline-flex rounded-full px-2 text-xs font-semibold leading-5 ${
+                                                className={`inline-flex rounded-full px-2 text-xs leading-5 font-semibold ${
                                                     link.is_expired
                                                         ? 'bg-red-100 text-red-800'
                                                         : link.is_active
-                                                        ? 'bg-green-100 text-green-800'
-                                                        : 'bg-gray-100 text-gray-800'
+                                                          ? 'bg-green-100 text-green-800'
+                                                          : 'bg-gray-100 text-gray-800'
                                                 }`}
                                             >
                                                 {link.is_expired ? 'Expired' : link.is_active ? 'Active' : 'Disabled'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
                                             <div className="flex items-center justify-end gap-2">
                                                 <button
                                                     onClick={() => handleRegenerate(link.id)}
@@ -229,7 +234,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                             <div className="border-b border-gray-100 px-6 py-4">
                                 <h3 className="text-lg font-semibold text-gray-900">Create Invite Link</h3>
                             </div>
-                            <div className="p-6 space-y-4">
+                            <div className="space-y-4 p-6">
                                 {/* Zone Assignment */}
                                 {zones.length > 0 && (
                                     <div className="space-y-2">
@@ -274,9 +279,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="text-sm font-semibold text-gray-900">Require Approval</span>
-                                            <span className="text-xs text-gray-500">
-                                                Users will stay pending until an admin approves them.
-                                            </span>
+                                            <span className="text-xs text-gray-500">Users will stay pending until an admin approves them.</span>
                                         </div>
                                     </label>
                                 </div>
@@ -352,9 +355,19 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                             />
                                             <button
                                                 onClick={() => handleCopy(createdLink.id, createdLink.url)}
-                                                className={`rounded-lg p-2 transition-colors ${isCopied === createdLink.id ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-gray-100'}`}
+                                                className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-colors ${isCopied === createdLink.id ? 'bg-green-500 text-white' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
                                             >
-                                                {isCopied === createdLink.id ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                                {isCopied === createdLink.id ? (
+                                                    <>
+                                                        <CheckCircle className="h-4 w-4" />
+                                                        <span className="text-sm font-medium">Copied!</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Copy className="h-4 w-4" />
+                                                        <span className="text-sm font-medium">Copy</span>
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
                                     </div>

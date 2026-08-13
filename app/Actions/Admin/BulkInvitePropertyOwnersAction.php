@@ -2,8 +2,6 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Invitation\CreateInvitationAction;
-use App\Jobs\Admin\SendBulkPropertyOwnerInvitationsJob;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
@@ -42,6 +40,7 @@ class BulkInvitePropertyOwnersAction
 
                 if ($isAlreadyAccepted) {
                     $alreadyMembers++;
+
                     continue;
                 }
             }
@@ -74,7 +73,7 @@ class BulkInvitePropertyOwnersAction
                 ])
                 ->log('bulk invited '.count($invitedIds).' property owners');
 
-            // The invitation emails are automatically queued by the ResidentCreated event 
+            // The invitation emails are automatically queued by the ResidentCreated event
             // fired within CreatePropertyOwnerAction, so we don't need a bulk dispatch here.
         }
 
