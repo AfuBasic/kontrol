@@ -12,6 +12,7 @@ use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
+use App\Services\Security\CheckpointClaimService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,10 +34,11 @@ class VerifyController extends Controller
         $user = $request->user();
         $estate = app(EstateContextService::class)->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
+        $gateName = app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
 
         return Inertia::render('Security/Verify', [
             'estateName' => $estate->name,
-            'gateName' => 'Main Entrance',
+            'gateName' => $gateName,
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
