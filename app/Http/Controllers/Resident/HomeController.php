@@ -55,14 +55,14 @@ class HomeController extends Controller
             ->count();
 
         return Inertia::render('Resident/Home', [
-            // Eager — lightweight command center shell
+            // Eager - lightweight command center shell
             'stats' => $this->accessCodeService->getHomeStats(),
             'estateName' => $estate->name,
             'openIncidentsCount' => $openIncidentsCount,
             'activePassesCount' => $activePassesCount,
             'upcomingPassesCount' => $upcomingPassesCount,
 
-            // Deferred — heavier secondary sections
+            // Deferred - heavier secondary sections
             'activeCodes' => Inertia::defer(fn () => $activeCodesCollection->map(fn ($code) => [
                 'id' => $code->id,
                 'code' => $code->code,
