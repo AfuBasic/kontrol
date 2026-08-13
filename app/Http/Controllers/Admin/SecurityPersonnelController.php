@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\BulkDeleteSecurityAction;
+use App\Actions\Admin\BulkInviteSecurityAction;
 use App\Actions\Admin\CreateSecurityAction;
 use App\Actions\Admin\DeleteSecurityAction;
 use App\Actions\Admin\ResetSecurityPasswordAction;
@@ -91,9 +92,24 @@ class SecurityPersonnelController extends Controller
     public function create(): Response
     {
         $this->authorize('security.create');
+        $estate = $this->estateContext->getEstate();
+        $inviteLinks = $estate->securityInviteLinks()->with('zone')->get();
 
         return Inertia::render('Admin/Security/Create', [
             'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+            'inviteLinks' => $inviteLinks->map(fn ($link) => [
+                'id' => $link->id,
+                'token' => $link->token,
+                'url' => url("/join/{$link->token}"),
+                'is_active' => $link->is_active,
+                'usage_count' => $link->usage_count,
+                'max_usages' => $link->max_usages,
+                'requires_approval' => $link->requires_approval,
+                'expires_at' => $link->expires_at?->toDateTimeString(),
+                'is_expired' => $link->expires_at?->isPast() ?? false,
+                'zone_id' => $link->zone_id,
+                'zone_name' => $link->zone?->name ?? 'Entire Estate',
+            ])->toArray(),
         ]);
     }
 
@@ -205,9 +221,6 @@ class SecurityPersonnelController extends Controller
         return back()->with('success', 'Security personnel password reset and invitation resent.');
     }
 
-    /**
-     * Bulk delete security personnel.
-     */
     public function bulkDelete(Request $request, BulkDeleteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.delete');
@@ -223,5 +236,31 @@ class SecurityPersonnelController extends Controller
         return redirect()
             ->route('admin.security.index')
             ->with('success', "Successfully removed {$deletedCount} security personnel.");
+    }
+
+    /**
+     * Bulk invite security personnel by email.
+     */
+    public function bulkInvite(Request $request, BulkInviteSecurityAction $action): RedirectResponse
+    {
+        $this->authorize('security.create');
+
+        $validated = $request->validate([
+            'emails' => ['required', 'array', 'min:1', 'max:500'],
+            'emails.*' => ['required', 'email'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
+
+        $message = "Successfully invited {$result['invited']} security personnel.";
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} email(s) were skipped (already exist).";
+        }
+
+        return redirect()
+            ->route('admin.security.index')
+            ->with('success', $message);
     }
 }
