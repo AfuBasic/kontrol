@@ -31,7 +31,7 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
         },
         {
             key: 'verified',
-            title: 'Verified at gate',
+            title: `Verified at ${record.entry_point || record.gate || 'Gate'}`,
             actor: record.verifier_name ? `by ${record.verifier_name}` : null,
             timestamp: record.verified_at,
             done: true,
@@ -43,7 +43,7 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
         if (record.checked_out_at) {
             steps.push({
                 key: 'checkout',
-                title: 'Checked out',
+                title: `Checked out at ${record.exit_point || record.entry_point || record.gate || 'Gate'}`,
                 actor: record.checkout_verifier_name ? `by ${record.checkout_verifier_name}` : null,
                 timestamp: record.checked_out_at,
                 done: true,
