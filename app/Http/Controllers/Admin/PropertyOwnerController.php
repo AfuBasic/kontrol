@@ -495,6 +495,8 @@ class PropertyOwnerController extends Controller
                 $propertyOwner->assignRole($residentRole);
             }
 
+            app(\App\Services\ResidentSubscriptionService::class)->createForUser($propertyOwner, $estate);
+
             return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
         }
 
