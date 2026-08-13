@@ -76,6 +76,12 @@ it('converts a resident into a property owner from the residents workspace', fun
 });
 
 it('grants resident privileges to a property owner from the owners workspace', function () {
+    $this->estate->settings()->update([
+        'charge_type' => 'residents',
+        'free_trial_enabled' => true,
+        'free_trial_days' => 30,
+    ]);
+
     $owner = User::factory()->create();
     setPermissionsTeamId($this->estate->id);
     $owner->assignRole('property_owner');
@@ -95,5 +101,11 @@ it('grants resident privileges to a property owner from the owners workspace', f
         'estate_id' => $this->estate->id,
         'role_id' => $this->residentRole->id,
         'is_active' => 1,
+    ]);
+
+    $this->assertDatabaseHas('resident_subscriptions', [
+        'user_id' => $owner->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'trial',
     ]);
 });
