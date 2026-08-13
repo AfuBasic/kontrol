@@ -192,6 +192,12 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     });
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        const type = notification.data?.type;
+                        const RESIDENT_ONLY_TYPES = ['visitor_checked_out', 'visitor_arrived', 'visitor_access_granted', 'household_member_invited'];
+                        if (type && RESIDENT_ONLY_TYPES.includes(type)) {
+                            return;
+                        }
+
                         setLastReceivedNotification(notification);
                         setToastMessage(notification.body || 'New alert received');
                         setToastType('success');
