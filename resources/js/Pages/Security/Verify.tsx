@@ -176,8 +176,13 @@ export default function SecurityVerify() {
             .catch(() => setCachedCodesCount(0));
     }, []);
 
+    const hasInitialRefreshed = useRef(false);
+
     useEffect(() => {
-        if (isOnline) {
+        if (!isOnline) {
+            hasInitialRefreshed.current = false;
+        } else if (!hasInitialRefreshed.current) {
+            hasInitialRefreshed.current = true;
             void refreshCodeCache();
         }
     }, [isOnline, refreshCodeCache]);
