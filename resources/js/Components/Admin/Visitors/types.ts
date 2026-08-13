@@ -30,6 +30,8 @@ export type VisitorRecord = {
     is_overstayed: boolean;
     code_expires_at: string | null;
     gate: string;
+    entry_point?: string | null;
+    exit_point?: string | null;
     vehicle: {
         make: string;
         model: string;
