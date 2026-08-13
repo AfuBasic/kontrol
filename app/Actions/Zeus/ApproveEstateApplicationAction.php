@@ -17,7 +17,7 @@ class ApproveEstateApplicationAction
     /**
      * Approve an estate application and create the estate.
      *
-     * Residents choose their own plans after the estate is live — intake
+     * Residents choose their own plans after the estate is live - intake
      * no longer selects a plan. Partner-sourced apps attach commission attribution.
      * Partner members are notified by email + database + broadcast when applicable.
      */
