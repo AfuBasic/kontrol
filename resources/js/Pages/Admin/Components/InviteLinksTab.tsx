@@ -1,3 +1,4 @@
+import Toast from '@/Components/Toast';
 import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Plus, Power, RefreshCw, Share2, Trash2 } from 'lucide-react';
@@ -34,6 +35,11 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [createdLink, setCreatedLink] = useState<InviteLink | null>(null);
     const [isCopied, setIsCopied] = useState<number | null>(null);
+    const [toast, setToast] = useState<{ show: boolean; message: string; type?: 'success' | 'error' | 'info' }>({
+        show: false,
+        message: '',
+        type: 'success',
+    });
 
     const [settings, setSettings] = useState({
         zone_id: '',
@@ -71,9 +77,26 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
     const handleCopy = (id: number, url: string) => {
         if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(url);
-            setIsCopied(id);
-            setTimeout(() => setIsCopied(null), 2000);
+        } else {
+            const textArea = document.createElement('textarea');
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+            }
+            document.body.removeChild(textArea);
         }
+
+        setIsCopied(id);
+        setToast({
+            show: true,
+            message: 'Invite link copied to clipboard!',
+            type: 'success',
+        });
+        setTimeout(() => setIsCopied(null), 2000);
     };
 
     const handleToggle = (id: number) => {
@@ -393,6 +416,8 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                     </div>
                 )}
             </AnimatePresence>
+
+            <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast((prev) => ({ ...prev, show: false }))} />
         </div>
     );
 }

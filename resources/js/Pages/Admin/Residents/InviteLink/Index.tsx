@@ -1,3 +1,4 @@
+import Toast from '@/Components/Toast';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Power, RefreshCw, Share2, Trash2, AlertCircle, ArrowLeft, Clock, Users, Shield } from 'lucide-react';
@@ -32,13 +33,16 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
     const [isCopied, setIsCopied] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [toast, setToast] = useState<{ show: boolean; message: string; type?: 'success' | 'error' | 'info' }>({
+        show: false,
+        message: '',
+        type: 'success',
+    });
 
     const handleCopyLink = () => {
         if (inviteLink?.url) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(inviteLink.url);
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
             } else {
                 // Fallback for non-secure contexts
                 const textArea = document.createElement('textarea');
@@ -47,13 +51,19 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    setIsCopied(true);
-                    setTimeout(() => setIsCopied(false), 2000);
                 } catch (err) {
                     console.error('Fallback copy failed', err);
                 }
                 document.body.removeChild(textArea);
             }
+
+            setIsCopied(true);
+            setToast({
+                show: true,
+                message: 'Invite link copied to clipboard!',
+                type: 'success',
+            });
+            setTimeout(() => setIsCopied(false), 2000);
         }
     };
 
@@ -386,6 +396,8 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <Toast show={toast.show} message={toast.message} type={toast.type} onClose={() => setToast((prev) => ({ ...prev, show: false }))} />
         </>
     );
 }

@@ -48,8 +48,10 @@ export default function Login() {
     useEffect(() => {
         if (flash?.error) {
             setLoginError(flash.error);
+        } else if ((flash as any)?.info) {
+            setLoginError((flash as any).info);
         }
-    }, [flash?.error]);
+    }, [flash]);
 
     // Onboarding welcome slides state
     const [showOnboarding, setShowOnboarding] = useState(false);
@@ -340,7 +342,7 @@ export default function Login() {
     // Sync external errors to local state on initial mount
     /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
-        const extError = page.props.flash?.error || page.props.errors?.email || null;
+        const extError = page.props.flash?.error || (page.props.flash as any)?.info || page.props.errors?.email || null;
         if (extError) {
             setLoginError(extError as string);
         }
@@ -389,7 +391,10 @@ export default function Login() {
                         onFinish: () => setGoogleLoading(false),
                         onError: (errs) => {
                             console.error('Google Backend Errors:', errs);
-                            const msg = typeof errs === 'string' ? errs : (errs.email || errs.error || Object.values(errs)[0] || 'Google authentication failed.');
+                            const msg =
+                                typeof errs === 'string'
+                                    ? errs
+                                    : errs.email || errs.error || Object.values(errs)[0] || 'Google authentication failed.';
                             setLoginError(msg);
                             setGoogleLoading(false);
                         },
