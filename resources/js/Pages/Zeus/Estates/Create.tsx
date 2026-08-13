@@ -1,7 +1,6 @@
 import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 type Feature = {
@@ -44,7 +43,7 @@ export default function CreateEstate({ plans, partners }: Props) {
         plan_id: plans.length > 0 ? plans[0].id : '',
         charge_type: 'residents',
         free_trial_enabled: true,
-        free_trial_days: 30,
+        free_trial_days: 30 as number | '',
         has_partner: false,
         partner_id: '',
         partner_source: '',
@@ -52,8 +51,6 @@ export default function CreateEstate({ plans, partners }: Props) {
         commission_starts_at: '',
         commission_ends_at: '',
     });
-
-    const [settingsOpen, setSettingsOpen] = useState(false);
 
     const selectedPlan = plans.find((p) => p.id === data.plan_id);
 
@@ -222,29 +219,12 @@ export default function CreateEstate({ plans, partners }: Props) {
                         transition={{ duration: 0.35, delay: 0.2 }}
                         className="rounded-xl border border-slate-200/50 bg-white/50 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-[#0f1423]"
                     >
-                        <button
-                            type="button"
-                            onClick={() => setSettingsOpen(!settingsOpen)}
-                            className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50/50 dark:hover:bg-white/5"
-                        >
-                            <div>
-                                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Additional settings</h3>
-                                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Optional configuration for this estate</p>
-                            </div>
-                            <div className="text-slate-400 dark:text-slate-500">
-                                {settingsOpen ? <ChevronDownIcon className="h-5 w-5" /> : <ChevronRightIcon className="h-5 w-5" />}
-                            </div>
-                        </button>
-
-                        <AnimatePresence>
-                            {settingsOpen && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden border-t border-slate-100 dark:border-white/5"
-                                >
-                                    <div className="space-y-8 px-6 py-6">
+                        <div className="px-6 py-4">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Additional settings</h3>
+                            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Optional configuration for this estate</p>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-white/5">
+                            <div className="space-y-8 px-6 py-6">
                                         {/* Billing Model */}
                                         <div>
                                             <h4 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Billing settings</h4>
@@ -290,7 +270,7 @@ export default function CreateEstate({ plans, partners }: Props) {
                                                             min="1"
                                                             max="365"
                                                             value={data.free_trial_days}
-                                                            onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
+                                                            onChange={(e) => setData('free_trial_days', e.target.value === '' ? '' : parseInt(e.target.value))}
                                                             className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                                         />
                                                         {errors.free_trial_days && (
@@ -383,9 +363,7 @@ export default function CreateEstate({ plans, partners }: Props) {
                                             )}
                                         </div>
                                     </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                </div>
                     </motion.div>
 
                     {/* Summary and Actions */}
