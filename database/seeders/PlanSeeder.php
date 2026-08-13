@@ -31,7 +31,7 @@ class PlanSeeder extends Seeder
                 'name' => 'Kontrol Monthly',
                 'slug' => 'pro-plan-monthly',
                 'description' => 'Complete access control and premium features billed monthly.',
-                'price' => 550000,
+                'price' => 500000,
                 'billing_interval' => 'monthly',
                 'is_featured' => false,
                 'badge' => null,
