@@ -4,6 +4,7 @@ namespace App\Actions\Invitation;
 
 use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Enums\AssignmentScope;
+use App\Enums\PartnerStatus;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Invitation;
@@ -113,6 +114,26 @@ class AcceptInvitationAction
                 'status' => 'accepted',
                 'accepted_at' => Carbon::now(),
             ]);
+
+            // 4. Activate the estate if an admin accepted or the estate is inactive
+            if ($estate) {
+                $isAdmin = ($role && $role->name === 'admin') || $invitation->relationship_type === null;
+                if ($isAdmin || $estate->status === 'inactive') {
+                    $estateUpdates = [
+                        'status' => 'active',
+                    ];
+
+                    if (! $estate->activation_date) {
+                        $estateUpdates['activation_date'] = Carbon::now()->toDateString();
+                    }
+
+                    if ($estate->partner_id && $estate->partner_status !== PartnerStatus::Activated) {
+                        $estateUpdates['partner_status'] = PartnerStatus::Activated;
+                    }
+
+                    $estate->update($estateUpdates);
+                }
+            }
 
             // Email verification (if they are a brand new user and this implicitly verified them)
             if (is_null($user->email_verified_at)) {

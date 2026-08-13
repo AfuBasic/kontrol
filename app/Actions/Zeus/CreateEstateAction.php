@@ -38,12 +38,12 @@ class CreateEstateAction
         return DB::transaction(function () use ($data) {
             $plan = isset($data['plan_id']) ? Plan::find($data['plan_id']) : null;
 
-            // 1. Create the estate
+            // 1. Create the estate (starts inactive until admin accepts invite)
             $estate = Estate::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'address' => $data['address'] ?? null,
-                'status' => 'active',
+                'status' => 'inactive',
             ]);
 
             // 2. Create user with estate email (no password)
