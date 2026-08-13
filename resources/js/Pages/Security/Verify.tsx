@@ -528,10 +528,25 @@ export default function SecurityVerify() {
                     },
                 },
             );
-        } catch (err) {
-            console.error(err);
-        } finally {
             reset();
+        } catch (err: any) {
+            console.error('Decision error:', err);
+            const errorMessage =
+                err.response?.data?.errors?.checkout?.[0] ||
+                err.response?.data?.message ||
+                'Checkout rejected: Gate mismatch or invalid request.';
+
+            setResult((prev) => ({
+                valid: false,
+                status: 'checkout_mismatch',
+                message: errorMessage,
+                visitor_name: prev?.visitor_name || null,
+                host_name: prev?.host_name || null,
+                purpose: prev?.purpose || null,
+                expires_at: prev?.expires_at || null,
+                code_type: prev?.code_type || null,
+                has_vehicle: false,
+            }));
         }
     };
 
@@ -858,7 +873,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     let icon = <ShieldCheck className="h-4.5 w-4.5 text-emerald-600" strokeWidth={2.5} />;
 
     if (!valid) {
-        statusLabel = result.status === 'expired' ? 'Pass Expired' : result.status === 'revoked' ? 'Pass Revoked' : 'Access Denied';
+        statusLabel = result.status === 'checkout_mismatch' ? 'Gate Mismatch' : result.status === 'expired' ? 'Pass Expired' : result.status === 'revoked' ? 'Pass Revoked' : 'Access Denied';
         statusBg = 'bg-rose-50 text-rose-700 border-rose-100/80';
         ringColor = 'ring-rose-500/10 border-rose-100/80';
         icon = <ShieldX className="h-4.5 w-4.5 text-rose-600" strokeWidth={2.5} />;
@@ -916,6 +931,13 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     transition={{ type: 'spring', damping: 26, stiffness: 210 }}
                     className={`w-full max-w-md overflow-hidden rounded-[30px] border bg-white px-5.5 py-6.5 shadow-[0_20px_45px_rgba(0,0,0,0.025)] ring-4 ${ringColor}`}
                 >
+                    {/* Error / Gate Mismatch Notification Alert Banner */}
+                    {(!valid || result.status === 'checkout_mismatch') && result.message && (
+                        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold leading-relaxed text-rose-900 shadow-xs">
+                            <ShieldX className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                            <span>{result.message}</span>
+                        </div>
+                    )}
                     {/* Status badge and Type header */}
                     <div className="flex items-center justify-between gap-4">
                         <span
