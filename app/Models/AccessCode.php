@@ -342,9 +342,9 @@ class AccessCode extends Model
      * The canonical "when is this visit scheduled?" field for the Visitor Timeline.
      *
      * Precedence:
-     *   1. starts_at  — explicit visitor arrival time
-     *   2. expires_at — only for non-schedulable pass types (single_use, event)
-     *   3. created_at — last resort; prevents orphaned records on the timeline
+     *   1. starts_at  - explicit visitor arrival time
+     *   2. expires_at - only for non-schedulable pass types (single_use, event)
+     *   3. created_at - last resort; prevents orphaned records on the timeline
      *
      * The frontend must consume this field exclusively and never reference
      * raw database timestamps for grouping or sorting.
@@ -368,18 +368,18 @@ class AccessCode extends Model
      * The canonical "when was this visit completed?" field for the Visitor Timeline.
      *
      * Precedence follows the most granular completion signal available:
-     *   1. checked_out_at — visitor physically exited (most precise)
-     *   2. used_at        — visitor was verified at entry
-     *   3. verified_at    — legacy check-in timestamp (via latest access log)
-     *   4. revoked_at     — host cancelled the visit
-     *   5. expires_at     — pass window closed without entry
-     *   6. created_at     — last resort
+     *   1. checked_out_at - visitor physically exited (most precise)
+     *   2. used_at        - visitor was verified at entry
+     *   3. verified_at    - legacy check-in timestamp (via latest access log)
+     *   4. revoked_at     - host cancelled the visit
+     *   5. expires_at     - pass window closed without entry
+     *   6. created_at     - last resort
      *
      * Returns null for passes that are not yet completed (active/scheduled).
      */
     public function getCompletionAtAttribute(): ?CarbonImmutable
     {
-        // Not a terminal state — visit is ongoing or pending.
+        // Not a terminal state - visit is ongoing or pending.
         if (in_array($this->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled])) {
             return null;
         }
@@ -416,7 +416,7 @@ class AccessCode extends Model
 
     public static function generateCode(): string
     {
-        // Unambiguous alphabet — excludes 0, 1, I, O to prevent misreads at the gate.
+        // Unambiguous alphabet - excludes 0, 1, I, O to prevent misreads at the gate.
         $letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
         $numbers = '23456789';
         $alphabet = $letters.$numbers;
