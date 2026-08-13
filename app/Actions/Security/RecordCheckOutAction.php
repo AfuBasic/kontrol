@@ -10,6 +10,10 @@ use App\Notifications\VisitorCheckedOutNotification;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
+use App\Models\EstateSettings;
+use App\Services\Security\CheckpointClaimService;
+use Illuminate\Validation\ValidationException;
+
 class RecordCheckOutAction
 {
     /**
@@ -59,6 +63,18 @@ class RecordCheckOutAction
                 ->whereNull('checked_out_at')
                 ->latest('verified_at')
                 ->firstOrFail();
+
+            // Enforce entry point checkout constraint if enabled for estate
+            $settings = EstateSettings::forEstate($estateId);
+            if ($settings->entry_point_checkout_enforced && $log->entry_point) {
+                $currentCheckpoint = app(CheckpointClaimService::class)->getCurrentCheckpoint($estateId, $verifiedBy);
+
+                if ($currentCheckpoint && strcasecmp(trim($log->entry_point), trim($currentCheckpoint)) !== 0) {
+                    throw ValidationException::withMessages([
+                        'checkout' => "Entry Point Checkout Enforced: Visitor entered at '{$log->entry_point}' and can only check out from '{$log->entry_point}'. You are currently operating at '{$currentCheckpoint}'.",
+                    ]);
+                }
+            }
 
             $log->update([
                 'checked_out_at' => $timestamp,
