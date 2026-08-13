@@ -106,12 +106,12 @@ class CreateAdministrativeAssignmentAction
     {
         $hasMembership = $user->estates()
             ->where('estates.id', $estate->id)
-            ->wherePivot('status', 'accepted')
+            ->wherePivotIn('status', ['accepted', 'pending', 'active'])
             ->exists();
 
         if (! $hasMembership) {
             throw ValidationException::withMessages([
-                'user' => 'User is not a verified member of this estate.',
+                'user' => 'User is not a member of this estate.',
             ]);
         }
     }
