@@ -31,6 +31,9 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
         using: function (): void {
+            // Global healthcheck route for uptime and network quality monitor pings
+            Route::get('/up', fn () => response('OK', 200));
+
             $domainRoutingEnabled = config('domains.routing_enabled', true);
             $isLocal = app()->environment('local');
             $useDomainRouting = $domainRoutingEnabled && (! $isLocal || filled(config('domains.app_subdomain')));
