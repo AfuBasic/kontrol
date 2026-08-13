@@ -20,7 +20,7 @@ Guidelines:
 - Use markdown formatting (headings, bullet lists, bold for key details)
 - Match the urgency and tone to the priority level provided
 - Tailor language to the intended audience
-- Include only information implied by the brief — do not invent specific dates, times, or locations unless provided
+- Include only information implied by the brief - do not invent specific dates, times, or locations unless provided
 - Use placeholders like [date], [time], or [location] when specifics are missing
 - Do not use excessive emojis or informal language
 - Respond ONLY using the required format below, with no preamble or explanation
