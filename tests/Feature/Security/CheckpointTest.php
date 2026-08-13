@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Security\RecordCheckInAction;
+use App\Actions\Security\RecordCheckOutAction;
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\AdministrativeAssignment;
@@ -140,4 +141,34 @@ it('allows security personnel to release their claimed checkpoint', function () 
         ->assertSessionHas('success');
 
     expect($claimService->getCurrentCheckpoint($this->estate->id, $this->guard))->toBeNull();
+});
+
+it('prevents visitor checkout from a different entry point when entry_point_checkout_enforced is true', function () {
+    $claimService = app(CheckpointClaimService::class);
+    $claimService->claim($this->estate->id, $this->guard, 'North Gate');
+
+    $resident = User::factory()->create();
+    $accessCode = AccessCode::create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $resident->id,
+        'code' => '112233',
+        'type' => 'single_use',
+        'visitor_name' => 'Gate B Visitor',
+        'status' => AccessCodeStatus::Active,
+        'expires_at' => now()->addHours(2),
+    ]);
+
+    // Check in at North Gate
+    $checkInAction = app(RecordCheckInAction::class);
+    $checkInAction->execute('112233', $this->estate->id, $this->guard);
+
+    // Switch guard checkpoint to South Gate
+    $claimService->release($this->estate->id, $this->guard);
+    $claimService->claim($this->estate->id, $this->guard, 'South Gate');
+
+    // Attempt checkout at South Gate
+    $checkOutAction = app(RecordCheckOutAction::class);
+
+    expect(fn () => $checkOutAction->execute('112233', $this->estate->id, $this->guard))
+        ->toThrow(\Illuminate\Validation\ValidationException::class);
 });

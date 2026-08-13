@@ -57,15 +57,30 @@ class VerifyController extends Controller
 
         if ($result['valid']) {
             if (isset($result['action']) && $result['action'] === 'checkout') {
-                $log = $this->recordCheckOutAction->execute(
-                    code: $request->validated('code'),
-                    estateId: $estate->id,
-                    verifiedBy: $user
-                );
+                try {
+                    $log = $this->recordCheckOutAction->execute(
+                        code: $request->validated('code'),
+                        estateId: $estate->id,
+                        verifiedBy: $user
+                    );
 
-                $result['access_log_id'] = $log->id;
-                $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
-                $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
+                    $result['access_log_id'] = $log->id;
+                    $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
+                    $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    $result['valid'] = false;
+                    $result['status'] = 'checkout_mismatch';
+                    $result['message'] = $e->getMessage();
+
+                    if ($request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'validation_result' => $result,
+                        ], 422);
+                    }
+
+                    return back()->with('validation_result', $result)->withErrors($e->errors());
+                }
             } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
                 // Do not auto check-in when checkout is pending
             } else {
@@ -149,11 +164,23 @@ class VerifyController extends Controller
         }
 
         if ($request->input('decision') === 'checkout') {
-            $this->recordCheckOutAction->execute(
-                code: $request->input('code'),
-                estateId: $estate->id,
-                verifiedBy: $user
-            );
+            try {
+                $this->recordCheckOutAction->execute(
+                    code: $request->input('code'),
+                    estateId: $estate->id,
+                    verifiedBy: $user
+                );
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                        'errors' => $e->errors(),
+                    ], 422);
+                }
+
+                return back()->withErrors($e->errors())->with('error', $e->getMessage());
+            }
         }
 
         if ($request->wantsJson()) {
