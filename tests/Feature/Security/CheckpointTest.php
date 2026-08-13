@@ -4,6 +4,7 @@ use App\Actions\Security\RecordCheckInAction;
 use App\Actions\Security\RecordCheckOutAction;
 use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
+use App\Models\AccessLog;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateSettings;
@@ -146,7 +147,8 @@ it('allows security personnel to release their claimed checkpoint', function () 
 
 it('prevents visitor checkout from a different entry point when entry_point_checkout_enforced is true', function () {
     $claimService = app(CheckpointClaimService::class);
-    $claimService->claim($this->estate->id, $this->guard, 'North Gate');
+    $claimService->claim($this->estate->id, $this->guard, 'South Gate');
+    session(['active_checkpoint' => 'South Gate']);
 
     $resident = User::factory()->create();
     $accessCode = AccessCode::create([
@@ -159,19 +161,16 @@ it('prevents visitor checkout from a different entry point when entry_point_chec
         'expires_at' => now()->addHours(2),
     ]);
 
-    // Check in at North Gate
-    $claimService->claim($this->estate->id, $this->guard, 'North Gate');
-    session(['active_checkpoint' => 'North Gate']);
+    // Create an active check-in log recorded at North Gate
+    AccessLog::create([
+        'estate_id' => $this->estate->id,
+        'access_code_id' => $accessCode->id,
+        'verified_by' => $this->guard->id,
+        'verified_at' => now(),
+        'entry_point' => 'North Gate',
+    ]);
 
-    $checkInAction = app(RecordCheckInAction::class);
-    $checkInAction->execute('112233', $this->estate->id, $this->guard);
-
-    // Switch guard checkpoint to South Gate
-    $claimService->release($this->estate->id, $this->guard);
-    $claimService->claim($this->estate->id, $this->guard, 'South Gate');
-    session(['active_checkpoint' => 'South Gate']);
-
-    // Attempt checkout at South Gate
+    // Attempt checkout while claimed at South Gate
     $checkOutAction = app(RecordCheckOutAction::class);
 
     expect(fn () => $checkOutAction->execute('112233', $this->estate->id, $this->guard))
