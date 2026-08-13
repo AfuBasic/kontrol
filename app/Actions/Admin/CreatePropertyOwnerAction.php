@@ -123,7 +123,7 @@ class CreatePropertyOwnerAction
 
             // 6. Dispatch event for side effects (invitation email)
             if ($invitation) {
-                event(new ResidentCreated($invitation, $estate, false));
+                event(new ResidentCreated($user, $estate, false));
             }
 
             activity()
