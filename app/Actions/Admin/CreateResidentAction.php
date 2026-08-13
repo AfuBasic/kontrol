@@ -84,6 +84,9 @@ class CreateResidentAction
                 );
             }
 
+            // Provision trial subscription if estate requires resident subscriptions
+            app(\App\Services\ResidentSubscriptionService::class)->createForUser($user, $estate);
+
             // 4. Create or update user profile with additional data
             UserProfile::updateOrCreate(
                 ['user_id' => $user->id],
