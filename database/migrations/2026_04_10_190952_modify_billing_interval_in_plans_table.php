@@ -22,7 +22,7 @@ return new class extends Migration
 
         // Convert back to enum with new values
         Schema::table('plans', function (Blueprint $table) {
-            $table->enum('billing_interval', ['quarterly', 'semi-annually', 'annually'])->change();
+            $table->enum('billing_interval', ['monthly', 'quarterly', 'semi-annually', 'annually'])->change();
         });
     }
 

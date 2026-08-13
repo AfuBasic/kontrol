@@ -40,7 +40,7 @@ export default function PublicLayout({ children }: Props) {
             setScrolled(window.scrollY > 20);
 
             // Determine active section based on scroll offset
-            const sections = ['features', 'pricing', 'download'];
+            const sections = ['features', 'download'];
             let current = window.location.pathname === '/' ? 'home' : '';
             for (const section of sections) {
                 const el = document.getElementById(section);
@@ -168,29 +168,7 @@ export default function PublicLayout({ children }: Props) {
                                 />
                             )}
                         </a>
-                        <a
-                            href="/#pricing"
-                            onClick={(e) => {
-                                if (window.location.pathname === '/') {
-                                    e.preventDefault();
-                                    document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' });
-                                }
-                            }}
-                            className={`relative py-1 text-sm font-medium transition-colors ${
-                                activeSection === 'pricing'
-                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
-                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
-                            }`}
-                        >
-                            Pricing
-                            {activeSection === 'pricing' && (
-                                <motion.div
-                                    layoutId="activeNavIndicator"
-                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
-                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                                />
-                            )}
-                        </a>
+
                         <a
                             href="/#download"
                             onClick={(e) => {
@@ -299,19 +277,6 @@ export default function PublicLayout({ children }: Props) {
                                 className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             >
                                 Features
-                            </a>
-                            <a
-                                href="/#pricing"
-                                onClick={(e) => {
-                                    handleNavClick();
-                                    if (window.location.pathname === '/') {
-                                        e.preventDefault();
-                                        document.querySelector('#pricing')?.scrollIntoView({ behavior: 'smooth' });
-                                    }
-                                }}
-                                className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                            >
-                                Pricing
                             </a>
                             <a
                                 href="/#download"
