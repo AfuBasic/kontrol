@@ -68,19 +68,13 @@ class CreateSecurityAction
 
             // Assign the role via the AdministrativeAssignment system to create a valid context
             $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
-            $membershipIsAccepted = DB::table('estate_users_membership')
-                ->where('estate_id', $estate->id)
-                ->where('user_id', $user->id)
-                ->where('status', 'accepted')
-                ->exists();
-
             $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
                 ->where('estate_id', $estate->id)
                 ->where('role_id', $role->id)
                 ->where('zone_id_coalesced', $zone?->id ?? 0)
                 ->exists();
 
-            if ($membershipIsAccepted && ! $assignmentExists) {
+            if (! $assignmentExists) {
                 $assignmentAction->execute(
                     user: $user,
                     estate: $estate,

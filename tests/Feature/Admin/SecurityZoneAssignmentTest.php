@@ -126,3 +126,35 @@ it('passes zones to the security create page', function () {
             ->has('zones', 1)
             ->where('zones.0.name', 'Zone 1'));
 });
+
+it('lists an existing user in security index after being invited as security', function () {
+    $existing = User::factory()->create(['email' => 'existing_security@example.com']);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->post(route('admin.security.store'), [
+            'name' => $existing->name,
+            'email' => $existing->email,
+            'badge_number' => 'SEC-999',
+        ])
+        ->assertRedirect(route('admin.security.index'));
+
+    $securityRole = Role::where('name', 'security')->whereNull('estate_id')->first();
+
+    $assignment = AdministrativeAssignment::query()
+        ->where('user_id', $existing->id)
+        ->where('estate_id', $this->estate->id)
+        ->where('role_id', $securityRole->id)
+        ->first();
+
+    expect($assignment)->not->toBeNull();
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->get(route('admin.security.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Security/Index')
+            ->where('stats.total', 1)
+            ->where('stats.pending', 1));
+});

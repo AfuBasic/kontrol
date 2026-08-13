@@ -75,20 +75,15 @@ class CreatePropertyOwnerAction
 
             // Assign the roles via the AdministrativeAssignment system
             $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
-            $membershipIsAccepted = DB::table('estate_users_membership')
-                ->where('estate_id', $estate->id)
-                ->where('user_id', $user->id)
-                ->where('status', 'accepted')
-                ->exists();
 
-            $assignRole = function ($role) use ($user, $estate, $zone, $scopeType, $assignmentAction, $membershipIsAccepted) {
+            $assignRole = function ($role) use ($user, $estate, $zone, $scopeType, $assignmentAction) {
                 $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
                     ->where('estate_id', $estate->id)
                     ->where('role_id', $role->id)
                     ->where('zone_id_coalesced', $zone?->id ?? 0)
                     ->exists();
 
-                if ($membershipIsAccepted && ! $assignmentExists) {
+                if (! $assignmentExists) {
                     $assignmentAction->execute(
                         user: $user,
                         estate: $estate,

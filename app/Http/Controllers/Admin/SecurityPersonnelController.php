@@ -44,7 +44,7 @@ class SecurityPersonnelController extends Controller
 
         $totalSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
         $activeSecurity = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingSecurity = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
+        $pendingSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
         $suspendedSecurity = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
 
         return Inertia::render('Admin/Security/Index', [
