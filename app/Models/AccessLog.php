@@ -41,6 +41,7 @@ class AccessLog extends Model
     protected $fillable = [
         'estate_id',
         'zone_id',
+        'entry_point',
         'access_code_id',
         'verified_by',
         'verified_at',
