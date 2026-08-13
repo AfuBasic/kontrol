@@ -290,7 +290,7 @@ class EarningsController extends Controller
             $items[] = [
                 'key' => 'grow',
                 'title' => 'Grow resident adoption',
-                'description' => 'You have live estates — commissions appear as residents subscribe.',
+                'description' => 'You have live estates - commissions appear as residents subscribe.',
                 'href' => '/partner/partner-requests',
                 'cta' => 'Open My Estates',
             ];
