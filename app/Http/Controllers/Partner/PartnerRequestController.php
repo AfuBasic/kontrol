@@ -499,7 +499,7 @@ class PartnerRequestController extends Controller
             'under_review' => 'Our team is evaluating estate fit and documentation.',
             'info_requested' => 'Provide the requested information to continue review.',
             'accepted' => $application->estate
-                ? 'Estate is live — track performance in Estates.'
+                ? 'Estate is live - track performance in Estates.'
                 : 'Estate workspace is being prepared.',
             'rejected' => 'Review the rejection reason or submit a new referral.',
             default => 'Awaiting the next update from Kontrol.',
