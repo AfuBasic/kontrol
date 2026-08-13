@@ -8,6 +8,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\Zone;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
@@ -56,7 +57,7 @@ class CreateAdministrativeAssignmentAction
             }
 
             if ($role->name === 'resident') {
-                app(\App\Services\ResidentSubscriptionService::class)->createForUser($user, $estate);
+                app(ResidentSubscriptionService::class)->createForUser($user, $estate);
             }
 
             return $assignment;
