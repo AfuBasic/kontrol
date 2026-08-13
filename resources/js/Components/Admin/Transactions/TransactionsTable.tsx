@@ -154,10 +154,10 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         <td className="px-4 py-3">
                                             <p className="text-xs font-bold text-slate-900">{tx.type_label}</p>
                                         </td>
-                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.resident?.name || '—'}</td>
-                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.collection?.name || '—'}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.resident?.name || '-'}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.collection?.name || '-'}</td>
                                         <td className="px-4 py-3 text-xs font-black text-slate-950">{formatCurrency(tx.amount, tx.currency || 'NGN')}</td>
-                                        <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '—'}</td>
+                                        <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '-'}</td>
                                         <td className="px-4 py-3">
                                             <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                                                 tx.status === 'success' || tx.status === 'successful' || tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
@@ -169,7 +169,7 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         </td>
                                         <td className="px-4 py-3 font-mono text-[10px] text-slate-450 font-semibold">{tx.reference_number}</td>
                                         <td className="px-4 py-3 text-xs text-slate-500 font-semibold">
-                                            {tx.created_at ? format(parseISO(tx.created_at), 'MMM d, h:mm a') : '—'}
+                                            {tx.created_at ? format(parseISO(tx.created_at), 'MMM d, h:mm a') : '-'}
                                         </td>
                                         <td className="px-4 py-3">
                                             <RowActions transaction={tx} onSelect={onSelect} permissions={permissions} />

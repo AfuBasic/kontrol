@@ -373,25 +373,25 @@ export default function ShowCollection({
             return { Icon: Clock, text: 'Waiting for assignments to be generated…', color: 'amber' };
         }
         if (collectionRate === 100) {
-            return { Icon: CheckCircle, text: 'Outstanding — all residents have paid. Collection is complete!', color: 'emerald' };
+            return { Icon: CheckCircle, text: 'Outstanding - all residents have paid. Collection is complete!', color: 'emerald' };
         }
         if (stats.overdue_count > 0 && collectionRate < 50) {
             return {
                 Icon: AlertCircle,
-                text: `Collections are behind target — ${collectionRate}% collected with ${stats.overdue_count} overdue ${stats.overdue_count === 1 ? 'resident' : 'residents'}.`,
+                text: `Collections are behind target - ${collectionRate}% collected with ${stats.overdue_count} overdue ${stats.overdue_count === 1 ? 'resident' : 'residents'}.`,
                 color: 'rose',
             };
         }
         if (daysLeft !== null && daysLeft <= 3 && collectionRate < 80) {
             return {
                 Icon: Clock,
-                text: `Closing soon — only ${collectionRate}% collected with ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining. Consider sending reminders.`,
+                text: `Closing soon - only ${collectionRate}% collected with ${daysLeft} day${daysLeft === 1 ? '' : 's'} remaining. Consider sending reminders.`,
                 color: 'amber',
             };
         }
         return {
             Icon: CheckCircle,
-            text: `Collections are on track — ${collectionRate}% collected${daysLeft !== null ? ` with ${daysLeft} days remaining` : ''}.`,
+            text: `Collections are on track - ${collectionRate}% collected${daysLeft !== null ? ` with ${daysLeft} days remaining` : ''}.`,
             color: 'emerald',
         };
     }, [collection.status, stats, collectionRate, daysLeft]);
@@ -457,7 +457,7 @@ export default function ShowCollection({
 
     return (
         <>
-            <Head title={`${collection.name} — Collection`} />
+            <Head title={`${collection.name} - Collection`} />
             <ConfigDrawer collection={collection} open={configOpen} onClose={() => setConfigOpen(false)} />
 
             <div className="space-y-6">
@@ -485,7 +485,7 @@ export default function ShowCollection({
                 )}
 
                 {/* ══════════════════════════════════════════════════════════
-                    ZONE 1 — CINEMATIC HERO
+                    ZONE 1 - CINEMATIC HERO
                 ══════════════════════════════════════════════════════════ */}
                 <motion.div
                     initial={{ opacity: 0, y: 12 }}
@@ -507,7 +507,7 @@ export default function ShowCollection({
                     </nav>
 
                     <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-                        {/* Left — Title + Revenue */}
+                        {/* Left - Title + Revenue */}
                         <div className="flex-1">
                             <div className="mb-3 flex flex-wrap items-center gap-3">
                                 <span
@@ -562,7 +562,7 @@ export default function ShowCollection({
                             </div>
                         </div>
 
-                        {/* Right — Progress ring + actions */}
+                        {/* Right - Progress ring + actions */}
                         <div className="flex flex-row items-center gap-6 lg:flex-col lg:items-end">
                             {/* Radial progress */}
                             <div className="relative flex-shrink-0">
@@ -646,7 +646,7 @@ export default function ShowCollection({
                 </motion.div>
 
                 {/* ══════════════════════════════════════════════════════════
-                    ZONE 2 — INTELLIGENCE BANNER
+                    ZONE 2 - INTELLIGENCE BANNER
                 ══════════════════════════════════════════════════════════ */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -659,7 +659,7 @@ export default function ShowCollection({
                 </motion.div>
 
                 {/* ══════════════════════════════════════════════════════════
-                    ZONE 3 — KPI CARDS
+                    ZONE 3 - KPI CARDS
                 ══════════════════════════════════════════════════════════ */}
                 <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     {/* Paid */}
@@ -760,8 +760,8 @@ export default function ShowCollection({
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════
-                    ZONES 4 / 5 / 6 — TWO-COLUMN COMMAND LAYOUT
-                    Left (2/3): Resident table — PRIMARY work area
+                    ZONES 4 / 5 / 6 - TWO-COLUMN COMMAND LAYOUT
+                    Left (2/3): Resident table - PRIMARY work area
                     Right (1/3): Progress + Trend + Recent Payments sidebar
                 ══════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
@@ -878,7 +878,7 @@ export default function ShowCollection({
                                                     {a.amount_paid > 0 ? (
                                                         <span className="text-sm font-bold text-emerald-600">{fmt(a.amount_paid)}</span>
                                                     ) : (
-                                                        <span className="text-sm text-slate-300">—</span>
+                                                        <span className="text-sm text-slate-300">-</span>
                                                     )}
                                                 </td>
                                                 <td className="px-5 py-4">
@@ -974,7 +974,7 @@ export default function ShowCollection({
                         )}
                     </motion.div>
 
-                    {/* ── RIGHT: Sidebar — Progress + Chart + Timeline ── */}
+                    {/* ── RIGHT: Sidebar - Progress + Chart + Timeline ── */}
                     <div className="flex flex-col gap-4">
 
                         {/* Progress Panel */}
@@ -1059,7 +1059,7 @@ export default function ShowCollection({
                                 <BarChart3 className="h-4 w-4 text-slate-400" />
                                 <h3 className="font-bold text-slate-900">Payment Activity</h3>
                             </div>
-                            <p className="mb-3 text-xs text-slate-400">Daily totals — last 14 days</p>
+                            <p className="mb-3 text-xs text-slate-400">Daily totals - last 14 days</p>
                             {dailyTrend === undefined ? (
                                 <div className="space-y-2">
                                     {[...Array(4)].map((_, i) => (
@@ -1119,7 +1119,7 @@ export default function ShowCollection({
                                                         <p className="truncate text-xs font-bold text-slate-900">{p.user_name}</p>
                                                         <span className="shrink-0 text-xs font-bold text-emerald-600">{fmt(p.amount)}</span>
                                                     </div>
-                                                    <p className="text-[10px] text-slate-400">{p.paid_at_human || '—'}</p>
+                                                    <p className="text-[10px] text-slate-400">{p.paid_at_human || '-'}</p>
                                                 </div>
                                             </motion.div>
                                         ))}

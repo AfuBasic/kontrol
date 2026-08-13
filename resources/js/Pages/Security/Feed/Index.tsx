@@ -67,7 +67,7 @@ function FeedRow({ post }: { post: EstateBoardPost }) {
                 {/* Left accent rail for security-targeted posts */}
                 {targetsSecurity && <span className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-emerald-500/80" aria-hidden="true" />}
 
-                {/* Time column — fixed width for alignment */}
+                {/* Time column - fixed width for alignment */}
                 <div className="flex w-12 shrink-0 flex-col items-end pt-0.5">
                     <span className="font-mono text-[11px] tracking-wider text-slate-500 tabular-nums">{timestamp(date)}</span>
                 </div>

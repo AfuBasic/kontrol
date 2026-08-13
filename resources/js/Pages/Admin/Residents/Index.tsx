@@ -344,7 +344,7 @@ export default function Residents({
             </div>
 
             <div className="space-y-6">
-                {/* SECTION 1 — RESIDENT OVERVIEW STRIP */}
+                {/* SECTION 1 - RESIDENT OVERVIEW STRIP */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Community</span>
@@ -379,7 +379,7 @@ export default function Residents({
                     </div>
                 </div>
 
-                {/* SECTION 2 — INSIGHTS PANEL (deferred) */}
+                {/* SECTION 2 - INSIGHTS PANEL (deferred) */}
                 <Deferred
                     data={['insights', 'incompleteResidents']}
                     fallback={
@@ -431,7 +431,7 @@ export default function Residents({
                     )}
                 </Deferred>
 
-                {/* SECTION 3 — SEARCH & FILTERS */}
+                {/* SECTION 3 - SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                     <div className="flex flex-col gap-3">
                         {/* Search Input */}
@@ -513,7 +513,7 @@ export default function Residents({
                     </div>
                 </div>
 
-                {/* SECTION 4 — TABLE REDESIGN */}
+                {/* SECTION 4 - TABLE REDESIGN */}
                 <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
                     {isLoading ? (
                         <div className="animate-pulse space-y-4 p-6">
@@ -621,7 +621,7 @@ export default function Residents({
                                                     <div className="text-xs font-semibold text-slate-800">
                                                         <span className="block max-w-[150px] truncate">{resident.email}</span>
                                                         <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
-                                                            {resident.phone || '—'}
+                                                            {resident.phone || '-'}
                                                         </span>
                                                     </div>
                                                 </td>

@@ -169,7 +169,7 @@
             }
         }
 
-        /* Dark Mode — Apple Mail, iOS Mail, Outlook iOS/Android, Samsung Email */
+        /* Dark Mode - Apple Mail, iOS Mail, Outlook iOS/Android, Samsung Email */
         @media (prefers-color-scheme: dark) {
 
             body,

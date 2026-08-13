@@ -250,7 +250,7 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    '—'
+                                                    '-'
                                                 )}
                                             </td>
                                         </tr>

@@ -85,7 +85,7 @@ export default function PaymentStatus({
             iconWrap: 'bg-amber-50 text-amber-500',
             title: 'Confirming your transfer',
             subtitle:
-                'Your bank transfer may still be processing. This page will update once Paystack confirms the payment. You can safely close this window — we will still record it.',
+                'Your bank transfer may still be processing. This page will update once Paystack confirms the payment. You can safely close this window - we will still record it.',
             badge: 'Pending',
             badgeClass: 'bg-amber-50 text-amber-700 border-amber-100',
         },

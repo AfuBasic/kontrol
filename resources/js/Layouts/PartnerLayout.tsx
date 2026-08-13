@@ -79,7 +79,7 @@ function getGreeting(): string {
     return 'Good evening';
 }
 
-/** e.g. "1:30 PM" — compact clock time for toast chrome */
+/** e.g. "1:30 PM" - compact clock time for toast chrome */
 function formatToastTime(date: Date): string {
     return new Intl.DateTimeFormat(undefined, {
         hour: 'numeric',
@@ -148,7 +148,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
         }
 
         // Laravel notification broadcasts land on PrivateChannel App.Models.User.{id}
-        // (Notifiable default — matches routes/channels.php authorization).
+        // (Notifiable default - matches routes/channels.php authorization).
         const channelName = `App.Models.User.${user.id}`;
         const channel = window.Echo.private(channelName);
 
@@ -496,7 +496,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                     )}
                 </AnimatePresence>
 
-                {/* Main column — marginLeft only on lg+ via class + media query */}
+                {/* Main column - marginLeft only on lg+ via class + media query */}
                 <div
                     className="partner-shell-main flex min-w-0 flex-1 flex-col transition-[margin] duration-300 ease-out"
                     style={{ marginLeft: sidebarWidth }}

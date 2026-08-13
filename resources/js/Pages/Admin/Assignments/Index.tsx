@@ -222,7 +222,7 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                                             {assignment.scope_type === 'estate' ? 'Estate-wide' : 'Zone'}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-700">
-                                            {assignment.zone?.name ?? '—'}
+                                            {assignment.zone?.name ?? '-'}
                                         </td>
                                         <td className="px-6 py-4">
                                             {assignment.is_active ? (

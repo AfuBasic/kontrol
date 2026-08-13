@@ -97,7 +97,7 @@ export default function VisitorIndex({
 
     const handleClearFilters = () => {
         setSearchDraft('');
-        // Drop search/filter fields only — keep table/timeline view and sort.
+        // Drop search/filter fields only - keep table/timeline view and sort.
         const kept: Record<string, string | number | undefined> = {};
         if (filters.sort && filters.sort !== 'verified_at') {
             kept.sort = filters.sort;
@@ -244,7 +244,7 @@ export default function VisitorIndex({
                     onSelect={setSelectedRecord}
                 />
 
-                {/* Activity journal — tools + feed as one surface */}
+                {/* Activity journal - tools + feed as one surface */}
                 <section
                     aria-labelledby="activity-heading"
                     className="overflow-hidden rounded-xl border border-gray-200 bg-white"

@@ -13,7 +13,7 @@ interface Props {
 }
 
 /**
- * Section failed to load — with retry.
+ * Section failed to load - with retry.
  */
 export default function ErrorState({
     title = 'Failed to load',

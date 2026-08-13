@@ -112,7 +112,7 @@ export default function CrashScreen({ error, resetError }: Props) {
                     </div>
                 </div>
 
-                {/* Technical Details — local/dev only */}
+                {/* Technical Details - local/dev only */}
                 {showTechnicalDetails && (
                     <div className="border-t border-slate-50 bg-slate-50/50 px-8 py-4">
                         <button

@@ -301,7 +301,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
             </div>
 
             <div className="space-y-6">
-                {/* SECTION 1 — STATS STRIP */}
+                {/* SECTION 1 - STATS STRIP */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                         <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Landlords</span>
@@ -336,7 +336,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                     </div>
                 </div>
 
-                {/* SECTION 2 — INSIGHTS PANEL */}
+                {/* SECTION 2 - INSIGHTS PANEL */}
                 {((insights && insights.length > 0) || (incompleteOwners && incompleteOwners.length > 0)) && (
                     <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
                         <div className="mb-2.5 flex items-center gap-2">
@@ -378,7 +378,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                     </div>
                 )}
 
-                {/* SECTION 3 — SEARCH & FILTERS */}
+                {/* SECTION 3 - SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                     <div className="flex flex-col gap-3">
                         {/* Search Input */}
@@ -447,7 +447,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                     </div>
                 </div>
 
-                {/* SECTION 4 — TABLE */}
+                {/* SECTION 4 - TABLE */}
                 <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 overflow-hidden">
                     {propertyOwners.data.length > 0 ? (
                         <div className="overflow-x-auto min-h-[280px]">
@@ -514,7 +514,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                 <td className="px-4 py-3.5">
                                                     <div className="text-xs font-semibold text-slate-800">
                                                         <span className="block truncate max-w-[150px]">{owner.email}</span>
-                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">{owner.phone || '—'}</span>
+                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">{owner.phone || '-'}</span>
                                                     </div>
                                                 </td>
 

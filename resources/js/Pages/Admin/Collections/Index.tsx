@@ -306,7 +306,7 @@ export default function CollectionsIndex({
 
         if (collectionInsights?.worst) {
             chips.push({
-                text: `${collectionInsights.worst.name} needs attention — ${collectionInsights.worst.rate}% collected`,
+                text: `${collectionInsights.worst.name} needs attention - ${collectionInsights.worst.rate}% collected`,
                 icon: <AlertTriangle className="h-3.5 w-3.5" />,
                 color: 'amber',
             });
@@ -442,7 +442,7 @@ export default function CollectionsIndex({
                 ) : (
                 <>
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 1 — FINANCIAL HEALTH HERO
+                    ZONE 1 - FINANCIAL HEALTH HERO
                 ══════════════════════════════════════════════════════════════ */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
@@ -593,11 +593,11 @@ export default function CollectionsIndex({
                 )}
 
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 2+3 — TODAY'S SNAPSHOT + COLLECTION INSIGHTS
+                    ZONE 2+3 - TODAY'S SNAPSHOT + COLLECTION INSIGHTS
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
 
-                    {/* Zone 2 — Today's Snapshot */}
+                    {/* Zone 2 - Today's Snapshot */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -649,7 +649,7 @@ export default function CollectionsIndex({
                         </Deferred>
                     </motion.div>
 
-                    {/* Zone 3 — Collection Insights */}
+                    {/* Zone 3 - Collection Insights */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -749,7 +749,7 @@ export default function CollectionsIndex({
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 4 — MONEY FLOW + TREND CHART
+                    ZONE 4 - MONEY FLOW + TREND CHART
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Money Flow Funnel */}
@@ -808,7 +808,7 @@ export default function CollectionsIndex({
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-slate-900">Revenue Trend</h3>
-                                <p className="text-xs text-slate-400">Expected vs. collected — last 30 days</p>
+                                <p className="text-xs text-slate-400">Expected vs. collected - last 30 days</p>
                             </div>
                             <BarChart3 className="h-4 w-4 text-slate-300" />
                         </div>
@@ -861,11 +861,11 @@ export default function CollectionsIndex({
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 5+6 — COLLECTIONS LIST + RECENT ACTIVITY
+                    ZONE 5+6 - COLLECTIONS LIST + RECENT ACTIVITY
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
 
-                    {/* Zone 5 — Collections List (primary, 2/3) */}
+                    {/* Zone 5 - Collections List (primary, 2/3) */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -978,7 +978,7 @@ export default function CollectionsIndex({
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-[10px] text-slate-300">—</span>
+                                                                <span className="text-[10px] text-slate-300">-</span>
                                                             )}
                                                         </td>
                                                         <td className="px-5 py-4 text-right">
@@ -1063,7 +1063,7 @@ export default function CollectionsIndex({
                         )}
                     </motion.div>
 
-                    {/* Zone 6 — Recent Activity Feed (sidebar) */}
+                    {/* Zone 6 - Recent Activity Feed (sidebar) */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}

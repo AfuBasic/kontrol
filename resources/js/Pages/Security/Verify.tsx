@@ -95,18 +95,18 @@ function cameraErrorMessage(err: unknown): string {
     const name = err instanceof DOMException ? err.name : err instanceof Error ? err.name : '';
 
     if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-        return 'Camera permission denied — use manual code entry below';
+        return 'Camera permission denied - use manual code entry below';
     }
 
     if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-        return 'No camera detected — use manual code entry below';
+        return 'No camera detected - use manual code entry below';
     }
 
     if (name === 'NotReadableError' || name === 'TrackStartError') {
-        return 'Camera is in use by another app — use manual code entry below';
+        return 'Camera is in use by another app - use manual code entry below';
     }
 
-    return 'Camera unavailable — use manual code entry below';
+    return 'Camera unavailable - use manual code entry below';
 }
 
 export default function SecurityVerify() {
@@ -382,7 +382,7 @@ export default function SecurityVerify() {
                 console.error('Camera access failed:', err);
                 setScannerError(cameraErrorMessage(err));
                 setIsScanning(false);
-                // Manual entry remains the primary path — focus first digit.
+                // Manual entry remains the primary path - focus first digit.
                 setTimeout(() => inputsRef.current[0]?.focus(), 100);
             }
         };
@@ -555,7 +555,7 @@ export default function SecurityVerify() {
                                         </span>
                                         <span className="text-[10px] font-bold text-amber-600/85 dark:text-amber-500/80">
                                             {offlineWithEmptyCache
-                                                ? 'No offline pass cache — manual entry still available'
+                                                ? 'No offline pass cache - manual entry still available'
                                                 : 'Verifying codes locally via encrypted cache'}
                                         </span>
                                     </div>
@@ -620,7 +620,7 @@ export default function SecurityVerify() {
                                             {securityPendingCount > 0
                                                 ? `Uploading ${securityPendingCount} queued check-ins to server...`
                                                 : quality === 'poor'
-                                                  ? 'Limited connectivity — cache update may be slow'
+                                                  ? 'Limited connectivity - cache update may be slow'
                                                   : 'Downloading latest pass hashes...'}
                                         </span>
                                     </div>

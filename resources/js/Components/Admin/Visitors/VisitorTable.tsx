@@ -20,7 +20,7 @@ type Props = {
 };
 
 /**
- * Tabular visit ledger — filterable, sortable, infinite-scroll friendly.
+ * Tabular visit ledger - filterable, sortable, infinite-scroll friendly.
  * No always-identical "Verified" status column.
  * Event type is an icon (check-in vs check-out), not a text badge that never varies.
  */
@@ -149,7 +149,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                                     ) : null}
                                                 </>
                                             ) : (
-                                                <span className="text-gray-400">—</span>
+                                                <span className="text-gray-400">-</span>
                                             )}
                                         </td>
                                     )}
@@ -160,7 +160,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                     )}
                                     {showGateColumn && (
                                         <td className="px-4 py-3 font-medium text-gray-500">
-                                            {log.gate === 'Main Gate' ? '—' : log.gate}
+                                            {log.gate === 'Main Gate' ? '-' : log.gate}
                                         </td>
                                     )}
                                     <td className="px-4 py-3 text-right">

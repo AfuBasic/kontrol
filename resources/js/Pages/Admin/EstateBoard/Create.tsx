@@ -218,7 +218,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                         >
                             <div>
                                 <h2 className="text-sm font-semibold text-gray-900">Publish settings</h2>
-                                <p className="mt-0.5 text-xs text-gray-500">Set these first — they guide the AI draft and preview.</p>
+                                <p className="mt-0.5 text-xs text-gray-500">Set these first - they guide the AI draft and preview.</p>
                             </div>
 
                             <div>

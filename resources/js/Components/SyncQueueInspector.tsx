@@ -36,7 +36,7 @@ function statusLabel(status: SyncStatus): string {
 
 function formatTime(iso: string | null): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     try {

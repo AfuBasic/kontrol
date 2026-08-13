@@ -11,7 +11,7 @@ type Props = {
 };
 
 /**
- * Timeline tools — search + filters sit in the journal chrome, not as floating widgets.
+ * Timeline tools - search + filters sit in the journal chrome, not as floating widgets.
  */
 export default function ActivityFiltersBar({
     filters,

@@ -178,7 +178,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
 
     return (
         <>
-            <Head title="Report Incident — Admin Workspace" />
+            <Head title="Report Incident - Admin Workspace" />
 
             {/* Back Button */}
             <div className="mb-6">

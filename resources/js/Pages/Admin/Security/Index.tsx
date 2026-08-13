@@ -150,7 +150,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
             </div>
 
             <div className="space-y-6">
-                {/* SECTION 1 — STATS STRIP */}
+                {/* SECTION 1 - STATS STRIP */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Personnel</span>
@@ -185,7 +185,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                     </div>
                 </div>
 
-                {/* SECTION 2 — INSIGHTS PANEL */}
+                {/* SECTION 2 - INSIGHTS PANEL */}
                 <Deferred data="insights" fallback={<div className="h-16 animate-pulse rounded-2xl bg-blue-50/40" />}>
                     {insights.length > 0 && (
                         <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
@@ -205,7 +205,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                     )}
                 </Deferred>
 
-                {/* SECTION 3 — SEARCH & FILTERS */}
+                {/* SECTION 3 - SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                     <div className="flex flex-col gap-3 sm:flex-row">
                         {/* Search Input */}
@@ -245,7 +245,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                     </div>
                 </div>
 
-                {/* SECTION 4 — TABLE */}
+                {/* SECTION 4 - TABLE */}
                 <SectionErrorBoundary name="security-table">
                 <Deferred data="security" fallback={<TableRowSkeleton rows={6} columns={5} />}>
                 <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
@@ -315,7 +315,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                 <td className="px-6 py-3.5 whitespace-nowrap">
                                                     <div className="text-xs font-semibold text-slate-800">
                                                         <span className="block truncate max-w-[180px]">{person.email}</span>
-                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">{person.phone || '—'}</span>
+                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">{person.phone || '-'}</span>
                                                     </div>
                                                 </td>
 
@@ -328,7 +328,7 @@ export default function SecurityPersonnel({ security: initialSecurity, filters: 
                                                 {/* Badge */}
                                                 <td className="px-6 py-3.5 whitespace-nowrap">
                                                     <span className="inline-flex rounded-full bg-slate-50 border border-slate-150 px-2 py-0.5 text-xs font-bold text-slate-700">
-                                                        {person.badge_number || '—'}
+                                                        {person.badge_number || '-'}
                                                     </span>
                                                 </td>
 

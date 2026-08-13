@@ -502,7 +502,7 @@ export default function SettlementsIndex({ earnings, summary, filters, statusOpt
                                                             {earning.settled_at_human ?? 'Paid'}
                                                         </span>
                                                     ) : (
-                                                        <span className="text-xs text-[#9297A8]">—</span>
+                                                        <span className="text-xs text-[#9297A8]">-</span>
                                                     )}
                                                 </td>
                                             </tr>

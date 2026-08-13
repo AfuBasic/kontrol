@@ -23,7 +23,7 @@ type Props = {
 
 const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
 
-/** Narrow fixed time column — content sits close to the spine */
+/** Narrow fixed time column - content sits close to the spine */
 const TIME_COL = 'w-[3.25rem] shrink-0 sm:w-[3.75rem]';
 
 /**
@@ -99,7 +99,7 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
     );
 }
 
-/** Level 1 — Day as chapter. Dominant type; never confusable with an event. */
+/** Level 1 - Day as chapter. Dominant type; never confusable with an event. */
 function DayChapter({
     label,
     eventCount,
@@ -162,7 +162,7 @@ function TimelineEvent({
 
     return (
         <li className="group/event relative">
-            {/* Spine node — scales subtly on hover */}
+            {/* Spine node - scales subtly on hover */}
             <span
                 className={`absolute top-[13px] left-0 z-10 h-2 w-2 -translate-x-1/2 rounded-full border-2 bg-white ring-2 ring-white transition-transform duration-150 ease-out group-hover/event:scale-125 ${config.nodeClass}`}
                 aria-hidden
@@ -184,7 +184,7 @@ function TimelineEvent({
                             : 'hover:bg-gray-50/90'
                     }`}
                 >
-                    {/* Level 2 — time */}
+                    {/* Level 2 - time */}
                     <time
                         dateTime={event.occurredAt}
                         className={`${TIME_COL} pt-0.5 text-right text-[11px] font-semibold tabular-nums tracking-tight text-gray-400 sm:text-xs`}
@@ -197,9 +197,9 @@ function TimelineEvent({
                         <VisitEventIcon kind={kind} size="sm" />
                     </span>
 
-                    {/* Level 3 — structured activity object */}
+                    {/* Level 3 - structured activity object */}
                     <div className="min-w-0 flex-1">
-                        {/* Activity type first — scannable before the name */}
+                        {/* Activity type first - scannable before the name */}
                         <p
                             className={`text-[10px] font-bold tracking-wider uppercase ${config.textClass}`}
                         >
@@ -209,7 +209,7 @@ function TimelineEvent({
                             {record.visitor.name}
                         </p>
 
-                        {/* Supporting details — muted metadata layer */}
+                        {/* Supporting details - muted metadata layer */}
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[11px] font-medium text-gray-500">
                             {type === 'check_in' && showHost ? (
                                 <span className="truncate">

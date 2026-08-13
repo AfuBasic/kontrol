@@ -82,7 +82,7 @@ export function hasActiveVisitorFilters(filters: VisitorFilters): boolean {
  */
 export function formatStayDuration(minutes: number | null | undefined): string {
     if (minutes == null || Number.isNaN(minutes)) {
-        return '—';
+        return '-';
     }
 
     const total = Math.max(0, Math.floor(minutes));

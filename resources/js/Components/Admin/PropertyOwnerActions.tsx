@@ -220,7 +220,7 @@ export default function PropertyOwnerActions({ owner }: Props) {
                 <EllipsisVerticalIcon className="h-5 w-5" />
             </button>
 
-            {/* Desktop dropdown — portalled so it escapes overflow-hidden table wrappers */}
+            {/* Desktop dropdown - portalled so it escapes overflow-hidden table wrappers */}
             {typeof document !== 'undefined' &&
                 createPortal(
                     <AnimatePresence>

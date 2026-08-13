@@ -105,7 +105,7 @@ function policyFor(op: QueuedOperation): RetryPolicy {
 }
 
 /**
- * Unified offline write sync engine — singleton.
+ * Unified offline write sync engine - singleton.
  * Queues domain operations, retries with per-type policies, replays on reconnect.
  */
 class SyncEngineImpl {
@@ -518,7 +518,7 @@ class SyncEngineImpl {
         try {
             await this.loadOperations();
         } catch {
-            // IndexedDB unavailable (private mode / SSR) — continue in-memory empty.
+            // IndexedDB unavailable (private mode / SSR) - continue in-memory empty.
         }
 
         this.hydrated = true;

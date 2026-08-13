@@ -1076,7 +1076,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                 ? data.type === 'percentage'
                                                     ? `${data.value}% OFF`
                                                     : `₦${Number(data.value).toLocaleString()} OFF`
-                                                : '—'}
+                                                : '-'}
                                         </p>
                                     </div>
                                 </div>

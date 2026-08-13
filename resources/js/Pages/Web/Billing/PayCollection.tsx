@@ -121,7 +121,7 @@ export default function PayCollection({
             const data = await response.json().catch(() => ({}));
 
             if (data.already_paid) {
-                // Already settled — send them to a receipt-like reload of this bill
+                // Already settled - send them to a receipt-like reload of this bill
                 window.location.reload();
                 return;
             }
@@ -176,7 +176,7 @@ export default function PayCollection({
                     setIsProcessing(false);
                 },
                 callback: (paystackResponse: { reference: string }) => {
-                    // Redirect to receipt/status page — it syncs with Paystack and shows full/partial outcome
+                    // Redirect to receipt/status page - it syncs with Paystack and shows full/partial outcome
                     window.location.href = statusUrlFor(paystackResponse.reference);
                 },
             };
@@ -288,7 +288,7 @@ export default function PayCollection({
                             </div>
                         </div>
 
-                        {/* Option 2: Pay Part — only when remaining balance ≥ 20% of original bill */}
+                        {/* Option 2: Pay Part - only when remaining balance ≥ 20% of original bill */}
                         {allowsPartialPayment && (
                             <div
                                 onClick={() => {

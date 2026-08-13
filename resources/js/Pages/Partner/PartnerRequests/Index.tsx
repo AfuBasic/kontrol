@@ -131,7 +131,7 @@ const emptyPortfolio: PortfolioSummary = {
 
 function formatDate(iso: string | null | undefined): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
     return new Date(iso).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
 }
@@ -287,7 +287,7 @@ function EstateCommandSearch({
                                             <div className="min-w-0">
                                                 <p className="truncate text-[13px] font-semibold text-white">{estate.name}</p>
                                                 <p className="mt-0.5 truncate text-[11px] text-white/40">
-                                                    {estate.location || estate.reference} · {estate.chairman_name || '—'}
+                                                    {estate.location || estate.reference} · {estate.chairman_name || '-'}
                                                 </p>
                                             </div>
                                             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}>
@@ -565,7 +565,7 @@ export default function PartnerRequestsIndex({
                                 <p className="text-[11px] font-semibold tracking-[0.16em] text-white/40 uppercase">Portfolio</p>
                                 <h1 className="mt-1.5 text-[1.85rem] font-semibold tracking-tight sm:text-[2.1rem]">My Estates</h1>
                                 <p className="mt-2 max-w-xl text-[13px] leading-relaxed text-white/50">
-                                    Manage live estates as commercial assets — performance, residents, and commission in one place.
+                                    Manage live estates as commercial assets - performance, residents, and commission in one place.
                                 </p>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">

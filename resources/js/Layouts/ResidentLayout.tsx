@@ -470,7 +470,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             <div className="fixed top-0 right-0 left-0 z-[60]">
                 <OfflineBanner />
             </div>
-            {/* Mobile health chip — resident shell has no persistent header */}
+            {/* Mobile health chip - resident shell has no persistent header */}
             <div className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-3 z-[55] md:hidden">
                 <SystemHealthMonitor hideWhenHealthy className="shadow-sm" />
             </div>

@@ -13,7 +13,7 @@ type Props = {
 };
 
 /**
- * Activity glyph — direction + color encode kind at a glance.
+ * Activity glyph - direction + color encode kind at a glance.
  */
 export default function VisitEventIcon({ type, kind, size = 'md', bare = false }: Props) {
     const resolved: ActivityKind = kind ?? (type ? activityKindFromEventType(type) : 'verified');

@@ -33,7 +33,7 @@ function resolveHealth(
     if (quality === 'offline') {
         return {
             tone: 'slate',
-            label: pendingCount > 0 ? `Offline — ${pendingCount} pending` : 'Offline',
+            label: pendingCount > 0 ? `Offline - ${pendingCount} pending` : 'Offline',
             icon: WifiOff,
         };
     }
@@ -82,7 +82,7 @@ const toneClasses: Record<HealthTone, string> = {
 };
 
 /**
- * Compact system health indicator — opens SyncQueueInspector on click.
+ * Compact system health indicator - opens SyncQueueInspector on click.
  */
 export default function SystemHealthMonitor({ size = 'sm', className = '', hideWhenHealthy = false }: Props) {
     const { quality } = useNetworkQuality();

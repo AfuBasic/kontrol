@@ -45,7 +45,7 @@ export interface StaleCacheEntry<T = unknown> {
 }
 
 /**
- * Resident offline store — queued writes + stale-while-revalidate cache.
+ * Resident offline store - queued writes + stale-while-revalidate cache.
  */
 export const ResidentStore = {
     async putPendingPass(pass: PendingPass): Promise<PendingPass> {

@@ -42,7 +42,7 @@ function pendingBadge(status: SyncStatus): { label: string; className: string } 
         case SyncStatus.Failed:
         case SyncStatus.Conflict:
             return {
-                label: status === SyncStatus.Conflict ? 'Conflict' : 'Sync failed — tap to retry',
+                label: status === SyncStatus.Conflict ? 'Conflict' : 'Sync failed - tap to retry',
                 className: 'bg-rose-50 text-rose-700 border-rose-100',
             };
         case SyncStatus.Syncing:

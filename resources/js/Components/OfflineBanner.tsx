@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * Global offline strip — slides in when quality is offline, out on reconnect.
+ * Global offline strip - slides in when quality is offline, out on reconnect.
  */
 export default function OfflineBanner({ variant = 'default', className = '' }: Props) {
     const { quality, isOnline } = useNetworkQuality();
@@ -41,9 +41,9 @@ export default function OfflineBanner({ variant = 'default', className = '' }: P
                         <span>
                             {isSecurity ? 'Offline mode' : "You're offline"}
                             {pendingCount > 0
-                                ? ` — ${pendingCount} action${pendingCount === 1 ? '' : 's'} pending sync`
+                                ? ` - ${pendingCount} action${pendingCount === 1 ? '' : 's'} pending sync`
                                 : isSecurity
-                                  ? ' — scanning from cache'
+                                  ? ' - scanning from cache'
                                   : ''}
                         </span>
                     </div>

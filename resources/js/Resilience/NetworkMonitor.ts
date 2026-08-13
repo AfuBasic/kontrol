@@ -71,7 +71,7 @@ function qualityFromMetrics(rtt: number | null, effectiveType: string | null, on
 
 /**
  * Network quality monitor with Network Information API + fetch RTT fallback.
- * Singleton — subscribe via NetworkMonitor.subscribe().
+ * Singleton - subscribe via NetworkMonitor.subscribe().
  */
 class NetworkMonitorImpl {
     private listeners = new Set<Listener>();

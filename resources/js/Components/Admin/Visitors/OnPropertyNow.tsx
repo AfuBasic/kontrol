@@ -9,7 +9,7 @@ type Props = {
 };
 
 /**
- * Surface 1 — who is on the property right now (checked in, not checked out).
+ * Surface 1 - who is on the property right now (checked in, not checked out).
  * Warning color is reserved exclusively for overstay.
  */
 export default function OnPropertyNow({
@@ -44,7 +44,7 @@ export default function OnPropertyNow({
 
             {!checkoutEnabled ? (
                 <p className="text-sm font-medium text-gray-500">
-                    Presence isn&apos;t tracked for this estate — visitor check-out is disabled, so we
+                    Presence isn&apos;t tracked for this estate - visitor check-out is disabled, so we
                     can&apos;t tell who is still on the property.
                 </p>
             ) : visitors.length === 0 ? (

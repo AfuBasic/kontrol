@@ -357,7 +357,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 <PullToRefresh>{children}</PullToRefresh>
             </main>
 
-            {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
+            {/* Bottom Navigation - slim, monochromatic, animated active indicator */}
             {!hideNav && (
                 <motion.nav
                     initial={{ opacity: 0, y: 12 }}
@@ -389,7 +389,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                                             aria-current={active ? 'page' : undefined}
                                             className="group relative flex h-full flex-col items-center justify-center gap-1 px-1 pt-2.5 pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900/15"
                                         >
-                                            {/* Animated top accent — morphs between active tabs */}
+                                            {/* Animated top accent - morphs between active tabs */}
                                             {active && (
                                                 <motion.span
                                                     layoutId="security-nav-indicator"
