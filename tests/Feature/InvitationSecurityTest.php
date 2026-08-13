@@ -81,6 +81,30 @@ test('invited property owner has pending membership status and cannot log in', f
     $response->assertSessionHasErrors('email');
 });
 
+test('inviting a user that already exists in another estate dispatches invitation event and sets pending membership', function () {
+    \Illuminate\Support\Facades\Mail::fake();
+    $estate1 = Estate::factory()->create();
+    $estate2 = Estate::factory()->create();
+
+    $existingUser = User::factory()->create(['email' => 'cross.estate@example.com']);
+    $estate1->users()->attach($existingUser->id, ['status' => 'accepted', 'relationship_type' => 'resident']);
+
+    $action = app(CreateResidentAction::class);
+    $user = $action->execute([
+        'name' => 'Cross Estate Resident',
+        'email' => 'cross.estate@example.com',
+    ], $estate2);
+
+    expect($user->id)->toBe($existingUser->id);
+
+    $membershipStatus = DB::table('estate_users_membership')
+        ->where('user_id', $existingUser->id)
+        ->where('estate_id', $estate2->id)
+        ->value('status');
+
+    expect($membershipStatus)->toBe('pending');
+});
+
 test('bulk invited residents have pending invitation status', function () {
     $estate = Estate::factory()->create();
 
