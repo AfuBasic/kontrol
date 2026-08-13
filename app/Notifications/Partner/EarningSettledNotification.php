@@ -39,7 +39,7 @@ class EarningSettledNotification extends Notification implements ShouldBroadcast
             ->greeting("Hello {$partnerName},")
             ->line("Your commission for {$monthLabel} has been paid.")
             ->line("Amount: ₦{$amount}")
-            ->line('Payment reference: '.($this->earning->maskedPaymentReference() ?? '—'))
+            ->line('Payment reference: '.($this->earning->maskedPaymentReference() ?? '-'))
             ->action('View earnings', url('/partner/earnings'))
             ->line('Thank you for partnering with Kontrol.');
     }
