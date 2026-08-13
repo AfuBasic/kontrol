@@ -394,7 +394,7 @@ class CollectionController extends Controller
             'canDelete' => $collection->status === 'draft'
                 || ($collection->status === 'active' && ! $collection->assignments()->where('amount_paid', '>', 0)->exists()),
 
-            // Deferred props — loaded after initial render to keep TTFB fast
+            // Deferred props - loaded after initial render to keep TTFB fast
             'recentPayments' => Inertia::defer(fn () => Payment::query()
                 ->whereHas('assignment', fn ($q) => $q->where('collection_id', $collection->id))
                 ->with('user')
@@ -525,7 +525,7 @@ class CollectionController extends Controller
                 abort(403, 'This collection cannot be deleted because payments have already been made.');
             }
 
-            // Safe to delete — remove all unpaid assignments first
+            // Safe to delete - remove all unpaid assignments first
             $collection->assignments()->delete();
         }
 
