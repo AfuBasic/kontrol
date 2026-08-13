@@ -291,7 +291,7 @@ class AccessCodeController extends Controller
                     'checked_out_at' => $log->checked_out_at?->toISOString(),
                     'checkout_verifier_name' => $log->checkoutVerifier?->name ?? 'Unknown',
                     'entry_point' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
-                    'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? $log->meta['entry_point'] ?? 'Main Entrance',
+                    'exit_point' => $log->checked_out_at ? ($log->meta['exit_point'] ?? $log->entry_point ?? 'Main Entrance') : null,
                     'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
                 ]),
                 'next_cursor' => $usageLogs->nextCursor()?->encode(),
