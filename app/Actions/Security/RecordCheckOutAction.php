@@ -57,7 +57,7 @@ class RecordCheckOutAction
             }
 
             // Find the most recent active log that is not checked out
-            $log = AccessLog::query()
+            $log = AccessLog::withoutGlobalScopes()
                 ->where('estate_id', $estateId)
                 ->where('access_code_id', $accessCode->id)
                 ->whereNull('checked_out_at')
