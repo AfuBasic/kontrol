@@ -69,9 +69,10 @@ class RecordCheckOutAction
             // Enforce entry point checkout constraint if enabled for estate
             $settings = EstateSettings::forEstate($estateId);
             if ($settings->entry_point_checkout_enforced && $log->entry_point) {
-                if ($checkoutGate && strcasecmp(trim($log->entry_point), trim($checkoutGate)) !== 0) {
+                if (! $checkoutGate || strcasecmp(trim($log->entry_point), trim($checkoutGate)) !== 0) {
+                    $activeGateLabel = $checkoutGate ? "You are currently operating at '{$checkoutGate}'." : 'Please select an active checkpoint first.';
                     throw ValidationException::withMessages([
-                        'checkout' => "Entry Point Checkout Enforced: Visitor entered at '{$log->entry_point}' and can only check out from '{$log->entry_point}'. You are currently operating at '{$checkoutGate}'.",
+                        'checkout' => "Entry Point Checkout Enforced: Visitor entered at '{$log->entry_point}' and can only check out from '{$log->entry_point}'. {$activeGateLabel}",
                     ]);
                 }
             }
