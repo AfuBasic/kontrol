@@ -32,6 +32,9 @@ type ValidationResult = {
     starts_at?: string | null;
     action?: string | null;
     checked_in_at?: string | null;
+    checked_out_at?: string | null;
+    exit_point?: string | null;
+    duration_minutes?: number | null;
     /** True when validated from the local offline cache, not the server. */
     offline?: boolean;
 };
@@ -515,7 +518,7 @@ export default function SecurityVerify() {
         }
 
         try {
-            await axios.post(
+            const res = await axios.post(
                 VerifyController.decision.url(),
                 {
                     decision,
@@ -528,7 +531,26 @@ export default function SecurityVerify() {
                     },
                 },
             );
-            reset();
+
+            if (decision === 'checkout') {
+                const checkoutData = res.data || {};
+                setResult((prev) => ({
+                    valid: true,
+                    status: 'checked_out_success',
+                    message: 'Visitor successfully checked out',
+                    visitor_name: prev?.visitor_name || null,
+                    host_name: prev?.host_name || null,
+                    purpose: prev?.purpose || null,
+                    expires_at: prev?.expires_at || null,
+                    code_type: prev?.code_type || null,
+                    checked_out_at: checkoutData.checked_out_at || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    exit_point: checkoutData.exit_point || 'Main Gate',
+                    duration_minutes: checkoutData.duration_minutes ?? 0,
+                    has_vehicle: false,
+                }));
+            } else {
+                reset();
+            }
         } catch (err: any) {
             console.error('Decision error:', err);
             const errorMessage =
@@ -872,7 +894,12 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
     let ringColor = 'ring-emerald-500/10 border-emerald-100/80';
     let icon = <ShieldCheck className="h-4.5 w-4.5 text-emerald-600" strokeWidth={2.5} />;
 
-    if (!valid) {
+    if (result.status === 'checked_out_success') {
+        statusLabel = 'Check-Out Complete';
+        statusBg = 'bg-blue-50 text-blue-700 border-blue-100/80';
+        ringColor = 'ring-blue-500/10 border-blue-100/80';
+        icon = <CheckCircle2 className="h-4.5 w-4.5 text-blue-600" strokeWidth={2.5} />;
+    } else if (!valid) {
         statusLabel = result.status === 'checkout_mismatch' ? 'Gate Mismatch' : result.status === 'expired' ? 'Pass Expired' : result.status === 'revoked' ? 'Pass Revoked' : 'Access Denied';
         statusBg = 'bg-rose-50 text-rose-700 border-rose-100/80';
         ringColor = 'ring-rose-500/10 border-rose-100/80';
@@ -931,6 +958,20 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     transition={{ type: 'spring', damping: 26, stiffness: 210 }}
                     className={`w-full max-w-md overflow-hidden rounded-[30px] border bg-white px-5.5 py-6.5 shadow-[0_20px_45px_rgba(0,0,0,0.025)] ring-4 ${ringColor}`}
                 >
+                    {/* Check-Out Complete Notification Banner */}
+                    {result.status === 'checked_out_success' && (
+                        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs font-bold leading-relaxed text-blue-900 shadow-xs">
+                            <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />
+                            <div>
+                                <p className="font-black text-sm">Visitor Checked Out Successfully</p>
+                                <p className="mt-0.5 text-[11px] text-blue-700 font-medium">
+                                    Exit Gate: <span className="font-bold">{result.exit_point || 'Main Gate'}</span> • Duration: <span className="font-bold">{result.duration_minutes ?? 0} mins</span>
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Error / Gate Mismatch Notification Alert Banner */}
                     {/* Error / Gate Mismatch Notification Alert Banner */}
                     {(!valid || result.status === 'checkout_mismatch') && result.message && (
                         <div className="mb-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold leading-relaxed text-rose-900 shadow-xs">
