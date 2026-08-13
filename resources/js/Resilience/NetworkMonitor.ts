@@ -198,6 +198,8 @@ class NetworkMonitorImpl {
         void this.measure();
     };
 
+    private failedPings = 0;
+
     private async measure(timeoutMs = 2_500): Promise<void> {
         if (this.measuring || typeof window === 'undefined') {
             return;
@@ -211,6 +213,7 @@ class NetworkMonitorImpl {
             let rtt = typeof connection?.rtt === 'number' ? connection.rtt : null;
 
             if (!navigator.onLine) {
+                this.failedPings = 2;
                 this.publish({
                     quality: 'offline',
                     isOnline: false,
@@ -225,16 +228,21 @@ class NetworkMonitorImpl {
             const reachable = await this.isServerReachable(timeoutMs);
 
             if (!reachable) {
-                this.publish({
-                    quality: 'offline',
-                    isOnline: false,
-                    rtt: null,
-                    effectiveType,
-                    checkedAt: new Date().toISOString(),
-                });
+                this.failedPings++;
+                if (this.failedPings >= 2) {
+                    this.publish({
+                        quality: 'offline',
+                        isOnline: false,
+                        rtt: null,
+                        effectiveType,
+                        checkedAt: new Date().toISOString(),
+                    });
+                }
 
                 return;
             }
+
+            this.failedPings = 0;
 
             // Fallback RTT when Network Information API is missing (Safari / Firefox).
             if (rtt === null) {
