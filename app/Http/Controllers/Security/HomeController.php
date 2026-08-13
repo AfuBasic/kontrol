@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Services\EstateContextService;
+use App\Services\Security\CheckpointClaimService;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,6 +16,7 @@ class HomeController extends Controller
     {
         $user = auth()->user();
         $estate = app(EstateContextService::class)->getEstate();
+        $gateName = app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
 
         $today = now()->startOfDay();
 
@@ -55,7 +57,7 @@ class HomeController extends Controller
 
         return Inertia::render('Security/Home', [
             'estateName' => $estate->name,
-            'gateName' => 'Main Entrance',
+            'gateName' => $gateName,
             'guardName' => $user->name,
             'stats' => [
                 'expected_today' => $expectedTodayCount,
