@@ -13,7 +13,15 @@ class ResidentSubscriptionService
      */
     public function createForUser(User $user, Estate $estate): ?ResidentSubscription
     {
-        if ($user->contextHasRole('household_member') || ! $user->contextHasRole('resident')) {
+        $existing = ResidentSubscription::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        if ($user->contextHasRole('household_member') || $user->isHouseholdMember()) {
             return null;
         }
 
