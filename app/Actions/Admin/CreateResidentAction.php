@@ -115,7 +115,7 @@ class CreateResidentAction
             // If CreateInvitationAction returns null, the user is already an active member of this estate
             // and we do not need to send them a redundant invitation email.
             if ($invitation) {
-                event(new ResidentCreated($invitation, $estate, false));
+                event(new ResidentCreated($user, $estate, false));
             }
 
             activity()
