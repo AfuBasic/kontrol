@@ -5,6 +5,7 @@ namespace App\Actions\Auth;
 use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\User;
+use App\Services\Security\CheckpointClaimService;
 
 class ActivateContext
 {
@@ -29,6 +30,13 @@ class ActivateContext
                 return route('context.select');
             }
         }
+
+        // Release checkpoint for previous context if switching estates
+        $currentContext = $this->contextManager->current();
+        if ($currentContext && $currentContext->estateId !== $assignment->estate_id) {
+            app(CheckpointClaimService::class)->release($currentContext->estateId, $user);
+        }
+
         // Use the context manager to validate and activate the assignment
         try {
             $this->contextManager->activate($assignment);
