@@ -43,7 +43,7 @@ class CreateEstateAction
                 'name' => $data['name'],
                 'email' => $data['email'],
                 'address' => $data['address'] ?? null,
-                'status' => 'inactive',
+                'status' => 'active',
             ]);
 
             // 2. Create user with estate email (no password)
