@@ -1,13 +1,13 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, MapPin, Lock, CheckCircle2, AlertCircle, ArrowRight, LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { ShieldCheck, MapPin, Lock, CheckCircle2, AlertCircle, ArrowRight, LogOut, Loader2 } from 'lucide-react';
+import { type ReactNode, useState } from 'react';
 import SecurityLayout from '@/Layouts/SecurityLayout';
 
 interface CheckpointStatus {
     name: string;
-    is_available: bool;
-    is_mine: bool;
+    is_available: boolean;
+    is_mine: boolean;
     occupied_by_id: number | null;
     occupied_by_name: string | null;
 }
@@ -16,7 +16,7 @@ interface PageProps {
     estateName: string;
     checkpoints: CheckpointStatus[];
     currentCheckpoint: string | null;
-    enforced: bool;
+    enforced: boolean;
     flash?: {
         error?: string;
         success?: string;
@@ -52,47 +52,47 @@ export default function CheckpointSelect() {
     };
 
     return (
-        <SecurityLayout hideNav variant="dark">
+        <>
             <Head title="Select Operating Checkpoint" />
 
-            <div className="mx-auto max-w-lg space-y-6 pt-2 pb-12 text-white">
+            <div className="space-y-5">
                 {/* Header card */}
                 <motion.div
-                    initial={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative overflow-hidden rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-xl backdrop-blur-xl"
+                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
                 >
                     <div className="flex items-center gap-3">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20">
-                            <ShieldCheck className="h-6 w-6" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                            <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                            <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
+                            <span className="text-[10px] font-bold tracking-[0.14em] text-slate-500 uppercase">
                                 {estateName}
                             </span>
-                            <h1 className="text-xl font-bold tracking-tight text-white">
+                            <h1 className="text-lg font-semibold tracking-tight text-slate-900">
                                 Operating Checkpoint
                             </h1>
                         </div>
                     </div>
 
-                    <p className="mt-3 text-xs leading-relaxed text-slate-400">
+                    <p className="mt-2.5 text-xs leading-relaxed text-slate-500">
                         {enforced
                             ? 'Entry point checkout enforcement is active for this estate. Select an available entry point to open your security workspace.'
                             : 'Select your operational checkpoint for visitor management and activity tracking.'}
                     </p>
 
                     {currentCheckpoint && (
-                        <div className="mt-4 flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-2.5 text-xs text-emerald-300">
+                        <div className="mt-3.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2.5 text-xs text-emerald-900">
                             <div className="flex items-center gap-2">
-                                <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                                <span>Active Checkpoint: <strong>{currentCheckpoint}</strong></span>
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                <span>Active Checkpoint: <strong className="font-semibold">{currentCheckpoint}</strong></span>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleRelease}
                                 disabled={submitting !== null}
-                                className="flex items-center gap-1 rounded-lg bg-emerald-500/20 px-2 py-1 text-[11px] font-semibold text-emerald-200 hover:bg-emerald-500/30 active:scale-95"
+                                className="flex items-center gap-1 rounded-lg border border-emerald-300 bg-white px-2.5 py-1 text-[11px] font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-95 disabled:opacity-50"
                             >
                                 <LogOut className="h-3 w-3" />
                                 Release
@@ -101,26 +101,28 @@ export default function CheckpointSelect() {
                     )}
                 </motion.div>
 
-                {/* Error Banner */}
+                {/* Error Flash Banner */}
                 {flash?.error && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center gap-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-medium text-rose-300"
+                        className="flex items-center gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
                     >
-                        <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" />
+                        <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
                         <span>{flash.error}</span>
                     </motion.div>
                 )}
 
                 {/* Checkpoint Selection List */}
                 <div className="space-y-3">
-                    <h2 className="px-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                        Available Entry Points ({checkpoints.filter((c) => c.is_available).length}/{checkpoints.length})
-                    </h2>
+                    <div className="px-1">
+                        <p className="text-[10px] font-bold tracking-[0.14em] text-slate-500 uppercase">
+                            Available Entry Points ({checkpoints.filter((c) => c.is_available).length}/{checkpoints.length})
+                        </p>
+                    </div>
 
                     {checkpoints.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 text-center text-xs text-slate-400">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-xs text-slate-500 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                             No entry points configured for this estate. Please ask an estate admin to configure entry points in Estate Settings.
                         </div>
                     ) : (
@@ -131,47 +133,47 @@ export default function CheckpointSelect() {
                             return (
                                 <motion.div
                                     key={cp.name}
-                                    initial={{ opacity: 0, y: 12 }}
+                                    initial={{ opacity: 0, y: 8 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    className={`relative overflow-hidden rounded-2xl border p-4 transition-all ${
+                                    transition={{ delay: idx * 0.04 }}
+                                    className={`rounded-2xl border p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all ${
                                         cp.is_mine
-                                            ? 'border-emerald-500/40 bg-emerald-950/20 shadow-lg ring-1 ring-emerald-500/20'
+                                            ? 'border-emerald-300 bg-emerald-50/40 ring-1 ring-emerald-500/20'
                                             : canClaim
-                                              ? 'border-slate-800 bg-slate-900/80 hover:border-slate-700'
-                                              : 'border-slate-800/60 bg-slate-900/40 opacity-60'
+                                              ? 'border-slate-200 bg-white hover:border-slate-300'
+                                              : 'border-slate-200/70 bg-slate-50/70 opacity-65'
                                     }`}
                                 >
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex items-center justify-between gap-3">
                                         <div className="flex items-center gap-3">
                                             <div
-                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
                                                     cp.is_mine
-                                                        ? 'bg-emerald-500/20 text-emerald-400'
+                                                        ? 'bg-emerald-100 text-emerald-700'
                                                         : canClaim
-                                                          ? 'bg-slate-800 text-slate-300'
-                                                          : 'bg-slate-800/50 text-slate-500'
+                                                          ? 'bg-slate-100 text-slate-700'
+                                                          : 'bg-slate-100 text-slate-400'
                                                 }`}
                                             >
-                                                <MapPin className="h-5 w-5" />
+                                                <MapPin className="h-4.5 w-4.5" />
                                             </div>
 
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className="font-semibold text-white">{cp.name}</span>
+                                                    <span className="text-sm font-semibold text-slate-900">{cp.name}</span>
                                                     {cp.is_mine && (
-                                                        <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                                                            Current
+                                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 uppercase">
+                                                            Active
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="mt-0.5 text-xs text-slate-400">
+                                                <p className="mt-0.5 text-xs text-slate-500">
                                                     {cp.is_mine
                                                         ? 'Claimed by you'
                                                         : cp.occupied_by_name
                                                           ? `Occupied by ${cp.occupied_by_name}`
                                                           : 'Available for claim'}
-                                                </div>
+                                                </p>
                                             </div>
                                         </div>
 
@@ -179,16 +181,19 @@ export default function CheckpointSelect() {
                                             type="button"
                                             onClick={() => handleClaim(cp.name)}
                                             disabled={!canClaim || isBusy || submitting !== null}
-                                            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all active:scale-95 ${
+                                            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition active:scale-95 ${
                                                 cp.is_mine
-                                                    ? 'bg-emerald-500 text-white shadow-md hover:bg-emerald-400'
+                                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
                                                     : canClaim
-                                                      ? 'bg-amber-500 text-slate-950 shadow-md hover:bg-amber-400'
-                                                      : 'cursor-not-allowed bg-slate-800 text-slate-500'
+                                                      ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-xs'
+                                                      : 'cursor-not-allowed bg-slate-100 text-slate-400'
                                             }`}
                                         >
                                             {isBusy ? (
-                                                <span>Claiming…</span>
+                                                <>
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    <span>Claiming…</span>
+                                                </>
                                             ) : cp.is_mine ? (
                                                 <>
                                                     <span>Continue</span>
@@ -213,6 +218,8 @@ export default function CheckpointSelect() {
                     )}
                 </div>
             </div>
-        </SecurityLayout>
+        </>
     );
 }
+
+CheckpointSelect.layout = (page: ReactNode) => <SecurityLayout hideNav>{page}</SecurityLayout>;
