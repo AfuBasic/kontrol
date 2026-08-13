@@ -55,6 +55,10 @@ class CreateAdministrativeAssignmentAction
                 $user->assignRole($role);
             }
 
+            if ($role->name === 'resident') {
+                app(\App\Services\ResidentSubscriptionService::class)->createForUser($user, $estate);
+            }
+
             return $assignment;
         });
     }
