@@ -15,7 +15,7 @@ class UpdateAdministrativeAssignmentAction
     /**
      * Update an existing administrative assignment while enforcing domain invariants.
      *
-     * Estate is never taken from the client — only the assignment's estate is used.
+     * Estate is never taken from the client - only the assignment's estate is used.
      *
      * @param  array{
      *     role_id?: int,
