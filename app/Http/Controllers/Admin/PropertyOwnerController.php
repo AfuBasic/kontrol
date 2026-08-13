@@ -138,8 +138,9 @@ class PropertyOwnerController extends Controller
         }
 
         // Section 3: Invitation Link management
-        $link = $estate->propertyOwnerInviteLink;
-        $inviteLinkData = $link ? [
+        $inviteLinks = $estate->propertyOwnerInviteLinks()->with('zone')->get();
+        $inviteLinksData = $inviteLinks->map(fn ($link) => [
+            'id' => $link->id,
             'token' => $link->token,
             'url' => url("/join/{$link->token}"),
             'is_active' => $link->is_active,
@@ -148,7 +149,9 @@ class PropertyOwnerController extends Controller
             'requires_approval' => $link->requires_approval,
             'expires_at' => $link->expires_at?->toDateTimeString(),
             'is_expired' => $link->expires_at?->isPast() ?? false,
-        ] : null;
+            'zone_id' => $link->zone_id,
+            'zone_name' => $link->zone?->name ?? 'Entire Estate',
+        ])->toArray();
 
         return Inertia::render('Admin/PropertyOwners/Index', [
             'propertyOwners' => $propertyOwners,
@@ -162,7 +165,7 @@ class PropertyOwnerController extends Controller
             ],
             'insights' => $insights,
             'incompleteOwners' => $ownersNoPropertiesList,
-            'inviteLink' => $inviteLinkData,
+            'inviteLinks' => $inviteLinksData,
         ]);
     }
 
@@ -173,10 +176,11 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->propertyOwnerInviteLink;
+        $inviteLinks = $estate->propertyOwnerInviteLinks()->with('zone')->get();
 
         return Inertia::render('Admin/PropertyOwners/Create', [
-            'inviteLink' => $link ? [
+            'inviteLinks' => $inviteLinks->map(fn ($link) => [
+                'id' => $link->id,
                 'token' => $link->token,
                 'url' => url("/join/{$link->token}"),
                 'is_active' => $link->is_active,
@@ -185,7 +189,9 @@ class PropertyOwnerController extends Controller
                 'requires_approval' => $link->requires_approval,
                 'expires_at' => $link->expires_at?->toDateTimeString(),
                 'is_expired' => $link->expires_at?->isPast() ?? false,
-            ] : null,
+                'zone_id' => $link->zone_id,
+                'zone_name' => $link->zone?->name ?? 'Entire Estate',
+            ])->toArray(),
         ]);
     }
 
@@ -199,10 +205,11 @@ class PropertyOwnerController extends Controller
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
         ]);
 
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate);
+        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
 
         $message = "Successfully invited {$result['invited']} property owner(s).";
         if ($result['skipped'] > 0) {
@@ -227,6 +234,7 @@ class PropertyOwnerController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
         ]);
 
         $estate = $this->estateContext->getEstate();
