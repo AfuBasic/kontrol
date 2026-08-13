@@ -138,6 +138,40 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                     <PassCard pass={accessCode} qrUrl={`kontrol://pass/${accessCode.pass_uuid}?token=${accessCode.qr_token}`} />
                 </div>
 
+                {/* Gate Entry & Exit Activity Logs */}
+                {usageLogs && usageLogs.data && usageLogs.data.length > 0 && (
+                    <div className="mx-auto w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+                        <h4 className="text-xs font-black tracking-wide text-slate-900 uppercase">Gate Activity History</h4>
+                        <div className="space-y-2.5 divide-y divide-slate-100">
+                            {usageLogs.data.map((log: any) => (
+                                <div key={log.id} className="pt-2.5 first:pt-0 space-y-1">
+                                    <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
+                                        <span className="text-emerald-700 font-extrabold">Check-In • {log.entry_point || log.gate || 'Main Entrance'}</span>
+                                        <span className="text-[10px] text-slate-500 font-medium">
+                                            {new Date(log.verified_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
+                                            {new Date(log.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] font-medium text-slate-500">Verified by {log.verifier_name}</p>
+
+                                    {log.checked_out_at && (
+                                        <div className="mt-2 pt-2 border-t border-dashed border-slate-200 space-y-1">
+                                            <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
+                                                <span className="text-blue-700 font-extrabold">Check-Out • {log.exit_point || log.entry_point || log.gate || 'Main Entrance'}</span>
+                                                <span className="text-[10px] text-slate-500 font-medium">
+                                                    {new Date(log.checked_out_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
+                                                    {new Date(log.checked_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-[11px] font-medium text-slate-500">Processed by {log.checkout_verifier_name || 'Security'}</p>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Primary & Secondary Action Controls */}
                 <div className="mx-auto w-full max-w-sm space-y-3 px-1">
                     {/* Primary Actions: Copy, Share & Prominent Extend */}
