@@ -10,6 +10,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\Zone;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -44,6 +45,7 @@ class CreateResidentAction
                     'status' => 'pending',
                     'property_owner_id' => $data['property_owner_id'] ?? null,
                     'relationship_type' => 'resident',
+                    'zone_id' => $data['zone_id'] ?? null,
                 ]);
             } else {
                 DB::table('estate_users_membership')
@@ -51,6 +53,7 @@ class CreateResidentAction
                     ->update([
                         'property_owner_id' => $data['property_owner_id'] ?? $membership->property_owner_id,
                         'relationship_type' => 'resident',
+                        'zone_id' => $data['zone_id'] ?? $membership->zone_id,
                     ]);
             }
 
@@ -67,7 +70,7 @@ class CreateResidentAction
             $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
                 ->where('estate_id', $estate->id)
                 ->where('role_id', $role->id)
-                ->where('zone_id_coalesced', 0)
+                ->where('zone_id_coalesced', $data['zone_id'] ?? 0)
                 ->exists();
 
             if (! $assignmentExists) {
@@ -75,8 +78,8 @@ class CreateResidentAction
                     user: $user,
                     estate: $estate,
                     role: $role,
-                    scopeType: AssignmentScope::Estate,
-                    zone: null,
+                    scopeType: empty($data['zone_id']) ? AssignmentScope::Estate : AssignmentScope::Zone,
+                    zone: empty($data['zone_id']) ? null : Zone::find($data['zone_id']),
                     isPrimary: false
                 );
             }
@@ -99,8 +102,8 @@ class CreateResidentAction
                 estate: $estate,
                 relationshipType: 'resident',
                 role: null, // Residents don't get an explicit Spatie role assignment in Invitations, they are handled generically
-                zoneId: null,
-                scopeType: AssignmentScope::Estate->value,
+                zoneId: empty($data['zone_id']) ? null : (int) $data['zone_id'],
+                scopeType: empty($data['zone_id']) ? AssignmentScope::Estate->value : AssignmentScope::Zone->value,
                 createdBy: Auth::user()
             );
 

@@ -14,7 +14,7 @@ class BulkInviteResidentsAction
      * @param  array<string>  $emails
      * @return array{invited: int, skipped: int, duplicates: int}
      */
-    public function execute(array $emails, Estate $estate): array
+    public function execute(array $emails, Estate $estate, ?int $zoneId = null): array
     {
         // 1. Normalize and deduplicate emails from the input
         $normalizedEmails = array_map(fn ($email) => strtolower(trim($email)), $emails);
@@ -34,8 +34,8 @@ class BulkInviteResidentsAction
                 estate: $estate,
                 relationshipType: 'resident',
                 role: null,
-                zoneId: null,
-                scopeType: 'estate',
+                zoneId: $zoneId,
+                scopeType: $zoneId ? 'zone' : 'estate',
                 createdBy: $user
             );
 

@@ -66,6 +66,7 @@ class StoreResidentRequest extends FormRequest
             'address' => ['nullable', 'string', 'max:500'],
             'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
             'property_id' => ['nullable', 'integer', Rule::exists('properties', 'id')],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', $estateId)],
         ];
     }
 

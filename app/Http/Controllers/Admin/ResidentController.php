@@ -93,8 +93,9 @@ class ResidentController extends Controller
         $occupancyRate = $totalProperties > 0 ? (int) round(($occupiedProperties / $totalProperties) * 100) : 0;
 
         // Section 3: Invitation management link
-        $link = $estate->inviteLink;
-        $inviteLinkData = $link ? [
+        $inviteLinks = $estate->inviteLinks()->with('zone')->get();
+        $inviteLinksData = $inviteLinks->map(fn ($link) => [
+            'id' => $link->id,
             'token' => $link->token,
             'url' => url("/join/{$link->token}"),
             'is_active' => $link->is_active,
@@ -103,7 +104,9 @@ class ResidentController extends Controller
             'requires_approval' => $link->requires_approval,
             'expires_at' => $link->expires_at?->toDateTimeString(),
             'is_expired' => $link->expires_at?->isPast() ?? false,
-        ] : null;
+            'zone_id' => $link->zone_id,
+            'zone_name' => $link->zone?->name ?? 'Entire Estate',
+        ])->toArray();
 
         return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
@@ -168,7 +171,7 @@ class ResidentController extends Controller
                 ->get(['users.id', 'users.name'])
                 ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
                 ->toArray()),
-            'inviteLink' => $inviteLinkData,
+            'inviteLinks' => $inviteLinksData,
         ]);
     }
 
@@ -179,10 +182,11 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->inviteLink;
+        $inviteLinks = $estate->inviteLinks()->with('zone')->get();
 
         return Inertia::render('Admin/Residents/Create', [
-            'inviteLink' => $link ? [
+            'inviteLinks' => $inviteLinks->map(fn ($link) => [
+                'id' => $link->id,
                 'token' => $link->token,
                 'url' => url("/join/{$link->token}"),
                 'is_active' => $link->is_active,
@@ -191,7 +195,9 @@ class ResidentController extends Controller
                 'requires_approval' => $link->requires_approval,
                 'expires_at' => $link->expires_at?->toDateTimeString(),
                 'is_expired' => $link->expires_at?->isPast() ?? false,
-            ] : null,
+                'zone_id' => $link->zone_id,
+                'zone_name' => $link->zone?->name ?? 'Entire Estate',
+            ])->toArray(),
             'propertyOwners' => User::query()
                 ->forEstate($estate->id)
                 ->withRole('property_owner', $estate->id)
@@ -364,10 +370,11 @@ class ResidentController extends Controller
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
         ]);
 
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate);
+        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
 
         $message = "Successfully invited {$result['invited']} resident(s).";
         if ($result['skipped'] > 0) {
