@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
@@ -159,12 +160,16 @@ it('prevents visitor checkout from a different entry point when entry_point_chec
     ]);
 
     // Check in at North Gate
+    $claimService->claim($this->estate->id, $this->guard, 'North Gate');
+    session(['active_checkpoint' => 'North Gate']);
+
     $checkInAction = app(RecordCheckInAction::class);
     $checkInAction->execute('112233', $this->estate->id, $this->guard);
 
     // Switch guard checkpoint to South Gate
     $claimService->release($this->estate->id, $this->guard);
     $claimService->claim($this->estate->id, $this->guard, 'South Gate');
+    session(['active_checkpoint' => 'South Gate']);
 
     // Attempt checkout at South Gate
     $checkOutAction = app(RecordCheckOutAction::class);

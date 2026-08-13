@@ -17,6 +17,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -67,7 +68,7 @@ class VerifyController extends Controller
                     $result['access_log_id'] = $log->id;
                     $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
                     $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
-                } catch (\Illuminate\Validation\ValidationException $e) {
+                } catch (ValidationException $e) {
                     $result['valid'] = false;
                     $result['status'] = 'checkout_mismatch';
                     $result['message'] = $e->getMessage();
@@ -170,7 +171,7 @@ class VerifyController extends Controller
                     estateId: $estate->id,
                     verifiedBy: $user
                 );
-            } catch (\Illuminate\Validation\ValidationException $e) {
+            } catch (ValidationException $e) {
                 if ($request->wantsJson()) {
                     return response()->json([
                         'success' => false,
