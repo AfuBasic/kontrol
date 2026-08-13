@@ -538,6 +538,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Property Owner</p>
                             </div>
                         </div>
+                        {(auth.user?.available_contexts?.length || 0) > 1 && (
+                            <Link
+                                href={ContextController.index.url()}
+                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-700 transition-all hover:bg-slate-50"
+                            >
+                                Switch Workspace
+                            </Link>
+                        )}
                         <button
                             onClick={() => {
                                 const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
@@ -826,7 +834,16 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     );
                                 })}
                             </div>
-                            <div className="mt-6 border-t border-slate-100 pt-4 space-y-3">
+                            <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
+                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                    <Link
+                                        href={ContextController.index.url()}
+                                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-100/70"
+                                    >
+                                        <Building className="h-5 w-5" />
+                                        Switch Workspace
+                                    </Link>
+                                )}
                                 <button
                                     onClick={() => {
                                         setMoreMenuOpen(false);

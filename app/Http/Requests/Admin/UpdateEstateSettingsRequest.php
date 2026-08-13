@@ -72,29 +72,29 @@ class UpdateEstateSettingsRequest extends FormRequest
                 $enforceEntryPoint = $this->input('entry_point_checkout_enforced', false);
                 $entryPoints = $this->input('entry_points', []);
 
-                if ($enforceEntryPoint && !$checkoutMonitoring) {
+                if ($enforceEntryPoint && ! $checkoutMonitoring) {
                     $validator->errors()->add('entry_point_checkout_enforced', 'Entry Point Checkout cannot be enforced when Checkout Monitoring is disabled.');
                 }
 
                 if ($enforceEntryPoint && $checkoutMonitoring) {
-                    if (!is_array($entryPoints) || count(array_filter($entryPoints)) === 0) {
+                    if (! is_array($entryPoints) || count(array_filter($entryPoints)) === 0) {
                         $validator->errors()->add('entry_points', 'At least one valid entry point is required when Entry Point Checkout is enforced.');
                     }
                 }
-                
+
                 if (is_array($entryPoints)) {
                     // Check for case-insensitive duplicates
-                    $lowerNames = array_map(function($name) {
-                        return strtolower(trim((string)$name));
+                    $lowerNames = array_map(function ($name) {
+                        return strtolower(trim((string) $name));
                     }, $entryPoints);
-                    
+
                     $lowerNames = array_filter($lowerNames);
-                    
+
                     if (count($lowerNames) !== count(array_unique($lowerNames))) {
                         $validator->errors()->add('entry_points', 'Entry points must have unique names.');
                     }
                 }
-            }
+            },
         ];
     }
 }

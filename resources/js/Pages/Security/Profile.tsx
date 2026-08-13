@@ -119,6 +119,17 @@ export default function ProfilePage({ user, estateName }: Props) {
                     }}
                 />
 
+                {/* Switch Workspace */}
+                {availableContexts.length > 1 && (
+                    <ActionRow
+                        icon={<Building2 className="h-4 w-4" strokeWidth={2.2} />}
+                        label="Switch Workspace"
+                        sub="Switch to another estate or role"
+                        onClick={() => {
+                            router.visit(ContextController.index.url());
+                        }}
+                    />
+                )}
             </section>
 
             {/* Logout */}

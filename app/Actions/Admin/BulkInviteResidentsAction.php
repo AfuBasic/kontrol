@@ -9,6 +9,7 @@ use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class BulkInviteResidentsAction
 {
@@ -53,7 +54,7 @@ class BulkInviteResidentsAction
                     'email' => $email,
                     'zone_id' => $zoneId,
                 ], $estate);
-            } catch (\Illuminate\Validation\ValidationException $e) {
+            } catch (ValidationException $e) {
                 $alreadyMembers++;
                 continue;
             }

@@ -99,7 +99,7 @@ class InviteRegistrationController extends Controller
                 ->whereNull('estate_id')
                 ->firstOrFail();
             $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
-            
+
             $assignmentAction->execute(
                 user: $user,
                 estate: $inviteLink->estate,
@@ -115,7 +115,7 @@ class InviteRegistrationController extends Controller
                     ->where('guard_name', 'web')
                     ->whereNull('estate_id')
                     ->firstOrFail();
-                
+
                 $assignmentAction->execute(
                     user: $user,
                     estate: $inviteLink->estate,

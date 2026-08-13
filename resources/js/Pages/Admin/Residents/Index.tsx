@@ -211,9 +211,9 @@ export default function Residents({
     // Selection Helpers
     const toggleSelectAll = () => {
         if (!residents?.data) return;
-        
-        const selectableIds = residents.data.filter(r => !r.is_estate_creator).map(r => r.id);
-        
+
+        const selectableIds = residents.data.filter((r) => !r.is_estate_creator).map((r) => r.id);
+
         if (selectedIds.length === selectableIds.length && selectableIds.length > 0) {
             setSelectedIds([]);
         } else {
@@ -382,9 +382,7 @@ export default function Residents({
                 {/* SECTION 2 - INSIGHTS PANEL (deferred) */}
                 <Deferred
                     data={['insights', 'incompleteResidents']}
-                    fallback={
-                        <div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />
-                    }
+                    fallback={<div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />}
                 >
                     {((insights && insights.length > 0) || (incompleteResidents && incompleteResidents.length > 0)) && (
                         <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
@@ -417,9 +415,7 @@ export default function Residents({
                                                         >
                                                             {r.name}
                                                         </Link>
-                                                        {idx < incompleteResidents.length - 1 && (
-                                                            <span className="mr-1 text-blue-950/80">,</span>
-                                                        )}
+                                                        {idx < incompleteResidents.length - 1 && <span className="mr-1 text-blue-950/80">,</span>}
                                                     </span>
                                                 ))}
                                             </span>
@@ -530,7 +526,7 @@ export default function Residents({
                             ))}
                         </div>
                     ) : hasResidents ? (
-                        <div className="overflow-x-auto min-h-[280px]">
+                        <div className="min-h-[280px] overflow-x-auto">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="border-b border-slate-100 bg-slate-50/70">
                                     <tr>
@@ -539,8 +535,8 @@ export default function Residents({
                                                 <input
                                                     type="checkbox"
                                                     checked={
-                                                        residents.data.filter(r => !r.is_estate_creator).length > 0 &&
-                                                        selectedIds.length === residents.data.filter(r => !r.is_estate_creator).length
+                                                        residents.data.filter((r) => !r.is_estate_creator).length > 0 &&
+                                                        selectedIds.length === residents.data.filter((r) => !r.is_estate_creator).length
                                                     }
                                                     onChange={toggleSelectAll}
                                                     className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
@@ -592,7 +588,7 @@ export default function Residents({
                                                             checked={isSelected}
                                                             disabled={resident.is_estate_creator}
                                                             onChange={() => toggleSelect(resident.id)}
-                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                                                         />
                                                     </td>
                                                 )}
@@ -667,7 +663,7 @@ export default function Residents({
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
                                                             resident.status === 'inactive'
                                                                 ? 'bg-rose-50 text-rose-700'
-                                                                : (resident.status === 'active' || resident.status === 'accepted')
+                                                                : resident.status === 'active' || resident.status === 'accepted'
                                                                   ? 'bg-emerald-50 text-emerald-700'
                                                                   : 'bg-amber-50 text-amber-700'
                                                         }`}
@@ -911,7 +907,7 @@ export default function Residents({
                                         className={`w-full rounded-xl border py-2.5 text-xs font-black tracking-wider uppercase shadow-xs transition ${
                                             inviteLink.is_active
                                                 ? 'border-rose-250 bg-white text-rose-600 hover:bg-rose-50/50'
-                                                : 'bg-emerald-600 border-transparent text-white hover:bg-emerald-700'
+                                                : 'border-transparent bg-emerald-600 text-white hover:bg-emerald-700'
                                         }`}
                                     >
                                         {inviteLink.is_active ? 'Disable Link' : 'Enable Link'}
@@ -1022,7 +1018,7 @@ export default function Residents({
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="bg-red-600 inline-flex items-center gap-2 rounded-xl px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {isDeleting ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : 'Yes, Delete Selected'}
                                 </button>

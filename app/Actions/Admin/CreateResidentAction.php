@@ -14,6 +14,7 @@ use App\Models\Zone;
 use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class CreateResidentAction
@@ -34,7 +35,7 @@ class CreateResidentAction
                     ->exists();
 
                 if ($otherEstates) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
+                    throw ValidationException::withMessages([
                         'email' => "The email {$data['email']} already belongs to another estate."
                     ]);
                 }

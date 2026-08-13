@@ -17,6 +17,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public string $invitationUrl;
+
     public string $userName;
 
     public function __construct(
