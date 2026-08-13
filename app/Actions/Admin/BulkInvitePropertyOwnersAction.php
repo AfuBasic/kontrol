@@ -5,7 +5,10 @@ namespace App\Actions\Admin;
 use App\Actions\Invitation\CreateInvitationAction;
 use App\Jobs\Admin\SendBulkPropertyOwnerInvitationsJob;
 use App\Models\Estate;
+use App\Models\Invitation;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BulkInvitePropertyOwnersAction
 {
@@ -23,25 +26,39 @@ class BulkInvitePropertyOwnersAction
         $invitedIds = [];
         $alreadyMembers = 0;
 
-        $createAction = app(CreateInvitationAction::class);
+        $createPropertyOwnerAction = app(CreatePropertyOwnerAction::class);
         $user = Auth::user();
 
-        // 2. Iterate and create invitations via CreateInvitationAction (V3 architecture compliant)
+        // 2. Iterate and create property owner records + invitations
         foreach ($uniqueEmails as $email) {
-            $invitation = $createAction->execute(
-                email: $email,
-                estate: $estate,
-                relationshipType: 'property_owner',
-                role: null,
-                zoneId: $zoneId,
-                scopeType: $zoneId ? 'zone' : 'estate',
-                createdBy: $user
-            );
+            // Check if user is already an accepted member of this estate
+            $existingUser = User::where('email', $email)->first();
+            if ($existingUser) {
+                $isAlreadyAccepted = DB::table('estate_users_membership')
+                    ->where('user_id', $existingUser->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['accepted', 'active'])
+                    ->exists();
 
-            if ($invitation === null) {
-                // Already an active/accepted member of this estate
-                $alreadyMembers++;
-            } else {
+                if ($isAlreadyAccepted) {
+                    $alreadyMembers++;
+                    continue;
+                }
+            }
+
+            // Create property owner (user, pending membership, role assignment, profile, invitation token)
+            $createPropertyOwnerAction->execute([
+                'name' => strstr($email, '@', true) ?: $email,
+                'email' => $email,
+                'zone_id' => $zoneId,
+            ], $estate);
+
+            $invitation = Invitation::withoutGlobalScopes()
+                ->where('email', $email)
+                ->where('estate_id', $estate->id)
+                ->first();
+
+            if ($invitation) {
                 $invitedIds[] = $invitation->id;
             }
         }
