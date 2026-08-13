@@ -84,6 +84,8 @@ class ValidateAccessCodeAction
                 $granted['message'] = 'Visitor is currently in the estate';
                 $granted['checked_in_at'] = $activeSession->verified_at?->toIso8601String();
                 $granted['access_log_id'] = $activeSession->id;
+                $granted['entry_point'] = $activeSession->entry_point;
+                $granted['entry_point_checkout_enforced'] = (bool) $settings->entry_point_checkout_enforced;
 
                 return $granted;
             }
