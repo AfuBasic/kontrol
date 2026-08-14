@@ -111,14 +111,19 @@ test('admin can view, create, edit, suspend property owners', function () {
     $response->assertRedirect();
 
     $owner->refresh();
-    expect($owner->suspended_at)->not->toBeNull();
+    $assignment = \App\Models\AdministrativeAssignment::where('user_id', $owner->id)
+        ->where('estate_id', $this->estate->id)
+        ->where('role_id', \Spatie\Permission\Models\Role::where('name', 'property_owner')->first()->id)
+        ->first();
+    expect($assignment->is_active)->toBeFalse();
 
     // 5. Reactivate
     $response = $this->patch(route('admin.property-owners.suspend', $owner->id));
     $response->assertRedirect();
 
     $owner->refresh();
-    expect($owner->suspended_at)->toBeNull();
+    $assignment->refresh();
+    expect($assignment->is_active)->toBeTrue();
 });
 
 test('property owner dashboard, residents, properties, collections, and announcements access', function () {
@@ -132,13 +137,21 @@ test('property owner dashboard, residents, properties, collections, and announce
     $owner->assignRole('resident');
     $owner->assignRole('property_owner');
     $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    \App\Models\AdministrativeAssignment::create([
+        'user_id' => $owner->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => \Spatie\Permission\Models\Role::where('name', 'property_owner')->first()->id,
+        'is_active' => true,
+    ]);
 
     // 2. Create managed residents
     $resident1 = User::factory()->create();
-    $resident1->estates()->attach($this->estate->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
+    $resident1->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create(['user_id' => $resident1->id, 'property_owner_id' => $owner->id]);
 
     $resident2 = User::factory()->create();
-    $resident2->estates()->attach($this->estate->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
+    $resident2->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create(['user_id' => $resident2->id, 'property_owner_id' => $owner->id]);
 
     // 3. Create property
     $property = Property::create([
@@ -190,7 +203,6 @@ test('property owner dashboard, residents, properties, collections, and announce
         ]);
     $response->assertRedirect(route('resident.property-owner.collections.index'));
 
-    // Verify collection assignments were created for both managed residents
     $collection = Collection::where('name', 'July Rent')->first();
     expect($collection)->not->toBeNull();
     expect($collection->assignments()->count())->toBe(2);
@@ -262,7 +274,7 @@ test('admin can manage property owner invite link and users can join', function 
     $response->assertRedirect();
 
     $this->estate->refresh();
-    $link = $this->estate->propertyOwnerInviteLink;
+    $link = $this->estate->propertyOwnerInviteLinks()->first();
     expect($link)->not->toBeNull();
     expect($link->role)->toBe('property_owner');
     expect($link->max_usages)->toBe(10);
