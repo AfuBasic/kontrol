@@ -27,7 +27,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
     const [currentSlide, setCurrentSlide] = useState(0);
     const firstName = userName.split(' ')[0];
 
-    // Slide definitions with custom inline interactive animations
+    // Slide definitions with performance-optimized animations
     const residentSlides = [
         {
             title: 'Community Living, Reimagined.',
@@ -35,16 +35,16 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: `Hi ${firstName}! Welcome to ${estateName}. Experience a smarter, safer, and fully connected way to manage your home.`,
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    {/* Ambient Glows */}
-                    <div className="absolute top-1/4 left-1/4 h-32 w-32 rounded-full bg-indigo-500/10 blur-2xl"></div>
-                    <div className="absolute right-1/4 bottom-1/4 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl"></div>
+                    {/* Ambient Glows (GPU-friendly) */}
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%)]"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(16,185,129,0.15),transparent_50%)]"></div>
 
                     {/* Floating Main Access Card */}
                     <motion.div
-                        initial={{ opacity: 0, y: 30, rotateX: 15 }}
-                        animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                        transition={{ duration: 1, ease: 'easeOut' }}
-                        className="relative z-10 w-64 rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 p-5 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-md"
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                        className="relative z-10 w-64 rounded-2xl border border-white/10 bg-gradient-to-b from-slate-800 to-slate-900 p-5 shadow-2xl"
                     >
                         <div className="flex items-center justify-between border-b border-white/5 pb-4">
                             <div>
@@ -69,10 +69,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
 
                     {/* Floating Ambient Notification */}
                     <motion.div
-                        initial={{ opacity: 0, x: -30, y: -20 }}
+                        initial={{ opacity: 0, x: -20, y: -10 }}
                         animate={{ opacity: 1, x: 0, y: -10 }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
-                        className="absolute top-8 left-4 z-20 flex w-48 items-center gap-2.5 rounded-xl border border-white/5 bg-slate-900/80 p-2.5 shadow-lg backdrop-blur-md"
+                        transition={{ delay: 0.4, duration: 0.6 }}
+                        className="absolute top-8 left-4 z-20 flex w-48 items-center gap-2.5 rounded-xl border border-white/5 bg-slate-800 p-2.5 shadow-xl"
                     >
                         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-amber-500/20">
                             <Bell className="h-3 w-3 text-amber-400" />
@@ -91,14 +91,14 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: 'Generate secure visitor access codes instantly and receive real-time alerts the second your guest arrives at the gate.',
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    <div className="absolute top-1/3 right-1/4 h-28 w-28 rounded-full bg-orange-500/10 blur-2xl"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_right,rgba(249,115,22,0.12),transparent_50%)]"></div>
 
                     {/* QR Code Container */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 15 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="relative z-10 flex flex-col items-center rounded-2xl border border-white/10 bg-slate-950 p-5 shadow-[0_20px_40px_rgba(0,0,0,0.5)]"
+                        transition={{ duration: 0.6 }}
+                        className="relative z-10 flex flex-col items-center rounded-2xl border border-white/10 bg-slate-900 p-5 shadow-2xl"
                     >
                         <div className="rounded-lg bg-white p-2.5">
                             <QrCode className="h-24 w-24 text-slate-950" />
@@ -111,10 +111,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
 
                     {/* Floating SMS alert */}
                     <motion.div
-                        initial={{ opacity: 0, y: 40 }}
+                        initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.8 }}
-                        className="absolute right-6 bottom-6 left-6 z-20 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-slate-900/90 p-3 shadow-xl backdrop-blur-md"
+                        transition={{ delay: 0.3, duration: 0.6 }}
+                        className="absolute right-6 bottom-6 left-6 z-20 flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-slate-800 p-3 shadow-xl"
                     >
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500/25">
                             <Smartphone className="h-4 w-4 text-emerald-400" />
@@ -133,14 +133,14 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: 'Track, view, and settle outstanding community dues, security levies, and contributions seamlessly via secured gateways.',
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    <div className="bg-radial-at-c absolute inset-0 from-emerald-500/10 via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15),transparent_60%)]"></div>
 
                     {/* Floating Credit Card */}
                     <motion.div
-                        initial={{ opacity: 0, rotateY: -15, y: -25 }}
-                        animate={{ opacity: 1, rotateY: 0, y: -10 }}
-                        transition={{ duration: 0.8 }}
-                        className="relative z-10 w-56 rounded-xl border border-white/10 bg-gradient-to-tr from-emerald-600 to-indigo-600 p-4 shadow-xl shadow-slate-950/45"
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: -10 }}
+                        transition={{ duration: 0.6 }}
+                        className="relative z-10 w-56 rounded-xl border border-white/10 bg-gradient-to-tr from-emerald-600 to-indigo-600 p-4 shadow-2xl"
                     >
                         <div className="flex items-start justify-between">
                             <CreditCard className="h-7 w-7 text-white" />
@@ -154,10 +154,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
 
                     {/* Check Overlay */}
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.6, type: 'spring' }}
-                        className="absolute bottom-6 z-20 flex items-center gap-2 rounded-full border border-emerald-500 bg-emerald-950/80 px-4 py-1.5 shadow-lg shadow-emerald-950/40"
+                        transition={{ delay: 0.4, type: 'spring' }}
+                        className="absolute bottom-6 z-20 flex items-center gap-2 rounded-full border border-emerald-500 bg-emerald-950 px-4 py-1.5 shadow-xl"
                     >
                         <div className="flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 text-slate-950">
                             <Check className="h-2.5 w-2.5 font-bold" />
@@ -173,15 +173,15 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: 'Get direct announcements, report security concerns, and stay informed with instant notifications.',
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden px-6">
-                    <div className="absolute top-1/4 left-1/3 h-24 w-24 rounded-full bg-rose-500/10 blur-2xl"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(244,63,94,0.12),transparent_50%)]"></div>
 
                     <div className="relative z-10 w-full space-y-3">
                         {/* Feed Item 1 */}
                         <motion.div
-                            initial={{ opacity: 0, x: -30 }}
+                            initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-900/90 p-3 shadow-md"
+                            className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-800 p-3 shadow-lg"
                         >
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-500/20">
                                 <ShieldAlert className="h-4 w-4 text-rose-400" />
@@ -194,10 +194,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
 
                         {/* Feed Item 2 */}
                         <motion.div
-                            initial={{ opacity: 0, x: 30 }}
+                            initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.2, duration: 0.5 }}
-                            className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-900/90 p-3 shadow-md"
+                            className="flex items-center gap-3 rounded-xl border border-white/5 bg-slate-800 p-3 shadow-lg"
                         >
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20">
                                 <MessageSquare className="h-4 w-4 text-indigo-400" />
@@ -221,23 +221,23 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: `Hi ${firstName}! Monitor occupancy levels, manage units, and track real-time payments across all your properties.`,
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    <div className="absolute top-1/4 left-1/4 h-32 w-32 rounded-full bg-indigo-500/10 blur-2xl"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(99,102,241,0.15),transparent_50%)]"></div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        className="w-64 rounded-xl border border-white/10 bg-slate-900/90 p-5 shadow-2xl"
+                        transition={{ duration: 0.6 }}
+                        className="relative z-10 w-64 rounded-xl border border-white/10 bg-slate-800 p-5 shadow-2xl"
                     >
                         <h4 className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Property Owner</h4>
                         <h3 className="mt-1 text-sm font-black text-white">{estateName} Portfolio</h3>
 
                         <div className="mt-4 grid grid-cols-2 gap-3">
-                            <div className="rounded-lg border border-white/5 bg-slate-950 p-2.5 text-center">
+                            <div className="rounded-lg border border-white/5 bg-slate-900 p-2.5 text-center">
                                 <span className="block text-[9px] font-medium text-slate-400">Total Units</span>
                                 <span className="mt-0.5 block text-base font-black text-indigo-400">12</span>
                             </div>
-                            <div className="rounded-lg border border-white/5 bg-slate-950 p-2.5 text-center">
+                            <div className="rounded-lg border border-white/5 bg-slate-900 p-2.5 text-center">
                                 <span className="block text-[9px] font-medium text-slate-400">Occupied</span>
                                 <span className="mt-0.5 block text-base font-black text-emerald-400">9</span>
                             </div>
@@ -252,13 +252,13 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
             description: 'Automate billing cycles, collect service charges, and check payment statuses instantly for all assigned tenants.',
             visual: (
                 <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-                    <div className="bg-radial-at-c absolute inset-0 from-indigo-500/10 via-transparent to-transparent"></div>
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.15),transparent_60%)]"></div>
 
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.8 }}
-                        className="w-60 rounded-xl border border-white/10 bg-slate-900/90 p-4 shadow-xl"
+                        transition={{ duration: 0.6 }}
+                        className="relative z-10 w-60 rounded-xl border border-white/10 bg-slate-800 p-4 shadow-2xl"
                     >
                         <div className="flex items-center justify-between border-b border-white/5 pb-3">
                             <span className="text-[10px] font-bold text-white">Recent Collections</span>
@@ -304,13 +304,13 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
     const slide = slides[currentSlide];
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/95 p-4">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ type: 'spring', duration: 0.5 }}
-                className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-[#090d16]/95 shadow-[0_24px_80px_rgba(0,0,0,0.85)] sm:max-w-lg"
+                transition={{ type: 'spring', duration: 0.4 }}
+                className="relative w-full max-w-md overflow-hidden rounded-[2.5rem] border border-white/10 bg-slate-900 shadow-2xl sm:max-w-lg"
             >
                 {/* Skip Button */}
                 <button
@@ -328,7 +328,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            transition={{ duration: 0.4 }}
+                            transition={{ duration: 0.3 }}
                             className="absolute inset-0 h-full w-full"
                         >
                             {slide.visual}
@@ -341,10 +341,10 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                     <AnimatePresence mode="wait" initial={false}>
                         <motion.div
                             key={currentSlide}
-                            initial={{ opacity: 0, y: 15 }}
+                            initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -15 }}
-                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
                             className="text-center"
                         >
                             <span className="text-[10px] font-black tracking-widest text-indigo-400 uppercase sm:text-xs">{slide.subtitle}</span>
@@ -362,7 +362,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                             <button
                                 key={i}
                                 onClick={() => setCurrentSlide(i)}
-                                className={`h-1.5 cursor-pointer rounded-full transition-all duration-500 ${
+                                className={`h-1.5 cursor-pointer rounded-full transition-colors duration-300 ${
                                     currentSlide === i ? 'w-8 bg-indigo-500' : 'w-2 bg-white/10 hover:bg-white/20'
                                 }`}
                             />
@@ -381,7 +381,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
                         ) : (
                             <button
                                 onClick={handleComplete}
-                                className="cursor-pointer rounded-xl px-5 py-3 text-xs font-bold text-slate-400 transition-all hover:text-white sm:text-sm"
+                                className="cursor-pointer rounded-xl px-5 py-3 text-xs font-bold text-slate-400 transition-colors hover:text-white sm:text-sm"
                             >
                                 Skip
                             </button>
@@ -389,7 +389,7 @@ export default function WelcomeSlideshow({ estateName, userName, isPropertyOwner
 
                         <button
                             onClick={nextSlide}
-                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-indigo-600/35 transition-all hover:bg-indigo-500 active:scale-95 sm:text-sm"
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-indigo-600/30 transition-transform active:scale-95 sm:text-sm"
                         >
                             {currentSlide === slides.length - 1 ? (
                                 <>
