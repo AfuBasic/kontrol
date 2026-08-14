@@ -35,6 +35,20 @@ class SuspendPropertyOwnerAction
 
         $isSuspended = ! $newActiveState;
 
+        if ($isSuspended) {
+            $activeCount = AdministrativeAssignment::where('user_id', $propertyOwner->id)
+                ->where('is_active', true)
+                ->count();
+
+            if ($activeCount === 0) {
+                $propertyOwner->update(['suspended_at' => now()]);
+            }
+        } else {
+            if ($propertyOwner->suspended_at !== null) {
+                $propertyOwner->update(['suspended_at' => null]);
+            }
+        }
+
         activity()
             ->performedOn($propertyOwner)
             ->causedBy(Auth::user())
