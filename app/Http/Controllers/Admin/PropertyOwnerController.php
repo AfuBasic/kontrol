@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\AssignResidentsToPropertyOwnerAction;
 use App\Actions\Admin\BulkDeletePropertyOwnersAction;
-use App\Actions\Admin\BulkDeleteResidentsAction;
 use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\DeletePropertyOwnerAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendPropertyOwnerAction;
-use App\Actions\Admin\SuspendResidentAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
