@@ -22,6 +22,10 @@ class ResidentService
     {
         $estate = $this->estateContext->getEstate();
 
+        $residentRoles = \Spatie\Permission\Models\Role::whereIn('name', ['resident', 'household_member'])
+            ->whereNull('estate_id')
+            ->pluck('id');
+
         return User::query()
             ->forEstate($estate->id)
             ->whereHas('roles', function ($q) {
@@ -30,7 +34,12 @@ class ResidentService
             ->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'property_owner');
             })
-            ->with(['roles', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id')])
+            ->with([
+                'roles',
+                'profile.property',
+                'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id'),
+                'administrativeAssignments' => fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles),
+            ])
             ->withCount('householdMembers')
             ->when($filters['zone'] ?? null, function ($query, $zoneId) use ($estate) {
                 $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.zone_id', $zoneId));
@@ -45,17 +54,19 @@ class ResidentService
                         });
                 });
             })
-            ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
+            ->when($filters['status'] ?? null, function ($query, $status) use ($estate, $residentRoles) {
                 if ($status === 'active') {
-                    $query->whereNull('suspended_at')
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'inactive') {
-                    $query->whereNotNull('suspended_at');
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', false));
                 } elseif ($status === 'invited') {
                     $query->whereNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 } elseif ($status === 'pending_activation') {
                     $query->whereNotNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 } elseif ($status === 'pending') {
                     $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));

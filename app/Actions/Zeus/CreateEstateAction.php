@@ -28,8 +28,7 @@ class CreateEstateAction
     public function __construct(
         private InitializeTrialService $initializeTrialService,
         private PartnerAttributionService $attributionService,
-    ) {
-    }
+    ) {}
 
     /**
      * @param  array{name: string, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
@@ -39,7 +38,7 @@ class CreateEstateAction
         return DB::transaction(function () use ($data) {
             $plan = isset($data['plan_id']) ? Plan::find($data['plan_id']) : null;
 
-            // 1. Create the estate
+            // 1. Create the estate (starts inactive until admin accepts invite)
             $estate = Estate::create([
                 'name' => $data['name'],
                 'email' => $data['email'],
@@ -142,7 +141,7 @@ class CreateEstateAction
             $this->initializeTrialService->initializeForEstate($estate);
 
             // 8. Apply partner attribution when estate has a partner
-            if (!empty($data['has_partner']) && !empty($data['partner_id'])) {
+            if (! empty($data['has_partner']) && ! empty($data['partner_id'])) {
                 $partner = Partner::findOrFail($data['partner_id']);
                 $commissionPlan = CommissionPlan::cloneFromPartner($partner);
                 $startsAt = isset($data['commission_starts_at'])

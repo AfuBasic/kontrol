@@ -14,13 +14,12 @@ use App\Models\Zone;
 use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
 class CreateResidentAction
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @param  array{name: string, email: string, phone?: string|null, unit_number?: string|null, address?: string|null}  $data
@@ -28,6 +27,20 @@ class CreateResidentAction
     public function execute(array $data, Estate $estate): User
     {
         return DB::transaction(function () use ($data, $estate) {
+            $existingUser = User::where('email', strtolower(trim($data['email'])))->first();
+            if ($existingUser) {
+                $otherEstates = DB::table('estate_users_membership')
+                    ->where('user_id', $existingUser->id)
+                    ->where('estate_id', '!=', $estate->id)
+                    ->exists();
+
+                if ($otherEstates) {
+                    throw ValidationException::withMessages([
+                        'email' => "The email {$data['email']} already belongs to another estate.",
+                    ]);
+                }
+            }
+
             // 1. Get or create user (invitation pending if new user)
             $user = User::firstOrCreate(
                 ['email' => strtolower(trim($data['email']))],
@@ -43,7 +56,7 @@ class CreateResidentAction
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$membership) {
+            if (! $membership) {
                 $estate->users()->attach($user->id, [
                     'status' => 'pending',
                     'property_owner_id' => $data['property_owner_id'] ?? null,
@@ -76,7 +89,7 @@ class CreateResidentAction
                 ->where('zone_id_coalesced', $data['zone_id'] ?? 0)
                 ->exists();
 
-            if (!$assignmentExists) {
+            if (! $assignmentExists) {
                 $assignmentAction->execute(
                     user: $user,
                     estate: $estate,
@@ -124,7 +137,7 @@ class CreateResidentAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited resident ' . $user->email);
+                ->log('invited resident '.$user->email);
 
             return $user;
         });
