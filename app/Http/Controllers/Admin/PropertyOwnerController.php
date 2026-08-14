@@ -575,4 +575,16 @@ class PropertyOwnerController extends Controller
 
         return back()->with('success', 'Invitations resent successfully.');
     }
+
+    public function resendInvitation(Request $request, User $propertyOwner, ResendResidentInvitationAction $action): RedirectResponse
+    {
+        $this->authorize('property_owners.reset-password');
+        $estate = $this->estateContext->getEstate();
+
+        if (! $propertyOwner->password) {
+            $action->execute($propertyOwner, $estate);
+        }
+
+        return back()->with('success', 'Invitation resent successfully.');
+    }
 }

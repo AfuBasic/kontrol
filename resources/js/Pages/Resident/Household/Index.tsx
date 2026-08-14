@@ -65,7 +65,7 @@ export default function HouseholdIndex({ members }: Props) {
     const handleResetPassword = () => {
         if (!memberToReset) return;
         setResettingId(memberToReset.id);
-        resetForm.post(`/resident/household/${memberToReset.id}/reset-password`, {
+        resetForm.post(`/resident/household/${memberToReset.id}/resend-invitation`, {
             preserveScroll: true,
             onFinish: () => {
                 setResettingId(null);
