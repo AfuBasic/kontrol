@@ -14,20 +14,19 @@ class BulkDeleteSecurityAction
      */
     public function execute(array $securityIds, Estate $estate): int
     {
-        // Get security personnel that belong to this estate
         $securityPersonnel = User::whereIn('id', $securityIds)
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
             ->get();
 
+        $deleteAction = app(DeleteSecurityAction::class);
         $deletedCount = 0;
 
-        DB::transaction(function () use ($securityPersonnel, $estate, &$deletedCount) {
+        DB::transaction(function () use ($securityPersonnel, $estate, $deleteAction, &$deletedCount) {
             foreach ($securityPersonnel as $security) {
-                $security->delete();
+                $deleteAction->execute($security, $estate);
                 $deletedCount++;
             }
 
-            // Log the bulk delete activity
             activity()
                 ->causedBy(Auth::user())
                 ->withProperties([
@@ -35,7 +34,7 @@ class BulkDeleteSecurityAction
                     'deleted_count' => $deletedCount,
                     'security_ids' => $securityPersonnel->pluck('id')->toArray(),
                 ])
-                ->log('bulk deleted '.$deletedCount.' security personnel');
+                ->log('bulk removed '.$deletedCount.' security personnel');
         });
 
         return $deletedCount;

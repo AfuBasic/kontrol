@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\AssignResidentsToPropertyOwnerAction;
+use App\Actions\Admin\BulkDeletePropertyOwnersAction;
 use App\Actions\Admin\BulkDeleteResidentsAction;
 use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
+use App\Actions\Admin\DeletePropertyOwnerAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendResidentAction;
 use App\Auth\ContextManager;
@@ -504,7 +506,19 @@ class PropertyOwnerController extends Controller
         return back()->with('info', 'Property Owner is already a Resident.');
     }
 
-    public function bulkDelete(Request $request, BulkDeleteResidentsAction $action): RedirectResponse
+    public function destroy(User $propertyOwner, DeletePropertyOwnerAction $action): RedirectResponse
+    {
+        $this->authorize('property_owners.delete');
+        $estate = $this->estateContext->getEstate();
+
+        $action->execute($propertyOwner, $estate);
+
+        return redirect()
+            ->route('admin.property-owners.index')
+            ->with('success', 'Property Owner removed successfully.');
+    }
+
+    public function bulkDelete(Request $request, BulkDeletePropertyOwnersAction $action): RedirectResponse
     {
         $this->authorize('property_owners.delete');
         $estate = $this->estateContext->getEstate();
@@ -513,8 +527,7 @@ class PropertyOwnerController extends Controller
             'ids' => ['required', 'array'],
         ]);
 
-        $result = $action->execute($validated['ids'], $estate);
-        $total = $result['deleted'] + $result['detached'];
+        $total = $action->execute($validated['ids'], $estate);
 
         return redirect()
             ->route('admin.property-owners.index')
