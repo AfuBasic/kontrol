@@ -27,6 +27,20 @@ class SuspendSecurityAction
 
                 $isSuspended = ! $assignment->is_active;
 
+                if ($isSuspended) {
+                    $activeCount = AdministrativeAssignment::where('user_id', $security->id)
+                        ->where('is_active', true)
+                        ->count();
+
+                    if ($activeCount === 0) {
+                        $security->update(['suspended_at' => now()]);
+                    }
+                } else {
+                    if ($security->suspended_at !== null) {
+                        $security->update(['suspended_at' => null]);
+                    }
+                }
+
                 activity()
                     ->performedOn($security)
                     ->causedBy(Auth::user())
