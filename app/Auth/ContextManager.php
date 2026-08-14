@@ -4,6 +4,7 @@ namespace App\Auth;
 
 use App\Enums\AssignmentScope;
 use App\Models\AdministrativeAssignment;
+use App\Models\Estate;
 use App\Models\EstateMembership;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
