@@ -26,6 +26,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SecurityInviteLinkController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SetupController;
 use App\Http\Controllers\Admin\SettlementController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserController;
@@ -54,6 +55,10 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('/violations/{violation}/payment-plan', [ComplianceController::class, 'approvePaymentPlan'])->name('violations.payment-plan');
         Route::post('/violations/{violation}/resolve', [ComplianceController::class, 'resolveViolation'])->name('violations.resolve');
     });
+
+    // Setup / Onboarding
+    Route::get('/setup', [SetupController::class, 'show'])->name('setup');
+    Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
 
     // Legacy dashboard redirect
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
