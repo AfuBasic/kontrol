@@ -85,6 +85,7 @@ class EstateSettings extends Model
         'collection_reminder_frequency',
         'collection_maximum_reminder_attempts',
         'send_reminder_before_due_date_days',
+        'onboarding_completed',
     ];
 
     /**
@@ -114,6 +115,7 @@ class EstateSettings extends Model
             'free_trial_days' => 'integer',
             'grace_period_days' => 'integer',
             'contacts' => 'array',
+            'onboarding_completed' => 'boolean',
         ];
     }
 
@@ -133,7 +135,7 @@ class EstateSettings extends Model
         return Cache::remember(
             "estate_settings:{$estateId}",
             now()->addMinutes(15),
-            fn () => self::firstOrCreate(['estate_id' => $estateId])->refresh()
+            fn() => self::firstOrCreate(['estate_id' => $estateId])->refresh()
         );
     }
 
@@ -163,11 +165,11 @@ class EstateSettings extends Model
             }
         }
 
-        if (! $hasOther) {
+        if (!$hasOther) {
             $configured[] = 'Other';
         }
 
-        return collect($configured)->map(fn ($cat) => [
+        return collect($configured)->map(fn($cat) => [
             'value' => $cat,
             'label' => $cat,
         ])->values()->toArray();
@@ -175,6 +177,6 @@ class EstateSettings extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn ($settings) => Cache::forget("estate_settings:{$settings->estate_id}"));
+        static::saved(fn($settings) => Cache::forget("estate_settings:{$settings->estate_id}"));
     }
 }
