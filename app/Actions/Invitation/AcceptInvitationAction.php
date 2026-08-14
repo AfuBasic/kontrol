@@ -116,9 +116,12 @@ class AcceptInvitationAction
                 'accepted_at' => Carbon::now(),
             ]);
 
-            // Activate the estate if it was inactive and this is an estate-scoped invitation (usually the initial admin invite)
-            if ($estate && $estate->status === 'inactive' && $invitation->scope_type === AssignmentScope::Estate->value) {
-                $estate->update(['status' => 'active']);
+            // Activate the estate if it was inactive or pending and this is an estate-scoped invitation (usually the initial admin invite)
+            if ($estate && in_array($estate->status, ['inactive', 'pending']) && $invitation->scope_type === AssignmentScope::Estate->value) {
+                $estate->update([
+                    'status' => 'active',
+                    'activation_date' => $estate->activation_date ?? Carbon::now(),
+                ]);
             }
 
             // Email verification (if they are a brand new user and this implicitly verified them)
