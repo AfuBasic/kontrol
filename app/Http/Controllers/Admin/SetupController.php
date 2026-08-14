@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,20 +11,22 @@ use Inertia\Response;
 
 class SetupController extends Controller
 {
+    public function __construct(
+        protected EstateContextService $estateContext
+    ) {}
+
     /**
      * Show the estate setup onboarding page.
      */
     public function show(Request $request): Response|RedirectResponse
     {
-        $estate = $request->get('estate');
+        $estate = $this->estateContext->getEstate();
 
         if (! $estate) {
             return redirect()->route('admin.dashboard');
         }
 
         // If onboarding is already completed, they shouldn't be here.
-        // Assuming $estate->settings->onboarding_completed is false.
-        // We'll add that field shortly.
         if ($estate->settings && $estate->settings->onboarding_completed) {
             return redirect()->route('admin.dashboard');
         }
@@ -50,7 +53,7 @@ class SetupController extends Controller
      */
     public function complete(Request $request): RedirectResponse
     {
-        $estate = $request->get('estate');
+        $estate = $this->estateContext->getEstate();
 
         if ($estate && $estate->settings) {
             $estate->settings->update(['onboarding_completed' => true]);
