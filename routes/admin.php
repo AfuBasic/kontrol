@@ -118,6 +118,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
         Route::prefix('residents/approvals')->name('residents.approvals.')->middleware('feature:approval-portal')->group(function (): void {
             Route::get('/', [ResidentApprovalController::class, 'index'])->name('index');
+            Route::post('/approve-all', [ResidentApprovalController::class, 'approveAll'])->name('approve-all');
             Route::post('/{user}/approve', [ResidentApprovalController::class, 'approve'])->name('approve');
             Route::post('/{user}/reject', [ResidentApprovalController::class, 'reject'])->name('reject');
         });

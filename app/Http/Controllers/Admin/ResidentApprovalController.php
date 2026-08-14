@@ -74,6 +74,34 @@ class ResidentApprovalController extends Controller
     }
 
     /**
+     * Approve all pending residents for the estate.
+     */
+    public function approveAll(Request $request): RedirectResponse
+    {
+        $this->authorize('residents.edit');
+        $estate = $this->estateContext->getEstate();
+
+        // Get all pending users for this estate
+        $pendingUsers = User::whereHas('estates', function ($q) use ($estate) {
+            $q->where('estates.id', $estate->id)
+              ->where('estate_users_membership.status', 'pending');
+        })->get();
+
+        if ($pendingUsers->isEmpty()) {
+            return back()->with('info', 'No pending residents to approve.');
+        }
+
+        foreach ($pendingUsers as $user) {
+            $user->estates()->updateExistingPivot($estate->id, [
+                'status' => 'accepted',
+            ]);
+            $user->notify(new ResidentApproved($estate));
+        }
+
+        return back()->with('success', "{$pendingUsers->count()} pending residents have been approved.");
+    }
+
+    /**
      * Reject and remove a pending resident.
      */
     public function reject(User $user): RedirectResponse
