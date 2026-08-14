@@ -9,6 +9,7 @@ use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\DeletePropertyOwnerAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
+use App\Actions\Admin\SuspendPropertyOwnerAction;
 use App\Actions\Admin\SuspendResidentAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
@@ -40,13 +41,19 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.view');
 
-        $estate = $this->estateContext->getEstate();
         $filters = $request->only(['search', 'status', 'property', 'sort']);
+        $estate = $this->estateContext->getEstate();
+        $poRole = Role::where('name', 'property_owner')->whereNull('estate_id')->first();
 
         $query = User::query()
             ->forEstate($estate->id)
             ->withRole('property_owner', $estate->id)
-            ->with(['profile', 'roles', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with([
+                'roles',
+                'profile',
+                'estates' => fn ($q) => $q->where('estates.id', $estate->id),
+                'administrativeAssignments' => fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id)),
+            ])
             ->withCount([
                 'properties' => fn ($q) => $q->where('estate_id', $estate->id),
                 'managedResidents',
@@ -61,17 +68,19 @@ class PropertyOwnerController extends Controller
                         });
                 });
             })
-            ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
+            ->when($filters['status'] ?? null, function ($query, $status) use ($estate, $poRole) {
                 if ($status === 'active') {
-                    $query->whereNull('suspended_at')
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'inactive') {
-                    $query->whereNotNull('suspended_at');
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', false));
                 } elseif ($status === 'invited') {
                     $query->whereNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 } elseif ($status === 'pending_activation') {
                     $query->whereNotNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
@@ -95,28 +104,41 @@ class PropertyOwnerController extends Controller
             });
 
         $propertyOwners = $query->paginate(15)
-            ->through(fn ($user) => [
-                'id' => $user->id,
-                'ulid' => $user->ulid,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->profile?->phone,
-                'unit_number' => $user->profile?->unit_number,
-                'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
-                'suspended_at' => $user->suspended_at,
-                'email_verified_at' => $user->email_verified_at,
-                'properties_count' => $user->properties_count,
-                'residents_count' => $user->managed_residents_count,
-                'is_resident' => $user->roles->contains('name', 'resident'),
-                'created_at' => $user->created_at->format('M d, Y'),
-            ])
+            ->through(function ($user) {
+                $assignment = $user->administrativeAssignments->first();
+                $isSuspended = $assignment ? ! $assignment->is_active : false;
+
+                return [
+                    'id' => $user->id,
+                    'ulid' => $user->ulid,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->profile?->phone,
+                    'unit_number' => $user->profile?->unit_number,
+                    'status' => $isSuspended ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
+                    'suspended_at' => $isSuspended ? ($assignment?->updated_at ?? now()) : null,
+                    'email_verified_at' => $user->email_verified_at,
+                    'properties_count' => $user->properties_count,
+                    'residents_count' => $user->managed_residents_count,
+                    'is_resident' => $user->roles->contains('name', 'resident'),
+                    'created_at' => $user->created_at->format('M d, Y'),
+                ];
+            })
             ->withQueryString();
 
         // Section 1: Metrics Strip
         $totalOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->count();
-        $activeOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->active()->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->whereNull('password')->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
-        $inactiveOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->suspended()->count();
+        $activeOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
+            ->count();
+        $pendingOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->whereNull('password')
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
+            ->count();
+        $inactiveOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', false))
+            ->count();
         $totalPropertiesOwned = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereNotNull('property_owner_id')->count();
 
         // Section 2: Insights Box
@@ -320,17 +342,15 @@ class PropertyOwnerController extends Controller
     /**
      * Toggle the suspension status of the property owner.
      */
-    public function suspend(User $propertyOwner): RedirectResponse
+    public function suspend(User $propertyOwner, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
+        $estate = $this->estateContext->getEstate();
 
-        if ($propertyOwner->suspended_at) {
-            $propertyOwner->update(['suspended_at' => null]);
-            $message = 'Property Owner reactivated successfully.';
-        } else {
-            $propertyOwner->update(['suspended_at' => now()]);
-            $message = 'Property Owner suspended successfully.';
-        }
+        $isActive = $action->execute($propertyOwner, $estate);
+        $message = $isActive
+            ? 'Property Owner reactivated successfully.'
+            : 'Property Owner suspended successfully.';
 
         return back()->with('success', $message);
     }
@@ -534,7 +554,7 @@ class PropertyOwnerController extends Controller
             ->with('success', "Successfully removed {$total} property owner(s).");
     }
 
-    public function bulkSuspend(Request $request, SuspendResidentAction $action): RedirectResponse
+    public function bulkSuspend(Request $request, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
@@ -545,15 +565,13 @@ class PropertyOwnerController extends Controller
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
-            if (! $resident->suspended_at) {
-                $action->execute($resident, $estate);
-            }
+            $action->execute($resident, $estate, false);
         }
 
         return back()->with('success', 'Selected property owner(s) suspended successfully.');
     }
 
-    public function bulkActivate(Request $request, SuspendResidentAction $action): RedirectResponse
+    public function bulkActivate(Request $request, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
@@ -564,9 +582,7 @@ class PropertyOwnerController extends Controller
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
-            if ($resident->suspended_at) {
-                $action->execute($resident, $estate);
-            }
+            $action->execute($resident, $estate, true);
         }
 
         return back()->with('success', 'Selected property owner(s) activated successfully.');

@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class SecurityPersonnelController extends Controller
 {
@@ -41,7 +42,7 @@ class SecurityPersonnelController extends Controller
 
         $filters = $request->only(['search', 'status']);
         $estate = $this->estateContext->getEstate();
-        $securityRole = \Spatie\Permission\Models\Role::where('name', 'security')->whereNull('estate_id')->first();
+        $securityRole = Role::where('name', 'security')->whereNull('estate_id')->first();
 
         $totalSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
         $activeSecurity = User::query()->forEstate($estate->id)

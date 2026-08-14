@@ -6,6 +6,7 @@ use App\Models\Estate;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Spatie\Permission\Models\Role;
 
 class ResidentService
 {
@@ -22,7 +23,7 @@ class ResidentService
     {
         $estate = $this->estateContext->getEstate();
 
-        $residentRoles = \Spatie\Permission\Models\Role::whereIn('name', ['resident', 'household_member'])
+        $residentRoles = Role::whereIn('name', ['resident', 'household_member'])
             ->whereNull('estate_id')
             ->pluck('id');
 

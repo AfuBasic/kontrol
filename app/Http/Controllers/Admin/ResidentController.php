@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class ResidentController extends Controller
 {
@@ -40,12 +41,17 @@ class ResidentController extends Controller
 
         $filters = $request->only(['search', 'status', 'role', 'property', 'zone', 'sort']);
         $estate = $this->estateContext->getEstate();
+        $residentRoles = Role::whereIn('name', ['resident', 'household_member'])
+            ->whereNull('estate_id')
+            ->pluck('id');
 
         $residents = Inertia::defer(fn () => $this->residentService
             ->getPaginatedResidents(15, $filters)
             ->through(function ($user) use ($estate) {
                 $membership = $user->estates->first()?->pivot;
                 $zone = $membership?->zone_id ? Zone::find($membership->zone_id) : null;
+                $assignment = $user->administrativeAssignments->first();
+                $isSuspended = $assignment ? ! $assignment->is_active : false;
 
                 return [
                     'id' => $user->id,
@@ -60,13 +66,13 @@ class ResidentController extends Controller
                     'property_owner_name' => $user->profile?->propertyOwner?->name,
                     'property_id' => $user->profile?->property_id,
                     'property_name' => $user->profile?->property?->name,
-                    'status' => $user->suspended_at ? 'inactive' : ($membership?->status ?? 'pending'),
+                    'status' => $isSuspended ? 'inactive' : ($membership?->status ?? 'pending'),
                     'is_property_owner' => $user->roles->contains('name', 'property_owner'),
                     'role_label' => $user->roles->contains('name', 'property_owner')
                         ? 'Property Owner'
                         : ($user->profile?->property_owner_id ? 'Tenant' : 'Resident'),
                     'household_members_count' => $user->household_members_count ?? 0,
-                    'suspended_at' => $user->suspended_at,
+                    'suspended_at' => $isSuspended ? ($assignment?->updated_at ?? now()) : null,
                     'email_verified_at' => $user->email_verified_at,
                     'last_active' => $user->updated_at?->diffForHumans() ?? 'Never',
                     'created_at' => $user->created_at->format('M d, Y'),
@@ -76,17 +82,24 @@ class ResidentController extends Controller
 
         // Section 1: Overview stats
         $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
-        $activeResidents = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
+        $activeResidents = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
+            ->count();
         $pendingMembership = User::query()
             ->forEstate($estate->id)
-            ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
             ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
 
         $unacceptedInvitations = (clone $pendingMembership)->whereNull('email_verified_at')->count();
         $awaitingApproval = (clone $pendingMembership)->whereNotNull('email_verified_at')->count();
         $pendingAccess = $unacceptedInvitations + $awaitingApproval;
-        $inactiveResidents = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
+        $inactiveResidents = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', false))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->count();
 
         $totalProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->count();
         $occupiedProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereHas('residents')->count();
