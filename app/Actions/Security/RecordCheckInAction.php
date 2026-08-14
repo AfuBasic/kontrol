@@ -80,7 +80,7 @@ class RecordCheckInAction
 
             $isEventFull = false;
             if ($accessCode->type === 'event' && $accessCode->guest_limit !== null) {
-                $currentCount = $accessCode->accessLogs()->count();
+                $currentCount = $accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count();
                 if ($currentCount + 1 >= $accessCode->guest_limit) {
                     $isEventFull = true;
                 }
