@@ -2,14 +2,11 @@ import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import {
     User,
-    Lock,
     Shield,
     ChevronRight,
     Zap,
     Users,
     UserCircle,
-    Eye,
-    EyeOff,
     Crown,
     X,
     Loader2,
@@ -65,7 +62,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
     const userRoles = auth.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const parentResidentName = auth.user?.resident_subscription?.parent_resident_name;
-    const [activeSheet, setActiveSheet] = useState<'profile' | 'password' | 'emergency_management' | null>(null);
+    const [activeSheet, setActiveSheet] = useState<'profile' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
 
     const CONTACT_LIMIT = 5;
@@ -199,20 +196,13 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                 <div className="space-y-8">
                     {/* Account Section */}
                     <section>
-                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Personal & Security</h2>
+                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Personal Information</h2>
                         <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
                             <SettingsRow
                                 icon={<UserCircle className="h-5 w-5" />}
                                 label="Profile Information"
                                 description="Update your name and address"
                                 onClick={() => setActiveSheet('profile')}
-                            />
-                            <div className="mx-6 h-px bg-slate-50" />
-                            <SettingsRow
-                                icon={<Lock className="h-5 w-5" />}
-                                label="Security"
-                                description="Update your account password"
-                                onClick={() => setActiveSheet('password')}
                             />
 
                             {hasHousehold && !isHouseholdMember && (
@@ -263,13 +253,6 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
             <MobileSheet isOpen={activeSheet === 'profile'} onClose={() => setActiveSheet(null)} title="Profile Information">
                 <div className="p-1">
                     <ProfileForm profile={profile} onSuccess={() => setActiveSheet(null)} />
-                </div>
-            </MobileSheet>
-
-            {/* PASSWORD UPDATE SHEET */}
-            <MobileSheet isOpen={activeSheet === 'password'} onClose={() => setActiveSheet(null)} title="Account Security">
-                <div className="p-1">
-                    <UpdatePasswordForm onSuccess={() => setActiveSheet(null)} />
                 </div>
             </MobileSheet>
 
@@ -404,82 +387,6 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                 className="w-full rounded-[24px] bg-slate-900 py-4 text-base font-black text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
                 {processing ? 'Saving...' : 'Save Changes'}
-            </button>
-        </form>
-    );
-}
-
-/* ─── Update Password Form ─── */
-function UpdatePasswordForm({ onSuccess }: { onSuccess: () => void }) {
-    const { data, setData, put, errors, processing, reset } = useForm({
-        current_password: '',
-        password: '',
-        password_confirmation: '',
-    });
-
-    const [showCurrent, setShowCurrent] = useState(false);
-    const [showNew, setShowNew] = useState(false);
-
-    const submit: FormEventHandler = (e) => {
-        e.preventDefault();
-        put(resident.password.update.url(), {
-            onSuccess: () => {
-                reset();
-                setTimeout(onSuccess, 500);
-            },
-        });
-    };
-
-    return (
-        <form onSubmit={submit} className="space-y-6 pb-8">
-            <div className="space-y-4">
-                <div>
-                    <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Current Password</label>
-                    <div className="relative">
-                        <input
-                            type={showCurrent ? 'text' : 'password'}
-                            value={data.current_password}
-                            onChange={(e) => setData('current_password', e.target.value)}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 pr-12 text-base font-bold text-slate-900 shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowCurrent(!showCurrent)}
-                            className="absolute top-1/2 right-5 -translate-y-1/2 text-slate-400"
-                        >
-                            {showCurrent ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                    </div>
-                    {errors.current_password && <p className="mt-2 text-xs font-bold text-rose-500">{errors.current_password}</p>}
-                </div>
-
-                <div>
-                    <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">New Password</label>
-                    <div className="relative">
-                        <input
-                            type={showNew ? 'text' : 'password'}
-                            value={data.password}
-                            onChange={(e) => setData('password', e.target.value)}
-                            className="w-full rounded-[20px] border border-slate-100 bg-slate-50 px-5 py-4 pr-12 text-base font-bold text-slate-900 shadow-sm focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowNew(!showNew)}
-                            className="absolute top-1/2 right-5 -translate-y-1/2 text-slate-400"
-                        >
-                            {showNew ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                    </div>
-                    {errors.password && <p className="mt-2 text-xs font-bold text-rose-500">{errors.password}</p>}
-                </div>
-            </div>
-
-            <button
-                type="submit"
-                disabled={processing}
-                className="w-full rounded-[24px] bg-slate-900 py-4 text-base font-black text-white shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
-            >
-                {processing ? 'Updating...' : 'Update Password'}
             </button>
         </form>
     );
