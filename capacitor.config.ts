@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Set this to true for local development with Simulator/Emulator
-const isDev = true;
+const isDev = process.env.NODE_ENV !== 'production' && process.env.CAPACITOR_PROD !== 'true';
 
 // Default local URL
 let devUrl = 'http://app.kontrol.test';
@@ -24,6 +24,10 @@ try {
     console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
 }
 
+const isAndroid = process.argv.includes('android') || process.env.CAPACITOR_PLATFORM_NAME === 'android';
+const prodUrl = isAndroid ? 'https://app.usekontrol.afuwapetunde.com' : 'https://app.usekontrol.com';
+const prodHostname = isAndroid ? 'app.usekontrol.afuwapetunde.com' : 'app.usekontrol.com';
+
 const config: CapacitorConfig = {
     appId: 'com.kontrol.hq',
     appName: 'Kontrol',
@@ -31,12 +35,12 @@ const config: CapacitorConfig = {
     appendUserAgent: ' KontrolApp',
     // loggingBehavior: isDev ? 'debug' : 'none',
     server: {
-        url: isDev ? devUrl : 'https://app.usekontrol.com',
+        url: isDev ? devUrl : prodUrl,
         cleartext: isDev,
         // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
-        hostname: isDev ? devHostname : 'app.usekontrol.com',
+        hostname: isDev ? devHostname : prodHostname,
         // Allow all subdomains and the emulator IP for local development
-        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', '10.0.2.2', devHostname],
+        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', 'app.usekontrol.afuwapetunde.com', '10.0.2.2', devHostname],
         // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
         androidScheme: isDev && !devUrl.startsWith('https') ? 'http' : 'https',
     },
