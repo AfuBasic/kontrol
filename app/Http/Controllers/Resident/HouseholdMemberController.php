@@ -125,7 +125,6 @@ class HouseholdMemberController extends Controller
                 user: $householdMember->member,
                 estate: $estate,
                 primaryResident: $user,
-                passwordReset: false,
                 invitation: $invitation,
             )
         );
