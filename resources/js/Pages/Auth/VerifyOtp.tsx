@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ArrowLeft, RefreshCw, AlertCircle, Check, ShieldCheck } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, AlertCircle, Check, ShieldCheck } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import * as LoginOtpController from '@/actions/App/Http/Controllers/Auth/LoginOtpController';
 
@@ -303,7 +303,7 @@ export default function VerifyOtp({ email }: Props) {
                             >
                                 {isSubmitting ? (
                                     <span className="flex items-center gap-2">
-                                        <RefreshCw className="h-4 w-4 animate-spin text-white" />
+                                        <Loader2 className="h-4 w-4 animate-spin text-white" />
                                         <span>Verifying identity...</span>
                                     </span>
                                 ) : (
@@ -321,7 +321,7 @@ export default function VerifyOtp({ email }: Props) {
                                 Didn&apos;t receive the code?{' '}
                                 {isResending ? (
                                     <span className="inline-flex items-center gap-1.5 font-semibold text-indigo-400">
-                                        <RefreshCw className="h-3 w-3 animate-spin" />
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                         <span>Sending code...</span>
                                     </span>
                                 ) : resendCooldown > 0 ? (
