@@ -198,3 +198,38 @@ it('bulk invites security personnel via paste or csv and lists them with pending
             ->where('stats.total', 2)
             ->where('stats.pending', 2));
 });
+
+it('sends an invitation email when adding security role to an existing resident', function () {
+    Event::fake([SecurityCreated::class]);
+
+    // 1. Create an existing accepted resident
+    $resident = User::factory()->create(['email' => 'resident_turned_guard@example.com']);
+    $this->estate->users()->attach($resident->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'resident',
+    ]);
+
+    // 2. Invite the resident as security
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->post(route('admin.security.store'), [
+            'name' => $resident->name,
+            'email' => $resident->email,
+            'badge_number' => 'SEC-DUAL-1',
+        ])
+        ->assertRedirect(route('admin.security.index'));
+
+    // 3. Verify event was dispatched
+    Event::assertDispatched(SecurityCreated::class, function ($event) use ($resident) {
+        return $event->user->email === $resident->email;
+    });
+
+    // 4. Verify invitation record exists with valid pending token
+    $this->assertDatabaseHas('invitations', [
+        'email' => $resident->email,
+        'estate_id' => $this->estate->id,
+        'relationship_type' => 'security',
+        'status' => 'pending',
+    ]);
+});
+
