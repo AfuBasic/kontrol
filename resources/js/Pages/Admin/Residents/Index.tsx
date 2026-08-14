@@ -870,20 +870,10 @@ export default function Residents({
                                         />
                                         <button
                                             onClick={copyToClipboard}
-                                            className="text-slate-455 hover:bg-slate-150/50 flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 transition hover:text-slate-800"
+                                            className="text-slate-455 hover:bg-slate-150/50 shrink-0 rounded-lg p-1.5 transition hover:text-slate-800"
                                             title="Copy Link"
                                         >
-                                            {copied ? (
-                                                <>
-                                                    <Check className="h-4.5 w-4.5 text-emerald-600" />
-                                                    <span className="text-xs font-semibold text-emerald-600">Copied!</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Copy className="h-4.5 w-4.5" />
-                                                    <span className="text-xs font-semibold">Copy</span>
-                                                </>
-                                            )}
+                                            {copied ? <Check className="h-4.5 w-4.5 text-emerald-600" /> : <Copy className="h-4.5 w-4.5" />}
                                         </button>
                                     </div>
                                 </div>
@@ -965,7 +955,7 @@ export default function Residents({
                                 <button
                                     onClick={() => setShowDeleteConfirm(true)}
                                     disabled={isBulkActionRunning}
-                                    className="bg-red-650 rounded-xl px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition hover:bg-red-700 disabled:opacity-40"
+                                    className="rounded-xl bg-red-600 px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase shadow-sm transition hover:bg-red-700 active:bg-red-800 disabled:opacity-40"
                                 >
                                     Delete
                                 </button>
