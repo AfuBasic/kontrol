@@ -40,7 +40,7 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
                 estate: $this->estate,
                 relationshipType: 'household_member',
                 role: $role,
-                zoneId: $this->primaryResident->getZoneForEstate($this->estate)?->id,
+                zoneId: $this->primaryResident->profile?->zone_id ?? $this->primaryResident->estateMembershipFor($this->estate->id)?->zone_id,
                 createdBy: $this->primaryResident,
             );
         }
