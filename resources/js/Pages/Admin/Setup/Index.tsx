@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, ChevronRight, MapPin, ShieldCheck, Users, Settings as SettingsIcon } from 'lucide-react';
 import React from 'react';
 
-import AdminLayout from '@/Layouts/AdminLayout';
+import admin from '@/routes/admin';
 
 interface SetupProps {
     estate: {
@@ -24,11 +24,11 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
     const { post, processing } = useForm();
 
     const handleComplete = () => {
-        post(route('admin.setup.complete'));
+        post(admin.setup.complete.url());
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Estate Setup - Kontrol" />
 
             <div className="mx-auto max-w-4xl py-12">
@@ -76,7 +76,7 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                             </div>
                         </div>
                         <div className="flex items-center gap-3 pl-14 sm:pl-0">
-                            <Link href={route('admin.settings')} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700">
+                            <Link href={admin.settings.url()} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700">
                                 {progress.address_completed ? 'Update details' : 'Review details'} <ChevronRight className="h-4 w-4" />
                             </Link>
                         </div>
@@ -98,7 +98,7 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                         </div>
                         <div className="flex items-center gap-4 pl-14 sm:pl-0">
                             {!progress.zones_completed && <span className="text-xs text-gray-400">Skip for now</span>}
-                            <Link href={route('admin.zones.index')} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
+                            <Link href={admin.zones.index.url()} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
                                 {progress.zones_completed ? 'Manage zones' : 'Set up zones'}
                             </Link>
                         </div>
@@ -120,7 +120,7 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                         </div>
                         <div className="flex items-center gap-4 pl-14 sm:pl-0">
                             {!progress.security_completed && <span className="text-xs text-gray-400">Skip for now</span>}
-                            <Link href={route('admin.security.create')} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
+                            <Link href={admin.security.create.url()} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
                                 {progress.security_completed ? 'Manage security' : 'Add security'}
                             </Link>
                         </div>
@@ -142,7 +142,7 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                         </div>
                         <div className="flex items-center gap-4 pl-14 sm:pl-0">
                             {!progress.residents_completed && <span className="text-xs text-gray-400">Skip for now</span>}
-                            <Link href={route('admin.residents.create')} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
+                            <Link href={admin.residents.create.url()} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
                                 {progress.residents_completed ? 'Manage residents' : 'Invite resident'}
                             </Link>
                         </div>
@@ -160,6 +160,6 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     </button>
                 </div>
             </div>
-        </AdminLayout>
+        </>
     );
 }
