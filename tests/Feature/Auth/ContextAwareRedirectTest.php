@@ -25,7 +25,7 @@ beforeEach(function () {
     $this->securityRoleA = Role::create(['name' => 'security', 'guard_name' => 'web', 'estate_id' => $this->estateA->id]);
 });
 
-test('Test 1 — Admin only user routes to Admin Portal', function () {
+test('Test 1 - Admin only user routes to Admin Portal', function () {
     $user = User::factory()->create();
     $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
     $assignment = AdministrativeAssignment::create([
@@ -44,7 +44,7 @@ test('Test 1 — Admin only user routes to Admin Portal', function () {
     expect(session('active_context_assignment_id'))->toBe($assignment->id);
 });
 
-test('Test 2 — Resident only user routes to Resident Portal', function () {
+test('Test 2 - Resident only user routes to Resident Portal', function () {
     $user = User::factory()->create();
     $this->estateB->users()->attach($user->id, ['status' => 'accepted']);
     $assignment = AdministrativeAssignment::create([
@@ -63,7 +63,7 @@ test('Test 2 — Resident only user routes to Resident Portal', function () {
     expect(session('active_context_assignment_id'))->toBe($assignment->id);
 });
 
-test('Test 3 — Security only user routes to Security Portal', function () {
+test('Test 3 - Security only user routes to Security Portal', function () {
     $user = User::factory()->create();
     $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
     $zone = Zone::create(['estate_id' => $this->estateA->id, 'name' => 'Zone 1']);
@@ -85,7 +85,7 @@ test('Test 3 — Security only user routes to Security Portal', function () {
     expect(session('active_context_assignment_id'))->toBe($assignment->id);
 });
 
-test('Test 4 — Admin + Resident across estates routes based on active context', function () {
+test('Test 4 - Admin + Resident across estates routes based on active context', function () {
     $user = User::factory()->create();
     $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
     $this->estateB->users()->attach($user->id, ['status' => 'accepted']);
@@ -120,7 +120,7 @@ test('Test 4 — Admin + Resident across estates routes based on active context'
     expect(session('active_context_assignment_id'))->toBe($assignB->id);
 });
 
-test('Test 5 — Same estate, different contexts changes destination correctly', function () {
+test('Test 5 - Same estate, different contexts changes destination correctly', function () {
     $user = User::factory()->create();
     $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
 
@@ -150,7 +150,7 @@ test('Test 5 — Same estate, different contexts changes destination correctly',
     expect($action->execute($user, $assignSec))->toBe(route('security.dashboard'));
 });
 
-test('Test 6 — No active context with 2+ assignments sends user to Context Picker', function () {
+test('Test 6 - No active context with 2+ assignments sends user to Context Picker', function () {
     $user = User::factory()->create();
     $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
     $this->estateB->users()->attach($user->id, ['status' => 'accepted']);
@@ -179,7 +179,7 @@ test('Test 6 — No active context with 2+ assignments sends user to Context Pic
     expect(session('active_context_assignment_id'))->toBeNull();
 });
 
-test('Test 7 — Stale context is handled gracefully', function () {
+test('Test 7 - Stale context is handled gracefully', function () {
     $user = User::factory()->create();
     $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
 
@@ -203,7 +203,7 @@ test('Test 7 — Stale context is handled gracefully', function () {
     expect(session('active_context_assignment_id'))->toBeNull();
 });
 
-test('Test 8 — Magic login controller routes fallback to context.select', function () {
+test('Test 8 - Magic login controller routes fallback to context.select', function () {
     $user = User::factory()->create();
     $magicToken = MagicLoginToken::create([
         'user_id' => $user->id,

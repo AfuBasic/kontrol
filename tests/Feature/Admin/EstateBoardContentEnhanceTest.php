@@ -46,7 +46,7 @@ it('enhances estate board content with contextual metadata', function () {
                     'audience' => 'all',
                 ],
             )
-            ->andReturn('**Water Notice** — Scheduled maintenance tomorrow morning.');
+            ->andReturn('**Water Notice** - Scheduled maintenance tomorrow morning.');
     });
 
     $this->actingAs($this->adminUser)
@@ -62,7 +62,7 @@ it('enhances estate board content with contextual metadata', function () {
         ->assertOk()
         ->assertJson([
             'success' => true,
-            'enhanced' => '**Water Notice** — Scheduled maintenance tomorrow morning.',
+            'enhanced' => '**Water Notice** - Scheduled maintenance tomorrow morning.',
         ]);
 });
 

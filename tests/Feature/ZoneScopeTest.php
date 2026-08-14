@@ -73,7 +73,7 @@ beforeEach(function () {
     ]);
 });
 
-it('Test 1 — Zone A cannot see Zone B', function () {
+it('Test 1 - Zone A cannot see Zone B', function () {
     // Activate Zone A context
     $assignment = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
@@ -95,7 +95,7 @@ it('Test 1 — Zone A cannot see Zone B', function () {
         ->not->toContain($this->invitationB->id);
 });
 
-it('Test 2 — Direct lookup cannot bypass', function () {
+it('Test 2 - Direct lookup cannot bypass', function () {
     $assignment = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
         'estate_id' => $this->estateA->id,
@@ -114,7 +114,7 @@ it('Test 2 — Direct lookup cannot bypass', function () {
     expect($found)->toBeNull();
 });
 
-it('Test 3 — Estate admin sees all zones', function () {
+it('Test 3 - Estate admin sees all zones', function () {
     $assignment = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
         'estate_id' => $this->estateA->id,
@@ -136,7 +136,7 @@ it('Test 3 — Estate admin sees all zones', function () {
         ->not->toContain($this->invitationCross->id); // Must not see Estate B's stuff
 });
 
-it('Test 4 — Cross-estate same-zone ID', function () {
+it('Test 4 - Cross-estate same-zone ID', function () {
     // Manually force $this->zoneA_B to have same ID as $this->zoneA but in Estate B
     // Wait, the DB auto-increments. Let's just create an invitation in Estate B with zone_id matching zone A's ID
     $cross = Invitation::create([
@@ -168,7 +168,7 @@ it('Test 4 — Cross-estate same-zone ID', function () {
         ->not->toContain($cross->id);
 });
 
-it('Test 5 — No context', function () {
+it('Test 5 - No context', function () {
     // Auth::login not called, no active session assignment
     $results = Invitation::all();
 
@@ -176,7 +176,7 @@ it('Test 5 — No context', function () {
     expect($results->count())->toBe(0);
 });
 
-it('Test 6 — Invalid context', function () {
+it('Test 6 - Invalid context', function () {
     // Setup an assignment but make it invalid by deactivating
     $assignment = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
@@ -199,7 +199,7 @@ it('Test 6 — Invalid context', function () {
     expect($results->count())->toBe(0);
 });
 
-it('Test 7 — Relationship leakage', function () {
+it('Test 7 - Relationship leakage', function () {
     // Assuming Estate hasMany Invitations
     $assignment = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
@@ -224,7 +224,7 @@ it('Test 7 — Relationship leakage', function () {
         ->not->toContain($this->invitationB->id);
 });
 
-it('Test 8 — Eager loading', function () {
+it('Test 8 - Eager loading', function () {
     $assignment = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
         'estate_id' => $this->estateA->id,
@@ -247,7 +247,7 @@ it('Test 8 — Eager loading', function () {
         ->not->toContain($this->invitationB->id);
 });
 
-it('Test 10 — Explicit bypass', function () {
+it('Test 10 - Explicit bypass', function () {
     $results = Invitation::withoutGlobalScope(ZoneScope::class)->get();
     expect($results->count())->toBeGreaterThan(0);
 });

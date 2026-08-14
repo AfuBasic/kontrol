@@ -56,7 +56,7 @@ beforeEach(function () {
     ]);
 });
 
-test('Test A — Admin in Estate A is ALLOWED on Admin routes when Estate A active, DENIED on Admin routes when Estate B Resident active', function () {
+test('Test A - Admin in Estate A is ALLOWED on Admin routes when Estate A active, DENIED on Admin routes when Estate B Resident active', function () {
     $this->actingAs($this->user);
 
     // Active: Estate A (Admin)
@@ -66,7 +66,7 @@ test('Test A — Admin in Estate A is ALLOWED on Admin routes when Estate A acti
     $responseA = $this->get(route('admin.dashboard'));
     $responseA->assertOk();
 
-    // Active: Estate B (Resident) — Admin route access is denied/redirected away from admin
+    // Active: Estate B (Resident) - Admin route access is denied/redirected away from admin
     session(['active_context_assignment_id' => $this->assignResidentB->id]);
     app(ContextManager::class)->resolve();
 
@@ -74,7 +74,7 @@ test('Test A — Admin in Estate A is ALLOWED on Admin routes when Estate A acti
     $responseB->assertRedirect(route('resident.home'));
 });
 
-test('Test B — Resident in Estate B is ALLOWED on Resident routes when Estate B active', function () {
+test('Test B - Resident in Estate B is ALLOWED on Resident routes when Estate B active', function () {
     $this->actingAs($this->user);
 
     session(['active_context_assignment_id' => $this->assignResidentB->id]);
@@ -84,7 +84,7 @@ test('Test B — Resident in Estate B is ALLOWED on Resident routes when Estate 
     $response->assertOk();
 });
 
-test('Test C — Security in Zone A is ALLOWED on Security routes', function () {
+test('Test C - Security in Zone A is ALLOWED on Security routes', function () {
     $zoneA = Zone::create(['estate_id' => $this->estateA->id, 'name' => 'Zone A']);
     $assignSecZoneA = AdministrativeAssignment::create([
         'user_id' => $this->user->id,
@@ -103,7 +103,7 @@ test('Test C — Security in Zone A is ALLOWED on Security routes', function () 
     $response->assertOk();
 });
 
-test('Test D — Security in Zone A context cannot access Zone B scoped records', function () {
+test('Test D - Security in Zone A context cannot access Zone B scoped records', function () {
     $zoneA = Zone::create(['estate_id' => $this->estateA->id, 'name' => 'Zone A']);
     $zoneB = Zone::create(['estate_id' => $this->estateA->id, 'name' => 'Zone B']);
 
@@ -152,7 +152,7 @@ test('Test D — Security in Zone A context cannot access Zone B scoped records'
     expect($incidents->pluck('id')->contains($incidentB->id))->toBeFalse();
 });
 
-test('Test E — Route estate parameter mismatch is DENIED', function () {
+test('Test E - Route estate parameter mismatch is DENIED', function () {
     $this->actingAs($this->user);
     session(['active_context_assignment_id' => $this->assignAdminA->id]);
 
@@ -175,14 +175,14 @@ test('Test E — Route estate parameter mismatch is DENIED', function () {
     expect($exception->getMessage())->toContain('Estate ID mismatch');
 });
 
-test('Test F — No active context is DENIED access to protected routes', function () {
+test('Test F - No active context is DENIED access to protected routes', function () {
     $unauthenticatedUser = User::factory()->create();
 
     $response = $this->actingAs($unauthenticatedUser)->get(route('admin.dashboard'));
     $response->assertStatus(403);
 });
 
-test('Test G — Stale context is DENIED access', function () {
+test('Test G - Stale context is DENIED access', function () {
     $this->actingAs($this->user);
     session(['active_context_assignment_id' => $this->assignAdminA->id]);
 
@@ -193,7 +193,7 @@ test('Test G — Stale context is DENIED access', function () {
     $response->assertRedirect(route('resident.home'));
 });
 
-test('Test H — Switching context from Admin to Resident clears role cache and revokes Admin access', function () {
+test('Test H - Switching context from Admin to Resident clears role cache and revokes Admin access', function () {
     $this->actingAs($this->user);
 
     // Context A (Admin)

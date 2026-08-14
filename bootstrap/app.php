@@ -43,7 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
             | Domain-Based Routing
             |------------------------------------------------------------------
             |
-            | Register domains from config only — never from request()->getHost().
+            | Register domains from config only - never from request()->getHost().
             | Request-derived domains break php artisan route:cache (CLI has no
             | Host header), which is what made www.usekontrol.com 404 in production.
             |

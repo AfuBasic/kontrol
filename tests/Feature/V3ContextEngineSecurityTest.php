@@ -17,7 +17,7 @@ beforeEach(function () {
     $this->contextManager = app(ContextManager::class);
 });
 
-it('Test 1 — prevents Spatie cache leakage across context switches', function () {
+it('Test 1 - prevents Spatie cache leakage across context switches', function () {
     // Setup
     $user = User::factory()->create();
 
@@ -74,7 +74,7 @@ it('Test 1 — prevents Spatie cache leakage across context switches', function 
     expect($user->hasRole('resident'))->toBeTrue();
 });
 
-it('Test 2 — rejects forged context', function () {
+it('Test 2 - rejects forged context', function () {
     $user = User::factory()->create();
     $estateA = Estate::factory()->create();
 
@@ -101,7 +101,7 @@ it('Test 2 — rejects forged context', function () {
     expect($context)->toBeNull();
 });
 
-it('Test 3 — rejects inactive assignment', function () {
+it('Test 3 - rejects inactive assignment', function () {
     $user = User::factory()->create();
     $estate = Estate::factory()->create();
     EstateMembership::create(['user_id' => $user->id, 'estate_id' => $estate->id, 'status' => 'accepted']);
@@ -118,7 +118,7 @@ it('Test 3 — rejects inactive assignment', function () {
     expect(fn () => $this->contextManager->activate($assignment))->toThrow(Exception::class);
 });
 
-it('Test 4 — rejects wrong estate role', function () {
+it('Test 4 - rejects wrong estate role', function () {
     $user = User::factory()->create();
     $estateA = Estate::factory()->create();
     $estateB = Estate::factory()->create();
@@ -139,7 +139,7 @@ it('Test 4 — rejects wrong estate role', function () {
     expect(fn () => $this->contextManager->activate($assignment))->toThrow(Exception::class);
 });
 
-it('Test 5 — rejects wrong zone', function () {
+it('Test 5 - rejects wrong zone', function () {
     $user = User::factory()->create();
     $estateA = Estate::factory()->create();
     $estateB = Estate::factory()->create();
@@ -160,7 +160,7 @@ it('Test 5 — rejects wrong zone', function () {
     expect(fn () => $this->contextManager->activate($assignment))->toThrow(Exception::class);
 });
 
-it('Test 6 — rejects activating someone elses assignment', function () {
+it('Test 6 - rejects activating someone elses assignment', function () {
     $userA = User::factory()->create();
     $userB = User::factory()->create();
     $estate = Estate::factory()->create();
@@ -179,7 +179,7 @@ it('Test 6 — rejects activating someone elses assignment', function () {
     expect(fn () => $this->contextManager->activate($assignmentForB))->toThrow(Exception::class);
 });
 
-it('Test 7 — safe failure with no context', function () {
+it('Test 7 - safe failure with no context', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
@@ -192,7 +192,7 @@ it('Test 7 — safe failure with no context', function () {
     expect($context)->toBeNull();
 });
 
-it('Test 8 — handles invalid session data safely', function () {
+it('Test 8 - handles invalid session data safely', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 

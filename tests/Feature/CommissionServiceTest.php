@@ -131,7 +131,7 @@ it('stops commission after N months from post-trial start even if estate is olde
     $resident->estates()->attach($estate->id, ['status' => 'accepted']);
 
     $trialEnds = CarbonImmutable::parse('2026-01-01');
-    // 7 months after trial end — outside 6m tenure
+    // 7 months after trial end - outside 6m tenure
     $paymentAt = CarbonImmutable::parse('2026-08-02');
 
     ResidentSubscription::factory()->create([

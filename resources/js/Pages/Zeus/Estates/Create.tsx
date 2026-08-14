@@ -412,24 +412,24 @@ export default function CreateEstate({ plans, partners }: Props) {
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
                                 <div>
                                     <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">Estate</div>
-                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.name || '—'}</div>
-                                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{data.address || '—'}</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.name || '-'}</div>
+                                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{data.address || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
                                         Administrator
                                     </div>
-                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.email || '—'}</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.email || '-'}</div>
                                 </div>
                                 <div>
                                     <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
                                         Subscription
                                     </div>
-                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{selectedPlan?.name || '—'}</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{selectedPlan?.name || '-'}</div>
                                     <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                                         {selectedPlan
                                             ? `₦${(selectedPlan.price / 100).toLocaleString()} / ${selectedPlan.billing_interval === 'monthly' ? 'month' : selectedPlan.billing_interval === 'quarterly' ? 'quarter' : selectedPlan.billing_interval === 'semi-annually' ? '6 months' : 'year'}`
-                                            : '—'}
+                                            : '-'}
                                     </div>
                                 </div>
                             </div>

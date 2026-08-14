@@ -68,7 +68,7 @@ beforeEach(function () {
     ]);
 });
 
-it('Test 1 — Admin -> Resident prevents eager load leak', function () {
+it('Test 1 - Admin -> Resident prevents eager load leak', function () {
     $this->actingAs($this->user);
 
     // Activate Estate A (Admin)
@@ -86,7 +86,7 @@ it('Test 1 — Admin -> Resident prevents eager load leak', function () {
         ->and(Auth::user()->roles()->where('name', 'resident')->exists())->toBeTrue();
 });
 
-it('Test 2 — Resident -> Admin prevents eager load leak', function () {
+it('Test 2 - Resident -> Admin prevents eager load leak', function () {
     $this->actingAs($this->user);
 
     // Activate Estate B (Resident)
@@ -104,7 +104,7 @@ it('Test 2 — Resident -> Admin prevents eager load leak', function () {
         ->and(Auth::user()->roles()->where('name', 'admin')->exists())->toBeTrue();
 });
 
-it('Test 3 — Unauthorized Context Selection is rejected', function () {
+it('Test 3 - Unauthorized Context Selection is rejected', function () {
     $this->actingAs($this->user);
 
     // Assignment C does not belong to the user
@@ -127,7 +127,7 @@ it('Test 3 — Unauthorized Context Selection is rejected', function () {
     expect(session('active_context_assignment_id'))->toBeNull();
 });
 
-it('Test 4 — Multiple Context Login does not auto-activate first estate', function () {
+it('Test 4 - Multiple Context Login does not auto-activate first estate', function () {
     $user = User::factory()->create();
     $user->estates()->attach([$this->estateA->id => ['status' => 'accepted'], $this->estateB->id => ['status' => 'accepted']]);
     $assignA = AdministrativeAssignment::create(['user_id' => $user->id, 'estate_id' => $this->estateA->id, 'role_id' => $this->adminRoleA->id, 'scope_type' => AssignmentScope::Estate, 'is_active' => true]);
@@ -141,7 +141,7 @@ it('Test 4 — Multiple Context Login does not auto-activate first estate', func
     expect(session('active_context_assignment_id'))->toBeNull();
 });
 
-it('Test 5 — Single Context Login automatically activates', function () {
+it('Test 5 - Single Context Login automatically activates', function () {
     $user = User::factory()->create();
     $user->estates()->attach($this->estateA->id, ['status' => 'accepted']);
     $assignment = AdministrativeAssignment::create(['user_id' => $user->id, 'estate_id' => $this->estateA->id, 'role_id' => $this->adminRoleA->id, 'scope_type' => AssignmentScope::Estate, 'is_active' => true]);
@@ -154,7 +154,7 @@ it('Test 5 — Single Context Login automatically activates', function () {
     expect(session('active_context_assignment_id'))->toBe($assignment->id);
 });
 
-it('Test 6 — No Context denies entry', function () {
+it('Test 6 - No Context denies entry', function () {
     $user = User::factory()->create();
     // No assignments
 
@@ -165,7 +165,7 @@ it('Test 6 — No Context denies entry', function () {
     expect(session('active_context_assignment_id'))->toBeNull();
 });
 
-it('Test 7 — Route Parameter Spoofing uses active context', function () {
+it('Test 7 - Route Parameter Spoofing uses active context', function () {
     $this->actingAs($this->user);
 
     // Active context is Estate A
@@ -192,7 +192,7 @@ it('Test 7 — Route Parameter Spoofing uses active context', function () {
         ->and($exception->getMessage())->toContain('Estate ID mismatch');
 });
 
-it('Test 8 — Global Role Must Not Control Routing', function () {
+it('Test 8 - Global Role Must Not Control Routing', function () {
     // The user has admin on Estate A, and resident on Estate B.
     $this->actingAs($this->user);
 

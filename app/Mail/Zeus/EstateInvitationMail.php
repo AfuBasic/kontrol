@@ -58,7 +58,7 @@ class EstateInvitationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Your Kontrol administrator account is ready — {$this->estate->name}",
+            subject: "Your Kontrol administrator account is ready - {$this->estate->name}",
         );
     }
 
