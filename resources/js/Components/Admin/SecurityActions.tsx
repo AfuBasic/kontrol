@@ -2,7 +2,7 @@ import { ArrowPathIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, NoSymbolIco
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
-import { edit, destroy, suspend, resetPassword } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import { edit, destroy, suspend, resendInvitation } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
@@ -74,7 +74,7 @@ export default function SecurityActions({ security }: Props) {
                 router.patch(suspend.url({ security: security.ulid }), {}, options);
                 break;
             case 'reset':
-                router.post(resetPassword.url({ security: security.ulid }), {}, options);
+                router.post(resendInvitation.url({ security: security.ulid }), {}, options);
                 break;
         }
     };

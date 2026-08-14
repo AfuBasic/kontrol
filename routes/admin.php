@@ -170,7 +170,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         // Explicit routes must come before resource to avoid {security} matching "bulk-delete"
         Route::delete('security/bulk-delete', [SecurityPersonnelController::class, 'bulkDelete'])->name('security.bulk-delete');
         Route::patch('security/{security}/suspend', [SecurityPersonnelController::class, 'suspend'])->name('security.suspend');
-        Route::post('security/{security}/reset-password', [SecurityPersonnelController::class, 'resetPassword'])->name('security.reset-password');
+        Route::post('security/{security}/resend-invitation', [SecurityPersonnelController::class, 'resendInvitation'])->name('security.resend-invitation');
         Route::resource('security', SecurityPersonnelController::class)->except(['show']);
     });
 

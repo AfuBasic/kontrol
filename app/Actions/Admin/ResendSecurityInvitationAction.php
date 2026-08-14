@@ -7,12 +7,11 @@ use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
-class ResetSecurityPasswordAction
+class ResendSecurityInvitationAction
 {
     public function execute(User $security, Estate $estate): void
     {
-        // 1. Reset password
-        $security->update(['password' => null]);
+        // 1. Password reset is obsolete, so we no longer do it.
 
         // 2. Set status to pending for the current estate
         $security->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
@@ -24,6 +23,6 @@ class ResetSecurityPasswordAction
             ->performedOn($security)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log('reset password for security personnel '.$security->email);
+            ->log('resent invitation for security personnel '.$security->email);
     }
 }

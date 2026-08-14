@@ -6,7 +6,7 @@ use App\Actions\Admin\BulkDeleteSecurityAction;
 use App\Actions\Admin\BulkInviteSecurityAction;
 use App\Actions\Admin\CreateSecurityAction;
 use App\Actions\Admin\DeleteSecurityAction;
-use App\Actions\Admin\ResetSecurityPasswordAction;
+use App\Actions\Admin\ResendSecurityInvitationAction;
 use App\Actions\Admin\SuspendSecurityAction;
 use App\Actions\Admin\UpdateSecurityAction;
 use App\Http\Controllers\Controller;
@@ -221,16 +221,16 @@ class SecurityPersonnelController extends Controller
     }
 
     /**
-     * Reset the password and resend invitation for the specified security personnel.
+     * Resend invitation for the specified security personnel.
      */
-    public function resetPassword(User $security, ResetSecurityPasswordAction $action): RedirectResponse
+    public function resendInvitation(User $security, ResendSecurityInvitationAction $action): RedirectResponse
     {
-        $this->authorize('security.ResetPassword');
+        $this->authorize('security.reset-password'); // Keep original permission name to avoid breaking role configs
         $estate = $this->estateContext->getEstate();
 
         $action->execute($security, $estate);
 
-        return back()->with('success', 'Security personnel password reset and invitation resent.');
+        return back()->with('success', 'Security personnel invitation resent.');
     }
 
     public function bulkDelete(Request $request, BulkDeleteSecurityAction $action): RedirectResponse
