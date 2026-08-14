@@ -401,32 +401,32 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 </div>
 
                                 {/* Zone Assignment */}
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
-                                    <p className="mt-0.5 text-xs text-gray-500">
-                                        Determine whether this resident belongs to the entire estate or a specific zone.
-                                    </p>
+                                {zones.length > 0 && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether this resident belongs to the entire estate or a specific zone.
+                                        </p>
 
-                                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <label
-                                            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="scope_mode"
-                                                checked={data.zone_id === ''}
-                                                onChange={() => setData('zone_id', '')}
-                                                className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
-                                            />
-                                            <div>
-                                                <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                <span className="mt-0.5 block text-[11px] text-gray-500">
-                                                    Resident is not restricted to a specific zone.
-                                                </span>
-                                            </div>
-                                        </label>
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="scope_mode"
+                                                    checked={data.zone_id === ''}
+                                                    onChange={() => setData('zone_id', '')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Resident is not restricted to a specific zone.
+                                                    </span>
+                                                </div>
+                                            </label>
 
-                                        {zones.length > 0 && (
                                             <label
                                                 className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
                                             >
@@ -444,35 +444,35 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                     </span>
                                                 </div>
                                             </label>
-                                        )}
-                                    </div>
+                                        </div>
 
-                                    {/* Zone Selector Dropdown when Specific Zone is selected */}
-                                    {data.zone_id !== '' && zones.length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
-                                        >
-                                            <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
-                                                Select Zone
-                                            </label>
-                                            <select
-                                                id="zone_id"
-                                                value={data.zone_id}
-                                                onChange={(e) => setData('zone_id', e.target.value)}
-                                                className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {data.zone_id !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                {zones.map((zone) => (
-                                                    <option key={zone.id} value={zone.id}>
-                                                        {zone.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </motion.div>
-                                    )}
-                                    {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
-                                </div>
+                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="zone_id"
+                                                    value={data.zone_id}
+                                                    onChange={(e) => setData('zone_id', e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </motion.div>
+                                        )}
+                                        {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
@@ -573,32 +573,32 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 )}
 
                                 {/* Zone Assignment for Bulk */}
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
-                                    <p className="mt-0.5 text-xs text-gray-500">
-                                        Determine whether these residents belong to the entire estate or a specific zone.
-                                    </p>
+                                {zones.length > 0 && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether these residents belong to the entire estate or a specific zone.
+                                        </p>
 
-                                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <label
-                                            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="bulk_scope_mode"
-                                                checked={selectedZone === ''}
-                                                onChange={() => setSelectedZone('')}
-                                                className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
-                                            />
-                                            <div>
-                                                <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                <span className="mt-0.5 block text-[11px] text-gray-500">
-                                                    Residents are not restricted to a specific zone.
-                                                </span>
-                                            </div>
-                                        </label>
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="bulk_scope_mode"
+                                                    checked={selectedZone === ''}
+                                                    onChange={() => setSelectedZone('')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Residents are not restricted to a specific zone.
+                                                    </span>
+                                                </div>
+                                            </label>
 
-                                        {zones.length > 0 && (
                                             <label
                                                 className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
                                             >
@@ -616,34 +616,34 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                     </span>
                                                 </div>
                                             </label>
+                                        </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {selectedZone !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                                            >
+                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="bulk_zone_id"
+                                                    value={selectedZone}
+                                                    onChange={(e) => setSelectedZone(e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </motion.div>
                                         )}
                                     </div>
-
-                                    {/* Zone Selector Dropdown when Specific Zone is selected */}
-                                    {selectedZone !== '' && zones.length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
-                                        >
-                                            <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700">
-                                                Select Zone
-                                            </label>
-                                            <select
-                                                id="bulk_zone_id"
-                                                value={selectedZone}
-                                                onChange={(e) => setSelectedZone(e.target.value)}
-                                                className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                            >
-                                                {zones.map((zone) => (
-                                                    <option key={zone.id} value={zone.id}>
-                                                        {zone.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </motion.div>
-                                    )}
-                                </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
@@ -739,32 +739,32 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 )}
 
                                 {/* Zone Assignment for Paste */}
-                                <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
-                                    <p className="mt-0.5 text-xs text-gray-500">
-                                        Determine whether these residents belong to the entire estate or a specific zone.
-                                    </p>
+                                {zones.length > 0 && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700">Coverage Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether these residents belong to the entire estate or a specific zone.
+                                        </p>
 
-                                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <label
-                                            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="paste_scope_mode"
-                                                checked={selectedZone === ''}
-                                                onChange={() => setSelectedZone('')}
-                                                className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
-                                            />
-                                            <div>
-                                                <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                <span className="mt-0.5 block text-[11px] text-gray-500">
-                                                    Residents are not restricted to a specific zone.
-                                                </span>
-                                            </div>
-                                        </label>
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="paste_scope_mode"
+                                                    checked={selectedZone === ''}
+                                                    onChange={() => setSelectedZone('')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Residents are not restricted to a specific zone.
+                                                    </span>
+                                                </div>
+                                            </label>
 
-                                        {zones.length > 0 && (
                                             <label
                                                 className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
                                             >
@@ -782,34 +782,34 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                     </span>
                                                 </div>
                                             </label>
+                                        </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {selectedZone !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                                            >
+                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="paste_zone_id"
+                                                    value={selectedZone}
+                                                    onChange={(e) => setSelectedZone(e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </motion.div>
                                         )}
                                     </div>
-
-                                    {/* Zone Selector Dropdown when Specific Zone is selected */}
-                                    {selectedZone !== '' && zones.length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
-                                        >
-                                            <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700">
-                                                Select Zone
-                                            </label>
-                                            <select
-                                                id="paste_zone_id"
-                                                value={selectedZone}
-                                                onChange={(e) => setSelectedZone(e.target.value)}
-                                                className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                            >
-                                                {zones.map((zone) => (
-                                                    <option key={zone.id} value={zone.id}>
-                                                        {zone.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </motion.div>
-                                    )}
-                                </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
