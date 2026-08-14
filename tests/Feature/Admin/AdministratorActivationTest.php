@@ -1,11 +1,9 @@
 <?php
 
-use App\Actions\Invitation\AcceptInvitationAction;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Event;
 use Spatie\Permission\Models\Role;
 
 test('it redirects to setup after admin accepts invitation', function () {

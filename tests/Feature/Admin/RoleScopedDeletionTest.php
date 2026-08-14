@@ -1,10 +1,9 @@
 <?php
 
+use App\Actions\Admin\BulkDeleteSecurityAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\CreateSecurityAction;
-use App\Actions\Admin\DeleteResidentAction;
 use App\Actions\Admin\DeleteSecurityAction;
-use App\Actions\Admin\BulkDeleteSecurityAction;
 use App\Enums\AssignmentScope;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;

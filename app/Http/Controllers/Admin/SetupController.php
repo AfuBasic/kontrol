@@ -37,7 +37,7 @@ class SetupController extends Controller
             ],
             // Evaluate progress for the UI
             'progress' => [
-                'address_completed' => !empty($estate->address),
+                'address_completed' => ! empty($estate->address),
                 'zones_completed' => $estate->zones()->exists(),
                 'security_completed' => $estate->users()->withRole('security', $estate->id)->exists(),
                 'residents_completed' => $estate->users()->withRole('resident', $estate->id)->exists(),

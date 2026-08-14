@@ -32,6 +32,7 @@ class InvitationController extends Controller
             if (Auth::check() && strtolower(Auth::user()->email) === strtolower($invitation->email)) {
                 return redirect()->route('admin.dashboard');
             }
+
             return Inertia::render('Invitation/Invalid', [
                 'type' => 'admin_accepted',
                 'estateName' => $invitation->estate->name,

@@ -24,8 +24,7 @@ class InviteRegistrationController extends Controller
 {
     public function __construct(
         protected ResidentSubscriptionService $subscriptionService
-    ) {
-    }
+    ) {}
 
     /**
      * Show the registration form for the invite link.
