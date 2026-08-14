@@ -54,6 +54,10 @@ class ActivateContext
 
     private function getRouteForRole(string $roleName): string
     {
+        if ($roleName === 'property_owner') {
+            return route('resident.property-owner.dashboard');
+        }
+
         if ($roleName === 'security') {
             return route('security.dashboard');
         }
