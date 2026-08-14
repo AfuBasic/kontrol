@@ -807,11 +807,7 @@ export default function AdminLayout({ children, title }: Props) {
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className="min-h-screen flex-1 px-6 py-8 lg:px-8"
                 >
-                    <header className="mb-8 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="h-2 w-2 rounded-full bg-[#1F6FDB]" />
-                            <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">{title || 'Dashboard'}</span>
-                        </div>
+                    <header className="mb-8 flex items-center justify-end">
                         <div className="flex items-center gap-3">
                             <ContextSwitcher />
                             <SystemHealthMonitor hideWhenHealthy />
