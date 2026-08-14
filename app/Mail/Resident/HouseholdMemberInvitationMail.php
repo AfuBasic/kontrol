@@ -2,7 +2,9 @@
 
 namespace App\Mail\Resident;
 
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Models\Estate;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,7 +12,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\URL;
+use Spatie\Permission\Models\Role;
 
 class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
 {
@@ -23,20 +25,27 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
         public Estate $estate,
         public User $primaryResident,
         public bool $passwordReset = false,
+        public ?Invitation $invitation = null,
     ) {
-        // Generate signed URL on app domain that expires in 72 hours
-        $appDomain = config('domains.app');
-        $scheme = app()->environment('local') ? 'http' : 'https';
+        $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
+            ->where('email', strtolower(trim($this->user->email)))
+            ->where('estate_id', $this->estate->id)
+            ->latest()
+            ->first();
 
-        URL::forceRootUrl("{$scheme}://{$appDomain}");
+        if (! $invitation) {
+            $role = Role::where('name', 'household_member')->where('guard_name', 'web')->whereNull('estate_id')->first();
+            $invitation = app(CreateInvitationAction::class)->execute(
+                email: $this->user->email,
+                estate: $this->estate,
+                relationshipType: 'household_member',
+                role: $role,
+                zoneId: $this->primaryResident->getZoneForEstate($this->estate)?->id,
+                createdBy: $this->primaryResident,
+            );
+        }
 
-        $this->invitationUrl = URL::temporarySignedRoute(
-            'invitation.accept',
-            now()->addHours(72),
-            ['token' => $user->id]
-        );
-
-        URL::forceRootUrl(null);
+        $this->invitationUrl = route('invitations.show', ['token' => $invitation->token]);
     }
 
     public function envelope(): Envelope
