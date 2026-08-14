@@ -54,7 +54,9 @@ class NewCollectionNotification extends Notification implements ShouldQueue
         $creator = $this->assignment->collection->creator;
         app(ContextManager::class)->setSystemContext($this->assignment->estate_id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
-        $propertyName = $notifiable->profile?->property?->name;
+        $propertyName = $notifiable->profile?->property_id
+            ? \App\Models\Property::withoutZoneIsolation()->find($notifiable->profile->property_id)?->name
+            : null;
 
         return (new MailMessage)
             ->subject($isPropertyOwner ? "New House Bill: {$this->assignment->collection->name}" : "New Payment Collection: {$this->assignment->collection->name}")
@@ -71,7 +73,9 @@ class NewCollectionNotification extends Notification implements ShouldQueue
         $creator = $this->assignment->collection->creator;
         app(ContextManager::class)->setSystemContext($this->assignment->estate_id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
-        $propertyName = $notifiable->profile?->property?->name;
+        $propertyName = $notifiable->profile?->property_id
+            ? \App\Models\Property::withoutZoneIsolation()->find($notifiable->profile->property_id)?->name
+            : null;
         $houseInfo = $propertyName ? "for your house ({$propertyName})" : 'for your house';
 
         return [
