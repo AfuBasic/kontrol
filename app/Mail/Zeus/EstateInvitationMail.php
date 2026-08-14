@@ -58,7 +58,7 @@ class EstateInvitationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You've been invited to manage {$this->estate->name}",
+            subject: "Your Kontrol administrator account is ready — {$this->estate->name}",
         );
     }
 
@@ -68,6 +68,7 @@ class EstateInvitationMail extends Mailable implements ShouldQueue
             view: 'mail.zeus.estate-invitation',
             with: [
                 'estateName' => $this->estate->name,
+                'userName' => $this->user->name,
                 'invitationUrl' => $this->invitationUrl,
             ],
         );
