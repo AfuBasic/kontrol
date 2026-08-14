@@ -115,7 +115,7 @@ class HouseholdMemberController extends Controller
             estate: $estate,
             relationshipType: 'household_member',
             role: $role,
-            zoneId: $user->getZoneForEstate($estate)?->id,
+            zoneId: $user->profile?->zone_id ?? $user->estateMembershipFor($estate->id)?->zone_id,
             createdBy: $user,
         );
 
