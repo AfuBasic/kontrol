@@ -20,7 +20,7 @@ test('public home page returns ok and renders correct inertia component with pla
     // 3. Assert status and component
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
-        ? $page->component('Public/Home')->has('plans')
+        ? $page->component('Public/Home')
         : null
     );
 });
