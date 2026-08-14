@@ -29,6 +29,7 @@ class PublishCollectionJob implements ShouldQueue
         $estate = $collection->estate;
 
         $userIds = $this->getTargetUserIds($collection, $estate);
+        \Illuminate\Support\Facades\Log::info('getTargetUserIds returned:', ['ids' => $userIds]);
 
         $dueDate = $collection->due_at;
 
@@ -100,7 +101,8 @@ class PublishCollectionJob implements ShouldQueue
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
-                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $creator->id))
+                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
                     ->active()
                     ->acceptedInvitation()
                     ->pluck('users.id')
