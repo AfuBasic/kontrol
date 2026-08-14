@@ -2,8 +2,6 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Invitation\CreateInvitationAction;
-use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
@@ -19,7 +17,7 @@ class BulkInviteResidentsAction
     public function execute(array $emails, Estate $estate, ?int $zoneId = null): array
     {
         // 1. Normalize and deduplicate emails from the input
-        $normalizedEmails = array_map(fn($email) => strtolower(trim($email)), $emails);
+        $normalizedEmails = array_map(fn ($email) => strtolower(trim($email)), $emails);
         $uniqueEmails = array_unique($normalizedEmails);
         $duplicateCount = count($emails) - count($uniqueEmails);
 
@@ -42,6 +40,7 @@ class BulkInviteResidentsAction
 
                 if ($isAlreadyAccepted) {
                     $alreadyMembers++;
+
                     continue;
                 }
             }
@@ -72,9 +71,9 @@ class BulkInviteResidentsAction
                     'bulk_invite' => true,
                     'count' => count($invitedIds),
                 ])
-                ->log('bulk invited ' . count($invitedIds) . ' residents');
+                ->log('bulk invited '.count($invitedIds).' residents');
 
-            // The invitation emails are automatically queued by the ResidentCreated event 
+            // The invitation emails are automatically queued by the ResidentCreated event
             // fired within CreateResidentAction, so we don't need a bulk dispatch here.
         }
 
