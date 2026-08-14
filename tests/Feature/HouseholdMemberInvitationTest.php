@@ -22,6 +22,7 @@ beforeEach(function () {
 
 test('resident adding household member creates invitation and sends email with valid token link', function () {
     Mail::fake();
+    \Illuminate\Support\Facades\Notification::fake();
 
     $estate = Estate::factory()->create();
     $primaryResident = User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
@@ -65,6 +66,11 @@ test('resident adding household member creates invitation and sends email with v
     // Check invitation is marked accepted
     $invitation->refresh();
     expect($invitation->status)->toBe('accepted');
+
+    // Verify notification was sent
+    \Illuminate\Support\Facades\Notification::assertSentTo(
+        [$primaryResident], \App\Notifications\Resident\HouseholdMemberInvitationAcceptedNotification::class
+    );
 });
 
 test('resending household member invitation refreshes invitation and sends valid email', function () {
