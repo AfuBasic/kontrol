@@ -1,22 +1,10 @@
-import {
-    ArchiveBoxIcon,
-    MagnifyingGlassIcon,
-    PencilSquareIcon,
-    PlusIcon,
-    XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { ArchiveBoxIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    AlertTriangle,
-    Building2,
-    Loader2,
-    MapPin,
-    Shield,
-    Users,
-} from 'lucide-react';
+import { AlertTriangle, Building2, Loader2,  Shield, Users } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
+import ZoneEmptyState from '@/Components/Admin/Zones/ZoneEmptyState';
 import { destroy, store, update } from '@/actions/App/Http/Controllers/Admin/ZoneController';
 
 type Zone = {
@@ -98,8 +86,7 @@ export default function ZonesIndex({ zones }: Props) {
 
     const filteredZones = zones.filter((z) => {
         const matchesSearch =
-            z.name.toLowerCase().includes(search.toLowerCase()) ||
-            (z.description && z.description.toLowerCase().includes(search.toLowerCase()));
+            z.name.toLowerCase().includes(search.toLowerCase()) || (z.description && z.description.toLowerCase().includes(search.toLowerCase()));
 
         if (!matchesSearch) return false;
 
@@ -146,27 +133,12 @@ export default function ZonesIndex({ zones }: Props) {
 
                 {/* Main Content Area */}
                 {zones.length === 0 ? (
-                    <div className="mx-auto my-8 max-w-lg rounded-3xl border border-slate-200/80 bg-white p-10 text-center shadow-xs ring-1 ring-slate-100/50">
-                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#1F6FDB] ring-4 ring-blue-50/50">
-                            <MapPin className="h-7 w-7" />
-                        </div>
-                        <h3 className="mt-5 text-base font-black text-slate-900">No zones yet</h3>
-                        <p className="mx-auto mt-2 max-w-sm text-xs font-medium text-slate-500 leading-relaxed">
-                            Zones help you organize residents, properties, and operational security staff across distinct physical areas of your estate.
-                        </p>
-                        <div className="mt-6">
-                            <button
-                                onClick={() => {
-                                    createForm.reset();
-                                    setIsCreateModalOpen(true);
-                                }}
-                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
-                            >
-                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                                Create your first zone
-                            </button>
-                        </div>
-                    </div>
+                    <ZoneEmptyState
+                        onCreateZone={() => {
+                            createForm.reset();
+                            setIsCreateModalOpen(true);
+                        }}
+                    />
                 ) : (
                     <>
                         {/* Content Toolbar */}
@@ -178,7 +150,7 @@ export default function ZonesIndex({ zones }: Props) {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search zones by name or description..."
-                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-10 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden shadow-xs"
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-10 text-xs font-semibold shadow-xs placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                 />
                                 {search && (
                                     <button
@@ -195,7 +167,7 @@ export default function ZonesIndex({ zones }: Props) {
                                 <select
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                                    className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden shadow-xs"
+                                    className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs focus:border-slate-800 focus:outline-hidden"
                                 >
                                     <option value="all">All Zones ({zones.length})</option>
                                     <option value="active">Active Only ({totalActive})</option>
@@ -218,50 +190,44 @@ export default function ZonesIndex({ zones }: Props) {
                                         <div>
                                             {/* Header: Name & Status */}
                                             <div className="flex items-start justify-between gap-2">
-                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                <div className="flex min-w-0 items-center gap-2.5">
                                                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
                                                         <Building2 className="h-4 w-4" />
                                                     </div>
-                                                    <h3 className="truncate text-sm font-black text-slate-900">
-                                                        {zone.name}
-                                                    </h3>
+                                                    <h3 className="truncate text-sm font-black text-slate-900">{zone.name}</h3>
                                                 </div>
                                                 <span
-                                                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                                                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-wider uppercase ${
                                                         zone.is_active
-                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-                                                            : 'bg-slate-100 text-slate-600 border border-slate-200/60'
+                                                            ? 'border border-emerald-200/60 bg-emerald-50 text-emerald-700'
+                                                            : 'border border-slate-200/60 bg-slate-100 text-slate-600'
                                                     }`}
                                                 >
                                                     <span
-                                                        className={`h-1.5 w-1.5 rounded-full ${
-                                                            zone.is_active ? 'bg-emerald-500' : 'bg-slate-400'
-                                                        }`}
+                                                        className={`h-1.5 w-1.5 rounded-full ${zone.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`}
                                                     />
                                                     {zone.is_active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </div>
 
                                             {/* Description */}
-                                            <p className="mt-2.5 text-xs font-medium text-slate-500 line-clamp-2 leading-relaxed min-h-[32px]">
-                                                {zone.description || (
-                                                    <span className="italic text-slate-400">No description provided</span>
-                                                )}
+                                            <p className="mt-2.5 line-clamp-2 min-h-[32px] text-xs leading-relaxed font-medium text-slate-500">
+                                                {zone.description || <span className="text-slate-400 italic">No description provided</span>}
                                             </p>
 
                                             {/* Operational Associations */}
                                             <div className="mt-4 grid grid-cols-2 gap-2">
                                                 <Link
                                                     href={`/admin/residents?zone=${zone.id}`}
-                                                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:bg-slate-100 hover:border-slate-200"
+                                                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:border-slate-200 hover:bg-slate-100"
                                                     title={`View residents in ${zone.name}`}
                                                 >
                                                     <Users className="h-4 w-4 text-slate-400" />
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-black text-slate-900 leading-none">
+                                                        <p className="text-xs leading-none font-black text-slate-900">
                                                             {zone.memberships_count ?? 0}
                                                         </p>
-                                                        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                                        <p className="mt-0.5 truncate text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                                                             Residents
                                                         </p>
                                                     </div>
@@ -269,15 +235,15 @@ export default function ZonesIndex({ zones }: Props) {
 
                                                 <Link
                                                     href={`/admin/assignments?search=${encodeURIComponent(zone.name)}`}
-                                                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:bg-slate-100 hover:border-slate-200"
+                                                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:border-slate-200 hover:bg-slate-100"
                                                     title={`View staff assigned to ${zone.name}`}
                                                 >
                                                     <Shield className="h-4 w-4 text-slate-400" />
                                                     <div className="min-w-0">
-                                                        <p className="text-xs font-black text-slate-900 leading-none">
+                                                        <p className="text-xs leading-none font-black text-slate-900">
                                                             {zone.assignments_count ?? 0}
                                                         </p>
-                                                        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                                        <p className="mt-0.5 truncate text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                                                             Personnel
                                                         </p>
                                                     </div>
@@ -349,16 +315,14 @@ export default function ZonesIndex({ zones }: Props) {
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl"
                         >
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div>
                                     <h3 className="text-base font-black text-slate-900">Create Zone</h3>
-                                    <p className="text-xs font-semibold text-slate-500">
-                                        Define a physical area within this estate.
-                                    </p>
+                                    <p className="text-xs font-semibold text-slate-500">Define a physical area within this estate.</p>
                                 </div>
                                 <button
                                     onClick={() => setIsCreateModalOpen(false)}
-                                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                                    className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                                 >
                                     <XMarkIcon className="h-5 w-5" />
                                 </button>
@@ -366,7 +330,7 @@ export default function ZonesIndex({ zones }: Props) {
 
                             <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4">
                                 <div>
-                                    <label htmlFor="create_zone_name" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                    <label htmlFor="create_zone_name" className="block text-xs font-black tracking-wider text-slate-700 uppercase">
                                         Zone Name <span className="text-rose-500">*</span>
                                     </label>
                                     <input
@@ -379,14 +343,15 @@ export default function ZonesIndex({ zones }: Props) {
                                         onChange={(e) => createForm.setData('name', e.target.value)}
                                         className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     />
-                                    {createForm.errors.name && (
-                                        <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.name}</p>
-                                    )}
+                                    {createForm.errors.name && <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.name}</p>}
                                 </div>
 
                                 <div>
                                     <div className="flex items-center justify-between">
-                                        <label htmlFor="create_zone_desc" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                        <label
+                                            htmlFor="create_zone_desc"
+                                            className="block text-xs font-black tracking-wider text-slate-700 uppercase"
+                                        >
                                             Description
                                         </label>
                                         <span className="text-[10px] font-bold text-slate-400 uppercase">Optional</span>
@@ -397,25 +362,25 @@ export default function ZonesIndex({ zones }: Props) {
                                         placeholder="Optional description for this area."
                                         value={createForm.data.description}
                                         onChange={(e) => createForm.setData('description', e.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden resize-none"
+                                        className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     />
                                     {createForm.errors.description && (
                                         <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.description}</p>
                                     )}
                                 </div>
 
-                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setIsCreateModalOpen(false)}
-                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={createForm.processing}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm hover:bg-slate-800 disabled:opacity-50 transition-all"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 disabled:opacity-50"
                                     >
                                         {createForm.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                         {createForm.processing ? 'Creating...' : 'Create Zone'}
@@ -444,16 +409,14 @@ export default function ZonesIndex({ zones }: Props) {
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl"
                         >
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div>
                                     <h3 className="text-base font-black text-slate-900">Edit Zone</h3>
-                                    <p className="text-xs font-semibold text-slate-500">
-                                        Update area name, details, or active status.
-                                    </p>
+                                    <p className="text-xs font-semibold text-slate-500">Update area name, details, or active status.</p>
                                 </div>
                                 <button
                                     onClick={() => setEditingZone(null)}
-                                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                                    className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                                 >
                                     <XMarkIcon className="h-5 w-5" />
                                 </button>
@@ -461,7 +424,7 @@ export default function ZonesIndex({ zones }: Props) {
 
                             <form onSubmit={handleEditSubmit} className="mt-5 space-y-4">
                                 <div>
-                                    <label htmlFor="edit_zone_name" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                    <label htmlFor="edit_zone_name" className="block text-xs font-black tracking-wider text-slate-700 uppercase">
                                         Zone Name <span className="text-rose-500">*</span>
                                     </label>
                                     <input
@@ -472,14 +435,12 @@ export default function ZonesIndex({ zones }: Props) {
                                         onChange={(e) => editForm.setData('name', e.target.value)}
                                         className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     />
-                                    {editForm.errors.name && (
-                                        <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.name}</p>
-                                    )}
+                                    {editForm.errors.name && <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.name}</p>}
                                 </div>
 
                                 <div>
                                     <div className="flex items-center justify-between">
-                                        <label htmlFor="edit_zone_desc" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                        <label htmlFor="edit_zone_desc" className="block text-xs font-black tracking-wider text-slate-700 uppercase">
                                             Description
                                         </label>
                                         <span className="text-[10px] font-bold text-slate-400 uppercase">Optional</span>
@@ -489,7 +450,7 @@ export default function ZonesIndex({ zones }: Props) {
                                         rows={3}
                                         value={editForm.data.description}
                                         onChange={(e) => editForm.setData('description', e.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden resize-none"
+                                        className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     />
                                     {editForm.errors.description && (
                                         <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.description}</p>
@@ -509,18 +470,18 @@ export default function ZonesIndex({ zones }: Props) {
                                     </label>
                                 </div>
 
-                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setEditingZone(null)}
-                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={editForm.processing}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm hover:bg-slate-800 disabled:opacity-50 transition-all"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 disabled:opacity-50"
                                     >
                                         {editForm.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                         {editForm.processing ? 'Saving...' : 'Save Changes'}
@@ -549,7 +510,7 @@ export default function ZonesIndex({ zones }: Props) {
                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                             className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl"
                         >
-                            <div className="flex items-center gap-3 pb-3 border-b border-slate-100 text-rose-600">
+                            <div className="flex items-center gap-3 border-b border-slate-100 pb-3 text-rose-600">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
                                     <AlertTriangle className="h-5 w-5" />
                                 </div>
@@ -559,26 +520,28 @@ export default function ZonesIndex({ zones }: Props) {
                                 </div>
                             </div>
 
-                            <p className="mt-4 text-xs font-medium text-slate-600 leading-relaxed">
+                            <p className="mt-4 text-xs leading-relaxed font-medium text-slate-600">
                                 Are you sure you want to archive <strong className="text-slate-900">{archivingZone.name}</strong>?
                             </p>
 
-                            <div className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/70 p-3 text-[11px] font-medium text-amber-900 leading-relaxed">
-                                <strong className="font-bold">Historical Records Preserved:</strong> Archiving removes this zone from new resident, property, and staff assignment selectors. All existing historical logs, incident reports, and records are retained for audits.
+                            <div className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/70 p-3 text-[11px] leading-relaxed font-medium text-amber-900">
+                                <strong className="font-bold">Historical Records Preserved:</strong> Archiving removes this zone from new resident,
+                                property, and staff assignment selectors. All existing historical logs, incident reports, and records are retained for
+                                audits.
                             </div>
 
                             <form onSubmit={handleArchiveSubmit} className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setArchivingZone(null)}
-                                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={archiveForm.processing}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm hover:bg-rose-700 disabled:opacity-50 transition-all"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-rose-700 disabled:opacity-50"
                                 >
                                     {archiveForm.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                                     {archiveForm.processing ? 'Archiving...' : 'Archive Zone'}
