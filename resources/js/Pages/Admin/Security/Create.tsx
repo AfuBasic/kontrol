@@ -347,28 +347,28 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 </div>
 
                                 {/* Coverage Scope Selection */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Operational Scope & Coverage
-                                    </label>
-                                    <p className="mt-0.5 text-xs text-gray-500">Determine where this officer has administrative and access authority.</p>
-
-                                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
-                                            <input
-                                                type="radio"
-                                                name="scope_mode"
-                                                checked={data.zone_id === ''}
-                                                onChange={() => setData('zone_id', '')}
-                                                className="mt-0.5 text-primary-600 focus:ring-primary-500"
-                                            />
-                                            <div>
-                                                <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                <span className="mt-0.5 block text-[11px] text-gray-500">Officer can operate across all gates, visitor logs, and zones.</span>
-                                            </div>
+                                {zones.length > 0 && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Operational Scope & Coverage
                                         </label>
+                                        <p className="mt-0.5 text-xs text-gray-500">Determine where this officer has administrative and access authority.</p>
 
-                                        {zones.length > 0 && (
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="scope_mode"
+                                                    checked={data.zone_id === ''}
+                                                    onChange={() => setData('zone_id', '')}
+                                                    className="mt-0.5 text-primary-600 focus:ring-primary-500"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Officer can operate across all gates, visitor logs, and zones.</span>
+                                                </div>
+                                            </label>
+
                                             <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
                                                 <input
                                                     type="radio"
@@ -382,35 +382,35 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                                     <span className="mt-0.5 block text-[11px] text-gray-500">Restrict officer's scope to a single operational phase or block.</span>
                                                 </div>
                                             </label>
+                                        </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {data.zone_id !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                                            >
+                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Operational Zone
+                                                </label>
+                                                <select
+                                                    id="zone_id"
+                                                    value={data.zone_id}
+                                                    onChange={(e) => setData('zone_id', e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {errors.zone_id && <p className="mt-1 text-xs text-red-600">{errors.zone_id}</p>}
+                                            </motion.div>
                                         )}
                                     </div>
-
-                                    {/* Zone Selector Dropdown when Specific Zone is selected */}
-                                    {data.zone_id !== '' && zones.length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
-                                        >
-                                            <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
-                                                Select Operational Zone
-                                            </label>
-                                            <select
-                                                id="zone_id"
-                                                value={data.zone_id}
-                                                onChange={(e) => setData('zone_id', e.target.value)}
-                                                className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                                            >
-                                                {zones.map((zone) => (
-                                                    <option key={zone.id} value={zone.id}>
-                                                        {zone.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                            {errors.zone_id && <p className="mt-1 text-xs text-red-600">{errors.zone_id}</p>}
-                                        </motion.div>
-                                    )}
-                                </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
