@@ -41,11 +41,11 @@ Route::middleware('guest')->group(function (): void {
         ->middleware('throttle:3,1')
         ->name('login.otp.resend');
 
-});
+    // Invite Link Registration
+    Route::get('/join/{token}', [InviteRegistrationController::class, 'show'])->name('invite.join');
+    Route::post('/join/{token}', [InviteRegistrationController::class, 'store'])->name('invite.join.store');
 
-// Invite Link Registration
-Route::get('/join/{token}', [InviteRegistrationController::class, 'show'])->name('invite.join');
-Route::post('/join/{token}', [InviteRegistrationController::class, 'store'])->name('invite.join.store');
+});
 
 // Magic Login
 Route::get('/auth/magic-login/{token}', [MagicLoginController::class, 'show'])

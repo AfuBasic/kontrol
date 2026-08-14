@@ -775,16 +775,14 @@ export default function AdminLayout({ children, title }: Props) {
                                                 </Link>
                                             )}
 
-                                            {(auth.user?.available_contexts?.length || 0) > 1 && (
-                                                <Link
-                                                    href={ContextController.index.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                >
-                                                    <BuildingOfficeIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Switch Workspace
-                                                </Link>
-                                            )}
+                                            <Link
+                                                href={ContextController.index.url()}
+                                                onClick={() => setUserMenuOpen(false)}
+                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                            >
+                                                <BuildingOfficeIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                Switch Workspace
+                                            </Link>
 
                                             <button
                                                 onClick={() => setShowLogoutConfirmation(true)}

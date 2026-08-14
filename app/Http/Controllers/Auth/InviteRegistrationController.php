@@ -14,7 +14,6 @@ use App\Notifications\Admin\NewResidentSignup;
 use App\Notifications\VerifyResidentEmail;
 use App\Services\ResidentSubscriptionService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
@@ -25,19 +24,14 @@ class InviteRegistrationController extends Controller
 {
     public function __construct(
         protected ResidentSubscriptionService $subscriptionService
-    ) {}
+    ) {
+    }
 
     /**
      * Show the registration form for the invite link.
      */
     public function show(string $token): Response
     {
-        if (Auth::check()) {
-            Auth::logout();
-            request()->session()->invalidate();
-            request()->session()->regenerateToken();
-        }
-
         $inviteLink = EstateInviteLink::where('token', $token)
             ->where('is_active', true)
             ->with('estate')

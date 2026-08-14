@@ -41,11 +41,20 @@ class SecurityPersonnelController extends Controller
 
         $filters = $request->only(['search', 'status']);
         $estate = $this->estateContext->getEstate();
+        $securityRole = \Spatie\Permission\Models\Role::where('name', 'security')->whereNull('estate_id')->first();
 
         $totalSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
-        $activeSecurity = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
-        $suspendedSecurity = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
+        $activeSecurity = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
+            ->count();
+        $pendingSecurity = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
+            ->count();
+        $suspendedSecurity = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', false))
+            ->count();
 
         return Inertia::render('Admin/Security/Index', [
             'security' => Inertia::defer(fn () => $this->securityService
@@ -53,6 +62,8 @@ class SecurityPersonnelController extends Controller
                 ->through(function ($user) {
                     $membership = $user->estates->first()?->pivot;
                     $zone = $membership?->zone_id ? Zone::find($membership->zone_id) : null;
+                    $assignment = $user->administrativeAssignments->first();
+                    $isSuspended = $assignment ? ! $assignment->is_active : false;
 
                     return [
                         'ulid' => $user->ulid,
@@ -63,8 +74,8 @@ class SecurityPersonnelController extends Controller
                         'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
                         'zone_id' => $membership?->zone_id,
                         'zone_name' => $zone?->name ?? 'Entire estate',
-                        'status' => $user->suspended_at ? 'inactive' : ($membership?->status ?? 'pending'),
-                        'suspended_at' => $user->suspended_at,
+                        'status' => $isSuspended ? 'inactive' : ($membership?->status ?? 'pending'),
+                        'suspended_at' => $isSuspended ? ($assignment?->updated_at ?? now()) : null,
                         'created_at' => $user->created_at->format('M d, Y'),
                     ];
                 })),

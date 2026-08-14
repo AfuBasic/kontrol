@@ -2,12 +2,13 @@
 
 namespace App\Actions\Admin;
 
+use App\Actions\Invitation\CreateInvitationAction;
+use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class BulkInviteResidentsAction
 {
@@ -18,7 +19,7 @@ class BulkInviteResidentsAction
     public function execute(array $emails, Estate $estate, ?int $zoneId = null): array
     {
         // 1. Normalize and deduplicate emails from the input
-        $normalizedEmails = array_map(fn ($email) => strtolower(trim($email)), $emails);
+        $normalizedEmails = array_map(fn($email) => strtolower(trim($email)), $emails);
         $uniqueEmails = array_unique($normalizedEmails);
         $duplicateCount = count($emails) - count($uniqueEmails);
 
@@ -41,23 +42,16 @@ class BulkInviteResidentsAction
 
                 if ($isAlreadyAccepted) {
                     $alreadyMembers++;
-
                     continue;
                 }
             }
 
             // Create resident (user, pending membership, role assignment, profile, invitation token)
-            try {
-                $createResidentAction->execute([
-                    'name' => strstr($email, '@', true) ?: $email,
-                    'email' => $email,
-                    'zone_id' => $zoneId,
-                ], $estate);
-            } catch (ValidationException $e) {
-                $alreadyMembers++;
-
-                continue;
-            }
+            $createResidentAction->execute([
+                'name' => strstr($email, '@', true) ?: $email,
+                'email' => $email,
+                'zone_id' => $zoneId,
+            ], $estate);
 
             $invitation = Invitation::withoutGlobalScopes()
                 ->where('email', $email)
@@ -78,9 +72,9 @@ class BulkInviteResidentsAction
                     'bulk_invite' => true,
                     'count' => count($invitedIds),
                 ])
-                ->log('bulk invited '.count($invitedIds).' residents');
+                ->log('bulk invited ' . count($invitedIds) . ' residents');
 
-            // The invitation emails are automatically queued by the ResidentCreated event
+            // The invitation emails are automatically queued by the ResidentCreated event 
             // fired within CreateResidentAction, so we don't need a bulk dispatch here.
         }
 
