@@ -69,7 +69,7 @@ class CreateHouseholdMemberAction
                 estate: $estate,
                 relationshipType: 'household_member',
                 role: $role,
-                zoneId: $primaryResident->getZoneForEstate($estate)?->id,
+                zoneId: $primaryProfile?->zone_id ?? $primaryResident->estateMembershipFor($estate->id)?->zone_id,
                 createdBy: $primaryResident,
             );
 
