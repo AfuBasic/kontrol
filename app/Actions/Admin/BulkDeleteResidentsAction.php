@@ -15,43 +15,33 @@ class BulkDeleteResidentsAction
      */
     public function execute(array $residentIds, Estate $estate): array
     {
-        $deleted = 0;
-        $detached = 0;
-
-        // Get residents that belong to this estate
         $residents = User::whereIn('id', $residentIds)
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+            ->where('email', '!=', $estate->email)
             ->get();
 
-        DB::transaction(function () use ($residents, $estate, &$deleted, &$detached) {
+        $deleteAction = app(DeleteResidentAction::class);
+        $count = 0;
+
+        DB::transaction(function () use ($residents, $estate, $deleteAction, &$count) {
             foreach ($residents as $resident) {
-                // If the resident belongs to other estates, just detach them from this one
-                if ($resident->estates()->where('estates.id', '!=', $estate->id)->exists()) {
-                    $resident->estates()->detach($estate->id);
-                    $resident->roles()->wherePivot('estate_id', $estate->id)->detach();
-                    $detached++;
-                } else {
-                    // Otherwise, delete the user entirely
-                    $resident->delete();
-                    $deleted++;
-                }
+                $deleteAction->execute($resident, $estate);
+                $count++;
             }
 
-            // Log the bulk delete activity
             activity()
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'estate_id' => $estate->id,
-                    'deleted_count' => $deleted,
-                    'detached_count' => $detached,
+                    'deleted_count' => $count,
                     'resident_ids' => $residents->pluck('id')->toArray(),
                 ])
-                ->log('bulk deleted '.$deleted.' residents, detached '.$detached.' residents');
+                ->log('bulk removed '.$count.' residents');
         });
 
         return [
-            'deleted' => $deleted,
-            'detached' => $detached,
+            'deleted' => $count,
+            'detached' => 0,
         ];
     }
 }

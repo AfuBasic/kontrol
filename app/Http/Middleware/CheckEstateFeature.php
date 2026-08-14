@@ -50,7 +50,7 @@ class CheckEstateFeature
                     abort(403, 'Feature not available on your current plan tier.');
                 }
             } elseif ($residentSub && $residentSub->plan_id && ! $residentSub->plan) {
-                // Plan was deleted — treat as feature unavailable
+                // Plan was deleted - treat as feature unavailable
                 abort(403, 'Feature not available on your current plan tier.');
             }
             // No plan yet: let them through (grace period / newly subscribed user)

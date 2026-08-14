@@ -7,11 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Newspaper, Bell, User, History, ClipboardList } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
 
-import EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
-import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
+import * as EstateBoardController from '@/actions/App/Http/Controllers/Security/EstateBoardController';
+import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import HomeController from '@/actions/App/Http/Controllers/Security/HomeController';
-import NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
-import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 import ContextSwitcher from '@/Components/ContextSwitcher';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
@@ -192,6 +192,12 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     });
 
                     PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                        const type = notification.data?.type;
+                        const RESIDENT_ONLY_TYPES = ['visitor_checked_out', 'visitor_arrived', 'visitor_access_granted', 'household_member_invited'];
+                        if (type && RESIDENT_ONLY_TYPES.includes(type)) {
+                            return;
+                        }
+
                         setLastReceivedNotification(notification);
                         setToastMessage(notification.body || 'New alert received');
                         setToastType('success');
@@ -296,7 +302,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
-                className={`pt-safe sticky top-0 z-40 border-b backdrop-blur-xl ${
+                className={`pt-safe sticky top-0 z-[60] border-b backdrop-blur-xl ${
                     isDark ? 'border-slate-800/80 bg-slate-950/95 text-white' : 'border-slate-100 bg-white/80 text-slate-900'
                 }`}
             >
@@ -331,7 +337,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     </Link>
 
                     <div className="flex items-center gap-2">
-                        <ContextSwitcher />
+                        <div className="hidden sm:block">
+                            <ContextSwitcher variant={variant} />
+                        </div>
                         <SystemHealthMonitor size="md" />
                         <div
                             className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
@@ -355,7 +363,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                 <PullToRefresh>{children}</PullToRefresh>
             </main>
 
-            {/* Bottom Navigation — slim, monochromatic, animated active indicator */}
+            {/* Bottom Navigation - slim, monochromatic, animated active indicator */}
             {!hideNav && (
                 <motion.nav
                     initial={{ opacity: 0, y: 12 }}
@@ -387,7 +395,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                                             aria-current={active ? 'page' : undefined}
                                             className="group relative flex h-full flex-col items-center justify-center gap-1 px-1 pt-2.5 pb-1.5 outline-none focus-visible:ring-2 focus-visible:ring-slate-900/15"
                                         >
-                                            {/* Animated top accent — morphs between active tabs */}
+                                            {/* Animated top accent - morphs between active tabs */}
                                             {active && (
                                                 <motion.span
                                                     layoutId="security-nav-indicator"

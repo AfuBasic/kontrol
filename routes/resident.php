@@ -42,9 +42,9 @@ use Illuminate\Support\Facades\Route;
 */
 
 // ──────────────────────────────────────────────────────────────
-// Shared routes: accessible by both residents and household members
+// Shared routes: accessible by residents, household members, and property owners
 // ──────────────────────────────────────────────────────────────
-Route::middleware('role:resident,household_member')->group(function (): void {
+Route::middleware('role:resident,household_member,property_owner')->group(function (): void {
     // Legacy dashboard redirect
     Route::get('/dashboard', fn () => redirect()->route('resident.home'))->name('resident.dashboard');
 
@@ -127,9 +127,9 @@ Route::middleware('role:resident,household_member')->group(function (): void {
 });
 
 // ──────────────────────────────────────────────────────────────
-// Primary resident only: billing & household management
+// Primary resident & Property owner: billing & household management
 // ──────────────────────────────────────────────────────────────
-Route::middleware('role:resident')->group(function (): void {
+Route::middleware('role:resident,property_owner')->group(function (): void {
     // Coupons
     Route::get('/coupons', [CouponController::class, 'index'])->name('resident.coupons.index');
 
@@ -164,37 +164,39 @@ Route::middleware('role:resident')->group(function (): void {
         });
         Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');
     });
+});
 
-    // Property Owner routes (gated by property_owner role)
-    Route::middleware('role:property_owner')->prefix('property-owner')->name('resident.property-owner.')->group(function (): void {
-        Route::get('/dashboard', PODashboardController::class)->name('dashboard');
+// ──────────────────────────────────────────────────────────────
+// Property Owner routes (gated by property_owner role)
+// ──────────────────────────────────────────────────────────────
+Route::middleware('role:property_owner')->prefix('property-owner')->name('resident.property-owner.')->group(function (): void {
+    Route::get('/dashboard', PODashboardController::class)->name('dashboard');
 
-        // Managed Residents CRUD
-        Route::patch('/residents/{resident}/suspend', [POResidentController::class, 'suspend'])->name('residents.suspend');
-        Route::post('/residents/{resident}/resend-invitation', [POResidentController::class, 'resendInvitation'])->name('residents.resend-invitation');
-        Route::post('/residents/invite-link', [POResidentController::class, 'storeInviteLink'])->name('residents.invite-link.store');
-        Route::post('/residents/invite-link/regenerate', [POResidentController::class, 'regenerateInviteLink'])->name('residents.invite-link.regenerate');
-        Route::post('/residents/invite-link/toggle', [POResidentController::class, 'toggleInviteLink'])->name('residents.invite-link.toggle');
-        Route::delete('/residents/invite-link', [POResidentController::class, 'destroyInviteLink'])->name('residents.invite-link.destroy');
-        Route::resource('/residents', POResidentController::class)->except(['show'])->names('residents');
+    // Managed Residents CRUD
+    Route::patch('/residents/{resident}/suspend', [POResidentController::class, 'suspend'])->name('residents.suspend');
+    Route::post('/residents/{resident}/resend-invitation', [POResidentController::class, 'resendInvitation'])->name('residents.resend-invitation');
+    Route::post('/residents/invite-link', [POResidentController::class, 'storeInviteLink'])->name('residents.invite-link.store');
+    Route::post('/residents/invite-link/regenerate', [POResidentController::class, 'regenerateInviteLink'])->name('residents.invite-link.regenerate');
+    Route::post('/residents/invite-link/toggle', [POResidentController::class, 'toggleInviteLink'])->name('residents.invite-link.toggle');
+    Route::delete('/residents/invite-link', [POResidentController::class, 'destroyInviteLink'])->name('residents.invite-link.destroy');
+    Route::resource('/residents', POResidentController::class)->except(['show'])->names('residents');
 
-        // Properties CRUD
-        Route::post('/properties/{property}/assign-resident', [POPropertyController::class, 'assignResident'])->name('properties.assign-resident');
-        Route::post('/properties/{property}/remove-resident', [POPropertyController::class, 'removeResident'])->name('properties.remove-resident');
-        Route::resource('/properties', POPropertyController::class)->names('properties');
+    // Properties CRUD
+    Route::post('/properties/{property}/assign-resident', [POPropertyController::class, 'assignResident'])->name('properties.assign-resident');
+    Route::post('/properties/{property}/remove-resident', [POPropertyController::class, 'removeResident'])->name('properties.remove-resident');
+    Route::resource('/properties', POPropertyController::class)->names('properties');
 
-        // Custom Collections
-        Route::post('/collections/assignments/{assignment}/record-payment', [POCollectionController::class, 'recordPayment'])->name('collections.record-payment');
-        Route::resource('/collections', POCollectionController::class)->names('collections');
+    // Custom Collections
+    Route::post('/collections/assignments/{assignment}/record-payment', [POCollectionController::class, 'recordPayment'])->name('collections.record-payment');
+    Route::resource('/collections', POCollectionController::class)->names('collections');
 
-        // Scoped Announcements
-        Route::resource('/announcements', POAnnouncementController::class)->names('announcements');
+    // Scoped Announcements
+    Route::resource('/announcements', POAnnouncementController::class)->names('announcements');
 
-        // Settlement Account configuration
-        Route::get('/settlement', [POSettlementController::class, 'index'])->name('settlement.index');
-        Route::put('/settlement', [POSettlementController::class, 'update'])->name('settlement.update');
-        Route::post('/settlement/resolve', [POSettlementController::class, 'resolve'])->name('settlement.resolve');
-    });
+    // Settlement Account configuration
+    Route::get('/settlement', [POSettlementController::class, 'index'])->name('settlement.index');
+    Route::put('/settlement', [POSettlementController::class, 'update'])->name('settlement.update');
+    Route::post('/settlement/resolve', [POSettlementController::class, 'resolve'])->name('settlement.resolve');
 });
 
 // Incidents: community issue tracker (accessible by resident, household_member, property_owner)

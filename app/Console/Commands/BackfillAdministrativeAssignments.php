@@ -34,13 +34,13 @@ class BackfillAdministrativeAssignments extends Command
     public function handle(CreateAdministrativeAssignmentAction $createAction)
     {
         $isDryRun = $this->option('dry-run');
-        
-        $this->info("Starting Administrative Assignment Backfill" . ($isDryRun ? " [DRY RUN]" : ""));
-        
+
+        $this->info('Starting Administrative Assignment Backfill'.($isDryRun ? ' [DRY RUN]' : ''));
+
         $assignments = DB::table('model_has_roles')
             ->where('model_type', User::class)
             ->get();
-            
+
         $stats = [
             'total' => $assignments->count(),
             'migrated' => 0,
@@ -50,7 +50,7 @@ class BackfillAdministrativeAssignments extends Command
             'invalid_user' => 0,
             'invalid_estate' => 0,
         ];
-        
+
         $rolesCache = [];
         $estatesCache = [];
         $usersCache = [];
@@ -61,44 +61,44 @@ class BackfillAdministrativeAssignments extends Command
             if (! $role) {
                 continue; // Orphaned role
             }
-            
-            // 1. Reject Global Roles
-            if ($role->estate_id === null) {
-                $stats['invalid_global']++;
-                $this->warn("Skipped: Global role '{$role->name}' (User: {$assignment->model_id})");
-                continue;
-            }
-            
+
+            // 1. (Legacy: Rejected global roles here, now permitted for residents/security in V3)
+            // Global roles are tracked in AdministrativeAssignments but apply to specific estates contextually.
+
             // 2. Resolve Estate
             $estateId = $assignment->estate_id;
             if (! $estateId) {
                 $stats['invalid_estate']++;
                 $this->warn("Skipped: Missing estate_id in pivot (User: {$assignment->model_id}, Role: {$role->name})");
+
                 continue;
             }
-            
+
             $estate = $estatesCache[$estateId] ??= Estate::find($estateId);
             if (! $estate) {
                 $stats['invalid_estate']++;
                 $this->warn("Skipped: Estate ID {$estateId} not found (User: {$assignment->model_id})");
+
                 continue;
             }
-            
+
             // 3. Resolve User
             $user = $usersCache[$assignment->model_id] ??= User::find($assignment->model_id);
             if (! $user) {
                 $stats['invalid_user']++;
                 $this->warn("Skipped: User ID {$assignment->model_id} not found");
+
                 continue;
             }
-            
+
             // 4. Verify cross-estate
-            if ($role->estate_id !== $estate->id) {
+            if ($role->estate_id !== null && $role->estate_id !== $estate->id) {
                 $stats['conflicts']++;
                 $this->error("Conflict: Role {$role->name} (Estate {$role->estate_id}) assigned to Estate {$estate->id} (User: {$user->id})");
+
                 continue;
             }
-            
+
             // 5. Determine if it already exists (Idempotency)
             // Existing roles without zone logic assume `estate` scope.
             $exists = AdministrativeAssignment::where('user_id', $user->id)
@@ -106,25 +106,27 @@ class BackfillAdministrativeAssignments extends Command
                 ->where('role_id', $role->id)
                 ->where('zone_id_coalesced', 0)
                 ->exists();
-                
+
             if ($exists) {
                 $stats['skipped']++;
                 $this->line("Skipped: Assignment already exists (User: {$user->id}, Role: {$role->name}, Estate: {$estate->id})");
+
                 continue;
             }
-            
+
             // 6. Check Membership (Required by Action)
             $hasMembership = $user->estates()
                 ->where('estates.id', $estate->id)
                 ->wherePivot('status', 'accepted')
                 ->exists();
-                
+
             if (! $hasMembership) {
                 $stats['invalid_user']++;
                 $this->warn("Skipped: User {$user->id} does not have accepted membership in Estate {$estate->id}");
+
                 continue;
             }
-            
+
             // 7. Create assignment
             if (! $isDryRun) {
                 try {
@@ -148,9 +150,9 @@ class BackfillAdministrativeAssignments extends Command
                 $this->info("Would migrate: User {$user->id} -> Role {$role->name} in Estate {$estate->id}");
             }
         }
-        
+
         $this->newLine();
-        $this->info("Backfill Complete.");
+        $this->info('Backfill Complete.');
         $this->table(
             ['Metric', 'Count'],
             [
@@ -163,7 +165,7 @@ class BackfillAdministrativeAssignments extends Command
                 ['Invalid (Missing/Deleted Estate)', $stats['invalid_estate']],
             ]
         );
-        
+
         return self::SUCCESS;
     }
 }

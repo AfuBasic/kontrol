@@ -3,9 +3,9 @@
 use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
-use App\Models\EstateMembership;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -59,9 +59,10 @@ beforeEach(function () {
     Auth::login($this->user);
 
     $this->makeRequest = function () {
-        $request = \Illuminate\Http\Request::create('/', 'GET');
+        $request = Request::create('/', 'GET');
         $request->setLaravelSession($this->app['session']->driver());
         $request->setUserResolver(fn () => $this->user);
+
         return $request;
     };
 });
@@ -142,10 +143,10 @@ it('Test 6 — Wrong-estate assignment fails', function () {
 
     try {
         $this->contextManager->activate($this->assignmentResidentB);
-    } catch (\Exception $e) {
+    } catch (Exception $e) {
         // Expected
     }
-    
+
     // Simulate invalid assignment already in session
     session(['active_context_assignment_id' => $this->assignmentResidentB->id]);
     $this->contextManager->resolve(($this->makeRequest)());

@@ -9,9 +9,11 @@ use App\Models\Estate;
 use App\Models\Plan;
 use App\Models\User;
 use App\Notifications\Resident\CouponIssuedNotification;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -107,7 +109,10 @@ class CouponController extends Controller
 
     public function create(): Response
     {
-        $estates = Estate::orderBy('name')->get(['id', 'name']);
+        $estates = Estate::query()
+            ->with(['zones' => fn ($q) => $q->orderBy('name')->select('id', 'estate_id', 'name')])
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         $residents = User::whereHas('roles', function ($query) {
             $query->where('name', 'resident');
@@ -229,6 +234,11 @@ class CouponController extends Controller
             'value' => ['required', 'numeric', 'min:1'],
             'scope' => ['required', 'string', 'in:global,estate,resident'],
             'estate_id' => ['required_if:scope,estate', 'nullable', 'exists:estates,id'],
+            'zone_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('zones', 'id')->where(fn ($q) => $q->where('estate_id', $request->integer('estate_id'))),
+            ],
             'user_ids' => ['required_if:scope,resident', 'nullable', 'array'],
             'user_ids.*' => ['exists:users,id'],
             'eligible_plans' => ['nullable', 'array'],
@@ -300,6 +310,7 @@ class CouponController extends Controller
                 'type' => $validated['type'],
                 'value' => $value,
                 'estate_id' => $validated['scope'] === 'estate' ? ($validated['estate_id'] ?? null) : null,
+                'zone_id' => $validated['scope'] === 'estate' ? ($validated['zone_id'] ?? null) : null,
                 'user_id' => null,
                 'eligible_plans' => $eligiblePlans,
                 'expires_at' => $validated['expires_at'] ?? null,
@@ -313,6 +324,9 @@ class CouponController extends Controller
                     $q->where('estates.id', $coupon->estate_id);
                 })->whereHas('roles', function ($q) {
                     $q->where('name', 'resident');
+                })->when($coupon->zone_id, function ($q) use ($coupon) {
+                    $zoneUserIds = app(ZoneAudienceResolver::class)->userIdsInZones((int) $coupon->estate_id, [(int) $coupon->zone_id], false);
+                    $q->whereIn('id', $zoneUserIds);
                 })->get();
 
                 foreach ($estateResidents as $residentUser) {

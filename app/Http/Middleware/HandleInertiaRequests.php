@@ -11,6 +11,7 @@ use App\Models\Invoice;
 use App\Models\ZeusNotification;
 use App\Services\Platform\AndroidMigrationService;
 use App\Services\Resident\AccessCodeService;
+use App\Services\Security\CheckpointClaimService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -221,6 +222,9 @@ class HandleInertiaRequests extends Middleware
             'app_subdomain_url' => config('domains.routing_enabled')
                 ? request()->getScheme().'://'.config('domains.app')
                 : url('/'),
+            'activeCheckpoint' => fn () => ($estate && $user && $user->contextHasRole('security'))
+                ? app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user)
+                : null,
             'is_local' => app()->environment('local'),
             'platform' => [
                 'is_pwa_installed' => $request->header('X-PWA-Standalone') === 'true',

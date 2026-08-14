@@ -2,16 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
-use App\Models\Estate;
-use App\Models\EstateMembership;
-use App\Models\Invitation;
-use App\Models\Zone;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
 
 class KontrolV3HealthCheckCommand extends Command
 {
@@ -46,7 +41,7 @@ class KontrolV3HealthCheckCommand extends Command
             DB::connection()->getPdo();
             $this->info('✓ Database Connectivity: OK');
         } catch (\Throwable $e) {
-            $this->error('✗ Database Connectivity FAILED: ' . $e->getMessage());
+            $this->error('✗ Database Connectivity FAILED: '.$e->getMessage());
             $failures++;
         }
 
@@ -108,10 +103,10 @@ class KontrolV3HealthCheckCommand extends Command
 
         // 5. Check ContextManager Resolvability
         try {
-            $contextManager = app(\App\Auth\ContextManager::class);
+            $contextManager = app(ContextManager::class);
             $this->info('✓ ContextManager Service: Registered & resolving cleanly.');
         } catch (\Throwable $e) {
-            $this->error('✗ ContextManager Service FAILED: ' . $e->getMessage());
+            $this->error('✗ ContextManager Service FAILED: '.$e->getMessage());
             $failures++;
         }
 

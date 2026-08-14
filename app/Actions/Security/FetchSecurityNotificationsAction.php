@@ -3,11 +3,49 @@
 namespace App\Actions\Security;
 
 use App\Models\User;
+use App\Notifications\Resident\CollectionReminderNotification;
+use App\Notifications\Resident\CouponIssuedNotification;
+use App\Notifications\Resident\InvoicePaidNotification;
+use App\Notifications\Resident\NewCollectionNotification;
+use App\Notifications\Resident\NewInvoiceNotification;
+use App\Notifications\Resident\PaymentFailedNotification;
+use App\Notifications\Resident\SosResponderNotification;
+use App\Notifications\ResidentApproved;
+use App\Notifications\ResidentInvitedNotification;
+use App\Notifications\ResidentRejected;
+use App\Notifications\ResidentSubscriptionExpiredNotification;
+use App\Notifications\ResidentSubscriptionExpiringNotification;
+use App\Notifications\ResidentTrialEndingNotification;
+use App\Notifications\VisitorArrivedNotification;
+use App\Notifications\VisitorCheckedOutNotification;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Notifications\DatabaseNotification;
 
 class FetchSecurityNotificationsAction
 {
+    public const RESIDENT_NOTIFICATION_TYPES = [
+        VisitorCheckedOutNotification::class,
+        VisitorArrivedNotification::class,
+        ResidentApproved::class,
+        ResidentRejected::class,
+        ResidentInvitedNotification::class,
+        ResidentSubscriptionExpiringNotification::class,
+        ResidentSubscriptionExpiredNotification::class,
+        ResidentTrialEndingNotification::class,
+        NewCollectionNotification::class,
+        CollectionReminderNotification::class,
+        NewInvoiceNotification::class,
+        InvoicePaidNotification::class,
+        PaymentFailedNotification::class,
+        CouponIssuedNotification::class,
+        SosResponderNotification::class,
+        'App\Notifications\VisitorCheckedOutNotification',
+        'App\Notifications\VisitorArrivedNotification',
+        'App\Notifications\VisitorAccessGrantedNotification',
+        'App\Notifications\HouseholdMemberInvitedNotification',
+        'App\Notifications\ResidentSubscriptionNotification',
+    ];
+
     /**
      * Fetch paginated notifications for a security user.
      *
@@ -16,6 +54,7 @@ class FetchSecurityNotificationsAction
     public function execute(User $user, int $perPage = 20): LengthAwarePaginator
     {
         return $user->notifications()
+            ->whereNotIn('type', self::RESIDENT_NOTIFICATION_TYPES)
             ->latest()
             ->paginate($perPage);
     }
@@ -25,7 +64,9 @@ class FetchSecurityNotificationsAction
      */
     public function getUnreadCount(User $user): int
     {
-        return $user->unreadNotifications()->count();
+        return $user->unreadNotifications()
+            ->whereNotIn('type', self::RESIDENT_NOTIFICATION_TYPES)
+            ->count();
     }
 
     /**

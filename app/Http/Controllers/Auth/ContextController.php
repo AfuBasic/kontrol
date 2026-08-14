@@ -59,6 +59,8 @@ class ContextController extends Controller
             ]);
         }
 
+        $currentContext = $contextManager->current();
+
         // Map assignments for the frontend Context Picker
         $availableContexts = $assignments->map(fn ($assignment) => [
             'id' => $assignment->id,
@@ -67,6 +69,7 @@ class ContextController extends Controller
             'scope_type' => $assignment->scope_type,
             'zone_name' => $assignment->zone?->name,
             'is_primary' => $assignment->is_primary,
+            'is_current' => $currentContext && $currentContext->assignmentId === $assignment->id,
         ])->sortByDesc('is_primary')->values();
 
         return Inertia::render('Auth/ContextPicker', [

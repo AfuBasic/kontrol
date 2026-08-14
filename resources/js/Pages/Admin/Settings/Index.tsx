@@ -21,6 +21,8 @@ type SettingsProps = {
         require_vehicle_information: boolean;
         allow_residents_to_extend_visitor_passes: boolean;
         visitor_checkout_enabled: boolean;
+        entry_point_checkout_enforced: boolean;
+        entry_points: string[];
 
         // 2. Security Operations
         incident_categories: string[];
@@ -64,6 +66,8 @@ export default function Settings({ settings }: SettingsProps) {
         require_vehicle_information: settings.require_vehicle_information,
         allow_residents_to_extend_visitor_passes: settings.allow_residents_to_extend_visitor_passes,
         visitor_checkout_enabled: settings.visitor_checkout_enabled,
+        entry_point_checkout_enforced: settings.entry_point_checkout_enforced,
+        entry_points: settings.entry_points || [],
 
         // Security Operations
         incident_categories: settings.incident_categories || [],
@@ -82,6 +86,24 @@ export default function Settings({ settings }: SettingsProps) {
     });
 
     const [newCategoryInput, setNewCategoryInput] = useState('');
+    const [newEntryPointInput, setNewEntryPointInput] = useState('');
+
+    function handleAddEntryPoint(e: React.KeyboardEvent | React.MouseEvent) {
+        if ('key' in e && e.key !== 'Enter') return;
+        e.preventDefault();
+        const trimmed = newEntryPointInput.trim();
+        if (trimmed && !data.entry_points.some(ep => ep.toLowerCase() === trimmed.toLowerCase())) {
+            setData('entry_points', [...data.entry_points, trimmed]);
+            setNewEntryPointInput('');
+        }
+    }
+
+    function handleRemoveEntryPoint(pointToRemove: string) {
+        setData(
+            'entry_points',
+            data.entry_points.filter((ep) => ep !== pointToRemove)
+        );
+    }
 
     function handleAddCategory(e: React.KeyboardEvent | React.MouseEvent) {
         if ('key' in e && e.key !== 'Enter') return;
@@ -328,6 +350,91 @@ export default function Settings({ settings }: SettingsProps) {
                                             <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                         </label>
                                     </div>
+                                </div>
+
+                                {/* Entry Point Checkout Enforcement */}
+                                <div className="mt-4 rounded-xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900/40 overflow-hidden">
+                                    <div className={`flex items-start justify-between gap-3 p-4 transition-colors ${!data.visitor_checkout_enabled ? 'opacity-60 bg-slate-50 dark:bg-slate-800/20' : ''}`}>
+                                        <div>
+                                            <span className="block text-sm font-medium text-slate-900 dark:text-white">Enforce Entry Point Checkout</span>
+                                            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                Require visitors to check out through the same entry point they used to enter.
+                                                {!data.visitor_checkout_enabled && (
+                                                    <span className="block mt-1 text-amber-600 dark:text-amber-500 font-medium">
+                                                        Requires Visitor Checkout Tracking to be enabled.
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </div>
+                                        <label className="relative inline-flex cursor-pointer items-center shrink-0 mt-0.5">
+                                            <input
+                                                type="checkbox"
+                                                disabled={!data.visitor_checkout_enabled}
+                                                checked={data.visitor_checkout_enabled && data.entry_point_checkout_enforced}
+                                                onChange={(e) => {
+                                                    if (data.visitor_checkout_enabled) {
+                                                        setData('entry_point_checkout_enforced', e.target.checked);
+                                                    }
+                                                }}
+                                                className="peer sr-only"
+                                            />
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white peer-disabled:opacity-50 peer-disabled:cursor-not-allowed dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        </label>
+                                    </div>
+
+                                    {/* Entry Points List */}
+                                    {data.visitor_checkout_enabled && data.entry_point_checkout_enforced && (
+                                        <div className="border-t border-slate-100 bg-slate-50/50 p-4 dark:border-slate-800/80 dark:bg-slate-800/20">
+                                            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                                Configured Entry Points
+                                            </label>
+                                            
+                                            {data.entry_points.length === 0 && (
+                                                <div className="mt-2 mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                                                    <strong>Add your entry points:</strong> To enforce entry point checkout, tell Kontrol which gates/checkpoints visitors can use to enter and leave the estate.
+                                                </div>
+                                            )}
+
+                                            <div className="mt-3 space-y-2">
+                                                {data.entry_points.map((ep, index) => (
+                                                    <div key={index} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                                                        <span className="text-sm font-medium text-slate-700 dark:text-slate-200">{ep}</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveEntryPoint(ep)}
+                                                            className="text-xs font-medium text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-3 flex items-center gap-2">
+                                                <input
+                                                    type="text"
+                                                    value={newEntryPointInput}
+                                                    onChange={(e) => setNewEntryPointInput(e.target.value)}
+                                                    onKeyDown={handleAddEntryPoint}
+                                                    placeholder="e.g. Main Gate"
+                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddEntryPoint}
+                                                    disabled={!newEntryPointInput.trim()}
+                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-primary-600 dark:hover:bg-primary-500"
+                                                >
+                                                    <Plus className="h-4 w-4" />
+                                                    Add
+                                                </button>
+                                            </div>
+                                            
+                                            {errors.entry_points && (
+                                                <p className="mt-2 text-xs font-medium text-red-500">{errors.entry_points}</p>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

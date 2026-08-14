@@ -36,7 +36,7 @@ export default function EditAffiliate({ affiliate }: Props) {
 
     return (
         <ZeusLayout>
-            <Head title={`Edit Affiliate — ${affiliate.name}`} />
+            <Head title={`Edit Affiliate - ${affiliate.name}`} />
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-2xl">
                 <Link

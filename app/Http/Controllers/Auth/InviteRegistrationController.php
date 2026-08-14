@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
 use App\Models\Estate;
 use App\Models\EstateInviteLink;
@@ -22,7 +24,8 @@ class InviteRegistrationController extends Controller
 {
     public function __construct(
         protected ResidentSubscriptionService $subscriptionService
-    ) {}
+    ) {
+    }
 
     /**
      * Show the registration form for the invite link.
@@ -75,13 +78,30 @@ class InviteRegistrationController extends Controller
                 'user_type' => 'user',
             ]);
 
+            // Create membership based on requires_approval setting
+            $status = $inviteLink->requires_approval ? 'pending' : 'accepted';
+
+            $user->estates()->attach($inviteLink->estate_id, [
+                'status' => $status,
+            ]);
+
             app(ContextManager::class)->setSystemContext($inviteLink->estate_id);
 
-            // Assign roles scoped to this estate
+            // Assign roles scoped to this estate via AdministrativeAssignment system
             $residentRole = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
                 ->whereNull('estate_id')
                 ->firstOrFail();
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+
+            $assignmentAction->execute(
+                user: $user,
+                estate: $inviteLink->estate,
+                role: $residentRole,
+                scopeType: AssignmentScope::Estate,
+                zone: null,
+                isPrimary: false
+            );
             $user->assignRole($residentRole);
 
             if ($inviteLink->role === 'property_owner') {
@@ -89,6 +109,15 @@ class InviteRegistrationController extends Controller
                     ->where('guard_name', 'web')
                     ->whereNull('estate_id')
                     ->firstOrFail();
+
+                $assignmentAction->execute(
+                    user: $user,
+                    estate: $inviteLink->estate,
+                    role: $poRole,
+                    scopeType: AssignmentScope::Estate,
+                    zone: null,
+                    isPrimary: false
+                );
                 $user->assignRole($poRole);
             }
 
@@ -99,13 +128,6 @@ class InviteRegistrationController extends Controller
             UserProfile::create([
                 'user_id' => $user->id,
                 'property_owner_id' => $inviteLink->user_id,
-            ]);
-
-            // Create membership based on requires_approval setting
-            $status = $inviteLink->requires_approval ? 'pending' : 'accepted';
-
-            $user->estates()->attach($inviteLink->estate_id, [
-                'status' => $status,
             ]);
 
             // Create resident subscription if required

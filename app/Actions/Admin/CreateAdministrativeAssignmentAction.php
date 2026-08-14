@@ -8,6 +8,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\Zone;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
@@ -55,22 +56,17 @@ class CreateAdministrativeAssignmentAction
                 $user->assignRole($role);
             }
 
+            if ($role->name === 'resident') {
+                app(ResidentSubscriptionService::class)->createForUser($user, $estate);
+            }
+
             return $assignment;
         });
     }
 
-    /**
-     * @throws ValidationException
-     */
     private function assertRoleBelongsToEstate(Role $role, Estate $estate): void
     {
-        if ($role->estate_id === null) {
-            throw ValidationException::withMessages([
-                'role' => 'Global roles cannot be used for administrative assignments.',
-            ]);
-        }
-
-        if ((int) $role->estate_id !== (int) $estate->id) {
+        if ($role->estate_id !== null && (int) $role->estate_id !== (int) $estate->id) {
             throw ValidationException::withMessages([
                 'role' => 'Role does not belong to the given estate.',
             ]);
@@ -110,12 +106,12 @@ class CreateAdministrativeAssignmentAction
     {
         $hasMembership = $user->estates()
             ->where('estates.id', $estate->id)
-            ->wherePivot('status', 'accepted')
+            ->wherePivotIn('status', ['accepted', 'pending', 'active'])
             ->exists();
 
         if (! $hasMembership) {
             throw ValidationException::withMessages([
-                'user' => 'User is not a verified member of this estate.',
+                'user' => 'User is not a member of this estate.',
             ]);
         }
     }

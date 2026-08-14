@@ -82,7 +82,7 @@ function getCategoryChipStyle(purpose: string, isActive: boolean) {
     return `${style.bg} ${style.text} ${style.border} border shadow-xs font-extrabold`;
 }
 
-/** Legend items — same categories as purpose chips, mapped to their dot colors */
+/** Legend items - same categories as purpose chips, mapped to their dot colors */
 const LEGEND_ITEMS = [
     { label: 'Family', purpose: 'Family' },
     { label: 'Friends', purpose: 'Friends' },
@@ -365,7 +365,7 @@ export default function VisitorCalendar({
                 </select>
             )}
 
-            {/* ─── View Toggle (Month / Agenda) — plain text, not pills ─── */}
+            {/* ─── View Toggle (Month / Agenda) - plain text, not pills ─── */}
             <div className="flex items-center gap-4 border-b border-gray-100 pb-1.5">
                 <button
                     onClick={() => setViewMode('grid')}
@@ -397,7 +397,7 @@ export default function VisitorCalendar({
                     {/* Left Column: Month Grid (lg:col-span-7) */}
                     <div className="lg:col-span-7 space-y-3">
                         <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-2xs">
-                            {/* Weekday Header — small, uppercase, muted */}
+                            {/* Weekday Header - small, uppercase, muted */}
                             <div className="grid grid-cols-7 mb-1 text-center">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
                                     <div
@@ -567,7 +567,7 @@ export default function VisitorCalendar({
 }
 
 /* ──────────────────────────────────────────────────────────────
-   EventCard — shared between grid-day-detail and agenda views
+   EventCard - shared between grid-day-detail and agenda views
    Uses same getPurposeColorStyle as Schedule/Archive screens.
    ────────────────────────────────────────────────────────────── */
 

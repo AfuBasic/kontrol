@@ -17,7 +17,7 @@ interface State {
 }
 
 /**
- * Per-section error boundary — isolates widget failures so the rest of the page keeps working.
+ * Per-section error boundary - isolates widget failures so the rest of the page keeps working.
  */
 export default class SectionErrorBoundary extends Component<Props, State> {
     constructor(props: Props) {

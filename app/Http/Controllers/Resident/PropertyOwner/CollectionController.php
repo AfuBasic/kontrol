@@ -192,7 +192,7 @@ class CollectionController extends Controller
                     // Security check: ensure target user or property is owned/managed by the Property Owner
                     if ($t['type'] === 'user') {
                         $targetUser = User::find($t['id']);
-                        if (! $targetUser || $targetUser->profile?->property_owner_id !== $user->id) {
+                        if (! $targetUser || $targetUser->getPropertyOwnerForEstate($estate)?->id !== $user->id) {
                             continue;
                         }
                     } else {
@@ -237,7 +237,7 @@ class CollectionController extends Controller
                 'id' => $a->id,
                 'ulid' => $a->ulid,
                 'resident_name' => $a->user->name,
-                'property_name' => $a->user->profile?->property?->name ?? '—',
+                'property_name' => $a->user->profile?->property?->name ?? '-',
                 'amount_due' => $a->amount_due,
                 'amount_paid' => $a->amount_paid,
                 'status' => $a->status,

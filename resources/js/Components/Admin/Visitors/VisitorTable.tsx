@@ -20,7 +20,7 @@ type Props = {
 };
 
 /**
- * Tabular visit ledger — filterable, sortable, infinite-scroll friendly.
+ * Tabular visit ledger - filterable, sortable, infinite-scroll friendly.
  * No always-identical "Verified" status column.
  * Event type is an icon (check-in vs check-out), not a text badge that never varies.
  */
@@ -132,7 +132,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                     <td className="px-4 py-3">
                                         <p className="font-medium tabular-nums text-gray-800">{log.verified_at}</p>
                                         <p className="mt-0.5 text-[11px] font-medium text-gray-400">
-                                            {log.verifier_name}
+                                            {log.verifier_name} • {log.entry_point || log.gate}
                                         </p>
                                     </td>
                                     {checkoutEnabled && (
@@ -142,14 +142,12 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                                     <p className="font-medium tabular-nums text-gray-800">
                                                         {log.checked_out_at}
                                                     </p>
-                                                    {log.checkout_verifier_name ? (
-                                                        <p className="mt-0.5 text-[11px] font-medium text-gray-400">
-                                                            {log.checkout_verifier_name}
-                                                        </p>
-                                                    ) : null}
+                                                    <p className="mt-0.5 text-[11px] font-medium text-gray-400">
+                                                        {(log.checkout_verifier_name || 'Security')} • {log.exit_point || log.entry_point || log.gate}
+                                                    </p>
                                                 </>
                                             ) : (
-                                                <span className="text-gray-400">—</span>
+                                                <span className="text-gray-400">-</span>
                                             )}
                                         </td>
                                     )}
@@ -160,7 +158,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                     )}
                                     {showGateColumn && (
                                         <td className="px-4 py-3 font-medium text-gray-500">
-                                            {log.gate === 'Main Gate' ? '—' : log.gate}
+                                            {log.gate === 'Main Gate' ? '-' : log.gate}
                                         </td>
                                     )}
                                     <td className="px-4 py-3 text-right">

@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
-import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { bulkDelete, index, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -34,6 +34,8 @@ type Resident = {
     email: string;
     phone: string | null;
     unit_number: string | null;
+    zone_id?: number | null;
+    zone_name?: string | null;
     property_owner_id: number | null;
     property_owner_name: string | null;
     property_id: number | null;
@@ -46,6 +48,7 @@ type Resident = {
     email_verified_at: string | null;
     last_active: string;
     created_at: string;
+    is_estate_creator: boolean;
 };
 
 type PaginatedResidents = {
@@ -59,11 +62,13 @@ type PaginatedResidents = {
 
 type Props = {
     residents: PaginatedResidents & { next_page_url: string | null };
+    zones?: Array<{ id: number; name: string }>;
     filters: {
         search?: string;
         status?: string;
         role?: string;
         property?: string;
+        zone?: string;
         sort?: string;
     };
     stats: {
@@ -206,10 +211,13 @@ export default function Residents({
     // Selection Helpers
     const toggleSelectAll = () => {
         if (!residents?.data) return;
-        if (selectedIds.length === residents.data.length) {
+
+        const selectableIds = residents.data.filter((r) => !r.is_estate_creator).map((r) => r.id);
+
+        if (selectedIds.length === selectableIds.length && selectableIds.length > 0) {
             setSelectedIds([]);
         } else {
-            setSelectedIds(residents.data.map((r) => r.id));
+            setSelectedIds(selectableIds);
         }
     };
 
@@ -289,8 +297,12 @@ export default function Residents({
         router.patch(`/admin/residents/${id}/suspend`, {}, { preserveScroll: true });
     };
 
-    const handleMarkAsPropertyOwner = (id: number) => {
-        router.patch(`/admin/residents/${id}/mark-as-property-owner`, {}, { preserveScroll: true });
+    const handleMarkAsPropertyOwner = (resident: Resident) => {
+        if (!confirm(`Convert ${resident.name} to a Property Owner (Landlord)? They will keep resident access.`)) {
+            return;
+        }
+
+        router.patch(markAsPropertyOwner.url(resident.ulid), {}, { preserveScroll: true });
     };
 
     const handleDeleteResident = (id: number) => {
@@ -332,7 +344,7 @@ export default function Residents({
             </div>
 
             <div className="space-y-6">
-                {/* SECTION 1 — RESIDENT OVERVIEW STRIP */}
+                {/* SECTION 1 - RESIDENT OVERVIEW STRIP */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Total Community</span>
@@ -367,12 +379,10 @@ export default function Residents({
                     </div>
                 </div>
 
-                {/* SECTION 2 — INSIGHTS PANEL (deferred) */}
+                {/* SECTION 2 - INSIGHTS PANEL (deferred) */}
                 <Deferred
                     data={['insights', 'incompleteResidents']}
-                    fallback={
-                        <div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />
-                    }
+                    fallback={<div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />}
                 >
                     {((insights && insights.length > 0) || (incompleteResidents && incompleteResidents.length > 0)) && (
                         <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
@@ -405,9 +415,7 @@ export default function Residents({
                                                         >
                                                             {r.name}
                                                         </Link>
-                                                        {idx < incompleteResidents.length - 1 && (
-                                                            <span className="mr-1 text-blue-950/80">,</span>
-                                                        )}
+                                                        {idx < incompleteResidents.length - 1 && <span className="mr-1 text-blue-950/80">,</span>}
                                                     </span>
                                                 ))}
                                             </span>
@@ -419,7 +427,7 @@ export default function Residents({
                     )}
                 </Deferred>
 
-                {/* SECTION 3 — SEARCH & FILTERS */}
+                {/* SECTION 3 - SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                     <div className="flex flex-col gap-3">
                         {/* Search Input */}
@@ -501,7 +509,7 @@ export default function Residents({
                     </div>
                 </div>
 
-                {/* SECTION 4 — TABLE REDESIGN */}
+                {/* SECTION 4 - TABLE REDESIGN */}
                 <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
                     {isLoading ? (
                         <div className="animate-pulse space-y-4 p-6">
@@ -518,7 +526,7 @@ export default function Residents({
                             ))}
                         </div>
                     ) : hasResidents ? (
-                        <div className="overflow-x-auto min-h-[280px]">
+                        <div className="min-h-[280px] overflow-x-auto">
                             <table className="w-full table-auto border-collapse">
                                 <thead className="border-b border-slate-100 bg-slate-50/70">
                                     <tr>
@@ -526,7 +534,10 @@ export default function Residents({
                                             <th className="w-10 px-4 py-3.5 text-center">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedIds.length === residents.data.length && residents.data.length > 0}
+                                                    checked={
+                                                        residents.data.filter((r) => !r.is_estate_creator).length > 0 &&
+                                                        selectedIds.length === residents.data.filter((r) => !r.is_estate_creator).length
+                                                    }
                                                     onChange={toggleSelectAll}
                                                     className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
                                                 />
@@ -575,8 +586,9 @@ export default function Residents({
                                                         <input
                                                             type="checkbox"
                                                             checked={isSelected}
+                                                            disabled={resident.is_estate_creator}
                                                             onChange={() => toggleSelect(resident.id)}
-                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
+                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                                                         />
                                                     </td>
                                                 )}
@@ -605,7 +617,7 @@ export default function Residents({
                                                     <div className="text-xs font-semibold text-slate-800">
                                                         <span className="block max-w-[150px] truncate">{resident.email}</span>
                                                         <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
-                                                            {resident.phone || '—'}
+                                                            {resident.phone || '-'}
                                                         </span>
                                                     </div>
                                                 </td>
@@ -651,12 +663,12 @@ export default function Residents({
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
                                                             resident.status === 'inactive'
                                                                 ? 'bg-rose-50 text-rose-700'
-                                                                : (resident.status === 'active' || resident.status === 'accepted')
+                                                                : resident.status === 'active' || resident.status === 'accepted'
                                                                   ? 'bg-emerald-50 text-emerald-700'
                                                                   : 'bg-amber-50 text-amber-700'
                                                         }`}
                                                     >
-                                                        {(resident.status === 'active' || resident.status === 'accepted') ? 'active' : resident.status}
+                                                        {resident.status}
                                                     </span>
                                                 </td>
 
@@ -694,6 +706,16 @@ export default function Residents({
                                                             </Link>
                                                         )}
 
+                                                        {!resident.is_property_owner && (
+                                                            <button
+                                                                onClick={() => handleMarkAsPropertyOwner(resident)}
+                                                                className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                                                title="Convert to Landlord"
+                                                            >
+                                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        )}
+
                                                         {/* Overflow menu */}
                                                         <button
                                                             onClick={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
@@ -707,38 +729,42 @@ export default function Residents({
                                                             <>
                                                                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
                                                                 <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleToggleSuspend(resident.id);
-                                                                            setMenuOpenId(null);
-                                                                        }}
-                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                    >
-                                                                        <UserMinus className="h-3.5 w-3.5 text-slate-400" />
-                                                                        {resident.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
-                                                                    </button>
-                                                                    {!resident.is_property_owner && (
+                                                                    {!resident.is_estate_creator && (
                                                                         <button
                                                                             onClick={() => {
-                                                                                handleMarkAsPropertyOwner(resident.id);
+                                                                                handleToggleSuspend(resident.id);
                                                                                 setMenuOpenId(null);
                                                                             }}
                                                                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                         >
-                                                                            <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
+                                                                            <UserMinus className="h-3.5 w-3.5 text-slate-400" />
+                                                                            {resident.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
+                                                                        </button>
+                                                                    )}
+                                                                    {!resident.is_property_owner && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                handleMarkAsPropertyOwner(resident);
+                                                                                setMenuOpenId(null);
+                                                                            }}
+                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                        >
+                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
                                                                             Convert to Landlord
                                                                         </button>
                                                                     )}
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleDeleteResident(resident.id);
-                                                                            setMenuOpenId(null);
-                                                                        }}
-                                                                        className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
-                                                                    >
-                                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                                        Delete Profile
-                                                                    </button>
+                                                                    {!resident.is_estate_creator && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                handleDeleteResident(resident.id);
+                                                                                setMenuOpenId(null);
+                                                                            }}
+                                                                            className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                        >
+                                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                                            Delete Profile
+                                                                        </button>
+                                                                    )}
                                                                 </div>
                                                             </>
                                                         )}
@@ -871,7 +897,7 @@ export default function Residents({
                                         className={`w-full rounded-xl border py-2.5 text-xs font-black tracking-wider uppercase shadow-xs transition ${
                                             inviteLink.is_active
                                                 ? 'border-rose-250 bg-white text-rose-600 hover:bg-rose-50/50'
-                                                : 'bg-emerald-600 border-transparent text-white hover:bg-emerald-700'
+                                                : 'border-transparent bg-emerald-600 text-white hover:bg-emerald-700'
                                         }`}
                                     >
                                         {inviteLink.is_active ? 'Disable Link' : 'Enable Link'}
@@ -929,7 +955,7 @@ export default function Residents({
                                 <button
                                     onClick={() => setShowDeleteConfirm(true)}
                                     disabled={isBulkActionRunning}
-                                    className="bg-red-650 rounded-xl px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition hover:bg-red-700 disabled:opacity-40"
+                                    className="rounded-xl bg-red-600 px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase shadow-sm transition hover:bg-red-700 active:bg-red-800 disabled:opacity-40"
                                 >
                                     Delete
                                 </button>
@@ -982,7 +1008,7 @@ export default function Residents({
                                     type="button"
                                     onClick={handleBulkDelete}
                                     disabled={isDeleting}
-                                    className="bg-red-655 inline-flex items-center gap-2 rounded-xl px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {isDeleting ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : 'Yes, Delete Selected'}
                                 </button>

@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
-import CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
+import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 import type { SharedData } from '@/types';
 
 type Collection = {
@@ -304,7 +304,7 @@ function PaymentActivityCard({ payment, defaultOpen = false }: { payment: Paymen
                             Completed
                         </span>
                     </div>
-                    <p className="mt-1 text-xs font-medium text-slate-400">{payment.paid_at_label || '—'}</p>
+                    <p className="mt-1 text-xs font-medium text-slate-400">{payment.paid_at_label || '-'}</p>
                 </div>
                 <div className="text-right">
                     <p className="text-lg font-black tracking-tight text-slate-900">{formatCurrency(payment.amount)}</p>
@@ -388,7 +388,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
 
     const dueDateLabel = useMemo(() => {
         if (!assignment.due_date) {
-            return '—';
+            return '-';
         }
         return new Date(assignment.due_date).toLocaleDateString(undefined, {
             month: 'short',
@@ -430,7 +430,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 </Link>
             </section>
 
-            {/* Section 1 — Bill Header */}
+            {/* Section 1 - Bill Header */}
             <section className="space-y-5 px-1">
                 <div className="flex flex-wrap items-center gap-2">
                     {assignment.billing_source === 'property_owner' ? (
@@ -462,7 +462,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 </div>
             </section>
 
-            {/* Section 2 — Progress or Settled */}
+            {/* Section 2 - Progress or Settled */}
             <section>
                 {isSettled ? (
                     <motion.div
@@ -485,7 +485,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                             <div className="grid w-full grid-cols-3 gap-3 sm:w-auto sm:min-w-[280px]">
                                 <div>
                                     <p className="text-[10px] font-bold tracking-widest text-emerald-700/60 uppercase">Completed</p>
-                                    <p className="mt-1 text-sm font-black text-emerald-950">{completionLabel || '—'}</p>
+                                    <p className="mt-1 text-sm font-black text-emerald-950">{completionLabel || '-'}</p>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold tracking-widest text-emerald-700/60 uppercase">Payments</p>
@@ -546,7 +546,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 </p>
             </section>
 
-            {/* Section 3 — Financial Summary */}
+            {/* Section 3 - Financial Summary */}
             <section className="space-y-1 px-1">
                 <h2 className="mb-4 text-[11px] font-black tracking-[0.18em] text-slate-400 uppercase">Financial Summary</h2>
                 <div className="space-y-0 divide-y divide-slate-100">
@@ -578,7 +578,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 </div>
             </section>
 
-            {/* Due date & cycle — compressed */}
+            {/* Due date & cycle - compressed */}
             <section className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-sm text-slate-500">
                 <span>
                     <span className="font-medium text-slate-400">Due Date</span>{' '}
@@ -591,7 +591,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 </span>
             </section>
 
-            {/* Section 4 — Payment Activity + Timeline */}
+            {/* Section 4 - Payment Activity + Timeline */}
             <section className="space-y-5">
                 <div className="flex items-end justify-between gap-3 px-1">
                     <div>
@@ -688,7 +688,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 )}
             </section>
 
-            {/* CTA — in document flow so it never covers payment activity; page padding clears the dock */}
+            {/* CTA - in document flow so it never covers payment activity; page padding clears the dock */}
             {!isSettled && journey.cta_label && (
                 <section className="space-y-3 px-1 pt-2">
                     <button

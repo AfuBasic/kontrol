@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ZoneAudienceResolver;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,6 +32,7 @@ class Coupon extends Model
     protected $fillable = [
         'code',
         'estate_id',
+        'zone_id',
         'user_id',
         'type',
         'value',
@@ -65,6 +67,14 @@ class Coupon extends Model
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
+    }
+
+    /**
+     * @return BelongsTo<Zone, $this>
+     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
     }
 
     /**
@@ -222,6 +232,10 @@ class Coupon extends Model
 
         // If it's restricted to a specific resident/user, it must match
         if ($this->user_id !== null && $this->user_id !== $user->id) {
+            return false;
+        }
+
+        if ($this->zone_id !== null && ! app(ZoneAudienceResolver::class)->userBelongsToZone($user, $estate, (int) $this->zone_id)) {
             return false;
         }
 

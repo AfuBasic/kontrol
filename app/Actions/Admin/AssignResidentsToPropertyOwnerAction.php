@@ -4,7 +4,6 @@ namespace App\Actions\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
-use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -36,7 +35,7 @@ class AssignResidentsToPropertyOwnerAction
                 ->first();
 
             if (! $propertyOwnerMembership) {
-                throw new \InvalidArgumentException("Property owner does not belong to the estate.");
+                throw new \InvalidArgumentException('Property owner does not belong to the estate.');
             }
 
             // Update estate_users_membership to belong to the property owner

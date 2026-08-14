@@ -66,7 +66,7 @@ interface Props {
 
 function formatDate(iso: string | null | undefined): string {
     if (!iso) {
-        return '—';
+        return '-';
     }
 
     return new Date(iso).toLocaleDateString('en-NG', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -193,7 +193,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                             <dl className="mt-6 grid gap-4 sm:grid-cols-2">
                                 <div>
                                     <dt className="text-[10px] font-medium tracking-wide text-stone-400 uppercase">Address</dt>
-                                    <dd className="mt-1 text-[13px] text-stone-800 dark:text-slate-200">{estate.address || '—'}</dd>
+                                    <dd className="mt-1 text-[13px] text-stone-800 dark:text-slate-200">{estate.address || '-'}</dd>
                                 </div>
                                 <div>
                                     <dt className="text-[10px] font-medium tracking-wide text-stone-400 uppercase">Activated</dt>
@@ -208,7 +208,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                             ? `${formatDate(estate.commission_starts_at)}${
                                                   estate.commission_ends_at ? ` – ${formatDate(estate.commission_ends_at)}` : ''
                                               }`
-                                            : '—'}
+                                            : '-'}
                                     </dd>
                                 </div>
                                 <div>
@@ -317,16 +317,16 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                 <div>
                                     <dt className="text-[10px] text-stone-400 uppercase">Chairman / contact</dt>
                                     <dd className="mt-0.5 font-medium text-stone-800 dark:text-slate-200">
-                                        {estate.chairman_name || '—'}
+                                        {estate.chairman_name || '-'}
                                     </dd>
                                 </div>
                                 <div>
                                     <dt className="text-[10px] text-stone-400 uppercase">Email</dt>
-                                    <dd className="mt-0.5 text-stone-700 dark:text-slate-300">{estate.chairman_email || estate.email || '—'}</dd>
+                                    <dd className="mt-0.5 text-stone-700 dark:text-slate-300">{estate.chairman_email || estate.email || '-'}</dd>
                                 </div>
                                 <div>
                                     <dt className="text-[10px] text-stone-400 uppercase">Phone</dt>
-                                    <dd className="mt-0.5 text-stone-700 dark:text-slate-300">{estate.chairman_phone || '—'}</dd>
+                                    <dd className="mt-0.5 text-stone-700 dark:text-slate-300">{estate.chairman_phone || '-'}</dd>
                                 </div>
                             </dl>
                         </div>

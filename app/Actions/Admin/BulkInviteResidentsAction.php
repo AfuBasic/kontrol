@@ -2,12 +2,11 @@
 
 namespace App\Actions\Admin;
 
-use App\Actions\Invitation\CreateInvitationAction;
-use App\Jobs\Admin\SendBulkResidentInvitationsJob;
 use App\Models\Estate;
+use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
 
 class BulkInviteResidentsAction
 {
@@ -15,7 +14,7 @@ class BulkInviteResidentsAction
      * @param  array<string>  $emails
      * @return array{invited: int, skipped: int, duplicates: int}
      */
-    public function execute(array $emails, Estate $estate): array
+    public function execute(array $emails, Estate $estate, ?int $zoneId = null): array
     {
         // 1. Normalize and deduplicate emails from the input
         $normalizedEmails = array_map(fn ($email) => strtolower(trim($email)), $emails);
@@ -24,26 +23,41 @@ class BulkInviteResidentsAction
 
         $invitedIds = [];
         $alreadyMembers = 0;
-        
-        $createAction = app(CreateInvitationAction::class);
+
+        $createResidentAction = app(CreateResidentAction::class);
         $user = Auth::user();
 
         // 2. Iterate and create invitations
         foreach ($uniqueEmails as $email) {
-            $invitation = $createAction->execute(
-                email: $email,
-                estate: $estate,
-                relationshipType: 'resident',
-                role: null,
-                zoneId: null,
-                scopeType: 'estate',
-                createdBy: $user
-            );
+            // Check if user is already an accepted member of this estate
+            $existingUser = User::where('email', $email)->first();
+            if ($existingUser) {
+                $isAlreadyAccepted = DB::table('estate_users_membership')
+                    ->where('user_id', $existingUser->id)
+                    ->where('estate_id', $estate->id)
+                    ->whereIn('status', ['accepted', 'active'])
+                    ->exists();
 
-            if ($invitation === null) {
-                // The user is already an active member of this estate
-                $alreadyMembers++;
-            } else {
+                if ($isAlreadyAccepted) {
+                    $alreadyMembers++;
+
+                    continue;
+                }
+            }
+
+            // Create resident (user, pending membership, role assignment, profile, invitation token)
+            $createResidentAction->execute([
+                'name' => strstr($email, '@', true) ?: $email,
+                'email' => $email,
+                'zone_id' => $zoneId,
+            ], $estate);
+
+            $invitation = Invitation::withoutGlobalScopes()
+                ->where('email', $email)
+                ->where('estate_id', $estate->id)
+                ->first();
+
+            if ($invitation) {
                 $invitedIds[] = $invitation->id;
             }
         }
@@ -59,8 +73,8 @@ class BulkInviteResidentsAction
                 ])
                 ->log('bulk invited '.count($invitedIds).' residents');
 
-            // Dispatch single job for all invitations
-            SendBulkResidentInvitationsJob::dispatch($invitedIds, $estate->id);
+            // The invitation emails are automatically queued by the ResidentCreated event
+            // fired within CreateResidentAction, so we don't need a bulk dispatch here.
         }
 
         return [

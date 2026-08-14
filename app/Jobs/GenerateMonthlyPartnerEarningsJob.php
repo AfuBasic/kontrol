@@ -51,7 +51,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
         ]);
 
         // Eligibility (trial + per-resident tenure) is enforced at accrual time in CommissionService.
-        // This job only aggregates rows that already exist — it must not invent partner-age expiry.
+        // This job only aggregates rows that already exist - it must not invent partner-age expiry.
 
         // Snapshot only sums pending (re-runnable). Close includes already-aggregated rows for the period.
         $statusFilter = $mode === self::MODE_SNAPSHOT
@@ -73,7 +73,7 @@ class GenerateMonthlyPartnerEarningsJob implements ShouldQueue
 
         foreach ($rows as $row) {
             DB::transaction(function () use ($row, $monthKey, $rangeStart, $rangeEnd, $mode) {
-                // Never auto-set settled_at — payment is a separate Zeus action.
+                // Never auto-set settled_at - payment is a separate Zeus action.
                 $earning = PartnerEarning::query()
                     ->where('partner_id', $row->partner_id)
                     ->whereDate('month', $monthKey)

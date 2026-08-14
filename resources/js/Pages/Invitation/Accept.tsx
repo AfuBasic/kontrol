@@ -4,20 +4,40 @@ import { ArrowRight, ShieldCheck, Home, Bell } from 'lucide-react';
 import React from 'react';
 
 interface Props {
-    user: {
+    acceptUrl?: string;
+    user?: {
         id: number;
         name: string;
         email: string;
     };
+    invitation?: {
+        token: string;
+        email: string;
+        estate_name: string;
+        relationship_type?: string | null;
+        zone_name?: string | null;
+    };
     isPasswordReset?: boolean;
+    flash?: {
+        success?: string;
+        error?: string;
+        info?: string;
+    };
+    errors?: Record<string, string>;
 }
 
-export default function AcceptInvitation({ user, isPasswordReset }: Props) {
+export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswordReset, flash, errors }: Props) {
     const { post, processing } = useForm();
+
+    const name = user?.name || invitation?.email || 'there';
+    const estateName = invitation?.estate_name;
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post(`/invitation/${user.id}${window.location.search}`);
+        const targetUrl = acceptUrl || (window.location.pathname.startsWith('/invitations/')
+            ? `${window.location.pathname}/accept`
+            : window.location.pathname);
+        post(`${targetUrl}${window.location.search}`);
     }
 
     return (
@@ -52,9 +72,17 @@ export default function AcceptInvitation({ user, isPasswordReset }: Props) {
                     <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
                         <div className="p-8 text-center lg:p-10">
                             <div className="mb-8">
-                                <h1 className="text-2xl font-semibold tracking-tight text-white">Hello, {user.name}</h1>
-                                <p className="mt-2 text-sm text-white/60">You have been invited to join an estate on Kontrol.</p>
+                                <h1 className="text-2xl font-semibold tracking-tight text-white">Hello, {name}</h1>
+                                <p className="mt-2 text-sm text-white/60">
+                                    {estateName ? `You have been invited to join ${estateName} on Kontrol.` : 'You have been invited to join an estate on Kontrol.'}
+                                </p>
                             </div>
+
+                            {(flash?.error || (errors && Object.keys(errors).length > 0)) && (
+                                <div className="mb-6 rounded-lg bg-red-500/10 p-4 border border-red-500/20 text-sm text-red-400">
+                                    {flash?.error || Object.values(errors || {})[0]}
+                                </div>
+                            )}
 
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 <button

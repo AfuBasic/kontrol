@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Estate;
 use App\Models\Zone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,7 @@ class ZoneFactory extends Factory
     public function definition(): array
     {
         return [
-            'estate_id' => \App\Models\Estate::factory(),
+            'estate_id' => Estate::factory(),
             'name' => $this->faker->words(2, true),
         ];
     }

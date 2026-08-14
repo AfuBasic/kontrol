@@ -2,7 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ChevronRight, Loader2, RefreshCw, ScanLine, ShieldCheck, Siren, Wifi, WifiOff, Zap } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
+import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import EmergencyServicesList from '@/Components/EmergencyServicesList';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
@@ -46,7 +46,7 @@ function formatLastSync(iso: string | null): string {
             minute: '2-digit',
         }).format(new Date(iso));
     } catch {
-        return '—';
+        return '-';
     }
 }
 
@@ -79,7 +79,7 @@ export default function SecurityCommandCenter() {
     const status = (() => {
         if (!isOnline || quality === 'offline') {
             return {
-                label: 'Offline Mode — Scanning from cache',
+                label: 'Offline Mode - Scanning from cache',
                 detail: pendingCount > 0 ? `${pendingCount} log${pendingCount === 1 ? '' : 's'} pending sync` : 'Manual entry always available',
                 tone: 'slate' as const,
                 Icon: WifiOff,
@@ -89,7 +89,7 @@ export default function SecurityCommandCenter() {
 
         if (quality === 'poor') {
             return {
-                label: 'Limited Connectivity — Scanning still available',
+                label: 'Limited Connectivity - Scanning still available',
                 detail: pendingCount > 0 ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}` : `Last sync ${formatLastSync(lastSyncAt)}`,
                 tone: 'amber' as const,
                 Icon: Zap,
@@ -198,7 +198,7 @@ export default function SecurityCommandCenter() {
                     <h1 className="text-xl font-semibold tracking-tight text-slate-900">{guardName}</h1>
                 </div>
 
-                {/* Primary action — full-bleed terminal CTA */}
+                {/* Primary action - full-bleed terminal CTA */}
                 <motion.button
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -230,7 +230,7 @@ export default function SecurityCommandCenter() {
                     </div>
                 </motion.button>
 
-                {/* Live stats — 3-up */}
+                {/* Live stats - 3-up */}
                 <div className="grid grid-cols-3 gap-2.5">
                     <StatCard label="Expected" value={stats.expected_today} hint="today" />
                     <StatCard label="Validated" value={stats.validated_today} hint="today" tone="emerald" />

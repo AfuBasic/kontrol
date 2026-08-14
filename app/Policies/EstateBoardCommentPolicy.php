@@ -5,13 +5,9 @@ namespace App\Policies;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use App\Auth\ContextManager;
 
 class EstateBoardCommentPolicy extends BaseContextPolicy
 {
-
-
     /**
      * Determine if the user can create a comment.
      */

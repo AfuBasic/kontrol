@@ -8,10 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Invitation;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -50,7 +51,13 @@ class InvitationAcceptanceController extends Controller
 
         $existingUser = User::where('email', strtolower(trim($invitation->email)))->first();
 
-        return Inertia::render('Auth/AcceptInvitation', [
+        return Inertia::render('Invitation/Accept', [
+            'acceptUrl' => route('invitations.accept', ['token' => $invitation->token]),
+            'user' => [
+                'id' => $existingUser?->id ?? 0,
+                'name' => $existingUser?->name ?? $invitation->email,
+                'email' => $invitation->email,
+            ],
             'invitation' => [
                 'token' => $invitation->token,
                 'email' => $invitation->email,
@@ -85,42 +92,22 @@ class InvitationAcceptanceController extends Controller
         }
 
         if (! $user) {
-            // Unauthenticated user flow
-            $existingUser = User::where('email', $email)->first();
-
-            if ($existingUser) {
-                // Existing user accepting via password validation
-                $request->validate([
-                    'password' => ['required', 'string'],
-                ]);
-
-                if (! Auth::attempt(['email' => $email, 'password' => $request->password])) {
-                    return redirect()->back()->withErrors(['password' => 'Invalid password for existing account.']);
-                }
-
-                $user = Auth::user();
-            } else {
-                // New user registration
-                $request->validate([
-                    'name' => ['required', 'string', 'max:255'],
-                    'password' => ['required', 'string', 'min:8', 'confirmed'],
-                ]);
-
-                $user = User::create([
-                    'name' => $request->name,
-                    'email' => $email,
-                    'password' => Hash::make($request->password),
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => strstr($email, '@', true) ?: $email,
                     'email_verified_at' => now(),
-                ]);
+                ]
+            );
 
-                Auth::login($user);
-            }
+            Auth::login($user);
         }
 
-        // Execute V3 AcceptInvitationAction
         try {
             $acceptAction->execute($invitation, $user);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
+            Log::error('AcceptInvitationAction failed: '.$e->getMessage(), ['exception' => $e]);
+
             return redirect()->back()->with('error', $e->getMessage());
         }
 

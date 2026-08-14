@@ -169,7 +169,7 @@ export default function Create({ categories }: Props) {
 
     return (
         <>
-            <Head title="Report Incident — Security Workspace" />
+            <Head title="Report Incident - Security Workspace" />
 
             <div className="flex flex-col gap-5">
                 {/* Back Link */}

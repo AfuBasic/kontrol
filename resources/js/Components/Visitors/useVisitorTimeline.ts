@@ -45,7 +45,7 @@ function buildDateLabel(isoDate: string, todayISO: string): string {
  * Transforms a flat array of AccessCode objects into calendar-ready
  * VisitorTimelineGroup buckets. This is the source of truth for both:
  *   • Agenda View   (current)
- *   • Calendar View (future — consumes the same groups, different renderer)
+ *   • Calendar View (future - consumes the same groups, different renderer)
  *
  * Decision 6: Every group exposes date, label, weekday, month, and year so
  * that Calendar View can be built without any recalculation.
@@ -58,7 +58,7 @@ function buildDateLabel(isoDate: string, todayISO: string): string {
  * @param dateField  Which date field to group by:
  *                   'arrival_date'    → Upcoming tab
  *                   'completion_date' → History tab
- * @param todayISO   ISO date string for "today" — pass new Date().toISOString().slice(0,10)
+ * @param todayISO   ISO date string for "today" - pass new Date().toISOString().slice(0,10)
  */
 export function groupVisitorsByDate(
     codes: AccessCode[],
@@ -111,7 +111,7 @@ export function groupVisitorsByDate(
 /**
  * React hook wrapper around groupVisitorsByDate.
  *
- * Memoisation is intentionally omitted here — the caller's useMemo is
+ * Memoisation is intentionally omitted here - the caller's useMemo is
  * more appropriate as it can key off the correct dependencies.
  */
 export function useVisitorTimeline(

@@ -19,15 +19,16 @@ class ZoneIsolationScope implements Scope
         if (! $context) {
             // Fail closed: No valid context = no records for protected models
             $builder->whereRaw('1 = 0');
+
             return;
         }
 
         // Always enforce the estate boundary first
-        $builder->where($model->getTable() . '.estate_id', $context->estateId);
+        $builder->where($model->getTable().'.estate_id', $context->estateId);
 
         // If the context is specifically zone-scoped, enforce the zone boundary
         if ($context->zoneId !== null) {
-            $builder->where($model->getTable() . '.zone_id', $context->zoneId);
+            $builder->where($model->getTable().'.zone_id', $context->zoneId);
         }
     }
 }

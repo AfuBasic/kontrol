@@ -19,7 +19,7 @@ const paddingMap = {
 };
 
 /**
- * Premium surface — elevation over borders, soft ring, optional stretch.
+ * Premium surface - elevation over borders, soft ring, optional stretch.
  */
 export default function Surface({
     children,

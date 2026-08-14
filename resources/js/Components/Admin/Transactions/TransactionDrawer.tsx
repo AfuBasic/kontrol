@@ -5,7 +5,7 @@ import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, 
 import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 
-import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 
 interface TransactionDetail {
     ulid: string;

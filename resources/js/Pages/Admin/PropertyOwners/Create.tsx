@@ -7,24 +7,16 @@ import {
     store as inviteLinkStore,
     regenerate as inviteLinkRegenerate,
     toggle as inviteLinkToggle,
+    destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
 import AdminLayout from '@/Layouts/AdminLayout';
+import InviteLinksTab, { InviteLink } from '../Components/InviteLinksTab';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
-interface InviteLink {
-    token: string;
-    url: string;
-    is_active: boolean;
-    usage_count: number;
-    max_usages: number | null;
-    requires_approval: boolean;
-    expires_at: string | null;
-    is_expired: boolean;
-}
-
 interface Props {
-    inviteLink: InviteLink | null;
+    inviteLinks?: InviteLink[];
+    zones?: { id: number; name: string }[];
 }
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -56,33 +48,16 @@ function extractEmailsFromRow(row: unknown[]): string | null {
     return null;
 }
 
-export default function CreatePropertyOwner({ inviteLink }: Props) {
+export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Props) {
     const [activeTab, setActiveTab] = useState<TabType>('invite_link');
     const [extractedEmails, setExtractedEmails] = useState<string[]>([]);
     const [pasteText, setPasteText] = useState('');
     const [fileName, setFileName] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [bulkError, setBulkError] = useState<string | null>(null);
+    const [selectedZone, setSelectedZone] = useState<string>('');
 
-    // Invite Link Modal & Settings State
-    const [showInviteModal, setShowInviteModal] = useState(false);
-    const [isEditingSettings, setIsEditingSettings] = useState(false);
-    const [inviteSettings, setInviteSettings] = useState({
-        max_usages: inviteLink?.max_usages || '',
-        requires_approval: inviteLink?.requires_approval ?? true,
-        expires_at: inviteLink?.expires_at ? inviteLink.expires_at.split(' ')[0] : '',
-    });
-
-    // Sync state with props when inviteLink changes
-    useEffect(() => {
-        if (inviteLink) {
-            setInviteSettings({
-                max_usages: inviteLink.max_usages ?? '',
-                requires_approval: inviteLink.requires_approval,
-                expires_at: inviteLink.expires_at ? inviteLink.expires_at.split(' ')[0] : '',
-            });
-        }
-    }, [inviteLink]);
+    const { auth } = usePage<any>().props;
 
     // Single form
     const { data, setData, post, processing, errors } = useForm({
@@ -91,6 +66,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
         phone: '',
         unit_number: '',
         address: '',
+        zone_id: '',
     });
 
     function handleSubmitSingle(e: React.FormEvent) {
@@ -195,12 +171,13 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
 
         router.post(
             bulkInvite.url(),
-            { emails: extractedEmails },
+            { emails: extractedEmails, zone_id: selectedZone || null },
             {
                 onSuccess: () => {
                     setExtractedEmails([]);
                     setPasteText('');
                     setFileName(null);
+                    setSelectedZone('');
                 },
             },
         );
@@ -214,84 +191,7 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
         setBulkError(null);
     }, []);
 
-    const { auth } = usePage<any>().props;
-    const [isCopied, setIsCopied] = useState(false);
-
-    const handleCopyLink = () => {
-        if (inviteLink?.url) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(inviteLink.url);
-                setIsCopied(true);
-                setTimeout(() => setIsCopied(false), 2000);
-            } else {
-                // Fallback for non-secure contexts
-                const textArea = document.createElement('textarea');
-                textArea.value = inviteLink.url;
-                document.body.appendChild(textArea);
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    setIsCopied(true);
-                    setTimeout(() => setIsCopied(false), 2000);
-                } catch (err) {
-                    console.error('Fallback copy failed', err);
-                }
-                document.body.removeChild(textArea);
-            }
-        }
-    };
-
-    const handleShareWhatsApp = () => {
-        if (inviteLink?.url) {
-            const text = encodeURIComponent(
-                `Hi! You've been invited to join ${auth.user.estate_name} on Kontrol as a Property Owner. 🚀\n\nClick the link below to get started: ${inviteLink.url}`,
-            );
-            window.open(`https://wa.me/?text=${text}`, '_blank');
-        }
-    };
-
-    const handleGenerateLink = () => {
-        router.post(
-            inviteLinkStore.url(),
-            {
-                max_usages: inviteSettings.max_usages || null,
-                requires_approval: inviteSettings.requires_approval,
-                expires_at: inviteSettings.expires_at || null,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowInviteModal(true);
-                    setIsEditingSettings(false);
-                },
-            },
-        );
-    };
-
-    const handleRegenerateLink = () => {
-        if (!confirm('Are you sure? This will invalidate the previous link and reset its usage count.')) return;
-
-        router.post(
-            inviteLinkRegenerate.url(),
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setShowInviteModal(true);
-                },
-            },
-        );
-    };
-
-    const handleToggleLink = () => {
-        router.post(
-            inviteLinkToggle.url(),
-            {},
-            {
-                preserveScroll: true,
-            },
-        );
-    };
+    // End of bulk processing functions
 
     const tabs = [
         { id: 'invite_link' as const, label: 'Invite Link', icon: LinkIcon },
@@ -465,6 +365,72 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                     />
                                     {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
                                 </div>
+
+                                {/* Zone Assignment Selection */}
+                                {zones.length > 0 && (
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Property Location & Scope
+                                        </label>
+                                        <p className="mt-0.5 text-xs text-gray-500">Determine whether this owner's property is part of a specific zone.</p>
+
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="scope_mode"
+                                                    checked={data.zone_id === ''}
+                                                    onChange={() => setData('zone_id', '')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Property is not restricted to a specific zone.</span>
+                                                </div>
+                                            </label>
+
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="scope_mode"
+                                                    checked={data.zone_id !== ''}
+                                                    onChange={() => setData('zone_id', zones[0]?.id.toString() || '')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Property belongs to a specific phase or block.</span>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {data.zone_id !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                                            >
+                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="zone_id"
+                                                    value={data.zone_id}
+                                                    onChange={(e) => setData('zone_id', e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {errors.zone_id && <p className="mt-1 text-xs text-red-600">{errors.zone_id}</p>}
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
@@ -563,6 +529,71 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         </div>
                                     </div>
                                 )}
+
+                                {/* Zone Assignment for Bulk */}
+                                {zones.length > 0 && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Property Location & Scope
+                                        </label>
+                                        <p className="mt-0.5 text-xs text-gray-500">Determine whether these owners' properties are part of a specific zone.</p>
+
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="bulk_scope_mode"
+                                                    checked={selectedZone === ''}
+                                                    onChange={() => setSelectedZone('')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties are not restricted to a specific zone.</span>
+                                                </div>
+                                            </label>
+
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="bulk_scope_mode"
+                                                    checked={selectedZone !== ''}
+                                                    onChange={() => setSelectedZone(zones[0]?.id.toString() || '')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties belong to a specific phase or block.</span>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {selectedZone !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                                            >
+                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="bulk_zone_id"
+                                                    value={selectedZone}
+                                                    onChange={(e) => setSelectedZone(e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
@@ -656,6 +687,72 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                                         No valid email addresses found. Please check your input.
                                     </div>
                                 )}
+
+                                {/* Zone Assignment for Paste */}
+                                {zones.length > 0 && (
+                                    <div className="mt-4">
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Property Location & Scope
+                                        </label>
+                                        <p className="mt-0.5 text-xs text-gray-500">Determine whether these owners' properties are part of a specific zone.</p>
+
+                                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                                <input
+                                                    type="radio"
+                                                    name="paste_scope_mode"
+                                                    checked={selectedZone === ''}
+                                                    onChange={() => setSelectedZone('')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties are not restricted to a specific zone.</span>
+                                                </div>
+                                            </label>
+
+                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                                >
+                                                <input
+                                                    type="radio"
+                                                    name="paste_scope_mode"
+                                                    checked={selectedZone !== ''}
+                                                    onChange={() => setSelectedZone(zones[0]?.id.toString() || '')}
+                                                    className="mt-0.5 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                                />
+                                                <div>
+                                                    <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties belong to a specific phase or block.</span>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {/* Zone Selector Dropdown when Specific Zone is selected */}
+                                        {selectedZone !== '' && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                                            >
+                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                    Select Zone
+                                                </label>
+                                                <select
+                                                    id="paste_zone_id"
+                                                    value={selectedZone}
+                                                    onChange={(e) => setSelectedZone(e.target.value)}
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
+                                                >
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="mt-8 flex items-center justify-end gap-4">
@@ -688,183 +785,21 @@ export default function CreatePropertyOwner({ inviteLink }: Props) {
                             transition={{ duration: 0.2 }}
                             className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
                         >
-                            <div className="space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-[#1F6FDB]">
-                                        <LinkIcon className="h-5 w-5" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">Configure Invite Link</h3>
-                                        <p className="text-sm text-gray-500">Set limits and approval rules for your shareable link.</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4 pt-4">
-                                    {/* Max Usages */}
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700">Maximum Usage Limit</label>
-                                        <div className="relative">
-                                            <input
-                                                type="number"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
-                                                value={inviteSettings.max_usages}
-                                                onChange={(e) => setInviteSettings((prev) => ({ ...prev, max_usages: e.target.value }))}
-                                                placeholder="Unlimited"
-                                                className="block w-full rounded-xl border border-gray-300 py-2.5 pr-12 pl-4 text-sm transition-all outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                            />
-                                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                                <span className="text-xs text-gray-400">users</span>
-                                            </div>
-                                        </div>
-                                        <p className="text-xs text-gray-500">Leave empty or set to 0 for unlimited uses.</p>
-                                    </div>
-
-                                    {/* Requires Approval */}
-                                    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                                        <label className="flex cursor-pointer items-start gap-3">
-                                            <div className="mt-1 flex h-5 items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={inviteSettings.requires_approval}
-                                                    onChange={(e) => setInviteSettings((prev) => ({ ...prev, requires_approval: e.target.checked }))}
-                                                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                                />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-semibold text-gray-900">Require Admin Approval</span>
-                                                <span className="text-xs text-gray-500">
-                                                    If enabled, property owners will stay 'pending' after signup until you manually approve them in
-                                                    the dashboard.
-                                                </span>
-                                            </div>
-                                        </label>
-                                    </div>
-
-                                    {/* Expiry Date */}
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-gray-700">Expiry Date</label>
-                                        <div className="relative">
-                                            <input
-                                                type="date"
-                                                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
-                                                value={inviteSettings.expires_at}
-                                                onChange={(e) => setInviteSettings((prev) => ({ ...prev, expires_at: e.target.value }))}
-                                                className="block w-full rounded-xl border border-gray-300 py-2.5 pr-4 pl-4 text-sm transition-all outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                            />
-                                        </div>
-                                        <p className="text-xs text-gray-500">Link will automatically expire after this date (min. 1 day).</p>
-                                    </div>
-                                </div>
-
-                                <div className="mt-8 flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={handleGenerateLink}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
-                                    >
-                                        <RefreshCw className="h-4 w-4" />
-                                        {inviteLink ? 'Update & Share Link' : 'Generate Invite Link'}
-                                    </button>
-                                </div>
-                            </div>
+                            <InviteLinksTab
+                                inviteLinks={inviteLinks}
+                                zones={zones}
+                                urls={{
+                                    store: inviteLinkStore.url(),
+                                    toggle: inviteLinkToggle.url(),
+                                    regenerate: inviteLinkRegenerate.url(),
+                                    destroy: inviteLinkDestroy.url(),
+                                }}
+                                estateName={auth?.user?.estate_name || 'your estate'}
+                            />
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
-
-            {/* Success Modal */}
-            <AnimatePresence>
-                {showInviteModal && inviteLink && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowInviteModal(false)}
-                            className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
-                        >
-                            <div className="bg-[#1F6FDB] p-8 text-center text-white">
-                                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
-                                    <CheckCircle className="h-8 w-8" />
-                                </div>
-                                <h3 className="text-xl font-bold">Invite Link Ready!</h3>
-                                <p className="mt-2 text-sm text-white/80">
-                                    Your estate invitation link has been generated and is ready to be shared with property owners.
-                                </p>
-                            </div>
-
-                            <div className="p-8">
-                                <div className="space-y-6">
-                                    <div>
-                                        <label className="text-xs font-bold tracking-widest text-gray-400 uppercase">Shareable URL</label>
-                                        <div className="mt-2 flex items-center gap-2 rounded-xl border border-gray-100 bg-gray-50 p-3">
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={inviteLink.url}
-                                                className="flex-1 bg-transparent font-mono text-sm text-gray-600 focus:outline-none"
-                                            />
-                                            <motion.button
-                                                onClick={handleCopyLink}
-                                                whileTap={{ scale: 0.9 }}
-                                                className={`rounded-lg p-2 transition-colors ${isCopied ? 'bg-green-500 text-white shadow-sm' : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'}`}
-                                            >
-                                                <AnimatePresence mode="wait">
-                                                    <motion.div
-                                                        key={isCopied ? 'check' : 'copy'}
-                                                        initial={{ opacity: 0, scale: 0.5 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        exit={{ opacity: 0, scale: 0.5 }}
-                                                        transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-                                                    >
-                                                        {isCopied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                                                    </motion.div>
-                                                </AnimatePresence>
-                                            </motion.button>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="rounded-xl border border-gray-100 p-4">
-                                            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Approval</p>
-                                            <p className="mt-1 text-sm font-semibold text-gray-700">
-                                                {inviteLink.requires_approval ? 'Manual' : 'Automatic'}
-                                            </p>
-                                        </div>
-                                        <div className="rounded-xl border border-gray-100 p-4">
-                                            <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">Max Usage</p>
-                                            <p className="mt-1 text-sm font-semibold text-gray-700">{inviteLink.max_usages || 'Unlimited'}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-3 pt-4">
-                                        <button
-                                            onClick={handleShareWhatsApp}
-                                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-4 font-bold text-white shadow-lg shadow-[#25D366]/20 transition-all hover:opacity-90"
-                                        >
-                                            <Share2 className="h-5 w-5" />
-                                            Share on WhatsApp
-                                        </button>
-                                        <button
-                                            onClick={() => setShowInviteModal(false)}
-                                            className="w-full py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
-                                        >
-                                            Close and Continue
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
         </>
     );
 }

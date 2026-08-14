@@ -31,7 +31,7 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
         },
         {
             key: 'verified',
-            title: 'Verified at gate',
+            title: `Verified at ${record.entry_point || record.gate || 'Gate'}`,
             actor: record.verifier_name ? `by ${record.verifier_name}` : null,
             timestamp: record.verified_at,
             done: true,
@@ -43,7 +43,7 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
         if (record.checked_out_at) {
             steps.push({
                 key: 'checkout',
-                title: 'Checked out',
+                title: `Checked out at ${record.exit_point || record.entry_point || record.gate || 'Gate'}`,
                 actor: record.checkout_verifier_name ? `by ${record.checkout_verifier_name}` : null,
                 timestamp: record.checked_out_at,
                 done: true,
@@ -114,7 +114,7 @@ export default function RecordDetailChain({ record, checkoutEnabled }: Props) {
             <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-gray-100 bg-gray-50 px-2.5 py-2">
                 <Lock className="h-3 w-3 shrink-0 text-gray-400" aria-hidden />
                 <p className="text-[10px] font-medium leading-snug text-gray-500">
-                    Record locked — cannot be edited.
+                    Record locked - cannot be edited.
                 </p>
             </div>
         </div>

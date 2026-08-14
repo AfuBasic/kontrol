@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { KeyRound, Mail, Trash2, UserPlus, Users, ShieldCheck, Activity, BellRing, Sparkles, Zap } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 import { useState } from 'react';
-import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
+import * as HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import FeatureCard from '@/Pages/Resident/Household/Components/FeatureCard';

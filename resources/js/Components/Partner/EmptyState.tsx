@@ -22,7 +22,7 @@ interface Props {
 }
 
 /**
- * Premium empty state — illustration, clear message, motivating CTA.
+ * Premium empty state - illustration, clear message, motivating CTA.
  */
 export default function EmptyState({
     icon: Icon,

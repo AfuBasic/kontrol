@@ -31,6 +31,7 @@ interface AvailableResident {
 interface Props {
     propertyOwner: {
         id: number;
+        ulid: string;
         name: string;
     };
     residents?: Resident[] | null;
@@ -49,7 +50,7 @@ export default function Residents({ propertyOwner, residents }: Props) {
         async (query: string) => {
             setIsSearching(true);
             try {
-                const response = await axios.get(availableResidents.url(propertyOwner.id), {
+                const response = await axios.get(availableResidents.url(propertyOwner.ulid), {
                     params: { search: query },
                 });
                 setSearchResults(response.data);
@@ -80,7 +81,7 @@ export default function Residents({ propertyOwner, residents }: Props) {
 
         setIsSubmitting(true);
         router.post(
-            assignResidents.url(propertyOwner.id),
+            assignResidents.url(propertyOwner.ulid),
             {
                 resident_ids: selectedIds,
             },

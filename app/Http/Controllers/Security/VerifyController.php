@@ -12,10 +12,12 @@ use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
+use App\Services\Security\CheckpointClaimService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -33,10 +35,11 @@ class VerifyController extends Controller
         $user = $request->user();
         $estate = app(EstateContextService::class)->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
+        $gateName = app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
 
         return Inertia::render('Security/Verify', [
             'estateName' => $estate->name,
-            'gateName' => 'Main Entrance',
+            'gateName' => $gateName,
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
@@ -55,15 +58,30 @@ class VerifyController extends Controller
 
         if ($result['valid']) {
             if (isset($result['action']) && $result['action'] === 'checkout') {
-                $log = $this->recordCheckOutAction->execute(
-                    code: $request->validated('code'),
-                    estateId: $estate->id,
-                    verifiedBy: $user
-                );
+                try {
+                    $log = $this->recordCheckOutAction->execute(
+                        code: $request->validated('code'),
+                        estateId: $estate->id,
+                        verifiedBy: $user
+                    );
 
-                $result['access_log_id'] = $log->id;
-                $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
-                $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
+                    $result['access_log_id'] = $log->id;
+                    $result['checked_out_at'] = $log->checked_out_at?->toIso8601String();
+                    $result['duration_minutes'] = $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0;
+                } catch (ValidationException $e) {
+                    $result['valid'] = false;
+                    $result['status'] = 'checkout_mismatch';
+                    $result['message'] = $e->getMessage();
+
+                    if ($request->wantsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'validation_result' => $result,
+                        ], 422);
+                    }
+
+                    return back()->with('validation_result', $result)->withErrors($e->errors());
+                }
             } elseif (isset($result['action']) && $result['action'] === 'checkout_pending') {
                 // Do not auto check-in when checkout is pending
             } else {
@@ -147,11 +165,33 @@ class VerifyController extends Controller
         }
 
         if ($request->input('decision') === 'checkout') {
-            $this->recordCheckOutAction->execute(
-                code: $request->input('code'),
-                estateId: $estate->id,
-                verifiedBy: $user
-            );
+            try {
+                $log = $this->recordCheckOutAction->execute(
+                    code: $request->input('code'),
+                    estateId: $estate->id,
+                    verifiedBy: $user
+                );
+
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => true,
+                        'decision' => 'checkout',
+                        'checked_out_at' => $log->checked_out_at?->format('h:i A, M j'),
+                        'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
+                        'duration_minutes' => $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0,
+                    ]);
+                }
+            } catch (ValidationException $e) {
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                        'errors' => $e->errors(),
+                    ], 422);
+                }
+
+                return back()->withErrors($e->errors())->with('error', $e->getMessage());
+            }
         }
 
         if ($request->wantsJson()) {

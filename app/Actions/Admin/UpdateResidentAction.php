@@ -19,6 +19,10 @@ class UpdateResidentAction
         return DB::transaction(function () use ($resident, $data, $estate) {
             $emailChanged = isset($data['email']) && $data['email'] !== $resident->email;
 
+            if ($emailChanged && $resident->email === $estate->email) {
+                abort(403, 'The estate creator\'s email cannot be changed.');
+            }
+
             $updateData = [
                 'name' => $data['name'],
             ];

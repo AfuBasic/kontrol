@@ -1,10 +1,10 @@
 import { Capacitor } from '@capacitor/core';
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import LoginController from '@/actions/App/Http/Controllers/Auth/LoginController';
-import ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 
 interface Props {
     user: {
@@ -18,6 +18,9 @@ interface Props {
 const PERMISSIONS = ['Validate visitor access codes', 'Acknowledge & dismiss alerts', 'Read estate announcements'];
 
 export default function ProfilePage({ user, estateName }: Props) {
+    const { auth } = usePage().props as any;
+    const availableContexts = auth?.user?.available_contexts || [];
+
     const [editOpen, setEditOpen] = useState(false);
     const [editMode, setEditMode] = useState<'profile' | 'password'>('profile');
     const [logoutConfirm, setLogoutConfirm] = useState(false);
@@ -115,6 +118,18 @@ export default function ProfilePage({ user, estateName }: Props) {
                         setEditOpen(true);
                     }}
                 />
+
+                {/* Switch Workspace */}
+                {availableContexts.length > 1 && (
+                    <ActionRow
+                        icon={<Building2 className="h-4 w-4" strokeWidth={2.2} />}
+                        label="Switch Workspace"
+                        sub="Switch to another estate or role"
+                        onClick={() => {
+                            router.visit(ContextController.index.url());
+                        }}
+                    />
+                )}
             </section>
 
             {/* Logout */}

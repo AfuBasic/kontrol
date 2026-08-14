@@ -87,6 +87,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
             'visitor_name' => $visitorName ?? 'Your visitor',
             'estate_name' => $estateName,
             'type' => 'visitor_arrived',
+            'target_role' => 'resident',
             'action_url' => '/resident/home',
         ];
     }

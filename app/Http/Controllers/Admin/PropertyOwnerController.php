@@ -3,17 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\AssignResidentsToPropertyOwnerAction;
-use App\Actions\Admin\BulkDeleteResidentsAction;
+use App\Actions\Admin\BulkDeletePropertyOwnersAction;
 use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
+use App\Actions\Admin\DeletePropertyOwnerAction;
+use App\Actions\Admin\MarkPropertyOwnerAsResidentAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
-use App\Actions\Admin\SuspendResidentAction;
+use App\Actions\Admin\SuspendPropertyOwnerAction;
+use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
 use App\Models\AdministrativeAssignment;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\EstateContextService;
+use App\Services\ResidentSubscriptionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -35,13 +40,19 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.view');
 
-        $estate = $this->estateContext->getEstate();
         $filters = $request->only(['search', 'status', 'property', 'sort']);
+        $estate = $this->estateContext->getEstate();
+        $poRole = Role::where('name', 'property_owner')->whereNull('estate_id')->first();
 
         $query = User::query()
             ->forEstate($estate->id)
             ->withRole('property_owner', $estate->id)
-            ->with(['profile', 'roles', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with([
+                'roles',
+                'profile',
+                'estates' => fn ($q) => $q->where('estates.id', $estate->id),
+                'administrativeAssignments' => fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id)),
+            ])
             ->withCount([
                 'properties' => fn ($q) => $q->where('estate_id', $estate->id),
                 'managedResidents',
@@ -56,17 +67,19 @@ class PropertyOwnerController extends Controller
                         });
                 });
             })
-            ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
+            ->when($filters['status'] ?? null, function ($query, $status) use ($estate, $poRole) {
                 if ($status === 'active') {
-                    $query->whereNull('suspended_at')
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'inactive') {
-                    $query->whereNotNull('suspended_at');
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', false));
                 } elseif ($status === 'invited') {
                     $query->whereNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 } elseif ($status === 'pending_activation') {
                     $query->whereNotNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
@@ -90,28 +103,41 @@ class PropertyOwnerController extends Controller
             });
 
         $propertyOwners = $query->paginate(15)
-            ->through(fn ($user) => [
-                'id' => $user->id,
-                'ulid' => $user->ulid,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->profile?->phone,
-                'unit_number' => $user->profile?->unit_number,
-                'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
-                'suspended_at' => $user->suspended_at,
-                'email_verified_at' => $user->email_verified_at,
-                'properties_count' => $user->properties_count,
-                'residents_count' => $user->managed_residents_count,
-                'is_resident' => $user->roles->contains('name', 'resident'),
-                'created_at' => $user->created_at->format('M d, Y'),
-            ])
+            ->through(function ($user) {
+                $assignment = $user->administrativeAssignments->first();
+                $isSuspended = $assignment ? ! $assignment->is_active : false;
+
+                return [
+                    'id' => $user->id,
+                    'ulid' => $user->ulid,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->profile?->phone,
+                    'unit_number' => $user->profile?->unit_number,
+                    'status' => $isSuspended ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
+                    'suspended_at' => $isSuspended ? ($assignment?->updated_at ?? now()) : null,
+                    'email_verified_at' => $user->email_verified_at,
+                    'properties_count' => $user->properties_count,
+                    'residents_count' => $user->managed_residents_count,
+                    'is_resident' => $user->roles->contains('name', 'resident'),
+                    'created_at' => $user->created_at->format('M d, Y'),
+                ];
+            })
             ->withQueryString();
 
         // Section 1: Metrics Strip
         $totalOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->count();
-        $activeOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->active()->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->whereNull('password')->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
-        $inactiveOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->suspended()->count();
+        $activeOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
+            ->count();
+        $pendingOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)->whereNull('password')
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
+            ->count();
+        $inactiveOwners = User::query()->forEstate($estate->id)->withRole('property_owner', $estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($poRole, fn ($sq) => $sq->where('role_id', $poRole->id))->where('is_active', false))
+            ->count();
         $totalPropertiesOwned = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereNotNull('property_owner_id')->count();
 
         // Section 2: Insights Box
@@ -137,8 +163,9 @@ class PropertyOwnerController extends Controller
         }
 
         // Section 3: Invitation Link management
-        $link = $estate->propertyOwnerInviteLink;
-        $inviteLinkData = $link ? [
+        $inviteLinks = $estate->propertyOwnerInviteLinks()->with('zone')->get();
+        $inviteLinksData = $inviteLinks->map(fn ($link) => [
+            'id' => $link->id,
             'token' => $link->token,
             'url' => url("/join/{$link->token}"),
             'is_active' => $link->is_active,
@@ -147,7 +174,9 @@ class PropertyOwnerController extends Controller
             'requires_approval' => $link->requires_approval,
             'expires_at' => $link->expires_at?->toDateTimeString(),
             'is_expired' => $link->expires_at?->isPast() ?? false,
-        ] : null;
+            'zone_id' => $link->zone_id,
+            'zone_name' => $link->zone?->name ?? 'Entire Estate',
+        ])->toArray();
 
         return Inertia::render('Admin/PropertyOwners/Index', [
             'propertyOwners' => $propertyOwners,
@@ -161,7 +190,7 @@ class PropertyOwnerController extends Controller
             ],
             'insights' => $insights,
             'incompleteOwners' => $ownersNoPropertiesList,
-            'inviteLink' => $inviteLinkData,
+            'inviteLinks' => $inviteLinksData,
         ]);
     }
 
@@ -172,10 +201,11 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->propertyOwnerInviteLink;
+        $inviteLinks = $estate->propertyOwnerInviteLinks()->with('zone')->get();
 
         return Inertia::render('Admin/PropertyOwners/Create', [
-            'inviteLink' => $link ? [
+            'inviteLinks' => $inviteLinks->map(fn ($link) => [
+                'id' => $link->id,
                 'token' => $link->token,
                 'url' => url("/join/{$link->token}"),
                 'is_active' => $link->is_active,
@@ -184,7 +214,14 @@ class PropertyOwnerController extends Controller
                 'requires_approval' => $link->requires_approval,
                 'expires_at' => $link->expires_at?->toDateTimeString(),
                 'is_expired' => $link->expires_at?->isPast() ?? false,
-            ] : null,
+                'zone_id' => $link->zone_id,
+                'zone_name' => $link->zone?->name ?? 'Entire Estate',
+            ])->toArray(),
+            'zones' => Zone::query()
+                ->where('estate_id', $estate->id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -198,10 +235,11 @@ class PropertyOwnerController extends Controller
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
         ]);
 
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate);
+        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
 
         $message = "Successfully invited {$result['invited']} property owner(s).";
         if ($result['skipped'] > 0) {
@@ -226,6 +264,7 @@ class PropertyOwnerController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
         ]);
 
         $estate = $this->estateContext->getEstate();
@@ -302,17 +341,15 @@ class PropertyOwnerController extends Controller
     /**
      * Toggle the suspension status of the property owner.
      */
-    public function suspend(User $propertyOwner): RedirectResponse
+    public function suspend(User $propertyOwner, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
+        $estate = $this->estateContext->getEstate();
 
-        if ($propertyOwner->suspended_at) {
-            $propertyOwner->update(['suspended_at' => null]);
-            $message = 'Property Owner reactivated successfully.';
-        } else {
-            $propertyOwner->update(['suspended_at' => now()]);
-            $message = 'Property Owner suspended successfully.';
-        }
+        $isActive = $action->execute($propertyOwner, $estate);
+        $message = $isActive
+            ? 'Property Owner reactivated successfully.'
+            : 'Property Owner suspended successfully.';
 
         return back()->with('success', $message);
     }
@@ -446,42 +483,31 @@ class PropertyOwnerController extends Controller
     }
 
     /**
-     * Grant the specified property owner resident privileges.
+     * Swap the specified property owner to a resident.
      */
-    public function makeResident(User $propertyOwner): RedirectResponse
+    public function makeResident(User $propertyOwner, MarkPropertyOwnerAsResidentAction $action): RedirectResponse
     {
         $this->authorize('property_owners.edit');
-
         $estate = $this->estateContext->getEstate();
 
-        $residentRole = Role::where('name', 'resident')
-            ->where('guard_name', 'web')
-            ->whereNull('estate_id')
-            ->firstOrFail();
+        $action->execute($propertyOwner, $estate);
 
-        $hasResidentRole = AdministrativeAssignment::where('user_id', $propertyOwner->id)
-            ->where('estate_id', $estate->id)
-            ->where('is_active', true)
-            ->where('role_id', $residentRole->id)
-            ->exists();
-
-        if (! $hasResidentRole) {
-            AdministrativeAssignment::create([
-                'user_id' => $propertyOwner->id,
-                'estate_id' => $estate->id,
-                'role_id' => $residentRole->id,
-                'scope_type' => AssignmentScope::Estate,
-                'is_primary' => false,
-                'is_active' => true,
-            ]);
-
-            return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
-        }
-
-        return back()->with('info', 'Property Owner is already a Resident.');
+        return back()->with('success', 'Property Owner has been successfully converted to a Resident.');
     }
 
-    public function bulkDelete(Request $request, BulkDeleteResidentsAction $action): RedirectResponse
+    public function destroy(User $propertyOwner, DeletePropertyOwnerAction $action): RedirectResponse
+    {
+        $this->authorize('property_owners.delete');
+        $estate = $this->estateContext->getEstate();
+
+        $action->execute($propertyOwner, $estate);
+
+        return redirect()
+            ->route('admin.property-owners.index')
+            ->with('success', 'Property Owner removed successfully.');
+    }
+
+    public function bulkDelete(Request $request, BulkDeletePropertyOwnersAction $action): RedirectResponse
     {
         $this->authorize('property_owners.delete');
         $estate = $this->estateContext->getEstate();
@@ -490,15 +516,14 @@ class PropertyOwnerController extends Controller
             'ids' => ['required', 'array'],
         ]);
 
-        $result = $action->execute($validated['ids'], $estate);
-        $total = $result['deleted'] + $result['detached'];
+        $total = $action->execute($validated['ids'], $estate);
 
         return redirect()
             ->route('admin.property-owners.index')
             ->with('success', "Successfully removed {$total} property owner(s).");
     }
 
-    public function bulkSuspend(Request $request, SuspendResidentAction $action): RedirectResponse
+    public function bulkSuspend(Request $request, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
@@ -509,15 +534,13 @@ class PropertyOwnerController extends Controller
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
-            if (! $resident->suspended_at) {
-                $action->execute($resident, $estate);
-            }
+            $action->execute($resident, $estate, false);
         }
 
         return back()->with('success', 'Selected property owner(s) suspended successfully.');
     }
 
-    public function bulkActivate(Request $request, SuspendResidentAction $action): RedirectResponse
+    public function bulkActivate(Request $request, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
@@ -528,9 +551,7 @@ class PropertyOwnerController extends Controller
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
-            if ($resident->suspended_at) {
-                $action->execute($resident, $estate);
-            }
+            $action->execute($resident, $estate, true);
         }
 
         return back()->with('success', 'Selected property owner(s) activated successfully.');

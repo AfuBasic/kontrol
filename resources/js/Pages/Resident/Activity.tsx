@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
-import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { isRouteChangeVisit } from '@/Lib/inertia';
 import type { ActivityItem } from '@/types/access-code';

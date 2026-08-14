@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\EstateMembership;
 use App\Auth\ContextManager;
+use App\Models\EstateMembership;
 use App\Models\User;
 
 class EstateMembershipPolicy extends BaseContextPolicy
@@ -22,7 +22,7 @@ class EstateMembershipPolicy extends BaseContextPolicy
      */
     public function view(User $user, EstateMembership $membership): bool
     {
-        if (!$this->hasValidContextForEstate($membership->estate_id, $membership->zone_id)) {
+        if (! $this->hasValidContextForEstate($membership->estate_id, $membership->zone_id)) {
             return false;
         }
 
@@ -43,7 +43,7 @@ class EstateMembershipPolicy extends BaseContextPolicy
      */
     public function update(User $user, EstateMembership $membership): bool
     {
-        if (!$this->hasValidContextForEstate($membership->estate_id, $membership->zone_id)) {
+        if (! $this->hasValidContextForEstate($membership->estate_id, $membership->zone_id)) {
             return false;
         }
 
@@ -55,7 +55,7 @@ class EstateMembershipPolicy extends BaseContextPolicy
      */
     public function delete(User $user, EstateMembership $membership): bool
     {
-        if (!$this->hasValidContextForEstate($membership->estate_id, $membership->zone_id)) {
+        if (! $this->hasValidContextForEstate($membership->estate_id, $membership->zone_id)) {
             return false;
         }
 

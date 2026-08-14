@@ -64,6 +64,12 @@ class HistoryController extends Controller
                 'verified_at' => $log->verified_at->format('M j, Y g:i A'),
                 'verified_at_human' => $log->verified_at->diffForHumans(),
                 'verifier_name' => $log->verifier?->name ?? 'System',
+                'checked_out_at' => $log->checked_out_at?->format('M j, Y g:i A'),
+                'checked_out_at_human' => $log->checked_out_at?->diffForHumans(),
+                'checkout_verifier_name' => $log->checkoutVerifier?->name,
+                'entry_point' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
+                'exit_point' => $log->checked_out_at ? ($log->meta['exit_point'] ?? $log->entry_point ?? 'Main Entrance') : null,
+                'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
                 'vehicle' => $log->vehicle_make ? [
                     'make' => $log->vehicle_make,
                     'model' => $log->vehicle_model,

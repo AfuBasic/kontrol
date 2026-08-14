@@ -24,6 +24,7 @@ import type { PostAudience, PostCategory, PostPriority } from '@/types';
 type Props = {
     lastBroadcastNote?: string | null;
     onSuccess?: () => void;
+    zones?: Array<{ id: number; name: string }>;
 };
 
 const CATEGORIES: { value: PostCategory; label: string; icon: React.ElementType }[] = [
@@ -46,7 +47,7 @@ const PRIORITIES: { value: PostPriority; label: string; badge: string; icon: Rea
     { value: 'critical', label: 'Critical', badge: 'bg-rose-100 text-rose-700', icon: AlertOctagon },
 ];
 
-export default function QuickComposer({ lastBroadcastNote, onSuccess }: Props) {
+export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = [] }: Props) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,6 +59,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess }: Props) {
         priority: 'normal' as PostPriority,
         audience: 'all' as PostAudience,
         status: 'published' as const,
+        zone_ids: [] as number[],
         media: [] as File[],
     });
 
@@ -189,6 +191,26 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess }: Props) {
                                 ))}
                             </select>
                         </div>
+
+                        {zones.length > 0 && (
+                            <div className="relative">
+                                <select
+                                    value={data.zone_ids[0] ?? ''}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        setData('zone_ids', value ? [Number(value)] : []);
+                                    }}
+                                    className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-3 pr-7 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                >
+                                    <option value="">Entire Estate</option>
+                                    {zones.map((zone) => (
+                                        <option key={zone.id} value={zone.id}>
+                                            Zone: {zone.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         {/* Category Selector (Pills when expanded, dropdown when compact) */}
                         <div className="relative">

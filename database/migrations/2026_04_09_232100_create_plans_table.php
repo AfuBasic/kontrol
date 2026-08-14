@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('slug')->unique()->index();
             $table->text('description')->nullable();
             $table->unsignedBigInteger('price')->default(0)->comment('Price in kobo/cents');
-            $table->enum('billing_interval', ['quarterly', 'semi-annually', 'annually'])->default('annually');
+            $table->enum('billing_interval', ['monthly', 'quarterly', 'semi-annually', 'annually'])->default('annually');
             $table->boolean('is_featured')->default(false);
             $table->string('badge')->nullable()->comment('e.g. Most Popular, Best Value');
             $table->string('color', 20)->default('blue')->comment('Tailwind color name for display');

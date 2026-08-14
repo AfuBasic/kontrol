@@ -1,18 +1,23 @@
 import {
     ArchiveBoxIcon,
-    BuildingOfficeIcon,
-    CheckCircleIcon,
-    ExclamationTriangleIcon,
     MagnifyingGlassIcon,
     PencilSquareIcon,
     PlusIcon,
-    UserGroupIcon,
-    UsersIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { Head, useForm } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+    AlertTriangle,
+    Building2,
+    Loader2,
+    MapPin,
+    Shield,
+    Users,
+} from 'lucide-react';
 import { type FormEvent, useState } from 'react';
+import AdminLayout from '@/Layouts/AdminLayout';
+import { destroy, store, update } from '@/actions/App/Http/Controllers/Admin/ZoneController';
 
 type Zone = {
     id: number;
@@ -31,6 +36,7 @@ type Props = {
 
 export default function ZonesIndex({ zones }: Props) {
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingZone, setEditingZone] = useState<Zone | null>(null);
     const [archivingZone, setArchivingZone] = useState<Zone | null>(null);
@@ -51,7 +57,7 @@ export default function ZonesIndex({ zones }: Props) {
 
     const handleCreateSubmit = (e: FormEvent) => {
         e.preventDefault();
-        createForm.post('/admin/zones', {
+        createForm.post(store.url(), {
             onSuccess: () => {
                 createForm.reset();
                 setIsCreateModalOpen(false);
@@ -63,7 +69,7 @@ export default function ZonesIndex({ zones }: Props) {
         e.preventDefault();
         if (!editingZone) return;
 
-        editForm.put(`/admin/zones/${editingZone.id}`, {
+        editForm.put(update.url(editingZone.id), {
             onSuccess: () => {
                 setEditingZone(null);
             },
@@ -74,7 +80,7 @@ export default function ZonesIndex({ zones }: Props) {
         e.preventDefault();
         if (!archivingZone) return;
 
-        archiveForm.delete(`/admin/zones/${archivingZone.id}`, {
+        archiveForm.delete(destroy.url(archivingZone.id), {
             onSuccess: () => {
                 setArchivingZone(null);
             },
@@ -90,409 +96,500 @@ export default function ZonesIndex({ zones }: Props) {
         });
     };
 
-    const filteredZones = zones.filter(
-        (z) =>
+    const filteredZones = zones.filter((z) => {
+        const matchesSearch =
             z.name.toLowerCase().includes(search.toLowerCase()) ||
-            (z.description && z.description.toLowerCase().includes(search.toLowerCase()))
-    );
+            (z.description && z.description.toLowerCase().includes(search.toLowerCase()));
+
+        if (!matchesSearch) return false;
+
+        if (statusFilter === 'active') return z.is_active;
+        if (statusFilter === 'inactive') return !z.is_active;
+        return true;
+    });
 
     const totalActive = zones.filter((z) => z.is_active).length;
-    const totalMembers = zones.reduce((acc, z) => acc + (z.memberships_count || 0), 0);
-    const totalAssignments = zones.reduce((acc, z) => acc + (z.assignments_count || 0), 0);
 
     return (
         <>
             <Head title="Zone Management - Kontrol" />
 
             <div className="space-y-6">
-                {/* Header */}
+                {/* Page Header */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Zone Management</h1>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            Create and manage physical subdivisions (blocks, phases, wings) within your estate.
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-2xl font-black tracking-tight text-slate-900">Zone Management</h1>
+                            {zones.length > 0 && (
+                                <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-600">
+                                    {totalActive} Active {totalActive === 1 ? 'Zone' : 'Zones'}
+                                </span>
+                            )}
+                        </div>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                            Create and manage the physical areas (blocks, phases, wings) that make up your estate.
                         </p>
                     </div>
-                    <button
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-500/20 transition-all"
-                    >
-                        <PlusIcon className="h-5 w-5" />
-                        Create Zone
-                    </button>
-                </div>
-
-                {/* Stats Summary Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
-                                <BuildingOfficeIcon className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Total Zones</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white">{zones.length}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.05 }}
-                        className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                                <CheckCircleIcon className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Active Zones</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white">{totalActive}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
-                                <UsersIcon className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Zone Members</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white">{totalMembers}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.15 }}
-                        className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
-                                <UserGroupIcon className="h-5 w-5" />
-                            </div>
-                            <div>
-                                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Staff Assignments</p>
-                                <p className="text-xl font-bold text-slate-900 dark:text-white">{totalAssignments}</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* Filter / Search Bar */}
-                <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-                    <div className="relative flex-1 max-w-md">
-                        <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search zones by name or description..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-teal-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder-slate-500"
-                        />
+                    <div>
+                        <button
+                            onClick={() => {
+                                createForm.reset();
+                                setIsCreateModalOpen(true);
+                            }}
+                            className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                        >
+                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                            Create Zone
+                        </button>
                     </div>
                 </div>
 
-                {/* Zone Cards Grid */}
-                {filteredZones.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredZones.map((zone) => (
-                            <motion.div
-                                key={zone.id}
-                                layout
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+                {/* Main Content Area */}
+                {zones.length === 0 ? (
+                    <div className="mx-auto my-8 max-w-lg rounded-3xl border border-slate-200/80 bg-white p-10 text-center shadow-xs ring-1 ring-slate-100/50">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50 text-[#1F6FDB] ring-4 ring-blue-50/50">
+                            <MapPin className="h-7 w-7" />
+                        </div>
+                        <h3 className="mt-5 text-base font-black text-slate-900">No zones yet</h3>
+                        <p className="mx-auto mt-2 max-w-sm text-xs font-medium text-slate-500 leading-relaxed">
+                            Zones help you organize residents, properties, and operational security staff across distinct physical areas of your estate.
+                        </p>
+                        <div className="mt-6">
+                            <button
+                                onClick={() => {
+                                    createForm.reset();
+                                    setIsCreateModalOpen(true);
+                                }}
+                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                             >
-                                <div className="space-y-4">
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                                <BuildingOfficeIcon className="h-5 w-5" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-slate-900 dark:text-white">
-                                                    {zone.name}
-                                                </h3>
+                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                Create your first zone
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    <>
+                        {/* Content Toolbar */}
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="relative w-full max-w-sm">
+                                <MagnifyingGlassIcon className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                <input
+                                    type="text"
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search zones by name or description..."
+                                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-10 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden shadow-xs"
+                                />
+                                {search && (
+                                    <button
+                                        onClick={() => setSearch('')}
+                                        className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        aria-label="Clear search"
+                                    >
+                                        <XMarkIcon className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
+                                    className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden shadow-xs"
+                                >
+                                    <option value="all">All Zones ({zones.length})</option>
+                                    <option value="active">Active Only ({totalActive})</option>
+                                    <option value="inactive">Inactive Only ({zones.length - totalActive})</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* Zone Grid or Search Empty State */}
+                        {filteredZones.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {filteredZones.map((zone) => (
+                                    <motion.div
+                                        key={zone.id}
+                                        layout
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all hover:border-slate-300 hover:shadow-sm"
+                                    >
+                                        <div>
+                                            {/* Header: Name & Status */}
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="flex items-center gap-2.5 min-w-0">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+                                                        <Building2 className="h-4 w-4" />
+                                                    </div>
+                                                    <h3 className="truncate text-sm font-black text-slate-900">
+                                                        {zone.name}
+                                                    </h3>
+                                                </div>
                                                 <span
-                                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                                    className={`shrink-0 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
                                                         zone.is_active
-                                                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
-                                                            : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                                                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                                                            : 'bg-slate-100 text-slate-600 border border-slate-200/60'
                                                     }`}
                                                 >
+                                                    <span
+                                                        className={`h-1.5 w-1.5 rounded-full ${
+                                                            zone.is_active ? 'bg-emerald-500' : 'bg-slate-400'
+                                                        }`}
+                                                    />
                                                     {zone.is_active ? 'Active' : 'Inactive'}
                                                 </span>
                                             </div>
-                                        </div>
-                                    </div>
 
-                                    {zone.description && (
-                                        <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2">
-                                            {zone.description}
-                                        </p>
-                                    )}
+                                            {/* Description */}
+                                            <p className="mt-2.5 text-xs font-medium text-slate-500 line-clamp-2 leading-relaxed min-h-[32px]">
+                                                {zone.description || (
+                                                    <span className="italic text-slate-400">No description provided</span>
+                                                )}
+                                            </p>
 
-                                    <div className="grid grid-cols-2 gap-3 pt-2 text-xs border-t border-slate-100 dark:border-slate-800">
-                                        <div>
-                                            <span className="text-slate-400">Memberships:</span>{' '}
-                                            <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                                {zone.memberships_count || 0}
-                                            </span>
+                                            {/* Operational Associations */}
+                                            <div className="mt-4 grid grid-cols-2 gap-2">
+                                                <Link
+                                                    href={`/admin/residents?zone=${zone.id}`}
+                                                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:bg-slate-100 hover:border-slate-200"
+                                                    title={`View residents in ${zone.name}`}
+                                                >
+                                                    <Users className="h-4 w-4 text-slate-400" />
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-black text-slate-900 leading-none">
+                                                            {zone.memberships_count ?? 0}
+                                                        </p>
+                                                        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                                            Residents
+                                                        </p>
+                                                    </div>
+                                                </Link>
+
+                                                <Link
+                                                    href={`/admin/assignments?search=${encodeURIComponent(zone.name)}`}
+                                                    className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:bg-slate-100 hover:border-slate-200"
+                                                    title={`View staff assigned to ${zone.name}`}
+                                                >
+                                                    <Shield className="h-4 w-4 text-slate-400" />
+                                                    <div className="min-w-0">
+                                                        <p className="text-xs font-black text-slate-900 leading-none">
+                                                            {zone.assignments_count ?? 0}
+                                                        </p>
+                                                        <p className="mt-0.5 truncate text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                                                            Personnel
+                                                        </p>
+                                                    </div>
+                                                </Link>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <span className="text-slate-400">Assignments:</span>{' '}
-                                            <span className="font-semibold text-slate-700 dark:text-slate-200">
-                                                {zone.assignments_count || 0}
-                                            </span>
+
+                                        {/* Footer Actions */}
+                                        <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                                            <button
+                                                onClick={() => startEditing(zone)}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+                                            >
+                                                <PencilSquareIcon className="h-3.5 w-3.5 text-slate-400" />
+                                                Edit
+                                            </button>
+                                            <button
+                                                onClick={() => setArchivingZone(zone)}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-rose-600 shadow-2xs transition-all hover:border-rose-200 hover:bg-rose-50 active:scale-95"
+                                            >
+                                                <ArchiveBoxIcon className="h-3.5 w-3.5 text-rose-400" />
+                                                Archive
+                                            </button>
                                         </div>
-                                    </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs">
+                                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                                    <MagnifyingGlassIcon className="h-5 w-5" />
                                 </div>
-
-                                <div className="mt-6 flex items-center justify-end gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                                <h3 className="mt-3 text-sm font-bold text-slate-900">No zones match your search</h3>
+                                <p className="mt-1 text-xs font-medium text-slate-500">
+                                    We couldn't find any zone matching your search or active filter.
+                                </p>
+                                <div className="mt-4">
                                     <button
-                                        onClick={() => startEditing(zone)}
-                                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-all"
+                                        onClick={() => {
+                                            setSearch('');
+                                            setStatusFilter('all');
+                                        }}
+                                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition-all hover:bg-slate-50"
                                     >
-                                        <PencilSquareIcon className="h-4 w-4" />
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => setArchivingZone(zone)}
-                                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-500/10 transition-all"
-                                    >
-                                        <ArchiveBoxIcon className="h-4 w-4" />
-                                        Archive
+                                        <XMarkIcon className="h-3.5 w-3.5" />
+                                        Clear search and filters
                                     </button>
                                 </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900">
-                        <BuildingOfficeIcon className="mx-auto h-12 w-12 text-slate-400" />
-                        <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-white">No zones found</h3>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                            {search
-                                ? 'No zones match your search query.'
-                                : 'Get started by creating your estate’s first zone.'}
-                        </p>
-                        {!search && (
-                            <button
-                                onClick={() => setIsCreateModalOpen(true)}
-                                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-teal-500"
-                            >
-                                <PlusIcon className="h-5 w-5" />
-                                Create Zone
-                            </button>
+                            </div>
                         )}
-                    </div>
+                    </>
                 )}
             </div>
 
             {/* Create Zone Modal */}
-            {isCreateModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
-                    >
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Create New Zone</h3>
-                            <button
-                                onClick={() => setIsCreateModalOpen(false)}
-                                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                                <XMarkIcon className="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleCreateSubmit} className="mt-4 space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                                    Zone Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    placeholder="e.g. Block A, Phase 1, Residential Wing"
-                                    value={createForm.data.name}
-                                    onChange={(e) => createForm.setData('name', e.target.value)}
-                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
-                                {createForm.errors.name && (
-                                    <p className="mt-1 text-xs text-rose-500">{createForm.errors.name}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                                    Description (Optional)
-                                </label>
-                                <textarea
-                                    rows={3}
-                                    placeholder="Add details about this zone's boundaries or purpose..."
-                                    value={createForm.data.description}
-                                    onChange={(e) => createForm.setData('description', e.target.value)}
-                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
-                            </div>
-
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <AnimatePresence>
+                {isCreateModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsCreateModalOpen(false)}
+                            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 className="text-base font-black text-slate-900">Create Zone</h3>
+                                    <p className="text-xs font-semibold text-slate-500">
+                                        Define a physical area within this estate.
+                                    </p>
+                                </div>
                                 <button
-                                    type="button"
                                     onClick={() => setIsCreateModalOpen(false)}
-                                    className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={createForm.processing}
-                                    className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:opacity-50"
-                                >
-                                    Create Zone
+                                    <XMarkIcon className="h-5 w-5" />
                                 </button>
                             </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+
+                            <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4">
+                                <div>
+                                    <label htmlFor="create_zone_name" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                        Zone Name <span className="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        id="create_zone_name"
+                                        type="text"
+                                        required
+                                        autoFocus
+                                        placeholder="e.g. Block A, Phase 1, North Wing"
+                                        value={createForm.data.name}
+                                        onChange={(e) => createForm.setData('name', e.target.value)}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
+                                    />
+                                    {createForm.errors.name && (
+                                        <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.name}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="create_zone_desc" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                            Description
+                                        </label>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Optional</span>
+                                    </div>
+                                    <textarea
+                                        id="create_zone_desc"
+                                        rows={3}
+                                        placeholder="Optional description for this area."
+                                        value={createForm.data.description}
+                                        onChange={(e) => createForm.setData('description', e.target.value)}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden resize-none"
+                                    />
+                                    {createForm.errors.description && (
+                                        <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.description}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={createForm.processing}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm hover:bg-slate-800 disabled:opacity-50 transition-all"
+                                    >
+                                        {createForm.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                        {createForm.processing ? 'Creating...' : 'Create Zone'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Edit Zone Modal */}
-            {editingZone && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
-                    >
-                        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Edit Zone</h3>
-                            <button
-                                onClick={() => setEditingZone(null)}
-                                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                                <XMarkIcon className="h-5 w-5" />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleEditSubmit} className="mt-4 space-y-4">
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                                    Zone Name *
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={editForm.data.name}
-                                    onChange={(e) => editForm.setData('name', e.target.value)}
-                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
-                                {editForm.errors.name && (
-                                    <p className="mt-1 text-xs text-rose-500">{editForm.errors.name}</p>
-                                )}
+            <AnimatePresence>
+                {editingZone && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setEditingZone(null)}
+                            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl"
+                        >
+                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                                <div>
+                                    <h3 className="text-base font-black text-slate-900">Edit Zone</h3>
+                                    <p className="text-xs font-semibold text-slate-500">
+                                        Update area name, details, or active status.
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setEditingZone(null)}
+                                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                                >
+                                    <XMarkIcon className="h-5 w-5" />
+                                </button>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                                    Description
-                                </label>
-                                <textarea
-                                    rows={3}
-                                    value={editForm.data.description}
-                                    onChange={(e) => editForm.setData('description', e.target.value)}
-                                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-sm text-slate-900 focus:border-teal-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                />
+                            <form onSubmit={handleEditSubmit} className="mt-5 space-y-4">
+                                <div>
+                                    <label htmlFor="edit_zone_name" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                        Zone Name <span className="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        id="edit_zone_name"
+                                        type="text"
+                                        required
+                                        value={editForm.data.name}
+                                        onChange={(e) => editForm.setData('name', e.target.value)}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
+                                    />
+                                    {editForm.errors.name && (
+                                        <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.name}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <div className="flex items-center justify-between">
+                                        <label htmlFor="edit_zone_desc" className="block text-xs font-black uppercase tracking-wider text-slate-700">
+                                            Description
+                                        </label>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Optional</span>
+                                    </div>
+                                    <textarea
+                                        id="edit_zone_desc"
+                                        rows={3}
+                                        value={editForm.data.description}
+                                        onChange={(e) => editForm.setData('description', e.target.value)}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden resize-none"
+                                    />
+                                    {editForm.errors.description && (
+                                        <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.description}</p>
+                                    )}
+                                </div>
+
+                                <div className="flex items-center gap-3 pt-1">
+                                    <input
+                                        type="checkbox"
+                                        id="edit_is_active"
+                                        checked={editForm.data.is_active}
+                                        onChange={(e) => editForm.setData('is_active', e.target.checked)}
+                                        className="h-4 w-4 rounded border-slate-300 text-slate-950 focus:ring-slate-950"
+                                    />
+                                    <label htmlFor="edit_is_active" className="text-xs font-bold text-slate-700">
+                                        Active in estate management
+                                    </label>
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setEditingZone(null)}
+                                        className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={editForm.processing}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm hover:bg-slate-800 disabled:opacity-50 transition-all"
+                                    >
+                                        {editForm.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                        {editForm.processing ? 'Saving...' : 'Save Changes'}
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Archive Confirmation Dialog */}
+            <AnimatePresence>
+                {archivingZone && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setArchivingZone(null)}
+                            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            className="relative w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl"
+                        >
+                            <div className="flex items-center gap-3 pb-3 border-b border-slate-100 text-rose-600">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600">
+                                    <AlertTriangle className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="text-base font-black text-slate-900">Archive Zone?</h3>
+                                    <p className="text-xs font-semibold text-slate-500">Deactivate zone from active estate management</p>
+                                </div>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <input
-                                    type="checkbox"
-                                    id="edit_is_active"
-                                    checked={editForm.data.is_active}
-                                    onChange={(e) => editForm.setData('is_active', e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
-                                />
-                                <label htmlFor="edit_is_active" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Zone Active Status
-                                </label>
+                            <p className="mt-4 text-xs font-medium text-slate-600 leading-relaxed">
+                                Are you sure you want to archive <strong className="text-slate-900">{archivingZone.name}</strong>?
+                            </p>
+
+                            <div className="mt-3 rounded-xl border border-amber-200/60 bg-amber-50/70 p-3 text-[11px] font-medium text-amber-900 leading-relaxed">
+                                <strong className="font-bold">Historical Records Preserved:</strong> Archiving removes this zone from new resident, property, and staff assignment selectors. All existing historical logs, incident reports, and records are retained for audits.
                             </div>
 
-                            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <form onSubmit={handleArchiveSubmit} className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
                                 <button
                                     type="button"
-                                    onClick={() => setEditingZone(null)}
-                                    className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    onClick={() => setArchivingZone(null)}
+                                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    disabled={editForm.processing}
-                                    className="rounded-xl bg-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-teal-500 disabled:opacity-50"
+                                    disabled={archiveForm.processing}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm hover:bg-rose-700 disabled:opacity-50 transition-all"
                                 >
-                                    Save Changes
+                                    {archiveForm.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                    {archiveForm.processing ? 'Archiving...' : 'Archive Zone'}
                                 </button>
-                            </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
-
-            {/* Archive Confirmation Dialog */}
-            {archivingZone && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-900 border border-slate-200 dark:border-slate-800"
-                    >
-                        <div className="flex items-center gap-3 text-amber-600 dark:text-amber-400 pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <ExclamationTriangleIcon className="h-6 w-6" />
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Archive Zone</h3>
-                        </div>
-
-                        <p className="mt-4 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                            Are you sure you want to archive <strong className="text-slate-900 dark:text-white">{archivingZone.name}</strong>?
-                        </p>
-                        <div className="mt-3 rounded-xl bg-amber-50 p-3.5 text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-                            <strong>Historical Integrity Preserved:</strong> Archiving this zone soft-deletes the zone record. All historical incidents, visitor logs, and compliance records associated with this zone remain completely intact for audit purposes.
-                        </div>
-
-                        <form onSubmit={handleArchiveSubmit} className="mt-6 flex items-center justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => setArchivingZone(null)}
-                                className="rounded-xl px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                type="submit"
-                                disabled={archiveForm.processing}
-                                className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-500 disabled:opacity-50"
-                            >
-                                Archive Zone
-                            </button>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </>
     );
 }
+
+ZonesIndex.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

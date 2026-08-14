@@ -5,6 +5,7 @@ namespace App\Actions\Auth;
 use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\User;
+use App\Services\Security\CheckpointClaimService;
 
 class ActivateContext
 {
@@ -29,6 +30,13 @@ class ActivateContext
                 return route('context.select');
             }
         }
+
+        // Release checkpoint whenever context or role is changed
+        $currentContext = $this->contextManager->current();
+        if ($currentContext) {
+            app(CheckpointClaimService::class)->release($currentContext->estateId, $user);
+        }
+
         // Use the context manager to validate and activate the assignment
         try {
             $this->contextManager->activate($assignment);
@@ -54,7 +62,7 @@ class ActivateContext
             return route('resident.home');
         }
 
-        if ($roleName === 'resident') {
+        if ($roleName === 'resident' || $roleName === 'property_owner') {
             return route('resident.dashboard');
         }
 

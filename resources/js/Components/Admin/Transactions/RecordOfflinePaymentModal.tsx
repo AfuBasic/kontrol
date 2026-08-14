@@ -89,7 +89,7 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, assignments
                                 <option value="">Select resident & collection…</option>
                                 {assignments.map((a) => (
                                     <option key={a.id} value={a.id}>
-                                        {a.resident_name} — {a.collection_name} (₦{a.remaining.toLocaleString()} due)
+                                        {a.resident_name} - {a.collection_name} (₦{a.remaining.toLocaleString()} due)
                                     </option>
                                 ))}
                             </select>

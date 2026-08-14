@@ -124,7 +124,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
     };
 
     const formatDate = (dateString: string | null) => {
-        if (!dateString) return '—';
+        if (!dateString) return '-';
         return new Date(dateString).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -340,7 +340,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                     <div>
                                         <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Days Remaining</p>
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                            {estate.commission_days_remaining ?? '—'}
+                                            {estate.commission_days_remaining ?? '-'}
                                         </p>
                                     </div>
                                 </div>
@@ -566,7 +566,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                         </td>
                                         <td className="px-8 py-4">
                                             <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                                                {tx.invoice?.user?.name || '—'}
+                                                {tx.invoice?.user?.name || '-'}
                                             </div>
                                         </td>
                                         <td className="px-8 py-4 text-sm font-bold text-slate-900 dark:text-white">{formatCurrency(tx.amount)}</td>

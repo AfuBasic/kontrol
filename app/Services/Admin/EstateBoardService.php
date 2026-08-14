@@ -6,6 +6,8 @@ use App\Enums\EstateBoardPostAudience;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
+use App\Models\Zone;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Contracts\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -26,6 +28,7 @@ class EstateBoardService
         $isPropertyOwner = $user && $user->contextHasRole('property_owner');
         $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
+        $userZoneIds = $user ? app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId) : [];
 
         return EstateBoardPost::query()
             ->forEstate($estateId)
@@ -33,9 +36,25 @@ class EstateBoardService
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
             ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
             ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'))
-            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
-                $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
-                    $q->whereNull('property_owner_id');
+            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
+                $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
+                    $q->where(function ($estatePosts) use ($user, $propertyId, $userZoneIds) {
+                        $estatePosts->whereNull('property_owner_id')
+                            ->where(function ($scope) use ($user, $propertyId, $userZoneIds) {
+                                $scope->where(function ($all) {
+                                    $all->where(function ($inner) {
+                                        $inner->whereNull('applies_to')->orWhere('applies_to', 'all');
+                                    })->whereDoesntHave('targets');
+                                })->orWhere(function ($targeted) use ($user, $propertyId, $userZoneIds) {
+                                    $targeted->whereIn('applies_to', ['custom', 'target', 'zone'])
+                                        ->whereHas('targets', function ($t) use ($user, $propertyId, $userZoneIds) {
+                                            $t->where(fn ($sub) => $sub->where('target_type', 'user')->where('target_id', $user->id))
+                                                ->when($propertyId, fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->where('target_type', 'property')->where('target_id', $propertyId)))
+                                                ->when($userZoneIds !== [], fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->whereIn('target_type', ['zone', Zone::class])->whereIn('target_id', $userZoneIds)));
+                                        });
+                                });
+                            });
+                    });
 
                     if ($propertyOwnerId) {
                         $q->orWhere(function ($sq) use ($user, $propertyOwnerId, $propertyId) {
@@ -115,13 +134,30 @@ class EstateBoardService
         $isPropertyOwner = $user && $user->contextHasRole('property_owner');
         $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
+        $userZoneIds = $user ? app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId) : [];
 
         return EstateBoardPost::query()
             ->forEstate($estateId)
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
-            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
-                $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner) {
-                    $q->whereNull('property_owner_id');
+            ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
+                $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
+                    $q->where(function ($estatePosts) use ($user, $propertyId, $userZoneIds) {
+                        $estatePosts->whereNull('property_owner_id')
+                            ->where(function ($scope) use ($user, $propertyId, $userZoneIds) {
+                                $scope->where(function ($all) {
+                                    $all->where(function ($inner) {
+                                        $inner->whereNull('applies_to')->orWhere('applies_to', 'all');
+                                    })->whereDoesntHave('targets');
+                                })->orWhere(function ($targeted) use ($user, $propertyId, $userZoneIds) {
+                                    $targeted->whereIn('applies_to', ['custom', 'target', 'zone'])
+                                        ->whereHas('targets', function ($t) use ($user, $propertyId, $userZoneIds) {
+                                            $t->where(fn ($sub) => $sub->where('target_type', 'user')->where('target_id', $user->id))
+                                                ->when($propertyId, fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->where('target_type', 'property')->where('target_id', $propertyId)))
+                                                ->when($userZoneIds !== [], fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->whereIn('target_type', ['zone', Zone::class])->whereIn('target_id', $userZoneIds)));
+                                        });
+                                });
+                            });
+                    });
 
                     if ($propertyOwnerId) {
                         $q->orWhere(function ($sq) use ($user, $propertyOwnerId, $propertyId) {

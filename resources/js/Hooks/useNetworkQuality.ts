@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { NetworkMonitor, type NetworkQuality, type NetworkSnapshot } from '@/Resilience/NetworkMonitor';
 
@@ -25,14 +25,20 @@ export function useNetworkQuality(): UseNetworkQualityResult {
         return NetworkMonitor.subscribe(setSnapshot);
     }, []);
 
+    const refresh = useCallback((timeoutMs?: number) => NetworkMonitor.checkNow(timeoutMs), []);
+    const isServerReachable = useCallback(
+        (timeoutMs?: number, path?: string) => NetworkMonitor.isServerReachable(timeoutMs, path),
+        []
+    );
+
     return {
         quality: snapshot.quality,
         isOnline: snapshot.isOnline,
         rtt: snapshot.rtt,
         effectiveType: snapshot.effectiveType,
         checkedAt: snapshot.checkedAt,
-        refresh: (timeoutMs) => NetworkMonitor.checkNow(timeoutMs),
-        isServerReachable: (timeoutMs, path) => NetworkMonitor.isServerReachable(timeoutMs, path),
+        refresh,
+        isServerReachable,
     };
 }
 

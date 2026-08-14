@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class ResidentController extends Controller
 {
@@ -37,47 +39,76 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.view');
 
-        $filters = $request->only(['search', 'status', 'role', 'property', 'sort']);
+        $filters = $request->only(['search', 'status', 'role', 'property', 'zone', 'sort']);
         $estate = $this->estateContext->getEstate();
+        $residentRoles = Role::whereIn('name', ['resident', 'household_member'])
+            ->whereNull('estate_id')
+            ->pluck('id');
 
         $residents = Inertia::defer(fn () => $this->residentService
             ->getPaginatedResidents(15, $filters)
-            ->through(fn ($user) => [
-                'id' => $user->id,
-                'ulid' => $user->ulid,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->profile?->phone,
-                'unit_number' => $user->profile?->unit_number,
-                'property_owner_id' => $user->profile?->property_owner_id,
-                'property_owner_name' => $user->profile?->propertyOwner?->name,
-                'property_id' => $user->profile?->property_id,
-                'property_name' => $user->profile?->property?->name,
-                'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
-                'is_property_owner' => $user->roles->contains('name', 'property_owner'),
-                'role_label' => $user->roles->contains('name', 'property_owner')
-                    ? 'Property Owner'
-                    : ($user->profile?->property_owner_id ? 'Tenant' : 'Resident'),
-                'household_members_count' => $user->household_members_count ?? 0,
-                'suspended_at' => $user->suspended_at,
-                'email_verified_at' => $user->email_verified_at,
-                'last_active' => $user->updated_at?->diffForHumans() ?? 'Never',
-                'created_at' => $user->created_at->format('M d, Y'),
-            ]));
+            ->through(function ($user) use ($estate) {
+                $membership = $user->estates->first()?->pivot;
+                $zone = $membership?->zone_id ? Zone::find($membership->zone_id) : null;
+                $assignment = $user->administrativeAssignments->first();
+                $isSuspended = $assignment ? ! $assignment->is_active : false;
+
+                return [
+                    'id' => $user->id,
+                    'ulid' => $user->ulid,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->profile?->phone,
+                    'unit_number' => $user->profile?->unit_number,
+                    'zone_id' => $membership?->zone_id,
+                    'zone_name' => $zone?->name,
+                    'property_owner_id' => $user->profile?->property_owner_id,
+                    'property_owner_name' => $user->profile?->propertyOwner?->name,
+                    'property_id' => $user->profile?->property_id,
+                    'property_name' => $user->profile?->property?->name,
+                    'status' => $isSuspended ? 'inactive' : ($membership?->status ?? 'pending'),
+                    'is_property_owner' => $user->roles->contains('name', 'property_owner'),
+                    'role_label' => $user->roles->contains('name', 'property_owner')
+                        ? 'Property Owner'
+                        : ($user->profile?->property_owner_id ? 'Tenant' : 'Resident'),
+                    'household_members_count' => $user->household_members_count ?? 0,
+                    'suspended_at' => $isSuspended ? ($assignment?->updated_at ?? now()) : null,
+                    'email_verified_at' => $user->email_verified_at,
+                    'last_active' => $user->updated_at?->diffForHumans() ?? 'Never',
+                    'created_at' => $user->created_at->format('M d, Y'),
+                    'is_estate_creator' => $user->email === $estate->email,
+                ];
+            }));
 
         // Section 1: Overview stats
         $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
-        $activeResidents = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingInvitations = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
-        $inactiveResidents = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
+        $activeResidents = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
+            ->count();
+        $pendingMembership = User::query()
+            ->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
+
+        $unacceptedInvitations = (clone $pendingMembership)->whereNull('email_verified_at')->count();
+        $awaitingApproval = (clone $pendingMembership)->whereNotNull('email_verified_at')->count();
+        $pendingAccess = $unacceptedInvitations + $awaitingApproval;
+        $inactiveResidents = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', false))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->count();
 
         $totalProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->count();
         $occupiedProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->whereHas('residents')->count();
         $occupancyRate = $totalProperties > 0 ? (int) round(($occupiedProperties / $totalProperties) * 100) : 0;
 
         // Section 3: Invitation management link
-        $link = $estate->inviteLink;
-        $inviteLinkData = $link ? [
+        $inviteLinks = $estate->inviteLinks()->with('zone')->get();
+        $inviteLinksData = $inviteLinks->map(fn ($link) => [
+            'id' => $link->id,
             'token' => $link->token,
             'url' => url("/join/{$link->token}"),
             'is_active' => $link->is_active,
@@ -86,23 +117,33 @@ class ResidentController extends Controller
             'requires_approval' => $link->requires_approval,
             'expires_at' => $link->expires_at?->toDateTimeString(),
             'is_expired' => $link->expires_at?->isPast() ?? false,
-        ] : null;
+            'zone_id' => $link->zone_id,
+            'zone_name' => $link->zone?->name ?? 'Entire Estate',
+        ])->toArray();
 
         return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
             'filters' => $filters,
+            'zones' => Zone::where('estate_id', $estate->id)->get(['id', 'name']),
             'stats' => [
                 'total' => $totalResidents,
                 'active' => $activeResidents,
-                'pending' => $pendingInvitations,
+                'pending' => $pendingAccess,
                 'inactive' => $inactiveResidents,
                 'occupancy_rate' => $occupancyRate,
             ],
             // Heavier insight queries load after first paint
-            'insights' => Inertia::defer(function () use ($estate, $pendingInvitations, $totalProperties, $occupiedProperties) {
+            'insights' => Inertia::defer(function () use ($estate, $unacceptedInvitations, $awaitingApproval, $totalProperties, $occupiedProperties) {
                 $insights = [];
-                if ($pendingInvitations > 0) {
-                    $insights[] = "{$pendingInvitations} residents have not accepted their invitations.";
+                if ($awaitingApproval > 0) {
+                    $insights[] = $awaitingApproval === 1
+                        ? '1 resident is awaiting admin approval.'
+                        : "{$awaitingApproval} residents are awaiting admin approval.";
+                }
+                if ($unacceptedInvitations > 0) {
+                    $insights[] = $unacceptedInvitations === 1
+                        ? '1 resident has not accepted their invitation.'
+                        : "{$unacceptedInvitations} residents have not accepted their invitations.";
                 }
                 $vacantUnits = $totalProperties - $occupiedProperties;
                 if ($vacantUnits > 0) {
@@ -143,7 +184,7 @@ class ResidentController extends Controller
                 ->get(['users.id', 'users.name'])
                 ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
                 ->toArray()),
-            'inviteLink' => $inviteLinkData,
+            'inviteLinks' => $inviteLinksData,
         ]);
     }
 
@@ -154,10 +195,11 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->inviteLink;
+        $inviteLinks = $estate->inviteLinks()->with('zone')->get();
 
         return Inertia::render('Admin/Residents/Create', [
-            'inviteLink' => $link ? [
+            'inviteLinks' => $inviteLinks->map(fn ($link) => [
+                'id' => $link->id,
                 'token' => $link->token,
                 'url' => url("/join/{$link->token}"),
                 'is_active' => $link->is_active,
@@ -166,7 +208,9 @@ class ResidentController extends Controller
                 'requires_approval' => $link->requires_approval,
                 'expires_at' => $link->expires_at?->toDateTimeString(),
                 'is_expired' => $link->expires_at?->isPast() ?? false,
-            ] : null,
+                'zone_id' => $link->zone_id,
+                'zone_name' => $link->zone?->name ?? 'Entire Estate',
+            ])->toArray(),
             'propertyOwners' => User::query()
                 ->forEstate($estate->id)
                 ->withRole('property_owner', $estate->id)
@@ -174,9 +218,9 @@ class ResidentController extends Controller
                 ->orderBy('name')
                 ->get(['users.id', 'users.name'])
                 ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
-            'properties' => Property::query()
+            'zones' => Zone::query()
                 ->where('estate_id', $estate->id)
-                ->whereNull('archived_at')
+                ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
         ]);
@@ -218,6 +262,7 @@ class ResidentController extends Controller
                 'address' => $resident->profile?->address,
                 'property_owner_id' => $resident->profile?->property_owner_id,
                 'property_id' => $resident->profile?->property_id,
+                'is_estate_creator' => $resident->email === $estate->email,
             ],
             'propertyOwners' => User::query()
                 ->forEstate($estate->id)
@@ -338,10 +383,11 @@ class ResidentController extends Controller
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
         ]);
 
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate);
+        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
 
         $message = "Successfully invited {$result['invited']} resident(s).";
         if ($result['skipped'] > 0) {

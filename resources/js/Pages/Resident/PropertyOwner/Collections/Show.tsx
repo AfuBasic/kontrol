@@ -201,7 +201,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                         </div>
                                         <div>
                                             <h4 className="font-black tracking-tight text-slate-900">{asg.resident_name}</h4>
-                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">{asg.property_name || '—'}</p>
+                                            <p className="mt-0.5 text-xs font-semibold text-slate-500">{asg.property_name || '-'}</p>
 
                                             {/* Date displays inside the cards */}
                                             <div className="mt-2 flex flex-wrap gap-2">

@@ -6,6 +6,7 @@ use App\Models\Estate;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Spatie\Permission\Models\Role;
 
 class ResidentService
 {
@@ -22,6 +23,10 @@ class ResidentService
     {
         $estate = $this->estateContext->getEstate();
 
+        $residentRoles = Role::whereIn('name', ['resident', 'household_member'])
+            ->whereNull('estate_id')
+            ->pluck('id');
+
         return User::query()
             ->forEstate($estate->id)
             ->whereHas('roles', function ($q) {
@@ -30,8 +35,16 @@ class ResidentService
             ->whereDoesntHave('roles', function ($q) {
                 $q->where('name', 'property_owner');
             })
-            ->with(['roles', 'profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with([
+                'roles',
+                'profile.property',
+                'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id'),
+                'administrativeAssignments' => fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles),
+            ])
             ->withCount('householdMembers')
+            ->when($filters['zone'] ?? null, function ($query, $zoneId) use ($estate) {
+                $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.zone_id', $zoneId));
+            })
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -42,18 +55,22 @@ class ResidentService
                         });
                 });
             })
-            ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
+            ->when($filters['status'] ?? null, function ($query, $status) use ($estate, $residentRoles) {
                 if ($status === 'active') {
-                    $query->whereNull('suspended_at')
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'));
                 } elseif ($status === 'inactive') {
-                    $query->whereNotNull('suspended_at');
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', false));
                 } elseif ($status === 'invited') {
                     $query->whereNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 } elseif ($status === 'pending_activation') {
                     $query->whereNotNull('password')
+                        ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
+                } elseif ($status === 'pending') {
+                    $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
                 }
             })
             ->when($filters['role'] ?? null, function ($query, $role) use ($estate) {
@@ -74,11 +91,16 @@ class ResidentService
                     $query->whereHas('profile', fn ($q) => $q->whereNull('property_id'));
                 }
             })
-            ->when($filters['sort'] ?? null, function ($query, $sort) {
+            ->when($filters['sort'] ?? null, function ($query, $sort) use ($estate) {
                 if ($sort === 'name') {
                     $query->orderBy('name', 'asc');
                 } elseif ($sort === 'date_joined') {
-                    $query->orderBy('created_at', 'desc');
+                    $query->select('users.*')
+                        ->join('estate_users_membership as em_sort', function ($join) use ($estate) {
+                            $join->on('users.id', '=', 'em_sort.user_id')
+                                ->where('em_sort.estate_id', '=', $estate->id);
+                        })
+                        ->orderBy('em_sort.created_at', 'desc');
                 } elseif ($sort === 'recently_active') {
                     $query->orderBy('updated_at', 'desc');
                 } elseif ($sort === 'unit_number') {
@@ -86,8 +108,13 @@ class ResidentService
                         ->orderBy('user_profiles.unit_number', 'asc')
                         ->select('users.*');
                 }
-            }, function ($query) {
-                $query->latest();
+            }, function ($query) use ($estate) {
+                $query->select('users.*')
+                    ->join('estate_users_membership as em_sort', function ($join) use ($estate) {
+                        $join->on('users.id', '=', 'em_sort.user_id')
+                            ->where('em_sort.estate_id', '=', $estate->id);
+                    })
+                    ->orderBy('em_sort.created_at', 'desc');
             })
             ->paginate($perPage)
             ->withQueryString();

@@ -90,6 +90,14 @@ class Incident extends Model
         return $this->belongsTo(Estate::class);
     }
 
+    /**
+     * @return BelongsTo<Zone, $this>
+     */
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(Zone::class);
+    }
+
     public function reporter(): MorphTo
     {
         return $this->morphTo();

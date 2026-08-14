@@ -8,10 +8,13 @@ use App\Auth\ContextManager;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Models\Invitation;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,7 +22,7 @@ class InvitationController extends Controller
 {
     public function show(Request $request, string $token): Response|RedirectResponse
     {
-        $invitation = Invitation::where('token', $token)->first();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
 
         if (! $invitation || ! $invitation->isPending()) {
             return redirect()->route('invitation.invalid');
@@ -35,21 +38,17 @@ class InvitationController extends Controller
         }
 
         if (! $user) {
-            // New user: Needs to register. We can redirect to the join form using the token.
-            // Wait, we have InviteRegistrationController which uses `EstateInviteLink`. Let's just use Inertia Auth/Join.
-            // Since this is for specific invitations, we could just redirect them to a registration flow, or render a specific view here.
-            // But to keep it simple, we'll render 'Invitation/Register' if it existed, or we can use the same view if the frontend handles it, but since we are modifying backend:
-            // For now, let's just pass `user => null` to tell the frontend they need to register.
-            // Or better yet, we redirect them to standard register with pre-filled email.
-            return redirect()->route('register', ['email' => $invitation->email, 'invitation_token' => $token]);
-        }
-
-        // If user is not logged in but exists, they must log in to accept.
-        if (! Auth::check()) {
-            return redirect()->route('login', ['email' => $invitation->email, 'invitation_token' => $token]);
+            $user = User::firstOrCreate(
+                ['email' => strtolower($invitation->email)],
+                [
+                    'name' => strstr($invitation->email, '@', true) ?: $invitation->email,
+                    'email_verified_at' => now(),
+                ]
+            );
         }
 
         return Inertia::render('Invitation/Accept', [
+            'acceptUrl' => route('invitation.store', ['token' => $token]),
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -62,18 +61,32 @@ class InvitationController extends Controller
 
     public function store(Request $request, string $token, AcceptInvitationAction $action): RedirectResponse
     {
-        $invitation = Invitation::where('token', $token)->first();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
 
         if (! $invitation || ! $invitation->isPending()) {
             return redirect()->route('invitation.invalid');
         }
 
         $user = Auth::user();
+        if (! $user) {
+            $existingUser = User::where('email', strtolower($invitation->email))->first();
+            if ($existingUser) {
+                Auth::login($existingUser);
+                $user = $existingUser;
+            }
+        }
+
         if (! $user || strtolower($user->email) !== strtolower($invitation->email)) {
             return redirect()->route('invitation.invalid');
         }
 
-        $action->execute($invitation, $user);
+        try {
+            $action->execute($invitation, $user);
+        } catch (Exception $e) {
+            Log::error('Zeus AcceptInvitationAction failed: '.$e->getMessage(), ['exception' => $e]);
+
+            return redirect()->back()->with('error', $e->getMessage());
+        }
 
         $request->session()->regenerate();
         ForceLogout::dispatchSafely($user->id);

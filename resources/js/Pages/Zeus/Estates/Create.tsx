@@ -1,7 +1,6 @@
-import { CheckIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 type Feature = {
@@ -44,7 +43,7 @@ export default function CreateEstate({ plans, partners }: Props) {
         plan_id: plans.length > 0 ? plans[0].id : '',
         charge_type: 'residents',
         free_trial_enabled: true,
-        free_trial_days: 30,
+        free_trial_days: 30 as number | '',
         has_partner: false,
         partner_id: '',
         partner_source: '',
@@ -53,183 +52,286 @@ export default function CreateEstate({ plans, partners }: Props) {
         commission_ends_at: '',
     });
 
-    const [selectedPlanId, setSelectedPlanId] = useState<number | string>(plans.length > 0 ? plans[0].id : '');
-    const [partnerOpen, setPartnerOpen] = useState(false);
-
-    const selectedPlan = plans.find((p) => p.id === selectedPlanId);
+    const selectedPlan = plans.find((p) => p.id === data.plan_id);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         post('/zeus/estates');
     }
 
-    const handlePlanSelect = (id: number) => {
-        setSelectedPlanId(id);
-        setData('plan_id', id);
-    };
-
     return (
         <ZeusLayout backUrl="/zeus/dashboard">
             <Head title="Create Estate - Zeus" />
 
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-3xl pt-8 pb-24">
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.45, ease: 'easeOut' }}
-                    className="mb-8"
+                    className="mb-10"
                 >
-                    <div className="mb-1 flex items-center gap-2">
-                        <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shadow-lg shadow-blue-500/50" />
-                        <span className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Infrastructure</span>
+                    <div className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+                        <Link href="/zeus/estates" className="transition-colors hover:text-slate-800 dark:hover:text-slate-200">
+                            Estates
+                        </Link>
+                        <span>/</span>
+                        <span className="text-slate-800 dark:text-white">Create</span>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-                        Deploy <span className="font-light text-slate-400">Estate</span>
-                    </h1>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Create an estate</h1>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                Set up the estate, assign its primary administrator, and choose a subscription plan.
+                            </p>
+                        </div>
+                    </div>
                 </motion.div>
 
-                <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.35, delay: 0.05 }}
-                        className="space-y-6 lg:col-span-7"
-                    >
-                        <div className="rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
-                            <h3 className="mb-6 text-sm font-bold tracking-wider text-slate-900 uppercase">Entity Details</h3>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {/* Estate Information */}
+                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.05 }}>
+                        <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">Estate information</h3>
+                        <div className="rounded-xl border border-slate-200/50 bg-white/50 p-6 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-[#0f1423]">
                             <div className="space-y-6">
-                                {/* Name */}
                                 <div>
-                                    <label htmlFor="name" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                        Entity Name
+                                    <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Estate name
                                     </label>
                                     <input
                                         type="text"
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                         placeholder="e.g. Silverwood Heights"
                                     />
-                                    {errors.name && (
-                                        <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.name}</p>
-                                    )}
+                                    {errors.name && <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.name}</p>}
                                 </div>
 
-                                {/* Email */}
                                 <div>
-                                    <label htmlFor="email" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                        Administrative Email
+                                    <label htmlFor="address" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Estate address
                                     </label>
                                     <input
-                                        type="email"
-                                        id="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                        placeholder="admin@entity.com"
-                                    />
-                                    <p className="mt-2 text-[10px] leading-relaxed font-medium tracking-tight text-slate-400 uppercase">
-                                        Initialization credentials will be dispatched to this endpoint.
-                                    </p>
-                                    {errors.email && (
-                                        <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.email}</p>
-                                    )}
-                                </div>
-
-                                {/* Address */}
-                                <div>
-                                    <label htmlFor="address" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                        Physical Mapping
-                                    </label>
-                                    <textarea
+                                        type="text"
                                         id="address"
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
-                                        rows={3}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none placeholder:text-slate-300 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                        placeholder="Primary operations address..."
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                                        placeholder="Enter the estate's primary address"
                                     />
-                                    {errors.address && (
-                                        <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.address}</p>
-                                    )}
+                                    {errors.address && <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.address}</p>}
                                 </div>
                             </div>
                         </div>
+                    </motion.div>
 
-                        <div className="rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
-                            <h3 className="mb-6 text-sm font-bold tracking-wider text-slate-900 uppercase">Subscription Selection</h3>
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                {plans.map((plan) => (
+                    {/* Primary Administrator */}
+                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.1 }}>
+                        <div className="mb-4">
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Primary administrator</h3>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                This person will receive the initial account credentials and manage the estate.
+                            </p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200/50 bg-white/50 p-6 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-[#0f1423]">
+                            <div>
+                                <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                    Administrator email
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    value={data.email}
+                                    onChange={(e) => setData('email', e.target.value)}
+                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                                    placeholder="admin@example.com"
+                                />
+                                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                    Login credentials and setup instructions will be sent to this email address.
+                                </p>
+                                {errors.email && <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.email}</p>}
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Subscription */}
+                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.15 }}>
+                        <div className="mb-4">
+                            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Subscription</h3>
+                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Choose the billing plan for this estate.</p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                            {plans.map((plan) => {
+                                const isSelected = data.plan_id === plan.id;
+                                return (
                                     <button
                                         key={plan.id}
                                         type="button"
-                                        onClick={() => handlePlanSelect(plan.id)}
-                                        className={`group relative flex flex-col items-start rounded-xl border-2 p-4 transition-all ${
-                                            selectedPlanId === plan.id
-                                                ? 'border-blue-500 bg-blue-50/30'
-                                                : 'border-slate-100 bg-slate-50/50 hover:border-slate-200'
+                                        onClick={() => setData('plan_id', plan.id)}
+                                        className={`group relative flex flex-col rounded-xl border p-5 text-left transition-all ${
+                                            isSelected
+                                                ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600 dark:border-blue-500 dark:bg-blue-500/10 dark:ring-blue-500'
+                                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50 dark:border-white/10 dark:bg-[#0f1423] dark:hover:border-white/20 dark:hover:bg-slate-800/50'
                                         }`}
                                     >
-                                        <div className="mb-1 flex w-full items-center justify-between">
+                                        <div className="mb-2 flex w-full items-center justify-between">
                                             <span
-                                                className={`text-[10px] font-black tracking-widest uppercase ${selectedPlanId === plan.id ? 'text-blue-600' : 'text-slate-400'}`}
+                                                className={`text-sm font-semibold capitalize ${
+                                                    isSelected ? 'text-blue-900 dark:text-blue-400' : 'text-slate-900 dark:text-slate-300'
+                                                }`}
                                             >
                                                 {plan.billing_interval}
                                             </span>
-                                            {selectedPlanId === plan.id && (
-                                                <div className="flex h-4 w-4 items-center justify-center rounded-full bg-blue-500">
-                                                    <CheckIcon className="h-2.5 w-2.5 text-white" />
+                                            {isSelected && (
+                                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-500">
+                                                    <CheckIcon className="h-3 w-3" />
                                                 </div>
                                             )}
                                         </div>
-                                        <span className={`text-sm font-bold ${selectedPlanId === plan.id ? 'text-blue-900' : 'text-slate-700'}`}>
-                                            {plan.name}
-                                        </span>
-                                        <span className="mt-1 text-[11px] font-medium text-slate-400">
-                                            ₦{(plan.price / 100).toLocaleString()} / {plan.billing_interval}
-                                        </span>
+                                        <div className="flex flex-col gap-1">
+                                            <span
+                                                className={`text-lg font-bold ${
+                                                    isSelected ? 'text-blue-900 dark:text-blue-400' : 'text-slate-900 dark:text-white'
+                                                }`}
+                                            >
+                                                ₦{(plan.price / 100).toLocaleString()}
+                                            </span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                                                /{' '}
+                                                {plan.billing_interval === 'monthly'
+                                                    ? 'month'
+                                                    : plan.billing_interval === 'quarterly'
+                                                      ? 'quarter'
+                                                      : plan.billing_interval === 'semi-annually'
+                                                        ? '6 months'
+                                                        : 'year'}
+                                            </span>
+                                        </div>
+
+                                        <div className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3 text-xs font-medium text-slate-400 transition-colors group-hover:text-blue-600 dark:border-white/10 dark:group-hover:text-blue-400">
+                                            View plan details <ChevronRightIcon className="h-3 w-3" />
+                                        </div>
                                     </button>
-                                ))}
-                            </div>
-                            {errors.plan_id && <p className="mt-2 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.plan_id}</p>}
+                                );
+                            })}
                         </div>
+                        {errors.plan_id && <p className="mt-2 text-xs font-medium text-red-500 dark:text-red-400">{errors.plan_id}</p>}
+                    </motion.div>
 
-                        {/* Partner Information */}
-                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    const next = !partnerOpen;
-                                    setPartnerOpen(next);
-                                    setData('has_partner', next);
-                                }}
-                                className="flex w-full items-center justify-between px-7 py-5 text-left"
-                            >
-                                <h3 className="text-sm font-bold tracking-wider text-slate-900 uppercase">Partner Information</h3>
-                                <span className="text-xs font-semibold text-slate-400">{partnerOpen ? 'Collapse' : 'Expand'}</span>
-                            </button>
+                    {/* Additional Settings */}
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.35, delay: 0.2 }}
+                        className="rounded-xl border border-slate-200/50 bg-white/50 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-[#0f1423]"
+                    >
+                        <div className="px-6 py-4">
+                            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Additional settings</h3>
+                            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Optional configuration for this estate</p>
+                        </div>
+                        <div className="border-t border-slate-100 dark:border-white/5">
+                            <div className="space-y-8 px-6 py-6">
+                                {/* Billing Model */}
+                                <div>
+                                    <h4 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Billing settings</h4>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label
+                                                htmlFor="charge_type"
+                                                className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                            >
+                                                Billing Model
+                                            </label>
+                                            <select
+                                                id="charge_type"
+                                                value={data.charge_type}
+                                                onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
+                                                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                                            >
+                                                <option value="estate">Charge Estate (Fixed)</option>
+                                                <option value="residents">Charge Residents (Per-resident)</option>
+                                            </select>
+                                            {errors.charge_type && (
+                                                <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.charge_type}</p>
+                                            )}
+                                        </div>
 
-                            <AnimatePresence>
-                                {partnerOpen && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        className="border-t border-slate-100 px-7 pb-7"
-                                    >
-                                        <div className="space-y-5 pt-5">
+                                        <div>
+                                            <label className="flex items-center gap-3">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={data.free_trial_enabled}
+                                                    onChange={(e) => setData('free_trial_enabled', e.target.checked)}
+                                                    className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-white/20 dark:bg-slate-900 dark:checked:bg-blue-500"
+                                                />
+                                                <span className="text-sm font-medium text-slate-900 dark:text-slate-300">Enable trial period</span>
+                                            </label>
+                                        </div>
+
+                                        {data.free_trial_enabled && (
                                             <div>
-                                                <label htmlFor="partner_id" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                                    Partner
+                                                <label
+                                                    htmlFor="free_trial_days"
+                                                    className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                                >
+                                                    Trial Duration (Days)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    id="free_trial_days"
+                                                    min="1"
+                                                    max="365"
+                                                    value={data.free_trial_days}
+                                                    onChange={(e) =>
+                                                        setData('free_trial_days', e.target.value === '' ? '' : parseInt(e.target.value))
+                                                    }
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                                                />
+                                                {errors.free_trial_days && (
+                                                    <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">
+                                                        {errors.free_trial_days}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Partner Config */}
+                                <div className="border-t border-slate-100 pt-6 dark:border-white/5">
+                                    <h4 className="mb-4 text-sm font-semibold text-slate-900 dark:text-white">Partner association</h4>
+
+                                    <div className="mb-4">
+                                        <label className="flex items-center gap-3">
+                                            <input
+                                                type="checkbox"
+                                                checked={data.has_partner}
+                                                onChange={(e) => setData('has_partner', e.target.checked)}
+                                                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-white/20 dark:bg-slate-900 dark:checked:bg-blue-500"
+                                            />
+                                            <span className="text-sm font-medium text-slate-900 dark:text-slate-300">Associate with a partner</span>
+                                        </label>
+                                    </div>
+
+                                    {data.has_partner && (
+                                        <div className="space-y-4 pl-7">
+                                            <div>
+                                                <label
+                                                    htmlFor="partner_id"
+                                                    className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                                >
+                                                    Select Partner
                                                 </label>
                                                 <select
                                                     id="partner_id"
                                                     value={data.partner_id}
                                                     onChange={(e) => setData('partner_id', e.target.value)}
-                                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                                 >
-                                                    <option value="">Select partner...</option>
+                                                    <option value="">Choose a partner...</option>
                                                     {partners.map((partner) => (
                                                         <option key={partner.id} value={partner.id}>
                                                             {partner.name} ({partner.commission_rate}%)
@@ -237,27 +339,16 @@ export default function CreateEstate({ plans, partners }: Props) {
                                                     ))}
                                                 </select>
                                                 {errors.partner_id && (
-                                                    <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.partner_id}</p>
+                                                    <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.partner_id}</p>
                                                 )}
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="partner_source" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                                    Partner Source
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="partner_source"
-                                                    value={data.partner_source}
-                                                    onChange={(e) => setData('partner_source', e.target.value)}
-                                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
-                                                    placeholder="e.g. partner_portal, conference"
-                                                />
                                             </div>
 
                                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                                                 <div>
-                                                    <label htmlFor="commission_starts_at" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                    <label
+                                                        htmlFor="commission_starts_at"
+                                                        className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                                    >
                                                         Commission Starts
                                                     </label>
                                                     <input
@@ -265,223 +356,99 @@ export default function CreateEstate({ plans, partners }: Props) {
                                                         id="commission_starts_at"
                                                         value={data.commission_starts_at}
                                                         onChange={(e) => setData('commission_starts_at', e.target.value)}
-                                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label htmlFor="commission_ends_at" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                                        Commission Ends
+                                                    <label
+                                                        htmlFor="commission_ends_at"
+                                                        className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                                    >
+                                                        Commission Ends (Optional)
                                                     </label>
                                                     <input
                                                         type="date"
                                                         id="commission_ends_at"
                                                         value={data.commission_ends_at}
                                                         onChange={(e) => setData('commission_ends_at', e.target.value)}
-                                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                                     />
                                                 </div>
                                             </div>
 
                                             <div>
-                                                <label htmlFor="partner_notes" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                                <label
+                                                    htmlFor="partner_notes"
+                                                    className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                                >
                                                     Notes
                                                 </label>
                                                 <textarea
                                                     id="partner_notes"
                                                     value={data.partner_notes}
                                                     onChange={(e) => setData('partner_notes', e.target.value)}
-                                                    rows={3}
-                                                    className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900"
+                                                    rows={2}
+                                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
                                                     placeholder="Internal notes about this partner..."
                                                 />
                                             </div>
                                         </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
-
-                        {/* Billing Configuration */}
-                        <div className="rounded-xl border border-slate-200 bg-white p-7 shadow-sm">
-                            <h3 className="mb-6 text-sm font-bold tracking-wider text-slate-900 uppercase">Billing Configuration</h3>
-                            <div className="space-y-6">
-                                {/* Billing Model */}
-                                <div>
-                                    <label htmlFor="charge_type" className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
-                                        Billing Model
-                                    </label>
-                                    <select
-                                        id="charge_type"
-                                        value={data.charge_type}
-                                        onChange={(e) => setData('charge_type', e.target.value as 'residents' | 'estate')}
-                                        className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                    >
-                                        <option value="estate">Charge Estate (Fixed)</option>
-                                        <option value="residents">Charge Residents (Per-resident)</option>
-                                    </select>
-                                    {errors.charge_type && (
-                                        <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">{errors.charge_type}</p>
                                     )}
                                 </div>
-
-                                {/* Free Trial Toggle */}
-                                <div>
-                                    <label className="flex items-center gap-3">
-                                        <input
-                                            type="checkbox"
-                                            checked={data.free_trial_enabled}
-                                            onChange={(e) => setData('free_trial_enabled', e.target.checked)}
-                                            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                        />
-                                        <span className="text-sm font-bold text-slate-900">Enable Free Trial Period</span>
-                                    </label>
-                                    <p className="mt-2 text-[10px] leading-relaxed font-medium tracking-tight text-slate-400 uppercase">
-                                        Estate begins with a trial period before billing starts
-                                    </p>
-                                </div>
-
-                                {/* Trial Days (conditional) */}
-                                {data.free_trial_enabled && (
-                                    <div>
-                                        <label
-                                            htmlFor="free_trial_days"
-                                            className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase"
-                                        >
-                                            Trial Duration (Days)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            inputMode="numeric"
-                                            pattern="[0-9]*"
-                                            id="free_trial_days"
-                                            min="1"
-                                            max="365"
-                                            value={data.free_trial_days}
-                                            onChange={(e) => setData('free_trial_days', parseInt(e.target.value) || 30)}
-                                            className="w-full rounded border border-slate-200 px-4 py-2.5 text-[13px] text-slate-900 transition-all outline-none focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/5 focus:outline-none"
-                                        />
-                                        <p className="mt-2 text-[10px] leading-relaxed font-medium tracking-tight text-slate-400 uppercase">
-                                            Days from creation before first billing (1-365, default: 30)
-                                        </p>
-                                        {errors.free_trial_days && (
-                                            <p className="mt-1.5 text-[11px] font-bold tracking-tight text-red-500 uppercase">
-                                                {errors.free_trial_days}
-                                            </p>
-                                        )}
-                                    </div>
-                                )}
                             </div>
-                        </div>
-
-                        <div className="flex items-center justify-end gap-3 pt-4">
-                            <Link
-                                href="/zeus/dashboard"
-                                className="rounded px-6 py-3 text-[12px] font-bold tracking-wider text-slate-400 uppercase transition-all hover:bg-slate-100 active:scale-95"
-                            >
-                                Abort
-                            </Link>
-                            <button
-                                type="submit"
-                                disabled={processing}
-                                className="rounded-lg bg-slate-900 px-10 py-3.5 text-[12px] font-bold tracking-wider text-white uppercase shadow-xl shadow-slate-950/20 transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-40"
-                            >
-                                {processing ? 'Provisioning...' : 'Deploy Estate'}
-                            </button>
                         </div>
                     </motion.div>
 
+                    {/* Summary and Actions */}
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.45, delay: 0.1 }}
-                        className="lg:col-span-5"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.35, delay: 0.25 }}
+                        className="pt-8"
                     >
-                        <div className="sticky top-8">
-                            <AnimatePresence mode="wait">
-                                {selectedPlan ? (
-                                    <motion.div
-                                        key={selectedPlan.id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: -10 }}
-                                        className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900 p-8 text-white shadow-2xl"
-                                    >
-                                        <div className="absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full bg-blue-500/10 blur-3xl" />
+                        <div className="mb-6 rounded-xl border border-slate-200/50 bg-slate-50/50 p-6 dark:border-white/[0.04] dark:bg-[#0f1423]">
+                            <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Review</h3>
 
-                                        <div className="relative z-10">
-                                            <div className="mb-4 flex items-center gap-2">
-                                                <div className="h-1 w-4 rounded-full bg-blue-500" />
-                                                <span className="text-[10px] font-bold tracking-[0.2em] text-blue-400 uppercase">Selected TIER</span>
-                                            </div>
-
-                                            <h2 className="mb-2 text-2xl font-bold">{selectedPlan.name}</h2>
-                                            <p className="mb-6 text-[13px] leading-relaxed font-medium text-slate-400">
-                                                {selectedPlan.description || 'Custom provisioned infrastructure for secure estate management.'}
-                                            </p>
-
-                                            <div className="mb-8 rounded-xl border border-white/10 bg-white/5 p-4">
-                                                <div className="mb-1 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                                                    Cost Structure
-                                                </div>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-3xl font-bold">₦{(selectedPlan.price / 100).toLocaleString()}</span>
-                                                    <span className="text-xs font-medium text-slate-400">/ {selectedPlan.billing_interval}</span>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-4">
-                                                <div className="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
-                                                    Included Capabilities
-                                                </div>
-                                                <div className="grid grid-cols-1 gap-3">
-                                                    {selectedPlan.features.map((feature) => (
-                                                        <div key={feature.id} className="group flex items-start gap-3">
-                                                            <div
-                                                                className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${feature.pivot.is_enabled ? 'bg-blue-500/20 text-blue-400' : 'bg-slate-800 text-slate-600'}`}
-                                                            >
-                                                                <CheckIcon className="h-2.5 w-2.5" />
-                                                            </div>
-                                                            <div className="space-y-0.5">
-                                                                <p
-                                                                    className={`text-[12px] font-bold ${feature.pivot.is_enabled ? 'text-slate-200' : 'text-slate-500 line-through'}`}
-                                                                >
-                                                                    {feature.name}
-                                                                    {feature.pivot.limit && (
-                                                                        <span className="ml-1.5 rounded-md bg-blue-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-blue-400 uppercase">
-                                                                            Limit: {feature.pivot.limit}
-                                                                        </span>
-                                                                    )}
-                                                                </p>
-                                                                {feature.description && (
-                                                                    <p className="text-[10px] leading-tight font-medium text-slate-500 transition-colors group-hover:text-slate-400">
-                                                                        {feature.description}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-10 flex items-center gap-3 rounded-xl border border-blue-500/10 bg-blue-500/5 p-4 text-blue-400">
-                                                <InformationCircleIcon className="h-5 w-5 shrink-0" />
-                                                <p className="text-[10px] leading-relaxed font-bold tracking-wide uppercase">
-                                                    Infrastructure will be automatically provisioned upon deployment. Initial month billed at base
-                                                    rate.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-slate-400">
-                                        <InformationCircleIcon className="mb-3 h-8 w-8 opacity-20" />
-                                        <p className="mb-1 text-xs font-bold tracking-widest uppercase">Analysis Pending</p>
-                                        <p className="text-[11px] leading-relaxed font-medium">
-                                            Select a subscription tier to view infrastructure capabilities and terms.
-                                        </p>
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                                <div>
+                                    <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">Estate</div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.name || '—'}</div>
+                                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{data.address || '—'}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                                        Administrator
                                     </div>
-                                )}
-                            </AnimatePresence>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.email || '—'}</div>
+                                </div>
+                                <div>
+                                    <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                                        Subscription
+                                    </div>
+                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{selectedPlan?.name || '—'}</div>
+                                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                        {selectedPlan
+                                            ? `₦${(selectedPlan.price / 100).toLocaleString()} / ${selectedPlan.billing_interval === 'monthly' ? 'month' : selectedPlan.billing_interval === 'quarterly' ? 'quarter' : selectedPlan.billing_interval === 'semi-annually' ? '6 months' : 'year'}`
+                                            : '—'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-4">
+                            <Link
+                                href="/zeus/estates"
+                                className="rounded-lg px-6 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
+                            >
+                                Cancel
+                            </Link>
+                            <button
+                                type="submit"
+                                disabled={processing || !data.name || !data.email || !data.plan_id}
+                                className="rounded-lg bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
+                            >
+                                {processing ? 'Creating estate...' : 'Create estate'}
+                            </button>
                         </div>
                     </motion.div>
                 </form>

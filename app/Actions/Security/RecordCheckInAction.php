@@ -9,8 +9,10 @@ use App\Models\AccessLog;
 use App\Models\EstateSettings;
 use App\Models\User;
 use App\Notifications\VisitorArrivedNotification;
+use App\Services\Security\CheckpointClaimService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class RecordCheckInAction
 {
@@ -23,11 +25,13 @@ class RecordCheckInAction
         User $verifiedBy,
         array $vehicleData = [],
         ?string $verificationMethod = null,
-        ?\DateTimeInterface $verifiedAt = null
+        ?\DateTimeInterface $verifiedAt = null,
+        ?string $entryPoint = null
     ): AccessLog {
         $timestamp = $verifiedAt ? CarbonImmutable::instance($verifiedAt) : now();
+        $entryPoint = $entryPoint ?? app(CheckpointClaimService::class)->getCurrentCheckpoint($estateId, $verifiedBy);
 
-        return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData, $verificationMethod, $timestamp) {
+        return DB::transaction(function () use ($code, $estateId, $verifiedBy, $vehicleData, $verificationMethod, $timestamp, $entryPoint) {
             $passUuid = null;
             $qrToken = null;
 
@@ -99,6 +103,7 @@ class RecordCheckInAction
             // Create Access Log
             $log = AccessLog::create([
                 'estate_id' => $estateId,
+                'entry_point' => $entryPoint,
                 'access_code_id' => $accessCode->id,
                 'verified_by' => $verifiedBy->id,
                 'verified_at' => $timestamp,
@@ -111,6 +116,7 @@ class RecordCheckInAction
                     'enforced_single_use' => $forceSingleUse,
                     'original_type' => $accessCode->type,
                     'verification_method' => $verificationMethod,
+                    'entry_point' => $entryPoint,
                 ],
             ]);
 

@@ -26,7 +26,7 @@ const config: StoreConfig = {
 };
 
 /**
- * Security offline store — hashed pass cache + pending scan logs.
+ * Security offline store - hashed pass cache + pending scan logs.
  * Replaces Utils/offlineDb for the security domain.
  */
 export const SecurityStore = {

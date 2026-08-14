@@ -280,7 +280,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                                             </div>
                                             <div className="flex items-center gap-1.5">
                                                 <CalendarIcon className="h-3.5 w-3.5 text-slate-300" />
-                                                <span>Due: {col.due_at || '—'}</span>
+                                                <span>Due: {col.due_at || '-'}</span>
                                             </div>
                                         </div>
                                     </div>

@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 
-import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 
 interface Props {
     transaction: {

@@ -18,12 +18,27 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public string $invitationUrl;
 
+    public string $userName;
+
     public function __construct(
         public Invitation|User $user,
         public Estate $estate,
         public bool $isPasswordReset = false,
     ) {
-        $token = $this->user instanceof Invitation ? $this->user->token : ($this->user->token ?? $this->user->id);
+        if ($this->user instanceof Invitation) {
+            $token = $this->user->token;
+            $this->userName = $this->user->email;
+        } else {
+            $invitation = Invitation::withoutGlobalScopes()
+                ->where('email', strtolower(trim($this->user->email)))
+                ->where('estate_id', $this->estate->id)
+                ->latest()
+                ->first();
+
+            $token = $invitation?->token ?? ($this->user->token ?? $this->user->id);
+            $this->userName = $this->user->name;
+        }
+
         $this->invitationUrl = route('invitations.show', ['token' => $token]);
     }
 
@@ -45,7 +60,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
             view: 'mail.admin.resident-invitation',
             with: [
                 'estateName' => $this->estate->name,
-                'userName' => $this->user->name,
+                'userName' => $this->userName,
                 'invitationUrl' => $this->invitationUrl,
                 'isPasswordReset' => $this->isPasswordReset,
             ],

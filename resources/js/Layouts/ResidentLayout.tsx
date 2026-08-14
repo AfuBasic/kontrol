@@ -24,7 +24,18 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
+import MarketController from '@/actions/App/Http/Controllers/Market/MarketController';
+import EmergencyController from '@/actions/App/Http/Controllers/Resident/EmergencyController';
+import MessagesController from '@/actions/App/Http/Controllers/Resident/MessagesController';
+import EstateInviteController from '@/actions/App/Http/Controllers/Resident/EstateInviteController';
+import InvoiceController from '@/actions/App/Http/Controllers/Resident/InvoiceController';
+import GatehouseController from '@/actions/App/Http/Controllers/Resident/GatehouseController';
+import HelpDeskController from '@/actions/App/Http/Controllers/Resident/HelpDeskController';
+import PollController from '@/actions/App/Http/Controllers/Resident/PollController';
+import DirectoryController from '@/actions/App/Http/Controllers/Resident/DirectoryController';
+import SettingsController from '@/actions/App/Http/Controllers/Resident/SettingsController';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
@@ -459,7 +470,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             <div className="fixed top-0 right-0 left-0 z-[60]">
                 <OfflineBanner />
             </div>
-            {/* Mobile health chip — resident shell has no persistent header */}
+            {/* Mobile health chip - resident shell has no persistent header */}
             <div className="fixed top-[calc(env(safe-area-inset-top)+0.5rem)] right-3 z-[55] md:hidden">
                 <SystemHealthMonitor hideWhenHealthy className="shadow-sm" />
             </div>
@@ -527,6 +538,14 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                 <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Property Owner</p>
                             </div>
                         </div>
+                        {(auth.user?.available_contexts?.length || 0) > 1 && (
+                            <Link
+                                href={ContextController.index.url()}
+                                className="flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left text-sm font-bold text-slate-700 transition-all hover:bg-slate-50"
+                            >
+                                Switch Workspace
+                            </Link>
+                        )}
                         <button
                             onClick={() => {
                                 const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
@@ -550,7 +569,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             <div className="flex min-h-screen flex-1 flex-col">
                 {/* Header - Conditional Light Premium Header */}
                 {!hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform()) && (
-                    <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
+                    <header className="fixed inset-x-0 top-0 z-[60] border-b border-slate-100 bg-white pt-[env(safe-area-inset-top,0px)]">
                         <div className="mx-auto max-w-lg px-6 sm:max-w-xl md:max-w-4xl lg:max-w-5xl">
                             <div className="flex h-16 items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -563,7 +582,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <ContextSwitcher />
+                                    <div className="hidden sm:block">
+                                        <ContextSwitcher variant="light" />
+                                    </div>
                                     <Link
                                         href="/resident/activity?tab=notifications"
                                         className="relative rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-50 active:scale-95"
@@ -813,7 +834,16 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                     );
                                 })}
                             </div>
-                            <div className="mt-6 border-t border-slate-100 pt-4">
+                            <div className="mt-6 space-y-3 border-t border-slate-100 pt-4">
+                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                    <Link
+                                        href={ContextController.index.url()}
+                                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black text-slate-700 transition-all hover:bg-slate-100/70"
+                                    >
+                                        <Building className="h-5 w-5" />
+                                        Switch Workspace
+                                    </Link>
+                                )}
                                 <button
                                     onClick={() => {
                                         setMoreMenuOpen(false);

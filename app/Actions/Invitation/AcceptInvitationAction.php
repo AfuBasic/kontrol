@@ -4,12 +4,14 @@ namespace App\Actions\Invitation;
 
 use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Enums\AssignmentScope;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\Zone;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 
@@ -21,13 +23,13 @@ class AcceptInvitationAction
     public function execute(Invitation $invitation, User $user): void
     {
         // 1. Validation: Invitation must be pending
-        if (! $invitation->isPending()) {
-            throw new \Exception('This invitation is not valid or has expired.');
+        if (!$invitation->isPending()) {
+            throw new Exception('This invitation is not valid or has expired.');
         }
 
         // 2. Validation: User email must match invitation email
         if (strtolower($user->email) !== strtolower($invitation->email)) {
-            throw new \Exception('This invitation belongs to a different email address.');
+            throw new Exception('This invitation belongs to a different email address.');
         }
 
         DB::transaction(function () use ($invitation, $user) {
@@ -39,7 +41,7 @@ class AcceptInvitationAction
                 ->where('estate_id', $estateId)
                 ->exists();
 
-            if (! $membershipExists) {
+            if (!$membershipExists) {
                 // Ensure profile exists
                 UserProfile::firstOrCreate(['user_id' => $user->id]);
 
@@ -65,16 +67,36 @@ class AcceptInvitationAction
                     ]);
             }
 
-            // 2. Assign Spatie Role (if any)
-            if ($invitation->role_id) {
-                // Assign role via AdministrativeAssignment
-                $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
-                $role = Role::find($invitation->role_id);
-                $estate = Estate::find($estateId);
-                $zone = $invitation->zone_id ? Zone::find($invitation->zone_id) : null;
-                $scopeType = AssignmentScope::tryFrom($invitation->scope_type) ?? AssignmentScope::Estate;
+            // 2. Assign Spatie Role / administrative assignment
+            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
+            $estate = Estate::find($estateId);
+            $zone = $invitation->zone_id ? Zone::find($invitation->zone_id) : null;
+            $scopeType = AssignmentScope::tryFrom($invitation->scope_type) ?? AssignmentScope::Estate;
+            $zoneIdCoalesced = $zone ? $zone->id : 0;
 
-                if ($role && $estate) {
+            $role = null;
+            if ($invitation->role_id) {
+                $role = Role::find($invitation->role_id);
+            } else {
+                $roleName = match ($invitation->relationship_type) {
+                    'security' => 'security',
+                    'resident' => 'resident',
+                    'property_owner' => 'property_owner',
+                    default => null,
+                };
+                if ($roleName) {
+                    $role = Role::where('name', $roleName)->where('guard_name', 'web')->whereNull('estate_id')->first();
+                }
+            }
+
+            if ($role && $estate) {
+                $assignmentExists = AdministrativeAssignment::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->where('role_id', $role->id)
+                    ->where('zone_id_coalesced', $zoneIdCoalesced)
+                    ->exists();
+
+                if (!$assignmentExists) {
                     $assignmentAction->execute(
                         user: $user,
                         estate: $estate,

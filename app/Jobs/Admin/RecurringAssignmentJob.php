@@ -7,6 +7,8 @@ use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Property;
 use App\Models\User;
+use App\Models\Zone;
+use App\Services\ZoneAudienceResolver;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,6 +29,7 @@ class RecurringAssignmentJob implements ShouldQueue
         $collections = Collection::query()
             ->where('status', 'active')
             ->where('billing_type', 'recurring')
+            ->with('targets')
             ->get();
 
         foreach ($collections as $collection) {
@@ -135,6 +138,13 @@ class RecurringAssignmentJob implements ShouldQueue
                     ->pluck('users.id')
                     ->toArray();
             }
+        } elseif ($collection->applies_to === 'zone') {
+            $zoneIds = $collection->targets
+                ->filter(fn ($target) => $this->isZoneTarget($target->target_type))
+                ->pluck('target_id')
+                ->all();
+
+            $userIds = app(ZoneAudienceResolver::class)->userIdsInZones($collection->estate_id, $zoneIds, false);
         } else {
             foreach ($collection->targets as $target) {
                 if ($target->target_type === User::class || $target->target_type === 'user') {
@@ -144,6 +154,9 @@ class RecurringAssignmentJob implements ShouldQueue
                         ->pluck('id')
                         ->toArray();
                     $userIds = array_merge($userIds, $propertyResidentIds);
+                } elseif ($this->isZoneTarget($target->target_type)) {
+                    $zoneResidentIds = app(ZoneAudienceResolver::class)->userIdsInZones($collection->estate_id, [(int) $target->target_id], false);
+                    $userIds = array_merge($userIds, $zoneResidentIds);
                 }
             }
         }
@@ -155,5 +168,10 @@ class RecurringAssignmentJob implements ShouldQueue
         }
 
         return array_values(array_filter(array_unique($userIds), fn ($id) => (int) $id !== (int) $collection->created_by));
+    }
+
+    private function isZoneTarget(string $targetType): bool
+    {
+        return $targetType === Zone::class || $targetType === 'zone' || $targetType === 'App\Models\Zone';
     }
 }

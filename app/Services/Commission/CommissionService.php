@@ -120,7 +120,7 @@ class CommissionService
         CarbonImmutable $paymentAt,
     ): ?CarbonImmutable {
         if ($subscription === null) {
-            // No subscription row (e.g. non-resident billing) — clock starts at this payment.
+            // No subscription row (e.g. non-resident billing) - clock starts at this payment.
             return $paymentAt->startOfDay();
         }
 
@@ -140,7 +140,7 @@ class CommissionService
             return $trialEnd;
         }
 
-        // Never had a trial — tenure from subscription start.
+        // Never had a trial - tenure from subscription start.
         $start = $subscription->current_period_start ?? $subscription->created_at;
 
         return $start

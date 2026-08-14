@@ -107,6 +107,14 @@ class Estate extends Model
         return $this->hasMany(AdministrativeAssignment::class);
     }
 
+    /**
+     * @return HasMany<Zone, $this>
+     */
+    public function zones(): HasMany
+    {
+        return $this->hasMany(Zone::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
@@ -294,19 +302,27 @@ class Estate extends Model
     }
 
     /**
-     * @return HasOne<EstateInviteLink, $this>
+     * @return HasMany<EstateInviteLink, $this>
      */
-    public function inviteLink(): HasOne
+    public function inviteLinks(): HasMany
     {
-        return $this->hasOne(EstateInviteLink::class)->where('role', 'resident');
+        return $this->hasMany(EstateInviteLink::class)->where('role', 'resident');
     }
 
     /**
-     * @return HasOne<EstateInviteLink, $this>
+     * @return HasMany<EstateInviteLink, $this>
      */
-    public function propertyOwnerInviteLink(): HasOne
+    public function propertyOwnerInviteLinks(): HasMany
     {
-        return $this->hasOne(EstateInviteLink::class)->where('role', 'property_owner');
+        return $this->hasMany(EstateInviteLink::class)->where('role', 'property_owner');
+    }
+
+    /**
+     * @return HasMany<EstateInviteLink, $this>
+     */
+    public function securityInviteLinks(): HasMany
+    {
+        return $this->hasMany(EstateInviteLink::class)->where('role', 'security');
     }
 
     /**

@@ -95,7 +95,7 @@ class DashboardController extends Controller
                     'description' => match ($application->partnerStatusKey()) {
                         'submitted' => 'Estate request submitted',
                         'accepted' => $application->estate
-                            ? 'Accepted — estate live on Kontrol'
+                            ? 'Accepted - estate live on Kontrol'
                             : 'Estate accepted',
                         'rejected' => $application->rejection_reason
                             ? 'Rejected: '.$application->rejection_reason

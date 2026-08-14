@@ -28,6 +28,23 @@ class PlanSeeder extends Seeder
 
         $plans = [
             [
+                'name' => 'Kontrol Monthly',
+                'slug' => 'pro-plan-monthly',
+                'description' => 'Complete access control and premium features billed monthly.',
+                'price' => 500000,
+                'billing_interval' => 'monthly',
+                'is_featured' => false,
+                'badge' => null,
+                'color' => 'slate',
+                'visibility' => 'public',
+                'max_residents' => null,
+                'max_security' => null,
+                'max_admins' => null,
+                'is_active' => true,
+                'sort_order' => 0,
+                'features' => [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+            ],
+            [
                 'name' => 'Kontrol Quarterly',
                 'slug' => 'pro-plan',
                 'description' => 'Complete access control and premium features billed quarterly.',

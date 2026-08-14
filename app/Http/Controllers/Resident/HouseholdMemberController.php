@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Resident\StoreHouseholdMemberRequest;
 use App\Mail\Resident\HouseholdMemberInvitationMail;
 use App\Models\HouseholdMember;
-use App\Models\User;
 use App\Services\EstateContextService;
 use App\Services\Resident\HouseholdMemberService;
 use Illuminate\Http\RedirectResponse;

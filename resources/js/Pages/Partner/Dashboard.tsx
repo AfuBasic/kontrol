@@ -195,7 +195,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
             <Head title="Workspace" />
 
             <div className="relative space-y-7 pb-2 sm:space-y-8">
-                {/* Ambient wash — Kontrol blue family */}
+                {/* Ambient wash - Kontrol blue family */}
                 <div className="pointer-events-none absolute inset-x-0 -top-6 h-[380px] overflow-hidden" aria-hidden>
                     <div className="absolute -top-20 left-1/4 h-64 w-64 rounded-full bg-primary-400/15 blur-3xl dark:bg-primary-500/12" />
                     <div className="absolute top-8 right-0 h-56 w-56 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-500/8" />
@@ -279,7 +279,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 </div>
                             </div>
 
-                            {/* Settlement glass card — Kontrol blue accents */}
+                            {/* Settlement glass card - Kontrol blue accents */}
                             <motion.div
                                 initial={{ opacity: 0, x: 16 }}
                                 animate={{ opacity: 1, x: 0 }}

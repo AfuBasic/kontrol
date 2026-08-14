@@ -246,7 +246,9 @@ class VisitorLogController extends Controller
                 : (int) now()->diffInMinutes($log->verified_at),
             'is_overstayed' => $isOverstayed,
             'code_expires_at' => $code?->expires_at?->format('M j, Y g:i A'),
-            'gate' => $log->meta['gate'] ?? 'Main Gate',
+            'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
+            'entry_point' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
+            'exit_point' => $log->checked_out_at ? ($log->meta['exit_point'] ?? $log->entry_point ?? 'Main Entrance') : null,
             'vehicle' => $log->vehicle_make ? [
                 'make' => $log->vehicle_make,
                 'model' => $log->vehicle_model,

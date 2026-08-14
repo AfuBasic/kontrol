@@ -4,9 +4,12 @@ namespace App\Actions\Zeus;
 
 use App\Mail\Zeus\EstateInvitationMail;
 use App\Models\Estate;
+use App\Models\Invitation;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class ResetEstateAdminPasswordAction
 {
@@ -28,6 +31,19 @@ class ResetEstateAdminPasswordAction
                 ->where('estate_id', $estate->id)
                 ->where('user_id', $user->id)
                 ->update(['status' => 'pending']);
+
+            // Refresh or create pending invitation
+            Invitation::withoutGlobalScope(ZoneScope::class)->updateOrCreate(
+                ['estate_id' => $estate->id, 'email' => strtolower($user->email)],
+                [
+                    'relationship_type' => null,
+                    'token' => Str::random(64),
+                    'status' => 'pending',
+                    'expires_at' => now()->addDays(7),
+                    'accepted_at' => null,
+                    'cancelled_at' => null,
+                ]
+            );
         });
 
         // Send new invitation email (queued)

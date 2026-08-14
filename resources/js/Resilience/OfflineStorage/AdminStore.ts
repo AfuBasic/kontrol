@@ -10,7 +10,7 @@ const config: StoreConfig = {
 };
 
 /**
- * Admin offline store — reserved for stale read caches (Phase 3+).
+ * Admin offline store - reserved for stale read caches (Phase 3+).
  */
 export const AdminStore = {
     async setStaleCache<T>(key: string, data: T): Promise<void> {

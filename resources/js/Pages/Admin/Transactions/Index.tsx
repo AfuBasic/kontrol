@@ -5,7 +5,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { format, parseISO } from 'date-fns';
 
-import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import ActivityFeed from '@/Components/Admin/Transactions/ActivityFeed';
 import LedgerCharts from '@/Components/Admin/Transactions/LedgerCharts';
 import LedgerEmptyState from '@/Components/Admin/Transactions/LedgerEmptyState';

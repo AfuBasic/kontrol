@@ -24,25 +24,42 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
+import {
+    Bell,
+    Search,
+    LayoutDashboard,
+    Building,
+    Users,
+    Home,
+    ClipboardList,
+    Wallet,
+    Ticket,
+    Mail,
+    Settings,
+    Menu,
+    X,
+    ArrowLeftRight,
+} from 'lucide-react';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
-import ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
-import AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
+import * as ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
+import * as AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
-import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
-import TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import * as CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
-import NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
-import ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
-import PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
-import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import UserController from '@/actions/App/Http/Controllers/Admin/UserController';
-import VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
+import * as EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import * as IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
+import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
+import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
+import * as PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import * as RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
+import * as SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import * as SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import * as UserController from '@/actions/App/Http/Controllers/Admin/UserController';
+import * as VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
@@ -71,50 +88,156 @@ type NavItem = {
     permission?: string;
     role?: string;
     feature?: string;
+    group?: string;
     comingSoon?: boolean;
 };
 
 const baseNav: NavItem[] = [
     { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-    { name: 'Residents', href: ResidentController.index.url(), icon: UsersIcon, permission: 'residents.view', feature: 'resident-directory' },
-    { name: 'Property Owners', href: PropertyOwnerController.index.url(), icon: UsersIcon, permission: 'property_owners.view' },
+
+    // People Group
+    {
+        name: 'Residents',
+        href: ResidentController.index.url(),
+        icon: UsersIcon,
+        permission: 'residents.view',
+        feature: 'resident-directory',
+        group: 'People',
+    },
+    { name: 'Property Owners', href: PropertyOwnerController.index.url(), icon: UsersIcon, permission: 'property_owners.view', group: 'People' },
     {
         name: 'Security',
         href: SecurityPersonnelController.index.url(),
         icon: ShieldCheckIcon,
         permission: 'security.view',
         feature: 'security-personnel-management',
+        group: 'People',
     },
+
+    // Operations & Estate Group
+    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin', group: 'Estate' },
+    { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board', group: 'Estate' },
+    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view', group: 'Operations' },
+    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view', group: 'Operations' },
+
+    // Finance Group
     {
         name: 'Collections',
         href: CollectionController.index.url(),
         icon: BanknotesIcon,
         feature: 'payment-collection',
+        group: 'Finance',
     },
     {
         name: 'Transactions',
         href: TransactionController.index.url(),
         icon: CurrencyDollarIcon,
         feature: 'payment-collection',
+        group: 'Finance',
     },
-    { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board' },
-    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view' },
-    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view' },
-    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin' },
-    { name: 'Roles', href: RoleController.index.url(), icon: UserGroupIcon, permission: 'roles.view', feature: 'user-access-control' },
+
+    // Governance & Access Group
     {
-        name: 'Assignments',
+        name: 'Staff & Authority',
         href: AdministrativeAssignmentController.index.url(),
         icon: UserGroupIcon,
         role: 'admin',
         feature: 'user-access-control',
+        group: 'Access',
     },
-    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view' },
+    {
+        name: 'Roles',
+        href: RoleController.index.url(),
+        icon: UserGroupIcon,
+        permission: 'roles.view',
+        feature: 'user-access-control',
+        group: 'Access',
+    },
+    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view', group: 'Access' },
 ];
 
 const primaryNav: NavItem[] = baseNav;
 
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
+
+const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
+    const hasActiveChild = items.some((item: any) => isCurrentPath(item.href));
+    const [isExpanded, setIsExpanded] = useState(group === 'Main' || hasActiveChild);
+
+    useEffect(() => {
+        if (hasActiveChild) {
+            setIsExpanded(true);
+        }
+    }, [hasActiveChild]);
+
+    return (
+        <div className="space-y-1">
+            {!isCollapsed && group !== 'Main' && (
+                <button
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="mt-2 mb-1 flex w-full items-center justify-between px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase transition-colors hover:text-white/60"
+                >
+                    <span>{group}</span>
+                    <ChevronDownIcon className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                </button>
+            )}
+
+            <AnimatePresence initial={false}>
+                {(isExpanded || isCollapsed || group === 'Main') && (
+                    <motion.div
+                        key="content"
+                        initial={(isCollapsed ? false : { height: 0, opacity: 0 }) as any}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={(isCollapsed ? false : { height: 0, opacity: 0 }) as any}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-1 overflow-hidden"
+                    >
+                        {items.map((item: any) =>
+                            item.comingSoon ? (
+                                <div
+                                    key={item.name}
+                                    title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
+                                    className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
+                                >
+                                    <item.icon className="h-5 w-5 shrink-0 text-white/30" />
+                                    {!isCollapsed && (
+                                        <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
+                                            <span>{item.name}</span>
+                                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">Soon</span>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    prefetch="click"
+                                    title={isCollapsed ? item.name : undefined}
+                                    className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
+                                        isCurrentPath(item.href)
+                                            ? 'bg-white/20 text-white shadow-sm'
+                                            : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                    }`}
+                                >
+                                    {isCurrentPath(item.href) && (
+                                        <motion.div
+                                            layoutId="activeIndicator"
+                                            className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
+                                        />
+                                    )}
+                                    <item.icon
+                                        className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
+                                    />
+                                    {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
+                                </Link>
+                            ),
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
 
 export default function AdminLayout({ children, title }: Props) {
     const page = usePage<
@@ -551,49 +674,20 @@ export default function AdminLayout({ children, title }: Props) {
                     </div>
 
                     <nav className="flex-1 overflow-y-auto p-3">
-                        <div className="space-y-1">
-                            {visiblePrimaryNav.map((item) =>
-                                item.comingSoon ? (
-                                    <div
-                                        key={item.name}
-                                        title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
-                                        className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
-                                    >
-                                        <item.icon className="h-5 w-5 shrink-0 text-white/30" />
-                                        {!isCollapsed && (
-                                            <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
-                                                <span>{item.name}</span>
-                                                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
-                                                    Soon
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <Link
-                                        key={item.name}
-                                        href={item.href}
-                                        prefetch="click"
-                                        title={isCollapsed ? item.name : undefined}
-                                        className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
-                                            isCurrentPath(item.href)
-                                                ? 'bg-white/20 text-white shadow-sm'
-                                                : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                        }`}
-                                    >
-                                        {isCurrentPath(item.href) && (
-                                            <motion.div
-                                                layoutId="activeIndicator"
-                                                className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
-                                            />
-                                        )}
-                                        <item.icon
-                                            className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
-                                        />
-                                        {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
-                                    </Link>
+                        <div className="space-y-4">
+                            {Object.entries(
+                                visiblePrimaryNav.reduce(
+                                    (acc, item) => {
+                                        const group = item.group || 'Main';
+                                        if (!acc[group]) acc[group] = [];
+                                        acc[group].push(item);
+                                        return acc;
+                                    },
+                                    {} as Record<string, NavItem[]>,
                                 ),
-                            )}
+                            ).map(([group, items]) => (
+                                <NavGroup key={group} group={group} items={items} isCollapsed={isCollapsed} isCurrentPath={isCurrentPath} />
+                            ))}
                         </div>
 
                         {visibleSecondaryNav.length > 0 && (
@@ -680,6 +774,18 @@ export default function AdminLayout({ children, title }: Props) {
                                                     Activity Log
                                                 </Link>
                                             )}
+
+                                            {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                                <Link
+                                                    href={ContextController.index.url()}
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
+                                                >
+                                                    <BuildingOfficeIcon className="h-4 w-4 text-[#1F6FDB]" />
+                                                    Switch Workspace
+                                                </Link>
+                                            )}
+
                                             <button
                                                 onClick={() => setShowLogoutConfirmation(true)}
                                                 className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
@@ -701,99 +807,95 @@ export default function AdminLayout({ children, title }: Props) {
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className="min-h-screen flex-1 px-6 py-8 lg:px-8"
                 >
-                    <header className="mb-8 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="h-2 w-2 rounded-full bg-[#1F6FDB]" />
-                            <span className="text-sm font-medium tracking-wider text-slate-500 uppercase">{title || 'Dashboard'}</span>
-                        </div>
+                    <header className="mb-8 flex items-center justify-end">
                         <div className="flex items-center gap-3">
                             <ContextSwitcher />
                             <SystemHealthMonitor hideWhenHealthy />
-                        <div className="relative">
-                            <button
-                                onClick={() => setNotificationOpen(!notificationOpen)}
-                                className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-all hover:text-[#1F6FDB] hover:shadow-md"
-                            >
-                                <BellIcon className="h-6 w-6" />
-                                {unreadCount > 0 && (
-                                    <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                        <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
-                                    </span>
-                                )}
-                            </button>
-                            <AnimatePresence>
-                                {notificationOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setNotificationOpen(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                            className="absolute top-full right-0 z-20 mt-3 w-80 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
-                                        >
-                                            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-                                                <h3 className="font-bold text-slate-900">Notifications</h3>
-                                                {unreadCount > 0 && (
-                                                    <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600">
-                                                        {unreadCount} New
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="max-h-96 overflow-y-auto">
-                                                {notifications.length > 0 ? (
-                                                    notifications.map((n) => (
-                                                        <div
-                                                            key={n.id}
-                                                            onClick={() => {
-                                                                const targetUrl = (n.data?.action_url || n.data?.url) as string | undefined;
-                                                                if (targetUrl) {
-                                                                    router.visit(targetUrl);
-                                                                    setNotificationOpen(false);
-                                                                }
-                                                            }}
-                                                            className="cursor-pointer rounded-xl p-4 transition-colors hover:bg-slate-50"
-                                                        >
-                                                            <p className="text-sm font-medium text-slate-900">
-                                                                {n.data?.message ? String(n.data.message) : 'New notification'}
-                                                            </p>
-                                                            <p className="mt-1 text-[10px] font-bold text-slate-400 uppercase">
-                                                                {n.created_at_human}
-                                                            </p>
+                            <div className="relative">
+                                <button
+                                    onClick={() => setNotificationOpen(!notificationOpen)}
+                                    className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-all hover:text-[#1F6FDB] hover:shadow-md"
+                                >
+                                    <BellIcon className="h-6 w-6" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
+                                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+                                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                                        </span>
+                                    )}
+                                </button>
+                                <AnimatePresence>
+                                    {notificationOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setNotificationOpen(false)} />
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                                className="absolute top-full right-0 z-20 mt-3 w-80 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-2xl"
+                                            >
+                                                <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                                                    <h3 className="font-bold text-slate-900">Notifications</h3>
+                                                    {unreadCount > 0 && (
+                                                        <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-bold text-blue-600">
+                                                            {unreadCount} New
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="max-h-96 overflow-y-auto">
+                                                    {Object.keys(notifications).length > 0 ? (
+                                                        notifications.map((n) => (
+                                                            <div
+                                                                key={n.id}
+                                                                onClick={() => {
+                                                                    const targetUrl = (n.data?.action_url || n.data?.url) as string | undefined;
+                                                                    if (targetUrl) {
+                                                                        router.visit(targetUrl);
+                                                                        setNotificationOpen(false);
+                                                                    }
+                                                                }}
+                                                                className="cursor-pointer rounded-xl p-4 transition-colors hover:bg-slate-50"
+                                                            >
+                                                                <p className="text-sm font-medium text-slate-900">
+                                                                    {n.data?.message ? String(n.data.message) : 'New notification'}
+                                                                </p>
+                                                                <p className="mt-1 text-[10px] font-bold text-slate-400 uppercase">
+                                                                    {n.created_at_human}
+                                                                </p>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="py-12 text-center text-slate-400">
+                                                            <BellIcon className="mx-auto mb-2 h-8 w-8 opacity-20" />
+                                                            <p className="text-sm">No notifications yet</p>
                                                         </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="py-12 text-center text-slate-400">
-                                                        <BellIcon className="mx-auto mb-2 h-8 w-8 opacity-20" />
-                                                        <p className="text-sm">No notifications yet</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="p-2 pt-0">
-                                                <button
-                                                    onClick={() => {
-                                                        router.post(NotificationController.markAllAsRead.url());
-                                                        setUnreadCount(0);
-                                                        setNotifications([]);
-                                                        setNotificationOpen(false);
-                                                        // Clear native notifications and badge
-                                                        if (Capacitor.isNativePlatform()) {
-                                                            PushNotifications.removeAllDeliveredNotifications();
-                                                            if ('setAppBadge' in navigator) {
-                                                                (navigator as any).setAppBadge(0).catch(() => {});
+                                                    )}
+                                                </div>
+                                                <div className="p-2 pt-0">
+                                                    <button
+                                                        onClick={() => {
+                                                            router.post(NotificationController.markAllAsRead.url());
+                                                            setUnreadCount(0);
+                                                            setNotifications([]);
+                                                            setNotificationOpen(false);
+                                                            // Clear native notifications and badge
+                                                            if (Capacitor.isNativePlatform()) {
+                                                                PushNotifications.removeAllDeliveredNotifications();
+                                                                if ('setAppBadge' in navigator) {
+                                                                    (navigator as any).setAppBadge(0).catch(() => {});
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                    className="w-full rounded-xl bg-blue-50 py-2.5 text-xs font-bold text-[#1F6FDB] transition-colors hover:bg-blue-100"
-                                                >
-                                                    Mark all as read
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                                                        }}
+                                                        className="w-full rounded-xl bg-blue-50 py-2.5 text-xs font-bold text-[#1F6FDB] transition-colors hover:bg-blue-100"
+                                                    >
+                                                        Mark all as read
+                                                    </button>
+                                                </div>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </header>
 
@@ -856,9 +958,33 @@ export default function AdminLayout({ children, title }: Props) {
                                 ))}
                             </nav>
                             <div className="border-t border-white/10 bg-black/20 p-4">
-                                <Link href={ProfileController.edit.url()} className="flex items-center gap-3 px-4 py-3 text-white/70">
+                                <Link
+                                    href={ProfileController.edit.url()}
+                                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-white/70 transition-colors hover:bg-white/10"
+                                >
                                     <UserCircleIcon className="h-5 w-5" /> Profile
                                 </Link>
+
+                                {isAdmin && hasActivityLogs && (
+                                    <Link
+                                        href={ActivityLogController.index.url()}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-white/70 transition-colors hover:bg-white/10"
+                                    >
+                                        <ClipboardDocumentListIcon className="h-5 w-5" /> Activity Log
+                                    </Link>
+                                )}
+
+                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                    <Link
+                                        href={ContextController.index.url()}
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-white/70 transition-colors hover:bg-white/10"
+                                    >
+                                        <BuildingOfficeIcon className="h-5 w-5" /> Switch Workspace
+                                    </Link>
+                                )}
+
                                 <button
                                     onClick={() => {
                                         setMobileMenuOpen(false);

@@ -35,7 +35,7 @@ export type AccessCode = {
     effective_visit_at: string;
     /** YYYY-MM-DD derived from effective_visit_at (server timezone). */
     arrival_date: string;
-    /** "10:00 AM" — null when no explicit arrival time is set ("Anytime"). */
+    /** "10:00 AM" - null when no explicit arrival time is set ("Anytime"). */
     arrival_time: string | null;
 
     /** ISO timestamp of when the visit was completed. Only present on history items. */

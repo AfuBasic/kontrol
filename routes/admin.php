@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\PropertyOwnerInviteLinkController;
 use App\Http\Controllers\Admin\ResidentApprovalController;
 use App\Http\Controllers\Admin\ResidentController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SecurityInviteLinkController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SettlementController;
@@ -152,6 +153,15 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
     // Security Personnel management
     Route::middleware(['permission:security.view', 'feature:security-personnel-management'])->group(function (): void {
+        Route::middleware('feature:secure-invitations')->group(function (): void {
+            Route::post('security/bulk-invite', [SecurityPersonnelController::class, 'bulkInvite'])->name('security.bulk-invite');
+            Route::get('security/invite-link', [SecurityInviteLinkController::class, 'index'])->name('security.invite-link.index');
+            Route::post('security/invite-link', [SecurityInviteLinkController::class, 'store'])->name('security.invite-link.store');
+            Route::post('security/invite-link/toggle', [SecurityInviteLinkController::class, 'toggle'])->name('security.invite-link.toggle');
+            Route::post('security/invite-link/regenerate', [SecurityInviteLinkController::class, 'regenerate'])->name('security.invite-link.regenerate');
+            Route::delete('security/invite-link', [SecurityInviteLinkController::class, 'destroy'])->name('security.invite-link.destroy');
+        });
+
         // Explicit routes must come before resource to avoid {security} matching "bulk-delete"
         Route::delete('security/bulk-delete', [SecurityPersonnelController::class, 'bulkDelete'])->name('security.bulk-delete');
         Route::patch('security/{security}/suspend', [SecurityPersonnelController::class, 'suspend'])->name('security.suspend');

@@ -10,14 +10,17 @@ use App\Events\Zeus\EstateCreated;
 use App\Models\AdministrativeAssignment;
 use App\Models\CommissionPlan;
 use App\Models\Estate;
+use App\Models\Invitation;
 use App\Models\Partner;
 use App\Models\Plan;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use App\Services\Billing\InitializeTrialService;
 use App\Services\Commission\PartnerAttributionService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class CreateEstateAction
@@ -25,7 +28,8 @@ class CreateEstateAction
     public function __construct(
         private InitializeTrialService $initializeTrialService,
         private PartnerAttributionService $attributionService,
-    ) {}
+    ) {
+    }
 
     /**
      * @param  array{name: string, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
@@ -72,6 +76,23 @@ class CreateEstateAction
                 'is_active' => true,
                 'is_primary' => true,
             ]);
+
+            // Create pending invitation record for the primary admin user
+            Invitation::withoutGlobalScope(ZoneScope::class)->updateOrCreate(
+                ['estate_id' => $estate->id, 'email' => strtolower(trim($data['email']))],
+                [
+                    'relationship_type' => null,
+                    'role_id' => $adminRole->id,
+                    'scope_type' => AssignmentScope::Estate->value,
+                    'zone_id' => null,
+                    'token' => Str::random(64),
+                    'status' => 'pending',
+                    'expires_at' => now()->addDays(7),
+                    'accepted_at' => null,
+                    'cancelled_at' => null,
+                    'created_by' => auth()->id(),
+                ]
+            );
 
             // 5. Create the subscription
             if ($plan) {
@@ -121,13 +142,13 @@ class CreateEstateAction
             $this->initializeTrialService->initializeForEstate($estate);
 
             // 8. Apply partner attribution when estate has a partner
-            if (! empty($data['has_partner']) && ! empty($data['partner_id'])) {
+            if (!empty($data['has_partner']) && !empty($data['partner_id'])) {
                 $partner = Partner::findOrFail($data['partner_id']);
                 $commissionPlan = CommissionPlan::cloneFromPartner($partner);
                 $startsAt = isset($data['commission_starts_at'])
                     ? CarbonImmutable::parse($data['commission_starts_at'])
                     : now()->startOfDay();
-                // Prefer explicit Zeus override; otherwise leave open — tenure is per-resident post-trial.
+                // Prefer explicit Zeus override; otherwise leave open - tenure is per-resident post-trial.
                 $endsAt = isset($data['commission_ends_at'])
                     ? CarbonImmutable::parse($data['commission_ends_at'])
                     : null;

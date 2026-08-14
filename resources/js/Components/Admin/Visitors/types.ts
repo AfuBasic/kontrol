@@ -30,6 +30,8 @@ export type VisitorRecord = {
     is_overstayed: boolean;
     code_expires_at: string | null;
     gate: string;
+    entry_point?: string | null;
+    exit_point?: string | null;
     vehicle: {
         make: string;
         model: string;
@@ -82,7 +84,7 @@ export function hasActiveVisitorFilters(filters: VisitorFilters): boolean {
  */
 export function formatStayDuration(minutes: number | null | undefined): string {
     if (minutes == null || Number.isNaN(minutes)) {
-        return '—';
+        return '-';
     }
 
     const total = Math.max(0, Math.floor(minutes));

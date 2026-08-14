@@ -2,21 +2,19 @@
 
 namespace App\Actions\Invitation;
 
-use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use App\Models\Zone;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class CreateInvitationAction
 {
     /**
-     * Create a new invitation.
+     * Create or refresh an invitation.
      */
     public function execute(
         string $email,
@@ -26,40 +24,11 @@ class CreateInvitationAction
         ?int $zoneId = null,
         string $scopeType = 'estate',
         ?User $createdBy = null
-    ): ?Invitation {
+    ): Invitation {
         // 1. Normalize Email
         $email = strtolower(trim($email));
 
-        // 2. Validate Membership & Role: Does the user already hold this exact role/relationship in this estate?
-        $existingUser = User::where('email', $email)->first();
-        if ($existingUser) {
-            $hasDuplicateRole = false;
-
-            if ($role) {
-                $hasDuplicateRole = AdministrativeAssignment::where('user_id', $existingUser->id)
-                    ->where('estate_id', $estate->id)
-                    ->where('role_id', $role->id)
-                    ->where('is_active', true)
-                    ->exists();
-            } else {
-                $hasDuplicateRole = DB::table('estate_users_membership')
-                    ->where('user_id', $existingUser->id)
-                    ->where('estate_id', $estate->id)
-                    ->whereIn('status', ['accepted', 'active'])
-                    ->where(function ($query) use ($relationshipType) {
-                        $query->where('relationship_type', $relationshipType)
-                            ->orWhereNull('relationship_type');
-                    })
-                    ->exists();
-            }
-
-            if ($hasDuplicateRole) {
-                // Return null to signify that the invitation should be skipped because they already hold this role.
-                return null;
-            }
-        }
-
-        // 3. Validation: Zone belongs to Estate
+        // 2. Validation: Zone belongs to Estate
         if ($zoneId) {
             $zoneExists = Zone::withTrashed()->where('id', $zoneId)->where('estate_id', $estate->id)->exists();
             if (! $zoneExists) {
@@ -67,9 +36,9 @@ class CreateInvitationAction
             }
         }
 
-        // 4. Validation: Role belongs to Estate (prevent global roles)
+        // 3. Validation: Role belongs to Estate or is a valid global system role
         if ($role) {
-            if ($role->estate_id !== $estate->id) {
+            if ($role->estate_id !== null && $role->estate_id !== $estate->id) {
                 throw new \InvalidArgumentException("Role {$role->id} does not belong to Estate {$estate->id}.");
             }
             if ($role->guard_name !== 'web') {
@@ -77,8 +46,8 @@ class CreateInvitationAction
             }
         }
 
-        // 5. Idempotent Invitation Creation/Refresh (respecting UNIQUE(estate_id, email))
-        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->updateOrCreate(
+        // 4. Idempotent Invitation Creation/Refresh (respecting UNIQUE(estate_id, email))
+        return Invitation::withoutGlobalScope(ZoneScope::class)->updateOrCreate(
             ['estate_id' => $estate->id, 'email' => $email],
             [
                 'relationship_type' => $relationshipType,
@@ -93,7 +62,5 @@ class CreateInvitationAction
                 'created_by' => $createdBy?->id,
             ]
         );
-
-        return $invitation;
     }
 }

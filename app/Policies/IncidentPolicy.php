@@ -2,17 +2,14 @@
 
 namespace App\Policies;
 
+use App\Auth\ContextManager;
 use App\Enums\IncidentStatus;
 use App\Models\Estate;
 use App\Models\Incident;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
-use App\Auth\ContextManager;
 
 class IncidentPolicy extends BaseContextPolicy
 {
-
-
     /**
      * Determine if the user can view the incident feed.
      */
@@ -46,7 +43,7 @@ class IncidentPolicy extends BaseContextPolicy
             return false;
         }
 
-        return ($user->contextHasRole(['resident', 'property_owner', 'security', 'admin']))
+        return $user->contextHasRole(['resident', 'property_owner', 'security', 'admin'])
             && ! $user->contextHasRole('household_member');
     }
 
@@ -83,7 +80,7 @@ class IncidentPolicy extends BaseContextPolicy
             return false;
         }
 
-        return ($user->contextHasRole(['resident', 'property_owner']))
+        return $user->contextHasRole(['resident', 'property_owner'])
             && ! $user->contextHasRole('admin')
             && ! $user->contextHasRole('household_member');
     }

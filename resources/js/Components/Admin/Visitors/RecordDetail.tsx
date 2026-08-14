@@ -10,7 +10,7 @@ type Props = {
 };
 
 /**
- * Surface 3 — per-record chain of custody detail (modal).
+ * Surface 3 - per-record chain of custody detail (modal).
  */
 export default function RecordDetail({ record, checkoutEnabled, onClose }: Props) {
     return (

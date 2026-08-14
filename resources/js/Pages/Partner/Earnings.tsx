@@ -174,7 +174,7 @@ export default function PartnerEarnings({
                 </div>
 
                 {/* ═══════════════════════════════════════════
-                    HERO — DO NOT MODIFY (visual anchor)
+                    HERO - DO NOT MODIFY (visual anchor)
                     ═══════════════════════════════════════════ */}
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
@@ -270,7 +270,7 @@ export default function PartnerEarnings({
                 </motion.section>
 
                 {/* ═══════════════════════════════════════════
-                    1. TODAY'S FOCUS — actionable tasks
+                    1. TODAY'S FOCUS - actionable tasks
                     ═══════════════════════════════════════════ */}
                 <section className="space-y-3">
                     <h2 className="text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
@@ -330,7 +330,7 @@ export default function PartnerEarnings({
                 </section>
 
                 {/* ═══════════════════════════════════════════
-                    2. SETTLEMENT PREVIEW — financial centre
+                    2. SETTLEMENT PREVIEW - financial centre
                     ═══════════════════════════════════════════ */}
                 <section>
                     <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
@@ -403,7 +403,7 @@ export default function PartnerEarnings({
                 </section>
 
                 {/* ═══════════════════════════════════════════
-                    3. PAYOUT HISTORY — monthly earning rows
+                    3. PAYOUT HISTORY - monthly earning rows
                     ═══════════════════════════════════════════ */}
                 <section>
                     <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
@@ -538,7 +538,7 @@ export default function PartnerEarnings({
                 </section>
 
                 {/* ═══════════════════════════════════════════
-                    4. COMMISSION BREAKDOWN — by estate
+                    4. COMMISSION BREAKDOWN - by estate
                     ═══════════════════════════════════════════ */}
                 <section>
                     <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
@@ -621,7 +621,7 @@ export default function PartnerEarnings({
                 </section>
 
                 {/* ═══════════════════════════════════════════
-                    5. INSIGHTS — compact intelligence
+                    5. INSIGHTS - compact intelligence
                     ═══════════════════════════════════════════ */}
                 <section>
                     <h2 className="mb-3 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">

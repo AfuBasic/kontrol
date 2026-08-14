@@ -27,6 +27,7 @@ interface Props {
 export default function Edit({ resident, properties }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: resident.name,
+        email: resident.email,
         phone: resident.phone || '',
         unit_number: resident.unit_number || '',
         address: resident.address || '',

@@ -379,7 +379,7 @@ export default function IncidentsIndex({
             </div>
 
             <div className="space-y-6">
-                {/* SECTION 1 — INCIDENT HEALTH STATS */}
+                {/* SECTION 1 - INCIDENT HEALTH STATS */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
                         <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Open</span>
@@ -425,7 +425,7 @@ export default function IncidentsIndex({
                     </div>
                 </div>
 
-                {/* SECTION 1.5 — INCIDENT SOURCE BREAKDOWN */}
+                {/* SECTION 1.5 - INCIDENT SOURCE BREAKDOWN */}
                 {stats.source_breakdown && stats.source_breakdown.length > 0 && (
                     <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
                         <h3 className="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">Operational Incident Origin (Sources)</h3>
@@ -458,7 +458,7 @@ export default function IncidentsIndex({
                     </div>
                 )}
 
-                {/* SECTION 2 — NEEDS ATTENTION */}
+                {/* SECTION 2 - NEEDS ATTENTION */}
                 {needsAttentionIncidents.length > 0 ? (
                     <div className="rounded-2xl border border-red-100 bg-linear-to-br from-red-50/40 to-orange-50/20 p-4.5 shadow-xs">
                         <div className="mb-3 flex items-center gap-2">
@@ -914,7 +914,7 @@ export default function IncidentsIndex({
 
                                                     {/* Location */}
                                                     <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
-                                                        {incident.location || '—'}
+                                                        {incident.location || '-'}
                                                     </td>
 
                                                     {/* Assignee */}

@@ -14,6 +14,7 @@ use App\Models\Incident;
 use App\Models\User;
 use App\Services\EstateContextService;
 use App\Services\IncidentService;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,7 +28,8 @@ class IncidentController extends Controller
     public function __construct(
         protected IncidentService $incidentService,
         protected EstateContextService $estateContext,
-        protected CreateIncidentAction $createIncidentAction
+        protected CreateIncidentAction $createIncidentAction,
+        protected ZoneAudienceResolver $zoneAudience,
     ) {}
 
     /**
@@ -268,6 +270,7 @@ class IncidentController extends Controller
         return Inertia::render('Admin/Incidents/Create', [
             'categories' => $categories,
             'admins' => $admins,
+            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
         ]);
     }
 

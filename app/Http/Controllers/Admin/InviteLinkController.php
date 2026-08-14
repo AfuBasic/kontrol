@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreInviteLinkRequest;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,71 +41,70 @@ class InviteLinkController extends Controller
     {
         $estate = $this->estateContext->getEstate();
         $validated = $request->validated();
-        $link = $estate->inviteLink;
 
-        if ($link) {
+        $linkId = $request->input('id');
+
+        if ($linkId) {
+            $link = $estate->inviteLinks()->findOrFail($linkId);
             $link->update([
                 'max_usages' => $validated['max_usages'] ?? null,
                 'requires_approval' => $validated['requires_approval'] ?? true,
                 'expires_at' => $validated['expires_at'] ?? null,
+                'zone_id' => $validated['zone_id'] ?? null,
             ]);
         } else {
-            $estate->inviteLink()->create([
+            $estate->inviteLinks()->create([
+                'role' => 'resident',
                 'token' => Str::random(32),
                 'is_active' => true,
                 'usage_count' => 0,
                 'max_usages' => $validated['max_usages'] ?? null,
                 'requires_approval' => $validated['requires_approval'] ?? true,
                 'expires_at' => $validated['expires_at'] ?? null,
+                'zone_id' => $validated['zone_id'] ?? null,
             ]);
         }
 
         return back()->with('success', 'Invite link settings updated successfully.');
     }
 
-    public function regenerate(): RedirectResponse
+    public function regenerate(Request $request): RedirectResponse
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->inviteLink;
 
-        if (! $link) {
-            return back()->with('error', 'No invite link to regenerate.');
-        }
+        $validated = $request->validate(['id' => 'required|integer']);
+        $link = $estate->inviteLinks()->findOrFail($validated['id']);
 
         $link->update([
             'token' => Str::random(32),
-            'usage_count' => 0, // Reset usage count on regeneration? User didn't specify, but usually yes for fresh link.
+            'usage_count' => 0, // Reset usage count on regeneration
         ]);
 
         return back()->with('success', 'Invite link regenerated successfully.');
     }
 
-    public function toggle(): RedirectResponse
+    public function toggle(Request $request): RedirectResponse
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->inviteLink;
 
-        if ($link) {
-            $link->update(['is_active' => ! $link->is_active]);
-            $status = $link->is_active ? 'enabled' : 'disabled';
+        $validated = $request->validate(['id' => 'required|integer']);
+        $link = $estate->inviteLinks()->findOrFail($validated['id']);
 
-            return back()->with('success', "Invite link {$status} successfully.");
-        }
+        $link->update(['is_active' => ! $link->is_active]);
+        $status = $link->is_active ? 'enabled' : 'disabled';
 
-        return back()->with('error', 'No invite link found.');
+        return back()->with('success', "Invite link {$status} successfully.");
     }
 
-    public function destroy(): RedirectResponse
+    public function destroy(Request $request): RedirectResponse
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->inviteLink;
 
-        if (! $link) {
-            return back()->with('error', 'No invite link to delete.');
-        }
+        $validated = $request->validate(['id' => 'required|integer']);
+        $link = $estate->inviteLinks()->findOrFail($validated['id']);
 
         if ($link->is_active) {
             return back()->with('error', 'Invite link must be disabled before it can be deleted.');

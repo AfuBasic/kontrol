@@ -42,6 +42,8 @@ class SettingsController extends Controller
                 'require_vehicle_information' => (bool) $settings->require_vehicle_information,
                 'allow_residents_to_extend_visitor_passes' => (bool) $settings->allow_residents_to_extend_visitor_passes,
                 'visitor_checkout_enabled' => (bool) $settings->visitor_checkout_enabled,
+                'entry_point_checkout_enforced' => (bool) $settings->entry_point_checkout_enforced,
+                'entry_points' => $settings->entry_points ?: [],
 
                 // 2. Security Operations
                 'incident_categories' => $settings->incident_categories ?: [

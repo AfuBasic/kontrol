@@ -267,7 +267,7 @@ export default function ResidentActions({ resident }: Props) {
                 <EllipsisVerticalIcon className="h-5 w-5" />
             </button>
 
-            {/* Desktop dropdown — portalled so it escapes overflow-hidden table wrappers */}
+            {/* Desktop dropdown - portalled so it escapes overflow-hidden table wrappers */}
             {typeof document !== 'undefined' &&
                 createPortal(
                     <AnimatePresence>
@@ -288,7 +288,7 @@ export default function ResidentActions({ resident }: Props) {
                     document.body,
                 )}
 
-            {/* Mobile Sheet — scoped to <sm since the residents page switches to the desktop table at sm */}
+            {/* Mobile Sheet - scoped to <sm since the residents page switches to the desktop table at sm */}
             {!isDesktop && (
                 <MobileSheet isOpen={isOpen} onClose={() => setIsOpen(false)} title={resident.name}>
                     <ActionItems isMobile />

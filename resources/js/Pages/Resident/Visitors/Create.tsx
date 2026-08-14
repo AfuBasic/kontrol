@@ -2,7 +2,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, Calendar as CalendarIcon, ChevronLeft, Clock, Phone, ShieldCheck, User, Users, X, Zap, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
-import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
+import * as AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import ResidentLayout from '@/Layouts/ResidentLayout';

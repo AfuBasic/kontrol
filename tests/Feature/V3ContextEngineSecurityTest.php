@@ -20,7 +20,7 @@ beforeEach(function () {
 it('Test 1 — prevents Spatie cache leakage across context switches', function () {
     // Setup
     $user = User::factory()->create();
-    
+
     $estateA = Estate::factory()->create();
     $estateB = Estate::factory()->create();
 
@@ -58,7 +58,7 @@ it('Test 1 — prevents Spatie cache leakage across context switches', function 
     $this->contextManager->resolve($requestA);
 
     // Load caches explicitly
-    $user->getAllPermissions(); 
+    $user->getAllPermissions();
     expect($user->hasRole('admin'))->toBeTrue();
 
     // Now switch to Context B
@@ -77,7 +77,7 @@ it('Test 1 — prevents Spatie cache leakage across context switches', function 
 it('Test 2 — rejects forged context', function () {
     $user = User::factory()->create();
     $estateA = Estate::factory()->create();
-    
+
     // Assignment for someone else
     $otherUser = User::factory()->create();
     $role = Role::create(['name' => 'resident', 'guard_name' => 'web']);
@@ -89,15 +89,15 @@ it('Test 2 — rejects forged context', function () {
     ]);
 
     $this->actingAs($user);
-    
+
     Session::put('active_context_assignment_id', $assignment->id);
-    
+
     $request = Request::create('/test');
     $request->setLaravelSession(Session::driver());
     $request->setUserResolver(fn () => $user);
 
     $context = $this->contextManager->resolve($request);
-    
+
     expect($context)->toBeNull();
 });
 
@@ -105,7 +105,7 @@ it('Test 3 — rejects inactive assignment', function () {
     $user = User::factory()->create();
     $estate = Estate::factory()->create();
     EstateMembership::create(['user_id' => $user->id, 'estate_id' => $estate->id, 'status' => 'accepted']);
-    
+
     $role = Role::create(['name' => 'resident', 'guard_name' => 'web']);
     $assignment = AdministrativeAssignment::create([
         'user_id' => $user->id,
@@ -123,10 +123,10 @@ it('Test 4 — rejects wrong estate role', function () {
     $estateA = Estate::factory()->create();
     $estateB = Estate::factory()->create();
     EstateMembership::create(['user_id' => $user->id, 'estate_id' => $estateA->id, 'status' => 'accepted']);
-    
+
     // Create a role strictly bound to estate B
     $role = Role::create(['name' => 'custom', 'guard_name' => 'web', 'estate_id' => $estateB->id]);
-    
+
     // Try to assign it in Estate A
     $assignment = AdministrativeAssignment::create([
         'user_id' => $user->id,
@@ -144,10 +144,10 @@ it('Test 5 — rejects wrong zone', function () {
     $estateA = Estate::factory()->create();
     $estateB = Estate::factory()->create();
     EstateMembership::create(['user_id' => $user->id, 'estate_id' => $estateA->id, 'status' => 'accepted']);
-    
+
     $role = Role::create(['name' => 'security', 'guard_name' => 'web']);
     $zoneInB = Zone::create(['estate_id' => $estateB->id, 'name' => 'South Gate']);
-    
+
     $assignment = AdministrativeAssignment::create([
         'user_id' => $user->id,
         'estate_id' => $estateA->id,
@@ -165,7 +165,7 @@ it('Test 6 — rejects activating someone elses assignment', function () {
     $userB = User::factory()->create();
     $estate = Estate::factory()->create();
     EstateMembership::create(['user_id' => $userB->id, 'estate_id' => $estate->id, 'status' => 'accepted']);
-    
+
     $role = Role::create(['name' => 'resident', 'guard_name' => 'web']);
     $assignmentForB = AdministrativeAssignment::create([
         'user_id' => $userB->id,
@@ -188,7 +188,7 @@ it('Test 7 — safe failure with no context', function () {
     $request->setUserResolver(fn () => $user);
 
     $context = $this->contextManager->resolve($request);
-    
+
     expect($context)->toBeNull();
 });
 
@@ -203,6 +203,6 @@ it('Test 8 — handles invalid session data safely', function () {
     $request->setUserResolver(fn () => $user);
 
     $context = $this->contextManager->resolve($request);
-    
+
     expect($context)->toBeNull();
 });

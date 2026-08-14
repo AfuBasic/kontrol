@@ -2,10 +2,12 @@
 
 namespace App\Http\Middleware;
 
+use App\Auth\ContextManager;
 use App\Services\EstateContextService;
 use Closure;
 use Exception;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 
 class ValidateEstateContext
@@ -68,32 +70,32 @@ class ValidateEstateContext
     private function validateUserRoleForRoute($request): void
     {
         $path = $request->path();
-        $context = app(\App\Auth\ContextManager::class)->current();
+        $context = app(ContextManager::class)->current();
 
-        if (!$context) {
+        if (! $context) {
             abort(403, 'No active context');
         }
 
-        $role = \Spatie\Permission\Models\Role::find($context->roleId);
+        $role = Role::find($context->roleId);
         $roleName = strtolower($role ? $role->name : '');
 
         // Admin routes require an admin-like role in the active context
         if (str_starts_with($path, 'admin/')) {
-            if (!str_contains($roleName, 'admin')) {
+            if (! str_contains($roleName, 'admin')) {
                 abort(403, 'Admin context required for this route.');
             }
         }
 
         // Resident routes require a resident-like role in the active context
         if (str_starts_with($path, 'resident/')) {
-            if (!str_contains($roleName, 'resident') && !str_contains($roleName, 'household')) {
+            if (! str_contains($roleName, 'resident') && ! str_contains($roleName, 'household')) {
                 abort(403, 'Resident context required for this route.');
             }
         }
 
         // Security routes require a security role in the active context
         if (str_starts_with($path, 'security/')) {
-            if (!str_contains($roleName, 'security')) {
+            if (! str_contains($roleName, 'security')) {
                 abort(403, 'Security context required for this route.');
             }
         }

@@ -52,7 +52,7 @@ class EstateRequestRejectedNotification extends Notification implements ShouldBr
 
         return [
             'title' => 'Estate request rejected',
-            // Toast / in-app list: inform only — full reason lives on the estate request + email.
+            // Toast / in-app list: inform only - full reason lives on the estate request + email.
             'body' => "Your onboarding request for “{$estateName}” was rejected.",
             'url' => '/partner/partner-requests',
             'estate_application_id' => $this->application->id,

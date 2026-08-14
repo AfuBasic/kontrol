@@ -6,6 +6,7 @@ use App\Models\Estate;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Spatie\Permission\Models\Role;
 
 class SecurityService
 {
@@ -21,25 +22,30 @@ class SecurityService
     public function getPaginatedSecurity(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $estate = $this->estateContext->getEstate();
+        $securityRole = Role::where('name', 'security')->whereNull('estate_id')->first();
 
         return User::query()
             ->forEstate($estate->id)
             ->withRole('security', $estate->id)
-            ->with(['profile', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
+            ->with([
+                'profile',
+                'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id'),
+                'administrativeAssignments' => fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id)),
+            ])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->when($filters['status'] ?? null, function ($query, $status) use ($estate) {
+            ->when($filters['status'] ?? null, function ($query, $status) use ($estate, $securityRole) {
                 if ($status === 'suspended') {
-                    $query->whereNotNull('suspended_at');
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', false));
                 } elseif ($status === 'active') {
-                    $query->whereNull('suspended_at')
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'accepted'));
                 } elseif ($status === 'pending') {
-                    $query->whereNull('suspended_at')
+                    $query->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
                         ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('status', 'pending'));
                 }
             })

@@ -101,9 +101,9 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                 className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
             >
                 <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Assignments</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">Staff & Authority Management</h1>
                     <p className="mt-1 text-gray-500">
-                        Manage estate-scoped role assignments, including zone scope and active state.
+                        See who has administrative authority over this estate and which zones they can manage.
                     </p>
                 </div>
                 <Link
@@ -111,7 +111,7 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                     className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-primary-700"
                 >
                     <PlusIcon className="h-5 w-5" />
-                    Create Assignment
+                    Grant Authority
                 </Link>
             </motion.div>
 
@@ -129,7 +129,7 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search by user or role..."
+                        placeholder="Search by staff member or role..."
                         className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-3 pl-10 text-sm text-gray-900 placeholder-gray-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                     />
                 </div>
@@ -147,9 +147,9 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                     onChange={(e) => applyFilter('scope_type', e.target.value)}
                     className="rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none"
                 >
-                    <option value="">All scopes</option>
-                    <option value="estate">Estate-wide</option>
-                    <option value="zone">Zone-scoped</option>
+                    <option value="">All coverage</option>
+                    <option value="estate">Entire estate</option>
+                    <option value="zone">Zone-specific</option>
                 </select>
             </motion.div>
 
@@ -161,16 +161,16 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
             >
                 {!hasAssignments ? (
                     <div className="px-6 py-16 text-center">
-                        <p className="text-sm font-medium text-gray-900">No assignments found</p>
+                        <p className="text-sm font-medium text-gray-900">No staff authority configured</p>
                         <p className="mt-1 text-sm text-gray-500">
-                            Create an assignment to grant a user an estate-scoped role and scope.
+                            When you add security personnel, staff, or administrators, their operational authority will appear here.
                         </p>
                         <Link
                             href={create.url()}
                             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
                         >
                             <PlusIcon className="h-4 w-4" />
-                            Create Assignment
+                            Grant Authority
                         </Link>
                     </div>
                 ) : (
@@ -222,7 +222,7 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                                             {assignment.scope_type === 'estate' ? 'Estate-wide' : 'Zone'}
                                         </td>
                                         <td className="px-6 py-4 text-sm text-gray-700">
-                                            {assignment.zone?.name ?? '—'}
+                                            {assignment.zone?.name ?? '-'}
                                         </td>
                                         <td className="px-6 py-4">
                                             {assignment.is_active ? (

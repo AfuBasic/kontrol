@@ -17,10 +17,10 @@ import {
     Clock,
 } from 'lucide-react';
 
-import CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import * as CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { create as createPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import * as SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { CardSkeleton, FeedItemSkeleton, StatCardSkeleton } from '@/Components/Skeletons';
 import { ErrorState, OfflineState } from '@/Components/States';
@@ -146,7 +146,7 @@ export default function Dashboard({
             <Head title="Command Center" />
 
             <div className="w-full space-y-6 pb-24">
-                {/* SECTION 1 — ESTATE HEALTH (shell eager, details deferred) */}
+                {/* SECTION 1 - ESTATE HEALTH (shell eager, details deferred) */}
                 <SectionErrorBoundary name="estate-health">
                     <Deferred
                         data="estateHealth"
@@ -175,7 +175,7 @@ export default function Dashboard({
                     </Deferred>
                 </SectionErrorBoundary>
 
-                {/* SECTION 2 — ACTION CENTER */}
+                {/* SECTION 2 - ACTION CENTER */}
                 <SectionErrorBoundary name="needs-attention">
                     <Deferred
                         data="needsAttention"
@@ -193,7 +193,7 @@ export default function Dashboard({
                     </Deferred>
                 </SectionErrorBoundary>
 
-                {/* SECTION 3 — OPERATIONAL SNAPSHOT */}
+                {/* SECTION 3 - OPERATIONAL SNAPSHOT */}
                 <SectionErrorBoundary name="operational-snapshot">
                     <Deferred
                         data="operationalSnapshot"
@@ -217,7 +217,7 @@ export default function Dashboard({
                 </SectionErrorBoundary>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* SECTION 4 — FINANCIAL OVERVIEW */}
+                    {/* SECTION 4 - FINANCIAL OVERVIEW */}
                     <SectionErrorBoundary name="financial-overview">
                         {skipHeavyFinance ? (
                             <section className="space-y-2.5">
@@ -248,7 +248,7 @@ export default function Dashboard({
                         )}
                     </SectionErrorBoundary>
 
-                    {/* SECTION 5 — SECURITY & OPERATIONS */}
+                    {/* SECTION 5 - SECURITY & OPERATIONS */}
                     <SectionErrorBoundary name="security-operations">
                         <Deferred
                             data="securityOperations"
@@ -276,7 +276,7 @@ export default function Dashboard({
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {/* SECTION 6 — RECENT ACTIVITY */}
+                    {/* SECTION 6 - RECENT ACTIVITY */}
                     <SectionErrorBoundary name="recent-activity">
                         <Deferred
                             data="recentActivity"
@@ -291,7 +291,7 @@ export default function Dashboard({
                         </Deferred>
                     </SectionErrorBoundary>
 
-                    {/* SECTION 7 — COMMUNITY UPDATES */}
+                    {/* SECTION 7 - COMMUNITY UPDATES */}
                     <SectionErrorBoundary name="recent-posts">
                         <Deferred
                             data="recentPosts"
@@ -307,7 +307,7 @@ export default function Dashboard({
                     </SectionErrorBoundary>
                 </div>
 
-                {/* SECTION 8 — QUICK ACTIONS (static) */}
+                {/* SECTION 8 - QUICK ACTIONS (static) */}
                 <section className="space-y-2.5">
                     <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Quick Actions</h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">

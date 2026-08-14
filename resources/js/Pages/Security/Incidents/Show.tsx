@@ -90,7 +90,7 @@ export default function Show({ incident, comments }: Props) {
 
     return (
         <>
-            <Head title={`Incident Details — ${incident.title}`} />
+            <Head title={`Incident Details - ${incident.title}`} />
 
             <div className="flex flex-col gap-5">
                 {/* Back Link */}

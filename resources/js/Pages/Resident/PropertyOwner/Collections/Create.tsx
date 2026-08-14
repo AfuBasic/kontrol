@@ -777,13 +777,13 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         {data.billing_type === 'one_time' ? (
                                             <>
                                                 <p className="text-[10px] font-semibold text-slate-400 uppercase">Due Date</p>
-                                                <p className="mt-0.5 font-black text-slate-900">{data.due_at || '—'}</p>
+                                                <p className="mt-0.5 font-black text-slate-900">{data.due_at || '-'}</p>
                                             </>
                                         ) : (
                                             <>
                                                 <p className="text-[10px] font-semibold text-slate-400 uppercase">Schedule</p>
                                                 <p className="mt-0.5 font-black text-slate-900 capitalize">
-                                                    {data.recurring_interval} (Starts {data.start_date || '—'}, Due Day {data.due_day})
+                                                    {data.recurring_interval} (Starts {data.start_date || '-'}, Due Day {data.due_day})
                                                 </p>
                                             </>
                                         )}

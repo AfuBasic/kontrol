@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * Compact page header — consistent density and baseline alignment.
+ * Compact page header - consistent density and baseline alignment.
  */
 export default function PageHeader({ title, description, eyebrow, actions }: Props) {
     return (

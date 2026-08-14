@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
+import * as SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
 import AuthErrorSheet from '@/Components/AuthErrorSheet';
 import Toast from '@/Components/Toast';
 
@@ -48,14 +48,16 @@ export default function Login() {
     useEffect(() => {
         if (flash?.error) {
             setLoginError(flash.error);
+        } else if ((flash as any)?.info) {
+            setLoginError((flash as any).info);
         }
-    }, [flash?.error]);
+    }, [flash]);
 
     // Onboarding welcome slides state
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
     const carouselRef = useRef<HTMLDivElement>(null);
-    // Ref is the ground truth — avoids stale closure on rapid button taps
+    // Ref is the ground truth - avoids stale closure on rapid button taps
     const slideIndexRef = useRef(0);
     const carouselX = useMotionValue(0);
     const [windowWidth, setWindowWidth] = useState(window.innerWidth);
@@ -340,7 +342,7 @@ export default function Login() {
     // Sync external errors to local state on initial mount
     /* eslint-disable react-hooks/exhaustive-deps */
     useEffect(() => {
-        const extError = page.props.flash?.error || page.props.errors?.email || null;
+        const extError = page.props.flash?.error || (page.props.flash as any)?.info || page.props.errors?.email || null;
         if (extError) {
             setLoginError(extError as string);
         }
@@ -389,7 +391,10 @@ export default function Login() {
                         onFinish: () => setGoogleLoading(false),
                         onError: (errs) => {
                             console.error('Google Backend Errors:', errs);
-                            const msg = typeof errs === 'string' ? errs : (errs.email || errs.error || Object.values(errs)[0] || 'Google authentication failed.');
+                            const msg =
+                                typeof errs === 'string'
+                                    ? errs
+                                    : errs.email || errs.error || Object.values(errs)[0] || 'Google authentication failed.';
                             setLoginError(msg);
                             setGoogleLoading(false);
                         },
@@ -576,7 +581,7 @@ export default function Login() {
         <>
             <Head title="Login" />
             <div className="flex min-h-[100dvh] flex-col bg-white lg:flex-row">
-                {/* Branded panel — hidden on mobile, left side on desktop */}
+                {/* Branded panel - hidden on mobile, left side on desktop */}
                 <div className="relative hidden overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">
                         <div className="absolute -top-24 -right-16 h-[420px] w-[420px] rounded-full bg-linear-to-br from-primary-500/40 via-indigo-500/25 to-transparent blur-[100px] lg:-top-32 lg:-right-24 lg:h-[520px] lg:w-[520px] lg:blur-[120px]" />
@@ -629,7 +634,7 @@ export default function Login() {
                     </div>
                 </div>
 
-                {/* Form panel — simple full-screen centered login on mobile, side panel on desktop */}
+                {/* Form panel - simple full-screen centered login on mobile, side panel on desktop */}
                 <div className="flex flex-1 flex-col justify-center bg-white px-6 py-12 sm:px-10 lg:w-1/2 lg:px-16 lg:py-12 xl:px-24">
                     <div className="mx-auto w-full max-w-sm">
                         {/* Logo on mobile/native */}

@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Calendar, Clock, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown } from 'lucide-react';
+import { Wallet, Calendar, Clock, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown, MapPin } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { index, show, update } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import MoneyInput from '@/Components/MoneyInput';
@@ -31,16 +31,22 @@ type Collection = {
     due_day: number;
     grace_days: number;
     late_fee: number | null;
-    applies_to: 'all' | 'target' | 'property_owner';
+    applies_to: 'all' | 'target' | 'property_owner' | 'zone';
     targets?: CollectionTarget[];
+};
+
+type ZoneOption = {
+    id: number;
+    name: string;
 };
 
 type Props = {
     collection: Collection;
     residents: Resident[];
+    zones: ZoneOption[];
 };
 
-export default function EditCollection({ collection, residents }: Props) {
+export default function EditCollection({ collection, residents, zones = [] }: Props) {
     // Format date for the input field (YYYY-MM-DD)
     const formattedStartDate = collection.start_date ? new Date(collection.start_date).toISOString().split('T')[0] : '';
     const formattedDueAt = collection.due_at ? new Date(collection.due_at).toISOString().split('T')[0] : '';
@@ -57,7 +63,12 @@ export default function EditCollection({ collection, residents }: Props) {
         grace_days: collection.grace_days,
         late_fee: collection.late_fee?.toString() || '',
         applies_to: collection.applies_to,
-        targets: collection.targets?.map((t) => t.target_id) || [],
+        targets: (collection.targets || [])
+            .filter((t) => !t.target_type.toLowerCase().includes('zone'))
+            .map((t) => t.target_id),
+        zones: (collection.targets || [])
+            .filter((t) => t.target_type.toLowerCase().includes('zone'))
+            .map((t) => t.target_id),
     });
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -67,6 +78,17 @@ export default function EditCollection({ collection, residents }: Props) {
             (r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.email.toLowerCase().includes(searchQuery.toLowerCase()),
         );
     }, [residents, searchQuery]);
+
+    const toggleZone = (id: number) => {
+        const current = [...data.zones];
+        const index = current.indexOf(id);
+        if (index > -1) {
+            current.splice(index, 1);
+        } else {
+            current.push(id);
+        }
+        setData('zones', current);
+    };
 
     const toggleResident = (id: number) => {
         const current = [...data.targets];
@@ -278,6 +300,7 @@ export default function EditCollection({ collection, residents }: Props) {
                                 >
                                     <option value="all">Everyone</option>
                                     <option value="property_owner">Property Owners</option>
+                                    <option value="zone">Specific Zones</option>
                                     <option value="target">Specific List</option>
                                 </select>
                                 <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -285,7 +308,48 @@ export default function EditCollection({ collection, residents }: Props) {
                         </div>
 
                         <AnimatePresence mode="wait">
-                            {data.applies_to === 'target' ? (
+                            {data.applies_to === 'zone' ? (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    {zones.length === 0 ? (
+                                        <div className="rounded-3xl bg-amber-50 p-8 text-center ring-1 ring-amber-100">
+                                            <p className="text-sm font-bold text-amber-800">No zones have been created yet. Add a zone first to target collections geographically.</p>
+                                        </div>
+                                    ) : (
+                                        <div className="grid gap-3">
+                                            {zones.map((zone) => {
+                                                const isSelected = data.zones.includes(zone.id);
+                                                return (
+                                                    <button
+                                                        key={zone.id}
+                                                        type="button"
+                                                        onClick={() => toggleZone(zone.id)}
+                                                        className={`flex items-center justify-between rounded-2xl p-4 transition-all ${
+                                                            isSelected
+                                                                ? 'bg-white text-[#1F6FDB] shadow-sm ring-1 ring-[#1F6FDB]/30'
+                                                                : 'bg-slate-50 text-slate-600 hover:bg-white hover:shadow-sm'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}>
+                                                                <MapPin className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
+                                                            </div>
+                                                            <p className="text-sm font-black tracking-tight">{zone.name}</p>
+                                                        </div>
+                                                        {isSelected && <CheckCircle2 className="h-6 w-6 text-blue-500" />}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                    <p className="mt-4 text-xs font-bold text-slate-500">{data.zones.length} zone{data.zones.length === 1 ? '' : 's'} selected</p>
+                                    {errors.zones && <p className="mt-2 text-sm font-bold text-red-500">{errors.zones}</p>}
+                                </motion.div>
+                            ) : data.applies_to === 'target' ? (
                                 <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}

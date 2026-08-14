@@ -32,6 +32,9 @@ class UpdateEstateSettingsRequest extends FormRequest
             'require_vehicle_information' => ['required', 'boolean'],
             'allow_residents_to_extend_visitor_passes' => ['required', 'boolean'],
             'visitor_checkout_enabled' => ['required', 'boolean'],
+            'entry_point_checkout_enforced' => ['required', 'boolean'],
+            'entry_points' => ['nullable', 'array'],
+            'entry_points.*' => ['required', 'string', 'max:100'],
 
             // 2. Security Operations
             'incident_categories' => ['nullable', 'array'],
@@ -58,6 +61,40 @@ class UpdateEstateSettingsRequest extends FormRequest
     {
         return [
             'access_code_max_lifespan_minutes.gte' => 'Maximum lifespan must be greater than or equal to minimum lifespan.',
+        ];
+    }
+
+    public function after(): array
+    {
+        return [
+            function ($validator) {
+                $checkoutMonitoring = $this->input('visitor_checkout_enabled', false);
+                $enforceEntryPoint = $this->input('entry_point_checkout_enforced', false);
+                $entryPoints = $this->input('entry_points', []);
+
+                if ($enforceEntryPoint && ! $checkoutMonitoring) {
+                    $validator->errors()->add('entry_point_checkout_enforced', 'Entry Point Checkout cannot be enforced when Checkout Monitoring is disabled.');
+                }
+
+                if ($enforceEntryPoint && $checkoutMonitoring) {
+                    if (! is_array($entryPoints) || count(array_filter($entryPoints)) === 0) {
+                        $validator->errors()->add('entry_points', 'At least one valid entry point is required when Entry Point Checkout is enforced.');
+                    }
+                }
+
+                if (is_array($entryPoints)) {
+                    // Check for case-insensitive duplicates
+                    $lowerNames = array_map(function ($name) {
+                        return strtolower(trim((string) $name));
+                    }, $entryPoints);
+
+                    $lowerNames = array_filter($lowerNames);
+
+                    if (count($lowerNames) !== count(array_unique($lowerNames))) {
+                        $validator->errors()->add('entry_points', 'Entry points must have unique names.');
+                    }
+                }
+            },
         ];
     }
 }

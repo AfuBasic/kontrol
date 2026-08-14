@@ -126,7 +126,7 @@ type Collection = {
     status: 'draft' | 'active' | 'archived';
     assignments_count: number;
     targets_count: number;
-    applies_to: 'all' | 'target';
+    applies_to: 'all' | 'target' | 'property_owner' | 'zone';
     created_at: string;
 };
 
@@ -261,6 +261,9 @@ export default function CollectionsIndex({
         });
     };
 
+    const hasActiveFilters = Boolean((filters.search || '').length || (filters.status || '').length);
+    const showFinancialDashboard = collections.total > 0 || hasActiveFilters;
+
     // ── Derived values
     const expected = Number(stats.total_expected || 0);
     const realised = Number(stats.total_realised || 0);
@@ -303,7 +306,7 @@ export default function CollectionsIndex({
 
         if (collectionInsights?.worst) {
             chips.push({
-                text: `${collectionInsights.worst.name} needs attention — ${collectionInsights.worst.rate}% collected`,
+                text: `${collectionInsights.worst.name} needs attention - ${collectionInsights.worst.rate}% collected`,
                 icon: <AlertTriangle className="h-3.5 w-3.5" />,
                 color: 'amber',
             });
@@ -404,8 +407,42 @@ export default function CollectionsIndex({
                     </div>
                 </div>
 
+                {!showFinancialDashboard ? (
+                    <motion.div
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-col items-center justify-center rounded-3xl bg-white px-6 py-20 text-center ring-1 ring-slate-100"
+                    >
+                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-[#1F6FDB]/10 text-[#1F6FDB] shadow-inner">
+                            <Wallet className="h-9 w-9" />
+                        </div>
+                        <p className="mb-2 text-[10px] font-black tracking-[0.25em] text-[#1F6FDB] uppercase">Financial Command Center</p>
+                        <h2 className="text-2xl font-black tracking-tight text-slate-900">Create your first collection</h2>
+                        <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-500">
+                            Once you publish a levy, due, or recurring bill, this workspace will show financial health, collection progress, and live payment activity.
+                        </p>
+                        {hasBanking ? (
+                            <Link
+                                href={create.url()}
+                                className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[#1F6FDB] px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95"
+                            >
+                                <PlusIcon className="h-4 w-4" />
+                                New Collection
+                            </Link>
+                        ) : (
+                            <button
+                                onClick={() => setIsBankingModalOpen(true)}
+                                className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-amber-600 px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-amber-500/20 transition-all hover:bg-amber-700 active:scale-95"
+                            >
+                                <Building2 className="h-4 w-4" />
+                                Set up settlement first
+                            </button>
+                        )}
+                    </motion.div>
+                ) : (
+                <>
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 1 — FINANCIAL HEALTH HERO
+                    ZONE 1 - FINANCIAL HEALTH HERO
                 ══════════════════════════════════════════════════════════════ */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
@@ -556,11 +593,11 @@ export default function CollectionsIndex({
                 )}
 
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 2+3 — TODAY'S SNAPSHOT + COLLECTION INSIGHTS
+                    ZONE 2+3 - TODAY'S SNAPSHOT + COLLECTION INSIGHTS
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
 
-                    {/* Zone 2 — Today's Snapshot */}
+                    {/* Zone 2 - Today's Snapshot */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -612,7 +649,7 @@ export default function CollectionsIndex({
                         </Deferred>
                     </motion.div>
 
-                    {/* Zone 3 — Collection Insights */}
+                    {/* Zone 3 - Collection Insights */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -712,7 +749,7 @@ export default function CollectionsIndex({
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 4 — MONEY FLOW + TREND CHART
+                    ZONE 4 - MONEY FLOW + TREND CHART
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
                     {/* Money Flow Funnel */}
@@ -771,7 +808,7 @@ export default function CollectionsIndex({
                         <div className="mb-4 flex items-center justify-between">
                             <div>
                                 <h3 className="font-bold text-slate-900">Revenue Trend</h3>
-                                <p className="text-xs text-slate-400">Expected vs. collected — last 30 days</p>
+                                <p className="text-xs text-slate-400">Expected vs. collected - last 30 days</p>
                             </div>
                             <BarChart3 className="h-4 w-4 text-slate-300" />
                         </div>
@@ -824,11 +861,11 @@ export default function CollectionsIndex({
                 </div>
 
                 {/* ══════════════════════════════════════════════════════════════
-                    ZONE 5+6 — COLLECTIONS LIST + RECENT ACTIVITY
+                    ZONE 5+6 - COLLECTIONS LIST + RECENT ACTIVITY
                 ══════════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
 
-                    {/* Zone 5 — Collections List (primary, 2/3) */}
+                    {/* Zone 5 - Collections List (primary, 2/3) */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -941,7 +978,7 @@ export default function CollectionsIndex({
                                                                     </div>
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-[10px] text-slate-300">—</span>
+                                                                <span className="text-[10px] text-slate-300">-</span>
                                                             )}
                                                         </td>
                                                         <td className="px-5 py-4 text-right">
@@ -1026,7 +1063,7 @@ export default function CollectionsIndex({
                         )}
                     </motion.div>
 
-                    {/* Zone 6 — Recent Activity Feed (sidebar) */}
+                    {/* Zone 6 - Recent Activity Feed (sidebar) */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -1086,6 +1123,8 @@ export default function CollectionsIndex({
                         </Deferred>
                     </motion.div>
                 </div>
+                </>
+                )}
 
             </div>
 

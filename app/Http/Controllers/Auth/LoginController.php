@@ -6,6 +6,7 @@ use App\Actions\Auth\AuthenticateUser;
 use App\Actions\Auth\GenerateLoginOtp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\Security\CheckpointClaimService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +41,10 @@ class LoginController extends Controller
 
     public function destroy(Request $request): RedirectResponse
     {
+        if ($user = Auth::user()) {
+            app(CheckpointClaimService::class)->releaseUserCheckpoints($user);
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();

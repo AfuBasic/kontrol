@@ -11,7 +11,7 @@ interface Props {
 }
 
 /**
- * Distinct empty state — no records exist (not an error).
+ * Distinct empty state - no records exist (not an error).
  */
 export default function EmptyState({
     icon: Icon = Inbox,

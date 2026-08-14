@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\BulkDeleteSecurityAction;
+use App\Actions\Admin\BulkInviteSecurityAction;
 use App\Actions\Admin\CreateSecurityAction;
 use App\Actions\Admin\DeleteSecurityAction;
 use App\Actions\Admin\ResetSecurityPasswordAction;
@@ -11,21 +12,25 @@ use App\Actions\Admin\UpdateSecurityAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSecurityRequest;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Admin\SecurityService;
 use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class SecurityPersonnelController extends Controller
 {
     public function __construct(
         protected SecurityService $securityService,
         protected UserService $userService,
-        protected EstateContextService $estateContext
+        protected EstateContextService $estateContext,
+        protected ZoneAudienceResolver $zoneAudience,
     ) {}
 
     /**
@@ -37,26 +42,44 @@ class SecurityPersonnelController extends Controller
 
         $filters = $request->only(['search', 'status']);
         $estate = $this->estateContext->getEstate();
+        $securityRole = Role::where('name', 'security')->whereNull('estate_id')->first();
 
         $totalSecurity = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
-        $activeSecurity = User::query()->forEstate($estate->id)->active()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))->count();
-        $pendingSecurity = User::query()->forEstate($estate->id)->whereNull('password')->whereHas('roles', fn ($q) => $q->where('name', 'security'))->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))->count();
-        $suspendedSecurity = User::query()->forEstate($estate->id)->suspended()->whereHas('roles', fn ($q) => $q->where('name', 'security'))->count();
+        $activeSecurity = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
+            ->count();
+        $pendingSecurity = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', true))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'))
+            ->count();
+        $suspendedSecurity = User::query()->forEstate($estate->id)
+            ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->when($securityRole, fn ($sq) => $sq->where('role_id', $securityRole->id))->where('is_active', false))
+            ->count();
 
         return Inertia::render('Admin/Security/Index', [
             'security' => Inertia::defer(fn () => $this->securityService
                 ->getPaginatedSecurity(15, $filters)
-                ->through(fn ($user) => [
-                    'ulid' => $user->ulid,
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'phone' => $user->profile?->phone,
-                    'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
-                    'status' => $user->suspended_at ? 'inactive' : ($user->estates->first()?->pivot?->status ?? 'pending'),
-                    'suspended_at' => $user->suspended_at,
-                    'created_at' => $user->created_at->format('M d, Y'),
-                ])),
+                ->through(function ($user) {
+                    $membership = $user->estates->first()?->pivot;
+                    $zone = $membership?->zone_id ? Zone::find($membership->zone_id) : null;
+                    $assignment = $user->administrativeAssignments->first();
+                    $isSuspended = $assignment ? ! $assignment->is_active : false;
+
+                    return [
+                        'ulid' => $user->ulid,
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'phone' => $user->profile?->phone,
+                        'badge_number' => $user->profile?->metadata['badge_number'] ?? null,
+                        'zone_id' => $membership?->zone_id,
+                        'zone_name' => $zone?->name ?? 'Entire estate',
+                        'status' => $isSuspended ? 'inactive' : ($membership?->status ?? 'pending'),
+                        'suspended_at' => $isSuspended ? ($assignment?->updated_at ?? now()) : null,
+                        'created_at' => $user->created_at->format('M d, Y'),
+                    ];
+                })),
             'filters' => $filters,
             'stats' => [
                 'total' => $totalSecurity,
@@ -81,8 +104,25 @@ class SecurityPersonnelController extends Controller
     public function create(): Response
     {
         $this->authorize('security.create');
+        $estate = $this->estateContext->getEstate();
+        $inviteLinks = $estate->securityInviteLinks()->with('zone')->get();
 
-        return Inertia::render('Admin/Security/Create');
+        return Inertia::render('Admin/Security/Create', [
+            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+            'inviteLinks' => $inviteLinks->map(fn ($link) => [
+                'id' => $link->id,
+                'token' => $link->token,
+                'url' => url("/join/{$link->token}"),
+                'is_active' => $link->is_active,
+                'usage_count' => $link->usage_count,
+                'max_usages' => $link->max_usages,
+                'requires_approval' => $link->requires_approval,
+                'expires_at' => $link->expires_at?->toDateTimeString(),
+                'is_expired' => $link->expires_at?->isPast() ?? false,
+                'zone_id' => $link->zone_id,
+                'zone_name' => $link->zone?->name ?? 'Entire Estate',
+            ])->toArray(),
+        ]);
     }
 
     /**
@@ -193,9 +233,6 @@ class SecurityPersonnelController extends Controller
         return back()->with('success', 'Security personnel password reset and invitation resent.');
     }
 
-    /**
-     * Bulk delete security personnel.
-     */
     public function bulkDelete(Request $request, BulkDeleteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.delete');
@@ -211,5 +248,31 @@ class SecurityPersonnelController extends Controller
         return redirect()
             ->route('admin.security.index')
             ->with('success', "Successfully removed {$deletedCount} security personnel.");
+    }
+
+    /**
+     * Bulk invite security personnel by email.
+     */
+    public function bulkInvite(Request $request, BulkInviteSecurityAction $action): RedirectResponse
+    {
+        $this->authorize('security.create');
+
+        $validated = $request->validate([
+            'emails' => ['required', 'array', 'min:1', 'max:500'],
+            'emails.*' => ['required', 'email'],
+            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
+        ]);
+
+        $estate = $this->estateContext->getEstate();
+        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
+
+        $message = "Successfully invited {$result['invited']} security personnel.";
+        if ($result['skipped'] > 0) {
+            $message .= " {$result['skipped']} email(s) were skipped (already exist).";
+        }
+
+        return redirect()
+            ->route('admin.security.index')
+            ->with('success', $message);
     }
 }

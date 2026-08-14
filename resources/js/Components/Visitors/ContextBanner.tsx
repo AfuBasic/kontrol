@@ -41,7 +41,7 @@ export default function ContextBanner({ upcoming }: Props) {
         }
         message = `${visitorName} arrives in ${timeFormatted}.`;
     } else if (todayVisits.length >= 3) {
-        message = `Busy day ahead — ${todayVisits.length} visitors expected today.`;
+        message = `Busy day ahead - ${todayVisits.length} visitors expected today.`;
     } else if (todayVisits.length > 0) {
         message = `${todayVisits.length} visitor${todayVisits.length === 1 ? '' : 's'} scheduled for today.`;
     } else if (upcoming.length > 0) {

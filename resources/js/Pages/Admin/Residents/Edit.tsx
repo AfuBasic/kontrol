@@ -14,6 +14,7 @@ type Resident = {
     email_verified_at: string | null;
     property_owner_id: number | null;
     property_id: number | null;
+    is_estate_creator: boolean;
 };
 
 type Props = {
@@ -81,11 +82,14 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                             type="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none"
+                            className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500"
                             required
+                            disabled={resident.is_estate_creator}
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                            If you change the email address, the resident will be required to verify their new email via an invitation link.
+                            {resident.is_estate_creator 
+                                ? "This is the primary email used to create the estate and cannot be changed." 
+                                : "If you change the email address, the resident will be required to verify their new email via an invitation link."}
                         </p>
                         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                     </div>
@@ -182,9 +186,15 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                 </div>
 
                 <div className="mt-10 flex items-center justify-between border-t border-gray-100 pt-6">
-                    <button type="button" onClick={handleDelete} className="text-sm font-semibold text-red-500 transition-colors hover:text-red-600">
-                        Remove Resident
-                    </button>
+                    {resident.is_estate_creator ? (
+                        <div className="text-sm font-semibold text-gray-400">
+                            The estate creator cannot be removed.
+                        </div>
+                    ) : (
+                        <button type="button" onClick={handleDelete} className="text-sm font-semibold text-red-500 transition-colors hover:text-red-600">
+                            Remove Resident
+                        </button>
+                    )}
                     <div className="flex items-center gap-4">
                         <Link href={index.url()} className="px-6 py-3 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-700">
                             Cancel

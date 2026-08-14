@@ -202,7 +202,7 @@ export default function EstateBoardIndex({ posts, filter }: Props) {
                 <p className="mt-1 text-sm text-gray-500">Updates from your community</p>
             </motion.div>
 
-            {/* Filter Tabs — only for property owners and residents with a landlord */}
+            {/* Filter Tabs - only for property owners and residents with a landlord */}
             {showTabs && (
                 <div className="mb-6">
                     <div className="flex max-w-xs rounded-xl bg-slate-100 p-1">

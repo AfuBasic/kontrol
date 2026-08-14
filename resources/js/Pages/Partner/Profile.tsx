@@ -86,7 +86,7 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
         <div className="flex items-start justify-between gap-4 border-b border-stone-100 py-3 last:border-0 dark:border-white/[0.05]">
             <dt className="shrink-0 text-[12px] text-stone-400">{label}</dt>
-            <dd className="text-right text-[13px] font-medium text-stone-900 dark:text-white">{value ?? '—'}</dd>
+            <dd className="text-right text-[13px] font-medium text-stone-900 dark:text-white">{value ?? '-'}</dd>
         </div>
     );
 }
@@ -221,14 +221,14 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                 </div>
 
                 <dl>
-                    <InfoRow label="Account name" value={banking.account_name || '—'} />
-                    <InfoRow label="Account number" value={banking.account_number_masked || '—'} />
+                    <InfoRow label="Account name" value={banking.account_name || '-'} />
+                    <InfoRow label="Account number" value={banking.account_number_masked || '-'} />
                     <InfoRow
                         label="Verified"
                         value={
                             banking.account_verified_at
                                 ? new Date(banking.account_verified_at).toLocaleDateString('en-NG', { dateStyle: 'medium' })
-                                : '—'
+                                : '-'
                         }
                     />
                 </dl>
@@ -403,7 +403,7 @@ export default function PartnerProfile({
     tab,
     user,
     partner,
-    finance = { total_earned: 0, pending_commissions: 0, next_settlement_date: '—' },
+    finance = { total_earned: 0, pending_commissions: 0, next_settlement_date: '-' },
     banks = [],
     activity,
 }: Props) {
@@ -416,8 +416,8 @@ export default function PartnerProfile({
         .slice(0, 2)
         .toUpperCase();
     const isVerified = partner?.status === 'active';
-    const memberSince = partner?.created_at_label ?? user.created_at_label ?? partner?.created_at ?? user.created_at ?? '—';
-    const partnerCode = partner?.partner_code ?? '—';
+    const memberSince = partner?.created_at_label ?? user.created_at_label ?? partner?.created_at ?? user.created_at ?? '-';
+    const partnerCode = partner?.partner_code ?? '-';
     const securityScore = partner?.banking.is_verified ? 92 : 68;
 
     function setTab(key: string) {
@@ -467,7 +467,7 @@ export default function PartnerProfile({
                                 </div>
                                 <p className="mt-1 text-[13px] text-white/50">
                                     Commercial partner
-                                    {memberSince !== '—' && ` · Member since ${memberSince}`}
+                                    {memberSince !== '-' && ` · Member since ${memberSince}`}
                                 </p>
 
                                 <div className="mt-5 flex flex-wrap gap-2">
@@ -490,7 +490,7 @@ export default function PartnerProfile({
                                     </div>
                                     <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
                                         <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">Status</p>
-                                        <p className="text-[13px] font-semibold capitalize">{partner?.status ?? '—'}</p>
+                                        <p className="text-[13px] font-semibold capitalize">{partner?.status ?? '-'}</p>
                                     </div>
                                 </div>
                             </div>
@@ -598,7 +598,7 @@ export default function PartnerProfile({
                                                 isVerified ? (
                                                     <span className="text-emerald-600 dark:text-emerald-400">Verified</span>
                                                 ) : (
-                                                    <span className="capitalize">{partner?.status ?? '—'}</span>
+                                                    <span className="capitalize">{partner?.status ?? '-'}</span>
                                                 )
                                             }
                                         />
@@ -740,7 +740,7 @@ export default function PartnerProfile({
                                 {partner ? (
                                     <dl>
                                         <InfoRow label="Organization" value={partner.name} />
-                                        <InfoRow label="Contact person" value={partner.contact_person || '—'} />
+                                        <InfoRow label="Contact person" value={partner.contact_person || '-'} />
                                         <InfoRow
                                             label="Website"
                                             value={
@@ -755,7 +755,7 @@ export default function PartnerProfile({
                                                         {partner.website}
                                                     </a>
                                                 ) : (
-                                                    '—'
+                                                    '-'
                                                 )
                                             }
                                         />

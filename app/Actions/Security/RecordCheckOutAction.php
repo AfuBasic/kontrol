@@ -5,10 +5,13 @@ namespace App\Actions\Security;
 use App\Events\Resident\VisitorCheckedOutBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Notifications\VisitorCheckedOutNotification;
+use App\Services\Security\CheckpointClaimService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class RecordCheckOutAction
 {
@@ -53,16 +56,35 @@ class RecordCheckOutAction
             }
 
             // Find the most recent active log that is not checked out
-            $log = AccessLog::query()
+            $log = AccessLog::withoutGlobalScopes()
                 ->where('estate_id', $estateId)
                 ->where('access_code_id', $accessCode->id)
                 ->whereNull('checked_out_at')
                 ->latest('verified_at')
                 ->firstOrFail();
 
+            $checkoutGate = app(CheckpointClaimService::class)->getCurrentCheckpoint($estateId, $verifiedBy);
+
+            // Enforce entry point checkout constraint if enabled for estate
+            $settings = EstateSettings::forEstate($estateId);
+            if ($settings->entry_point_checkout_enforced && $log->entry_point) {
+                if (! $checkoutGate || strcasecmp(trim($log->entry_point), trim($checkoutGate)) !== 0) {
+                    $activeGateLabel = $checkoutGate ? "You are currently operating at '{$checkoutGate}'." : 'Please select an active checkpoint first.';
+                    throw ValidationException::withMessages([
+                        'checkout' => "Entry Point Checkout Enforced: Visitor entered at '{$log->entry_point}' and can only check out from '{$log->entry_point}'. {$activeGateLabel}",
+                    ]);
+                }
+            }
+
+            $meta = $log->meta ?? [];
+            if ($checkoutGate) {
+                $meta['exit_point'] = $checkoutGate;
+            }
+
             $log->update([
                 'checked_out_at' => $timestamp,
                 'checked_out_by' => $verifiedBy->id,
+                'meta' => $meta,
             ]);
 
             // Log to the activity feed so the resident sees the checkout

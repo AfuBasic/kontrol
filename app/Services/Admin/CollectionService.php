@@ -8,6 +8,7 @@ use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\User;
+use App\Models\Zone;
 use App\Notifications\Resident\CollectionReminderNotification;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -44,14 +45,7 @@ class CollectionService
                 'created_by' => auth()->id(),
             ]);
 
-            if ($collection->applies_to === 'target' && isset($data['targets'])) {
-                foreach ($data['targets'] as $targetId) {
-                    $collection->targets()->create([
-                        'target_type' => User::class,
-                        'target_id' => $targetId,
-                    ]);
-                }
-            }
+            $this->syncTargets($collection, $data);
 
             return $collection;
         });
@@ -74,18 +68,38 @@ class CollectionService
                 'applies_to' => $data['applies_to'] ?? 'all',
             ]);
 
-            if ($collection->applies_to === 'target' && isset($data['targets'])) {
-                $collection->targets()->delete();
-                foreach ($data['targets'] as $targetId) {
-                    $collection->targets()->create([
-                        'target_type' => User::class,
-                        'target_id' => $targetId,
-                    ]);
-                }
-            }
+            $this->syncTargets($collection, $data);
 
             return $collection;
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function syncTargets(Collection $collection, array $data): void
+    {
+        $collection->targets()->delete();
+
+        if ($collection->applies_to === 'target' && isset($data['targets'])) {
+            foreach ($data['targets'] as $targetId) {
+                $collection->targets()->create([
+                    'target_type' => User::class,
+                    'target_id' => $targetId,
+                ]);
+            }
+
+            return;
+        }
+
+        if ($collection->applies_to === 'zone' && isset($data['zones'])) {
+            foreach ($data['zones'] as $zoneId) {
+                $collection->targets()->create([
+                    'target_type' => Zone::class,
+                    'target_id' => $zoneId,
+                ]);
+            }
+        }
     }
 
     public function publishCollection(Collection $collection): void
@@ -130,7 +144,7 @@ class CollectionService
             ->where('status', '!=', 'paid')
             ->where(function ($q) use ($maxAttempts) {
                 $q->whereNull('reminder_count')
-                  ->orWhere('reminder_count', '<', $maxAttempts);
+                    ->orWhere('reminder_count', '<', $maxAttempts);
             })
             ->with('user')
             ->get();

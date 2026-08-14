@@ -124,7 +124,7 @@ function estimateAnnualCommission(
     return Math.round(annualRevenueKobo * 0.1);
 }
 
-/** Optional help — revealed on demand only. */
+/** Optional help - revealed on demand only. */
 function HelpTip({ text }: { text: string }) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
@@ -471,7 +471,7 @@ export default function PartnerEstate({ partner }: Props) {
         setStep((s) => Math.max(s - 1, 0));
     }
 
-    /** Sidebar / progress jumps — never skip past incomplete required steps. */
+    /** Sidebar / progress jumps - never skip past incomplete required steps. */
     function jumpToStep(target: number) {
         if (target === step) {
             return;
@@ -560,7 +560,7 @@ export default function PartnerEstate({ partner }: Props) {
                                     exit={{ opacity: 0, y: -6 }}
                                     transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                 >
-                                    {/* Step header — title + one line */}
+                                    {/* Step header - title + one line */}
                                     <header className="mb-8 hidden lg:block">
                                         <h2 className="text-[1.65rem] font-semibold tracking-tight text-stone-900 dark:text-white">
                                             {current.title}
@@ -794,8 +794,8 @@ export default function PartnerEstate({ partner }: Props) {
                                                         group: 'Estate',
                                                         step: 0,
                                                         rows: [
-                                                            { label: 'Name', value: data.estate_name || '—' },
-                                                            { label: 'Address', value: data.estate_address || '—' },
+                                                            { label: 'Name', value: data.estate_name || '-' },
+                                                            { label: 'Address', value: data.estate_address || '-' },
                                                         ],
                                                     },
                                                     {
@@ -804,18 +804,18 @@ export default function PartnerEstate({ partner }: Props) {
                                                         rows: [
                                                             {
                                                                 label: 'Area',
-                                                                value: [data.lga, data.state].filter(Boolean).join(', ') || '—',
+                                                                value: [data.lga, data.state].filter(Boolean).join(', ') || '-',
                                                             },
-                                                            { label: 'Houses', value: data.number_of_houses || '—' },
+                                                            { label: 'Houses', value: data.number_of_houses || '-' },
                                                         ],
                                                     },
                                                     {
                                                         group: 'Contact',
                                                         step: 2,
                                                         rows: [
-                                                            { label: 'Name', value: data.chairman_name || '—' },
-                                                            { label: 'Phone', value: data.chairman_phone || '—' },
-                                                            { label: 'Email', value: data.chairman_email || '—' },
+                                                            { label: 'Name', value: data.chairman_name || '-' },
+                                                            { label: 'Phone', value: data.chairman_phone || '-' },
+                                                            { label: 'Email', value: data.chairman_email || '-' },
                                                         ],
                                                     },
                                                 ].map((section, idx) => (

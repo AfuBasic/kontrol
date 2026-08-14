@@ -10,8 +10,7 @@ class ActiveContext
         public readonly int $assignmentId,
         public readonly int $roleId,
         public readonly ?int $zoneId = null
-    ) {
-    }
+    ) {}
 
     public function isEstateScoped(): bool
     {

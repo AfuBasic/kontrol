@@ -15,7 +15,7 @@ import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import * as ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'expired';
 
@@ -68,7 +68,7 @@ type Props = {
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
 
 const formatDate = (iso?: string) => {
-    if (!iso) return '—';
+    if (!iso) return '-';
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
