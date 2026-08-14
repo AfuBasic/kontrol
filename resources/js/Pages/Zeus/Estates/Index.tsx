@@ -457,7 +457,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                     setIsResetModalOpen(false);
                     setEstateToReset(null);
                 }}
-                onConfirm={handleResetPassword}
+                onConfirm={handleResendInvitation}
                 title="Resend Invitation"
                 message={`Are you sure you want to resend the invitation email to the administrator of ${estateToReset?.name}?`}
                 confirmLabel="Resend Invitation"
