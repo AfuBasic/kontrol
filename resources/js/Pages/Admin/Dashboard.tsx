@@ -26,7 +26,8 @@ import { CardSkeleton, FeedItemSkeleton, StatCardSkeleton } from '@/Components/S
 import { ErrorState, OfflineState } from '@/Components/States';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 
-import ActionCenter, { AttentionItem } from '@/Components/Admin/Dashboard/ActionCenter';
+import type { AttentionItem } from '@/Components/Admin/Dashboard/ActionCenter';
+import ActionCenter from '@/Components/Admin/Dashboard/ActionCenter';
 
 type EstateHealth = {
     name: string;

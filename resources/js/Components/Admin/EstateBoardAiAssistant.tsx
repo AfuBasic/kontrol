@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { CalendarDays, Megaphone, PartyPopper, Shield, Sparkles, Wrench } from 'lucide-react';
+import type { Megaphone} from 'lucide-react';
+import { CalendarDays, PartyPopper, Shield, Sparkles, Wrench } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import ContentEnhanceController from '@/actions/App/Http/Controllers/Api/ContentEnhanceController';

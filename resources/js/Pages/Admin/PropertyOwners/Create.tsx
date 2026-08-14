@@ -10,7 +10,8 @@ import {
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
 import AdminLayout from '@/Layouts/AdminLayout';
-import InviteLinksTab, { InviteLink } from '../Components/InviteLinksTab';
+import type { InviteLink } from '../Components/InviteLinksTab';
+import InviteLinksTab from '../Components/InviteLinksTab';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
