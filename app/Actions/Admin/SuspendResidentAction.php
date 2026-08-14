@@ -28,6 +28,20 @@ class SuspendResidentAction
 
             $isSuspended = ! $assignment->is_active;
 
+            if ($isSuspended) {
+                $activeCount = AdministrativeAssignment::where('user_id', $resident->id)
+                    ->where('is_active', true)
+                    ->count();
+
+                if ($activeCount === 0) {
+                    $resident->update(['suspended_at' => now()]);
+                }
+            } else {
+                if ($resident->suspended_at !== null) {
+                    $resident->update(['suspended_at' => null]);
+                }
+            }
+
             activity()
                 ->performedOn($resident)
                 ->causedBy(Auth::user())
