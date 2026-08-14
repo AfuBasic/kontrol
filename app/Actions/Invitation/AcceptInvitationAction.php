@@ -10,6 +10,7 @@ use App\Models\Invitation;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Models\Zone;
+use App\Notifications\Resident\HouseholdMemberInvitationAcceptedNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,7 @@ class AcceptInvitationAction
     public function execute(Invitation $invitation, User $user): void
     {
         // 1. Validation: Invitation must be pending
-        if (!$invitation->isPending()) {
+        if (! $invitation->isPending()) {
             throw new Exception('This invitation is not valid or has expired.');
         }
 
@@ -41,7 +42,7 @@ class AcceptInvitationAction
                 ->where('estate_id', $estateId)
                 ->exists();
 
-            if (!$membershipExists) {
+            if (! $membershipExists) {
                 // Ensure profile exists
                 UserProfile::firstOrCreate(['user_id' => $user->id]);
 
@@ -97,7 +98,7 @@ class AcceptInvitationAction
                     ->where('zone_id_coalesced', $zoneIdCoalesced)
                     ->exists();
 
-                if (!$assignmentExists) {
+                if (! $assignmentExists) {
                     $assignmentAction->execute(
                         user: $user,
                         estate: $estate,
@@ -118,6 +119,11 @@ class AcceptInvitationAction
             // Email verification (if they are a brand new user and this implicitly verified them)
             if (is_null($user->email_verified_at)) {
                 $user->update(['email_verified_at' => Carbon::now()]);
+            }
+
+            // 4. Notify inviter
+            if ($invitation->relationship_type === 'household_member' && $invitation->createdBy) {
+                $invitation->createdBy->notify(new HouseholdMemberInvitationAcceptedNotification($user, $estate));
             }
         });
     }
