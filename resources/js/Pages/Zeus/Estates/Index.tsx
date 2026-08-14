@@ -3,7 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus, Building2, Users, Home, Activity, X, TrendingUp, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { index, toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Controllers/Zeus/EstateController';
+import { index, toggleStatus, destroy, resendInvitation } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
 type EstateExplorerData = {
@@ -18,6 +18,7 @@ type EstateExplorerData = {
     health_score: number;
     mrr: number;
     has_active_coupons: boolean;
+    has_admin: boolean;
     created_at: string;
 };
 
@@ -75,16 +76,17 @@ export default function EstateExplorer({ estates, filters }: Props) {
         });
     };
 
-    const handleResetPassword = () => {
+    const handleResendInvitation = () => {
         if (!estateToReset) return;
         setIsProcessing(true);
         router.post(
-            resetPassword.url({ estate: estateToReset.ulid }),
+            resendInvitation.url({ estate: estateToReset.ulid }),
             {},
             {
                 preserveScroll: true,
                 onFinish: () => {
                     setIsProcessing(false);
+                    setIsResetModalOpen(false);
                     setEstateToReset(null);
                     setSelectedEstate(null);
                 },
@@ -371,7 +373,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 >
                                                     Edit Settings
                                                 </Link>
-                                                <div className="mt-4 grid grid-cols-2 gap-3">
+                                                <div className={`mt-4 grid ${!selectedEstate.has_admin ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
                                                     <div
                                                         onClick={() =>
                                                             setEstateToToggle({
@@ -393,15 +395,17 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                             />
                                                         </div>
                                                     </div>
-                                                    <button
-                                                        onClick={() => {
-                                                            setEstateToReset(selectedEstate);
-                                                            setIsResetModalOpen(true);
-                                                        }}
-                                                        className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-[#0f1423] dark:text-slate-400 dark:hover:bg-slate-800/50"
-                                                    >
-                                                        Resend Invitation
-                                                    </button>
+                                                    {!selectedEstate.has_admin && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setEstateToReset(selectedEstate);
+                                                                setIsResetModalOpen(true);
+                                                            }}
+                                                            className="rounded-2xl border border-slate-200 bg-white py-3 text-xs font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-[#0f1423] dark:text-slate-400 dark:hover:bg-slate-800/50"
+                                                        >
+                                                            Resend Invitation
+                                                        </button>
+                                                    )}
                                                 </div>
                                                 <button
                                                     onClick={() => {

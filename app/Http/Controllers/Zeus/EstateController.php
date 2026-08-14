@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Zeus;
 
 use App\Actions\Zeus\CreateEstateAction;
 use App\Actions\Zeus\DeleteEstateAction;
-use App\Actions\Zeus\ResetEstateAdminPasswordAction;
+use App\Actions\Zeus\ResendEstateAdminInvitationAction;
 use App\Actions\Zeus\ToggleEstateStatusAction;
 use App\Actions\Zeus\UpdateEstateAction;
 use App\Actions\Zeus\UpdatePartnerAssignmentAction;
@@ -215,13 +215,13 @@ class EstateController extends Controller
             ->with('success', "Estate {$status} successfully.");
     }
 
-    public function resetPassword(Estate $estate, ResetEstateAdminPasswordAction $action): RedirectResponse
+    public function resendInvitation(Estate $estate, ResendEstateAdminInvitationAction $action): RedirectResponse
     {
         $action->execute($estate);
 
         return redirect()
             ->route('zeus.estates.index')
-            ->with('success', 'Password reset link has been sent to the estate admin.');
+            ->with('success', 'Invitation link has been sent to the estate admin.');
     }
 
     public function destroy(Estate $estate, DeleteEstateAction $action): RedirectResponse

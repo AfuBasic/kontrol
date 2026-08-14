@@ -98,6 +98,7 @@ class EstateHealthService
                     'health_score' => $this->calculateHealthScore($estate),
                     'mrr' => $mrr,
                     'has_active_coupons' => $hasActiveCoupons,
+                    'has_admin' => $estate->hasAcceptedAdmin(),
                     'created_at' => $estate->created_at->toISOString(),
                 ];
             });
