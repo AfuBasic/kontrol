@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEventHandler } from 'react';
+import type { FormEventHandler } from 'react';
 import { index, update } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 
 type OptionRole = { id: number; name: string; estate_id: number };
@@ -27,7 +27,6 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
         role_id: String(assignment.role.id ?? ''),
         scope_type: assignment.scope_type,
         zone_id: assignment.zone ? String(assignment.zone.id) : '',
-        is_primary: assignment.is_primary,
         is_active: assignment.is_active,
     });
 
@@ -36,9 +35,12 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
         put(update.url(assignment.id));
     };
 
+    const selectedRole = roles.find((r) => r.id.toString() === data.role_id);
+    const selectedZone = zones.find((z) => z.id.toString() === data.zone_id);
+
     return (
         <>
-            <Head title="Edit Assignment" />
+            <Head title="Edit Authority" />
 
             <div className="mx-auto max-w-2xl px-4 py-8 lg:px-8">
                 <div className="mb-8">
@@ -47,34 +49,34 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                         className="mb-4 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700"
                     >
                         <ArrowLeftIcon className="mr-1 h-4 w-4" />
-                        Back to Assignments
+                        Back to Staff & Authority
                     </Link>
-                    <h1 className="text-2xl font-semibold text-gray-900">Edit Assignment</h1>
+                    <h1 className="text-2xl font-semibold text-gray-900">Edit Authority</h1>
                     <p className="mt-1 text-sm text-gray-500">
-                        Update role, scope, zone, or active state for{' '}
+                        Update the responsibility, coverage, or active state for{' '}
                         <span className="font-medium text-gray-700">{assignment.user.name}</span>.
                     </p>
                 </div>
 
                 <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
                     <div>
-                        <span className="font-medium text-gray-800">User:</span> {assignment.user.name} (
+                        <span className="font-medium text-gray-800">Person:</span> {assignment.user.name} (
                         {assignment.user.email})
                     </div>
-                    <div className="mt-1 text-xs text-gray-500">User cannot be changed after creation.</div>
+                    <div className="mt-1 text-xs text-gray-500">The person assigned cannot be changed.</div>
                 </div>
 
                 <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
                     <form onSubmit={submit} className="space-y-6 p-6">
                         <div>
                             <label htmlFor="role_id" className="mb-1.5 block text-sm font-medium text-gray-700">
-                                Role
+                                Responsibility
                             </label>
                             <select
                                 id="role_id"
                                 value={data.role_id}
                                 onChange={(e) => setData('role_id', e.target.value)}
-                                className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
+                                className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 focus:border-[#1F6FDB] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1F6FDB]/20"
                                 required
                             >
                                 <option value="" disabled>
@@ -91,77 +93,101 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                         </div>
 
                         <div>
-                            <label htmlFor="scope_type" className="mb-1.5 block text-sm font-medium text-gray-700">
-                                Scope
-                            </label>
-                            <select
-                                id="scope_type"
-                                value={data.scope_type}
-                                onChange={(e) => {
-                                    const next = e.target.value as 'estate' | 'zone';
-                                    setData({
-                                        ...data,
-                                        scope_type: next,
-                                        zone_id: next === 'estate' ? '' : data.zone_id,
-                                    });
-                                }}
-                                className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
-                                required
-                            >
-                                <option value="estate">Estate-wide</option>
-                                <option value="zone">Zone</option>
-                            </select>
+                            <label className="mb-3 block text-sm font-medium text-gray-700">Coverage</label>
+                            <div className="space-y-3">
+                                <label className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        name="scope_type"
+                                        value="estate"
+                                        checked={data.scope_type === 'estate'}
+                                        onChange={() => setData({ ...data, scope_type: 'estate', zone_id: '' })}
+                                        className="h-4 w-4 border-gray-300 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                    />
+                                    <span className="text-sm text-gray-900">Entire estate</span>
+                                </label>
+                                <label className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        name="scope_type"
+                                        value="zone"
+                                        checked={data.scope_type === 'zone'}
+                                        onChange={() => setData({ ...data, scope_type: 'zone' })}
+                                        className="h-4 w-4 border-gray-300 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                                    />
+                                    <span className="text-sm text-gray-900">Specific zone</span>
+                                </label>
+                            </div>
                             {errors.scope_type && <p className="mt-1.5 text-sm text-red-600">{errors.scope_type}</p>}
                         </div>
 
                         {data.scope_type === 'zone' && (
-                            <div>
+                            <div className="rounded-xl bg-slate-50 p-4">
                                 <label htmlFor="zone_id" className="mb-1.5 block text-sm font-medium text-gray-700">
                                     Zone
                                 </label>
-                                <select
-                                    id="zone_id"
-                                    value={data.zone_id}
-                                    onChange={(e) => setData('zone_id', e.target.value)}
-                                    className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
-                                    required
-                                >
-                                    <option value="" disabled>
-                                        Select a zone...
-                                    </option>
-                                    {zones.map((zone) => (
-                                        <option key={zone.id} value={zone.id}>
-                                            {zone.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                {errors.zone_id && <p className="mt-1.5 text-sm text-red-600">{errors.zone_id}</p>}
-                                {errors.zone && <p className="mt-1.5 text-sm text-red-600">{errors.zone}</p>}
+                                {zones.length > 0 ? (
+                                    <>
+                                        <select
+                                            id="zone_id"
+                                            value={data.zone_id}
+                                            onChange={(e) => setData('zone_id', e.target.value)}
+                                            className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-4 py-3.5 text-gray-900 focus:border-[#1F6FDB] focus:outline-none focus:ring-2 focus:ring-[#1F6FDB]/20"
+                                            required={data.scope_type === 'zone'}
+                                        >
+                                            <option value="" disabled>
+                                                Select a zone...
+                                            </option>
+                                            {zones.map((zone) => (
+                                                <option key={zone.id} value={zone.id}>
+                                                    {zone.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.zone_id && (
+                                            <p className="mt-1.5 text-sm text-red-600">{errors.zone_id}</p>
+                                        )}
+                                        {errors.zone && <p className="mt-1.5 text-sm text-red-600">{errors.zone}</p>}
+                                    </>
+                                ) : (
+                                    <p className="text-sm text-gray-500">
+                                        No zones have been created yet.{' '}
+                                        <Link href="/admin/zones" className="text-[#1F6FDB] hover:underline">
+                                            Create a zone
+                                        </Link>
+                                    </p>
+                                )}
                             </div>
                         )}
 
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-8">
-                            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                                <input
-                                    type="checkbox"
-                                    checked={data.is_primary}
-                                    onChange={(e) => setData('is_primary', e.target.checked)}
-                                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                />
-                                Primary assignment
-                            </label>
-                            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                                <input
-                                    type="checkbox"
-                                    checked={data.is_active}
-                                    onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                />
-                                Active
-                            </label>
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <input
+                                type="checkbox"
+                                checked={data.is_active}
+                                onChange={(e) => setData('is_active', e.target.checked)}
+                                className="rounded border-gray-300 text-[#1F6FDB] focus:ring-[#1F6FDB]"
+                            />
+                            Active
                         </div>
-                        {errors.is_primary && <p className="text-sm text-red-600">{errors.is_primary}</p>}
                         {errors.assignment && <p className="text-sm text-red-600">{errors.assignment}</p>}
+
+                        {/* Authority Preview */}
+                        {selectedRole && (data.scope_type === 'estate' || selectedZone) && (
+                            <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/50 p-4">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                    Authority preview
+                                </h4>
+                                <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                                    <span className="font-semibold text-slate-900">{assignment.user.name}</span> will
+                                    have <span className="font-semibold text-slate-900">{selectedRole.name}</span>{' '}
+                                    responsibility across{' '}
+                                    <span className="font-semibold text-slate-900">
+                                        {data.scope_type === 'estate' ? 'the entire estate' : selectedZone?.name}
+                                    </span>
+                                    .
+                                </p>
+                            </div>
+                        )}
 
                         <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
                             <Link
@@ -173,7 +199,7 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-700 disabled:opacity-60"
+                                className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </button>
