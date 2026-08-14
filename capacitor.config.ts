@@ -6,7 +6,8 @@ import * as path from 'path';
 const isDev = process.env.NODE_ENV !== 'production' && process.env.CAPACITOR_PROD !== 'true';
 
 // Default local URL
-let devUrl = 'http://app.kontrol.test';
+const isAndroid = process.argv.includes('android') || process.env.CAPACITOR_PLATFORM_NAME === 'android';
+let devUrl = isAndroid ? 'https://app.usekontrol.afuwapetunde.com' : 'https://app.kontrol.test';
 let devHostname = '10.0.2.2';
 
 // Dynamically read from .env to prevent committing local URLs to Git
@@ -24,7 +25,6 @@ try {
     console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
 }
 
-const isAndroid = process.argv.includes('android') || process.env.CAPACITOR_PLATFORM_NAME === 'android';
 const prodUrl = isAndroid ? 'https://app.usekontrol.afuwapetunde.com' : 'https://app.usekontrol.com';
 const prodHostname = isAndroid ? 'app.usekontrol.afuwapetunde.com' : 'app.usekontrol.com';
 
