@@ -2,6 +2,7 @@
 
 namespace App\Actions\Resident;
 
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
 use App\Events\Resident\HouseholdMemberCreated;
 use App\Models\Estate;
@@ -20,14 +21,22 @@ class CreateHouseholdMemberAction
     public function execute(array $data, Estate $estate, User $primaryResident): User
     {
         return DB::transaction(function () use ($data, $estate, $primaryResident) {
+            $email = strtolower(trim($data['email']));
 
-            $user = User::create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => null,
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $data['name'],
+                    'password' => null,
+                ]
+            );
+
+            $estate->users()->syncWithoutDetaching([
+                $user->id => [
+                    'status' => 'pending',
+                    'relationship_type' => 'household_member',
+                ],
             ]);
-
-            $estate->users()->attach($user->id, ['status' => 'pending']);
 
             $role = Role::where('name', 'household_member')
                 ->where('guard_name', 'web')
@@ -39,18 +48,30 @@ class CreateHouseholdMemberAction
 
             $primaryProfile = $primaryResident->profile;
 
-            UserProfile::create([
-                'user_id' => $user->id,
-                'phone' => null,
-                'unit_number' => $primaryProfile?->unit_number,
-                'address' => $primaryProfile?->address,
-            ]);
+            UserProfile::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'phone' => null,
+                    'unit_number' => $primaryProfile?->unit_number,
+                    'address' => $primaryProfile?->address,
+                ]
+            );
 
-            HouseholdMember::create([
+            HouseholdMember::firstOrCreate([
                 'estate_id' => $estate->id,
                 'primary_resident_id' => $primaryResident->id,
                 'household_member_id' => $user->id,
             ]);
+
+            // Create or update Invitation in the invitations table
+            app(CreateInvitationAction::class)->execute(
+                email: $user->email,
+                estate: $estate,
+                relationshipType: 'household_member',
+                role: $role,
+                zoneId: $primaryResident->getZoneForEstate($estate)?->id,
+                createdBy: $primaryResident,
+            );
 
             event(new HouseholdMemberCreated($user, $estate, $primaryResident));
 
