@@ -261,7 +261,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
     };
 
     const handleMakeResident = (owner: PropertyOwner) => {
-        if (!confirm(`Grant ${owner.name} resident privileges? They will keep their property owner role.`)) {
+        if (!confirm(`Convert ${owner.name} to a Resident? Their property owner role will be removed and converted to a resident account.`)) {
             return;
         }
 
@@ -629,15 +629,13 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                             </Link>
                                                         )}
 
-                                                        {!owner.is_resident && (
-                                                            <button
-                                                                onClick={() => handleMakeResident(owner)}
-                                                                className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
-                                                                title="Mark as Resident"
-                                                            >
-                                                                <ShieldCheck className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        )}
+                                                        <button
+                                                            onClick={() => handleMakeResident(owner)}
+                                                            className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                                            title="Convert to Resident"
+                                                        >
+                                                            <ShieldCheck className="h-3.5 w-3.5" />
+                                                        </button>
 
                                                         {/* Overflow menu */}
                                                         <button
@@ -662,18 +660,16 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                                         <UserMinus className="h-3.5 w-3.5 text-slate-400" />
                                                                         {owner.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
                                                                     </button>
-                                                                    {!owner.is_resident && (
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                handleMakeResident(owner);
-                                                                                setMenuOpenId(null);
-                                                                            }}
-                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                        >
-                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                                                            Mark as Resident
-                                                                        </button>
-                                                                    )}
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            handleMakeResident(owner);
+                                                                            setMenuOpenId(null);
+                                                                        }}
+                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                    >
+                                                                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                                        Convert to Resident
+                                                                    </button>
                                                                     <button
                                                                         onClick={() => {
                                                                             handleDeleteOwner(owner.id);

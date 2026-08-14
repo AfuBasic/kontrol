@@ -7,6 +7,7 @@ use App\Actions\Admin\BulkDeletePropertyOwnersAction;
 use App\Actions\Admin\BulkInvitePropertyOwnersAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\DeletePropertyOwnerAction;
+use App\Actions\Admin\MarkPropertyOwnerAsResidentAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendPropertyOwnerAction;
 use App\Auth\ContextManager;
@@ -482,46 +483,16 @@ class PropertyOwnerController extends Controller
     }
 
     /**
-     * Grant the specified property owner resident privileges.
+     * Swap the specified property owner to a resident.
      */
-    public function makeResident(User $propertyOwner): RedirectResponse
+    public function makeResident(User $propertyOwner, MarkPropertyOwnerAsResidentAction $action): RedirectResponse
     {
         $this->authorize('property_owners.edit');
-
         $estate = $this->estateContext->getEstate();
 
-        $residentRole = Role::where('name', 'resident')
-            ->where('guard_name', 'web')
-            ->whereNull('estate_id')
-            ->firstOrFail();
+        $action->execute($propertyOwner, $estate);
 
-        $hasResidentRole = AdministrativeAssignment::where('user_id', $propertyOwner->id)
-            ->where('estate_id', $estate->id)
-            ->where('is_active', true)
-            ->where('role_id', $residentRole->id)
-            ->exists();
-
-        if (! $hasResidentRole) {
-            AdministrativeAssignment::create([
-                'user_id' => $propertyOwner->id,
-                'estate_id' => $estate->id,
-                'role_id' => $residentRole->id,
-                'scope_type' => AssignmentScope::Estate,
-                'is_primary' => false,
-                'is_active' => true,
-            ]);
-
-            app(ContextManager::class)->setSystemContext($estate->id);
-            if (! $propertyOwner->hasRole('resident')) {
-                $propertyOwner->assignRole($residentRole);
-            }
-
-            app(ResidentSubscriptionService::class)->createForUser($propertyOwner, $estate);
-
-            return back()->with('success', 'Property Owner has been successfully granted Resident privileges.');
-        }
-
-        return back()->with('info', 'Property Owner is already a Resident.');
+        return back()->with('success', 'Property Owner has been successfully converted to a Resident.');
     }
 
     public function destroy(User $propertyOwner, DeletePropertyOwnerAction $action): RedirectResponse
