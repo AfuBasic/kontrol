@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Resident;
 
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Actions\Resident\CreateHouseholdMemberAction;
 use App\Actions\Resident\DeleteHouseholdMemberAction;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Permission\Models\Role;
 
 class HouseholdMemberController extends Controller
 {
@@ -84,7 +86,7 @@ class HouseholdMemberController extends Controller
     }
 
     /**
-     * Send a password reset email to a household member.
+     * Send or resend an invitation email to a household member.
      */
     public function resetPassword(Request $request, HouseholdMember $householdMember): RedirectResponse
     {
@@ -93,25 +95,41 @@ class HouseholdMemberController extends Controller
 
         // Ensure the household member belongs to this primary resident
         if ($householdMember->primary_resident_id !== $user->id || $householdMember->estate_id !== $estate->id) {
-            abort(403, 'You can only reset passwords for your own household members.');
+            abort(403, 'You can only resend invitations for your own household members.');
         }
 
-        // Clear the password to force reset
+        // Clear password to ensure fresh login/access
         $householdMember->member->update(['password' => null]);
 
         // Update membership status back to pending
         $householdMember->member->estates()->updateExistingPivot($estate->id, ['status' => 'pending']);
 
-        // Send password reset email
+        // Create or refresh Invitation in the invitations table
+        $role = Role::where('name', 'household_member')
+            ->where('guard_name', 'web')
+            ->whereNull('estate_id')
+            ->first();
+
+        $invitation = app(CreateInvitationAction::class)->execute(
+            email: $householdMember->member->email,
+            estate: $estate,
+            relationshipType: 'household_member',
+            role: $role,
+            zoneId: $user->profile?->zone_id ?? $user->estateMembershipFor($estate->id)?->zone_id,
+            createdBy: $user,
+        );
+
+        // Send invitation email
         Mail::to($householdMember->member)->send(
             new HouseholdMemberInvitationMail(
                 user: $householdMember->member,
                 estate: $estate,
                 primaryResident: $user,
-                passwordReset: true,
+                passwordReset: false,
+                invitation: $invitation,
             )
         );
 
-        return back()->with('success', "Password reset email sent to {$householdMember->member->name}.");
+        return back()->with('success', "Invitation email sent to {$householdMember->member->name}.");
     }
 }
