@@ -96,7 +96,7 @@ type PostItem = {
 };
 
 type Props = {
-    estateShell?: { name: string; address: string | null };
+    estateShell?: { name: string; address: string | null; onboarding_completed?: boolean };
     estateHealth?: EstateHealth | null;
     operationalSnapshot?: OperationalSnapshot | null;
     needsAttention?: AttentionItem[] | null;
@@ -146,6 +146,28 @@ export default function Dashboard({
             <Head title="Command Center" />
 
             <div className="w-full space-y-6 pb-24">
+                {/* ONBOARDING BANNER */}
+                {estateShell?.onboarding_completed === false && (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-6 shadow-sm">
+                        <div className="flex items-start gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                <ShieldCheck className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-indigo-900">Complete your estate setup</h3>
+                                <p className="text-xs text-indigo-700 mt-1">You have a few more steps to fully set up {estateShell.name}.</p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/admin/setup"
+                            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700"
+                        >
+                            Continue Setup
+                            <ChevronRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                )}
+
                 {/* SECTION 1 - ESTATE HEALTH (shell eager, details deferred) */}
                 <SectionErrorBoundary name="estate-health">
                     <Deferred
