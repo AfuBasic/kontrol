@@ -18,9 +18,7 @@ use Spatie\Permission\Models\Role;
 
 class CreateResidentAction
 {
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     /**
      * @param  array{name: string, email: string, phone?: string|null, unit_number?: string|null, address?: string|null}  $data
@@ -43,7 +41,7 @@ class CreateResidentAction
                 ->where('user_id', $user->id)
                 ->first();
 
-            if (!$membership) {
+            if (! $membership) {
                 $estate->users()->attach($user->id, [
                     'status' => 'pending',
                     'property_owner_id' => $data['property_owner_id'] ?? null,
@@ -76,7 +74,7 @@ class CreateResidentAction
                 ->where('zone_id_coalesced', $data['zone_id'] ?? 0)
                 ->exists();
 
-            if (!$assignmentExists) {
+            if (! $assignmentExists) {
                 $assignmentAction->execute(
                     user: $user,
                     estate: $estate,
@@ -124,7 +122,7 @@ class CreateResidentAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited resident ' . $user->email);
+                ->log('invited resident '.$user->email);
 
             return $user;
         });
