@@ -23,13 +23,13 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
     public function __construct(
         public Invitation|User $user,
         public Estate $estate,
-        public bool $isPasswordReset = false,
+        public ?Invitation $invitation = null,
     ) {
         if ($this->user instanceof Invitation) {
             $token = $this->user->token;
             $this->userName = $this->user->email;
         } else {
-            $invitation = Invitation::withoutGlobalScopes()
+            $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
                 ->where('email', strtolower(trim($this->user->email)))
                 ->where('estate_id', $this->estate->id)
                 ->latest()
@@ -44,9 +44,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $subject = $this->isPasswordReset
-            ? "Password Reset Request for {$this->estate->name}"
-            : "You've been invited to join {$this->estate->name}";
+        $subject = "You've been invited to join {$this->estate->name}";
 
         return new Envelope(
             subject: $subject,
@@ -62,7 +60,6 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
                 'estateName' => $this->estate->name,
                 'userName' => $this->userName,
                 'invitationUrl' => $this->invitationUrl,
-                'isPasswordReset' => $this->isPasswordReset,
             ],
         );
     }
