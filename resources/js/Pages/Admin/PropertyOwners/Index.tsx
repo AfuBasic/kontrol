@@ -16,7 +16,6 @@ import {
     X,
     Users,
     LinkIcon,
-    Home,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { properties, residents, create, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
@@ -616,17 +615,6 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                             >
                                                                 <Send className="h-3.5 w-3.5" />
                                                             </button>
-                                                        )}
-
-                                                        {/* Direct Assign Unit Link if Unassigned */}
-                                                        {owner.properties_count === 0 && (
-                                                            <Link
-                                                                href={`/admin/property-owners/${owner.id}/edit`}
-                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                title="Assign Unit"
-                                                            >
-                                                                <Home className="h-3.5 w-3.5" />
-                                                            </Link>
                                                         )}
 
                                                         <button
