@@ -41,6 +41,7 @@ class IncidentController extends Controller
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
         $settings = EstateSettings::forEstate($estateId);
+        $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
         return Inertia::render('Resident/Incidents/Index', [
             'incidents' => $incidents,
