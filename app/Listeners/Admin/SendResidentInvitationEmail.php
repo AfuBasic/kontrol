@@ -17,7 +17,7 @@ class SendResidentInvitationEmail implements ShouldQueue
 
         $mailable = $event->user->hasRole('property_owner')
             ? new PropertyOwnerInvitationMail($event->user, $event->estate, $event->isPasswordReset)
-            : new ResidentInvitationMail($event->user, $event->estate, $event->isPasswordReset);
+            : new ResidentInvitationMail($event->user, $event->estate);
 
         Mail::to($event->user->email)->send($mailable);
     }
