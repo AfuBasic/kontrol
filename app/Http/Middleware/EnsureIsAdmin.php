@@ -20,8 +20,12 @@ class EnsureIsAdmin
             return redirect()->route('login');
         }
 
-        // If user is a resident or household member, redirect to resident area
-        if (($user->contextHasRole('resident') || $user->contextHasRole('household_member')) && ! $user->contextHasRole('admin')) {
+        // If user is a resident, property owner, or household member, redirect to their area
+        if (($user->contextHasRole('resident') || $user->contextHasRole('household_member') || $user->contextHasRole('property_owner')) && ! $user->contextHasRole('admin')) {
+            if ($user->contextHasRole('property_owner')) {
+                return redirect()->route('resident.property-owner.dashboard');
+            }
+
             return redirect()->route('resident.home');
         }
 
