@@ -82,6 +82,7 @@ class AcceptInvitationAction
                     'security' => 'security',
                     'resident' => 'resident',
                     'property_owner' => 'property_owner',
+                    'household_member' => 'household_member',
                     default => null,
                 };
                 if ($roleName) {
