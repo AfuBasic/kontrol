@@ -7,9 +7,9 @@ const isDev = process.env.NODE_ENV !== 'production' && process.env.CAPACITOR_PRO
 
 // Default local URL
 const isAndroid = process.argv.includes('android') || process.env.CAPACITOR_PLATFORM_NAME === 'android';
-let devUrl = isAndroid ? 'https://app.usekontrol.afuwapetunde.com' : 'https://app.kontrol.test';
-// hostname must match the actual URL being loaded — 10.0.2.2 is only for local emulator tunnels
-let devHostname = isAndroid ? 'app.usekontrol.afuwapetunde.com' : '10.0.2.2';
+let devUrl = 'https://app.usekontrol.afuwapetunde.com';
+// hostname must match the actual URL being loaded
+let devHostname = 'app.usekontrol.afuwapetunde.com';
 
 // Dynamically read from .env to prevent committing local URLs to Git
 try {
