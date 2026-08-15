@@ -14,6 +14,8 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 use App\Services\PaystackService;
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
+use App\Enums\AssignmentScope;
 
 uses(RefreshDatabase::class);
 
@@ -58,7 +60,7 @@ beforeEach(function () {
     $this->adminUser->assignRole('admin');
     $this->estate->users()->attach($this->adminUser->id, ['status' => 'accepted']);
 
-    // Create custom manager role
+    // Create custom manager role (estate scoped role so it can have assignments)
     $this->managerRole = Role::create([
         'name' => 'manager',
         'guard_name' => 'web',
@@ -69,12 +71,32 @@ beforeEach(function () {
     $this->managerUser = User::factory()->create();
     $this->managerUser->assignRole($this->managerRole);
     $this->estate->users()->attach($this->managerUser->id, ['status' => 'accepted']);
+
+    // Create authoritative assignments for both users
+    $createAction = app(CreateAdministrativeAssignmentAction::class);
+    
+    $this->adminAssignment = $createAction->execute(
+        user: $this->adminUser,
+        estate: $this->estate,
+        role: $this->adminRole,
+        scopeType: AssignmentScope::Estate,
+        isPrimary: true
+    );
+
+    $this->managerAssignment = $createAction->execute(
+        user: $this->managerUser,
+        estate: $this->estate,
+        role: $this->managerRole,
+        scopeType: AssignmentScope::Estate,
+        isPrimary: false
+    );
 });
 
 it('restricts collections index page for manager without collections.view permission', function () {
     setPermissionsTeamId($this->estate->id);
 
     $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
         ->get(route('admin.collections.index'))
         ->assertForbidden();
 });
@@ -85,6 +107,7 @@ it('allows collections index page for manager with collections.view permission',
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
         ->get(route('admin.collections.index'))
         ->assertOk();
 });
@@ -93,6 +116,7 @@ it('restricts zones index page for manager without zones.view permission', funct
     setPermissionsTeamId($this->estate->id);
 
     $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
         ->get(route('admin.zones.index'))
         ->assertForbidden();
 });
@@ -103,6 +127,7 @@ it('allows zones index page for manager with zones.view permission', function ()
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
         ->get(route('admin.zones.index'))
         ->assertOk();
 });
@@ -111,6 +136,7 @@ it('restricts staff assignments index page for manager without assignments.view 
     setPermissionsTeamId($this->estate->id);
 
     $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
         ->get(route('admin.assignments.index'))
         ->assertForbidden();
 });
@@ -121,6 +147,7 @@ it('allows staff assignments index page for manager with assignments.view permis
     app(PermissionRegistrar::class)->forgetCachedPermissions();
 
     $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
         ->get(route('admin.assignments.index'))
         ->assertOk();
 });
@@ -130,16 +157,19 @@ it('retains default full access for admin role context', function () {
 
     // Admin should access collections without needing explicit permission grant because of policy/fallback
     $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
         ->get(route('admin.collections.index'))
         ->assertOk();
 
     // Admin should access zones
     $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
         ->get(route('admin.zones.index'))
         ->assertOk();
 
     // Admin should access staff assignments
     $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
         ->get(route('admin.assignments.index'))
         ->assertOk();
 });
