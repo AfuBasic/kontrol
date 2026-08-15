@@ -251,19 +251,19 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     });
 
     // Collections (Resident dues management)
-    Route::prefix('collections')->name('collections.')->middleware('feature:payment-collection')->group(function (): void {
+    Route::prefix('collections')->name('collections.')->middleware(['feature:payment-collection', 'permission:collections.view'])->group(function (): void {
         Route::get('/', [CollectionController::class, 'index'])->name('index');
         Route::get('/analytics', [CollectionAnalyticsController::class, 'index'])->name('analytics');
-        Route::get('/create', [CollectionController::class, 'create'])->name('create');
-        Route::post('/', [CollectionController::class, 'store'])->name('store');
+        Route::get('/create', [CollectionController::class, 'create'])->middleware('permission:collections.create')->name('create');
+        Route::post('/', [CollectionController::class, 'store'])->middleware('permission:collections.create')->name('store');
         Route::get('/{collection}', [CollectionController::class, 'show'])->name('show');
-        Route::get('/{collection}/edit', [CollectionController::class, 'edit'])->name('edit');
-        Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
-        Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->name('publish');
-        Route::post('/{collection}/remind', [CollectionController::class, 'remind'])->name('remind');
+        Route::get('/{collection}/edit', [CollectionController::class, 'edit'])->middleware('permission:collections.edit')->name('edit');
+        Route::put('/{collection}', [CollectionController::class, 'update'])->middleware('permission:collections.edit')->name('update');
+        Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->middleware('permission:collections.edit')->name('publish');
+        Route::post('/{collection}/remind', [CollectionController::class, 'remind'])->middleware('permission:collections.edit')->name('remind');
         Route::get('/{collection}/export', [CollectionController::class, 'export'])->name('export');
-        Route::post('/assignments/{assignment}/record-payment', [CollectionController::class, 'recordPayment'])->name('assignments.record-payment');
-        Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
+        Route::post('/assignments/{assignment}/record-payment', [CollectionController::class, 'recordPayment'])->middleware('permission:collections.edit')->name('assignments.record-payment');
+        Route::delete('/{collection}', [CollectionController::class, 'destroy'])->middleware('permission:collections.delete')->name('destroy');
     });
 
     // Incidents management
