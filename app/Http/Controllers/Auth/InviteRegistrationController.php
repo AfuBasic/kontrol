@@ -83,6 +83,10 @@ class InviteRegistrationController extends Controller
             $user->estates()->attach($inviteLink->estate_id, [
                 'status' => $status,
                 'created_via' => 'invite_link',
+                'initiated_by' => $inviteLink->user_id,
+                'initiated_at' => $inviteLink->created_at,
+                'invitation_link_id' => $inviteLink->id,
+                'accepted_at' => $status === 'accepted' ? now() : null,
             ]);
 
             app(ContextManager::class)->setSystemContext($inviteLink->estate_id);

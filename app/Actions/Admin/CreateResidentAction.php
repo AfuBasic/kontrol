@@ -23,9 +23,9 @@ class CreateResidentAction
     /**
      * @param  array{name: string, email: string, phone?: string|null, unit_number?: string|null, address?: string|null}  $data
      */
-    public function execute(array $data, Estate $estate): User
+    public function execute(array $data, Estate $estate, string $source = 'single_form', ?string $importBatch = null): User
     {
-        return DB::transaction(function () use ($data, $estate) {
+        return DB::transaction(function () use ($data, $estate, $source, $importBatch) {
             // 1. Get or create user (invitation pending if new user)
             $user = User::firstOrCreate(
                 ['email' => strtolower(trim($data['email']))],
@@ -41,23 +41,43 @@ class CreateResidentAction
                 ->where('user_id', $user->id)
                 ->first();
 
+            $initiatedBy = Auth::id();
+            $initiatedAt = now();
+
             if (! $membership) {
                 $estate->users()->attach($user->id, [
                     'status' => 'pending',
                     'property_owner_id' => $data['property_owner_id'] ?? null,
                     'relationship_type' => 'resident',
                     'zone_id' => $data['zone_id'] ?? null,
-                    'created_via' => 'admin_invite',
+                    'created_via' => $source,
+                    'initiated_by' => $initiatedBy,
+                    'initiated_at' => $initiatedAt,
+                    'last_invited_by' => $initiatedBy,
+                    'last_invited_at' => $initiatedAt,
+                    'import_batch' => $importBatch,
                 ]);
             } else {
+                $updateData = [
+                    'property_owner_id' => $data['property_owner_id'] ?? $membership->property_owner_id,
+                    'relationship_type' => 'resident',
+                    'zone_id' => $data['zone_id'] ?? $membership->zone_id,
+                    'last_invited_by' => $initiatedBy,
+                    'last_invited_at' => $initiatedAt,
+                ];
+                if (is_null($membership->created_via) || $membership->created_via === 'system') {
+                    $updateData['created_via'] = $source;
+                }
+                if (is_null($membership->initiated_by)) {
+                    $updateData['initiated_by'] = $initiatedBy;
+                    $updateData['initiated_at'] = $initiatedAt;
+                }
+                if (is_null($membership->import_batch)) {
+                    $updateData['import_batch'] = $importBatch;
+                }
                 DB::table('estate_users_membership')
                     ->where('id', $membership->id)
-                    ->update([
-                        'property_owner_id' => $data['property_owner_id'] ?? $membership->property_owner_id,
-                        'relationship_type' => 'resident',
-                        'zone_id' => $data['zone_id'] ?? $membership->zone_id,
-                        'created_via' => 'admin_invite',
-                    ]);
+                    ->update($updateData);
             }
 
             // 3. Assign global resident role scoped to this estate
@@ -112,6 +132,15 @@ class CreateResidentAction
                 scopeType: empty($data['zone_id']) ? AssignmentScope::Estate->value : AssignmentScope::Zone->value,
                 createdBy: Auth::user()
             );
+
+            if ($invitation) {
+                DB::table('estate_users_membership')
+                    ->where('estate_id', $estate->id)
+                    ->where('user_id', $user->id)
+                    ->update([
+                        'invitation_id' => $invitation->id,
+                    ]);
+            }
 
             // 6. Dispatch event for side effects (invitation email)
             // If CreateInvitationAction returns null, the user is already an active member of this estate

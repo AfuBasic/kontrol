@@ -52,6 +52,11 @@ class AcceptInvitationAction
                     'status' => 'accepted',
                     'zone_id' => $invitation->zone_id,
                     'relationship_type' => $invitation->relationship_type,
+                    'created_via' => 'single_form',
+                    'initiated_by' => $invitation->created_by,
+                    'initiated_at' => $invitation->created_at,
+                    'invitation_id' => $invitation->id,
+                    'accepted_at' => Carbon::now(),
                     'created_at' => Carbon::now(),
                     'updated_at' => Carbon::now(),
                 ]);
@@ -62,9 +67,10 @@ class AcceptInvitationAction
                     ->where('estate_id', $estateId)
                     ->update([
                         'status' => 'accepted',
-                        // Optional: update relationship/zone if appropriate based on product semantics
                         'zone_id' => $invitation->zone_id,
                         'relationship_type' => $invitation->relationship_type,
+                        'invitation_id' => $invitation->id,
+                        'accepted_at' => Carbon::now(),
                     ]);
             }
 

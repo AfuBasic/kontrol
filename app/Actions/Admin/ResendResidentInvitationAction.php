@@ -6,6 +6,7 @@ use App\Events\Admin\ResidentCreated;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ResendResidentInvitationAction
 {
@@ -24,6 +25,15 @@ class ResendResidentInvitationAction
 
         // 3. Resend invitation email
         event(new ResidentCreated($resident, $estate, true));
+
+        // 4. Update resend invitation metadata
+        DB::table('estate_users_membership')
+            ->where('estate_id', $estate->id)
+            ->where('user_id', $resident->id)
+            ->update([
+                'last_invited_by' => Auth::id(),
+                'last_invited_at' => now(),
+            ]);
 
         activity()
             ->performedOn($resident)

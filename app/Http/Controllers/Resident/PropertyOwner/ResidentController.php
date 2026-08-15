@@ -344,6 +344,10 @@ class ResidentController extends Controller
             $estate->users()->attach($resident->id, [
                 'status' => 'pending',
                 'created_via' => 'property_owner_invite',
+                'initiated_by' => $user->id,
+                'initiated_at' => now(),
+                'last_invited_by' => $user->id,
+                'last_invited_at' => now(),
             ]);
 
             $role = Role::where('name', 'resident')
@@ -360,7 +364,7 @@ class ResidentController extends Controller
             }
 
             // Create or update Invitation in the invitations table
-            app(CreateInvitationAction::class)->execute(
+            $invitation = app(CreateInvitationAction::class)->execute(
                 email: $validated['email'],
                 estate: $estate,
                 relationshipType: 'resident',
@@ -369,6 +373,12 @@ class ResidentController extends Controller
                 scopeType: 'estate',
                 createdBy: $user
             );
+
+            if ($invitation) {
+                $resident->estates()->updateExistingPivot($estate->id, [
+                    'invitation_id' => $invitation->id,
+                ]);
+            }
 
             UserProfile::create([
                 'user_id' => $resident->id,

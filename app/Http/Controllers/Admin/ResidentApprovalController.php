@@ -65,6 +65,7 @@ class ResidentApprovalController extends Controller
 
         $user->estates()->updateExistingPivot($estate->id, [
             'status' => 'accepted',
+            'accepted_at' => now(),
         ]);
 
         // Send ResidentApproved notification
@@ -94,6 +95,7 @@ class ResidentApprovalController extends Controller
         foreach ($pendingUsers as $user) {
             $user->estates()->updateExistingPivot($estate->id, [
                 'status' => 'accepted',
+                'accepted_at' => now(),
             ]);
             $user->notify(new ResidentApproved($estate));
         }
