@@ -696,7 +696,7 @@ export default function AdminLayout({ children, title }: Props) {
                     <div className="border-t border-white/10 p-3">
                         <button
                             onClick={toggle}
-                            className="mb-2 flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                            className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/10 hover:text-white"
                         >
                             {isCollapsed ? (
                                 <ChevronDoubleRightIcon className="h-5 w-5 shrink-0" />
@@ -704,76 +704,6 @@ export default function AdminLayout({ children, title }: Props) {
                                 <ChevronDoubleLeftIcon className="h-5 w-5 shrink-0" />
                             )}
                         </button>
-
-                        <div className="relative">
-                            <button
-                                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-white/10"
-                            >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1F6FDB] ring-2 ring-white/30">
-                                    <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
-                                </div>
-                                {!isCollapsed && (
-                                    <div className="flex flex-1 items-center justify-between overflow-hidden">
-                                        <p className="truncate text-left text-sm font-medium text-white">{auth.user?.name}</p>
-                                        <ChevronDownIcon
-                                            className={`h-4 w-4 shrink-0 text-white/60 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                                        />
-                                    </div>
-                                )}
-                            </button>
-                            <AnimatePresence>
-                                {userMenuOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                            className="absolute bottom-full left-0 z-20 mb-2 w-56 origin-bottom-left rounded-xl border border-[#1F6FDB]/20 bg-white p-1.5 shadow-xl"
-                                        >
-                                            <Link
-                                                href={ProfileController.edit.url()}
-                                                onClick={() => setUserMenuOpen(false)}
-                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                            >
-                                                <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                Profile
-                                            </Link>
-                                            {isAdmin && hasActivityLogs && (
-                                                <Link
-                                                    href={ActivityLogController.index.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                >
-                                                    <ClipboardDocumentListIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Activity Log
-                                                </Link>
-                                            )}
-
-                                            {(auth.user?.available_contexts?.length || 0) > 1 && (
-                                                <Link
-                                                    href={ContextController.index.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                >
-                                                    <BuildingOfficeIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Switch Workspace
-                                                </Link>
-                                            )}
-
-                                            <button
-                                                onClick={() => setShowLogoutConfirmation(true)}
-                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                            >
-                                                <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                Sign out
-                                            </button>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
                     </div>
                 </motion.aside>
 
@@ -781,22 +711,28 @@ export default function AdminLayout({ children, title }: Props) {
                     initial={false}
                     animate={{ marginLeft: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="min-h-screen flex-1 px-6 py-8 lg:px-8"
+                    className="min-h-screen flex flex-col"
                 >
-                    <header className="mb-8 flex items-center justify-end">
-                        <div className="flex items-center gap-3">
-                            <ContextSwitcher />
+                    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-xl lg:px-8">
+                        <div className="flex items-center gap-4">
+                            <ContextSwitcher variant="light" />
+                        </div>
+
+                        <div className="flex items-center gap-x-4 lg:gap-x-6">
                             <SystemHealthMonitor hideWhenHealthy />
+
+                            {/* Notifications */}
                             <div className="relative">
                                 <button
                                     onClick={() => setNotificationOpen(!notificationOpen)}
-                                    className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-all hover:text-[#1F6FDB] hover:shadow-md"
+                                    className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2"
                                 >
-                                    <BellIcon className="h-6 w-6" />
+                                    <span className="sr-only">View notifications</span>
+                                    <BellIcon className="h-5 w-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
+                                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                                         </span>
                                     )}
                                 </button>
@@ -854,7 +790,6 @@ export default function AdminLayout({ children, title }: Props) {
                                                             setUnreadCount(0);
                                                             setNotifications([]);
                                                             setNotificationOpen(false);
-                                                            // Clear native notifications and badge
                                                             if (Capacitor.isNativePlatform()) {
                                                                 PushNotifications.removeAllDeliveredNotifications();
                                                                 if ('setAppBadge' in navigator) {
@@ -872,11 +807,83 @@ export default function AdminLayout({ children, title }: Props) {
                                     )}
                                 </AnimatePresence>
                             </div>
+
+                            <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200" aria-hidden="true" />
+
+                            {/* User Profile */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                    className="flex items-center gap-2 rounded-full p-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2"
+                                >
+                                    <span className="sr-only">Open user menu</span>
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A3D91] text-xs font-semibold text-white ring-2 ring-white">
+                                        {auth.user?.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="hidden lg:block max-w-[120px] truncate">{auth.user?.name}</span>
+                                    <ChevronDownIcon
+                                        className={`hidden lg:block h-4 w-4 shrink-0 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+                                <AnimatePresence>
+                                    {userMenuOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-xl border border-slate-200/60 bg-white p-1.5 shadow-xl"
+                                            >
+                                                <Link
+                                                    href={ProfileController.edit.url()}
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                >
+                                                    <UserCircleIcon className="h-4 w-4 text-slate-400" />
+                                                    Profile
+                                                </Link>
+                                                {isAdmin && hasActivityLogs && (
+                                                    <Link
+                                                        href={ActivityLogController.index.url()}
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                    >
+                                                        <ClipboardDocumentListIcon className="h-4 w-4 text-slate-400" />
+                                                        Activity Log
+                                                    </Link>
+                                                )}
+
+                                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                                    <Link
+                                                        href={ContextController.index.url()}
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                    >
+                                                        <BuildingOfficeIcon className="h-4 w-4 text-slate-400" />
+                                                        Switch Workspace
+                                                    </Link>
+                                                )}
+
+                                                <button
+                                                    onClick={() => setShowLogoutConfirmation(true)}
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"
+                                                >
+                                                    <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-slate-400" />
+                                                    Sign out
+                                                </button>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </header>
 
-                    <PendingInvoiceNotification invoice={pendingInvoice} />
-                    {children}
+                    <main className="flex-1 px-6 py-8 lg:px-8">
+                        <PendingInvoiceNotification invoice={pendingInvoice} />
+                        {children}
+                    </main>
                 </motion.div>
             </div>
 
