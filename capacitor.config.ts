@@ -41,7 +41,7 @@ const config: CapacitorConfig = {
         // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
         hostname: isDev ? devHostname : prodHostname,
         // Allow all subdomains and the emulator IP for local development
-        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', 'app.usekontrol.afuwapetunde.com', '10.0.2.2', devHostname],
+        allowNavigation: ['app.usekontrol.com', 'app.usekontrol.afuwapetunde.com'],
         // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
         androidScheme: isDev && !devUrl.startsWith('https') ? 'http' : 'https',
     },
