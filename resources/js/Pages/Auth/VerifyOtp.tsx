@@ -272,7 +272,7 @@ export default function VerifyOtp({ email }: Props) {
                                             ref={(el) => {
                                                 inputRefs.current[i] = el;
                                             }}
-                                            type="text"
+                                            type="tel"
                                             inputMode="numeric"
                                             pattern="[0-9]*"
                                             maxLength={1}
