@@ -125,6 +125,10 @@ class PermissionSeeder extends Seeder
             }
         }
 
+        // Prune database permissions that are no longer defined in this seeder
+        $allSeededNames = self::getAllPermissionNames();
+        Permission::whereNotIn('name', $allSeededNames)->delete();
+
         $this->command->newLine();
         $this->command->info("Permissions seeded: {$created} created, {$skipped} skipped.");
     }
