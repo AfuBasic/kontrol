@@ -158,7 +158,7 @@ export default function EditRole({ role, permissions }: Props) {
                                     id="name"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="block w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-slate-900 shadow-xs transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-slate-900"
+                                    className="block w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-slate-900 focus:outline-none"
                                     placeholder="e.g. Security Supervisor"
                                 />
                                 {errors.name && <p className="mt-2 text-sm font-medium text-red-600">{errors.name}</p>}
