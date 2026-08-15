@@ -47,6 +47,7 @@ class CreateResidentAction
                     'property_owner_id' => $data['property_owner_id'] ?? null,
                     'relationship_type' => 'resident',
                     'zone_id' => $data['zone_id'] ?? null,
+                    'created_via' => 'admin_invite',
                 ]);
             } else {
                 DB::table('estate_users_membership')
@@ -55,6 +56,7 @@ class CreateResidentAction
                         'property_owner_id' => $data['property_owner_id'] ?? $membership->property_owner_id,
                         'relationship_type' => 'resident',
                         'zone_id' => $data['zone_id'] ?? $membership->zone_id,
+                        'created_via' => 'admin_invite',
                     ]);
             }
 
