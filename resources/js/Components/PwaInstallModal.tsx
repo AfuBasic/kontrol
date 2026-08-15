@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Download, X, CheckCircle2, ChevronRight, Compass, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -57,6 +58,9 @@ export default function PwaInstallModal() {
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
+
+        // Do not show PWA install prompt if already running in a native Capacitor app
+        if (Capacitor.isNativePlatform()) return;
 
         const os = getOperatingSystem();
 
