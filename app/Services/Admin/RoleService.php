@@ -26,6 +26,11 @@ class RoleService
             ->with('permissions')
             ->where('estate_id', $estateId)
             ->whereNotIn('name', RoleSeeder::RESERVED_ROLES)
+            ->addSelect([
+                'assignments_count' => \App\Models\AdministrativeAssignment::selectRaw('count(*)')
+                    ->whereColumn('role_id', 'roles.id')
+                    ->where('estate_id', $estateId),
+            ])
             ->orderBy('name')
             ->get();
     }
