@@ -64,6 +64,8 @@ import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
 import ContextSwitcher from '@/Components/ContextSwitcher';
+import CommandPalette from '@/Components/Admin/CommandPalette';
+import { baseNav, secondaryNav, type NavItem } from '@/Config/navigation';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
@@ -81,84 +83,7 @@ interface Props {
     title?: string;
 }
 
-type NavItem = {
-    name: string;
-    href: string;
-    icon: React.ComponentType<{ className?: string }>;
-    permission?: string;
-    role?: string;
-    feature?: string;
-    group?: string;
-    comingSoon?: boolean;
-};
-
-const baseNav: NavItem[] = [
-    { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-
-    // People Group
-    {
-        name: 'Residents',
-        href: ResidentController.index.url(),
-        icon: UsersIcon,
-        permission: 'residents.view',
-        feature: 'resident-directory',
-        group: 'People',
-    },
-    { name: 'Property Owners', href: PropertyOwnerController.index.url(), icon: UsersIcon, permission: 'property_owners.view', group: 'People' },
-    {
-        name: 'Security',
-        href: SecurityPersonnelController.index.url(),
-        icon: ShieldCheckIcon,
-        permission: 'security.view',
-        feature: 'security-personnel-management',
-        group: 'People',
-    },
-
-    // Operations & Estate Group
-    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin', group: 'Estate' },
-    { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board', group: 'Estate' },
-    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view', group: 'Operations' },
-    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view', group: 'Operations' },
-
-    // Finance Group
-    {
-        name: 'Collections',
-        href: CollectionController.index.url(),
-        icon: BanknotesIcon,
-        feature: 'payment-collection',
-        group: 'Finance',
-    },
-    {
-        name: 'Transactions',
-        href: TransactionController.index.url(),
-        icon: CurrencyDollarIcon,
-        feature: 'payment-collection',
-        group: 'Finance',
-    },
-
-    // Governance & Access Group
-    {
-        name: 'Staff & Authority',
-        href: AdministrativeAssignmentController.index.url(),
-        icon: UserGroupIcon,
-        role: 'admin',
-        feature: 'user-access-control',
-        group: 'Access',
-    },
-    {
-        name: 'Roles',
-        href: RoleController.index.url(),
-        icon: UserGroupIcon,
-        permission: 'roles.view',
-        feature: 'user-access-control',
-        group: 'Access',
-    },
-    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view', group: 'Access' },
-];
-
 const primaryNav: NavItem[] = baseNav;
-
-const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
 const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
     return (
@@ -238,6 +163,7 @@ export default function AdminLayout({ children, title }: Props) {
     const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
     useForceLogout(auth?.user?.id);
 
@@ -268,6 +194,25 @@ export default function AdminLayout({ children, title }: Props) {
         setUnreadCount(auth.user?.unread_notifications_count || 0);
         setNotifications(auth.user?.notifications || []);
     }, [auth.user?.unread_notifications_count, auth.user?.notifications]);
+
+    // Command Palette Keyboard Shortcut
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                // Don't trigger if user is actively typing in an input, textarea, or select
+                const activeElement = document.activeElement as HTMLElement;
+                const isInputFocused = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA' || activeElement?.tagName === 'SELECT' || activeElement?.isContentEditable;
+                
+                if (!isInputFocused) {
+                    e.preventDefault();
+                    setCommandPaletteOpen(true);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     // Force light mode for Admin panel
     useEffect(() => {
@@ -604,6 +549,13 @@ export default function AdminLayout({ children, title }: Props) {
                         </div>
                     </main>
 
+                    <CommandPalette 
+                        isOpen={commandPaletteOpen} 
+                        setIsOpen={setCommandPaletteOpen} 
+                        canAccess={canAccess} 
+                        billingEnabled={billing_enabled || false} 
+                    />
+
                     <MobileBottomNav url={url} unreadNotifications={unreadCount} />
                 </Suspense>
             </div>
@@ -716,6 +668,19 @@ export default function AdminLayout({ children, title }: Props) {
                     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-xl lg:px-8">
                         <div className="flex items-center gap-4">
                             <ContextSwitcher variant="light" />
+                        </div>
+
+                        <div className="flex flex-1 justify-center px-4 md:px-8">
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="group flex w-full max-w-md items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                            >
+                                <Search className="h-4 w-4 text-slate-400 group-hover:text-slate-500" />
+                                <span className="flex-1 text-left">Search Kontrol...</span>
+                                <kbd className="hidden rounded bg-white px-2 py-0.5 text-xs font-semibold text-slate-400 ring-1 ring-slate-200 ring-inset sm:block">
+                                    <span className="text-xs">⌘</span>K
+                                </kbd>
+                            </button>
                         </div>
 
                         <div className="flex items-center gap-x-4 lg:gap-x-6">
