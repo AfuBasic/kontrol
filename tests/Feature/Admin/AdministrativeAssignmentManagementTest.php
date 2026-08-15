@@ -81,6 +81,14 @@ beforeEach(function () {
         isPrimary: true,
     );
 
+    Permission::create(['name' => 'assignments.view']);
+    Permission::create(['name' => 'assignments.create']);
+    Permission::create(['name' => 'assignments.edit']);
+    Permission::create(['name' => 'assignments.delete']);
+
+    $this->adminRole->givePermissionTo(['assignments.view', 'assignments.create', 'assignments.edit', 'assignments.delete']);
+    $this->otherEstateRole->givePermissionTo(['assignments.view', 'assignments.create', 'assignments.edit', 'assignments.delete']);
+
     $this->zoneA = Zone::create(['name' => 'Zone A', 'estate_id' => $this->estate->id]);
     $this->zoneB = Zone::create(['name' => 'Zone B', 'estate_id' => $this->estate->id]);
     $this->foreignZone = Zone::create(['name' => 'Foreign Zone', 'estate_id' => $this->otherEstate->id]);
@@ -110,13 +118,14 @@ it('creates an estate-scoped assignment for a member', function () {
     expect($this->member->hasRole('staff'))->toBeTrue();
 });
 
-it('rejects global Spatie roles on assignment create', function () {
-    expect(fn () => $this->createAction->execute(
+it('allows global Spatie roles on assignment create', function () {
+    $assignment = $this->createAction->execute(
         user: $this->member,
         estate: $this->estate,
         role: $this->globalRole,
         scopeType: AssignmentScope::Estate,
-    ))->toThrow(ValidationException::class, 'Global roles cannot be used');
+    );
+    expect($assignment)->toBeInstanceOf(AdministrativeAssignment::class);
 });
 
 it('requires assignment estate to match role estate', function () {
@@ -247,7 +256,7 @@ it('lets estate admins create assignments via HTTP', function () {
     actingAsAdminWithContext()
         ->post(route('admin.assignments.store'), [
             'user_id' => $this->member->id,
-            'role_id' => $this->staffRole->id,
+            'role_ids' => [$this->staffRole->id],
             'scope_type' => 'estate',
             'is_primary' => false,
             'is_active' => true,
@@ -274,7 +283,7 @@ it('lets estate admins update role and scope', function () {
 
     actingAsAdminWithContext()
         ->put(route('admin.assignments.update', $assignment), [
-            'role_id' => $this->securityRole->id,
+            'role_ids' => [$this->securityRole->id],
             'scope_type' => 'zone',
             'zone_id' => $this->zoneA->id,
             'is_primary' => false,
@@ -325,7 +334,7 @@ it('forbids managing assignments outside the active estate context', function ()
 
     actingAsAdminWithContext()
         ->put(route('admin.assignments.update', $foreignAssignment), [
-            'role_id' => $this->staffRole->id,
+            'role_ids' => [$this->staffRole->id],
             'scope_type' => 'estate',
             'is_active' => false,
         ])
@@ -341,10 +350,10 @@ it('rejects HTTP create when role belongs to another estate', function () {
         ->from(route('admin.assignments.create'))
         ->post(route('admin.assignments.store'), [
             'user_id' => $this->member->id,
-            'role_id' => $this->otherEstateRole->id,
+            'role_ids' => [$this->otherEstateRole->id],
             'scope_type' => 'estate',
         ])
-        ->assertSessionHasErrors('role_id');
+        ->assertSessionHasErrors('role_ids.0');
 });
 
 it('rejects HTTP create when zone belongs to another estate', function () {
@@ -352,7 +361,7 @@ it('rejects HTTP create when zone belongs to another estate', function () {
         ->from(route('admin.assignments.create'))
         ->post(route('admin.assignments.store'), [
             'user_id' => $this->member->id,
-            'role_id' => $this->securityRole->id,
+            'role_ids' => [$this->securityRole->id],
             'scope_type' => 'zone',
             'zone_id' => $this->foreignZone->id,
         ])
