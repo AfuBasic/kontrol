@@ -235,7 +235,9 @@ export default function Visitors({ upcomingTimeline, historyTimeline, recentVisi
                                     >
                                         <div>
                                             <p className="font-bold text-slate-900">{pass.visitor_name || 'Guest Pass'}</p>
-                                            <p className="text-[10px] text-slate-500">{pass.type}</p>
+                                            <p className="text-[10px] text-slate-500">
+                                                {pass.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                            </p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${badge.className}`}>
