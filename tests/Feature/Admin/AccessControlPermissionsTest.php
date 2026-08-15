@@ -24,14 +24,12 @@ beforeEach(function () {
 
     $this->estate = Estate::factory()->create();
 
-    // Create system roles
-    $this->adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
-    Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
-
-    // Seed permissions
-    $this->seed(PermissionSeeder::class);
+    // Seed roles and permissions
+    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
     $this->seed(FeatureSeeder::class);
     $this->seed(PlanSeeder::class);
+
+    $this->adminRole = Role::where('name', 'admin')->whereNull('estate_id')->firstOrFail();
 
     // Setup active subscription for payment feature
     EstateSubscription::create([
