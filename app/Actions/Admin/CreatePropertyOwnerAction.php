@@ -50,6 +50,7 @@ class CreatePropertyOwnerAction
                     'status' => 'pending',
                     'relationship_type' => 'property_owner',
                     'zone_id' => $zone?->id,
+                    'created_via' => 'admin_invite',
                 ]);
             } else {
                 DB::table('estate_users_membership')
@@ -57,6 +58,7 @@ class CreatePropertyOwnerAction
                     ->update([
                         'relationship_type' => 'property_owner',
                         'zone_id' => $zone?->id,
+                        'created_via' => 'admin_invite',
                     ]);
             }
 
