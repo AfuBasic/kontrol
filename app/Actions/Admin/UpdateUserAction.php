@@ -22,9 +22,32 @@ class UpdateUserAction
             ]);
 
             if (isset($data['role'])) {
-                // Ensure estate context is set
-                app(ContextManager::class)->setSystemContext($estate->id);
-                $user->syncRoles([$data['role']]);
+                $roleModel = \Spatie\Permission\Models\Role::where('name', $data['role'])
+                    ->where(function ($query) use ($estate) {
+                        $query->whereNull('estate_id')->orWhere('estate_id', $estate->id);
+                    })
+                    ->firstOrFail();
+
+                // Find active administrative assignment for this user in this estate
+                $assignment = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->first();
+
+                if ($assignment) {
+                    app(\App\Actions\Admin\UpdateAdministrativeAssignmentAction::class)->execute($assignment, [
+                        'role_id' => $roleModel->id,
+                    ]);
+                } else {
+                    app(\App\Actions\Admin\CreateAdministrativeAssignmentAction::class)->execute(
+                        user: $user,
+                        estate: $estate,
+                        role: $roleModel,
+                        scopeType: \App\Enums\AssignmentScope::Estate,
+                        zone: null,
+                        isPrimary: false,
+                        isActive: true
+                    );
+                }
             }
 
             activity()
