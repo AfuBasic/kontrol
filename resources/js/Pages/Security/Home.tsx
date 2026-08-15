@@ -238,7 +238,7 @@ export default function SecurityCommandCenter() {
                 <div className="grid grid-cols-3 gap-2.5">
                     <StatCard label="Expected" value={stats.expected_today} hint="today" />
                     <StatCard label="Validated" value={stats.validated_today} hint="today" tone="emerald" />
-                    <StatCard label="Active" value={stats.active_codes} hint="codes" />
+                    <StatCard label="Active" value={stats.active_codes} hint={stats.active_codes === 1 ? 'code' : 'codes'} />
                 </div>
 
                 {/* Recent activity feed */}
