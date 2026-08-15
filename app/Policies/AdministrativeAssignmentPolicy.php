@@ -43,6 +43,10 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
      */
     public function update(User $user, AdministrativeAssignment $assignment): bool
     {
+        if ($assignment->is_primary) {
+            return false;
+        }
+
         if (! $this->hasValidContextForEstate($assignment->estate_id)) {
             return false;
         }

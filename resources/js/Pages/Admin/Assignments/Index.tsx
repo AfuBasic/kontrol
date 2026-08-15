@@ -269,64 +269,73 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
 
                                                     {/* Status Badge */}
                                                     <td className="px-4 py-3.5">
-                                                        {assignment.is_active ? (
-                                                            <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase">
-                                                                Active
-                                                            </span>
-                                                        ) : (
-                                                            <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
-                                                                Inactive
-                                                            </span>
-                                                        )}
+                                                        <div className="flex items-center gap-1.5">
+                                                            {assignment.is_active ? (
+                                                                <span className="inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase">
+                                                                    Active
+                                                                </span>
+                                                            ) : (
+                                                                <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
+                                                                    Inactive
+                                                                </span>
+                                                            )}
+                                                            {assignment.is_primary && (
+                                                                <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-blue-700 uppercase">
+                                                                    Creator
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </td>
 
                                                     {/* Actions */}
                                                     <td className="relative px-4 py-3.5 text-right">
-                                                        <div className="flex items-center justify-end gap-1">
-                                                            <Link
-                                                                href={edit.url(assignment.id)}
-                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                title="Edit Assignment"
-                                                            >
-                                                                <Pencil className="h-3.5 w-3.5" />
-                                                            </Link>
+                                                        {!assignment.is_primary && (
+                                                            <div className="flex items-center justify-end gap-1">
+                                                                <Link
+                                                                    href={edit.url(assignment.id)}
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                    title="Edit Assignment"
+                                                                >
+                                                                    <Pencil className="h-3.5 w-3.5" />
+                                                                </Link>
 
-                                                            <button
-                                                                onClick={() =>
-                                                                    setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)
-                                                                }
-                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                            >
-                                                                <EllipsisVerticalIcon className="h-4 w-4" />
-                                                            </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)
+                                                                    }
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                >
+                                                                    <EllipsisVerticalIcon className="h-4 w-4" />
+                                                                </button>
 
-                                                            {menuOpenId === assignment.id && (
-                                                                <>
-                                                                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                                                                    <div className="absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1 ring-slate-150/50">
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                handleToggleActive(assignment);
-                                                                                setMenuOpenId(null);
-                                                                            }}
-                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                        >
-                                                                            {assignment.is_active ? (
-                                                                                <>
-                                                                                    <UserMinus className="h-3.5 w-3.5 text-amber-500" />
-                                                                                    Deactivate Authority
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                                                                    Activate Authority
-                                                                                </>
-                                                                            )}
-                                                                        </button>
-                                                                    </div>
-                                                                </>
-                                                            )}
-                                                        </div>
+                                                                {menuOpenId === assignment.id && (
+                                                                    <>
+                                                                        <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+                                                                        <div className="absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1 ring-slate-150/50">
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleToggleActive(assignment);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                            >
+                                                                                {assignment.is_active ? (
+                                                                                    <>
+                                                                                        <UserMinus className="h-3.5 w-3.5 text-amber-500" />
+                                                                                        Deactivate Authority
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                                                        Activate Authority
+                                                                                    </>
+                                                                                )}
+                                                                            </button>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             );

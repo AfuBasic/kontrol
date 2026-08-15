@@ -28,6 +28,7 @@ class AdministrativeAssignmentService
 
         return AdministrativeAssignment::query()
             ->forEstate($estateId)
+            ->where('is_primary', false)
             ->with(['user', 'role', 'zone'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
