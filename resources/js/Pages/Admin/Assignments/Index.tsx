@@ -47,9 +47,11 @@ type Props = {
         status?: string;
         scope_type?: string;
     };
+    has_assignable_roles: boolean;
+    has_assignable_users: boolean;
 };
 
-export default function AssignmentsIndex({ assignments, filters }: Props) {
+export default function AssignmentsIndex({ assignments, filters, has_assignable_roles, has_assignable_users }: Props) {
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [scopeType, setScopeType] = useState(filters.scope_type || '');
@@ -59,6 +61,7 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
 
     const isZeroData = assignments.total === 0 && !filters.search && !filters.status && !filters.scope_type;
     const isSearchEmpty = assignments.total === 0 && !isZeroData;
+    const canAssignAuthority = has_assignable_roles && has_assignable_users;
 
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
@@ -121,18 +124,42 @@ export default function AssignmentsIndex({ assignments, filters }: Props) {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link
-                        href={create.url()}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
-                    >
-                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                        Assign Authority
-                    </Link>
+                    {canAssignAuthority ? (
+                        <Link
+                            href={create.url()}
+                            className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                        >
+                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                            Assign Authority
+                        </Link>
+                    ) : (
+                        <div className="group relative">
+                            <button
+                                disabled
+                                className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-slate-200 px-4.5 py-2.5 text-xs font-black tracking-wide text-slate-400 uppercase shadow-sm"
+                            >
+                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                Assign Authority
+                            </button>
+                            <div className="absolute top-full right-0 mt-2 hidden w-64 rounded-xl border border-slate-200 bg-white p-3 text-[11px] font-bold text-slate-500 shadow-xl group-hover:block z-50">
+                                {!has_assignable_users && !has_assignable_roles
+                                    ? 'You need to add staff members and create custom roles before assigning authority.'
+                                    : !has_assignable_users
+                                      ? 'You need to add staff members to your estate before assigning authority.'
+                                      : 'You need to create custom roles before assigning authority.'}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {isZeroData ? (
-                <AuthorityEmptyState onAssignAuthority={() => router.get(create.url())} />
+                <AuthorityEmptyState 
+                    onAssignAuthority={() => router.get(create.url())} 
+                    canAssignAuthority={canAssignAuthority}
+                    hasAssignableUsers={has_assignable_users}
+                    hasAssignableRoles={has_assignable_roles}
+                />
             ) : (
                 <div className="space-y-6">
                     {/* SECTION - SEARCH & FILTERS */}

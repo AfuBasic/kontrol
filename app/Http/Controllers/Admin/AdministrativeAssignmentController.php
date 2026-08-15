@@ -40,6 +40,8 @@ class AdministrativeAssignmentController extends Controller
         return Inertia::render('Admin/Assignments/Index', [
             'assignments' => $assignments,
             'filters' => $filters,
+            'has_assignable_roles' => $this->assignmentService->getAssignableRoles()->isNotEmpty(),
+            'has_assignable_users' => $this->assignmentService->getAssignableUsers()->isNotEmpty(),
         ]);
     }
 

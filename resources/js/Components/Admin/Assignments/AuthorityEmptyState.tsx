@@ -1,10 +1,19 @@
 import { PlusIcon } from '@heroicons/react/24/outline';
+import { ShieldAlert } from 'lucide-react';
 
 interface Props {
     onAssignAuthority: () => void;
+    canAssignAuthority?: boolean;
+    hasAssignableUsers?: boolean;
+    hasAssignableRoles?: boolean;
 }
 
-export default function AuthorityEmptyState({ onAssignAuthority }: Props) {
+export default function AuthorityEmptyState({
+    onAssignAuthority,
+    canAssignAuthority = true,
+    hasAssignableUsers = true,
+    hasAssignableRoles = true,
+}: Props) {
     return (
         <div className="w-full overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
             <div className="grid grid-cols-1 md:grid-cols-5">
@@ -57,20 +66,45 @@ export default function AuthorityEmptyState({ onAssignAuthority }: Props) {
                     <p className="mt-4 max-w-md text-sm font-medium leading-relaxed text-slate-500">
                         Assign responsibilities to trusted members of your estate and define where they can operate.
                     </p>
-                    <p className="mt-2 text-xs text-slate-400">
-                        You can assign estate-wide or zone-specific authority.
-                    </p>
+                    
+                    {!canAssignAuthority && (
+                        <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 max-w-md">
+                            <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                            <div>
+                                <h4 className="text-xs font-black text-amber-900">Unable to assign authority</h4>
+                                <p className="mt-1 text-[11px] font-bold text-amber-700 leading-relaxed">
+                                    {!hasAssignableUsers && !hasAssignableRoles
+                                        ? 'You need to add staff members and create custom roles before you can assign authority.'
+                                        : !hasAssignableUsers
+                                          ? 'You need to add staff members to your estate before you can assign authority.'
+                                          : 'You need to create custom roles before you can assign authority.'}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="mt-8">
-                        <button
-                            onClick={onAssignAuthority}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
-                        >
-                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                            Assign Authority
-                        </button>
+                        {canAssignAuthority ? (
+                            <button
+                                onClick={onAssignAuthority}
+                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                            >
+                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                Assign Authority
+                            </button>
+                        ) : (
+                            <button
+                                disabled
+                                className="inline-flex cursor-not-allowed items-center gap-2 rounded-xl bg-slate-200 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-400 shadow-sm"
+                            >
+                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                                Assign Authority
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
         </div>
     );
 }
+
