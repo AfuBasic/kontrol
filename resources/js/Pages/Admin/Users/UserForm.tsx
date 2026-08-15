@@ -123,7 +123,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                         </div>
 
                         {/* SECTION: RESPONSIBILITY */}
-                        {roles && roles.length > 0 && method === 'post' && (
+                        {roles && roles.length > 0 && (
                             <div className="pt-6 border-t border-slate-100">
                                 <h2 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Responsibility</h2>
                                 <p className="mt-1 text-sm font-bold text-slate-900">What will they be responsible for?</p>
