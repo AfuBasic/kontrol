@@ -123,8 +123,8 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
             Route::post('/{user}/reject', [ResidentApprovalController::class, 'reject'])->name('reject');
         });
 
-        Route::get('residents/{resident}', [ResidentController::class, 'show'])->name('residents.show')->middleware('feature:resident-directory');
         Route::resource('residents', ResidentController::class)->except(['show'])->middleware('feature:resident-directory');
+        Route::get('residents/{resident}', [ResidentController::class, 'show'])->name('residents.show')->middleware('feature:resident-directory');
     });
 
     // Property Owners management
