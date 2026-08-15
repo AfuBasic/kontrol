@@ -24,9 +24,15 @@
                 <td style="padding-bottom: 8px; color: #0f172a; font-weight: 700; text-align: right;">{{ $estateName }}</td>
             </tr>
             <tr>
-                <td style="color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Role</td>
-                <td style="color: #0f172a; font-weight: 700; text-align: right;">Resident</td>
+                <td style="{{ $zoneName ? 'padding-bottom: 8px; ' : '' }}color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Role</td>
+                <td style="{{ $zoneName ? 'padding-bottom: 8px; ' : '' }}color: #0f172a; font-weight: 700; text-align: right;">Resident</td>
             </tr>
+            @if($zoneName)
+            <tr>
+                <td style="color: #64748b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Zone</td>
+                <td style="color: #0f172a; font-weight: 700; text-align: right;">{{ $zoneName }}</td>
+            </tr>
+            @endif
         </table>
     </div>
     
