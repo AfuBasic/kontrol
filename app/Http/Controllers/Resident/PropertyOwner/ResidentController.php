@@ -329,7 +329,10 @@ class ResidentController extends Controller
                 'password' => null,
             ]);
 
-            $estate->users()->attach($resident->id, ['status' => 'pending']);
+            $estate->users()->attach($resident->id, [
+                'status' => 'pending',
+                'created_via' => 'property_owner_invite',
+            ]);
 
             $role = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
@@ -383,7 +386,7 @@ class ResidentController extends Controller
         if ($link) {
             $link->update([
                 'max_usages' => $validated['max_usages'] ?? null,
-                'requires_approval' => $validated['requires_approval'] ?? true,
+                'requires_approval' => true,
                 'expires_at' => $validated['expires_at'] ?? null,
             ]);
         } else {
@@ -395,7 +398,7 @@ class ResidentController extends Controller
                 'is_active' => true,
                 'usage_count' => 0,
                 'max_usages' => $validated['max_usages'] ?? null,
-                'requires_approval' => $validated['requires_approval'] ?? true,
+                'requires_approval' => true,
                 'expires_at' => $validated['expires_at'] ?? null,
             ]);
         }
