@@ -31,6 +31,9 @@ class AdministrativeAssignmentService
         return AdministrativeAssignment::query()
             ->forEstate($estateId)
             ->where('is_primary', false)
+            ->whereHas('role', function ($query) {
+                $query->whereNotIn('name', ['property_owner', 'resident', 'household_member']);
+            })
             ->with(['user', 'role', 'zone'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -51,7 +54,7 @@ class AdministrativeAssignmentService
     }
 
     /**
-     * Estate-scoped Spatie roles available for assignment in the current estate.
+     * Spatie roles available for assignment in the current estate.
      *
      * @return Collection<int, Role>
      */
@@ -84,6 +87,9 @@ class AdministrativeAssignmentService
             ->whereDoesntHave('administrativeAssignments', function ($query) use ($estateId) {
                 $query->where('estate_id', $estateId)
                     ->where('is_primary', true);
+            })
+            ->whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'property_owner');
             })
             ->orderBy('name')
             ->get(['id', 'ulid', 'name', 'email']);
