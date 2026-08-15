@@ -25,7 +25,6 @@ class UpdateZoneRequest extends FormRequest
                 'max:255',
                 Rule::unique('zones', 'name')
                     ->where('estate_id', $estateId)
-                    ->whereNull('deleted_at')
                     ->ignore($zone?->id),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
