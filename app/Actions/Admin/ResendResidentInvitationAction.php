@@ -72,6 +72,6 @@ class ResendResidentInvitationAction
             ->performedOn($resident)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
-            ->log('reset password for resident '.$resident->email);
+            ->log('resent invitation for resident '.$resident->email);
     }
 }
