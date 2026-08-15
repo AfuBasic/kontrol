@@ -14,7 +14,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
     public function viewAny(User $user): bool
     {
         return app(ContextManager::class)->hasContext()
-            && $user->contextHasRole('admin');
+            && ($user->contextHasRole('admin') || $user->hasPermissionTo('assignments.view'));
     }
 
     /**
@@ -26,7 +26,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('assignments.view');
     }
 
     /**
@@ -35,7 +35,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
     public function create(User $user): bool
     {
         return app(ContextManager::class)->hasContext()
-            && $user->contextHasRole('admin');
+            && ($user->contextHasRole('admin') || $user->hasPermissionTo('assignments.create'));
     }
 
     /**
@@ -51,7 +51,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('assignments.edit');
     }
 
     /**
