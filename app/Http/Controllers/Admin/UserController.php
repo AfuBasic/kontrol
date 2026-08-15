@@ -26,7 +26,8 @@ class UserController extends Controller
         protected RoleService $roleService,
         protected UserService $userService,
         protected EstateContextService $estateContext
-    ) {}
+    ) {
+    }
 
     /**
      * Display a listing of the admins.
@@ -38,7 +39,7 @@ class UserController extends Controller
         $estateId = $this->estateContext->getEstateId();
 
         $users = $this->userService->getPaginatedUsers(10, $request->only(['search']))
-            ->through(fn ($user) => [
+            ->through(fn($user) => [
                 'ulid' => $user->ulid,
                 'id' => $user->id,
                 'name' => $user->name,

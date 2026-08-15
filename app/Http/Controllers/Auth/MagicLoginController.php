@@ -32,6 +32,18 @@ class MagicLoginController extends Controller
         // 3. Log the user in
         Auth::login($magicToken->user);
 
+        // 3.5 Accept any pending estate memberships
+        // This ensures that newly invited admins can access the admin dashboard
+        // without being blocked by authorization checks that require an active membership.
+        \Illuminate\Support\Facades\DB::table('estate_users_membership')
+            ->where('user_id', $magicToken->user->id)
+            ->where('status', 'pending')
+            ->update(['status' => 'accepted']);
+
+        if (is_null($magicToken->user->email_verified_at)) {
+            $magicToken->user->markEmailAsVerified();
+        }
+
         // 4. Regenerate session for security
         $request->session()->regenerate();
         ForceLogout::dispatchSafely($magicToken->user->id);
