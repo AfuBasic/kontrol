@@ -80,6 +80,10 @@ class AdministrativeAssignmentService
                 $query->where('estates.id', $estateId)
                     ->where('estate_users_membership.status', 'accepted');
             })
+            ->whereDoesntHave('administrativeAssignments', function ($query) use ($estateId) {
+                $query->where('estate_id', $estateId)
+                    ->where('is_primary', true);
+            })
             ->orderBy('name')
             ->get(['id', 'ulid', 'name', 'email']);
     }
