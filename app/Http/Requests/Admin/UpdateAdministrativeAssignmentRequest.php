@@ -23,8 +23,11 @@ class UpdateAdministrativeAssignmentRequest extends FormRequest
         $estateId = resolve(EstateContextService::class)->getEstateId();
 
         return [
-            'role_id' => [
+            'role_ids' => [
                 'required',
+                'array',
+            ],
+            'role_ids.*' => [
                 'integer',
                 Rule::exists('roles', 'id')->where('estate_id', $estateId),
             ],
