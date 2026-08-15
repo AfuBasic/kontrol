@@ -534,7 +534,14 @@ export default function AdminLayout({ children, title }: Props) {
 
                         <div className="flex items-center gap-2">
                             <SystemHealthMonitor hideWhenHealthy />
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-all active:scale-90 active:bg-slate-100"
+                            >
+                                <span className="sr-only">Search Kontrol</span>
+                                <Search className="h-5 w-5" />
+                            </button>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
                                 <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
                             </div>
                         </div>
