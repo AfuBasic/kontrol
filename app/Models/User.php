@@ -351,7 +351,15 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function scopeForEstate(Builder $query, int $estateId): Builder
     {
-        return $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId));
+        $context = app(ContextManager::class)->current();
+
+        return $query->whereHas('estates', function ($q) use ($estateId, $context) {
+            $q->where('estates.id', $estateId);
+
+            if ($context && $context->isZoneScoped() && $context->estateId === $estateId) {
+                $q->where('estate_users_membership.zone_id', $context->zoneId);
+            }
+        });
     }
 
     /**
