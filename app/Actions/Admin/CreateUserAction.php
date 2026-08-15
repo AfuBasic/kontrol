@@ -29,16 +29,16 @@ class CreateUserAction
             );
 
             // 2. Attach to Estate if not already attached
-            if (! $user->estates()->where('estates.id', $estate->id)->exists()) {
+            if (!$user->estates()->where('estates.id', $estate->id)->exists()) {
                 $user->estates()->attach($estate->id, ['status' => 'pending']);
             }
 
             // 3. Create authoritative assignment (which dual-writes to Spatie roles)
             $roleModel = Role::where('name', $data['role'])
-                        ->where(function ($query) use ($estate) {
-                            $query->whereNull('estate_id')->orWhere('estate_id', $estate->id);
-                        })
-                        ->firstOrFail();
+                ->where(function ($query) use ($estate) {
+                    $query->whereNull('estate_id')->orWhere('estate_id', $estate->id);
+                })
+                ->firstOrFail();
 
             app(CreateAdministrativeAssignmentAction::class)->execute(
                 user: $user,
@@ -61,7 +61,7 @@ class CreateUserAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited admin '.$user->email);
+                ->log('invited admin ' . $user->email);
 
             return $user;
         });

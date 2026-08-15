@@ -41,7 +41,7 @@ class AdminInvitationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You've been invited to join {$this->estate->name} as an Administrator",
+            subject: "You've been added to {$this->estate->name} as an Administrator",
         );
     }
 
