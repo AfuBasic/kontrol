@@ -499,4 +499,185 @@ class ResidentController extends Controller
 
         return back()->with('success', 'Invitations resent successfully.');
     }
+
+    /**
+     * Display the specified resident's profile.
+     */
+    public function show(User $resident): Response
+    {
+        $this->authorize('residents.view');
+        $estate = $this->estateContext->getEstate();
+
+        // Scope validation: Ensure resident belongs to this estate
+        $membership = $resident->estates()
+            ->where('estates.id', $estate->id)
+            ->first()
+            ?->pivot;
+
+        abort_if(! $membership, 404, 'Resident does not belong to this estate.');
+
+        // Load profile and related properties
+        $resident->load(['profile.property.zone', 'profile.propertyOwner', 'roles']);
+
+        // Count other residents at the same property
+        $residentsCount = 0;
+        $propertyId = $resident->profile?->property_id;
+        if ($propertyId) {
+            $residentsCount = User::query()
+                ->whereHas('profile', fn ($q) => $q->where('property_id', $propertyId))
+                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+                ->count();
+        }
+
+        // Fetch collection assignments (direct & property owner's if applicable)
+        $personalAssignments = \App\Models\CollectionAssignment::query()
+            ->where('user_id', $resident->id)
+            ->whereHas('collection', fn ($q) => $q->where('estate_id', $estate->id))
+            ->with('collection')
+            ->get();
+
+        $totalPaid = $personalAssignments->sum('amount_paid');
+        $totalOutstanding = $personalAssignments->sum(fn ($a) => $a->amount_due - $a->amount_paid);
+
+        $recentPayments = $personalAssignments->where('amount_paid', '>', 0)
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'name' => $a->collection->name,
+                'amount' => $a->amount_paid,
+                'status' => $a->status,
+                'date' => $a->updated_at->format('d M Y, h:i A'),
+            ])
+            ->sortByDesc('date')
+            ->take(5)
+            ->values();
+
+        $poAssignments = collect();
+        $propertyOwner = $resident->profile?->propertyOwner;
+        if ($propertyOwner) {
+            $poAssignments = \App\Models\CollectionAssignment::query()
+                ->where('user_id', $propertyOwner->id)
+                ->whereHas('collection', fn ($q) => $q->where('estate_id', $estate->id))
+                ->with('collection')
+                ->get()
+                ->map(fn ($a) => [
+                    'id' => $a->id,
+                    'name' => $a->collection->name,
+                    'amount_due' => $a->amount_due,
+                    'amount_paid' => $a->amount_paid,
+                    'outstanding' => $a->amount_due - $a->amount_paid,
+                    'status' => $a->status,
+                ]);
+        }
+
+        // Fetch Spatie Activity log events for this resident
+        $activities = \App\Models\Activity::query()
+            ->where('subject_type', User::class)
+            ->where('subject_id', $resident->id)
+            ->where('estate_id', $estate->id)
+            ->with('causer')
+            ->latest()
+            ->get()
+            ->map(fn ($act) => [
+                'id' => $act->id,
+                'description' => $act->description,
+                'causer_name' => $act->causer?->name ?? 'System',
+                'created_at' => $act->created_at->format('M d, Y · h:i A'),
+            ]);
+
+        // Load specific details for the registration avenue
+        $initiatorName = null;
+        if ($membership->initiated_by) {
+            $initiatorName = User::find($membership->initiated_by)?->name;
+        }
+
+        $lastInvitedByName = null;
+        if ($membership->last_invited_by) {
+            $lastInvitedByName = User::find($membership->last_invited_by)?->name;
+        }
+
+        $inviteLinkUrl = null;
+        if ($membership->invitation_link_id) {
+            $link = \App\Models\EstateInviteLink::find($membership->invitation_link_id);
+            if ($link) {
+                $inviteLinkUrl = url("/join/{$link->token}");
+            }
+        }
+
+        $invitation = null;
+        if ($membership->invitation_id) {
+            $invitationModel = \App\Models\Invitation::withoutGlobalScopes()
+                ->find($membership->invitation_id);
+            if ($invitationModel) {
+                $invitation = [
+                    'id' => $invitationModel->id,
+                    'token' => $invitationModel->token,
+                    'created_at' => $invitationModel->created_at?->format('d M Y, h:i A'),
+                    'accepted_at' => $invitationModel->accepted_at?->format('d M Y, h:i A'),
+                ];
+            }
+        }
+
+        // Human readable registration source
+        $avenue = match ($membership->created_via) {
+            'single_form' => 'Single resident',
+            'bulk_upload' => 'Bulk upload',
+            'email_paste' => 'Email import',
+            'invite_link' => 'Invitation link',
+            'property_owner_invite' => 'Property owner',
+            'system' => 'Unknown / Legacy',
+            default => 'Unknown / Legacy',
+        };
+
+        // Determine if account is suspended / active
+        $assignment = $resident->administrativeAssignments()
+            ->where('estate_id', $estate->id)
+            ->first();
+        $isActive = $assignment ? $assignment->is_active : true;
+
+        return Inertia::render('Admin/Residents/Show', [
+            'resident' => [
+                'id' => $resident->id,
+                'ulid' => $resident->ulid,
+                'name' => $resident->name,
+                'email' => $resident->email,
+                'phone' => $resident->profile?->phone,
+                'unit_number' => $resident->profile?->unit_number,
+                'address' => $resident->profile?->address,
+                'property_id' => $resident->profile?->property_id,
+                'property_name' => $resident->profile?->property?->name,
+                'is_active' => $isActive,
+                'email_verified_at' => $resident->email_verified_at?->format('d M Y, h:i A'),
+                'is_verified' => $resident->email_verified_at !== null,
+                'has_password' => $resident->password !== null,
+                'role_label' => $resident->roles->contains('name', 'property_owner')
+                    ? 'Property Owner'
+                    : ($resident->profile?->property_owner_id ? 'Tenant' : 'Resident'),
+            ],
+            'provenance' => [
+                'created_via' => $membership->created_via,
+                'avenue' => $avenue,
+                'initiated_by_name' => $initiatorName,
+                'initiated_at' => $membership->initiated_at?->format('d M Y, h:i A') ?? $membership->created_at?->format('d M Y, h:i A'),
+                'last_invited_by_name' => $lastInvitedByName,
+                'last_invited_at' => $membership->last_invited_at?->format('d M Y, h:i A'),
+                'accepted_at' => $membership->accepted_at?->format('d M Y, h:i A'),
+                'import_batch' => $membership->import_batch,
+                'invite_link_url' => $inviteLinkUrl,
+                'invitation' => $invitation,
+            ],
+            'residence' => [
+                'property_owner_name' => $propertyOwner?->name,
+                'property_owner_id' => $propertyOwner?->id,
+                'zone_name' => $resident->profile?->property?->zone?->name ?? 'Entire Estate',
+                'residents_count' => $residentsCount,
+            ],
+            'financials' => [
+                'total_paid' => $totalPaid,
+                'total_outstanding' => $totalOutstanding,
+                'recent_payments' => $recentPayments,
+                'property_owner_financials' => $poAssignments,
+            ],
+            'activities' => $activities,
+        ]);
+    }
 }
