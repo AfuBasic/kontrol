@@ -10,7 +10,7 @@ class UpdateZoneRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->contextHasRole('admin');
+        return $this->user() && ($this->user()->contextHasRole('admin') || $this->user()->hasPermissionTo('zones.edit'));
     }
 
     public function rules(): array
