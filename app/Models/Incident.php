@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\IncidentCategoryCast;
 use App\Enums\IncidentCategory;
 use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
@@ -71,7 +72,7 @@ class Incident extends Model
     {
         return [
             'status' => IncidentStatus::class,
-            'category' => IncidentCategory::class,
+            'category' => IncidentCategoryCast::class,
             'priority' => IncidentPriority::class,
             'source' => IncidentSource::class,
             'acknowledged_at' => 'datetime',
