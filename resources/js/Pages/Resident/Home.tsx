@@ -142,11 +142,21 @@ export default function Home({
         });
     }
 
-    if (displayActivePasses > 0) {
+    const totalExpectedToday = displayActivePasses + displayUpcomingPasses;
+    if (totalExpectedToday > 0) {
+        let desc = '';
+        if (displayActivePasses > 0 && displayUpcomingPasses > 0) {
+            desc = `${displayActivePasses} active and ${displayUpcomingPasses} upcoming visitor pass${totalExpectedToday > 1 ? 'es' : ''} expected today`;
+        } else if (displayActivePasses > 0) {
+            desc = `${displayActivePasses} visitor pass${displayActivePasses > 1 ? 'es' : ''} currently active and ready for check-in`;
+        } else {
+            desc = `${displayUpcomingPasses} visitor pass${displayUpcomingPasses > 1 ? 'es' : ''} scheduled for later today`;
+        }
+
         attentionItems.push({
             type: 'visitors',
             title: 'Visitors Expected Today',
-            desc: `${displayActivePasses} visitor pass${displayActivePasses > 1 ? 'es' : ''} currently active and ready for check-in`,
+            desc,
             href: '/resident/visitors',
             color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700',
         });
@@ -280,7 +290,7 @@ export default function Home({
                         >
                             <div className="min-w-0">
                                 <span className="block text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Visitors</span>
-                                <span className="mt-0.5 block text-base font-bold text-slate-900">{displayActivePasses}</span>
+                                <span className="mt-0.5 block text-base font-bold text-slate-900">{displayActivePasses + displayUpcomingPasses}</span>
                             </div>
                             <div className="text-indigo-650 flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50">
                                 <Users className="h-4 w-4" />
