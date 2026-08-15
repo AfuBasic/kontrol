@@ -168,6 +168,6 @@ class UserController extends Controller
 
         $action->execute($user, $estate);
 
-        return back()->with('success', 'Admin password reset and invitation resent.');
+        return back()->with('success', 'Invitation resent successfully.');
     }
 }
