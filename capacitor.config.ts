@@ -74,7 +74,7 @@ const config: CapacitorConfig = {
         },
         SplashScreen: {
             launchShowDuration: 30000,
-            launchAutoHide: false, // Handled manually in app.tsx
+            launchAutoHide: true, // Handled manually in app.tsx
             backgroundColor: '#FFFFFF',
             androidScaleType: 'CENTER',
             showSpinner: false,
@@ -82,7 +82,7 @@ const config: CapacitorConfig = {
             splashImmersive: true,
         },
         Keyboard: {
-            resize: 'body', // Best for Android to prevent viewport jumping
+            resize: 'native', // 'body' collapses WebView on older Android — native lets the OS handle insets
             style: 'DARK',
             resizeOnFullScreen: true,
         },
