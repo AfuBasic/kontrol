@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resident\PropertyOwner;
 
 use App\Actions\Admin\ResendResidentInvitationAction;
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
 use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
@@ -341,6 +342,22 @@ class ResidentController extends Controller
 
             app(ContextManager::class)->setSystemContext($estate->id);
             $resident->assignRole($role);
+
+            $property = null;
+            if (! empty($validated['property_id'])) {
+                $property = Property::find($validated['property_id']);
+            }
+
+            // Create or update Invitation in the invitations table
+            app(CreateInvitationAction::class)->execute(
+                email: $validated['email'],
+                estate: $estate,
+                relationshipType: 'resident',
+                role: null,
+                zoneId: $property?->zone_id,
+                scopeType: 'estate',
+                createdBy: $user
+            );
 
             UserProfile::create([
                 'user_id' => $resident->id,
