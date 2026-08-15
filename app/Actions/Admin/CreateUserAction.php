@@ -2,7 +2,6 @@
 
 namespace App\Actions\Admin;
 
-use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Events\Admin\UserCreated;
 use App\Models\Estate;
@@ -20,16 +19,18 @@ class CreateUserAction
     {
         return DB::transaction(function () use ($data, $estate) {
             // 1. Check if user exists or create new one
-            $user = User::create(
-                [
+            $user = User::where('email', $data['email'])->first();
+
+            if (! $user) {
+                $user = User::create([
                     'name' => $data['name'],
                     'email' => $data['email'],
                     'password' => null,
-                ]
-            );
+                ]);
+            }
 
             // 2. Attach to Estate if not already attached
-            if (!$user->estates()->where('estates.id', $estate->id)->exists()) {
+            if (! $user->estates()->where('estates.id', $estate->id)->exists()) {
                 $user->estates()->attach($estate->id, ['status' => 'pending']);
             }
 
@@ -61,7 +62,7 @@ class CreateUserAction
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
-                ->log('invited admin ' . $user->email);
+                ->log('invited admin '.$user->email);
 
             return $user;
         });

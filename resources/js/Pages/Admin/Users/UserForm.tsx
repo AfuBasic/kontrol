@@ -58,6 +58,27 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
             <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
                 <form onSubmit={submit} className="flex flex-col">
                     <div className="p-8">
+                        {/* GLOBAL ERRORS */}
+                        {Object.keys(errors).length > 0 && (
+                            <div className="mb-8 rounded-xl border border-red-200 bg-red-50 p-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100">
+                                        <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-sm font-bold text-red-900">There was a problem with your submission</h3>
+                                        <ul className="mt-2 list-disc pl-5 text-xs font-semibold text-red-700">
+                                            {Object.entries(errors).map(([key, error]) => (
+                                                <li key={key}>{error as string}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* SECTION: PERSON */}
                         <div className="mb-8">
                             <h2 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Person</h2>
