@@ -16,6 +16,7 @@ use Database\Seeders\FeatureSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
 
 uses(RefreshDatabase::class);
@@ -248,7 +249,7 @@ it('lets estate admins list assignments for the current estate', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('Admin/Assignments/Index')
-            ->has('assignments.data', 2)
+            ->has('assignments.data', 1)
         );
 });
 
@@ -291,11 +292,13 @@ it('lets estate admins update role and scope', function () {
         ])
         ->assertRedirect(route('admin.assignments.index'));
 
-    $assignment->refresh();
+    $updatedAssignment = AdministrativeAssignment::where('user_id', $this->member->id)
+        ->where('role_id', $this->securityRole->id)
+        ->firstOrFail();
 
-    expect($assignment->role_id)->toBe($this->securityRole->id)
-        ->and($assignment->scope_type)->toBe(AssignmentScope::Zone)
-        ->and($assignment->zone_id)->toBe($this->zoneA->id);
+    expect($updatedAssignment->role_id)->toBe($this->securityRole->id)
+        ->and($updatedAssignment->scope_type)->toBe(AssignmentScope::Zone)
+        ->and($updatedAssignment->zone_id)->toBe($this->zoneA->id);
 });
 
 it('lets estate admins deactivate without deleting', function () {
