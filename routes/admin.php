@@ -220,6 +220,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
     // Admin User management (manage other admins)
     Route::middleware('role:admin')->group(function (): void {
+        Route::post('users/{user}/resend-invitation', [UserController::class, 'resetPassword'])->name('users.resend-invitation');
         Route::resource('users', UserController::class)->except(['show']);
     });
 
