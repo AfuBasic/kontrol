@@ -161,80 +161,56 @@ const primaryNav: NavItem[] = baseNav;
 const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
 
 const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
-    const hasActiveChild = items.some((item: any) => isCurrentPath(item.href));
-    const [isExpanded, setIsExpanded] = useState(group === 'Main' || hasActiveChild);
-
-    useEffect(() => {
-        if (hasActiveChild) {
-            setIsExpanded(true);
-        }
-    }, [hasActiveChild]);
-
     return (
-        <div className="space-y-1">
+        <div className="space-y-1 mb-6">
             {!isCollapsed && group !== 'Main' && (
-                <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="mt-2 mb-1 flex w-full items-center justify-between px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase transition-colors hover:text-white/60"
-                >
-                    <span>{group}</span>
-                    <ChevronDownIcon className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="mt-4 mb-2 px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase">
+                    {group}
+                </div>
             )}
 
-            <AnimatePresence initial={false}>
-                {(isExpanded || isCollapsed || group === 'Main') && (
-                    <motion.div
-                        key="content"
-                        initial={(isCollapsed ? false : { height: 0, opacity: 0 }) as any}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={(isCollapsed ? false : { height: 0, opacity: 0 }) as any}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-1 overflow-hidden"
-                    >
-                        {items.map((item: any) =>
-                            item.comingSoon ? (
-                                <div
-                                    key={item.name}
-                                    title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
-                                    className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
-                                >
-                                    <item.icon className="h-5 w-5 shrink-0 text-white/30" />
-                                    {!isCollapsed && (
-                                        <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
-                                            <span>{item.name}</span>
-                                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">Soon</span>
-                                        </div>
-                                    )}
+            <div className="space-y-1">
+                {items.map((item: any) =>
+                    item.comingSoon ? (
+                        <div
+                            key={item.name}
+                            title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
+                            className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
+                        >
+                            <item.icon className="h-5 w-5 shrink-0 text-white/30" />
+                            {!isCollapsed && (
+                                <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
+                                    <span>{item.name}</span>
+                                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">Soon</span>
                                 </div>
-                            ) : (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    prefetch="click"
-                                    title={isCollapsed ? item.name : undefined}
-                                    className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
-                                        isCurrentPath(item.href)
-                                            ? 'bg-white/20 text-white shadow-sm'
-                                            : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                >
-                                    {isCurrentPath(item.href) && (
-                                        <motion.div
-                                            layoutId="activeIndicator"
-                                            className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
-                                        />
-                                    )}
-                                    <item.icon
-                                        className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
-                                    />
-                                    {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
-                                </Link>
-                            ),
-                        )}
-                    </motion.div>
+                            )}
+                        </div>
+                    ) : (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            prefetch="click"
+                            title={isCollapsed ? item.name : undefined}
+                            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
+                                isCurrentPath(item.href)
+                                    ? 'bg-white/20 text-white shadow-sm'
+                                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            {isCurrentPath(item.href) && (
+                                <motion.div
+                                    layoutId="activeIndicator"
+                                    className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
+                                />
+                            )}
+                            <item.icon
+                                className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
+                            />
+                            {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
+                        </Link>
+                    ),
                 )}
-            </AnimatePresence>
+            </div>
         </div>
     );
 };
