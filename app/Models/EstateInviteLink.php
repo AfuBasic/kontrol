@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
+use App\Traits\ZoneScoped;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 /**
  * @property int $id
  * @property int $estate_id
@@ -35,8 +34,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  *
  * @mixin \Eloquent
  */
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class EstateInviteLink extends Model
 {
+    use ZoneScoped;
+
     protected $fillable = [
         'estate_id',
         'user_id',
