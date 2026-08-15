@@ -36,10 +36,11 @@ class SendBulkResidentInvitationsJob implements ShouldQueue
         // Process invitations in chunks to avoid memory issues
         Invitation::withoutGlobalScopes()
             ->whereIn('id', $this->invitationIds)
+            ->with('zone')
             ->cursor()
             ->each(function (Invitation $invitation) use ($estate) {
                 Mail::to($invitation->email)->queue(
-                    new ResidentInvitationMail($invitation, $estate, false)
+                    new ResidentInvitationMail($invitation, $estate, null, $invitation->zone?->name)
                 );
             });
     }
