@@ -128,3 +128,21 @@ test('admin can archive a zone', function () {
         'id' => $zone->id,
     ]);
 });
+
+test('admin cannot create a zone with a name that is already taken by a soft deleted zone', function () {
+    $zone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Archived Zone',
+    ]);
+    $zone->delete(); // Soft delete it
+
+    $response = $this->actingAs($this->admin)
+        ->post('/admin/zones', [
+            'name' => 'Archived Zone',
+            'description' => 'Try to recreate archived zone',
+            'is_active' => true,
+        ]);
+
+    $response->assertSessionHasErrors(['name']);
+});
+
