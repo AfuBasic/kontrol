@@ -61,7 +61,7 @@ class UserController extends Controller
     {
         $this->authorize('users.create');
 
-        $roles = $this->roleService->getAssignableRoles();
+        $roles = $this->roleService->getManageableRoles();
 
         return Inertia::render('Admin/Users/Create', [
             'roles' => $roles,
@@ -94,7 +94,7 @@ class UserController extends Controller
         $this->authorize('users.edit');
 
         $estateId = $this->estateContext->getEstateId();
-        $roles = $this->roleService->getAssignableRoles();
+        $roles = $this->roleService->getManageableRoles();
 
         // Load roles for the user in the context of this estate
         app(ContextManager::class)->setSystemContext($estateId);

@@ -210,6 +210,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::put('assignments/{assignment}', [AdministrativeAssignmentController::class, 'update'])->name('assignments.update');
         Route::post('assignments/{assignment}/deactivate', [AdministrativeAssignmentController::class, 'deactivate'])->name('assignments.deactivate');
         Route::post('assignments/{assignment}/activate', [AdministrativeAssignmentController::class, 'activate'])->name('assignments.activate');
+        Route::delete('assignments/{assignment}', [AdministrativeAssignmentController::class, 'destroy'])->name('assignments.destroy');
     });
 
     // Notifications

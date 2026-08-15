@@ -1,8 +1,8 @@
 import { EllipsisVerticalIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { ShieldCheck, UserMinus, X, Pencil } from 'lucide-react';
+import { ShieldCheck, UserMinus, X, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { activate, create, deactivate, edit, index } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
+import { activate, create, deactivate, destroy, edit, index } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import AuthorityEmptyState from '@/Components/Admin/Assignments/AuthorityEmptyState';
 import { useDebounce } from '@/Hooks/useDebounce';
 
@@ -99,6 +99,18 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
         }
 
         router.post(action.url(assignment.id), {}, { preserveScroll: true });
+    }
+
+    function handleDelete(assignment: Assignment) {
+        if (
+            !confirm(
+                `Are you sure you want to completely delete this authority?\n\nThis action cannot be undone and will immediately revoke their access for this role.`
+            )
+        ) {
+            return;
+        }
+
+        router.delete(destroy.url(assignment.id), { preserveScroll: true });
     }
 
     return (
@@ -322,6 +334,16 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                                                                                         Activate Authority
                                                                                     </>
                                                                                 )}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleDelete(assignment);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                            >
+                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                                Delete Authority
                                                                             </button>
                                                                         </div>
                                                                     </>

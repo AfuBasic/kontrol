@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Actions\Admin\DeactivateAdministrativeAssignmentAction;
+use App\Actions\Admin\DeleteAdministrativeAssignmentAction;
 use App\Actions\Admin\UpdateAdministrativeAssignmentAction;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
@@ -131,6 +132,20 @@ class AdministrativeAssignmentController extends Controller
         $action->execute($assignment, ['is_active' => true]);
 
         return back()->with('success', 'Assignment activated successfully.');
+    }
+
+    public function destroy(
+        AdministrativeAssignment $assignment,
+        DeleteAdministrativeAssignmentAction $action
+    ): RedirectResponse {
+        $this->authorize('delete', $assignment);
+        $this->ensureAssignmentInCurrentEstate($assignment);
+
+        $action->execute($assignment);
+
+        return redirect()
+            ->route('admin.assignments.index')
+            ->with('success', 'Assignment deleted successfully.');
     }
 
     /**

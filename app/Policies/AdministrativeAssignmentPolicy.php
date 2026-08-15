@@ -61,4 +61,12 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
     {
         return $this->update($user, $assignment);
     }
+
+    /**
+     * Determine whether the user can delete the assignment.
+     */
+    public function delete(User $user, AdministrativeAssignment $assignment): bool
+    {
+        return $this->update($user, $assignment);
+    }
 }
