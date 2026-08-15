@@ -28,7 +28,7 @@ class ResendResidentInvitationAction
             ->first();
 
         if (! $invitation) {
-            $role = $resident->roles()->where('estate_id', $estate->id)->first()
+            $role = $resident->roles()->where('roles.estate_id', $estate->id)->first()
                 ?? Role::where('name', 'resident')->first();
 
             $zoneId = $resident->profile?->zone_id;
