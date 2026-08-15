@@ -148,7 +148,7 @@ test('accepting invitation sets accepted_at timestamp', function () {
 
     // Accept invitation
     $acceptAction = app(AcceptInvitationAction::class);
-    $acceptAction->execute($invitation->token, 'password123');
+    $acceptAction->execute($invitation, $resident);
 
     $membership = DB::table('estate_users_membership')
         ->where('estate_id', $this->estate->id)
