@@ -131,7 +131,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                     They will be granted estate-wide access for this responsibility. You can adjust this later in Staff & Authority.
                                 </p>
                                 
-                                <div className="mt-5 max-w-md">
+                                <div className="mt-5 w-full">
                                     <SearchableSelect
                                         options={roles.map((r) => ({
                                             value: r.name,
