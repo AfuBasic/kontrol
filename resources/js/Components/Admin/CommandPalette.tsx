@@ -62,23 +62,24 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
         }
     };
 
+    const matchQuery = (item: NavItem, searchQuery: string) => {
+        const terms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+        if (terms.length === 0) return true;
+        
+        return terms.every(term => {
+            return item.name.toLowerCase().includes(term) ||
+                   (item.description && item.description.toLowerCase().includes(term)) ||
+                   (item.keywords && item.keywords.some(k => k.toLowerCase().includes(term)));
+        });
+    };
+
     const filteredNav = query === '' 
         ? accessibleNav 
-        : accessibleNav.filter((item) => {
-            const q = query.toLowerCase();
-            return item.name.toLowerCase().includes(q) || 
-                   (item.description && item.description.toLowerCase().includes(q)) ||
-                   (item.keywords && item.keywords.some(k => k.toLowerCase().includes(q)));
-        });
+        : accessibleNav.filter((item) => matchQuery(item, query));
 
     const filteredActions = query === '' 
         ? [] // Don't show all actions when query is empty to avoid clutter
-        : accessibleActions.filter((item) => {
-            const q = query.toLowerCase();
-            return item.name.toLowerCase().includes(q) || 
-                   (item.description && item.description.toLowerCase().includes(q)) ||
-                   (item.keywords && item.keywords.some(k => k.toLowerCase().includes(q)));
-        });
+        : accessibleActions.filter((item) => matchQuery(item, query));
 
     const handleSelect = (item: NavItem | null) => {
         if (!item) return;
