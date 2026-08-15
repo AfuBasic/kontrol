@@ -12,6 +12,10 @@ use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\UpdateResidentAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
+use App\Models\Activity;
+use App\Models\CollectionAssignment;
+use App\Models\EstateInviteLink;
+use App\Models\Invitation;
 use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
@@ -20,6 +24,7 @@ use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -530,7 +535,7 @@ class ResidentController extends Controller
         }
 
         // Fetch collection assignments (direct & property owner's if applicable)
-        $personalAssignments = \App\Models\CollectionAssignment::query()
+        $personalAssignments = CollectionAssignment::query()
             ->where('user_id', $resident->id)
             ->whereHas('collection', fn ($q) => $q->where('estate_id', $estate->id))
             ->with('collection')
@@ -554,7 +559,7 @@ class ResidentController extends Controller
         $poAssignments = collect();
         $propertyOwner = $resident->profile?->propertyOwner;
         if ($propertyOwner) {
-            $poAssignments = \App\Models\CollectionAssignment::query()
+            $poAssignments = CollectionAssignment::query()
                 ->where('user_id', $propertyOwner->id)
                 ->whereHas('collection', fn ($q) => $q->where('estate_id', $estate->id))
                 ->with('collection')
@@ -570,7 +575,7 @@ class ResidentController extends Controller
         }
 
         // Fetch Spatie Activity log events for this resident
-        $activities = \App\Models\Activity::query()
+        $activities = Activity::query()
             ->where('subject_type', User::class)
             ->where('subject_id', $resident->id)
             ->where('estate_id', $estate->id)
@@ -597,7 +602,7 @@ class ResidentController extends Controller
 
         $inviteLinkUrl = null;
         if ($membership->invitation_link_id) {
-            $link = \App\Models\EstateInviteLink::find($membership->invitation_link_id);
+            $link = EstateInviteLink::find($membership->invitation_link_id);
             if ($link) {
                 $inviteLinkUrl = url("/join/{$link->token}");
             }
@@ -605,7 +610,7 @@ class ResidentController extends Controller
 
         $invitation = null;
         if ($membership->invitation_id) {
-            $invitationModel = \App\Models\Invitation::withoutGlobalScopes()
+            $invitationModel = Invitation::withoutGlobalScopes()
                 ->find($membership->invitation_id);
             if ($invitationModel) {
                 $invitation = [
@@ -651,7 +656,11 @@ class ResidentController extends Controller
                 'has_password' => $resident->password !== null,
                 'role_label' => $resident->roles->contains('name', 'property_owner')
                     ? 'Property Owner'
-                    : ($resident->profile?->property_owner_id ? 'Tenant' : 'Resident'),
+                    : ($resident->roles->contains('name', 'security')
+                        ? 'Security Personnel'
+                        : ($resident->roles->contains('name', 'admin')
+                            ? 'Administrator'
+                            : ($resident->profile?->property_owner_id ? 'Tenant' : ($resident->roles->isNotEmpty() ? Str::title(str_replace('_', ' ', $resident->roles->first()->name)) : 'Resident')))),
             ],
             'provenance' => [
                 'created_via' => $membership->created_via,

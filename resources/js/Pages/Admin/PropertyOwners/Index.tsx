@@ -16,6 +16,7 @@ import {
     X,
     Users,
     LinkIcon,
+    Eye,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { properties, residents, create, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
@@ -532,9 +533,12 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                             {initial}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <span className="block max-w-[130px] truncate text-xs font-bold text-slate-900">
+                                                            <Link
+                                                                href={`/admin/residents/${owner.id}`}
+                                                                className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                            >
                                                                 {owner.name}
-                                                            </span>
+                                                            </Link>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -597,6 +601,15 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                 {/* Actions */}
                                                 <td className="relative px-4 py-3.5 text-right">
                                                     <div className="flex items-center justify-end gap-1">
+                                                        {/* Direct Profile View */}
+                                                        <Link
+                                                            href={`/admin/residents/${owner.id}`}
+                                                            className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                            title="View Profile"
+                                                        >
+                                                            <Eye className="h-3.5 w-3.5" />
+                                                        </Link>
+                                                        
                                                         {/* Direct Profile Edit */}
                                                         <Link
                                                             href={`/admin/property-owners/${owner.id}/edit`}
