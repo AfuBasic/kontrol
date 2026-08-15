@@ -6,6 +6,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\User;
 use App\Models\Zone;
 use App\Services\EstateContextService;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
@@ -59,6 +60,7 @@ class AdministrativeAssignmentService
 
         return Role::query()
             ->where('estate_id', $estateId)
+            ->whereNotIn('name', RoleSeeder::RESERVED_ROLES)
             ->orderBy('name')
             ->get(['id', 'name', 'estate_id']);
     }
