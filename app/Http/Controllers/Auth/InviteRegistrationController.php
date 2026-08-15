@@ -82,6 +82,7 @@ class InviteRegistrationController extends Controller
 
             $user->estates()->attach($inviteLink->estate_id, [
                 'status' => $status,
+                'created_via' => 'invite_link',
             ]);
 
             app(ContextManager::class)->setSystemContext($inviteLink->estate_id);
@@ -134,6 +135,16 @@ class InviteRegistrationController extends Controller
 
             // Increment usage count
             $inviteLink->increment('usage_count');
+
+            activity()
+                ->performedOn($user)
+                ->causedBy($user)
+                ->withProperties([
+                    'estate_id' => $inviteLink->estate_id,
+                    'invite_link_id' => $inviteLink->id,
+                    'invite_link_creator' => $inviteLink->user_id,
+                ])
+                ->log("resident self-registered via invite link (token: {$inviteLink->token})");
 
             // Notify estate admins only if manual approval is required
             if ($inviteLink->requires_approval) {
