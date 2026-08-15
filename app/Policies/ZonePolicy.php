@@ -13,7 +13,7 @@ class ZonePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('zones.view');
     }
 
     /**
@@ -27,7 +27,7 @@ class ZonePolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('zones.view');
     }
 
     /**
@@ -35,7 +35,7 @@ class ZonePolicy
      */
     public function create(User $user): bool
     {
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('zones.create');
     }
 
     /**
@@ -49,7 +49,7 @@ class ZonePolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('zones.edit');
     }
 
     /**
@@ -63,6 +63,6 @@ class ZonePolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->hasPermissionTo('zones.delete');
     }
 }
