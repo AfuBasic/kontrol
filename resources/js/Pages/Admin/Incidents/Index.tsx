@@ -969,7 +969,7 @@ export default function IncidentsIndex({
                             issues, or security concerns directly.
                         </p>
                         <Link
-                            href="/resident/incidents/create"
+                            href="/admin/incidents/create"
                             className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
                         >
                             <Plus className="h-4 w-4" />
