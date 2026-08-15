@@ -10,7 +10,7 @@ class StoreZoneRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->contextHasRole('admin');
+        return $this->user() && ($this->user()->contextHasRole('admin') || $this->user()->hasPermissionTo('zones.create'));
     }
 
     public function rules(): array
