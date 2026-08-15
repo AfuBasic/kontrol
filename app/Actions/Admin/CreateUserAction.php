@@ -3,11 +3,13 @@
 namespace App\Actions\Admin;
 
 use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
 use App\Events\Admin\UserCreated;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class CreateUserAction
 {
@@ -31,12 +33,22 @@ class CreateUserAction
                 $user->estates()->attach($estate->id, ['status' => 'pending']);
             }
 
-            // 3. Assign Role scoped to this estate
-            app(ContextManager::class)->setSystemContext($estate->id);
+            // 3. Create authoritative assignment (which dual-writes to Spatie roles)
+            $roleModel = Role::where('name', $data['role'])
+                        ->where(function ($query) use ($estate) {
+                            $query->whereNull('estate_id')->orWhere('estate_id', $estate->id);
+                        })
+                        ->firstOrFail();
 
-            if (! $user->hasRole($data['role'])) {
-                $user->assignRole($data['role']);
-            }
+            app(CreateAdministrativeAssignmentAction::class)->execute(
+                user: $user,
+                estate: $estate,
+                role: $roleModel,
+                scopeType: AssignmentScope::Estate,
+                zone: null,
+                isPrimary: false,
+                isActive: true
+            );
 
             // 4. Dispatch event (handles email invitation and realtime notification)
             if ($user->password === null) {
