@@ -9,9 +9,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Models\Scopes\CollectionAssignmentScope;
+
 class CollectionAssignment extends Model implements ViolatableInterface
 {
     use GeneratesUlid, HasFactory;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new CollectionAssignmentScope);
+    }
 
     protected $fillable = [
         'collection_id',
