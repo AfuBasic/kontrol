@@ -2,13 +2,7 @@ import { EllipsisVerticalIcon, MagnifyingGlassIcon, PlusIcon } from '@heroicons/
 import { Head, Link, router } from '@inertiajs/react';
 import { ShieldCheck, UserMinus, X, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-    activate,
-    create,
-    deactivate,
-    edit,
-    index,
-} from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
+import { activate, create, deactivate, edit, index } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import AuthorityEmptyState from '@/Components/Admin/Assignments/AuthorityEmptyState';
 import { useDebounce } from '@/Hooks/useDebounce';
 
@@ -65,11 +59,7 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
 
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(
-                index.url(),
-                { search: debouncedSearch, status, scope_type: scopeType },
-                { preserveState: true, replace: true },
-            );
+            router.get(index.url(), { search: debouncedSearch, status, scope_type: scopeType }, { preserveState: true, replace: true });
         }
     }, [debouncedSearch, filters.search, status, scopeType]);
 
@@ -124,38 +114,19 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {canAssignAuthority ? (
-                        <Link
-                            href={create.url()}
-                            className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
-                        >
-                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                            Assign Authority
-                        </Link>
-                    ) : (
-                        <div className="group relative">
-                            <button
-                                disabled
-                                className="flex cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-slate-200 px-4.5 py-2.5 text-xs font-black tracking-wide text-slate-400 uppercase shadow-sm"
-                            >
-                                <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                                Assign Authority
-                            </button>
-                            <div className="absolute top-full right-0 mt-2 hidden w-64 rounded-xl border border-slate-200 bg-white p-3 text-[11px] font-bold text-slate-500 shadow-xl group-hover:block z-50">
-                                {!has_assignable_users && !has_assignable_roles
-                                    ? 'You need to add staff members and create custom roles before assigning authority.'
-                                    : !has_assignable_users
-                                      ? 'You need to add staff members to your estate before assigning authority.'
-                                      : 'You need to create custom roles before assigning authority.'}
-                            </div>
-                        </div>
-                    )}
+                    <Link
+                        href={create.url()}
+                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                    >
+                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                        Assign Authority
+                    </Link>
                 </div>
             </div>
 
             {isZeroData ? (
-                <AuthorityEmptyState 
-                    onAssignAuthority={() => router.get(create.url())} 
+                <AuthorityEmptyState
+                    onAssignAuthority={() => router.get(create.url())}
                     canAssignAuthority={canAssignAuthority}
                     hasAssignableUsers={has_assignable_users}
                     hasAssignableRoles={has_assignable_roles}
@@ -219,9 +190,7 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                                     <MagnifyingGlassIcon className="h-6 w-6 text-slate-400" />
                                 </div>
                                 <h3 className="text-sm font-black text-slate-900">No assignments match your search</h3>
-                                <p className="mt-1 text-xs font-semibold text-slate-500">
-                                    Try another name, responsibility, or clear your filters.
-                                </p>
+                                <p className="mt-1 text-xs font-semibold text-slate-500">Try another name, responsibility, or clear your filters.</p>
                             </div>
                         ) : (
                             <div className="min-h-[280px] overflow-x-auto">
@@ -288,9 +257,7 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                                                         {assignment.scope_type === 'estate' ? (
                                                             <span className="text-xs font-bold text-slate-700">Entire estate</span>
                                                         ) : (
-                                                            <span className="text-xs font-bold text-slate-700">
-                                                                {assignment.zone?.name ?? '-'}
-                                                            </span>
+                                                            <span className="text-xs font-bold text-slate-700">{assignment.zone?.name ?? '-'}</span>
                                                         )}
                                                     </td>
 
@@ -327,9 +294,7 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                                                                 </Link>
 
                                                                 <button
-                                                                    onClick={() =>
-                                                                        setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)
-                                                                    }
+                                                                    onClick={() => setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)}
                                                                     className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                                 >
                                                                     <EllipsisVerticalIcon className="h-4 w-4" />
@@ -338,7 +303,7 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                                                                 {menuOpenId === assignment.id && (
                                                                     <>
                                                                         <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                                                                        <div className="absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1 ring-slate-150/50">
+                                                                        <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
                                                                             <button
                                                                                 onClick={() => {
                                                                                     handleToggleActive(assignment);
