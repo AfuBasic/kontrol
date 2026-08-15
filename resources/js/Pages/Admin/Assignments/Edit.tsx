@@ -301,7 +301,13 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                             <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Authority summary</h3>
                                             <p className="mt-1.5 text-sm leading-relaxed text-slate-700">
                                                 <span className="font-black text-slate-900">{assignment.user.name}</span> will have{' '}
-                                                <span className="font-black text-slate-900">{selectedRole?.name}</span> responsibility across{' '}
+                                                <span className="font-black text-slate-900">
+                                                    {roles
+                                                        .filter((r) => data.role_ids.map(String).includes(r.id.toString()))
+                                                        .map((r) => r.name)
+                                                        .join(', ')}
+                                                </span>{' '}
+                                                responsibility across{' '}
                                                 <span className="font-black text-slate-900">
                                                     {data.scope_type === 'estate' ? 'the entire estate' : selectedZone?.name}
                                                 </span>
