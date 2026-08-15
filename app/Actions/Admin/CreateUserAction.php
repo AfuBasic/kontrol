@@ -31,7 +31,7 @@ class CreateUserAction
 
             // 2. Attach to Estate if not already attached
             if (! $user->estates()->where('estates.id', $estate->id)->exists()) {
-                $user->estates()->attach($estate->id, ['status' => 'pending']);
+                $user->estates()->attach($estate->id, ['status' => 'pending', 'created_via' => 'admin_invite']);
             }
 
             // 3. Create authoritative assignment (which dual-writes to Spatie roles)
