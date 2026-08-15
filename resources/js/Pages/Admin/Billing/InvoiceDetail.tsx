@@ -324,7 +324,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
                                 <div className="relative z-10 flex flex-wrap items-end justify-between gap-6 border-b border-slate-100 p-6 pb-4 sm:p-10">
                                     <div className="max-w-xs">
                                         <div className="mb-6 flex items-center gap-2.5">
-                                            <div className="flex h-9 w-9 rotate-[-4deg] items-center justify-center rounded-xl bg-primary-600 shadow-lg shadow-primary-200 transition-transform group-hover:rotate-0">
+                                            <div className="flex h-9 w-9 rotate-[-4deg] items-center justify-center rounded-xl bg-slate-950 shadow-lg shadow-sm transition-transform group-hover:rotate-0">
                                                 <DocumentTextIcon className="h-5 w-5 text-white" />
                                             </div>
                                             <span className="text-xl font-black tracking-tight text-gray-900 uppercase">Kontrol.</span>
@@ -414,7 +414,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
                                             </div>
                                             <div className="border-t border-slate-100 pt-3">
                                                 <div className="group/total relative flex items-center justify-between overflow-hidden rounded-2xl bg-slate-900 p-4 shadow-xl shadow-slate-200">
-                                                    <div className="absolute inset-0 bg-primary-600 opacity-0 transition-opacity group-hover/total:opacity-10" />
+                                                    <div className="absolute inset-0 bg-slate-950 opacity-0 transition-opacity group-hover/total:opacity-10" />
                                                     <span className="relative z-10 text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                                         Payable Total
                                                     </span>
@@ -468,7 +468,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
                                             className={`group relative h-14 w-full rounded-2xl text-xs font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${
                                                 isOverdue
                                                     ? 'bg-red-600 shadow-red-100 hover:bg-red-700'
-                                                    : 'bg-primary-600 shadow-primary-200 hover:bg-primary-700'
+                                                    : 'bg-slate-950 shadow-sm hover:bg-slate-800'
                                             }`}
                                         >
                                             <span className="flex items-center justify-center gap-3">

@@ -190,7 +190,7 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     <button
                         onClick={handleComplete}
                         disabled={processing}
-                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-700 hover:shadow-primary-600/30 active:scale-95 disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 hover:shadow-sm active:scale-95 disabled:opacity-50"
                     >
                         {processing ? 'Loading...' : 'Continue to estate dashboard'}
                         <ChevronRight className="h-5 w-5" />

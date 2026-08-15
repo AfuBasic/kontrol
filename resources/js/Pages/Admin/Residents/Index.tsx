@@ -395,14 +395,14 @@ export default function Residents({
                                     if (insight.includes('require profile completion')) return null;
                                     return (
                                         <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-950" />
                                             <span>{insight}</span>
                                         </li>
                                     );
                                 })}
                                 {incompleteResidents && incompleteResidents.length > 0 && (
                                     <li className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-950" />
                                         <span>
                                             {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile
                                             completion:{' '}

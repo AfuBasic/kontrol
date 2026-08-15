@@ -426,7 +426,7 @@ export default function CollectionsIndex({
                         {hasBanking ? (
                             <Link
                                 href={create.url()}
-                                className="flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95"
+                                className="flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                             >
                                 <PlusIcon className="h-3.5 w-3.5" /> New Collection
                             </Link>
@@ -459,7 +459,7 @@ export default function CollectionsIndex({
                         {hasBanking ? (
                             <Link
                                 href={create.url()}
-                                className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[#1F6FDB] px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-blue-700 active:scale-95"
+                                className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[#1F6FDB] px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-blue-500/20 transition-all hover:bg-slate-800 active:scale-95"
                             >
                                 <PlusIcon className="h-4 w-4" />
                                 New Collection
@@ -1142,14 +1142,14 @@ export default function CollectionsIndex({
                                                                                     setSelectedCollection(c);
                                                                                     setIsPublishModalOpen(true);
                                                                                 }}
-                                                                                className="flex h-7 items-center gap-1 rounded-lg bg-[#1F6FDB] px-2.5 text-[9px] font-bold text-white transition-all hover:bg-blue-700 active:scale-95"
+                                                                                className="flex h-7 items-center gap-1 rounded-lg bg-[#1F6FDB] px-2.5 text-[9px] font-bold text-white transition-all hover:bg-slate-800 active:scale-95"
                                                                             >
                                                                                 <Zap className="h-3 w-3" /> Publish
                                                                             </button>
                                                                         )}
                                                                         <Link
                                                                             href={show.url(c.ulid)}
-                                                                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition-all hover:bg-blue-500 hover:text-white"
+                                                                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 text-slate-500 transition-all hover:bg-slate-800 hover:text-white"
                                                                         >
                                                                             <ArrowRight className="h-3.5 w-3.5" />
                                                                         </Link>
@@ -1176,7 +1176,7 @@ export default function CollectionsIndex({
                                         {hasBanking && !filters.search && !filters.status && (
                                             <Link
                                                 href={create.url()}
-                                                className="mt-6 flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-blue-700 active:scale-95"
+                                                className="mt-6 flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-slate-800 active:scale-95"
                                             >
                                                 <PlusIcon className="h-4 w-4" /> Create Collection
                                             </Link>

@@ -153,7 +153,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                     <button
                         type="button"
                         onClick={apply}
-                        className="h-10 rounded-xl bg-[#1F6FDB] px-4 text-xs font-black tracking-wider text-white uppercase transition hover:bg-blue-700"
+                        className="h-10 rounded-xl bg-[#1F6FDB] px-4 text-xs font-black tracking-wider text-white uppercase transition hover:bg-slate-800"
                     >
                         Apply
                     </button>

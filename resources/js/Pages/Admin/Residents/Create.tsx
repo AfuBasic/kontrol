@@ -288,7 +288,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="Enter resident's full name"
                                     />
                                     {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -304,7 +304,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                         id="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="resident@example.com"
                                     />
                                     <p className="mt-1 text-xs text-gray-500">An invitation will be sent to this email.</p>
@@ -321,7 +321,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                         id="phone"
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="+1 (555) 000-0000"
                                     />
                                     {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
@@ -337,7 +337,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                         id="unit_number"
                                         value={data.unit_number}
                                         onChange={(e) => setData('unit_number', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="e.g., A-101, Block 2 Unit 5"
                                     />
                                     {errors.unit_number && <p className="mt-1 text-sm text-red-600">{errors.unit_number}</p>}
@@ -353,7 +353,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                         value={data.address}
                                         onChange={(e) => setData('address', e.target.value)}
                                         rows={3}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="Enter resident's address within the estate"
                                     />
                                     {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
@@ -486,7 +486,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                                    className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                                 >
                                     {processing ? 'Sending Invitation...' : 'Send Invitation'}
                                 </button>
@@ -658,7 +658,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}
@@ -691,7 +691,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                         value={pasteText}
                                         onChange={(e) => handlePasteChange(e.target.value)}
                                         rows={6}
-                                        className="mt-3 block w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-3 block w-full rounded-lg border border-gray-300 px-4 py-3 font-mono text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="john@example.com, jane@example.com&#10;mike@example.com&#10;sarah@example.com - tom@example.com"
                                     />
                                 </div>
@@ -824,7 +824,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}

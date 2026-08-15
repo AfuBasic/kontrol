@@ -233,7 +233,7 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                                 onClick={() => setFilter('category', cat.value)}
                                 className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition ${
                                     isActive
-                                        ? 'bg-primary-600 text-white shadow-2xs'
+                                        ? 'bg-slate-950 text-white shadow-2xs'
                                         : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                                 }`}
                             >

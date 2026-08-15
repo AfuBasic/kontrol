@@ -336,7 +336,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                                                 selected ? data.zone_ids.filter((id) => id !== zone.id) : [...data.zone_ids, zone.id],
                                                             );
                                                         }}
-                                                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                        className="rounded border-gray-300 text-primary-600 focus:ring-slate-900"
                                                     />
                                                     <MapPin className="h-4 w-4 text-gray-500" />
                                                     <span className="text-xs font-medium text-gray-900">{zone.name}</span>
@@ -435,7 +435,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                                    className="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                                 >
                                     {processing ? 'Saving...' : data.status === 'published' ? 'Publish' : 'Save draft'}
                                 </button>

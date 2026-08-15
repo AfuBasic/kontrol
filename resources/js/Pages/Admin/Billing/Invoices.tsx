@@ -80,7 +80,7 @@ export default function InvoicesPage({ invoices }: Props) {
                     </div>
                     <Link
                         href={InvoiceController.index.url()}
-                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                        className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-slate-800"
                     >
                         Back to Billing
                     </Link>
@@ -100,7 +100,7 @@ export default function InvoicesPage({ invoices }: Props) {
                         <button
                             onClick={() => setStatusFilter('')}
                             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                                statusFilter === '' ? 'bg-primary-600 text-white' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                statusFilter === '' ? 'bg-slate-950 text-white' : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
                             }`}
                         >
                             All
@@ -231,7 +231,7 @@ export default function InvoicesPage({ invoices }: Props) {
                                                         key={idx}
                                                         href={link.url}
                                                         className={`rounded-lg p-2 transition-colors ${
-                                                            link.active ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                                                            link.active ? 'bg-slate-950 text-white' : 'text-gray-600 hover:bg-gray-100'
                                                         }`}
                                                     >
                                                         {link.label.includes('&laquo;') ? (
@@ -247,7 +247,7 @@ export default function InvoicesPage({ invoices }: Props) {
                                                     key={idx}
                                                     href={link.url}
                                                     className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                        link.active ? 'bg-primary-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+                                                        link.active ? 'bg-slate-950 text-white' : 'text-gray-600 hover:bg-gray-100'
                                                     }`}
                                                 >
                                                     {link.label}

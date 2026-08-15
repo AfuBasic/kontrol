@@ -150,7 +150,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                         <button
                             onClick={() => setIsApproveAllModalOpen(true)}
                             disabled={isApprovingAll}
-                            className="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
+                            className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
                         >
                             {isApprovingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                             Approve All Pending
@@ -237,7 +237,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             <button
                                                 onClick={() => handleApprove(resident)}
                                                 disabled={processingId === (resident.ulid ?? String(resident.id))}
-                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-primary-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-slate-950 py-3.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -331,7 +331,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                         <button
                                                             onClick={() => handleApprove(resident)}
                                                             disabled={processingId === (resident.ulid ?? String(resident.id))}
-                                                            className="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
+                                                            className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
                                                         >
                                                             {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -385,7 +385,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             href={link.url || '#'}
                                             className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
                                                 link.active
-                                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                                    ? 'bg-slate-950 text-white shadow-lg shadow-blue-500/20'
                                                     : link.url
                                                       ? 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
                                                       : 'cursor-not-allowed text-slate-400 opacity-30'

@@ -71,7 +71,7 @@ export default function EditSecurity({ security }: Props) {
                                 className={`mt-1 block w-full rounded-lg border px-4 py-2.5 text-sm transition-all focus:ring-1 focus:outline-none ${
                                     isVerified
                                         ? 'cursor-not-allowed border-gray-100 bg-gray-50 text-gray-400'
-                                        : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
+                                        : 'border-gray-300 focus:border-primary-500 focus:ring-slate-900'
                                 }`}
                             />
                             <p className="mt-1 text-xs text-gray-400">
@@ -92,7 +92,7 @@ export default function EditSecurity({ security }: Props) {
                                 id="name"
                                 value={data.name}
                                 onChange={(e) => setData('name', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                 placeholder="Enter full name"
                             />
                             {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
@@ -110,7 +110,7 @@ export default function EditSecurity({ security }: Props) {
                                 id="phone"
                                 value={data.phone}
                                 onChange={(e) => setData('phone', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                 placeholder="+1 (555) 000-0000"
                             />
                             {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
@@ -126,7 +126,7 @@ export default function EditSecurity({ security }: Props) {
                                 id="badge_number"
                                 value={data.badge_number}
                                 onChange={(e) => setData('badge_number', e.target.value)}
-                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                 placeholder="e.g., SEC-001"
                             />
                             {errors.badge_number && <p className="mt-1 text-sm text-red-600">{errors.badge_number}</p>}
@@ -151,7 +151,7 @@ export default function EditSecurity({ security }: Props) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                                className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </button>

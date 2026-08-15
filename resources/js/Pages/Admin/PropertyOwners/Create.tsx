@@ -452,7 +452,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                                 >
                                     {processing ? 'Sending Invitation...' : 'Send Invitation'}
                                 </button>
@@ -624,7 +624,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}
@@ -790,7 +790,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}

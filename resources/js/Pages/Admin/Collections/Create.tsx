@@ -477,7 +477,7 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="flex items-center gap-3 rounded-[1.5rem] bg-[#1F6FDB] px-12 py-5 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
+                            className="flex items-center gap-3 rounded-[1.5rem] bg-[#1F6FDB] px-12 py-5 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-slate-800 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
                         >
                             <Save className="h-5 w-5" />
                             {processing ? 'Creating Collection...' : 'Create Collection'}

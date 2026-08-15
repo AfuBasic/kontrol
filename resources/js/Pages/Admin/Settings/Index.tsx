@@ -143,7 +143,7 @@ export default function Settings({ settings }: SettingsProps) {
                         type="button"
                         onClick={handleSubmit}
                         disabled={processing}
-                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition-all hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sm transition-all hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:opacity-50 dark:bg-slate-950 dark:hover:bg-slate-800"
                     >
                         <Save className="h-4 w-4" />
                         {processing ? 'Saving Changes...' : 'Save Settings'}
@@ -186,7 +186,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         onChange={(e) => setData('access_codes_enabled', e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                 </label>
                             </div>
 
@@ -215,7 +215,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                     setData('access_code_min_lifespan_minutes', 60);
                                                 }
                                             }}
-                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
@@ -252,7 +252,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                     setData('access_code_max_lifespan_minutes', 1440);
                                                 }
                                             }}
-                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                     <p className="mt-1 text-xs text-slate-400">
@@ -286,7 +286,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 onChange={(e) => setData('access_code_single_use', e.target.checked)}
                                                 className="peer sr-only"
                                             />
-                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                         </label>
                                     </div>
 
@@ -306,7 +306,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 onChange={(e) => setData('require_vehicle_information', e.target.checked)}
                                                 className="peer sr-only"
                                             />
-                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                         </label>
                                     </div>
 
@@ -324,7 +324,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 onChange={(e) => setData('allow_residents_to_extend_visitor_passes', e.target.checked)}
                                                 className="peer sr-only"
                                             />
-                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                         </label>
                                     </div>
 
@@ -344,7 +344,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 onChange={(e) => setData('visitor_checkout_enabled', e.target.checked)}
                                                 className="peer sr-only"
                                             />
-                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                         </label>
                                     </div>
                                 </div>
@@ -379,7 +379,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 }}
                                                 className="peer sr-only"
                                             />
-                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none peer-disabled:cursor-not-allowed peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                         </label>
                                     </div>
 
@@ -422,13 +422,13 @@ export default function Settings({ settings }: SettingsProps) {
                                                     onChange={(e) => setNewEntryPointInput(e.target.value)}
                                                     onKeyDown={handleAddEntryPoint}
                                                     placeholder="e.g. Main Gate"
-                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                                    className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                                 />
                                                 <button
                                                     type="button"
                                                     onClick={handleAddEntryPoint}
                                                     disabled={!newEntryPointInput.trim()}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-950 dark:hover:bg-slate-800"
                                                 >
                                                     <Plus className="h-4 w-4" />
                                                     Add
@@ -492,12 +492,12 @@ export default function Settings({ settings }: SettingsProps) {
                                             onChange={(e) => setNewCategoryInput(e.target.value)}
                                             onKeyDown={handleAddCategory}
                                             placeholder="Add category & press Enter..."
-                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <button
                                             type="button"
                                             onClick={handleAddCategory}
-                                            className="rounded-lg bg-primary-600 p-1 text-white hover:bg-primary-700 active:scale-95"
+                                            className="rounded-lg bg-slate-950 p-1 text-white hover:bg-slate-800 active:scale-95"
                                         >
                                             <Plus className="h-4 w-4" />
                                         </button>
@@ -517,7 +517,7 @@ export default function Settings({ settings }: SettingsProps) {
                                     id="default_severity"
                                     value={data.default_incident_severity}
                                     onChange={(e) => setData('default_incident_severity', e.target.value)}
-                                    className="mt-2 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                    className="mt-2 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                 >
                                     <option value="Low">Low (Informational / Minor)</option>
                                     <option value="Medium">Medium (Requires Review)</option>
@@ -544,7 +544,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             onChange={(e) => setData('allow_residents_to_report_incidents', e.target.checked)}
                                             className="peer sr-only"
                                         />
-                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                     </label>
                                 </div>
 
@@ -564,7 +564,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             onChange={(e) => setData('notify_admins_immediately_for_critical_incidents', e.target.checked)}
                                             className="peer sr-only"
                                         />
-                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                     </label>
                                 </div>
 
@@ -582,7 +582,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             onChange={(e) => setData('require_photo_evidence_for_incidents', e.target.checked)}
                                             className="peer sr-only"
                                         />
-                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                     </label>
                                 </div>
 
@@ -600,7 +600,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             onChange={(e) => setData('require_resolution_notes_for_incidents', e.target.checked)}
                                             className="peer sr-only"
                                         />
-                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                        <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                     </label>
                                 </div>
                             </div>
@@ -642,7 +642,7 @@ export default function Settings({ settings }: SettingsProps) {
                                         onChange={(e) => setData('allow_partial_payments', e.target.checked)}
                                         className="peer sr-only"
                                     />
-                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-primary-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                    <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
                                 </label>
                             </div>
 
@@ -676,7 +676,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                 }
                                             }}
                                             placeholder="10"
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                                             Minimum percentage of bill balance required per partial installment (10-90%).
@@ -704,7 +704,7 @@ export default function Settings({ settings }: SettingsProps) {
                                             id="reminder_freq"
                                             value={data.collection_reminder_frequency}
                                             onChange={(e) => setData('collection_reminder_frequency', e.target.value)}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         >
                                             <option value="daily">Daily</option>
                                             <option value="3_days">Every 3 Days</option>
@@ -735,7 +735,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                     setData('collection_maximum_reminder_attempts', 3);
                                                 }
                                             }}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
 
@@ -764,7 +764,7 @@ export default function Settings({ settings }: SettingsProps) {
                                                     setData('send_reminder_before_due_date_days', 1);
                                                 }
                                             }}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                         />
                                     </div>
                                 </div>
@@ -778,7 +778,7 @@ export default function Settings({ settings }: SettingsProps) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-primary-500/20 transition-all hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-500"
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-sm transition-all hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:opacity-50 dark:bg-slate-950 dark:hover:bg-slate-800"
                         >
                             <Save className="h-4 w-4" />
                             {processing ? 'Saving Changes...' : 'Save Settings'}

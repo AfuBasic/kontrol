@@ -106,7 +106,7 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                     {!inviteLink && (
                         <Link
                             href={propertyOwnersCreate.url()}
-                            className="inline-flex items-center gap-2 rounded-lg bg-[#1F6FDB] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700"
+                            className="inline-flex items-center gap-2 rounded-lg bg-[#1F6FDB] px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
                         >
                             <LinkIcon className="h-4 w-4" />
                             Generate New Link

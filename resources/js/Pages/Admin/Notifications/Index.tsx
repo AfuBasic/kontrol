@@ -111,7 +111,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search notifications..."
-                            className="block w-full rounded-lg border-gray-300 py-2.5 pr-3 pl-10 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                            className="block w-full rounded-lg border-gray-300 py-2.5 pr-3 pl-10 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-slate-900 sm:text-sm"
                         />
                     </div>
                 </form>
@@ -124,7 +124,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                             onClick={() => handleTypeChange(f)}
                             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                                 type === f
-                                    ? 'bg-primary-600 text-white shadow-sm'
+                                    ? 'bg-slate-950 text-white shadow-sm'
                                     : 'bg-white text-gray-600 ring-1 ring-gray-200 ring-inset hover:bg-gray-50'
                             }`}
                         >
@@ -243,7 +243,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                         href={link.url || '#'}
                                         className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                                             link.active
-                                                ? 'z-10 bg-primary-600 text-white focus:z-20 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-primary-600'
+                                                ? 'z-10 bg-slate-950 text-white focus:z-20 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-slate-900'
                                                 : 'text-gray-900 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
                                         } ${i === 0 ? 'rounded-l-md' : ''} ${
                                             i === notifications.links.length - 1 ? 'rounded-r-md' : ''

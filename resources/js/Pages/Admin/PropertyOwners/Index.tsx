@@ -355,14 +355,14 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                 if (insight.includes('no properties assigned')) return null;
                                 return (
                                     <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-950" />
                                         <span>{insight}</span>
                                     </li>
                                 );
                             })}
                             {incompleteOwners && incompleteOwners.length > 0 && (
                                 <li className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-950" />
                                     <span>
                                         {incompleteOwners.length} property owner{incompleteOwners.length > 1 ? 's' : ''} have no properties assigned
                                         to them:{' '}

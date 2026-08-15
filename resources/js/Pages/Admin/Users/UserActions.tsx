@@ -144,7 +144,7 @@ export default function UserActions({ user }: { user: User }) {
                 </button>
 
                 <Menu as="div" className="relative hidden md:inline-block">
-                    <Menu.Button className="flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none">
+                    <Menu.Button className="flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none">
                         <span className="sr-only">Open options</span>
                         <EllipsisVerticalIcon className="h-5 w-5" aria-hidden="true" />
                     </Menu.Button>

@@ -296,7 +296,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                         <button
                             type="submit"
                             disabled={processing || !data.body.trim()}
-                            className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-1.5 text-xs font-bold text-white shadow-sm shadow-primary-600/30 transition hover:bg-primary-700 active:scale-95 disabled:opacity-50"
+                            className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-1.5 text-xs font-bold text-white shadow-sm shadow-sm transition hover:bg-slate-800 active:scale-95 disabled:opacity-50"
                         >
                             <Send className="h-3.5 w-3.5" />
                             <span>{processing ? 'Posting...' : 'Post Announcement'}</span>

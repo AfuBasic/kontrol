@@ -118,7 +118,7 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                     {!inviteLink && (
                         <Link
                             href={residentsCreate.url()}
-                            className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+                            className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
                         >
                             <LinkIcon className="h-4 w-4" />
                             Generate New Link
@@ -334,7 +334,7 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
                         <p className="mt-2 max-w-sm text-gray-500">You haven't generated a public invite link for your estate yet.</p>
                         <Link
                             href={residentsCreate.url()}
-                            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-200 transition-all hover:bg-primary-700 active:scale-95"
+                            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                         >
                             <LinkIcon className="h-4 w-4" />
                             Generate My First Link

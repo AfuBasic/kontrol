@@ -154,7 +154,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700"
+                    className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
                 >
                     <Plus className="h-4 w-4" />
                     New Link
@@ -279,7 +279,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                         <select
                                             value={settings.zone_id}
                                             onChange={(e) => setSettings({ ...settings, zone_id: e.target.value })}
-                                            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-slate-900"
                                         >
                                             <option value="">Entire Estate</option>
                                             {zones.map((zone) => (
@@ -299,7 +299,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                         value={settings.max_usages}
                                         onChange={(e) => setSettings({ ...settings, max_usages: e.target.value })}
                                         placeholder="Unlimited"
-                                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-slate-900"
                                     />
                                 </div>
 
@@ -311,7 +311,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                                 type="checkbox"
                                                 checked={settings.requires_approval}
                                                 onChange={(e) => setSettings({ ...settings, requires_approval: e.target.checked })}
-                                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-slate-900"
                                             />
                                         </div>
                                         <div className="flex flex-col">
@@ -329,7 +329,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                         min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
                                         value={settings.expires_at}
                                         onChange={(e) => setSettings({ ...settings, expires_at: e.target.value })}
-                                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                                        className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-slate-900"
                                     />
                                 </div>
 
@@ -344,7 +344,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                     <button
                                         type="button"
                                         onClick={handleGenerateLink}
-                                        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
+                                        className="rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
                                     >
                                         Generate Link
                                     </button>
@@ -372,7 +372,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             className="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl"
                         >
-                            <div className="bg-primary-600 p-8 text-center text-white">
+                            <div className="bg-slate-950 p-8 text-center text-white">
                                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-md">
                                     <CheckCircle className="h-8 w-8" />
                                 </div>
