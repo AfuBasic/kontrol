@@ -13,13 +13,7 @@ type Props = {
 /**
  * Timeline tools - search + filters sit in the journal chrome, not as floating widgets.
  */
-export default function ActivityFiltersBar({
-    filters,
-    hosts,
-    checkoutEnabled,
-    onFilterChange,
-    onClearFilters,
-}: Props) {
+export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, onFilterChange, onClearFilters }: Props) {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const active = hasActiveVisitorFilters(filters);
 
@@ -33,7 +27,7 @@ export default function ActivityFiltersBar({
                         value={filters.search || ''}
                         onChange={(e) => onFilterChange({ search: e.target.value || undefined })}
                         placeholder="Search visitor, host, code…"
-                        className="w-full rounded-lg border border-gray-200 bg-gray-50/80 py-1.5 pr-2.5 pl-8 text-xs font-medium text-gray-800 placeholder:text-gray-400 transition-[border-color,box-shadow,background-color] duration-150 ease-out focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/15 focus:outline-hidden"
+                        className="w-full rounded-lg border border-gray-200 bg-gray-50/80 py-1.5 pr-2.5 pl-8 text-xs font-medium text-gray-800 transition-[border-color,box-shadow,background-color] duration-150 ease-out placeholder:text-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/15 focus:outline-hidden"
                     />
                 </div>
 
@@ -115,9 +109,7 @@ export default function ActivityFiltersBar({
                             <input
                                 type="text"
                                 value={filters.vehicle_plate || ''}
-                                onChange={(e) =>
-                                    onFilterChange({ vehicle_plate: e.target.value || undefined })
-                                }
+                                onChange={(e) => onFilterChange({ vehicle_plate: e.target.value || undefined })}
                                 placeholder="Plate…"
                                 className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-800 focus:border-primary-500 focus:outline-hidden"
                             />

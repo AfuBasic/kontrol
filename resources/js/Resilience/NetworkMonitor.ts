@@ -286,9 +286,7 @@ class NetworkMonitorImpl {
 
     private publish(snapshot: NetworkSnapshot): void {
         const changed =
-            snapshot.quality !== this.snapshot.quality ||
-            snapshot.isOnline !== this.snapshot.isOnline ||
-            snapshot.rtt !== this.snapshot.rtt;
+            snapshot.quality !== this.snapshot.quality || snapshot.isOnline !== this.snapshot.isOnline || snapshot.rtt !== this.snapshot.rtt;
 
         this.snapshot = snapshot;
 

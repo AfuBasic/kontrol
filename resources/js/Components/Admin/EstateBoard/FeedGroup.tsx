@@ -41,7 +41,7 @@ export default function FeedGroup({ posts, hasActiveFilters = false }: Props) {
     if (hasActiveFilters) {
         return (
             <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
+                <div className="flex items-center justify-between text-xs font-bold tracking-wider text-slate-400 uppercase">
                     <span>Search / Filter Results</span>
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600">
                         {posts.length} post{posts.length === 1 ? '' : 's'}
@@ -68,12 +68,8 @@ export default function FeedGroup({ posts, hasActiveFilters = false }: Props) {
                 return (
                     <div key={groupName} className="space-y-3">
                         <div className="flex items-center gap-2 border-b border-slate-200/60 pb-2">
-                            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                                {groupName}
-                            </h3>
-                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
-                                {groupPosts.length}
-                            </span>
+                            <h3 className="text-xs font-extrabold tracking-wider text-slate-500 uppercase">{groupName}</h3>
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">{groupPosts.length}</span>
                         </div>
 
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">

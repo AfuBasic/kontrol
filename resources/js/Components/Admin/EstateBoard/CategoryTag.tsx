@@ -40,14 +40,11 @@ export default function CategoryTag({ category = 'general', size = 'sm' }: Props
     const config = CATEGORY_CONFIG[key] || CATEGORY_CONFIG.general;
     const Icon = config.icon;
 
-    const sizeClasses =
-        size === 'sm'
-            ? 'px-2.5 py-0.5 text-[10px] gap-1'
-            : 'px-3 py-1 text-xs gap-1.5';
+    const sizeClasses = size === 'sm' ? 'px-2.5 py-0.5 text-[10px] gap-1' : 'px-3 py-1 text-xs gap-1.5';
 
     return (
         <span
-            className={`inline-flex items-center font-bold tracking-wider uppercase rounded-full ring-1 ring-inset ${config.styles} ${sizeClasses}`}
+            className={`inline-flex items-center rounded-full font-bold tracking-wider uppercase ring-1 ring-inset ${config.styles} ${sizeClasses}`}
         >
             <Icon className={size === 'sm' ? 'h-3 w-3 shrink-0' : 'h-3.5 w-3.5 shrink-0'} />
             <span>{config.label}</span>

@@ -50,8 +50,8 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
             filters.created_by ||
             filters.approved_by ||
             filters.amount_min ||
-            filters.amount_max
-        )
+            filters.amount_max,
+        ),
     );
 
     const [local, setLocal] = useState({
@@ -89,9 +89,20 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
 
     const reset = () => {
         const cleared = {
-            search: '', date_from: '', date_to: '', status: '', type: '',
-            resident_id: '', collection_id: '', payment_method: '', provider: '',
-            coupon: '', created_by: '', approved_by: '', amount_min: '', amount_max: '',
+            search: '',
+            date_from: '',
+            date_to: '',
+            status: '',
+            type: '',
+            resident_id: '',
+            collection_id: '',
+            payment_method: '',
+            provider: '',
+            coupon: '',
+            created_by: '',
+            approved_by: '',
+            amount_min: '',
+            amount_max: '',
         };
         setLocal(cleared);
         router.get(TransactionController.index.url(), {}, { replace: true });
@@ -111,7 +122,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                         onChange={(e) => update('search', e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && apply()}
                         placeholder="Search transactions..."
-                        className={`${inputClass} pl-9 h-10`}
+                        className={`${inputClass} h-10 pl-9`}
                     />
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -119,7 +130,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                         type="date"
                         value={local.date_from}
                         onChange={(e) => update('date_from', e.target.value)}
-                        className={`${inputClass} w-28 sm:w-32 h-10`}
+                        className={`${inputClass} h-10 w-28 sm:w-32`}
                     />
                     <SearchableSelect
                         options={filterOptions.statuses.map((s) => ({ value: s.value, label: s.label }))}
@@ -131,9 +142,9 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                     <button
                         type="button"
                         onClick={() => setShowMore(!showMore)}
-                        className={`inline-flex items-center gap-1.5 rounded-xl border px-3 h-10 text-xs font-black tracking-wider uppercase transition ${
+                        className={`inline-flex h-10 items-center gap-1.5 rounded-xl border px-3 text-xs font-black tracking-wider uppercase transition ${
                             showMore
-                                ? 'bg-slate-900 border-slate-900 text-white hover:bg-slate-800'
+                                ? 'border-slate-900 bg-slate-900 text-white hover:bg-slate-800'
                                 : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                         }`}
                     >
@@ -142,7 +153,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                     <button
                         type="button"
                         onClick={apply}
-                        className="rounded-xl bg-[#1F6FDB] px-4 h-10 text-xs font-black tracking-wider text-white uppercase transition hover:bg-blue-700"
+                        className="h-10 rounded-xl bg-[#1F6FDB] px-4 text-xs font-black tracking-wider text-white uppercase transition hover:bg-blue-700"
                     >
                         Apply
                     </button>
@@ -151,11 +162,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
 
             <AnimatePresence>
                 {showMore && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                    >
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
                         <div className="grid gap-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 sm:grid-cols-2 lg:grid-cols-3">
                             <SearchableSelect
                                 label="Resident"
@@ -173,22 +180,28 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                             />
                             <div>
                                 <label className="mb-1 block text-[9px] font-black tracking-widest text-slate-400 uppercase">Coupon Code</label>
-                                <input value={local.coupon} onChange={(e) => update('coupon', e.target.value)} placeholder="e.g. WELCOME25" className={inputClass} />
+                                <input
+                                    value={local.coupon}
+                                    onChange={(e) => update('coupon', e.target.value)}
+                                    placeholder="e.g. WELCOME25"
+                                    className={inputClass}
+                                />
                             </div>
-                            <div className="sm:col-span-2 space-y-2">
-                                <div className="flex justify-between items-center text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                            <div className="space-y-2 sm:col-span-2">
+                                <div className="flex items-center justify-between text-[9px] font-black tracking-widest text-slate-400 uppercase">
                                     <span>Amount Range</span>
-                                    <span className="text-slate-800 font-extrabold text-xs">
-                                        ₦{Number(local.amount_min || 0).toLocaleString()} - ₦{Number(local.amount_max || maxAmountLimit).toLocaleString()}
+                                    <span className="text-xs font-extrabold text-slate-800">
+                                        ₦{Number(local.amount_min || 0).toLocaleString()} - ₦
+                                        {Number(local.amount_max || maxAmountLimit).toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="relative w-full h-6 flex items-center">
+                                <div className="relative flex h-6 w-full items-center">
                                     {/* Base track */}
-                                    <div className="absolute left-0 right-0 h-1.5 bg-slate-200 rounded-lg"></div>
+                                    <div className="absolute right-0 left-0 h-1.5 rounded-lg bg-slate-200"></div>
 
                                     {/* Highlight active range */}
                                     <div
-                                        className="absolute h-1.5 bg-indigo-600 rounded-lg"
+                                        className="absolute h-1.5 rounded-lg bg-indigo-600"
                                         style={{
                                             left: `${(Number(local.amount_min || 0) / maxAmountLimit) * 100}%`,
                                             right: `${100 - (Number(local.amount_max || maxAmountLimit) / maxAmountLimit) * 100}%`,
@@ -203,7 +216,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                                         step="5000"
                                         value={local.amount_min || 0}
                                         onChange={handleMinChange}
-                                        className="absolute w-full h-1.5 pointer-events-none appearance-none bg-transparent accent-indigo-600 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto cursor-pointer"
+                                        className="pointer-events-none absolute h-1.5 w-full cursor-pointer appearance-none bg-transparent accent-indigo-600 [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:pointer-events-auto"
                                         style={{
                                             zIndex: Number(local.amount_min || 0) > maxAmountLimit / 2 ? 25 : 10,
                                         }}
@@ -215,7 +228,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                                         step="5000"
                                         value={local.amount_max || maxAmountLimit}
                                         onChange={handleMaxChange}
-                                        className="absolute w-full h-1.5 pointer-events-none appearance-none bg-transparent accent-indigo-600 [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto cursor-pointer"
+                                        className="pointer-events-none absolute h-1.5 w-full cursor-pointer appearance-none bg-transparent accent-indigo-600 [&::-moz-range-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:pointer-events-auto"
                                         style={{
                                             zIndex: Number(local.amount_min || 0) > maxAmountLimit / 2 ? 10 : 25,
                                         }}
@@ -226,7 +239,7 @@ export default function LedgerFilters({ filters, filterOptions, maxAmountLimit =
                                 <button
                                     type="button"
                                     onClick={reset}
-                                    className="inline-flex items-center gap-1.5 text-xs font-black tracking-widest text-slate-400 uppercase hover:text-slate-600 pb-2.5"
+                                    className="inline-flex items-center gap-1.5 pb-2.5 text-xs font-black tracking-widest text-slate-400 uppercase hover:text-slate-600"
                                 >
                                     <RotateCcw className="h-3.5 w-3.5" /> Reset all filters
                                 </button>

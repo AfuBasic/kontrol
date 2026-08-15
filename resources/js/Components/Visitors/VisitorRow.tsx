@@ -17,22 +17,17 @@ export default function VisitorRow({ visit, fromTab = 'schedule', onCancel }: Pr
 
     return (
         <div className="group flex items-center justify-between px-3.5 py-3 transition hover:bg-slate-50/60">
-            <Link
-                href={resident.visitors.show.url(visit.id, { query: { from_tab: fromTab } })}
-                className="flex flex-1 items-center gap-3 min-w-0"
-            >
+            <Link href={resident.visitors.show.url(visit.id, { query: { from_tab: fromTab } })} className="flex min-w-0 flex-1 items-center gap-3">
                 {/* Category Avatar Anchor */}
                 <VisitorAvatar category={category} name={visit.visitor_name} size="md" />
 
                 {/* Visitor Details */}
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <p className="truncate text-xs font-bold text-slate-900">{visit.visitor_name}</p>
-                        {visit.arrival_time && (
-                            <span className="font-mono text-[10px] text-slate-400 font-semibold">• {visit.arrival_time}</span>
-                        )}
+                        {visit.arrival_time && <span className="font-mono text-[10px] font-semibold text-slate-400">• {visit.arrival_time}</span>}
                     </div>
-                    <p className="truncate text-[11px] text-slate-400 font-medium">
+                    <p className="truncate text-[11px] font-medium text-slate-400">
                         {dateFormatted} {visit.purpose ? `· ${visit.purpose}` : ''}
                     </p>
                 </div>
@@ -48,7 +43,7 @@ export default function VisitorRow({ visit, fromTab = 'schedule', onCancel }: Pr
                             e.preventDefault();
                             onCancel(visit.id);
                         }}
-                        className="hidden text-[11px] font-semibold text-slate-400 hover:text-rose-600 group-hover:inline-block"
+                        className="hidden text-[11px] font-semibold text-slate-400 group-hover:inline-block hover:text-rose-600"
                     >
                         Cancel
                     </button>

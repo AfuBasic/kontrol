@@ -42,7 +42,10 @@ function getAudienceConfig(audience: PostAudience) {
 
 function stripHtml(html: string): string {
     if (!html) return '';
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return html
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 export default function AnnouncementCard({ post, isPinned = false }: Props) {
@@ -69,27 +72,27 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
         <div
             className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-white p-5 shadow-xs ring-1 transition-all hover:shadow-md ${
                 isPinned || isCritical || isImportant
-                    ? 'border-l-4 border-l-amber-500 ring-slate-200 bg-amber-50/10'
+                    ? 'border-l-4 border-l-amber-500 bg-amber-50/10 ring-slate-200'
                     : 'ring-slate-200 hover:border-slate-300'
             }`}
         >
             <div>
                 {/* Secondary Tier (Header metadata row) */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 mb-3">
-                    <div className="flex items-center gap-2 flex-wrap">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-2">
                         {/* Category Tag */}
                         <CategoryTag category={post.category} />
 
                         {/* Pinned or Priority Indicator */}
                         {(isPinned || isImportant) && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 ring-1 ring-amber-200">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase ring-1 ring-amber-200">
                                 <Pin className="h-3 w-3 text-amber-600" />
                                 <span>Pinned</span>
                             </span>
                         )}
 
                         {isCritical && (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 ring-1 ring-rose-200">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-700 uppercase ring-1 ring-rose-200">
                                 <AlertOctagon className="h-3 w-3 text-rose-600" />
                                 <span>Critical Notice</span>
                             </span>
@@ -119,7 +122,7 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
 
                     {/* Body text preview */}
                     <div
-                        className="prose prose-sm prose-slate line-clamp-3 text-xs font-medium leading-relaxed text-slate-600"
+                        className="prose prose-sm prose-slate line-clamp-3 text-xs leading-relaxed font-medium text-slate-600"
                         dangerouslySetInnerHTML={{ __html: post.body }}
                     />
                 </div>
@@ -128,7 +131,7 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                 {imageMedia.length > 0 && (
                     <div className="mt-4">
                         {imageMedia.length === 1 ? (
-                            <div className="overflow-hidden rounded-xl bg-slate-100 max-h-56">
+                            <div className="max-h-56 overflow-hidden rounded-xl bg-slate-100">
                                 <img
                                     src={imageMedia[0].url}
                                     alt="Post attachment"
@@ -136,7 +139,7 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                                 />
                             </div>
                         ) : (
-                            <div className="grid grid-cols-2 gap-2 max-h-48 overflow-hidden rounded-xl">
+                            <div className="grid max-h-48 grid-cols-2 gap-2 overflow-hidden rounded-xl">
                                 {imageMedia.slice(0, 4).map((img, i) => (
                                     <div key={i} className="relative h-24 overflow-hidden rounded-lg bg-slate-100">
                                         <img src={img.url} alt="" className="h-full w-full object-cover" />
@@ -161,13 +164,13 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                                 href={doc.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                                className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
                             >
                                 <div className="flex items-center gap-2 truncate">
-                                    <FileText className="h-4 w-4 text-primary-600 shrink-0" />
+                                    <FileText className="h-4 w-4 shrink-0 text-primary-600" />
                                     <span className="truncate">Attachment #{idx + 1}</span>
                                 </div>
-                                <Download className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                <Download className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                             </a>
                         ))}
                     </div>
@@ -210,7 +213,7 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                     <div className="relative">
                         <button
                             onClick={() => setShowMenu((prev) => !prev)}
-                            className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+                            className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                             title="Actions"
                         >
                             <MoreVertical className="h-4 w-4" />
@@ -219,7 +222,7 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                         {showMenu && (
                             <div
                                 onMouseLeave={() => setShowMenu(false)}
-                                className="absolute right-0 bottom-full mb-1 w-36 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-slate-900/5 z-20"
+                                className="absolute right-0 bottom-full z-20 mb-1 w-36 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-slate-900/5"
                             >
                                 <Link
                                     href={show.url({ post: post.hashid })}

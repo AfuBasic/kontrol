@@ -342,23 +342,22 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
                     <div className="mb-2 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-[#6C5DFD] shadow-[0_0_12px_rgba(108,93,253,0.6)]" />
-                        <span className="text-[10px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">
-                            COUPON MANAGER
-                        </span>
+                        <span className="text-[10px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">COUPON MANAGER</span>
                     </div>
                     <h1 className="text-4xl font-black tracking-tight text-[#F2F3F6]">
                         Create <span className="font-light text-[#9297A8]">Coupon</span>
                     </h1>
                     <p className="mt-2 max-w-2xl text-sm leading-relaxed font-medium text-[#9297A8]">
-                        Design a targeted platform incentive. Distribute custom percentage or fixed-amount discounts mapped to estates, individual users, or global audiences.
+                        Design a targeted platform incentive. Distribute custom percentage or fixed-amount discounts mapped to estates, individual
+                        users, or global audiences.
                     </p>
                 </motion.div>
 
                 {/* Main 2-Column Layout */}
-                <div className="grid gap-8 lg:grid-cols-12 items-start">
+                <div className="grid items-start gap-8 lg:grid-cols-12">
                     {/* Left Sticky Progress Nav (1.5 cols) */}
-                    <div className="hidden lg:block lg:col-span-2 sticky top-24 space-y-3">
-                        <p className="text-[10px] font-bold tracking-wider text-[#9297A8] uppercase mb-4">Steps</p>
+                    <div className="sticky top-24 hidden space-y-3 lg:col-span-2 lg:block">
+                        <p className="mb-4 text-[10px] font-bold tracking-wider text-[#9297A8] uppercase">Steps</p>
                         <div className="flex flex-col gap-3">
                             {sectionNav.map((s) => {
                                 const isActive = activeSection === s.id;
@@ -367,9 +366,9 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                         key={s.id}
                                         type="button"
                                         onClick={() => scrollToSection(s.id)}
-                                        className={`text-left text-xs font-bold transition-all border-l-2 pl-3 py-1 ${
+                                        className={`border-l-2 py-1 pl-3 text-left text-xs font-bold transition-all ${
                                             isActive
-                                                ? 'border-[#6C5DFD] text-[#F2F3F6] font-black scale-102'
+                                                ? 'scale-102 border-[#6C5DFD] font-black text-[#F2F3F6]'
                                                 : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
                                         }`}
                                     >
@@ -381,7 +380,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                     </div>
 
                     {/* Middle Form Panel (6.5 cols) */}
-                    <div className="lg:col-span-6 space-y-8">
+                    <div className="space-y-8 lg:col-span-6">
                         <form onSubmit={handleSubmit} className="space-y-8">
                             {/* SECTION 1: BLUEPRINT */}
                             <motion.section
@@ -415,7 +414,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                     validateField('campaign_name', e.target.value);
                                                 }}
                                                 placeholder="e.g. Year End Promotion"
-                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3.5 text-sm text-[#F2F3F6] placeholder:text-gray-600 focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] focus:outline-none transition-all"
+                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3.5 text-sm text-[#F2F3F6] transition-all placeholder:text-gray-600 focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] focus:outline-none"
                                                 required
                                             />
                                             {(localErrors.campaign_name || errors.campaign_name) && (
@@ -431,7 +430,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                             </label>
                                             <motion.div
                                                 animate={codeTrigger ? { scale: [1, 1.02, 1] } : {}}
-                                                className="relative flex overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD] transition-all"
+                                                className="relative flex overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] transition-all focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD]"
                                             >
                                                 <input
                                                     type="text"
@@ -454,9 +453,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                 </button>
                                             </motion.div>
                                             {(localErrors.code || errors.code) && (
-                                                <p className="mt-1.5 text-xs font-semibold text-rose-500">
-                                                    {localErrors.code || errors.code}
-                                                </p>
+                                                <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.code || errors.code}</p>
                                             )}
                                         </div>
                                     </div>
@@ -471,23 +468,23 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                             onChange={(e) => setData('description', e.target.value)}
                                             placeholder="Describe what this coupon does..."
                                             rows={2}
-                                            className="w-full resize-none rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3.5 text-sm text-[#F2F3F6] placeholder:text-gray-600 focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] focus:outline-none transition-all"
+                                            className="w-full resize-none rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3.5 text-sm text-[#F2F3F6] transition-all placeholder:text-gray-600 focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] focus:outline-none"
                                         />
                                     </div>
 
                                     {/* Discount Configuration (Segmented Toggle & Input Connected) */}
-                                    <div className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0A0B10]/50 p-6 space-y-4">
+                                    <div className="space-y-4 rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0A0B10]/50 p-6">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Discount Model</span>
                                             {/* Segmented Toggle */}
-                                            <div className="flex gap-1 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] p-1 w-56">
+                                            <div className="flex w-56 gap-1 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] p-1">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
                                                         setData((d) => ({ ...d, type: 'percentage', value: '' }));
                                                         setLocalErrors((prev) => ({ ...prev, value: '' }));
                                                     }}
-                                                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all ${
+                                                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all ${
                                                         data.type === 'percentage'
                                                             ? 'bg-[#6C5DFD] text-[#F2F3F6] shadow-sm'
                                                             : 'text-[#9297A8] hover:text-[#F2F3F6]'
@@ -501,7 +498,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                         setData((d) => ({ ...d, type: 'fixed', value: '' }));
                                                         setLocalErrors((prev) => ({ ...prev, value: '' }));
                                                     }}
-                                                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all ${
+                                                    className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-bold transition-all ${
                                                         data.type === 'fixed'
                                                             ? 'bg-[#6C5DFD] text-[#F2F3F6] shadow-sm'
                                                             : 'text-[#9297A8] hover:text-[#F2F3F6]'
@@ -514,7 +511,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
 
                                         {/* Value Input and Quick Select chips grouped together */}
                                         <div className="space-y-3">
-                                            <div className="relative flex overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD] transition-all">
+                                            <div className="relative flex overflow-hidden rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] transition-all focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD]">
                                                 <span className="flex items-center pr-2 pl-4 text-sm font-black text-slate-400">
                                                     {data.type === 'percentage' ? '%' : '₦'}
                                                 </span>
@@ -545,7 +542,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                                   setData('value', val.toString());
                                                                   validateField('value', val.toString());
                                                               }}
-                                                              className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-3 py-1.5 text-xs font-bold text-[#9297A8] hover:border-[#6C5DFD] hover:text-[#6C5DFD] transition-all"
+                                                              className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-3 py-1.5 text-xs font-bold text-[#9297A8] transition-all hover:border-[#6C5DFD] hover:text-[#6C5DFD]"
                                                           >
                                                               {val}%
                                                           </button>
@@ -558,7 +555,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                                   setData('value', val.toString());
                                                                   validateField('value', val.toString());
                                                               }}
-                                                              className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-3 py-1.5 text-xs font-bold text-[#9297A8] hover:border-[#6C5DFD] hover:text-[#6C5DFD] transition-all"
+                                                              className="rounded-lg border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-3 py-1.5 text-xs font-bold text-[#9297A8] transition-all hover:border-[#6C5DFD] hover:text-[#6C5DFD]"
                                                           >
                                                               ₦{val.toLocaleString()}
                                                           </button>
@@ -620,9 +617,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                 <h3 className="text-sm font-bold text-[#F2F3F6] transition-colors group-hover:text-[#6C5DFD]">
                                                     {scope.title}
                                                 </h3>
-                                                <p className="mt-1.5 text-xs leading-relaxed font-medium text-[#9297A8]">
-                                                    {scope.description}
-                                                </p>
+                                                <p className="mt-1.5 text-xs leading-relaxed font-medium text-[#9297A8]">{scope.description}</p>
                                                 {isSelected && (
                                                     <span className="absolute top-4 right-4 text-[#6C5DFD]">
                                                         <CheckCircle2 className="h-5 w-5 rounded-full bg-[#0A0B10] text-[#6C5DFD]" />
@@ -671,7 +666,9 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                 </button>
                                             )}
                                             {(localErrors.estate_id || errors.estate_id) && (
-                                                <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.estate_id || errors.estate_id}</p>
+                                                <p className="mt-1.5 text-xs font-semibold text-rose-500">
+                                                    {localErrors.estate_id || errors.estate_id}
+                                                </p>
                                             )}
 
                                             {data.estate_id && (
@@ -685,11 +682,13 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                         className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3.5 text-sm text-[#F2F3F6] focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] focus:outline-none"
                                                     >
                                                         <option value="">Entire estate</option>
-                                                        {(estates.find((estate) => estate.id.toString() === data.estate_id)?.zones || []).map((zone) => (
-                                                            <option key={zone.id} value={zone.id}>
-                                                                {zone.name}
-                                                            </option>
-                                                        ))}
+                                                        {(estates.find((estate) => estate.id.toString() === data.estate_id)?.zones || []).map(
+                                                            (zone) => (
+                                                                <option key={zone.id} value={zone.id}>
+                                                                    {zone.name}
+                                                                </option>
+                                                            ),
+                                                        )}
                                                     </select>
                                                     <p className="mt-1.5 text-[11px] font-medium text-[#9297A8]">
                                                         Restrict redemption to residents whose property is in this zone.
@@ -749,7 +748,9 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                 </button>
                                             )}
                                             {(localErrors.user_ids || errors.user_ids) && (
-                                                <p className="mt-1.5 text-xs font-semibold text-rose-500">{localErrors.user_ids || errors.user_ids}</p>
+                                                <p className="mt-1.5 text-xs font-semibold text-rose-500">
+                                                    {localErrors.user_ids || errors.user_ids}
+                                                </p>
                                             )}
                                         </motion.div>
                                     )}
@@ -907,10 +908,10 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                     </div>
 
                                     {/* Plan Constraints */}
-                                    <div className="mt-4 md:col-span-2 space-y-4">
+                                    <div className="mt-4 space-y-4 md:col-span-2">
                                         <div className="flex flex-col">
                                             <h3 className="text-sm font-bold text-[#F2F3F6]">Plan Constraints</h3>
-                                            <p className="text-xs text-[#9297A8] mt-0.5">Restrict coupon eligibility to specific subscriptions.</p>
+                                            <p className="mt-0.5 text-xs text-[#9297A8]">Restrict coupon eligibility to specific subscriptions.</p>
                                         </div>
 
                                         <div className="flex flex-wrap gap-2.5">
@@ -997,12 +998,11 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                                         </div>
                                                                     </div>
                                                                     <div>
-                                                                        <span className="block text-xs font-bold text-[#F2F3F6]">
-                                                                            {plan.name}
-                                                                        </span>
+                                                                        <span className="block text-xs font-bold text-[#F2F3F6]">{plan.name}</span>
                                                                         <span className="mt-1 block text-[10px] font-medium text-[#9297A8]">
-                                                                            ₦{(plan.price / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })} ·{' '}
-                                                                            {intervalLabel}
+                                                                            ₦
+                                                                            {(plan.price / 100).toLocaleString('en-NG', { minimumFractionDigits: 0 })}{' '}
+                                                                            · {intervalLabel}
                                                                         </span>
                                                                     </div>
                                                                 </label>
@@ -1040,15 +1040,15 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                     </div>
 
                     {/* Right Sticky Preview Panel (3.5 cols) */}
-                    <div className="lg:col-span-4 sticky top-24 space-y-6">
+                    <div className="sticky top-24 space-y-6 lg:col-span-4">
                         <p className="text-[10px] font-bold tracking-wider text-[#9297A8] uppercase">Live Preview</p>
 
-                        <div className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl relative overflow-hidden">
+                        <div className="relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
                             {/* Glow accent */}
                             <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-[#6C5DFD]/10 blur-2xl" />
 
-                            <div className="flex items-center justify-between mb-6">
-                                <span className="text-[9px] font-bold tracking-wider text-[#6C5DFD] bg-[#6C5DFD]/10 px-2.5 py-1 rounded-full uppercase">
+                            <div className="mb-6 flex items-center justify-between">
+                                <span className="rounded-full bg-[#6C5DFD]/10 px-2.5 py-1 text-[9px] font-bold tracking-wider text-[#6C5DFD] uppercase">
                                     INCENTIVE PASS
                                 </span>
                                 <Tag className="h-4 w-4 text-[#6C5DFD]" />
@@ -1057,21 +1057,19 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                             <div className="space-y-4">
                                 <div>
                                     <p className="text-xs font-medium text-[#9297A8]">Campaign Name</p>
-                                    <p className="text-lg font-bold text-[#F2F3F6] truncate">
-                                        {data.campaign_name || 'Draft Campaign'}
-                                    </p>
+                                    <p className="truncate text-lg font-bold text-[#F2F3F6]">{data.campaign_name || 'Draft Campaign'}</p>
                                 </div>
 
-                                <div className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0A0B10] p-4 flex items-center justify-between">
+                                <div className="flex items-center justify-between rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[#0A0B10] p-4">
                                     <div>
-                                        <p className="text-[10px] font-medium text-[#9297A8] uppercase tracking-wider">Coupon Code</p>
-                                        <p className="text-sm font-mono font-bold tracking-widest text-[#F2F3F6] mt-0.5">
+                                        <p className="text-[10px] font-medium tracking-wider text-[#9297A8] uppercase">Coupon Code</p>
+                                        <p className="mt-0.5 font-mono text-sm font-bold tracking-widest text-[#F2F3F6]">
                                             {data.code || 'CODE-PENDING'}
                                         </p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-medium text-[#9297A8] uppercase tracking-wider">Benefit</p>
-                                        <p className="text-base font-black text-[#34D399] mt-0.5">
+                                        <p className="text-[10px] font-medium tracking-wider text-[#9297A8] uppercase">Benefit</p>
+                                        <p className="mt-0.5 text-base font-black text-[#34D399]">
                                             {data.value
                                                 ? data.type === 'percentage'
                                                     ? `${data.value}% OFF`
@@ -1081,7 +1079,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2.5 text-xs text-[#9297A8] border-t border-[rgba(255,255,255,0.06)] pt-4">
+                                <div className="space-y-2.5 border-t border-[rgba(255,255,255,0.06)] pt-4 text-xs text-[#9297A8]">
                                     <div className="flex justify-between">
                                         <span>Audience Scope</span>
                                         <span className="font-bold text-[#F2F3F6] capitalize">{data.scope}</span>
@@ -1090,18 +1088,14 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                     {data.scope === 'estate' && selectedEstateName && (
                                         <div className="flex justify-between">
                                             <span>Estate</span>
-                                            <span className="font-bold text-[#F2F3F6] truncate max-w-[150px]">
-                                                {selectedEstateName}
-                                            </span>
+                                            <span className="max-w-[150px] truncate font-bold text-[#F2F3F6]">{selectedEstateName}</span>
                                         </div>
                                     )}
 
                                     {data.scope === 'resident' && selectedResidents.length > 0 && (
                                         <div className="flex justify-between">
                                             <span>Residents</span>
-                                            <span className="font-bold text-[#F2F3F6]">
-                                                {selectedResidents.length} Selected
-                                            </span>
+                                            <span className="font-bold text-[#F2F3F6]">{selectedResidents.length} Selected</span>
                                         </div>
                                     )}
 
@@ -1121,10 +1115,8 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
 
                                     <div className="flex justify-between">
                                         <span>Plans Constraints</span>
-                                        <span className="font-bold text-[#F2F3F6] truncate max-w-[150px]">
-                                            {data.eligible_plans.length === 0
-                                                ? 'All Plans'
-                                                : `${data.eligible_plans.length} plan(s)`}
+                                        <span className="max-w-[150px] truncate font-bold text-[#F2F3F6]">
+                                            {data.eligible_plans.length === 0 ? 'All Plans' : `${data.eligible_plans.length} plan(s)`}
                                         </span>
                                     </div>
                                 </div>
@@ -1159,9 +1151,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-lg font-black text-[#F2F3F6]">Select Target Estate</h3>
-                                    <p className="mt-0.5 text-xs text-[#9297A8]">
-                                        Choose which estate this coupon code applies to.
-                                    </p>
+                                    <p className="mt-0.5 text-xs text-[#9297A8]">Choose which estate this coupon code applies to.</p>
                                 </div>
                                 <button
                                     type="button"
@@ -1175,7 +1165,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                 </button>
                             </div>
 
-                            <div className="relative mb-4 flex overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD] transition-all">
+                            <div className="relative mb-4 flex overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] transition-all focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD]">
                                 <span className="flex items-center pl-4 text-slate-400">
                                     <Search className="h-4 w-4" />
                                 </span>
@@ -1214,9 +1204,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                     {estate.name}
                                                 </span>
                                             </div>
-                                            <span className="text-xs font-semibold text-[#6C5DFD] transition-colors">
-                                                Select
-                                            </span>
+                                            <span className="text-xs font-semibold text-[#6C5DFD] transition-colors">Select</span>
                                         </div>
                                     ))
                                 )}
@@ -1251,9 +1239,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                             <div className="mb-4 flex items-center justify-between">
                                 <div>
                                     <h3 className="text-lg font-black text-[#F2F3F6]">Select Target Resident</h3>
-                                    <p className="mt-0.5 text-xs text-[#9297A8]">
-                                        Choose which resident account this coupon applies to.
-                                    </p>
+                                    <p className="mt-0.5 text-xs text-[#9297A8]">Choose which resident account this coupon applies to.</p>
                                 </div>
                                 <button
                                     type="button"
@@ -1267,7 +1253,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                 </button>
                             </div>
 
-                            <div className="relative mb-4 flex overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD] transition-all">
+                            <div className="relative mb-4 flex overflow-hidden rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] transition-all focus-within:border-[#6C5DFD] focus-within:ring-1 focus-within:ring-[#6C5DFD]">
                                 <span className="flex items-center pl-4 text-slate-400">
                                     <Search className="h-4 w-4" />
                                 </span>
@@ -1287,7 +1273,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                         {[1, 2, 3].map((n) => (
                                             <div
                                                 key={n}
-                                                className="flex animate-pulse items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] p-3.5 bg-[#0A0B10]"
+                                                className="flex animate-pulse items-center gap-3 rounded-xl border border-[rgba(255,255,255,0.06)] bg-[#0A0B10] p-3.5"
                                             >
                                                 <div className="h-9 w-9 rounded-lg bg-gray-800" />
                                                 <div className="flex-1 space-y-2">
@@ -1313,15 +1299,13 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                                 className={`group flex cursor-pointer items-center justify-between rounded-xl border p-3.5 text-left transition ${
                                                     isSelected
                                                         ? 'border-[#6C5DFD] bg-[#6C5DFD]/5'
-                                                        : 'border-[rgba(255,255,255,0.08)] hover:border-[#6C5DFD] hover:bg-[#6C5DFD]/5 bg-[#0A0B10]'
+                                                        : 'border-[rgba(255,255,255,0.08)] bg-[#0A0B10] hover:border-[#6C5DFD] hover:bg-[#6C5DFD]/5'
                                                 }`}
                                             >
                                                 <div className="flex items-center gap-3">
                                                     <div
                                                         className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
-                                                            isSelected
-                                                                ? 'bg-[#6C5DFD] text-white'
-                                                                : 'bg-[#6C5DFD]/10 text-[#6C5DFD]'
+                                                            isSelected ? 'bg-[#6C5DFD] text-white' : 'bg-[#6C5DFD]/10 text-[#6C5DFD]'
                                                         }`}
                                                     >
                                                         <User className="h-5 w-5" />
@@ -1344,7 +1328,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                 )}
                             </div>
 
-                            <div className="flex items-center justify-between gap-4 border-t border-[rgba(255,255,255,0.08)] pt-4 mt-4">
+                            <div className="mt-4 flex items-center justify-between gap-4 border-t border-[rgba(255,255,255,0.08)] pt-4">
                                 <span className="text-xs text-[#9297A8]">{selectedResidents.length} resident(s) selected</span>
                                 <button
                                     type="button"

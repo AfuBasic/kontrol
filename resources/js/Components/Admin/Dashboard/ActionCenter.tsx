@@ -50,12 +50,10 @@ export default function ActionCenter({ items }: Props) {
             {/* Header / Briefing Title */}
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2.5">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                        Action Center
-                    </h3>
+                    <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Action Center</h3>
                     {items.length > 0 ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
                             {totalPendingCount} {totalPendingCount === 1 ? 'Action Required' : 'Actions Required'}
                         </span>
                     ) : (
@@ -65,9 +63,7 @@ export default function ActionCenter({ items }: Props) {
                         </span>
                     )}
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400">
-                    Executive Operational Briefing
-                </span>
+                <span className="text-[11px] font-semibold text-slate-400">Executive Operational Briefing</span>
             </div>
 
             {/* Empty State */}
@@ -106,7 +102,7 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
 
     return (
         <div
-            className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-4 transition shadow-2xs hover:shadow-md ${severityConfig.cardBorder}`}
+            className={`group relative flex flex-col justify-between rounded-2xl border bg-white p-4 shadow-2xs transition hover:shadow-md ${severityConfig.cardBorder}`}
         >
             <div>
                 {/* Header Row: Title, Severity Pill & Count */}
@@ -116,11 +112,11 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
                             <SeverityIcon className={`h-4 w-4 ${severityConfig.iconColor}`} />
                         </div>
                         <div>
-                            <h4 className="text-xs font-bold text-slate-900 group-hover:text-primary-600 transition">
-                                {item.title}
-                            </h4>
+                            <h4 className="text-xs font-bold text-slate-900 transition group-hover:text-primary-600">{item.title}</h4>
                             <div className="mt-0.5 flex items-center gap-2">
-                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${severityConfig.pillClass}`}>
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${severityConfig.pillClass}`}
+                                >
                                     {severityConfig.label}
                                 </span>
                                 {item.count !== undefined && item.count > 0 && (
@@ -135,7 +131,7 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
                     {/* Primary Action Button */}
                     <Link
                         href={item.actionUrl}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-2xs transition hover:bg-slate-800 active:scale-95 shrink-0"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-2xs transition hover:bg-slate-800 active:scale-95"
                     >
                         <span>{item.actionLabel ?? 'Take Action'}</span>
                         <ArrowRight className="h-3.5 w-3.5" />
@@ -144,7 +140,7 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
 
                 {/* Executive Summary Line */}
                 <div className="pt-3">
-                    <p className="text-xs font-medium leading-relaxed text-slate-600">{item.desc}</p>
+                    <p className="text-xs leading-relaxed font-medium text-slate-600">{item.desc}</p>
                 </div>
 
                 {/* Progressive Disclosure Preview Section */}
@@ -152,11 +148,9 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
                     <div className="mt-3">
                         <button
                             onClick={() => setIsExpanded((prev) => !prev)}
-                            className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 hover:text-slate-900 transition"
+                            className="flex items-center gap-1.5 text-[11px] font-bold text-slate-500 transition hover:text-slate-900"
                         >
-                            <span>
-                                {isExpanded ? 'Hide Preview' : `Preview Recent (${previewList.length})`}
-                            </span>
+                            <span>{isExpanded ? 'Hide Preview' : `Preview Recent (${previewList.length})`}</span>
                             {isExpanded ? (
                                 <ChevronUp className="h-3.5 w-3.5 text-slate-400" />
                             ) : (
@@ -169,17 +163,13 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
                                 {previewList.map((pv) => (
                                     <div
                                         key={pv.id}
-                                        className="flex items-center justify-between gap-3 rounded-lg bg-white p-2 border border-slate-100 shadow-2xs text-xs"
+                                        className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-white p-2 text-xs shadow-2xs"
                                     >
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate font-bold text-slate-900">{pv.title}</p>
-                                            <p className="truncate text-[10px] font-semibold text-slate-400">
-                                                {pv.subtitle}
-                                            </p>
+                                            <p className="truncate text-[10px] font-semibold text-slate-400">{pv.subtitle}</p>
                                         </div>
-                                        <span className="shrink-0 text-[10px] font-bold text-slate-500">
-                                            {pv.context}
-                                        </span>
+                                        <span className="shrink-0 text-[10px] font-bold text-slate-500">{pv.context}</span>
                                     </div>
                                 ))}
 

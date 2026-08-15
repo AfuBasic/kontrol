@@ -42,7 +42,8 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     </motion.div>
                     <h1 className="mb-3 text-3xl font-bold tracking-tight text-gray-900">Let's get your estate ready.</h1>
                     <p className="text-lg text-gray-600">
-                        Welcome, administrator. We've set up the basics for <span className="font-semibold text-gray-900">{estate.name}</span>. Complete these recommended steps to get the most out of Kontrol.
+                        Welcome, administrator. We've set up the basics for <span className="font-semibold text-gray-900">{estate.name}</span>.
+                        Complete these recommended steps to get the most out of Kontrol.
                     </p>
                 </div>
 
@@ -64,19 +65,28 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     {/* Step 2: Estate Details */}
                     <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
                         <div className="mb-4 flex items-start gap-4 sm:mb-0 sm:items-center">
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.address_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                            <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.address_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}
+                            >
                                 {progress.address_completed ? <CheckCircle2 className="h-6 w-6" /> : <SettingsIcon className="h-5 w-5" />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-gray-900">Review estate details</h3>
-                                    {!progress.address_completed && <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium tracking-wide text-blue-700 uppercase">Recommended</span>}
+                                    {!progress.address_completed && (
+                                        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium tracking-wide text-blue-700 uppercase">
+                                            Recommended
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-sm text-gray-500">Add your estate's physical address and update contact information.</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-3 pl-14 sm:pl-0">
-                            <Link href={admin.settings.url()} className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700">
+                            <Link
+                                href={admin.settings.url()}
+                                className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition-colors hover:text-blue-700"
+                            >
                                 {progress.address_completed ? 'Update details' : 'Review details'} <ChevronRight className="h-4 w-4" />
                             </Link>
                         </div>
@@ -85,20 +95,29 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     {/* Step 3: Zones (Optional) */}
                     <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
                         <div className="mb-4 flex items-start gap-4 sm:mb-0 sm:items-center">
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.zones_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                            <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.zones_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}
+                            >
                                 {progress.zones_completed ? <CheckCircle2 className="h-6 w-6" /> : <MapPin className="h-5 w-5" />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-gray-900">Set up zones</h3>
-                                    {!progress.zones_completed && <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-gray-600 uppercase">Optional</span>}
+                                    {!progress.zones_completed && (
+                                        <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-medium tracking-wide text-gray-600 uppercase">
+                                            Optional
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-sm text-gray-500">Group your properties into streets, phases, or blocks.</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 pl-14 sm:pl-0">
                             {!progress.zones_completed && <span className="text-xs text-gray-400">Skip for now</span>}
-                            <Link href={admin.zones.index.url()} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
+                            <Link
+                                href={admin.zones.index.url()}
+                                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900"
+                            >
                                 {progress.zones_completed ? 'Manage zones' : 'Set up zones'}
                             </Link>
                         </div>
@@ -107,20 +126,29 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     {/* Step 4: Security Personnel */}
                     <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
                         <div className="mb-4 flex items-start gap-4 sm:mb-0 sm:items-center">
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.security_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                            <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.security_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}
+                            >
                                 {progress.security_completed ? <CheckCircle2 className="h-6 w-6" /> : <ShieldCheck className="h-5 w-5" />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-gray-900">Add security personnel</h3>
-                                    {!progress.security_completed && <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium tracking-wide text-blue-700 uppercase">Recommended</span>}
+                                    {!progress.security_completed && (
+                                        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium tracking-wide text-blue-700 uppercase">
+                                            Recommended
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-sm text-gray-500">Invite guards to manage access control at your entry points.</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 pl-14 sm:pl-0">
                             {!progress.security_completed && <span className="text-xs text-gray-400">Skip for now</span>}
-                            <Link href={admin.security.create.url()} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
+                            <Link
+                                href={admin.security.create.url()}
+                                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900"
+                            >
                                 {progress.security_completed ? 'Manage security' : 'Add security'}
                             </Link>
                         </div>
@@ -129,20 +157,29 @@ export default function SetupIndex({ estate, progress }: SetupProps) {
                     {/* Step 5: Invite Resident */}
                     <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:justify-between">
                         <div className="mb-4 flex items-start gap-4 sm:mb-0 sm:items-center">
-                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.residents_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
+                            <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${progress.residents_completed ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}
+                            >
                                 {progress.residents_completed ? <CheckCircle2 className="h-6 w-6" /> : <Users className="h-5 w-5" />}
                             </div>
                             <div>
                                 <div className="flex items-center gap-2">
                                     <h3 className="font-semibold text-gray-900">Invite your first resident</h3>
-                                    {!progress.residents_completed && <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium tracking-wide text-blue-700 uppercase">Recommended</span>}
+                                    {!progress.residents_completed && (
+                                        <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-medium tracking-wide text-blue-700 uppercase">
+                                            Recommended
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-sm text-gray-500">Bring your community to Kontrol by inviting a resident.</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 pl-14 sm:pl-0">
                             {!progress.residents_completed && <span className="text-xs text-gray-400">Skip for now</span>}
-                            <Link href={admin.residents.create.url()} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900">
+                            <Link
+                                href={admin.residents.create.url()}
+                                className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs transition-all hover:bg-gray-50 hover:text-gray-900"
+                            >
                                 {progress.residents_completed ? 'Manage residents' : 'Invite resident'}
                             </Link>
                         </div>

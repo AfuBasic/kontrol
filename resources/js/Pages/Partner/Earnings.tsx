@@ -168,9 +168,7 @@ export default function PartnerEarnings({
                 {/* Page title */}
                 <div>
                     <p className="text-[11px] font-medium tracking-[0.14em] text-stone-400 uppercase">Finance</p>
-                    <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight text-stone-900 dark:text-white">
-                        Earnings
-                    </h1>
+                    <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight text-stone-900 dark:text-white">Earnings</h1>
                 </div>
 
                 {/* ═══════════════════════════════════════════
@@ -191,9 +189,7 @@ export default function PartnerEarnings({
                     <div className="relative px-5 py-7 sm:px-8 sm:py-9">
                         <div className="flex flex-wrap items-start justify-between gap-6">
                             <div className="min-w-0">
-                                <p className="text-[11px] font-semibold tracking-[0.16em] text-white/40 uppercase">
-                                    Lifetime earnings
-                                </p>
+                                <p className="text-[11px] font-semibold tracking-[0.16em] text-white/40 uppercase">Lifetime earnings</p>
                                 <AnimatedNaira
                                     kobo={summary.total_earned}
                                     className="mt-1.5 block text-[2.75rem] leading-none font-semibold tracking-tight tabular-nums sm:text-[3.25rem]"
@@ -218,16 +214,12 @@ export default function PartnerEarnings({
 
                             <div className="w-full max-w-xs rounded-2xl border border-white/12 bg-white/[0.07] p-4 backdrop-blur-md sm:p-5">
                                 <div className="flex items-center justify-between gap-2">
-                                    <p className="text-[10px] font-semibold tracking-[0.14em] text-sky-200/70 uppercase">
-                                        Next settlement
-                                    </p>
+                                    <p className="text-[10px] font-semibold tracking-[0.14em] text-sky-200/70 uppercase">Next settlement</p>
                                     <CalendarDaysIcon className="h-4 w-4 text-sky-200/60" />
                                 </div>
                                 <p className="mt-2 text-[15px] font-semibold">{summary.next_settlement_month}</p>
                                 <div className="mt-2 flex items-baseline gap-1.5">
-                                    <span className="text-3xl font-semibold tabular-nums tracking-tight">
-                                        {summary.days_until_settlement}
-                                    </span>
+                                    <span className="text-3xl font-semibold tracking-tight tabular-nums">{summary.days_until_settlement}</span>
                                     <span className="text-[13px] text-white/45">days</span>
                                 </div>
                                 <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
@@ -253,9 +245,7 @@ export default function PartnerEarnings({
                                 { label: 'Settles', value: summary.next_settlement_date.split(',')[0] },
                             ].map((cell) => (
                                 <div key={cell.label} className="bg-[#061230]/80 px-4 py-3.5 backdrop-blur-sm">
-                                    <p className="text-[10px] font-medium tracking-wide text-white/40 uppercase">
-                                        {cell.label}
-                                    </p>
+                                    <p className="text-[10px] font-medium tracking-wide text-white/40 uppercase">{cell.label}</p>
                                     <p
                                         className={`mt-1 text-[15px] font-semibold tabular-nums sm:text-base ${
                                             cell.emphasize ? 'text-sky-200' : 'text-white'
@@ -273,9 +263,7 @@ export default function PartnerEarnings({
                     1. TODAY'S FOCUS - actionable tasks
                     ═══════════════════════════════════════════ */}
                 <section className="space-y-3">
-                    <h2 className="text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
-                        Today&apos;s focus
-                    </h2>
+                    <h2 className="text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">Today&apos;s focus</h2>
 
                     <div className="overflow-hidden rounded-2xl bg-white shadow-[0_1px_0_rgba(28,25,23,0.04),0_12px_32px_-20px_rgba(28,25,23,0.12)] ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:shadow-none dark:ring-white/[0.06]">
                         {/* Task: attention / estate */}
@@ -288,9 +276,7 @@ export default function PartnerEarnings({
                                     <ExclamationTriangleIcon className="h-5 w-5" />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <p className="text-[14px] font-semibold text-stone-900 dark:text-white">
-                                        {focusTask.title}
-                                    </p>
+                                    <p className="text-[14px] font-semibold text-stone-900 dark:text-white">{focusTask.title}</p>
                                     <p className="mt-0.5 text-[12px] leading-snug text-stone-500">{focusTask.description}</p>
                                 </div>
                                 <span className="mt-1 inline-flex shrink-0 items-center gap-1 text-[12px] font-semibold text-primary-600 opacity-80 transition group-hover:opacity-100 dark:text-primary-400">
@@ -310,7 +296,7 @@ export default function PartnerEarnings({
                                 <p className="mt-0.5 text-[12px] text-stone-500">
                                     {payoutTask.title}
                                     {' · '}
-                                    <span className="font-semibold tabular-nums text-stone-700 dark:text-slate-200">
+                                    <span className="font-semibold text-stone-700 tabular-nums dark:text-slate-200">
                                         {formatAmount(payoutTask.amount)}
                                     </span>
                                     {' · '}
@@ -322,9 +308,7 @@ export default function PartnerEarnings({
                                     </p>
                                 )}
                             </div>
-                            <span className="mt-1 shrink-0 text-[12px] font-medium tabular-nums text-stone-400">
-                                {payoutTask.days}d
-                            </span>
+                            <span className="mt-1 shrink-0 text-[12px] font-medium text-stone-400 tabular-nums">{payoutTask.days}d</span>
                         </div>
                     </div>
                 </section>
@@ -333,9 +317,7 @@ export default function PartnerEarnings({
                     2. SETTLEMENT PREVIEW - financial centre
                     ═══════════════════════════════════════════ */}
                 <section>
-                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
-                        Settlement
-                    </h2>
+                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">Settlement</h2>
 
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
@@ -347,9 +329,7 @@ export default function PartnerEarnings({
 
                         <div className="relative flex flex-wrap items-start justify-between gap-4">
                             <div>
-                                <p className="text-[11px] font-semibold tracking-[0.12em] text-stone-400 uppercase">
-                                    Next settlement
-                                </p>
+                                <p className="text-[11px] font-semibold tracking-[0.12em] text-stone-400 uppercase">Next settlement</p>
                                 <p className="mt-1 text-2xl font-semibold tracking-tight text-stone-900 dark:text-white">
                                     {summary.next_settlement_month}
                                 </p>
@@ -357,7 +337,7 @@ export default function PartnerEarnings({
                             </div>
                             <div className="text-right">
                                 <p className="text-[11px] font-medium text-stone-400">Projected payout</p>
-                                <p className="mt-0.5 text-2xl font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
+                                <p className="mt-0.5 text-2xl font-semibold tracking-tight text-stone-900 tabular-nums dark:text-white">
                                     {formatAmount(summary.projected_settlement)}
                                 </p>
                             </div>
@@ -366,21 +346,20 @@ export default function PartnerEarnings({
                         <div className="relative mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
                             <div className="rounded-xl bg-white/80 px-3.5 py-3 ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04] dark:ring-white/10">
                                 <p className="text-[10px] font-medium text-stone-400">Pending commission</p>
-                                <p className="mt-1 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                <p className="mt-1 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                     {formatAmount(summary.pending_commissions)}
                                 </p>
                             </div>
                             <div className="rounded-xl bg-white/80 px-3.5 py-3 ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04] dark:ring-white/10">
                                 <p className="text-[10px] font-medium text-stone-400">Eligible payments</p>
-                                <p className="mt-1 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                <p className="mt-1 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                     {summary.eligible_payment_count}
                                 </p>
                             </div>
                             <div className="col-span-2 rounded-xl bg-white/80 px-3.5 py-3 ring-1 ring-stone-900/[0.04] sm:col-span-1 dark:bg-white/[0.04] dark:ring-white/10">
                                 <p className="text-[10px] font-medium text-stone-400">Countdown</p>
-                                <p className="mt-1 text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
-                                    {summary.days_until_settlement}{' '}
-                                    <span className="text-[12px] font-medium text-stone-400">days</span>
+                                <p className="mt-1 text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
+                                    {summary.days_until_settlement} <span className="text-[12px] font-medium text-stone-400">days</span>
                                 </p>
                             </div>
                         </div>
@@ -388,7 +367,7 @@ export default function PartnerEarnings({
                         <div className="relative mt-5">
                             <div className="mb-1.5 flex justify-between text-[11px] text-stone-400">
                                 <span>Settlement progress</span>
-                                <span className="tabular-nums font-medium text-stone-600 dark:text-slate-300">{progress}%</span>
+                                <span className="font-medium text-stone-600 tabular-nums dark:text-slate-300">{progress}%</span>
                             </div>
                             <div className="h-2 overflow-hidden rounded-full bg-stone-200/80 dark:bg-white/10">
                                 <motion.div
@@ -406,9 +385,7 @@ export default function PartnerEarnings({
                     3. PAYOUT HISTORY - monthly earning rows
                     ═══════════════════════════════════════════ */}
                 <section>
-                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
-                        Payout history
-                    </h2>
+                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">Payout history</h2>
 
                     {earnings.data.length === 0 ? (
                         <div className="flex max-h-[180px] items-center gap-4 rounded-2xl bg-stone-50/80 px-5 py-5 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
@@ -416,12 +393,8 @@ export default function PartnerEarnings({
                                 <CalendarDaysIcon className="h-5 w-5" />
                             </span>
                             <div className="min-w-0 flex-1">
-                                <p className="text-[13px] font-semibold text-stone-800 dark:text-white">
-                                    No monthly payouts yet
-                                </p>
-                                <p className="mt-0.5 text-[12px] text-stone-500">
-                                    Periods appear after commissions are aggregated.
-                                </p>
+                                <p className="text-[13px] font-semibold text-stone-800 dark:text-white">No monthly payouts yet</p>
+                                <p className="mt-0.5 text-[12px] text-stone-500">Periods appear after commissions are aggregated.</p>
                             </div>
                         </div>
                     ) : (
@@ -431,9 +404,7 @@ export default function PartnerEarnings({
                                     <thead>
                                         <tr className="border-b border-stone-100 text-left text-[10px] font-semibold tracking-wide text-stone-400 uppercase dark:border-white/[0.05]">
                                             <th className="px-4 py-2.5 font-semibold sm:px-5">Period</th>
-                                            <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">
-                                                Revenue
-                                            </th>
+                                            <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">Revenue</th>
                                             <th className="px-4 py-2.5 text-right font-semibold">Commission</th>
                                             <th className="px-4 py-2.5 text-right font-semibold sm:px-5">Status</th>
                                         </tr>
@@ -443,11 +414,7 @@ export default function PartnerEarnings({
                                             const status = row.status ?? (row.is_settled ? 'paid' : 'pending');
                                             const label =
                                                 row.status_label ??
-                                                (status === 'paid'
-                                                    ? 'Paid'
-                                                    : status === 'accruing'
-                                                      ? 'Accruing'
-                                                      : 'Pending Settlement');
+                                                (status === 'paid' ? 'Paid' : status === 'accruing' ? 'Accruing' : 'Pending Settlement');
 
                                             return (
                                                 <motion.tr
@@ -458,28 +425,23 @@ export default function PartnerEarnings({
                                                     className="border-b border-stone-50 transition last:border-0 hover:bg-stone-50/60 dark:border-white/[0.04] dark:hover:bg-white/[0.02]"
                                                 >
                                                     <td className="px-4 py-3.5 sm:px-5">
-                                                        <p className="font-semibold text-stone-900 dark:text-white">
-                                                            {row.month_label}
-                                                        </p>
+                                                        <p className="font-semibold text-stone-900 dark:text-white">{row.month_label}</p>
                                                         {row.is_settled && (
                                                             <p className="mt-0.5 text-[11px] text-stone-400">
                                                                 {row.settled_at_human ??
                                                                     (row.settled_at
-                                                                        ? new Date(row.settled_at).toLocaleDateString(
-                                                                              'en-NG',
-                                                                              { dateStyle: 'medium' },
-                                                                          )
+                                                                        ? new Date(row.settled_at).toLocaleDateString('en-NG', {
+                                                                              dateStyle: 'medium',
+                                                                          })
                                                                         : null)}
-                                                                {row.payment_reference_masked
-                                                                    ? ` · Ref ${row.payment_reference_masked}`
-                                                                    : ''}
+                                                                {row.payment_reference_masked ? ` · Ref ${row.payment_reference_masked}` : ''}
                                                             </p>
                                                         )}
                                                     </td>
-                                                    <td className="hidden px-4 py-3.5 text-right tabular-nums text-stone-600 sm:table-cell dark:text-slate-300">
+                                                    <td className="hidden px-4 py-3.5 text-right text-stone-600 tabular-nums sm:table-cell dark:text-slate-300">
                                                         {formatAmount(row.revenue_amount)}
                                                     </td>
-                                                    <td className="px-4 py-3.5 text-right font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                    <td className="px-4 py-3.5 text-right font-semibold text-stone-900 tabular-nums dark:text-white">
                                                         {formatAmount(row.total_amount)}
                                                     </td>
                                                     <td className="px-4 py-3.5 text-right sm:px-5">
@@ -541,9 +503,7 @@ export default function PartnerEarnings({
                     4. COMMISSION BREAKDOWN - by estate
                     ═══════════════════════════════════════════ */}
                 <section>
-                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
-                        Commission breakdown
-                    </h2>
+                    <h2 className="mb-4 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">Commission breakdown</h2>
 
                     {breakdown.length === 0 ? (
                         <div className="flex max-h-[180px] items-center gap-4 rounded-2xl bg-stone-50/80 px-5 py-5 ring-1 ring-stone-900/[0.03] dark:bg-white/[0.03] dark:ring-white/[0.05]">
@@ -552,9 +512,7 @@ export default function PartnerEarnings({
                             </span>
                             <div className="min-w-0 flex-1">
                                 <p className="text-[13px] font-semibold text-stone-800 dark:text-white">No estate earnings yet</p>
-                                <p className="mt-0.5 text-[12px] text-stone-500">
-                                    Breakdown appears when residents on your estates pay.
-                                </p>
+                                <p className="mt-0.5 text-[12px] text-stone-500">Breakdown appears when residents on your estates pay.</p>
                             </div>
                         </div>
                     ) : (
@@ -565,9 +523,7 @@ export default function PartnerEarnings({
                                         <tr className="border-b border-stone-100 text-left text-[10px] font-semibold tracking-wide text-stone-400 uppercase dark:border-white/[0.05]">
                                             <th className="px-4 py-2.5 font-semibold sm:px-5">Estate</th>
                                             <th className="px-4 py-2.5 text-right font-semibold">Payments</th>
-                                            <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">
-                                                Revenue
-                                            </th>
+                                            <th className="hidden px-4 py-2.5 text-right font-semibold sm:table-cell">Revenue</th>
                                             <th className="px-4 py-2.5 text-right font-semibold">Commission</th>
                                             <th className="px-4 py-2.5 text-right font-semibold sm:px-5">Status</th>
                                         </tr>
@@ -582,22 +538,18 @@ export default function PartnerEarnings({
                                                 className="border-b border-stone-50 transition last:border-0 hover:bg-stone-50/60 dark:border-white/[0.04] dark:hover:bg-white/[0.02]"
                                             >
                                                 <td className="px-4 py-3.5 sm:px-5">
-                                                    <p className="font-semibold text-stone-900 dark:text-white">
-                                                        {row.estate_name}
-                                                    </p>
+                                                    <p className="font-semibold text-stone-900 dark:text-white">{row.estate_name}</p>
                                                     {row.estate_status && (
-                                                        <p className="mt-0.5 text-[11px] capitalize text-stone-400">
-                                                            {row.estate_status}
-                                                        </p>
+                                                        <p className="mt-0.5 text-[11px] text-stone-400 capitalize">{row.estate_status}</p>
                                                     )}
                                                 </td>
-                                                <td className="px-4 py-3.5 text-right tabular-nums text-stone-600 dark:text-slate-300">
+                                                <td className="px-4 py-3.5 text-right text-stone-600 tabular-nums dark:text-slate-300">
                                                     {row.payment_count}
                                                 </td>
-                                                <td className="hidden px-4 py-3.5 text-right tabular-nums text-stone-600 sm:table-cell dark:text-slate-300">
+                                                <td className="hidden px-4 py-3.5 text-right text-stone-600 tabular-nums sm:table-cell dark:text-slate-300">
                                                     {formatAmount(row.revenue_amount)}
                                                 </td>
-                                                <td className="px-4 py-3.5 text-right font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                <td className="px-4 py-3.5 text-right font-semibold text-stone-900 tabular-nums dark:text-white">
                                                     {formatAmount(row.commission_amount)}
                                                 </td>
                                                 <td className="px-4 py-3.5 text-right sm:px-5">
@@ -624,9 +576,7 @@ export default function PartnerEarnings({
                     5. INSIGHTS - compact intelligence
                     ═══════════════════════════════════════════ */}
                 <section>
-                    <h2 className="mb-3 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">
-                        Insights
-                    </h2>
+                    <h2 className="mb-3 text-[13px] font-semibold tracking-tight text-stone-500 dark:text-slate-400">Insights</h2>
                     <ul className="space-y-2">
                         {INSIGHTS.map((insight, i) => (
                             <motion.li
@@ -643,10 +593,7 @@ export default function PartnerEarnings({
                         <li className="flex items-start gap-3 rounded-xl bg-primary-50/70 px-3.5 py-3 ring-1 ring-primary-500/10 dark:bg-primary-500/10">
                             <LightBulbIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary-600 dark:text-primary-400" />
                             <p className="text-[13px] leading-snug text-primary-900 dark:text-primary-100">
-                                <Link
-                                    href="/partner/profile?tab=banking"
-                                    className="font-semibold underline-offset-2 hover:underline"
-                                >
+                                <Link href="/partner/profile?tab=banking" className="font-semibold underline-offset-2 hover:underline">
                                     Verify payout bank details
                                 </Link>{' '}
                                 before your first settlement.

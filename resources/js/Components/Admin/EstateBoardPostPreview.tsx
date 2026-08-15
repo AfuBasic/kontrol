@@ -23,7 +23,10 @@ function getAudienceIcon(audience: PostAudience) {
 }
 
 function stripHtml(html: string): string {
-    return html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    return html
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 export default function EstateBoardPostPreview({ title, body, category, priority, audience }: Props) {
@@ -37,11 +40,15 @@ export default function EstateBoardPostPreview({ title, body, category, priority
 
             <div className="p-4">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ring-1 ring-inset ${CATEGORY_COLORS[category]}`}>
+                    <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ring-1 ring-inset ${CATEGORY_COLORS[category]}`}
+                    >
                         {category}
                     </span>
                     {priority !== 'normal' && (
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${PRIORITY_BADGES[priority]}`}>
+                        <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase ${PRIORITY_BADGES[priority]}`}
+                        >
                             {priority}
                         </span>
                     )}

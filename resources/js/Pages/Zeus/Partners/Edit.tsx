@@ -1,10 +1,4 @@
-import {
-    ChevronLeftIcon,
-    EnvelopeIcon,
-    LinkIcon,
-    UserGroupIcon,
-    UserPlusIcon,
-} from '@heroicons/react/24/outline';
+import { ChevronLeftIcon, EnvelopeIcon, LinkIcon, UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -80,14 +74,18 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
     function handleConfirmResend() {
         if (selectedMemberId === null) return;
         setIsInviting(true);
-        router.post(`/zeus/partners/${partner.id}/members/${selectedMemberId}/resend-invite`, {}, {
-            preserveScroll: true,
-            onFinish: () => {
-                setIsInviting(false);
-                setInviteModalOpen(false);
-                setSelectedMemberId(null);
-            }
-        });
+        router.post(
+            `/zeus/partners/${partner.id}/members/${selectedMemberId}/resend-invite`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsInviting(false);
+                    setInviteModalOpen(false);
+                    setSelectedMemberId(null);
+                },
+            },
+        );
     }
 
     const modeOptions = [
@@ -125,7 +123,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
         <ZeusLayout>
             <Head title={`Edit Partner – ${partner.name}`} />
 
-            <div className="relative mx-auto max-w-4xl px-4 py-8 text-[#F2F3F6] bg-[#0A0B10] min-h-screen space-y-8">
+            <div className="relative mx-auto min-h-screen max-w-4xl space-y-8 bg-[#0A0B10] px-4 py-8 text-[#F2F3F6]">
                 {/* Decorative Glow */}
                 <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
 
@@ -133,13 +131,13 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <Link
                         href="/zeus/partners"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#9297A8] hover:text-[#F2F3F6] transition-colors uppercase tracking-wider"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider text-[#9297A8] uppercase transition-colors hover:text-[#F2F3F6]"
                     >
                         <ChevronLeftIcon className="h-4 w-4" /> Back to Partners
                     </Link>
                     <Link
                         href={`/zeus/partners/${partner.id}/earnings`}
-                        className="inline-flex items-center gap-2 rounded-xl bg-[#34D399] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#34D399]/90 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#34D399] px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#34D399]/90"
                     >
                         View Financial Dashboard
                     </Link>
@@ -150,16 +148,16 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 flex items-start gap-4"
+                    className="flex items-start gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6"
                 >
-                    <div className="rounded-lg bg-amber-500/10 p-2 text-[#F5A623] shrink-0">
+                    <div className="shrink-0 rounded-lg bg-amber-500/10 p-2 text-[#F5A623]">
                         <LinkIcon className="h-5 w-5" />
                     </div>
                     <div>
                         <h2 className="text-sm font-bold text-[#F2F3F6]">Portal Access URL</h2>
-                        <p className="mt-1 text-xs text-[#9297A8] leading-relaxed">
+                        <p className="mt-1 text-xs leading-relaxed text-[#9297A8]">
                             Members belonging to this partner can sign in to request estate attribution and check commissions at:{' '}
-                            <a href={partnerPortalUrl} className="font-semibold text-white underline break-all" target="_blank" rel="noreferrer">
+                            <a href={partnerPortalUrl} className="font-semibold break-all text-white underline" target="_blank" rel="noreferrer">
                                 {partnerPortalUrl}
                             </a>
                         </p>
@@ -172,7 +170,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                         initial={{ opacity: 0, y: 15 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.4 }}
-                        className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-8 shadow-2xl lg:col-span-2 space-y-6"
+                        className="space-y-6 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-8 shadow-2xl lg:col-span-2"
                     >
                         <div>
                             <div className="mb-2 flex items-center gap-2">
@@ -180,7 +178,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                 <span className="text-[10px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">PARTNER DETAILS</span>
                             </div>
                             <h2 className="text-2xl font-bold text-[#F2F3F6]">Edit Partner</h2>
-                            <p className="text-xs text-[#9297A8] mt-1">Modify partner profile, commission schedules, and credentials.</p>
+                            <p className="mt-1 text-xs text-[#9297A8]">Modify partner profile, commission schedules, and credentials.</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -188,12 +186,12 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                 <div>
                                     <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Partner Name</label>
                                     <div className="relative">
-                                        <User className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
+                                        <User className="absolute top-3.5 left-3.5 h-4 w-4 text-[#9297A8]" />
                                         <input
                                             type="text"
                                             value={data.name}
                                             onChange={(e) => setData('name', e.target.value)}
-                                            className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                            className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] transition-colors outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
                                             required
                                         />
                                     </div>
@@ -204,12 +202,12 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                     <div>
                                         <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Email Address</label>
                                         <div className="relative">
-                                            <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
+                                            <Mail className="absolute top-3.5 left-3.5 h-4 w-4 text-[#9297A8]" />
                                             <input
                                                 type="email"
                                                 value={data.email}
                                                 onChange={(e) => setData('email', e.target.value)}
-                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] transition-colors outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
                                                 required
                                             />
                                         </div>
@@ -219,12 +217,12 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                     <div>
                                         <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Phone Number</label>
                                         <div className="relative">
-                                            <Phone className="absolute left-3.5 top-3.5 h-4 w-4 text-[#9297A8]" />
+                                            <Phone className="absolute top-3.5 left-3.5 h-4 w-4 text-[#9297A8]" />
                                             <input
                                                 type="tel"
                                                 value={data.phone}
                                                 onChange={(e) => setData('phone', e.target.value)}
-                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                                className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] transition-colors outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
                                             />
                                         </div>
                                         {errors.phone && <p className="mt-1.5 text-xs text-rose-500">{errors.phone}</p>}
@@ -234,9 +232,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
 
                             {/* Commission Schedule */}
                             <div className="space-y-6 border-t border-[rgba(255,255,255,0.06)] pt-6">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8] mb-4">
-                                    Commission Schedule
-                                </h3>
+                                <h3 className="mb-4 text-xs font-bold tracking-wider text-[#9297A8] uppercase">Commission Schedule</h3>
 
                                 <div className="space-y-3">
                                     <div className="grid gap-4 sm:grid-cols-2">
@@ -259,7 +255,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                                     </div>
                                                     <div>
                                                         <span className="block text-sm font-bold text-[#F2F3F6]">{opt.title}</span>
-                                                        <span className="block text-xs text-[#9297A8] mt-1">{opt.description}</span>
+                                                        <span className="mt-1 block text-xs text-[#9297A8]">{opt.description}</span>
                                                     </div>
                                                 </button>
                                             );
@@ -273,13 +269,13 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}
                                             exit={{ opacity: 0, height: 0 }}
-                                            className="overflow-hidden space-y-2 mt-4"
+                                            className="mt-4 space-y-2 overflow-hidden"
                                         >
                                             <label className="block text-xs font-semibold text-[#9297A8]">
                                                 {data.commission_type === 'percentage' ? 'Commission Rate (%)' : 'Flat Amount (₦)'}
                                             </label>
                                             <div className="relative">
-                                                <span className="absolute left-4 top-3.5 text-sm font-bold text-[#9297A8]">
+                                                <span className="absolute top-3.5 left-4 text-sm font-bold text-[#9297A8]">
                                                     {data.commission_type === 'percentage' ? '%' : '₦'}
                                                 </span>
                                                 <input
@@ -299,15 +295,13 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                                     ? 'Enter flat amount in Naira (e.g. 5000 = ₦5,000.00)'
                                                     : 'Percentage rate applied to resident transaction fees.'}
                                             </p>
-                                            {errors.commission_rate && <p className="text-xs text-rose-500 mt-1">{errors.commission_rate}</p>}
+                                            {errors.commission_rate && <p className="mt-1 text-xs text-rose-500">{errors.commission_rate}</p>}
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
 
                                 <div className="space-y-2">
-                                    <label className="block text-xs font-semibold text-[#9297A8]">
-                                        Commission Length
-                                    </label>
+                                    <label className="block text-xs font-semibold text-[#9297A8]">Commission Length</label>
                                     <div className="grid gap-2 sm:grid-cols-4">
                                         {lengthOptions.map((opt) => {
                                             const isSelected = data.commission_length === opt.value;
@@ -327,15 +321,13 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                             );
                                         })}
                                     </div>
-                                    {errors.commission_length && <p className="text-xs text-rose-500 mt-1">{errors.commission_length}</p>}
+                                    {errors.commission_length && <p className="mt-1 text-xs text-rose-500">{errors.commission_length}</p>}
                                 </div>
                             </div>
 
                             {/* Lifecycle Status Option */}
                             <div className="space-y-3 border-t border-[rgba(255,255,255,0.06)] pt-6">
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-[#9297A8]">
-                                    Account Status
-                                </h3>
+                                <h3 className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Account Status</h3>
                                 <div className="flex gap-3">
                                     {statusOptions.map((opt) => {
                                         const isSelected = data.status === opt.value;
@@ -344,7 +336,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                                 key={opt.value}
                                                 type="button"
                                                 onClick={() => setData('status', opt.value as any)}
-                                                className={`rounded-full px-4 py-2 text-xs font-bold border transition-all ${
+                                                className={`rounded-full border px-4 py-2 text-xs font-bold transition-all ${
                                                     isSelected
                                                         ? opt.color + ' ring-1 ring-[#6C5DFD]'
                                                         : 'border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-[#9297A8] hover:border-gray-700'
@@ -355,20 +347,20 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                         );
                                     })}
                                 </div>
-                                {errors.status && <p className="text-xs text-rose-500 mt-1">{errors.status}</p>}
+                                {errors.status && <p className="mt-1 text-xs text-rose-500">{errors.status}</p>}
                             </div>
 
                             <div className="flex gap-4 border-t border-[rgba(255,255,255,0.08)] pt-6">
                                 <Link
                                     href="/zeus/partners"
-                                    className="flex-1 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] py-4 text-center text-sm font-bold text-[#9297A8] hover:bg-gray-800 transition-colors"
+                                    className="flex-1 rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] py-4 text-center text-sm font-bold text-[#9297A8] transition-colors hover:bg-gray-800"
                                 >
                                     Cancel
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 rounded-2xl bg-[#6C5DFD] py-4 text-sm font-bold text-white shadow-lg hover:bg-[#6C5DFD]/90 transition-all active:scale-[0.98]"
+                                    className="flex-1 rounded-2xl bg-[#6C5DFD] py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-[#6C5DFD]/90 active:scale-[0.98]"
                                 >
                                     {processing ? 'Saving...' : 'Save Changes'}
                                 </button>
@@ -383,7 +375,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                             initial={{ opacity: 0, x: 15 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.4, delay: 0.05 }}
-                            className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl space-y-4"
+                            className="space-y-4 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="rounded-lg bg-[#6C5DFD]/10 p-2 text-[#6C5DFD]">
@@ -425,7 +417,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                 <button
                                     type="submit"
                                     disabled={inviteForm.processing}
-                                    className="w-full inline-flex justify-center items-center gap-2 rounded-xl bg-gray-900 border border-[rgba(255,255,255,0.08)] px-4 py-2.5 text-sm font-bold text-white hover:bg-gray-800 transition-colors disabled:opacity-60"
+                                    className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.08)] bg-gray-900 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-gray-800 disabled:opacity-60"
                                 >
                                     <EnvelopeIcon className="h-4.5 w-4.5" />
                                     Send Invitation
@@ -438,7 +430,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                             initial={{ opacity: 0, x: 15 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ duration: 0.4, delay: 0.1 }}
-                            className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl space-y-4"
+                            className="space-y-4 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="rounded-lg bg-gray-950/40 p-2 text-gray-500">
@@ -451,21 +443,21 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                             </div>
 
                             {members.length === 0 ? (
-                                <p className="text-sm text-gray-600 py-4 text-center">No portal members active yet.</p>
+                                <p className="py-4 text-center text-sm text-gray-600">No portal members active yet.</p>
                             ) : (
-                                <ul className="divide-y divide-[rgba(255,255,255,0.05)] max-h-64 overflow-y-auto pr-1">
+                                <ul className="max-h-64 divide-y divide-[rgba(255,255,255,0.05)] overflow-y-auto pr-1">
                                     {members.map((member) => (
-                                        <li key={member.id} className="py-3 flex items-center justify-between">
+                                        <li key={member.id} className="flex items-center justify-between py-3">
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-sm font-semibold text-[#F2F3F6]">{member.name}</p>
                                                     {!member.email_verified_at && (
-                                                        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold text-blue-400 border border-blue-500/20">
+                                                        <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[9px] font-bold text-blue-400">
                                                             Pending
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-[#9297A8] mt-0.5">{member.email}</p>
+                                                <p className="mt-0.5 text-xs text-[#9297A8]">{member.email}</p>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 {!member.email_verified_at && (

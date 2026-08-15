@@ -26,10 +26,7 @@ export function useNetworkQuality(): UseNetworkQualityResult {
     }, []);
 
     const refresh = useCallback((timeoutMs?: number) => NetworkMonitor.checkNow(timeoutMs), []);
-    const isServerReachable = useCallback(
-        (timeoutMs?: number, path?: string) => NetworkMonitor.isServerReachable(timeoutMs, path),
-        []
-    );
+    const isServerReachable = useCallback((timeoutMs?: number, path?: string) => NetworkMonitor.isServerReachable(timeoutMs, path), []);
 
     return {
         quality: snapshot.quality,

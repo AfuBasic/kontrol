@@ -176,7 +176,7 @@ export default function Create({ categories }: Props) {
                 <div>
                     <Link
                         href="/security/incidents"
-                        className="inline-flex items-center gap-1 text-xs font-black uppercase tracking-wider text-slate-500 hover:text-slate-900 transition"
+                        className="inline-flex items-center gap-1 text-xs font-black tracking-wider text-slate-500 uppercase transition hover:text-slate-900"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Workspace
@@ -186,7 +186,9 @@ export default function Create({ categories }: Props) {
                 <div className="rounded-2xl border border-slate-200/60 bg-white p-5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)]">
                     <div className="mb-5 border-b border-slate-100 pb-3">
                         <h1 className="text-lg font-black tracking-tight text-slate-900">Report Incident</h1>
-                        <p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">File an official report. Security reports default to private and are visible to estate administrators for dispatching.</p>
+                        <p className="mt-0.5 text-[10.5px] font-semibold text-slate-400">
+                            File an official report. Security reports default to private and are visible to estate administrators for dispatching.
+                        </p>
                     </div>
 
                     {customError && (
@@ -199,7 +201,7 @@ export default function Create({ categories }: Props) {
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Title */}
                         <div>
-                            <label htmlFor="title" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <label htmlFor="title" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 Incident Title
                             </label>
                             <input
@@ -208,7 +210,7 @@ export default function Create({ categories }: Props) {
                                 value={data.title}
                                 onChange={(e) => setData('title', e.target.value)}
                                 placeholder="e.g. Suspicious vehicle near gate house"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 transition-all placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                 required
                             />
                             {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
@@ -216,7 +218,7 @@ export default function Create({ categories }: Props) {
 
                         {/* Description */}
                         <div>
-                            <label htmlFor="body" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <label htmlFor="body" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 Description / Context
                             </label>
                             <textarea
@@ -225,7 +227,7 @@ export default function Create({ categories }: Props) {
                                 onChange={(e) => setData('body', e.target.value)}
                                 placeholder="Describe the safety threat, property damage, or operational breakdown..."
                                 rows={5}
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 transition-all placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                 required
                             />
                             {errors.body && <span className="mt-1 block text-xs font-medium text-red-600">{errors.body}</span>}
@@ -234,14 +236,14 @@ export default function Create({ categories }: Props) {
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {/* Category */}
                             <div>
-                                <label htmlFor="category" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                <label htmlFor="category" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                     Category
                                 </label>
                                 <select
                                     id="category"
                                     value={data.category}
                                     onChange={(e) => setData('category', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 transition-all focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     required
                                 >
                                     <option value="">Select Category</option>
@@ -256,14 +258,14 @@ export default function Create({ categories }: Props) {
 
                             {/* Priority */}
                             <div>
-                                <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                     Priority
                                 </label>
                                 <select
                                     id="priority"
                                     value={data.priority}
                                     onChange={(e) => setData('priority', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 transition-all focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     required
                                 >
                                     <option value="low">Low</option>
@@ -277,7 +279,7 @@ export default function Create({ categories }: Props) {
 
                         {/* Location */}
                         <div>
-                            <label htmlFor="location" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <label htmlFor="location" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 Property / Location
                             </label>
                             <input
@@ -286,28 +288,22 @@ export default function Create({ categories }: Props) {
                                 value={data.location}
                                 onChange={(e) => setData('location', e.target.value)}
                                 placeholder="e.g. Block C, Visitor Car Park"
-                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden transition-all"
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold text-slate-900 transition-all placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                             />
                             {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
                         </div>
 
                         {/* Attachment upload */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                 Evidence Attachment (Image or Video)
                             </label>
                             <div className="flex flex-col gap-4">
-                                <input
-                                    type="file"
-                                    accept="image/*,video/*"
-                                    ref={fileInputRef}
-                                    onChange={handleFileChange}
-                                    className="hidden"
-                                />
+                                <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center hover:border-slate-800 hover:bg-slate-50/55 transition"
+                                    className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center transition hover:border-slate-800 hover:bg-slate-50/55"
                                 >
                                     <Paperclip className="h-4 w-4 text-slate-400" />
                                     <span className="text-xs font-bold text-slate-500">Choose file...</span>
@@ -323,7 +319,7 @@ export default function Create({ categories }: Props) {
                                         <button
                                             type="button"
                                             onClick={handleRemoveAttachment}
-                                            className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white hover:bg-slate-950 transition"
+                                            className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white transition hover:bg-slate-950"
                                         >
                                             ✕
                                         </button>
@@ -336,14 +332,14 @@ export default function Create({ categories }: Props) {
                         <div className="flex justify-end gap-3 border-t border-slate-100 pt-4">
                             <Link
                                 href="/security/incidents"
-                                className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-600 hover:bg-slate-200 transition"
+                                className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black tracking-wider text-slate-600 uppercase transition hover:bg-slate-200"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing || uploadingMedia}
-                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 disabled:opacity-40 transition shadow-xs"
+                                className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-xs transition hover:bg-slate-800 disabled:opacity-40"
                             >
                                 {processing || uploadingMedia ? (
                                     <>

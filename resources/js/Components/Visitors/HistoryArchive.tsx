@@ -19,12 +19,7 @@ type Props = {
     initialSearch?: string;
 };
 
-export default function HistoryArchive({
-    historyTimeline,
-    recentVisitors,
-    onInviteAgain,
-    initialSearch = '',
-}: Props) {
+export default function HistoryArchive({ historyTimeline, recentVisitors, onInviteAgain, initialSearch = '' }: Props) {
     const [search, setSearch] = useState(initialSearch);
     const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
 
@@ -59,21 +54,21 @@ export default function HistoryArchive({
         <div className="space-y-4 py-2">
             {/* Search Input */}
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search past visitors, phone numbers or codes..."
-                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-4 text-xs font-semibold text-slate-900 placeholder-slate-400 transition focus:border-primary-500 focus:outline-hidden"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-4 pl-9 text-xs font-semibold text-slate-900 placeholder-slate-400 transition focus:border-primary-500 focus:outline-hidden"
                 />
             </div>
 
             {/* Horizontal Snap Scroll of Compact Recent Contacts Chips */}
             {!search && recentVisitors.length > 0 && (
                 <div className="space-y-1.5">
-                    <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recent Contacts</h4>
-                    <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    <h4 className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Recent Contacts</h4>
+                    <div className="scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
                         {recentVisitors.map((v) => {
                             const category = deriveCategory(v.purpose, v.type);
                             return (
@@ -82,9 +77,7 @@ export default function HistoryArchive({
                                     className="flex shrink-0 snap-start items-center gap-2 rounded-full border border-slate-200 bg-white px-2.5 py-1.5 shadow-2xs transition hover:border-primary-300 hover:bg-primary-50/30"
                                 >
                                     <VisitorAvatar category={category} name={v.visitor_name} size="sm" />
-                                    <span className="max-w-[100px] truncate text-xs font-bold text-slate-900">
-                                        {v.visitor_name}
-                                    </span>
+                                    <span className="max-w-[100px] truncate text-xs font-bold text-slate-900">{v.visitor_name}</span>
                                     <button
                                         onClick={() => onInviteAgain(v)}
                                         className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-50 text-primary-600 transition hover:bg-primary-500 hover:text-white"
@@ -101,7 +94,7 @@ export default function HistoryArchive({
 
             {/* Monthly Archive Accordion */}
             <div className="space-y-2">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Monthly Archive</h4>
+                <h4 className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Monthly Archive</h4>
                 {monthKeys.length === 0 ? (
                     <p className="py-6 text-center text-xs font-semibold text-slate-400">No past visitors found.</p>
                 ) : (
@@ -110,12 +103,14 @@ export default function HistoryArchive({
                         const isExpanded = expandedMonths[month] ?? idx === 0;
 
                         return (
-                            <div key={month} className="rounded-xl border border-slate-100 bg-white overflow-hidden">
+                            <div key={month} className="overflow-hidden rounded-xl border border-slate-100 bg-white">
                                 <button
                                     onClick={() => toggleMonth(month)}
                                     className="flex w-full items-center justify-between p-3.5 text-left text-xs font-bold text-slate-900 hover:bg-slate-50"
                                 >
-                                    <span>{month} ({items.length} visit{items.length === 1 ? '' : 's'})</span>
+                                    <span>
+                                        {month} ({items.length} visit{items.length === 1 ? '' : 's'})
+                                    </span>
                                     {isExpanded ? (
                                         <ChevronDown className="h-4 w-4 text-slate-400" />
                                     ) : (

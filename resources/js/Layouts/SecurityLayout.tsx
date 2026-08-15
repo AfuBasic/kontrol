@@ -281,11 +281,8 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
             .filter((other) => other !== item)
             .some((other) =>
                 other.matchPaths.some((otherPath) => {
-                    return (
-                        otherPath.length > matchedPath.length &&
-                        (currentPath === otherPath || currentPath.startsWith(otherPath + '/'))
-                    );
-                })
+                    return otherPath.length > matchedPath.length && (currentPath === otherPath || currentPath.startsWith(otherPath + '/'));
+                }),
             );
 
         return !otherItemsMatch;

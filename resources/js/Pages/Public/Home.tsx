@@ -244,7 +244,6 @@ export default function Home() {
                     <InteractiveShowcase />
                 </section>
 
-
                 {/* BIG CTA FOOTER */}
                 <section id="download" className="relative overflow-hidden bg-slate-900 py-40 sm:py-56">
                     {/* Simple Dotted Pattern Background */}

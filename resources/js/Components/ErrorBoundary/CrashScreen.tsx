@@ -44,7 +44,8 @@ export default function CrashScreen({ error, resetError }: Props) {
         if (!error) return;
         const text = `${error.name}: ${error.message}\n\nStack Trace:\n${error.stack}`;
         if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text)
+            navigator.clipboard
+                .writeText(text)
                 .then(() => {
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);

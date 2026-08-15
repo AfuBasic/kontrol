@@ -107,7 +107,7 @@ function SectionCard({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.035] dark:ring-white/[0.06] sm:p-6 ${className}`}
+            className={`rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] sm:p-6 dark:bg-white/[0.035] dark:ring-white/[0.06] ${className}`}
         >
             <div className="mb-4 flex items-center justify-between gap-3">
                 <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">{title}</h2>
@@ -133,8 +133,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
     const [matchScore, setMatchScore] = useState<number | null>(null);
     const [editing, setEditing] = useState(!banking.is_verified);
 
-    const filteredBanks =
-        bankQuery === '' ? banks : banks.filter((bank) => bank.name.toLowerCase().includes(bankQuery.toLowerCase()));
+    const filteredBanks = bankQuery === '' ? banks : banks.filter((bank) => bank.name.toLowerCase().includes(bankQuery.toLowerCase()));
 
     useEffect(() => {
         if (data.account_number !== banking.account_number || data.bank_code !== banking.bank_code) {
@@ -166,9 +165,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                 setMatchScore(typeof response.data.match?.score === 'number' ? response.data.match.score : null);
 
                 if (!response.data.match?.accepted) {
-                    setResolveError(
-                        `Account name "${response.data.account_name}" does not match your partner or contact name closely enough.`,
-                    );
+                    setResolveError(`Account name "${response.data.account_name}" does not match your partner or contact name closely enough.`);
                 }
             }
         } catch (error: unknown) {
@@ -202,9 +199,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                             <BanknotesIcon className="h-6 w-6" />
                         </span>
                         <div>
-                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">
-                                {banking.bank_name || 'Payout account'}
-                            </p>
+                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">{banking.bank_name || 'Payout account'}</p>
                             <p className="mt-0.5 flex items-center gap-1.5 text-[12px] font-medium text-emerald-600 dark:text-emerald-400">
                                 <CheckCircleIcon className="h-3.5 w-3.5" />
                                 Verified
@@ -273,7 +268,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                     >
                         <div className="relative">
                             <ComboboxInput
-                                className="w-full rounded-xl bg-stone-50 px-3.5 py-3 text-[13px] font-medium text-stone-900 outline-none ring-1 ring-stone-900/[0.06] focus:ring-2 focus:ring-primary-200 dark:bg-white/5 dark:text-white dark:ring-white/10"
+                                className="w-full rounded-xl bg-stone-50 px-3.5 py-3 text-[13px] font-medium text-stone-900 ring-1 ring-stone-900/[0.06] outline-none focus:ring-2 focus:ring-primary-200 dark:bg-white/5 dark:text-white dark:ring-white/10"
                                 displayValue={(bank: Bank | null) => bank?.name || ''}
                                 onChange={(event) => setBankQuery(event.target.value)}
                                 placeholder="Search for a bank…"
@@ -310,9 +305,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-[12px] font-medium text-stone-600 dark:text-slate-300">
-                        Account number
-                    </label>
+                    <label className="mb-1.5 block text-[12px] font-medium text-stone-600 dark:text-slate-300">Account number</label>
                     <div className="flex gap-2">
                         <input
                             type="text"
@@ -321,7 +314,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                             value={data.account_number}
                             onChange={(e) => setData('account_number', e.target.value.replace(/\D/g, '').slice(0, 10))}
                             placeholder="10-digit NUBAN"
-                            className="w-full rounded-xl bg-stone-50 px-3.5 py-3 text-[13px] font-medium tabular-nums outline-none ring-1 ring-stone-900/[0.06] focus:ring-2 focus:ring-primary-200 dark:bg-white/5 dark:text-white dark:ring-white/10"
+                            className="w-full rounded-xl bg-stone-50 px-3.5 py-3 text-[13px] font-medium tabular-nums ring-1 ring-stone-900/[0.06] outline-none focus:ring-2 focus:ring-primary-200 dark:bg-white/5 dark:text-white dark:ring-white/10"
                         />
                         <button
                             type="button"
@@ -358,9 +351,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                                 {matchScore != null && ` (${Math.round(matchScore * 100)}%)`}
                             </p>
                         ) : (
-                            <p className="mt-1 text-[11px] font-medium text-amber-800 dark:text-amber-300">
-                                Name does not match closely enough.
-                            </p>
+                            <p className="mt-1 text-[11px] font-medium text-amber-800 dark:text-amber-300">Name does not match closely enough.</p>
                         )}
                     </div>
                 )}
@@ -445,7 +436,7 @@ export default function PartnerProfile({
                     <div className="relative px-5 py-7 sm:px-8 sm:py-9">
                         <div className="flex flex-wrap items-start gap-5">
                             <div className="relative">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-lg font-bold shadow-lg shadow-blue-900/40 ring-2 ring-white/15 sm:h-20 sm:w-20 sm:text-xl">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-blue-500 to-indigo-600 text-lg font-bold shadow-lg ring-2 shadow-blue-900/40 ring-white/15 sm:h-20 sm:w-20 sm:text-xl">
                                     {initials}
                                 </div>
                                 {isVerified && (
@@ -472,9 +463,7 @@ export default function PartnerProfile({
 
                                 <div className="mt-5 flex flex-wrap gap-2">
                                     <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
-                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">
-                                            Commission
-                                        </p>
+                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">Commission</p>
                                         <p className="text-[13px] font-semibold">
                                             {formatCommission(partner?.commission_rate ?? null, partner?.commission_type ?? null)}
                                             <span className="ml-1 text-[11px] font-medium text-white/45">
@@ -483,9 +472,7 @@ export default function PartnerProfile({
                                         </p>
                                     </div>
                                     <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
-                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">
-                                            Partner ID
-                                        </p>
+                                        <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">Partner ID</p>
                                         <p className="font-mono text-[13px] font-semibold tracking-wide">{partnerCode}</p>
                                     </div>
                                     <div className="rounded-xl bg-white/[0.07] px-3 py-2 ring-1 ring-white/10">
@@ -522,11 +509,8 @@ export default function PartnerProfile({
                 </motion.section>
 
                 {/* ═══ HORIZONTAL TABS ═══ */}
-                <nav
-                    className="sticky top-14 z-20 -mx-1 overflow-x-auto px-1 sm:top-16"
-                    aria-label="Account sections"
-                >
-                    <div className="inline-flex min-w-full gap-0.5 rounded-2xl bg-white/90 p-1 shadow-sm ring-1 ring-stone-900/[0.05] backdrop-blur-xl dark:bg-slate-950/90 dark:ring-white/10 sm:min-w-0">
+                <nav className="sticky top-14 z-20 -mx-1 overflow-x-auto px-1 sm:top-16" aria-label="Account sections">
+                    <div className="inline-flex min-w-full gap-0.5 rounded-2xl bg-white/90 p-1 shadow-sm ring-1 ring-stone-900/[0.05] backdrop-blur-xl sm:min-w-0 dark:bg-slate-950/90 dark:ring-white/10">
                         {TABS.map((t) => {
                             const isActive = active === t.key;
 
@@ -584,9 +568,7 @@ export default function PartnerProfile({
                                             {initials}
                                         </div>
                                         <div>
-                                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">
-                                                {businessName}
-                                            </p>
+                                            <p className="text-[15px] font-semibold text-stone-900 dark:text-white">{businessName}</p>
                                             <p className="text-[12px] text-stone-500">{user.email}</p>
                                         </div>
                                     </div>
@@ -630,9 +612,7 @@ export default function PartnerProfile({
                                     ) : (
                                         <div className="rounded-xl bg-stone-50 px-4 py-5 text-center dark:bg-white/[0.03]">
                                             <BanknotesIcon className="mx-auto h-8 w-8 text-stone-300" />
-                                            <p className="mt-2 text-[13px] font-semibold text-stone-800 dark:text-white">
-                                                No payout account
-                                            </p>
+                                            <p className="mt-2 text-[13px] font-semibold text-stone-800 dark:text-white">No payout account</p>
                                             <button
                                                 type="button"
                                                 onClick={() => setTab('banking')}
@@ -652,7 +632,7 @@ export default function PartnerProfile({
                                         </Link>
                                     }
                                 >
-                                    <p className="text-3xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    <p className="text-3xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                         {formatCommission(partner?.commission_rate ?? null, partner?.commission_type ?? null)}
                                     </p>
                                     <p className="mt-1 text-[12px] text-stone-500">
@@ -669,16 +649,14 @@ export default function PartnerProfile({
                                     <div className="mb-3 flex items-end justify-between">
                                         <div>
                                             <p className="text-[11px] text-stone-400">Security score</p>
-                                            <p className="text-2xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                            <p className="text-2xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                                 {securityScore}
                                                 <span className="text-sm font-medium text-stone-400">%</span>
                                             </p>
                                         </div>
                                         <span
                                             className={`text-[12px] font-semibold ${
-                                                securityScore >= 85
-                                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                                    : 'text-amber-600 dark:text-amber-400'
+                                                securityScore >= 85 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                                             }`}
                                         >
                                             {securityScore >= 85 ? 'Healthy' : 'Improve'}
@@ -798,16 +776,12 @@ export default function PartnerProfile({
                                 <SectionCard title="Plan" className="lg:col-span-2">
                                     {partner ? (
                                         <>
-                                            <p className="text-[11px] font-semibold tracking-wide text-stone-400 uppercase">
-                                                Growth
-                                            </p>
-                                            <p className="mt-1 text-4xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                            <p className="text-[11px] font-semibold tracking-wide text-stone-400 uppercase">Growth</p>
+                                            <p className="mt-1 text-4xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                                 {formatCommission(partner.commission_rate, partner.commission_type)}
                                             </p>
-                                            <p className="mt-2 text-[13px] text-stone-500">
-                                                {formatCommissionLength(partner.commission_length)}
-                                            </p>
-                                            <p className="mt-1 text-[12px] capitalize text-stone-400">
+                                            <p className="mt-2 text-[13px] text-stone-500">{formatCommissionLength(partner.commission_length)}</p>
+                                            <p className="mt-1 text-[12px] text-stone-400 capitalize">
                                                 {partner.commission_type ?? 'percentage'} plan
                                             </p>
                                         </>
@@ -819,13 +793,13 @@ export default function PartnerProfile({
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
                                             <p className="text-[10px] text-stone-400">Total settled</p>
-                                            <p className="mt-1 text-xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                            <p className="mt-1 text-xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                                 {formatAmount(finance.total_earned)}
                                             </p>
                                         </div>
                                         <div className="rounded-xl bg-stone-50 px-3.5 py-3 dark:bg-white/[0.04]">
                                             <p className="text-[10px] text-stone-400">Pending</p>
-                                            <p className="mt-1 text-xl font-semibold tabular-nums text-primary-700 dark:text-primary-300">
+                                            <p className="mt-1 text-xl font-semibold text-primary-700 tabular-nums dark:text-primary-300">
                                                 {formatAmount(finance.pending_commissions)}
                                             </p>
                                         </div>
@@ -848,7 +822,7 @@ export default function PartnerProfile({
                         {active === 'security' && (
                             <div className="grid gap-4 lg:grid-cols-2">
                                 <SectionCard title="Security score">
-                                    <p className="text-4xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    <p className="text-4xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                         {securityScore}
                                         <span className="text-lg text-stone-400">%</span>
                                     </p>
@@ -871,12 +845,8 @@ export default function PartnerProfile({
                                     <div className="flex items-start gap-3 rounded-xl bg-stone-50 px-4 py-3.5 dark:bg-white/[0.04]">
                                         <UserCircleIcon className="mt-0.5 h-5 w-5 text-stone-400" />
                                         <div>
-                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                This device
-                                            </p>
-                                            <p className="mt-0.5 text-[12px] text-stone-500">
-                                                Active session · Device management coming soon
-                                            </p>
+                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">This device</p>
+                                            <p className="mt-0.5 text-[12px] text-stone-500">Active session · Device management coming soon</p>
                                         </div>
                                     </div>
                                 </SectionCard>
@@ -884,12 +854,9 @@ export default function PartnerProfile({
                                 <SectionCard title="Login email" className="lg:col-span-2">
                                     <div className="flex flex-wrap items-start justify-between gap-4">
                                         <div className="min-w-0">
-                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                {user.email}
-                                            </p>
+                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{user.email}</p>
                                             <p className="mt-1 max-w-lg text-[12px] leading-relaxed text-stone-500">
-                                                If you have an issue with your login email, contact support so we can
-                                                verify the change securely.
+                                                If you have an issue with your login email, contact support so we can verify the change securely.
                                             </p>
                                         </div>
                                         <Link
@@ -909,9 +876,7 @@ export default function PartnerProfile({
                                     <div className="flex items-center gap-3 py-4">
                                         <ClockIcon className="h-8 w-8 text-stone-300" />
                                         <div>
-                                            <p className="text-[13px] font-semibold text-stone-800 dark:text-white">
-                                                No activity yet
-                                            </p>
+                                            <p className="text-[13px] font-semibold text-stone-800 dark:text-white">No activity yet</p>
                                             <p className="text-[12px] text-stone-500">Estate events will appear here.</p>
                                         </div>
                                     </div>
@@ -926,9 +891,7 @@ export default function PartnerProfile({
                                                 className="relative pb-5 last:pb-0"
                                             >
                                                 <span className="absolute top-1.5 -left-[1.4rem] h-2.5 w-2.5 rounded-full bg-primary-500 ring-4 ring-white dark:ring-slate-950" />
-                                                <p className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                    {item.title}
-                                                </p>
+                                                <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{item.title}</p>
                                                 <p className="mt-0.5 text-[12px] text-stone-500">
                                                     {item.status_label}
                                                     <span className="text-stone-300"> · </span>

@@ -55,10 +55,7 @@ export async function shareAccessCode(accessCode: AccessCode & { pass_uuid?: str
         : null;
 
     // Compose location: "Plot 7, Block 8, Akinola Street, Adelade Estate"
-    const locationParts = [
-        accessCode.resident_address ?? null,
-        accessCode.estate_name ?? null,
-    ].filter(Boolean);
+    const locationParts = [accessCode.resident_address ?? null, accessCode.estate_name ?? null].filter(Boolean);
     const location = locationParts.length > 0 ? locationParts.join(', ') : null;
 
     let text = '';

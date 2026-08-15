@@ -115,9 +115,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                 className="mb-8"
             >
                 <h1 className="text-2xl font-semibold text-gray-900">Create Announcement</h1>
-                <p className="mt-1 max-w-2xl text-gray-500">
-                    Start with a short brief or template, generate a draft, refine it, then publish.
-                </p>
+                <p className="mt-1 max-w-2xl text-gray-500">Start with a short brief or template, generate a draft, refine it, then publish.</p>
             </motion.div>
 
             <form onSubmit={handleSubmit}>
@@ -195,7 +193,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                         </motion.div>
                     </div>
 
-                    <div className="order-1 space-y-6 xl:order-2 xl:sticky xl:top-6 xl:self-start">
+                    <div className="order-1 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -314,7 +312,9 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                             {zones.length > 0 && (
                                 <div>
                                     <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Zone targeting</label>
-                                    <p className="mb-3 text-[11px] text-gray-500">Leave empty to reach the entire estate. Select zones to notify only residents in those areas.</p>
+                                    <p className="mb-3 text-[11px] text-gray-500">
+                                        Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
+                                    </p>
                                     <div className="space-y-2">
                                         {zones.map((zone) => {
                                             const selected = data.zone_ids.includes(zone.id);
@@ -333,9 +333,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                                         onChange={() => {
                                                             setData(
                                                                 'zone_ids',
-                                                                selected
-                                                                    ? data.zone_ids.filter((id) => id !== zone.id)
-                                                                    : [...data.zone_ids, zone.id],
+                                                                selected ? data.zone_ids.filter((id) => id !== zone.id) : [...data.zone_ids, zone.id],
                                                             );
                                                         }}
                                                         className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -393,9 +391,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                 <div className="grid grid-cols-2 gap-2">
                                     <label
                                         className={`flex cursor-pointer flex-col rounded-xl border-2 p-3 transition-all ${
-                                            data.status === 'published'
-                                                ? 'border-green-500 bg-green-50'
-                                                : 'border-gray-200 hover:bg-gray-50'
+                                            data.status === 'published' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'
                                         }`}
                                     >
                                         <input

@@ -46,18 +46,18 @@ export default function Invalid({ type = 'default', estateName }: Props) {
                             </motion.div>
 
                             <h1 className="mb-2 text-2xl font-semibold tracking-tight text-white">
-                                {type === 'admin_accepted' 
-                                    ? 'Administrator Account Active' 
+                                {type === 'admin_accepted'
+                                    ? 'Administrator Account Active'
                                     : type === 'admin_expired'
-                                    ? 'Invitation Expired'
-                                    : 'Invalid or Expired Link'}
+                                      ? 'Invitation Expired'
+                                      : 'Invalid or Expired Link'}
                             </h1>
                             <p className="mb-8 text-sm leading-relaxed text-white/60">
                                 {type === 'admin_accepted'
                                     ? `The administrator account for ${estateName} has already been set up. You can log in to your dashboard to manage the estate.`
                                     : type === 'admin_expired'
-                                    ? `Your administrator invitation for ${estateName} has expired. Please contact Kontrol support or your partner representative to request a new invitation link.`
-                                    : 'This invitation link is no longer valid. It may have expired, or you might have already used it to set up your account.'}
+                                      ? `Your administrator invitation for ${estateName} has expired. Please contact Kontrol support or your partner representative to request a new invitation link.`
+                                      : 'This invitation link is no longer valid. It may have expired, or you might have already used it to set up your account.'}
                             </p>
 
                             <div className="flex flex-col gap-4">

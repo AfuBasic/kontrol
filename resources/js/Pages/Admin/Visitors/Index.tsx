@@ -8,13 +8,7 @@ import ActivityTimeline from '@/Components/Admin/Visitors/ActivityTimeline';
 import OnPropertyNow from '@/Components/Admin/Visitors/OnPropertyNow';
 import RecordDetail from '@/Components/Admin/Visitors/RecordDetail';
 import VisitorTable from '@/Components/Admin/Visitors/VisitorTable';
-import type {
-    ActivityView,
-    SortDirection,
-    SortField,
-    VisitorFilters,
-    VisitorRecord,
-} from '@/Components/Admin/Visitors/types';
+import type { ActivityView, SortDirection, SortField, VisitorFilters, VisitorRecord } from '@/Components/Admin/Visitors/types';
 import { OfflineState } from '@/Components/States';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
@@ -38,14 +32,7 @@ type Props = {
     expectedTodayCount?: number;
 };
 
-export default function VisitorIndex({
-    logs,
-    filters,
-    hosts,
-    checkoutEnabled = false,
-    currentlyInsideList = [],
-    expectedTodayCount = 0,
-}: Props) {
+export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, currentlyInsideList = [], expectedTodayCount = 0 }: Props) {
     const hostOptions = hosts ?? [];
     const onProperty = currentlyInsideList ?? [];
     const activeView: ActivityView = filters.view === 'table' ? 'table' : 'activity';
@@ -77,7 +64,7 @@ export default function VisitorIndex({
             }
             router.get(index.url(), merged, { preserveState: true, replace: true });
         },
-        [filters]
+        [filters],
     );
 
     useEffect(() => {
@@ -131,26 +118,13 @@ export default function VisitorIndex({
         }
 
         // New column: latest-first for times; A→Z for names/status.
-        const defaultDirection: SortDirection =
-            field === 'visitor' || field === 'host' || field === 'status' ? 'asc' : 'desc';
+        const defaultDirection: SortDirection = field === 'visitor' || field === 'host' || field === 'status' ? 'asc' : 'desc';
 
         applyFilters({ sort: field, direction: defaultDirection });
     };
 
     const handleExportCSV = () => {
-        const headers = [
-            'Visitor',
-            'Phone',
-            'Host',
-            'Purpose',
-            'Issued',
-            'Verified',
-            'Verifier',
-            'Checked Out',
-            'Duration (min)',
-            'Gate',
-            'Vehicle',
-        ];
+        const headers = ['Visitor', 'Phone', 'Host', 'Purpose', 'Issued', 'Verified', 'Verifier', 'Checked Out', 'Duration (min)', 'Gate', 'Vehicle'];
         const rows = logs.data.map((log) => [
             log.visitor.name,
             log.visitor.phone ?? '',
@@ -165,10 +139,7 @@ export default function VisitorIndex({
             log.vehicle ? `${log.vehicle.make} ${log.vehicle.model} (${log.vehicle.plate})` : '',
         ]);
 
-        const csvContent = [
-            headers.join(','),
-            ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
-        ].join('\n');
+        const csvContent = [headers.join(','), ...rows.map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
@@ -196,21 +167,12 @@ export default function VisitorIndex({
             <Head title="Visitors" />
 
             <div className="w-full space-y-6 pb-20">
-                {offline && (
-                    <OfflineState
-                        title="Connection interrupted"
-                        message="Live updates will resume automatically when internet returns."
-                    />
-                )}
+                {offline && <OfflineState title="Connection interrupted" message="Live updates will resume automatically when internet returns." />}
 
                 <header className="flex flex-col gap-3 border-b border-gray-200 pb-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-semibold tracking-tight text-gray-950 sm:text-[2rem]">
-                            Visitors
-                        </h1>
-                        <p className="mt-1 text-sm font-medium text-gray-500">
-                            Who is on the property, and what happened at the gate.
-                        </p>
+                        <h1 className="text-3xl font-semibold tracking-tight text-gray-950 sm:text-[2rem]">Visitors</h1>
+                        <p className="mt-1 text-sm font-medium text-gray-500">Who is on the property, and what happened at the gate.</p>
                         <p className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-400">
                             <Lock className="h-3 w-3 shrink-0" aria-hidden />
                             <span>Immutable record · verified at the gate</span>
@@ -245,16 +207,10 @@ export default function VisitorIndex({
                 />
 
                 {/* Activity journal - tools + feed as one surface */}
-                <section
-                    aria-labelledby="activity-heading"
-                    className="overflow-hidden rounded-xl border border-gray-200 bg-white"
-                >
+                <section aria-labelledby="activity-heading" className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div className="flex flex-col gap-3 border-b border-gray-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
                         <div className="min-w-0">
-                            <h2
-                                id="activity-heading"
-                                className="text-sm font-semibold tracking-tight text-gray-900"
-                            >
+                            <h2 id="activity-heading" className="text-sm font-semibold tracking-tight text-gray-900">
                                 Activity
                             </h2>
                             <p className="mt-0.5 text-[11px] font-medium text-gray-400">
@@ -275,12 +231,7 @@ export default function VisitorIndex({
                                 icon={LayoutList}
                                 label="Timeline"
                             />
-                            <TabButton
-                                active={activeView === 'table'}
-                                onClick={() => handleViewChange('table')}
-                                icon={Table2}
-                                label="Table"
-                            />
+                            <TabButton active={activeView === 'table'} onClick={() => handleViewChange('table')} icon={Table2} label="Table" />
                         </div>
                     </div>
 
@@ -318,11 +269,7 @@ export default function VisitorIndex({
                                 fallback={
                                     <div className="flex items-center justify-center gap-2 py-3 text-xs font-semibold text-gray-500">
                                         <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-600 border-t-transparent" />
-                                        <span>
-                                            {activeView === 'table'
-                                                ? 'Loading more…'
-                                                : 'Loading more…'}
-                                        </span>
+                                        <span>{activeView === 'table' ? 'Loading more…' : 'Loading more…'}</span>
                                     </div>
                                 }
                                 params={{
@@ -341,11 +288,7 @@ export default function VisitorIndex({
                 </section>
             </div>
 
-            <RecordDetail
-                record={selectedRecord}
-                checkoutEnabled={checkoutEnabled}
-                onClose={() => setSelectedRecord(null)}
-            />
+            <RecordDetail record={selectedRecord} checkoutEnabled={checkoutEnabled} onClose={() => setSelectedRecord(null)} />
         </>
     );
 }
@@ -368,9 +311,7 @@ function TabButton({
             aria-selected={active}
             onClick={onClick}
             className={`inline-flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors duration-150 ease-out active:scale-[0.97] ${
-                active
-                    ? 'bg-white text-gray-900 shadow-xs'
-                    : 'text-gray-500 hover:text-gray-800'
+                active ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-800'
             }`}
         >
             <Icon className="h-3.5 w-3.5" />

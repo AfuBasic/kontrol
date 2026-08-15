@@ -132,102 +132,104 @@ export default function Residents({ propertyOwner, residents }: Props) {
                 </div>
 
                 <SectionErrorBoundary name="po-residents">
-                <Deferred data="residents" fallback={<TableRowSkeleton rows={6} columns={4} />}>
-                <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
-                    {residentList.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-slate-100">
-                                <thead className="bg-slate-50/50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">Name</th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Contact
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Assigned Property
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Status
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 bg-white">
-                                    {residentList.map((resident) => (
-                                        <tr key={resident.id} className="transition-colors hover:bg-slate-50/50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
-                                                        {resident.name.charAt(0).toUpperCase()}
-                                                    </div>
-                                                    <span className="text-sm font-bold text-slate-900">{resident.name}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex flex-col gap-1 text-xs font-semibold text-slate-500">
-                                                    <span className="flex items-center gap-1.5 font-bold text-slate-900">
-                                                        <EnvelopeIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                                        {resident.email}
-                                                    </span>
-                                                    {resident.phone && (
-                                                        <span className="flex items-center gap-1.5">
-                                                            <PhoneIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                                            {resident.phone}
+                    <Deferred data="residents" fallback={<TableRowSkeleton rows={6} columns={4} />}>
+                        <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
+                            {residentList.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="bg-slate-50/50">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Name
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Contact
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Assigned Property
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Status
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 bg-white">
+                                            {residentList.map((resident) => (
+                                                <tr key={resident.id} className="transition-colors hover:bg-slate-50/50">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
+                                                                {resident.name.charAt(0).toUpperCase()}
+                                                            </div>
+                                                            <span className="text-sm font-bold text-slate-900">{resident.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex flex-col gap-1 text-xs font-semibold text-slate-500">
+                                                            <span className="flex items-center gap-1.5 font-bold text-slate-900">
+                                                                <EnvelopeIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                                                {resident.email}
+                                                            </span>
+                                                            {resident.phone && (
+                                                                <span className="flex items-center gap-1.5">
+                                                                    <PhoneIcon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                                                    {resident.phone}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        {resident.property ? (
+                                                            <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600">
+                                                                <MapPinIcon className="h-4 w-4 shrink-0 text-slate-400" />
+                                                                {resident.property}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs font-bold text-slate-400 italic">Unassigned</span>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase ${
+                                                                resident.suspended_at
+                                                                    ? 'bg-rose-100 text-rose-700'
+                                                                    : resident.status === 'accepted'
+                                                                      ? 'bg-emerald-100 text-emerald-700'
+                                                                      : 'bg-amber-100 text-amber-700'
+                                                            }`}
+                                                        >
+                                                            {resident.suspended_at ? 'Suspended' : resident.status}
                                                         </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                {resident.property ? (
-                                                    <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600">
-                                                        <MapPinIcon className="h-4 w-4 shrink-0 text-slate-400" />
-                                                        {resident.property}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-xs font-bold text-slate-400 italic">Unassigned</span>
-                                                )}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black tracking-widest uppercase ${
-                                                        resident.suspended_at
-                                                            ? 'bg-rose-100 text-rose-700'
-                                                            : resident.status === 'accepted'
-                                                              ? 'bg-emerald-100 text-emerald-700'
-                                                              : 'bg-amber-100 text-amber-700'
-                                                    }`}
-                                                >
-                                                    {resident.suspended_at ? 'Suspended' : resident.status}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="py-16 text-center">
+                                    <UsersIcon className="mx-auto h-12 w-12 text-slate-300" />
+                                    <h3 className="mt-4 text-lg font-black text-slate-900">No Residents Assigned</h3>
+                                    <p className="mt-1 text-sm text-slate-500">This Property Owner has no delegated occupants yet.</p>
+                                    <div className="mt-6 flex items-center justify-center gap-4">
+                                        <button
+                                            onClick={() => setIsAssignModalOpen(true)}
+                                            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700"
+                                        >
+                                            <UserPlusIcon className="h-5 w-5" />
+                                            <span>Assign Resident</span>
+                                        </button>
+                                        <Link
+                                            href={createResident.url()}
+                                            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50"
+                                        >
+                                            Delegate a Resident
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="py-16 text-center">
-                            <UsersIcon className="mx-auto h-12 w-12 text-slate-300" />
-                            <h3 className="mt-4 text-lg font-black text-slate-900">No Residents Assigned</h3>
-                            <p className="mt-1 text-sm text-slate-500">This Property Owner has no delegated occupants yet.</p>
-                            <div className="mt-6 flex items-center justify-center gap-4">
-                                <button
-                                    onClick={() => setIsAssignModalOpen(true)}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:bg-indigo-700"
-                                >
-                                    <UserPlusIcon className="h-5 w-5" />
-                                    <span>Assign Resident</span>
-                                </button>
-                                <Link
-                                    href={createResident.url()}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50"
-                                >
-                                    Delegate a Resident
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                </Deferred>
+                    </Deferred>
                 </SectionErrorBoundary>
             </div>
 

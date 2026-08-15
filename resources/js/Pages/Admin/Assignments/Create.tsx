@@ -36,7 +36,7 @@ export default function CreateAssignment({ users, roles, zones }: Props) {
     const selectedZone = zones.find((z) => z.id.toString() === data.zone_id);
 
     const isReadyToSubmit = data.user_id && data.role_id && (data.scope_type === 'estate' || data.zone_id);
-    
+
     const hasUsers = users.length > 0;
     const hasRoles = roles.length > 0;
     const isReadyToAssign = hasUsers && hasRoles;
@@ -66,15 +66,15 @@ export default function CreateAssignment({ users, roles, zones }: Props) {
                             <span className="text-2xl">🌱</span>
                         </div>
                         <h2 className="text-xl font-black tracking-tight text-slate-900">Almost ready</h2>
-                        <p className="mx-auto mt-3 max-w-md text-sm font-medium leading-relaxed text-slate-500">
+                        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed font-medium text-slate-500">
                             To assign authority, this estate needs at least one eligible member and an assignable responsibility.
                         </p>
-                        
+
                         <div className="mt-8 flex flex-wrap justify-center gap-3">
                             {!hasUsers && (
                                 <Link
                                     href={createUser.url()}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                                 >
                                     <UserPlusIcon className="h-4 w-4" strokeWidth={3} />
                                     Add staff member
@@ -83,9 +83,9 @@ export default function CreateAssignment({ users, roles, zones }: Props) {
                             {!hasRoles && (
                                 <Link
                                     href={createRole.url()}
-                                    className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black uppercase tracking-wider shadow-sm transition-all active:scale-95 ${
-                                        hasUsers 
-                                            ? 'bg-slate-950 text-white hover:bg-slate-800' 
+                                    className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black tracking-wider uppercase shadow-sm transition-all active:scale-95 ${
+                                        hasUsers
+                                            ? 'bg-slate-950 text-white hover:bg-slate-800'
                                             : 'bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50'
                                     }`}
                                 >
@@ -129,7 +129,9 @@ export default function CreateAssignment({ users, roles, zones }: Props) {
                                 <section>
                                     <div className="mb-4">
                                         <h2 className="text-[13px] font-black text-slate-900">Responsibility</h2>
-                                        <p className="mt-1 text-xs font-semibold text-slate-500">Choose the role that defines what they can manage.</p>
+                                        <p className="mt-1 text-xs font-semibold text-slate-500">
+                                            Choose the role that defines what they can manage.
+                                        </p>
                                     </div>
                                     <div className="max-w-2xl">
                                         <div className="grid gap-3 sm:grid-cols-2">

@@ -311,9 +311,7 @@ export default function ApplicationShow({ application }: Props) {
                                     <MapPinIcon className="h-5 w-5 text-slate-400" />
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase">Location</p>
-                                        <span className="font-medium">
-                                            {[application.lga, application.state].filter(Boolean).join(', ')}
-                                        </span>
+                                        <span className="font-medium">{[application.lga, application.state].filter(Boolean).join(', ')}</span>
                                     </div>
                                 </div>
                             )}

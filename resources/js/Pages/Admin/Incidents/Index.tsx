@@ -428,7 +428,9 @@ export default function IncidentsIndex({
                 {/* SECTION 1.5 - INCIDENT SOURCE BREAKDOWN */}
                 {stats.source_breakdown && stats.source_breakdown.length > 0 && (
                     <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">Operational Incident Origin (Sources)</h3>
+                        <h3 className="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                            Operational Incident Origin (Sources)
+                        </h3>
                         <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
                             {stats.source_breakdown.map((src, idx) => {
                                 const colors = ['bg-indigo-600', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-rose-500'];
@@ -449,8 +451,8 @@ export default function IncidentsIndex({
                                     <div key={src.source} className="flex items-center gap-1.5">
                                         <span className={`h-2.5 w-2.5 rounded-full ${dotColors[idx % dotColors.length]}`} />
                                         <span className="text-slate-600">{src.label}</span>
-                                        <span className="text-slate-900 font-extrabold">{src.percentage}%</span>
-                                        <span className="text-slate-400 font-normal">({src.count})</span>
+                                        <span className="font-extrabold text-slate-900">{src.percentage}%</span>
+                                        <span className="font-normal text-slate-400">({src.count})</span>
                                     </div>
                                 );
                             })}
@@ -740,7 +742,7 @@ export default function IncidentsIndex({
                                                                 </span>
                                                             </span>
                                                             <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500">
-                                                                <span className="rounded bg-slate-100 px-1 py-0.2 text-[8px] uppercase font-black text-slate-500">
+                                                                <span className="py-0.2 rounded bg-slate-100 px-1 text-[8px] font-black text-slate-500 uppercase">
                                                                     {incident.source.replace('_', ' ')}
                                                                 </span>
                                                                 {incident.location && <span>@ {incident.location}</span>}
@@ -906,8 +908,8 @@ export default function IncidentsIndex({
                                                     </td>
 
                                                     {/* Source */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
-                                                        <span className="rounded bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
+                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
+                                                        <span className="rounded border border-slate-200/60 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
                                                             {incident.source.replace('_', ' ')}
                                                         </span>
                                                     </td>
@@ -1003,8 +1005,6 @@ export default function IncidentsIndex({
                         </div>
                     </div>
                 )}
-
-
             </div>
         </>
     );

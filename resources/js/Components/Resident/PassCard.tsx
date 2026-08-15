@@ -42,7 +42,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             return `Long-term access · Until ${formatRelativeDate(pass.expires_at)}`;
         }
 
-        const startDate = pass.starts_at ? new Date(pass.starts_at) : (pass.created_at ? new Date(pass.created_at) : null);
+        const startDate = pass.starts_at ? new Date(pass.starts_at) : pass.created_at ? new Date(pass.created_at) : null;
         const endDate = pass.expires_at ? new Date(pass.expires_at) : null;
 
         if (!startDate && !endDate) return 'Unlimited validity';
@@ -51,9 +51,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             ? startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
             : null;
 
-        const endTimeStr = endDate
-            ? endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
-            : null;
+        const endTimeStr = endDate ? endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() : null;
 
         const dateFormatted = formatRelativeDate(startDate || endDate);
 
@@ -87,16 +85,16 @@ export default function PassCard({ pass, qrUrl }: Props) {
             }`}
         >
             {/* Top Info: Visitor Avatar, Name & Single Status Badge */}
-            <div className={`flex items-center justify-between border-b px-5 py-4 ${isEvent ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/60'}`}>
-                <div className="flex items-center gap-3 min-w-0">
+            <div
+                className={`flex items-center justify-between border-b px-5 py-4 ${isEvent ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/60'}`}
+            >
+                <div className="flex min-w-0 items-center gap-3">
                     <VisitorAvatar category={category} name={pass.visitor_name} size="md" />
                     <div className="min-w-0 text-left">
                         <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-900'}`}>
                             {pass.visitor_name || 'Guest Visitor'}
                         </h2>
-                        {pass.purpose && (
-                            <p className="truncate text-xs text-slate-400 font-medium">{pass.purpose}</p>
-                        )}
+                        {pass.purpose && <p className="truncate text-xs font-medium text-slate-400">{pass.purpose}</p>}
                     </div>
                 </div>
 
@@ -107,30 +105,32 @@ export default function PassCard({ pass, qrUrl }: Props) {
             {/* Host & Validity Info Section - Stacked Layout to Prevent Text Truncation */}
             <div className={`space-y-2.5 border-b px-5 py-3 text-xs ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-100 bg-white'}`}>
                 <div className="flex items-center justify-between">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">HOST / ESTATE</span>
-                    <span className={`font-bold text-right ${isEvent ? 'text-white' : 'text-slate-800'}`}>
-                        {pass.host_name || 'Resident'} <span className="text-slate-400 font-medium">• {pass.estate_name || 'My Estate'}</span>
+                    <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">HOST / ESTATE</span>
+                    <span className={`text-right font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>
+                        {pass.host_name || 'Resident'} <span className="font-medium text-slate-400">• {pass.estate_name || 'My Estate'}</span>
                     </span>
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">VALIDITY WINDOW</span>
-                    <span className={`font-bold text-right ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
-                        {formatValidityRange()}
-                    </span>
+                    <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">VALIDITY WINDOW</span>
+                    <span className={`text-right font-bold ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>{formatValidityRange()}</span>
                 </div>
             </div>
 
             {/* QR Code Section */}
             <div className={`relative flex flex-col items-center justify-center px-5 py-5 ${isEvent ? 'bg-white/5' : 'bg-slate-50/50'}`}>
-                <div className={`relative overflow-hidden rounded-2xl border p-3 ${isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-200 bg-white shadow-xs'}`}>
-                    {(!isPassActiveOrScheduled && (pass.type !== 'long_lived' || resolvedStatus === 'expired')) && (
+                <div
+                    className={`relative overflow-hidden rounded-2xl border p-3 ${isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-200 bg-white shadow-xs'}`}
+                >
+                    {!isPassActiveOrScheduled && (pass.type !== 'long_lived' || resolvedStatus === 'expired') && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
                             {resolvedStatus === 'completed' ? (
                                 <CheckCircle2 className="mb-1 h-8 w-8 text-emerald-500" strokeWidth={2.5} />
                             ) : (
                                 <XCircle className="mb-1 h-8 w-8 text-rose-500" />
                             )}
-                            <p className={`text-[10px] font-black uppercase tracking-wider ${resolvedStatus === 'completed' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <p
+                                className={`text-[10px] font-black tracking-wider uppercase ${resolvedStatus === 'completed' ? 'text-emerald-400' : 'text-rose-400'}`}
+                            >
                                 {resolvedStatus === 'completed' ? 'Visitor Admitted' : 'Pass Expired / Revoked'}
                             </p>
                         </div>
@@ -139,7 +139,10 @@ export default function PassCard({ pass, qrUrl }: Props) {
 
                     {/* Centered logo icon overlay */}
                     {isPassActiveOrScheduled && (
-                        <div className="absolute flex items-center justify-center rounded-lg bg-white p-1" style={{ top: '68px', left: '68px', zIndex: 10 }}>
+                        <div
+                            className="absolute flex items-center justify-center rounded-lg bg-white p-1"
+                            style={{ top: '68px', left: '68px', zIndex: 10 }}
+                        >
                             <img src={KONTROL_LOGO_BASE64} alt="Kontrol" className="h-6 w-6 object-contain" />
                         </div>
                     )}
@@ -150,12 +153,14 @@ export default function PassCard({ pass, qrUrl }: Props) {
             </div>
 
             {/* Fallback Code Section with Ticket Notches */}
-            <div className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-200 bg-white'}`}>
+            <div
+                className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-200 bg-white'}`}
+            >
                 {/* Left & Right Ticket Notches */}
-                <div className="absolute -left-3 top-0 h-5 w-5 -translate-y-1/2 rounded-full border-r border-slate-200 bg-white dark:bg-slate-950" />
-                <div className="absolute -right-3 top-0 h-5 w-5 -translate-y-1/2 rounded-full border-l border-slate-200 bg-white dark:bg-slate-950" />
+                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full border-r border-slate-200 bg-white dark:bg-slate-950" />
+                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-slate-200 bg-white dark:bg-slate-950" />
 
-                <p className="mb-0.5 text-[9px] font-black uppercase tracking-widest text-slate-400">FALLBACK ACCESS CODE</p>
+                <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
                 <div className={`font-mono text-2xl font-black tracking-[0.2em] ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
                     {pass.code}
                 </div>

@@ -357,12 +357,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                             </form>
                         </motion.div>
 
-                        <Deferred
-                            data="comments"
-                            fallback={
-                                <div className="h-40 animate-pulse rounded-3xl border border-slate-200 bg-white" />
-                            }
-                        >
+                        <Deferred data="comments" fallback={<div className="h-40 animate-pulse rounded-3xl border border-slate-200 bg-white" />}>
                             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}>
                                 {commentPage.data.length > 0 ? (
                                     <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">

@@ -37,7 +37,7 @@ export default function CheckpointSelect() {
             { entry_point: entryPoint },
             {
                 onFinish: () => setSubmitting(null),
-            }
+            },
         );
     };
 
@@ -48,7 +48,7 @@ export default function CheckpointSelect() {
             {},
             {
                 onFinish: () => setSubmitting(null),
-            }
+            },
         );
     };
 
@@ -68,12 +68,8 @@ export default function CheckpointSelect() {
                             <ShieldCheck className="h-5 w-5" />
                         </div>
                         <div>
-                            <span className="text-[10px] font-bold tracking-[0.14em] text-slate-500 uppercase">
-                                {estateName}
-                            </span>
-                            <h1 className="text-lg font-semibold tracking-tight text-slate-900">
-                                Operating Checkpoint
-                            </h1>
+                            <span className="text-[10px] font-bold tracking-[0.14em] text-slate-500 uppercase">{estateName}</span>
+                            <h1 className="text-lg font-semibold tracking-tight text-slate-900">Operating Checkpoint</h1>
                         </div>
                     </div>
 
@@ -87,7 +83,9 @@ export default function CheckpointSelect() {
                         <div className="mt-3.5 flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50/80 px-3.5 py-2.5 text-xs text-emerald-900">
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                <span>Active Checkpoint: <strong className="font-semibold">{currentCheckpoint}</strong></span>
+                                <span>
+                                    Active Checkpoint: <strong className="font-semibold">{currentCheckpoint}</strong>
+                                </span>
                             </div>
                             <button
                                 type="button"
@@ -184,9 +182,9 @@ export default function CheckpointSelect() {
                                             disabled={!canClaim || isBusy || submitting !== null}
                                             className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition active:scale-95 ${
                                                 cp.is_mine
-                                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
+                                                    ? 'bg-emerald-600 text-white shadow-xs hover:bg-emerald-700'
                                                     : canClaim
-                                                      ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-xs'
+                                                      ? 'bg-slate-900 text-white shadow-xs hover:bg-slate-800'
                                                       : 'cursor-not-allowed bg-slate-100 text-slate-400'
                                             }`}
                                         >

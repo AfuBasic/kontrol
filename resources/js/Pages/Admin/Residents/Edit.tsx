@@ -87,9 +87,9 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                             disabled={resident.is_estate_creator}
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                            {resident.is_estate_creator 
-                                ? "This is the primary email used to create the estate and cannot be changed." 
-                                : "If you change the email address, the resident will be required to verify their new email via an invitation link."}
+                            {resident.is_estate_creator
+                                ? 'This is the primary email used to create the estate and cannot be changed.'
+                                : 'If you change the email address, the resident will be required to verify their new email via an invitation link.'}
                         </p>
                         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                     </div>
@@ -187,11 +187,13 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
 
                 <div className="mt-10 flex items-center justify-between border-t border-gray-100 pt-6">
                     {resident.is_estate_creator ? (
-                        <div className="text-sm font-semibold text-gray-400">
-                            The estate creator cannot be removed.
-                        </div>
+                        <div className="text-sm font-semibold text-gray-400">The estate creator cannot be removed.</div>
                     ) : (
-                        <button type="button" onClick={handleDelete} className="text-sm font-semibold text-red-500 transition-colors hover:text-red-600">
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="text-sm font-semibold text-red-500 transition-colors hover:text-red-600"
+                        >
                             Remove Resident
                         </button>
                     )}

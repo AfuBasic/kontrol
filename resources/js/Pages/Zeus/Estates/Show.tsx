@@ -330,17 +330,25 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                         <p className="text-xs text-slate-500 dark:text-slate-400">{estate.partner.email}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Commission Rate</p>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                            Commission Rate
+                                        </p>
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
                                             {estate.commission_plan?.commission_rate ?? estate.partner.commission_rate}%
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Partner Date</p>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatDate(estate.partner_date ?? null)}</p>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                            Partner Date
+                                        </p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            {formatDate(estate.partner_date ?? null)}
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Days Remaining</p>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                            Days Remaining
+                                        </p>
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
                                             {estate.commission_days_remaining ?? '-'}
                                         </p>
@@ -357,8 +365,16 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                             { key: 'approved', label: 'Approved' },
                                             { key: 'estate_created', label: 'Estate Created', date: formatDate(estate.created_at) },
                                             { key: 'activated', label: 'Activated', date: formatDate(estate.activation_date ?? null) },
-                                            { key: 'commission_active', label: 'Commission Active', date: formatDate(estate.commission_starts_at ?? null) },
-                                            { key: 'commission_expired', label: 'Commission Expired', date: formatDate(estate.commission_ends_at ?? null) },
+                                            {
+                                                key: 'commission_active',
+                                                label: 'Commission Active',
+                                                date: formatDate(estate.commission_starts_at ?? null),
+                                            },
+                                            {
+                                                key: 'commission_expired',
+                                                label: 'Commission Expired',
+                                                date: formatDate(estate.commission_ends_at ?? null),
+                                            },
                                         ]}
                                     />
                                 )}

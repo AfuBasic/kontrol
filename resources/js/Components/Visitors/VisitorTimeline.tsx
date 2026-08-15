@@ -26,15 +26,11 @@ function DateGroupHeading({ group }: { group: VisitorTimelineGroup }) {
     const isPast = isYesterday || (!isToday && new Date(group.date + 'T00:00:00') < new Date());
 
     return (
-        <div className="sticky top-0 z-10 flex items-center justify-between bg-white/95 py-1.5 backdrop-blur-xs border-b border-slate-100/90 mb-1">
+        <div className="sticky top-0 z-10 mb-1 flex items-center justify-between border-b border-slate-100/90 bg-white/95 py-1.5 backdrop-blur-xs">
             <div className="flex items-baseline gap-2">
                 <span
-                    className={`text-[11px] font-bold uppercase tracking-wider ${
-                        isToday
-                            ? 'text-indigo-600'
-                            : isPast
-                              ? 'text-slate-400 font-medium'
-                              : 'text-slate-700 font-bold'
+                    className={`text-[11px] font-bold tracking-wider uppercase ${
+                        isToday ? 'text-indigo-600' : isPast ? 'font-medium text-slate-400' : 'font-bold text-slate-700'
                     }`}
                 >
                     {group.label}
@@ -58,25 +54,17 @@ function DefaultEmptyState({ variant }: { variant: TimelineVariant }) {
     return (
         <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
-                {variant === 'upcoming' ? (
-                    <Calendar className="h-4 w-4" />
-                ) : (
-                    <Users className="h-4 w-4" />
-                )}
+                {variant === 'upcoming' ? <Calendar className="h-4 w-4" /> : <Users className="h-4 w-4" />}
             </div>
             {variant === 'upcoming' ? (
                 <>
                     <p className="text-xs font-semibold text-slate-700">No visits scheduled</p>
-                    <p className="mt-0.5 text-[11px] text-slate-400 font-normal">
-                        Your schedule is clear. Create a pass to invite visitors.
-                    </p>
+                    <p className="mt-0.5 text-[11px] font-normal text-slate-400">Your schedule is clear. Create a pass to invite visitors.</p>
                 </>
             ) : (
                 <>
                     <p className="text-xs font-semibold text-slate-700">No history found</p>
-                    <p className="mt-0.5 text-[11px] text-slate-400 font-normal">
-                        Completed and expired visitor records will appear here.
-                    </p>
+                    <p className="mt-0.5 text-[11px] font-normal text-slate-400">Completed and expired visitor records will appear here.</p>
                 </>
             )}
         </div>
@@ -144,8 +132,8 @@ export default function VisitorTimeline({
                         <DateGroupHeading group={group} />
 
                         {group.items.length === 0 ? (
-                            <div className="flex items-center gap-2 py-2 px-2 text-xs text-slate-400 font-normal italic">
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 not-italic shrink-0" />
+                            <div className="flex items-center gap-2 px-2 py-2 text-xs font-normal text-slate-400 italic">
+                                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-500 not-italic" />
                                 <span>No visits scheduled today.</span>
                             </div>
                         ) : (

@@ -105,9 +105,7 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, assignments
                                 className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                                 placeholder="0"
                             />
-                            {selected && (
-                                <p className="mt-1 text-xs text-slate-400">Maximum: ₦{selected.remaining.toLocaleString()}</p>
-                            )}
+                            {selected && <p className="mt-1 text-xs text-slate-400">Maximum: ₦{selected.remaining.toLocaleString()}</p>}
                         </div>
                         <div>
                             <label className="mb-1.5 block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Payment Method</label>

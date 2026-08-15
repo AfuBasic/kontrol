@@ -411,20 +411,14 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-bold text-slate-900">{item.title || 'Incident report'}</p>
-                                    <p className="mt-0.5 text-[11px] text-slate-500">
-                                        {item.category || 'General'} · will submit when online
-                                    </p>
+                                    <p className="mt-0.5 text-[11px] text-slate-500">{item.category || 'General'} · will submit when online</p>
                                 </div>
                                 <span className="shrink-0 rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[10px] font-bold text-amber-800">
                                     {item.status === SyncStatus.Failed ? 'Failed' : item.status === SyncStatus.Syncing ? 'Syncing' : 'Pending'}
                                 </span>
                             </div>
                             {item.status === SyncStatus.Failed && (
-                                <button
-                                    type="button"
-                                    onClick={() => void retryOperation(item.id)}
-                                    className="mt-2 text-xs font-bold text-indigo-600"
-                                >
+                                <button type="button" onClick={() => void retryOperation(item.id)} className="mt-2 text-xs font-bold text-indigo-600">
                                     Retry
                                 </button>
                             )}

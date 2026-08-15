@@ -33,7 +33,10 @@ export default function TodaySummary({ summary, loading }: Props) {
                 </span>
                 <span className="text-slate-300">•</span>
                 <span>
-                    <strong className="font-bold text-slate-700">{summary.money_out_today > 0 ? formatCurrency(summary.money_out_today) : '0'}</strong> refunded
+                    <strong className="font-bold text-slate-700">
+                        {summary.money_out_today > 0 ? formatCurrency(summary.money_out_today) : '0'}
+                    </strong>{' '}
+                    refunded
                 </span>
                 <span className="text-slate-300">•</span>
                 <span>

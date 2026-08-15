@@ -57,9 +57,7 @@ export default function PartnerTimeline({ currentStatus, steps }: Props) {
                             >
                                 {step.label}
                             </p>
-                            {step.date && (
-                                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{step.date}</p>
-                            )}
+                            {step.date && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{step.date}</p>}
                         </div>
                     </motion.div>
                 );

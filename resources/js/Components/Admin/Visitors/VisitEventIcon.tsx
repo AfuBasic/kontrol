@@ -1,9 +1,5 @@
 import type { ActivityEventType } from './types';
-import {
-    ACTIVITY_KINDS,
-    activityKindFromEventType,
-    type ActivityKind,
-} from './activityKinds';
+import { ACTIVITY_KINDS, activityKindFromEventType, type ActivityKind } from './activityKinds';
 
 type Props = {
     type?: ActivityEventType;
@@ -22,13 +18,7 @@ export default function VisitEventIcon({ type, kind, size = 'md', bare = false }
     const iconSize = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
 
     if (bare) {
-        return (
-            <Icon
-                className={`${iconSize} shrink-0 ${config.textClass}`}
-                strokeWidth={2.5}
-                aria-hidden
-            />
-        );
+        return <Icon className={`${iconSize} shrink-0 ${config.textClass}`} strokeWidth={2.5} aria-hidden />;
     }
 
     const box = size === 'sm' ? 'h-6 w-6' : 'h-7 w-7';

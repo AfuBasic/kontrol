@@ -34,9 +34,8 @@ export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswo
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        const targetUrl = acceptUrl || (window.location.pathname.startsWith('/invitations/')
-            ? `${window.location.pathname}/accept`
-            : window.location.pathname);
+        const targetUrl =
+            acceptUrl || (window.location.pathname.startsWith('/invitations/') ? `${window.location.pathname}/accept` : window.location.pathname);
         post(`${targetUrl}${window.location.search}`);
     }
 
@@ -74,12 +73,14 @@ export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswo
                             <div className="mb-8">
                                 <h1 className="text-2xl font-semibold tracking-tight text-white">Hello, {name}</h1>
                                 <p className="mt-2 text-sm text-white/60">
-                                    {estateName ? `You have been invited to join ${estateName} on Kontrol.` : 'You have been invited to join an estate on Kontrol.'}
+                                    {estateName
+                                        ? `You have been invited to join ${estateName} on Kontrol.`
+                                        : 'You have been invited to join an estate on Kontrol.'}
                                 </p>
                             </div>
 
                             {(flash?.error || (errors && Object.keys(errors).length > 0)) && (
-                                <div className="mb-6 rounded-lg bg-red-500/10 p-4 border border-red-500/20 text-sm text-red-400">
+                                <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
                                     {flash?.error || Object.values(errors || {})[0]}
                                 </div>
                             )}

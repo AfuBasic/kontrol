@@ -54,19 +54,13 @@ function pendingBadge(status: SyncStatus): { label: string; className: string } 
     }
 }
 
-export default function Visitors({
-    upcomingTimeline,
-    historyTimeline,
-    recentVisitors = [],
-    accessCodesEnabled = true,
-}: Props) {
+export default function Visitors({ upcomingTimeline, historyTimeline, recentVisitors = [], accessCodesEnabled = true }: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const { operations, retryOperation, isSyncing, syncNow } = useSyncStatus();
 
-    const initialTab = (typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('tab')
-        : null) === 'history' ? 'history' : 'schedule';
+    const initialTab =
+        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null) === 'history' ? 'history' : 'schedule';
 
     const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
@@ -99,9 +93,7 @@ export default function Visitors({
     const handleRetry = async (pass: PendingPass) => {
         setRetryingId(pass.id);
         try {
-            const matchingOp = operations.find(
-                (op) => op.payload && (op.payload as any).uuid === pass.id,
-            );
+            const matchingOp = operations.find((op) => op.payload && (op.payload as any).uuid === pass.id);
             if (matchingOp) {
                 await retryOperation(matchingOp.id);
             } else {
@@ -155,7 +147,7 @@ export default function Visitors({
         <>
             <Head title="Visitors" />
 
-            <div className="mx-auto max-w-xl px-2 py-3 space-y-4 pb-20">
+            <div className="mx-auto max-w-xl space-y-4 px-2 py-3 pb-20">
                 {!accessCodesEnabled && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs font-semibold text-amber-900 shadow-xs">
                         Visitor access pass generation and code sharing are currently disabled by estate management policy.
@@ -239,7 +231,7 @@ export default function Visitors({
                                 return (
                                     <div
                                         key={pass.id}
-                                        className="flex items-center justify-between rounded-lg bg-white/80 p-2 border border-amber-100"
+                                        className="flex items-center justify-between rounded-lg border border-amber-100 bg-white/80 p-2"
                                     >
                                         <div>
                                             <p className="font-bold text-slate-900">{pass.visitor_name || 'Guest Pass'}</p>
@@ -282,10 +274,7 @@ export default function Visitors({
                             <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
 
                             {/* 3. Today's Schedule */}
-                            <TodaySchedule
-                                visits={todayVisits as any}
-                                onCancel={promptCancelPass}
-                            />
+                            <TodaySchedule visits={todayVisits as any} onCancel={promptCancelPass} />
 
                             {/* 4. Upcoming (Event-based) */}
                             <UpcomingSchedule visits={futureUpcomingVisits as any} />
@@ -317,15 +306,9 @@ export default function Visitors({
             </div>
 
             {/* Pass Creation Sheet */}
-            <MobileSheet
-                isOpen={showCreateSheet}
-                onClose={() => setShowCreateSheet(false)}
-                title="Create Visitor Pass"
-            >
+            <MobileSheet isOpen={showCreateSheet} onClose={() => setShowCreateSheet(false)} title="Create Visitor Pass">
                 <div className="space-y-3 pb-8">
-                    <p className="mb-2 px-1 text-xs font-medium text-slate-500">
-                        Select a pass type to continue.
-                    </p>
+                    <p className="mb-2 px-1 text-xs font-medium text-slate-500">Select a pass type to continue.</p>
 
                     <Link
                         href="/resident/visitors/create?type=single_use"
@@ -337,9 +320,7 @@ export default function Visitors({
                         </div>
                         <div>
                             <h4 className="text-xs font-bold text-slate-900">One-Time Pass</h4>
-                            <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
-                                Single entry for guests, deliveries, or contractors.
-                            </p>
+                            <p className="mt-0.5 text-[11px] font-medium text-slate-400">Single entry for guests, deliveries, or contractors.</p>
                         </div>
                     </Link>
 
@@ -354,7 +335,7 @@ export default function Visitors({
                             </div>
                             <div>
                                 <h4 className="text-xs font-bold text-slate-900">Long-Term Pass</h4>
-                                <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
+                                <p className="mt-0.5 text-[11px] font-medium text-slate-400">
                                     Recurring pass for family, domestic staff, or regulars.
                                 </p>
                             </div>
@@ -371,9 +352,7 @@ export default function Visitors({
                         </div>
                         <div>
                             <h4 className="text-xs font-bold text-slate-900">Event Pass</h4>
-                            <p className="mt-0.5 text-[11px] text-slate-400 font-medium">
-                                Shared access pass for multiple event guests.
-                            </p>
+                            <p className="mt-0.5 text-[11px] font-medium text-slate-400">Shared access pass for multiple event guests.</p>
                         </div>
                     </Link>
                 </div>
@@ -385,9 +364,7 @@ export default function Visitors({
                 onClose={() => setRevokeModalOpen(false)}
                 onConfirm={handleConfirmRevoke}
                 title="Cancel Visitor Pass"
-                message={`Are you sure you want to cancel the pass for ${
-                    codeToRevoke?.visitor_name || 'this visitor'
-                }?`}
+                message={`Are you sure you want to cancel the pass for ${codeToRevoke?.visitor_name || 'this visitor'}?`}
                 confirmLabel="Cancel Pass"
                 type="danger"
                 isLoading={revoking}

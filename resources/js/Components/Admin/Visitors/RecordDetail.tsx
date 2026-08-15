@@ -40,17 +40,12 @@ export default function RecordDetail({ record, checkoutEnabled, onClose }: Props
                     >
                         <div className="flex items-start justify-between gap-3 border-b border-gray-100 px-5 py-4">
                             <div className="min-w-0">
-                                <h3
-                                    id="record-detail-title"
-                                    className="truncate text-base font-semibold text-gray-900"
-                                >
+                                <h3 id="record-detail-title" className="truncate text-base font-semibold text-gray-900">
                                     {record.visitor.name}
                                 </h3>
                                 <p className="mt-0.5 text-xs font-medium text-gray-500">
                                     Visiting {record.host.name}
-                                    {record.code ? (
-                                        <span className="font-mono text-gray-400"> · #{record.code}</span>
-                                    ) : null}
+                                    {record.code ? <span className="font-mono text-gray-400"> · #{record.code}</span> : null}
                                 </p>
                             </div>
                             <button
@@ -68,9 +63,7 @@ export default function RecordDetail({ record, checkoutEnabled, onClose }: Props
                             <dl className="grid grid-cols-2 gap-3 rounded-xl border border-gray-100 bg-gray-50 p-3.5 text-xs">
                                 {record.purpose && (
                                     <div className="col-span-2">
-                                        <dt className="font-bold tracking-wider text-gray-400 uppercase">
-                                            Purpose
-                                        </dt>
+                                        <dt className="font-bold tracking-wider text-gray-400 uppercase">Purpose</dt>
                                         <dd className="mt-0.5 font-semibold text-gray-800">{record.purpose}</dd>
                                     </div>
                                 )}
@@ -96,19 +89,13 @@ export default function RecordDetail({ record, checkoutEnabled, onClose }: Props
                                 )}
                                 {record.visitor.phone && (
                                     <div>
-                                        <dt className="font-bold tracking-wider text-gray-400 uppercase">
-                                            Phone
-                                        </dt>
-                                        <dd className="mt-0.5 font-semibold text-gray-800">
-                                            {record.visitor.phone}
-                                        </dd>
+                                        <dt className="font-bold tracking-wider text-gray-400 uppercase">Phone</dt>
+                                        <dd className="mt-0.5 font-semibold text-gray-800">{record.visitor.phone}</dd>
                                     </div>
                                 )}
                                 {record.vehicle && (
                                     <div className="col-span-2">
-                                        <dt className="font-bold tracking-wider text-gray-400 uppercase">
-                                            Vehicle
-                                        </dt>
+                                        <dt className="font-bold tracking-wider text-gray-400 uppercase">Vehicle</dt>
                                         <dd className="mt-0.5 flex items-center gap-1.5 font-semibold text-gray-800">
                                             <Car className="h-3.5 w-3.5 text-gray-400" />
                                             {record.vehicle.make} {record.vehicle.model}

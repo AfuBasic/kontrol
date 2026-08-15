@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import type { Megaphone} from 'lucide-react';
+import type { Megaphone } from 'lucide-react';
 import { CalendarDays, PartyPopper, Shield, Sparkles, Wrench } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
@@ -209,9 +209,7 @@ export default function EstateBoardAiAssistant({ context, onDraft, onTemplateSel
                 </AnimatePresence>
 
                 <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs text-gray-500">
-                        Uses your category, priority, and audience settings for context.
-                    </p>
+                    <p className="text-xs text-gray-500">Uses your category, priority, and audience settings for context.</p>
                     <button
                         type="button"
                         onClick={handleGenerate}

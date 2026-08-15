@@ -60,11 +60,7 @@ function buildDateLabel(isoDate: string, todayISO: string): string {
  *                   'completion_date' → History tab
  * @param todayISO   ISO date string for "today" - pass new Date().toISOString().slice(0,10)
  */
-export function groupVisitorsByDate(
-    codes: AccessCode[],
-    dateField: 'arrival_date' | 'completion_date',
-    todayISO: string,
-): VisitorTimelineGroup[] {
+export function groupVisitorsByDate(codes: AccessCode[], dateField: 'arrival_date' | 'completion_date', todayISO: string): VisitorTimelineGroup[] {
     // Build a map of dateString → AccessCode[]
     const buckets = new Map<string, AccessCode[]>();
 
@@ -114,10 +110,7 @@ export function groupVisitorsByDate(
  * Memoisation is intentionally omitted here - the caller's useMemo is
  * more appropriate as it can key off the correct dependencies.
  */
-export function useVisitorTimeline(
-    codes: AccessCode[],
-    dateField: 'arrival_date' | 'completion_date',
-): VisitorTimelineGroup[] {
+export function useVisitorTimeline(codes: AccessCode[], dateField: 'arrival_date' | 'completion_date'): VisitorTimelineGroup[] {
     const todayISO = new Date().toISOString().slice(0, 10);
     return groupVisitorsByDate(codes, dateField, todayISO);
 }

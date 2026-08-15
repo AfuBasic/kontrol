@@ -95,9 +95,7 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
                                 {unreadCount > 0 ? (
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            router.post('/partner/notifications/read-all', {}, { preserveScroll: true })
-                                        }
+                                        onClick={() => router.post('/partner/notifications/read-all', {}, { preserveScroll: true })}
                                         className="inline-flex items-center gap-1.5 rounded-lg border border-stone-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-stone-700 transition hover:bg-stone-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                                     >
                                         <CheckIcon className="h-3.5 w-3.5" />
@@ -139,7 +137,10 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
                                 className="w-full rounded-lg border border-stone-200 bg-white py-1.5 pr-3 pl-8 text-[13px] outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                             />
                         </form>
-                        <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-0.5 dark:border-slate-700 dark:bg-slate-800/60" role="group">
+                        <div
+                            className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-0.5 dark:border-slate-700 dark:bg-slate-800/60"
+                            role="group"
+                        >
                             {['all', 'unread', 'read'].map((key) => (
                                 <button
                                     key={key}
@@ -199,18 +200,12 @@ export default function PartnerNotificationsIndex({ notifications, filters, unre
                                             />
                                             <span className="min-w-0 flex-1">
                                                 <span className="flex flex-wrap items-center gap-2">
-                                                    <span className="text-[13px] font-semibold text-stone-900 dark:text-white">
-                                                        {item.title}
-                                                    </span>
+                                                    <span className="text-[13px] font-semibold text-stone-900 dark:text-white">{item.title}</span>
                                                     <span className="text-[10px] text-stone-400">{item.created_at_human}</span>
                                                 </span>
-                                                <span className="mt-0.5 block text-[12px] text-stone-500 dark:text-slate-400">
-                                                    {item.body}
-                                                </span>
+                                                <span className="mt-0.5 block text-[12px] text-stone-500 dark:text-slate-400">{item.body}</span>
                                                 {item.href && (
-                                                    <span className="mt-1 inline-block text-[11px] font-semibold text-primary-600">
-                                                        Open →
-                                                    </span>
+                                                    <span className="mt-1 inline-block text-[11px] font-semibold text-primary-600">Open →</span>
                                                 )}
                                             </span>
                                         </button>

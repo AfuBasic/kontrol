@@ -1,13 +1,4 @@
-import {
-    add,
-    clear,
-    count,
-    get,
-    getAll,
-    remove,
-    replaceAll,
-    type StoreConfig,
-} from './BaseStore';
+import { add, clear, count, get, getAll, remove, replaceAll, type StoreConfig } from './BaseStore';
 import type { CachedCode, OfflineLog } from './types';
 
 export type { CachedCode, OfflineLog };

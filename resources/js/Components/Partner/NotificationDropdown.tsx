@@ -1,8 +1,4 @@
-import {
-    BellIcon,
-    CheckIcon,
-    EnvelopeOpenIcon,
-} from '@heroicons/react/24/outline';
+import { BellIcon, CheckIcon, EnvelopeOpenIcon } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { type CSSProperties, useEffect, useId, useRef, useState } from 'react';
@@ -46,9 +42,7 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
         partnerUnreadCount?: number;
     };
 
-    const items = notifications.length
-        ? notifications
-        : (shared.partnerNotifications ?? shared.auth?.user?.notifications ?? []);
+    const items = notifications.length ? notifications : (shared.partnerNotifications ?? shared.auth?.user?.notifications ?? []);
     const count = unreadCount || shared.partnerUnreadCount || shared.auth?.user?.unread_notifications_count || 0;
 
     useEffect(() => {
@@ -213,9 +207,7 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
                             <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-stone-100 ring-1 ring-stone-900/5 dark:bg-white/5 dark:ring-white/10">
                                 <EnvelopeOpenIcon className="h-5 w-5 text-stone-400 dark:text-slate-500" />
                             </div>
-                            <p className="mt-3 text-[13px] font-medium text-stone-800 dark:text-slate-200">
-                                You&apos;re all caught up
-                            </p>
+                            <p className="mt-3 text-[13px] font-medium text-stone-800 dark:text-slate-200">You&apos;re all caught up</p>
                             <p className="mx-auto mt-1 max-w-[220px] text-[12px] leading-relaxed text-stone-500 dark:text-slate-400">
                                 Estate updates, settlements, and account alerts will appear here.
                             </p>
@@ -244,9 +236,7 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
                                             }`}
                                         >
                                             <span
-                                                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                                                    unread ? 'bg-primary-500' : 'bg-transparent'
-                                                }`}
+                                                className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${unread ? 'bg-primary-500' : 'bg-transparent'}`}
                                                 aria-hidden
                                             />
                                             <span className="min-w-0 flex-1">
@@ -256,9 +246,7 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
                                                 <span className="mt-0.5 line-clamp-2 block text-[12px] text-stone-500 dark:text-slate-400">
                                                     {item.body}
                                                 </span>
-                                                <span className="mt-1 block text-[11px] text-stone-400">
-                                                    {item.created_at_human}
-                                                </span>
+                                                <span className="mt-1 block text-[11px] text-stone-400">{item.created_at_human}</span>
                                             </span>
                                         </button>
                                     </li>
@@ -301,8 +289,7 @@ export default function NotificationDropdown({ notifications = [], unreadCount =
                 )}
             </button>
 
-            {typeof document !== 'undefined' &&
-                createPortal(<AnimatePresence>{panel}</AnimatePresence>, document.body)}
+            {typeof document !== 'undefined' && createPortal(<AnimatePresence>{panel}</AnimatePresence>, document.body)}
         </div>
     );
 }

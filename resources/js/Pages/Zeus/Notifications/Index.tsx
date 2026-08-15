@@ -1,9 +1,4 @@
-import {
-    BellIcon,
-    CheckCircleIcon,
-    MagnifyingGlassIcon,
-    TrashIcon,
-} from '@heroicons/react/24/outline';
+import { BellIcon, CheckCircleIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
@@ -77,11 +72,7 @@ export default function ZeusNotificationsIndex({ notifications, filters, unreadC
                         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Notifications</h1>
                         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             Platform alerts for partner requests and other Zeus activity.
-                            {unreadCount > 0 && (
-                                <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400">
-                                    {unreadCount} unread
-                                </span>
-                            )}
+                            {unreadCount > 0 && <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400">{unreadCount} unread</span>}
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -130,7 +121,10 @@ export default function ZeusNotificationsIndex({ notifications, filters, unreadC
                             className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pr-3 pl-9 text-sm text-slate-900 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-500/15 dark:border-white/10 dark:bg-white/5 dark:text-white"
                         />
                     </form>
-                    <div className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 dark:border-white/10 dark:bg-white/5" role="group">
+                    <div
+                        className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 dark:border-white/10 dark:bg-white/5"
+                        role="group"
+                    >
                         {['all', 'unread', 'read'].map((key) => (
                             <button
                                 key={key}
@@ -156,9 +150,7 @@ export default function ZeusNotificationsIndex({ notifications, filters, unreadC
                         <div className="px-6 py-16 text-center">
                             <BellIcon className="mx-auto h-10 w-10 text-slate-300 dark:text-slate-600" />
                             <p className="mt-3 text-sm font-semibold text-slate-700 dark:text-slate-200">No notifications</p>
-                            <p className="mt-1 text-sm text-slate-500">
-                                Partner estate submissions and other platform alerts will show up here.
-                            </p>
+                            <p className="mt-1 text-sm text-slate-500">Partner estate submissions and other platform alerts will show up here.</p>
                         </div>
                     ) : (
                         <ul className="divide-y divide-slate-100 dark:divide-white/5">
@@ -170,26 +162,18 @@ export default function ZeusNotificationsIndex({ notifications, filters, unreadC
                                         }`}
                                     >
                                         <span
-                                            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                                                item.is_unread ? 'bg-blue-500' : 'bg-transparent'
-                                            }`}
+                                            className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${item.is_unread ? 'bg-blue-500' : 'bg-transparent'}`}
                                             aria-hidden
                                         />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex flex-wrap items-start justify-between gap-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
-                                                        {item.title}
-                                                    </p>
-                                                    <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
-                                                        {item.body}
-                                                    </p>
+                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{item.title}</p>
+                                                    <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{item.body}</p>
                                                     <p className="mt-1 text-xs text-slate-400">
                                                         {item.created_at_human}
                                                         <span className="mx-1.5">·</span>
-                                                        <span className="font-medium tracking-wide uppercase">
-                                                            {item.type.replace(/_/g, ' ')}
-                                                        </span>
+                                                        <span className="font-medium tracking-wide uppercase">{item.type.replace(/_/g, ' ')}</span>
                                                     </p>
                                                 </div>
                                                 <div className="flex shrink-0 gap-2">
@@ -221,9 +205,7 @@ export default function ZeusNotificationsIndex({ notifications, filters, unreadC
                                                     )}
                                                     <button
                                                         type="button"
-                                                        onClick={() =>
-                                                            router.delete(`/zeus/notifications/${item.id}`, { preserveScroll: true })
-                                                        }
+                                                        onClick={() => router.delete(`/zeus/notifications/${item.id}`, { preserveScroll: true })}
                                                         className="rounded-lg px-2 py-1 text-xs font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10"
                                                         aria-label="Delete notification"
                                                     >

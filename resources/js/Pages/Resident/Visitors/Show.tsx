@@ -68,7 +68,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                     setSuccessBanner('Pass validity successfully extended!');
                     setTimeout(() => setSuccessBanner(null), 4000);
                 },
-            }
+            },
         );
     }
 
@@ -92,9 +92,8 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
     const isExpired = accessCode.expires_at ? new Date(accessCode.expires_at) < new Date() : false;
     const isPassValid = (accessCode.status === 'active' || accessCode.status === 'scheduled') && !isExpired;
 
-    const fromTab = (typeof window !== 'undefined'
-        ? new URLSearchParams(window.location.search).get('from_tab')
-        : null) === 'history' ? 'history' : 'schedule';
+    const fromTab =
+        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('from_tab') : null) === 'history' ? 'history' : 'schedule';
 
     const backUrl = `/resident/visitors?tab=${fromTab}`;
 
@@ -102,10 +101,10 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
         <>
             <Head title="Visitor Pass Details" />
 
-            <div className="mx-auto max-w-lg px-4 py-3 space-y-4 pb-20">
+            <div className="mx-auto max-w-lg space-y-4 px-4 py-3 pb-20">
                 {/* Toast / Feedback Notification Banner */}
                 {successBanner && (
-                    <div className="flex items-center gap-2 rounded-xl bg-emerald-500 p-3 text-xs font-bold text-white shadow-lg animate-in fade-in slide-in-from-top-2">
+                    <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-2 rounded-xl bg-emerald-500 p-3 text-xs font-bold text-white shadow-lg">
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
                         <span>{successBanner}</span>
                     </div>
@@ -128,7 +127,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                     </div>
 
                     {/* Estate Context */}
-                    <span className="text-[11px] font-semibold text-slate-400 max-w-[100px] truncate">
+                    <span className="max-w-[100px] truncate text-[11px] font-semibold text-slate-400">
                         {(accessCode as any).estate_name || 'My Estate'}
                     </span>
                 </div>
@@ -140,14 +139,16 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
 
                 {/* Gate Entry & Exit Activity Logs */}
                 {usageLogs && usageLogs.data && usageLogs.data.length > 0 && (
-                    <div className="mx-auto w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
+                    <div className="mx-auto w-full max-w-sm space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                         <h4 className="text-xs font-black tracking-wide text-slate-900 uppercase">Gate Activity History</h4>
                         <div className="space-y-2.5 divide-y divide-slate-100">
                             {usageLogs.data.map((log: any) => (
-                                <div key={log.id} className="pt-2.5 first:pt-0 space-y-1">
+                                <div key={log.id} className="space-y-1 pt-2.5 first:pt-0">
                                     <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
-                                        <span className="text-emerald-700 font-extrabold">Check-In • {log.entry_point || log.gate || 'Main Entrance'}</span>
-                                        <span className="text-[10px] text-slate-500 font-medium">
+                                        <span className="font-extrabold text-emerald-700">
+                                            Check-In • {log.entry_point || log.gate || 'Main Entrance'}
+                                        </span>
+                                        <span className="text-[10px] font-medium text-slate-500">
                                             {new Date(log.verified_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
                                             {new Date(log.verified_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </span>
@@ -155,15 +156,19 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                                     <p className="text-[11px] font-medium text-slate-500">Verified by {log.verifier_name}</p>
 
                                     {log.checked_out_at && (
-                                        <div className="mt-2 pt-2 border-t border-dashed border-slate-200 space-y-1">
+                                        <div className="mt-2 space-y-1 border-t border-dashed border-slate-200 pt-2">
                                             <div className="flex items-center justify-between text-xs font-semibold text-slate-800">
-                                                <span className="text-blue-700 font-extrabold">Check-Out • {log.exit_point || log.entry_point || log.gate || 'Main Entrance'}</span>
-                                                <span className="text-[10px] text-slate-500 font-medium">
+                                                <span className="font-extrabold text-blue-700">
+                                                    Check-Out • {log.exit_point || log.entry_point || log.gate || 'Main Entrance'}
+                                                </span>
+                                                <span className="text-[10px] font-medium text-slate-500">
                                                     {new Date(log.checked_out_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}{' '}
                                                     {new Date(log.checked_out_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
-                                            <p className="text-[11px] font-medium text-slate-500">Processed by {log.checkout_verifier_name || 'Security'}</p>
+                                            <p className="text-[11px] font-medium text-slate-500">
+                                                Processed by {log.checkout_verifier_name || 'Security'}
+                                            </p>
                                         </div>
                                     )}
                                 </div>
@@ -208,7 +213,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                             {allowExtendPasses && (
                                 <button
                                     onClick={() => setIsExtendModalOpen(true)}
-                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-50 py-2.5 text-xs font-bold text-primary-700 border border-primary-100 transition-all hover:bg-primary-100 active:scale-98"
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary-100 bg-primary-50 py-2.5 text-xs font-bold text-primary-700 transition-all hover:bg-primary-100 active:scale-98"
                                 >
                                     <Clock className="h-3.5 w-3.5 text-primary-600" />
                                     <span>Extend Pass Duration</span>
@@ -220,10 +225,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                     {/* Quiet Danger Action: Revoke Pass */}
                     {isPassValid && (
                         <div className="flex items-center justify-center pt-1 text-xs font-semibold">
-                            <button
-                                onClick={revokeCode}
-                                className="text-slate-400 transition hover:text-error-600 hover:underline"
-                            >
+                            <button onClick={revokeCode} className="text-slate-400 transition hover:text-error-600 hover:underline">
                                 Revoke pass
                             </button>
                         </div>
@@ -233,8 +235,8 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                 {/* Extend Pass Confirmation Modal */}
                 {isExtendModalOpen && allowExtendPasses && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-                        <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl animate-in fade-in zoom-in duration-150">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div className="animate-in fade-in zoom-in w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl duration-150">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <div className="flex items-center gap-2">
                                     <Clock className="h-5 w-5 text-primary-600" />
                                     <h3 className="text-sm font-bold text-slate-900">Extend Visitor Pass</h3>
@@ -250,14 +252,12 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
 
                             <form onSubmit={handleExtendPass} className="mt-4 space-y-4">
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                                        Select Extension Duration
-                                    </label>
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Select Extension Duration</label>
                                     <select
                                         value={selectedDuration}
                                         onChange={(e) => setSelectedDuration(Number(e.target.value))}
                                         disabled={processing}
-                                        className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-900 shadow-xs focus:border-primary-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                                        className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-900 shadow-xs focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-none disabled:opacity-50"
                                     >
                                         {durationOptions.length > 0 ? (
                                             durationOptions.map((opt) => (

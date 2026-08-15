@@ -12,7 +12,6 @@ import { SyncEngine } from '@/Resilience/SyncEngine';
 import { SecurityStore, sha256 } from '@/Resilience/OfflineStorage/SecurityStore';
 import { SyncStatus } from '@/Resilience/SyncStatus';
 
-
 const CODE_LENGTH = 6;
 const SYNC_ENDPOINT = '/security/verify/sync';
 
@@ -151,9 +150,7 @@ export default function SecurityVerify() {
             const hasSecurityPending = state.operations.some(
                 (op) =>
                     op.type === 'security_log' &&
-                    (op.status === SyncStatus.Pending ||
-                        op.status === SyncStatus.Syncing ||
-                        op.status === SyncStatus.Failed),
+                    (op.status === SyncStatus.Pending || op.status === SyncStatus.Syncing || op.status === SyncStatus.Failed),
             );
             if (!hasSecurityPending) {
                 await SecurityStore.clearPendingLogs();
@@ -554,9 +551,7 @@ export default function SecurityVerify() {
         } catch (err: any) {
             console.error('Decision error:', err);
             const errorMessage =
-                err.response?.data?.errors?.checkout?.[0] ||
-                err.response?.data?.message ||
-                'Checkout rejected: Gate mismatch or invalid request.';
+                err.response?.data?.errors?.checkout?.[0] || err.response?.data?.message || 'Checkout rejected: Gate mismatch or invalid request.';
 
             setResult((prev) => ({
                 valid: false,
@@ -617,11 +612,11 @@ export default function SecurityVerify() {
                             className="mb-6 overflow-hidden"
                         >
                             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-center shadow-sm">
-                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 mb-3">
+                                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
                                     <ShieldX className="h-6 w-6" />
                                 </div>
                                 <h3 className="text-base font-extrabold text-slate-900">Visitor Pass Verification Disabled</h3>
-                                <p className="mt-1 text-xs text-slate-600 font-medium max-w-sm mx-auto">
+                                <p className="mx-auto mt-1 max-w-sm text-xs font-medium text-slate-600">
                                     Visitor access code generation and gate verification are currently turned off by estate management policy.
                                 </p>
                             </div>
@@ -900,7 +895,14 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
         ringColor = 'ring-blue-500/10 border-blue-100/80';
         icon = <CheckCircle2 className="h-4.5 w-4.5 text-blue-600" strokeWidth={2.5} />;
     } else if (!valid) {
-        statusLabel = result.status === 'checkout_mismatch' ? 'Gate Mismatch' : result.status === 'expired' ? 'Pass Expired' : result.status === 'revoked' ? 'Pass Revoked' : 'Access Denied';
+        statusLabel =
+            result.status === 'checkout_mismatch'
+                ? 'Gate Mismatch'
+                : result.status === 'expired'
+                  ? 'Pass Expired'
+                  : result.status === 'revoked'
+                    ? 'Pass Revoked'
+                    : 'Access Denied';
         statusBg = 'bg-rose-50 text-rose-700 border-rose-100/80';
         ringColor = 'ring-rose-500/10 border-rose-100/80';
         icon = <ShieldX className="h-4.5 w-4.5 text-rose-600" strokeWidth={2.5} />;
@@ -960,12 +962,13 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                 >
                     {/* Check-Out Complete Notification Banner */}
                     {result.status === 'checked_out_success' && (
-                        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs font-bold leading-relaxed text-blue-900 shadow-xs">
+                        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed font-bold text-blue-900 shadow-xs">
                             <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />
                             <div>
-                                <p className="font-black text-sm">Visitor Checked Out Successfully</p>
-                                <p className="mt-0.5 text-[11px] text-blue-700 font-medium">
-                                    Exit Gate: <span className="font-bold">{result.exit_point || 'Main Gate'}</span> • Duration: <span className="font-bold">{result.duration_minutes ?? 0} mins</span>
+                                <p className="text-sm font-black">Visitor Checked Out Successfully</p>
+                                <p className="mt-0.5 text-[11px] font-medium text-blue-700">
+                                    Exit Gate: <span className="font-bold">{result.exit_point || 'Main Gate'}</span> • Duration:{' '}
+                                    <span className="font-bold">{result.duration_minutes ?? 0} mins</span>
                                 </p>
                             </div>
                         </div>
@@ -974,7 +977,7 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                     {/* Error / Gate Mismatch Notification Alert Banner */}
                     {/* Error / Gate Mismatch Notification Alert Banner */}
                     {(!valid || result.status === 'checkout_mismatch') && result.message && (
-                        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-bold leading-relaxed text-rose-900 shadow-xs">
+                        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs leading-relaxed font-bold text-rose-900 shadow-xs">
                             <ShieldX className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
                             <span>{result.message}</span>
                         </div>

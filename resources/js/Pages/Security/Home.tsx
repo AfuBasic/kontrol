@@ -90,7 +90,10 @@ export default function SecurityCommandCenter() {
         if (quality === 'poor') {
             return {
                 label: 'Limited Connectivity - Scanning still available',
-                detail: pendingCount > 0 ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}` : `Last sync ${formatLastSync(lastSyncAt)}`,
+                detail:
+                    pendingCount > 0
+                        ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}`
+                        : `Last sync ${formatLastSync(lastSyncAt)}`,
                 tone: 'amber' as const,
                 Icon: Zap,
                 pulse: false,
@@ -109,7 +112,8 @@ export default function SecurityCommandCenter() {
 
         return {
             label: 'System Online',
-            detail: pendingCount > 0 ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}` : `Last sync ${formatLastSync(lastSyncAt)}`,
+            detail:
+                pendingCount > 0 ? `${pendingCount} pending · last sync ${formatLastSync(lastSyncAt)}` : `Last sync ${formatLastSync(lastSyncAt)}`,
             tone: 'emerald' as const,
             Icon: Wifi,
             pulse: true,

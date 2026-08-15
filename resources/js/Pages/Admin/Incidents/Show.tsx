@@ -22,7 +22,7 @@ import {
     Tag,
     AlertTriangle,
     Shield,
-    CornerDownRight
+    CornerDownRight,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import Modal from '@/Components/Modal';
@@ -51,18 +51,24 @@ type Incident = {
     hashid: string;
     title: string;
     body: string;
-    category: {
-        value: string;
-        label: string;
-    } | string;
-    priority: {
-        value: string;
-        label: string;
-    } | string;
-    status: {
-        value: string;
-        label: string;
-    } | string;
+    category:
+        | {
+              value: string;
+              label: string;
+          }
+        | string;
+    priority:
+        | {
+              value: string;
+              label: string;
+          }
+        | string;
+    status:
+        | {
+              value: string;
+              label: string;
+          }
+        | string;
     location: string | null;
     is_private: boolean;
     created_at: string;
@@ -131,12 +137,16 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
 
     const handleUpdateField = (key: string, value: any) => {
         setData(key as any, value);
-        router.put(`/admin/incidents/${incident.hashid}/status`, {
-            ...data,
-            [key]: value
-        }, {
-            preserveScroll: true,
-        });
+        router.put(
+            `/admin/incidents/${incident.hashid}/status`,
+            {
+                ...data,
+                [key]: value,
+            },
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleCommentSubmit = (e: React.FormEvent) => {
@@ -159,7 +169,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                 onFinish: () => {
                     setSubmittingComment(false);
                 },
-            }
+            },
         );
     };
 
@@ -180,12 +190,15 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
     // SLA helper calculations
     const getSlaStatus = () => {
         const created = new Date(incident.created_at).getTime();
-        const resolved = incident.solved_at ? new Date(incident.solved_at).getTime() : 
-                         incident.closed_at ? new Date(incident.closed_at).getTime() : null;
-        
+        const resolved = incident.solved_at
+            ? new Date(incident.solved_at).getTime()
+            : incident.closed_at
+              ? new Date(incident.closed_at).getTime()
+              : null;
+
         const nowTime = new Date().getTime();
         const durationLimit = 24 * 60 * 60 * 1000; // 24 hours in ms
-        const warningLimit = 16 * 60 * 60 * 1000;  // 16 hours in ms
+        const warningLimit = 16 * 60 * 60 * 1000; // 16 hours in ms
 
         if (resolved) {
             const timeTaken = resolved - created;
@@ -194,7 +207,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                 label: breached ? 'SLA Breached' : 'SLA Met',
                 style: breached ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
                 indicator: breached ? '🔴' : '🟢',
-                breached
+                breached,
             };
         }
 
@@ -204,14 +217,14 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                 label: 'SLA Breached',
                 style: 'bg-rose-50 text-rose-700 border-rose-250 animate-pulse',
                 indicator: '🔴',
-                breached: true
+                breached: true,
             };
         } else if (elapsed > warningLimit) {
             return {
                 label: 'SLA Warning',
                 style: 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse',
                 indicator: '🟠',
-                breached: false
+                breached: false,
             };
         } else {
             const remainingHours = Math.round((durationLimit - elapsed) / (1000 * 60 * 60));
@@ -219,7 +232,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                 label: `${remainingHours}h remaining`,
                 style: 'bg-slate-50 text-slate-700 border-slate-200',
                 indicator: '🟢',
-                breached: false
+                breached: false,
             };
         }
     };
@@ -252,7 +265,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
             <div className="mb-6 flex items-center justify-between">
                 <Link
                     href="/admin/incidents"
-                    className="inline-flex items-center gap-1 text-xs font-black tracking-wider uppercase text-slate-500 hover:text-slate-900 transition"
+                    className="inline-flex items-center gap-1 text-xs font-black tracking-wider text-slate-500 uppercase transition hover:text-slate-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Incident Workspace
@@ -272,7 +285,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                 <div className="space-y-6 lg:col-span-2">
                     <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
                         {/* Header Details */}
-                        <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">
                             <span className="inline-flex items-center gap-1 text-slate-500">
                                 <Tag className="h-3.5 w-3.5" />
                                 {categoryVal.replace('_', ' ')}
@@ -301,20 +314,20 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                         )}
 
                         {/* Body / Description */}
-                        <div className="mt-5 border-t border-slate-50 pt-5 text-sm leading-relaxed text-slate-655 whitespace-pre-wrap">
+                        <div className="text-slate-655 mt-5 border-t border-slate-50 pt-5 text-sm leading-relaxed whitespace-pre-wrap">
                             {incident.body}
                         </div>
 
                         {/* Image/Video attachments */}
                         {incident.attachment_url && (
                             <div className="mt-6 border-t border-slate-50 pt-5">
-                                <h3 className="mb-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Evidence / Attachments</h3>
-                                <div className="relative group max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1.5 shadow-xs">
+                                <h3 className="mb-3 text-[10px] font-black tracking-wider text-slate-400 uppercase">Evidence / Attachments</h3>
+                                <div className="group relative max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1.5 shadow-xs">
                                     {incident.attachment_type === 'image' ? (
-                                        <img 
-                                            src={incident.attachment_url} 
-                                            alt="Incident attachment" 
-                                            className="max-h-80 w-full rounded-lg object-cover cursor-pointer"
+                                        <img
+                                            src={incident.attachment_url}
+                                            alt="Incident attachment"
+                                            className="max-h-80 w-full cursor-pointer rounded-lg object-cover"
                                             onClick={() => setIsLightboxOpen(true)}
                                         />
                                     ) : (
@@ -324,7 +337,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                                     {incident.attachment_type === 'image' && (
                                         <button
                                             onClick={() => setIsLightboxOpen(true)}
-                                            className="absolute bottom-4 right-4 flex items-center gap-1 rounded-xl bg-slate-950/80 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-xs transition hover:bg-slate-900"
+                                            className="absolute right-4 bottom-4 flex items-center gap-1 rounded-xl bg-slate-950/80 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-xs transition hover:bg-slate-900"
                                         >
                                             <ZoomIn className="h-3.5 w-3.5" />
                                             Enlarge
@@ -343,62 +356,63 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                         </h3>
 
                         {/* Comments feed */}
-                        <Deferred
-                            data="comments"
-                            fallback={<div className="mb-4 h-24 animate-pulse rounded-xl bg-slate-50" />}
-                        >
-                        <div className="space-y-4">
-                            {commentList.map((comment) => (
-                                <div key={comment.id} className="rounded-xl bg-slate-50/50 p-4 border border-slate-100">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-xs font-black text-indigo-700">
-                                                {comment.author.name.charAt(0).toUpperCase()}
-                                            </div>
-                                            <div>
-                                                <span className="text-xs font-bold text-slate-900">{comment.author.name}</span>
-                                                <span className="ml-2 text-[10px] font-bold text-slate-400">
-                                                    {formatDistanceToNow(new Date(comment.created_at))} ago
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onClick={() => handleDeleteComment(comment.id)}
-                                            className="text-slate-350 hover:text-red-600 transition"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                    <p className="mt-2.5 text-xs font-semibold leading-relaxed text-slate-655">{comment.body}</p>
-
-                                    {/* Replies */}
-                                    {comment.replies && comment.replies.map((reply) => (
-                                        <div key={reply.id} className="ml-6 mt-3.5 flex items-start gap-2.5 border-l border-slate-200 pl-4 py-1">
-                                            <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-slate-400 mt-1" />
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-xs font-bold text-slate-800">{reply.author.name}</span>
-                                                    <span className="text-[9px] font-bold text-slate-400">
-                                                        {formatDistanceToNow(new Date(reply.created_at))} ago
+                        <Deferred data="comments" fallback={<div className="mb-4 h-24 animate-pulse rounded-xl bg-slate-50" />}>
+                            <div className="space-y-4">
+                                {commentList.map((comment) => (
+                                    <div key={comment.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-xs font-black text-indigo-700">
+                                                    {comment.author.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <span className="text-xs font-bold text-slate-900">{comment.author.name}</span>
+                                                    <span className="ml-2 text-[10px] font-bold text-slate-400">
+                                                        {formatDistanceToNow(new Date(comment.created_at))} ago
                                                     </span>
                                                 </div>
-                                                <p className="mt-1 text-xs font-medium text-slate-600">{reply.body}</p>
                                             </div>
+                                            <button
+                                                onClick={() => handleDeleteComment(comment.id)}
+                                                className="text-slate-350 transition hover:text-red-600"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
                                         </div>
-                                    ))}
+                                        <p className="text-slate-655 mt-2.5 text-xs leading-relaxed font-semibold">{comment.body}</p>
 
-                                    {/* Inline reply trigger */}
-                                    <div className="mt-3 flex justify-end">
-                                        <button
-                                            onClick={() => setReplyToId(comment.id)}
-                                            className="text-[10px] font-black uppercase tracking-wider text-indigo-600 hover:text-indigo-800"
-                                        >
-                                            Reply
-                                        </button>
+                                        {/* Replies */}
+                                        {comment.replies &&
+                                            comment.replies.map((reply) => (
+                                                <div
+                                                    key={reply.id}
+                                                    className="mt-3.5 ml-6 flex items-start gap-2.5 border-l border-slate-200 py-1 pl-4"
+                                                >
+                                                    <CornerDownRight className="mt-1 h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs font-bold text-slate-800">{reply.author.name}</span>
+                                                            <span className="text-[9px] font-bold text-slate-400">
+                                                                {formatDistanceToNow(new Date(reply.created_at))} ago
+                                                            </span>
+                                                        </div>
+                                                        <p className="mt-1 text-xs font-medium text-slate-600">{reply.body}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+
+                                        {/* Inline reply trigger */}
+                                        <div className="mt-3 flex justify-end">
+                                            <button
+                                                onClick={() => setReplyToId(comment.id)}
+                                                className="text-[10px] font-black tracking-wider text-indigo-600 uppercase hover:text-indigo-800"
+                                            >
+                                                Reply
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
                         </Deferred>
 
                         {/* Add Comment form */}
@@ -419,12 +433,12 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                                 rows={3}
                                 className="w-full rounded-xl border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-hidden"
                             />
-                            
+
                             <div className="mt-3 flex justify-end">
                                 <button
                                     type="submit"
                                     disabled={submittingComment || !commentText.trim()}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black tracking-wide text-white uppercase hover:bg-slate-800 disabled:opacity-40 transition"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black tracking-wide text-white uppercase transition hover:bg-slate-800 disabled:opacity-40"
                                 >
                                     <Send className="h-3 w-3" />
                                     Post Update
@@ -468,11 +482,11 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                 <div className="space-y-6">
                     {/* SLA Status Card */}
                     <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-3 text-[10px] font-black uppercase tracking-wider text-slate-400">SLA Resolution Target</h3>
+                        <h3 className="mb-3 text-[10px] font-black tracking-wider text-slate-400 uppercase">SLA Resolution Target</h3>
                         <div className={`flex flex-col gap-2 rounded-xl border p-4 ${slaInfo.style}`}>
                             <div className="flex items-center gap-2">
                                 <span className="text-sm">{slaInfo.indicator}</span>
-                                <span className="text-xs font-black uppercase tracking-wider">{slaInfo.label}</span>
+                                <span className="text-xs font-black tracking-wider uppercase">{slaInfo.label}</span>
                             </div>
                             <p className="text-[10px] font-semibold text-slate-500">
                                 Estate standard SLA guarantees critical/high reports are resolved or verified within 24 hours.
@@ -481,25 +495,31 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                     </div>
 
                     {/* Meta Parameters Form */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-4.5">
-                        <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-50 pb-2">Operational Attributes</h3>
-                        
+                    <div className="space-y-4.5 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
+                        <h3 className="border-b border-slate-50 pb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                            Operational Attributes
+                        </h3>
+
                         {/* Status update */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">Status</label>
+                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Status</label>
                             <select
                                 value={data.status}
                                 onChange={(e) => handleUpdateField('status', e.target.value)}
                                 className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                             >
-                                {statuses.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                                {statuses.map((s) => (
+                                    <option key={s.value} value={s.value}>
+                                        {s.label}
+                                    </option>
+                                ))}
                                 <option value="closed">Closed (Done)</option>
                             </select>
                         </div>
 
                         {/* Priority update */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">Priority</label>
+                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Priority</label>
                             <select
                                 value={data.priority}
                                 onChange={(e) => handleUpdateField('priority', e.target.value)}
@@ -514,32 +534,40 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
 
                         {/* Assignee update */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">Assigned To</label>
+                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Assigned To</label>
                             <select
                                 value={data.assigned_to}
                                 onChange={(e) => handleUpdateField('assigned_to', e.target.value)}
                                 className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                             >
                                 <option value="">Unassigned</option>
-                                {admins.map(adm => <option key={adm.id} value={adm.id}>{adm.name}</option>)}
+                                {admins.map((adm) => (
+                                    <option key={adm.id} value={adm.id}>
+                                        {adm.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
                         {/* Category update */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">Category</label>
+                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Category</label>
                             <select
                                 value={data.category}
                                 onChange={(e) => handleUpdateField('category', e.target.value)}
                                 className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
                             >
-                                {categories.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                {categories.map((c) => (
+                                    <option key={c.value} value={c.value}>
+                                        {c.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
                         {/* Visibility (is_private) update */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">Visibility</label>
+                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Visibility</label>
                             <select
                                 value={data.is_private ? 'true' : 'false'}
                                 onChange={(e) => handleUpdateField('is_private', e.target.value === 'true')}
@@ -552,10 +580,12 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                     </div>
 
                     {/* Reporter details */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-3.5">
-                        <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-50 pb-2">Reporter Details</h3>
+                    <div className="space-y-3.5 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
+                        <h3 className="border-b border-slate-50 pb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">
+                            Reporter Details
+                        </h3>
                         <div className="flex items-center gap-3 border-b border-slate-50 pb-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 font-bold text-xs text-slate-500">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-xs font-bold text-slate-500">
                                 {incident.reporter.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -571,7 +601,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                             </div>
                             <div>
                                 <span className="block font-black text-slate-400 uppercase">Incident Source</span>
-                                <span className="rounded bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase inline-block mt-0.5">
+                                <span className="mt-0.5 inline-block rounded border border-slate-200/60 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
                                     {incident.source.replace('_', ' ')}
                                 </span>
                             </div>
@@ -583,13 +613,10 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
             {/* LIGHTBOX FOR IMAGES */}
             <AnimatePresence>
                 {isLightboxOpen && incident.attachment_url && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
-                        onClick={() => setIsLightboxOpen(false)}
-                    >
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setIsLightboxOpen(false)}>
                         <button
                             onClick={() => setIsLightboxOpen(false)}
-                            className="absolute top-6 right-6 rounded-full bg-slate-850 p-2.5 text-white transition hover:bg-slate-700"
+                            className="bg-slate-850 absolute top-6 right-6 rounded-full p-2.5 text-white transition hover:bg-slate-700"
                         >
                             <X className="h-5 w-5" />
                         </button>

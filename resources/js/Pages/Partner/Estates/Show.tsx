@@ -122,7 +122,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                         {estate.status_label}
                                     </span>
                                     {estate.commission_status ? (
-                                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold capitalize text-white/70 ring-1 ring-white/10">
+                                        <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/70 capitalize ring-1 ring-white/10">
                                             Commission {estate.commission_status}
                                         </span>
                                     ) : null}
@@ -179,7 +179,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                             <div className="mt-5">
                                 <div className="mb-1.5 flex justify-between text-[11px] text-stone-400">
                                     <span>Adoption progress</span>
-                                    <span className="font-semibold tabular-nums text-stone-600">{estate.progress}%</span>
+                                    <span className="font-semibold text-stone-600 tabular-nums">{estate.progress}%</span>
                                 </div>
                                 <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-white/10">
                                     <motion.div
@@ -225,13 +225,13 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                             <div className="mt-4 grid gap-3 sm:grid-cols-2">
                                 <div className="rounded-2xl bg-stone-50 p-4 dark:bg-white/[0.04]">
                                     <p className="text-[10px] font-medium text-stone-400 uppercase">This month</p>
-                                    <p className="mt-1 text-2xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    <p className="mt-1 text-2xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                         {formatAmount(estate.commission.monthly_revenue_kobo)}
                                     </p>
                                 </div>
                                 <div className="rounded-2xl bg-stone-50 p-4 dark:bg-white/[0.04]">
                                     <p className="text-[10px] font-medium text-stone-400 uppercase">Your commission (lifetime)</p>
-                                    <p className="mt-1 text-2xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                    <p className="mt-1 text-2xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                         {formatAmount(estate.commission.earned_kobo)}
                                     </p>
                                 </div>
@@ -244,11 +244,9 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                             className="flex items-center justify-between rounded-xl px-3 py-2.5 text-[13px] ring-1 ring-stone-900/[0.04] dark:ring-white/10"
                                         >
                                             <span className="text-stone-500">{row.month}</span>
-                                            <span className="font-semibold tabular-nums text-stone-900 dark:text-white">
+                                            <span className="font-semibold text-stone-900 tabular-nums dark:text-white">
                                                 {formatAmount(row.revenue_kobo)}
-                                                <span className="ml-2 font-medium text-stone-400">
-                                                    · {formatAmount(row.commission_kobo)}
-                                                </span>
+                                                <span className="ml-2 font-medium text-stone-400">· {formatAmount(row.commission_kobo)}</span>
                                             </span>
                                         </li>
                                     ))}
@@ -270,7 +268,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                     <div key={item.label} className="rounded-2xl bg-stone-50 p-3.5 dark:bg-white/[0.04]">
                                         <item.icon className="h-4 w-4 text-stone-400" />
                                         <p className="mt-2 text-[10px] text-stone-400 uppercase">{item.label}</p>
-                                        <p className="text-xl font-semibold tabular-nums text-stone-900 dark:text-white">{item.value}</p>
+                                        <p className="text-xl font-semibold text-stone-900 tabular-nums dark:text-white">{item.value}</p>
                                     </div>
                                 ))}
                             </div>
@@ -299,11 +297,11 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                 <h2 className="text-[15px] font-semibold text-stone-900 dark:text-white">Commission</h2>
                             </div>
                             <p className="mt-4 text-[11px] text-stone-400 uppercase">Earned</p>
-                            <p className="text-2xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                            <p className="text-2xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                 {formatAmount(estate.commission.earned_kobo)}
                             </p>
                             <p className="mt-3 text-[11px] text-stone-400 uppercase">Pending settlement</p>
-                            <p className="text-lg font-semibold tabular-nums text-sky-700 dark:text-sky-300">
+                            <p className="text-lg font-semibold text-sky-700 tabular-nums dark:text-sky-300">
                                 {formatAmount(estate.commission.pending_kobo)}
                             </p>
                             <Link href={estate.earnings_href} className="mt-4 inline-flex text-[12px] font-semibold text-primary-600">
@@ -316,9 +314,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                             <dl className="mt-4 space-y-3 text-[13px]">
                                 <div>
                                     <dt className="text-[10px] text-stone-400 uppercase">Chairman / contact</dt>
-                                    <dd className="mt-0.5 font-medium text-stone-800 dark:text-slate-200">
-                                        {estate.chairman_name || '-'}
-                                    </dd>
+                                    <dd className="mt-0.5 font-medium text-stone-800 dark:text-slate-200">{estate.chairman_name || '-'}</dd>
                                 </div>
                                 <div>
                                     <dt className="text-[10px] text-stone-400 uppercase">Email</dt>
@@ -344,12 +340,10 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                         <li key={String(event.id)} className="flex gap-3">
                                             <div className="flex w-4 shrink-0 flex-col items-center">
                                                 <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary-500 ring-4 ring-primary-500/15" />
-                                                {!isLast ? (
-                                                    <span className="mt-1 w-px flex-1 min-h-[1.25rem] bg-stone-200 dark:bg-white/15" />
-                                                ) : null}
+                                                {!isLast ? <span className="mt-1 min-h-[1.25rem] w-px flex-1 bg-stone-200 dark:bg-white/15" /> : null}
                                             </div>
                                             <div className={`min-w-0 ${isLast ? 'pb-0' : 'pb-5'}`}>
-                                                <p className="text-[13px] font-semibold leading-snug text-stone-900 dark:text-white">
+                                                <p className="text-[13px] leading-snug font-semibold text-stone-900 dark:text-white">
                                                     {event.description}
                                                 </p>
                                                 <p className="mt-1 text-[11px] text-stone-400">
@@ -363,7 +357,10 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                             </ol>
                         </div>
 
-                        <div id="activity" className="rounded-[1.5rem] bg-linear-to-br from-sky-50 to-white p-5 ring-1 ring-sky-100 dark:from-sky-500/10 dark:to-transparent dark:ring-sky-500/20">
+                        <div
+                            id="activity"
+                            className="rounded-[1.5rem] bg-linear-to-br from-sky-50 to-white p-5 ring-1 ring-sky-100 dark:from-sky-500/10 dark:to-transparent dark:ring-sky-500/20"
+                        >
                             <div className="flex items-center gap-2">
                                 <ChartBarIcon className="h-4 w-4 text-sky-600" />
                                 <h2 className="text-[15px] font-semibold text-stone-900 dark:text-white">Recent activity</h2>

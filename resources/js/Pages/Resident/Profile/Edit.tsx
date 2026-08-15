@@ -1,20 +1,6 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import {
-    User,
-    Shield,
-    ChevronRight,
-    Zap,
-    Users,
-    UserCircle,
-    Crown,
-    X,
-    Loader2,
-    Plus,
-    Wallet,
-    CheckCircle2,
-    ShieldAlert,
-} from 'lucide-react';
+import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import * as EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';

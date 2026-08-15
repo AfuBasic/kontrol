@@ -36,9 +36,7 @@ export default function PartnerSupport({ support }: Props) {
 
         return support.faq.filter(
             (item) =>
-                item.question.toLowerCase().includes(q) ||
-                item.answer.toLowerCase().includes(q) ||
-                (item.category ?? '').toLowerCase().includes(q),
+                item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q) || (item.category ?? '').toLowerCase().includes(q),
         );
     }, [query, support.faq]);
 
@@ -49,9 +47,7 @@ export default function PartnerSupport({ support }: Props) {
             <div className="mx-auto max-w-5xl space-y-8 pb-8">
                 <div>
                     <p className="text-[11px] font-medium tracking-[0.14em] text-stone-400 uppercase">Partner success</p>
-                    <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight text-stone-900 dark:text-white">
-                        Support
-                    </h1>
+                    <h1 className="mt-1 text-[1.5rem] font-semibold tracking-tight text-stone-900 dark:text-white">Support</h1>
                 </div>
 
                 {/* Hero */}
@@ -69,18 +65,12 @@ export default function PartnerSupport({ support }: Props) {
 
                     <div className="relative px-5 py-7 sm:px-8 sm:py-9">
                         <p className="text-[13px] font-medium text-white/50">Partner Success Center</p>
-                        <h2 className="mt-1 max-w-lg text-[1.85rem] font-semibold tracking-tight sm:text-[2.25rem]">
-                            Need help?
-                        </h2>
-                        <p className="mt-2 max-w-md text-[14px] text-white/50">
-                            We&apos;re here whenever you need us.
-                        </p>
+                        <h2 className="mt-1 max-w-lg text-[1.85rem] font-semibold tracking-tight sm:text-[2.25rem]">Need help?</h2>
+                        <p className="mt-2 max-w-md text-[14px] text-white/50">We&apos;re here whenever you need us.</p>
 
                         <div className="mt-6 flex flex-wrap gap-2">
                             <div className="rounded-xl bg-white/[0.07] px-3.5 py-2.5 ring-1 ring-white/10">
-                                <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">
-                                    Avg. response
-                                </p>
+                                <p className="text-[9px] font-semibold tracking-wide text-white/40 uppercase">Avg. response</p>
                                 <p className="text-[13px] font-semibold">&lt; {support.response_sla}</p>
                             </div>
                             <div className="rounded-xl bg-white/[0.07] px-3.5 py-2.5 ring-1 ring-white/10">
@@ -119,9 +109,7 @@ export default function PartnerSupport({ support }: Props) {
                 <section className="space-y-4">
                     <div className="flex flex-wrap items-end justify-between gap-3">
                         <div>
-                            <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">
-                                Frequently asked questions
-                            </h2>
+                            <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 dark:text-white">Frequently asked questions</h2>
                             <p className="mt-0.5 text-[12px] text-stone-500">Quick answers to common partner questions</p>
                         </div>
                     </div>
@@ -135,7 +123,7 @@ export default function PartnerSupport({ support }: Props) {
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search FAQs…"
                             aria-label="Search FAQs"
-                            className="w-full rounded-2xl bg-white py-3 pr-4 pl-11 text-[14px] text-stone-900 shadow-sm outline-none ring-1 ring-stone-900/[0.06] transition placeholder:text-stone-400 focus:ring-2 focus:ring-primary-200 dark:bg-white/[0.04] dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
+                            className="w-full rounded-2xl bg-white py-3 pr-4 pl-11 text-[14px] text-stone-900 shadow-sm ring-1 ring-stone-900/[0.06] transition outline-none placeholder:text-stone-400 focus:ring-2 focus:ring-primary-200 dark:bg-white/[0.04] dark:text-white dark:ring-white/10 dark:focus:ring-primary-800"
                         />
                     </div>
 
@@ -150,10 +138,7 @@ export default function PartnerSupport({ support }: Props) {
                                     const open = openQuestion === item.question;
 
                                     return (
-                                        <li
-                                            key={item.question}
-                                            className="border-b border-stone-100 last:border-0 dark:border-white/[0.05]"
-                                        >
+                                        <li key={item.question} className="border-b border-stone-100 last:border-0 dark:border-white/[0.05]">
                                             <button
                                                 type="button"
                                                 onClick={() => setOpenQuestion(open ? null : item.question)}
@@ -204,9 +189,7 @@ export default function PartnerSupport({ support }: Props) {
                     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.035] dark:ring-white/[0.06]">
                         <div className="flex items-center gap-2">
                             <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)]" />
-                            <p className="text-[14px] font-semibold text-stone-900 dark:text-white">
-                                Support team {support.status ?? 'Online'}
-                            </p>
+                            <p className="text-[14px] font-semibold text-stone-900 dark:text-white">Support team {support.status ?? 'Online'}</p>
                         </div>
                         <dl className="mt-4 space-y-2.5">
                             {[
@@ -225,8 +208,8 @@ export default function PartnerSupport({ support }: Props) {
                     <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.035] dark:ring-white/[0.06]">
                         <p className="text-[14px] font-semibold text-stone-900 dark:text-white">Still need help?</p>
                         <p className="mt-1 text-[12px] text-stone-500">
-                            Reach us at <span className="font-semibold text-stone-700 dark:text-slate-200">{support.email}</span>.
-                            Typical reply within {support.response_sla}.
+                            Reach us at <span className="font-semibold text-stone-700 dark:text-slate-200">{support.email}</span>. Typical reply
+                            within {support.response_sla}.
                         </p>
                         <a
                             href={mailto}
@@ -237,7 +220,6 @@ export default function PartnerSupport({ support }: Props) {
                         </a>
                     </div>
                 </section>
-
             </div>
         </PartnerLayout>
     );

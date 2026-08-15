@@ -330,7 +330,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                     />
                                     {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                                 </div>
-                                
+
                                 {/* Badge Number */}
                                 <div>
                                     <label htmlFor="badge_number" className="block text-sm font-medium text-gray-700">
@@ -350,13 +350,15 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 {/* Coverage Scope Selection */}
                                 {zones.length > 0 && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Operational Scope & Coverage
-                                        </label>
-                                        <p className="mt-0.5 text-xs text-gray-500">Determine where this officer has administrative and access authority.</p>
+                                        <label className="block text-sm font-medium text-gray-700">Operational Scope & Coverage</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine where this officer has administrative and access authority.
+                                        </p>
 
                                         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="scope_mode"
@@ -366,11 +368,15 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Officer can operate across all gates, visitor logs, and zones.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Officer can operate across all gates, visitor logs, and zones.
+                                                    </span>
                                                 </div>
                                             </label>
 
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="scope_mode"
@@ -380,7 +386,9 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Restrict officer's scope to a single operational phase or block.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Restrict officer's scope to a single operational phase or block.
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>

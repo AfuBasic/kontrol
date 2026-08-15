@@ -69,20 +69,22 @@ export default function AdminActivation({ acceptUrl, user, flash, errors, estate
                     <div className="overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-2xl backdrop-blur-2xl">
                         <div className="p-8 text-center lg:p-10">
                             <div className="mb-6 flex justify-center">
-                                <span className="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-300 ring-1 ring-inset ring-indigo-500/20">
+                                <span className="inline-flex items-center rounded-md bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-300 ring-1 ring-indigo-500/20 ring-inset">
                                     ESTATE ADMINISTRATOR
                                 </span>
                             </div>
-                            
+
                             <div className="mb-8">
                                 <h1 className="text-2xl font-semibold tracking-tight text-white">Your administrator account is ready.</h1>
                                 <p className="mt-2 text-sm text-white/60">
-                                    Hello, {name}. You are the designated administrator for <span className="font-semibold text-white">{estate_name}</span>. Activate your account to begin setting up your estate.
+                                    Hello, {name}. You are the designated administrator for{' '}
+                                    <span className="font-semibold text-white">{estate_name}</span>. Activate your account to begin setting up your
+                                    estate.
                                 </p>
                             </div>
 
                             {(flash?.error || (errors && Object.keys(errors).length > 0)) && (
-                                <div className="mb-6 rounded-lg bg-red-500/10 p-4 border border-red-500/20 text-sm text-red-400">
+                                <div className="mb-6 rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-400">
                                     {flash?.error || Object.values(errors || {})[0]}
                                 </div>
                             )}

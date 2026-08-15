@@ -21,14 +21,7 @@ const paddingMap = {
 /**
  * Premium surface - elevation over borders, soft ring, optional stretch.
  */
-export default function Surface({
-    children,
-    className,
-    padding = 'md',
-    hover = false,
-    as: Tag = 'div',
-    stretch = false,
-}: Props) {
+export default function Surface({ children, className, padding = 'md', hover = false, as: Tag = 'div', stretch = false }: Props) {
     return (
         <Tag
             className={cn(

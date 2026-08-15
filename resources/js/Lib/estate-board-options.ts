@@ -1,15 +1,4 @@
-import {
-    AlertOctagon,
-    AlertTriangle,
-    CalendarDays,
-    Circle,
-    Globe,
-    Megaphone,
-    PartyPopper,
-    Shield,
-    Users,
-    Wrench,
-} from 'lucide-react';
+import { AlertOctagon, AlertTriangle, CalendarDays, Circle, Globe, Megaphone, PartyPopper, Shield, Users, Wrench } from 'lucide-react';
 
 import type { PostAudience, PostCategory, PostPriority } from '@/types';
 

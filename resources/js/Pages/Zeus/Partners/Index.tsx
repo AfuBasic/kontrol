@@ -86,15 +86,19 @@ export default function PartnersIndex({ partners, filters }: Props) {
     function handleConfirmResend() {
         if (selectedPartnerId === null || selectedMemberId === null) return;
         setIsInviting(true);
-        router.post(`/zeus/partners/${selectedPartnerId}/members/${selectedMemberId}/resend-invite`, {}, {
-            preserveScroll: true,
-            onFinish: () => {
-                setIsInviting(false);
-                setInviteModalOpen(false);
-                setSelectedPartnerId(null);
-                setSelectedMemberId(null);
-            }
-        });
+        router.post(
+            `/zeus/partners/${selectedPartnerId}/members/${selectedMemberId}/resend-invite`,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setIsInviting(false);
+                    setInviteModalOpen(false);
+                    setSelectedPartnerId(null);
+                    setSelectedMemberId(null);
+                },
+            },
+        );
     }
 
     function clearFilters() {
@@ -106,14 +110,14 @@ export default function PartnersIndex({ partners, filters }: Props) {
     const hasFilters = search || status;
 
     // Calculate quick stats from current page or totals
-    const activePartnersCount = partners.data.filter(p => p.status === 'active').length;
+    const activePartnersCount = partners.data.filter((p) => p.status === 'active').length;
     const totalEstatesCount = partners.data.reduce((acc, p) => acc + p.estates_count, 0);
 
     return (
         <ZeusLayout>
             <Head title="Partners Management" />
 
-            <div className="relative mx-auto max-w-7xl px-4 py-8 text-[#F2F3F6] space-y-8">
+            <div className="relative mx-auto max-w-7xl space-y-8 px-4 py-8 text-[#F2F3F6]">
                 {/* Decorative Glow */}
                 <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
 
@@ -132,12 +136,12 @@ export default function PartnersIndex({ partners, filters }: Props) {
                         <h1 className="text-4xl font-black tracking-tight text-[#F2F3F6]">
                             Strategic <span className="font-light text-[#9297A8]">Partners</span>
                         </h1>
-                        <p className="text-sm text-[#9297A8] mt-2">Manage external partners, update commission structures, and audit referrals.</p>
+                        <p className="mt-2 text-sm text-[#9297A8]">Manage external partners, update commission structures, and audit referrals.</p>
                     </div>
                     <div>
                         <Link
                             href="/zeus/partners/create"
-                            className="inline-flex items-center gap-2 rounded-2xl bg-[#6C5DFD] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#6C5DFD]/10 hover:bg-[#6C5DFD]/90 active:scale-[0.98] transition-all"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-[#6C5DFD] px-6 py-4 text-sm font-black text-white shadow-lg shadow-[#6C5DFD]/10 transition-all hover:bg-[#6C5DFD]/90 active:scale-[0.98]"
                         >
                             <PlusIcon className="h-4.5 w-4.5 stroke-[3]" />
                             Create Partner
@@ -200,10 +204,10 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     transition={{ duration: 0.4, delay: 0.1 }}
                     className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl"
                 >
-                    <form onSubmit={handleSearch} className="flex flex-col gap-4 sm:flex-row sm:items-end justify-between">
+                    <form onSubmit={handleSearch} className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div className="flex flex-1 flex-col gap-4 sm:flex-row">
                             <div className="flex-1">
-                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Search Partners</label>
+                                <label className="mb-2 block text-xs font-bold tracking-wider text-[#9297A8] uppercase">Search Partners</label>
                                 <div className="relative">
                                     <MagnifyingGlassIcon className="absolute top-3.5 left-3.5 h-4 w-4 text-[#9297A8]" />
                                     <input
@@ -211,17 +215,17 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search by name, email..."
-                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors placeholder:text-gray-600"
+                                        className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 pr-4 pl-10 text-sm text-[#F2F3F6] transition-colors outline-none placeholder:text-gray-600 focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
                                     />
                                 </div>
                             </div>
 
                             <div className="w-full sm:w-48">
-                                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[#9297A8]">Status Filter</label>
+                                <label className="mb-2 block text-xs font-bold tracking-wider text-[#9297A8] uppercase">Status Filter</label>
                                 <select
                                     value={status}
                                     onChange={(e) => handleStatusChange(e.target.value)}
-                                    className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] py-3 px-4 text-sm text-[#F2F3F6] outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD] transition-colors"
+                                    className="w-full rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] px-4 py-3 text-sm text-[#F2F3F6] transition-colors outline-none focus:border-[#6C5DFD] focus:ring-1 focus:ring-[#6C5DFD]"
                                 >
                                     <option value="">All Statuses</option>
                                     <option value="active">Active</option>
@@ -234,7 +238,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                         <div className="flex gap-2">
                             <button
                                 type="submit"
-                                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gray-900 border border-[rgba(255,255,255,0.08)] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 transition-colors"
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.08)] bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-gray-800"
                             >
                                 <FunnelIcon className="h-4 w-4" />
                                 Filter
@@ -243,7 +247,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                 <button
                                     type="button"
                                     onClick={clearFilters}
-                                    className="rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-5 py-3 text-sm font-semibold text-[#9297A8] hover:bg-gray-850 hover:text-white transition-colors"
+                                    className="hover:bg-gray-850 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] px-5 py-3 text-sm font-semibold text-[#9297A8] transition-colors hover:text-white"
                                 >
                                     Reset
                                 </button>
@@ -257,11 +261,11 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: 0.15 }}
-                    className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] shadow-2xl overflow-hidden"
+                    className="overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] shadow-2xl"
                 >
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-[#12141C] border-b border-[rgba(255,255,255,0.08)] text-xs font-semibold uppercase tracking-wider text-[#9297A8]">
+                        <table className="w-full text-left text-sm">
+                            <thead className="border-b border-[rgba(255,255,255,0.08)] bg-[#12141C] text-xs font-semibold tracking-wider text-[#9297A8] uppercase">
                                 <tr>
                                     <th className="px-6 py-4 text-left">Partner Details</th>
                                     <th className="px-6 py-4 text-left">Commission Rate</th>
@@ -279,13 +283,13 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                     </tr>
                                 ) : (
                                     partners.data.map((partner) => (
-                                        <tr key={partner.id} className="hover:bg-[#12141C]/50 transition-colors">
+                                        <tr key={partner.id} className="transition-colors hover:bg-[#12141C]/50">
                                             <td className="px-6 py-5">
                                                 <div>
-                                                    <p className="font-bold text-[#F2F3F6] text-[14px]">{partner.name}</p>
-                                                    <p className="text-[#9297A8] text-xs mt-0.5">{partner.email}</p>
+                                                    <p className="text-[14px] font-bold text-[#F2F3F6]">{partner.name}</p>
+                                                    <p className="mt-0.5 text-xs text-[#9297A8]">{partner.email}</p>
                                                     {partner.contact_person && (
-                                                        <p className="text-gray-650 text-[10px] mt-1">Attn: {partner.contact_person}</p>
+                                                        <p className="text-gray-650 mt-1 text-[10px]">Attn: {partner.contact_person}</p>
                                                     )}
                                                 </div>
                                             </td>
@@ -294,13 +298,13 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                                     <span className="font-bold text-[#F2F3F6]">
                                                         {formatCommission(partner.commission_rate, partner.commission_type)}
                                                     </span>
-                                                    <span className="text-[10px] text-[#9297A8] uppercase mt-0.5">
+                                                    <span className="mt-0.5 text-[10px] text-[#9297A8] uppercase">
                                                         {partner.commission_type === 'fixed' ? 'Fixed Fee' : 'Percentage'}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#0A0B10] border border-[rgba(255,255,255,0.08)] font-semibold text-[#F2F3F6] text-xs">
+                                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-xs font-semibold text-[#F2F3F6]">
                                                     {partner.estates_count}
                                                 </span>
                                             </td>
@@ -308,19 +312,21 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                                 <span
                                                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold uppercase ${
                                                         partner.status === 'active'
-                                                            ? 'bg-[#34D399]/10 text-[#34D399] border border-[#34D399]/20'
+                                                            ? 'border border-[#34D399]/20 bg-[#34D399]/10 text-[#34D399]'
                                                             : partner.status === 'inactive'
-                                                            ? 'bg-[#F5A623]/10 text-[#F5A623] border border-[#F5A623]/20'
-                                                            : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                                                              ? 'border border-[#F5A623]/20 bg-[#F5A623]/10 text-[#F5A623]'
+                                                              : 'border border-rose-500/20 bg-rose-500/10 text-rose-500'
                                                     }`}
                                                 >
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${
-                                                        partner.status === 'active'
-                                                            ? 'bg-[#34D399]'
-                                                            : partner.status === 'inactive'
-                                                            ? 'bg-[#F5A623]'
-                                                            : 'bg-rose-500'
-                                                    }`} />
+                                                    <span
+                                                        className={`h-1.5 w-1.5 rounded-full ${
+                                                            partner.status === 'active'
+                                                                ? 'bg-[#34D399]'
+                                                                : partner.status === 'inactive'
+                                                                  ? 'bg-[#F5A623]'
+                                                                  : 'bg-rose-500'
+                                                        }`}
+                                                    />
                                                     {partner.status}
                                                 </span>
                                             </td>
@@ -381,7 +387,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                                                 link.active
                                                     ? 'bg-[#6C5DFD] text-white shadow-sm'
-                                                    : 'bg-[#0A0B10] border border-[rgba(255,255,255,0.08)] text-[#9297A8] hover:bg-[#12141C]'
+                                                    : 'border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-[#9297A8] hover:bg-[#12141C]'
                                             }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />

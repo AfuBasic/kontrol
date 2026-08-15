@@ -1,10 +1,4 @@
-import {
-    BanknotesIcon,
-    BuildingOffice2Icon,
-    PlusCircleIcon,
-    Squares2X2Icon,
-    UserCircleIcon,
-} from '@heroicons/react/24/outline';
+import { BanknotesIcon, BuildingOffice2Icon, PlusCircleIcon, Squares2X2Icon, UserCircleIcon } from '@heroicons/react/24/outline';
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
@@ -23,16 +17,13 @@ const navItems = [
 export default function MobileBottomNav({ url }: Props) {
     return (
         <nav
-            className="pb-safe fixed right-0 bottom-0 left-0 z-50 border-t border-stone-200/70 bg-[#f7f6f3]/90 backdrop-blur-2xl dark:border-slate-800/80 dark:bg-slate-950/90 lg:hidden"
+            className="pb-safe fixed right-0 bottom-0 left-0 z-50 border-t border-stone-200/70 bg-[#f7f6f3]/90 backdrop-blur-2xl lg:hidden dark:border-slate-800/80 dark:bg-slate-950/90"
             aria-label="Partner mobile navigation"
         >
             <div className="flex h-[3.6rem] items-center justify-around px-1">
                 {navItems.map((item) => {
                     const path = item.href.split('?')[0];
-                    const active =
-                        item.href === '/partner/dashboard'
-                            ? url === path
-                            : url === path || url.startsWith(path + '/');
+                    const active = item.href === '/partner/dashboard' ? url === path : url === path || url.startsWith(path + '/');
                     const emphasize = 'emphasize' in item && item.emphasize;
 
                     return (
@@ -57,11 +48,7 @@ export default function MobileBottomNav({ url }: Props) {
                             ) : (
                                 <item.icon className={`h-5 w-5 shrink-0 transition ${active ? 'scale-105' : ''}`} />
                             )}
-                            <span
-                                className={`max-w-full truncate text-[9px] font-bold tracking-tight ${
-                                    active ? '' : 'opacity-70'
-                                }`}
-                            >
+                            <span className={`max-w-full truncate text-[9px] font-bold tracking-tight ${active ? '' : 'opacity-70'}`}>
                                 {item.name}
                             </span>
                             {active && (

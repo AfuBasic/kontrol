@@ -200,21 +200,15 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                 {/* Header Row: Name and Status Badge */}
                 <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                        <h3 className="truncate text-sm font-semibold tracking-tight text-slate-900">
-                            {code.visitor_name || 'Visitor'}
-                        </h3>
-                        {code.purpose && (
-                            <p className="mt-0.5 truncate text-[11px] font-medium text-slate-400">
-                                {code.purpose}
-                            </p>
-                        )}
+                        <h3 className="truncate text-sm font-semibold tracking-tight text-slate-900">{code.visitor_name || 'Visitor'}</h3>
+                        {code.purpose && <p className="mt-0.5 truncate text-[11px] font-medium text-slate-400">{code.purpose}</p>}
                     </div>
-                    
-                    <div className="flex items-center gap-1.5 shrink-0">
+
+                    <div className="flex shrink-0 items-center gap-1.5">
                         <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold ${status.color}`}>
                             {status.label}
                         </span>
-                        
+
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -229,12 +223,12 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
 
                 {/* Info Row: Type, Expiry */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-50 pt-2.5">
-                    <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${typeInfo.bg}`}>
+                    <span
+                        className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[9px] font-semibold tracking-wider uppercase ${typeInfo.bg}`}
+                    >
                         {typeInfo.label}
                     </span>
-                    <span className="text-[11px] font-medium text-slate-400">
-                        {formatFaintExpiry()}
-                    </span>
+                    <span className="text-[11px] font-medium text-slate-400">{formatFaintExpiry()}</span>
                 </div>
 
                 {/* Event Attendance (Progress Bar) */}
@@ -242,7 +236,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                     <div className="space-y-1 rounded-lg border border-slate-100 bg-slate-50/50 p-2 text-[10px] text-slate-500">
                         <div className="flex items-center justify-between">
                             <span className="flex items-center gap-1 font-medium">
-                                <Users className="h-3 w-3 text-purple-550" />
+                                <Users className="text-purple-550 h-3 w-3" />
                                 Attendance
                             </span>
                             <span className="font-semibold text-slate-700">
@@ -252,7 +246,7 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
                         {code.guest_limit && (
                             <div className="h-1 w-full overflow-hidden rounded-full bg-slate-100">
                                 <div
-                                    className="bg-purple-600 h-full rounded-full transition-all duration-500"
+                                    className="h-full rounded-full bg-purple-600 transition-all duration-500"
                                     style={{ width: `${Math.min(100, ((code.uses_count ?? 0) / code.guest_limit) * 100)}%` }}
                                 />
                             </div>
@@ -262,24 +256,20 @@ export default function CodeCard({ code, showActions = false, onRevoke }: Props)
 
                 {/* Access Code Row - High Contrast and Prominent */}
                 <div className="flex items-center justify-between gap-2 border-t border-slate-50 pt-2.5">
-                    <div 
+                    <div
                         onClick={(e) => {
                             e.stopPropagation();
                             copyCode();
                         }}
                         className={`flex flex-1 items-center justify-between rounded-xl px-3 py-2 transition-all ${
-                            copying 
-                                ? 'bg-emerald-500 text-white' 
-                                : 'bg-slate-900 text-white hover:bg-slate-800'
+                            copying ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-slate-800'
                         }`}
                     >
                         <div className="flex flex-col">
-                            <span className={`text-[8px] font-semibold uppercase tracking-widest ${copying ? 'text-emerald-100' : 'text-slate-400'}`}>
+                            <span className={`text-[8px] font-semibold tracking-widest uppercase ${copying ? 'text-emerald-100' : 'text-slate-400'}`}>
                                 Access Code
                             </span>
-                            <span className="font-mono text-sm font-bold tracking-widest">
-                                {code.code}
-                            </span>
+                            <span className="font-mono text-sm font-bold tracking-widest">{code.code}</span>
                         </div>
                         <div className="shrink-0 p-1">
                             {copying ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5 opacity-80" />}

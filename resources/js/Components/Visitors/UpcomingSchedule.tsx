@@ -23,7 +23,7 @@ export default function UpcomingSchedule({ visits }: Props) {
 
     return (
         <div className="space-y-2 py-2">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Upcoming</h3>
+            <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Upcoming</h3>
 
             <div className="space-y-2">
                 {dayGroupKeys.map((dayLabel) => (

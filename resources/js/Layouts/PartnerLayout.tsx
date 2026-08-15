@@ -152,45 +152,33 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
         const channelName = `App.Models.User.${user.id}`;
         const channel = window.Echo.private(channelName);
 
-        channel.notification(
-            (notification: {
-                title?: string;
-                body?: string;
-                message?: string;
-                type?: string;
-                severity?: string;
-                url?: string;
-            }) => {
-                const message = notification.body || notification.message || notification.title || 'You have a new update.';
-                const severity = notification.severity || notification.type;
-                const typeName = typeof notification.type === 'string' ? notification.type : '';
-                const isRejection = typeName.includes('EstateRequestRejected');
-                const isAcceptance = typeName.includes('EstateRequestAccepted');
-                const isDanger = severity === 'danger' || severity === 'error' || isRejection;
+        channel.notification((notification: { title?: string; body?: string; message?: string; type?: string; severity?: string; url?: string }) => {
+            const message = notification.body || notification.message || notification.title || 'You have a new update.';
+            const severity = notification.severity || notification.type;
+            const typeName = typeof notification.type === 'string' ? notification.type : '';
+            const isRejection = typeName.includes('EstateRequestRejected');
+            const isAcceptance = typeName.includes('EstateRequestAccepted');
+            const isDanger = severity === 'danger' || severity === 'error' || isRejection;
 
-                setToastTitle(
-                    notification.title ||
-                        (isRejection ? 'Estate request rejected' : isAcceptance ? 'Estate request accepted' : undefined),
-                );
-                setToastTime(formatToastTime(new Date()));
-                setToastMessage(message);
-                setToastType(isDanger ? 'error' : 'success');
-                setShowToast(true);
+            setToastTitle(notification.title || (isRejection ? 'Estate request rejected' : isAcceptance ? 'Estate request accepted' : undefined));
+            setToastTime(formatToastTime(new Date()));
+            setToastMessage(message);
+            setToastType(isDanger ? 'error' : 'success');
+            setShowToast(true);
 
-                // Refresh unread badge + dropdown listing without a full navigation.
-                // Also refresh My Estates list when a pipeline status change is broadcast.
-                const only = ['partnerUnreadCount', 'partnerNotifications', 'auth'];
-                if (window.location.pathname.startsWith('/partner/partner-requests')) {
-                    only.push('partnerRequests', 'columns', 'commission', 'filters');
-                }
+            // Refresh unread badge + dropdown listing without a full navigation.
+            // Also refresh My Estates list when a pipeline status change is broadcast.
+            const only = ['partnerUnreadCount', 'partnerNotifications', 'auth'];
+            if (window.location.pathname.startsWith('/partner/partner-requests')) {
+                only.push('partnerRequests', 'columns', 'commission', 'filters');
+            }
 
-                router.reload({
-                    only,
-                    preserveScroll: true,
-                    preserveState: true,
-                });
-            },
-        );
+            router.reload({
+                only,
+                preserveScroll: true,
+                preserveState: true,
+            });
+        });
 
         return () => {
             window.Echo.leave(channelName);
@@ -251,9 +239,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 )}
                 <span
                     className={`relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200 ${
-                        active
-                            ? 'bg-white/[0.08] text-sky-300'
-                            : 'text-slate-500 group-hover:bg-white/[0.04] group-hover:text-slate-300'
+                        active ? 'bg-white/[0.08] text-sky-300' : 'text-slate-500 group-hover:bg-white/[0.04] group-hover:text-slate-300'
                     }`}
                 >
                     <item.icon className="h-[17px] w-[17px]" />
@@ -263,22 +249,10 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
         );
     }
 
-    function NavSection({
-        label,
-        items,
-        showLabel,
-    }: {
-        label: string;
-        items: NavItem[];
-        showLabel: boolean;
-    }) {
+    function NavSection({ label, items, showLabel }: { label: string; items: NavItem[]; showLabel: boolean }) {
         return (
             <div className="space-y-0.5">
-                {showLabel && (
-                    <p className="px-2.5 pt-0.5 pb-1.5 text-[10px] font-semibold tracking-[0.16em] text-slate-500/90 uppercase">
-                        {label}
-                    </p>
-                )}
+                {showLabel && <p className="px-2.5 pt-0.5 pb-1.5 text-[10px] font-semibold tracking-[0.16em] text-slate-500/90 uppercase">{label}</p>}
                 {items.map((item) => renderNavLink(item, { showLabel }))}
             </div>
         );
@@ -288,13 +262,10 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
 
     const profileCard = !isCollapsed ? (
         <div className="relative overflow-hidden rounded-2xl bg-white/[0.045] p-3 ring-1 ring-white/[0.07]">
-            <div
-                className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-blue-500/15 blur-2xl"
-                aria-hidden
-            />
+            <div className="pointer-events-none absolute -top-8 -right-6 h-20 w-20 rounded-full bg-blue-500/15 blur-2xl" aria-hidden />
             <div className="relative flex items-start gap-2.5">
                 <div className="relative shrink-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-linear-to-br from-blue-500 via-blue-600 to-indigo-600 text-[11px] font-bold tracking-wide text-white shadow-lg shadow-blue-900/40 ring-1 ring-white/15">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-[0.8rem] bg-linear-to-br from-blue-500 via-blue-600 to-indigo-600 text-[11px] font-bold tracking-wide text-white shadow-lg ring-1 shadow-blue-900/40 ring-white/15">
                         {initials}
                     </div>
                     <span
@@ -315,9 +286,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 {partnerContext?.status ?? 'Partner'}
                             </span>
                         )}
-                        <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold ring-1 ${tier.tone}`}>
-                            {tier.label}
-                        </span>
+                        <span className={`rounded-md px-1.5 py-0.5 text-[9px] font-semibold ring-1 ${tier.tone}`}>{tier.label}</span>
                     </div>
                     {partnerContext?.commission_rate && (
                         <p className="mt-2 text-[11px] leading-none text-slate-400">
@@ -350,10 +319,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                 }`}
                 aria-label="Submit new estate"
             >
-                <span
-                    className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/20 to-transparent opacity-60"
-                    aria-hidden
-                />
+                <span className="pointer-events-none absolute inset-0 bg-linear-to-b from-white/20 to-transparent opacity-60" aria-hidden />
                 <span
                     className="pointer-events-none absolute -inset-x-4 -top-8 h-12 bg-white/20 opacity-0 blur-xl transition duration-500 group-hover:opacity-100"
                     aria-hidden
@@ -398,11 +364,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                     {/* Brand */}
                     <div className="relative z-10 flex h-14 items-center justify-between gap-2 px-3.5">
                         {!isCollapsed ? (
-                            <Link
-                                href="/partner/dashboard"
-                                className="flex min-w-0 flex-1 items-center"
-                                aria-label="Kontrol Partner"
-                            >
+                            <Link href="/partner/dashboard" className="flex min-w-0 flex-1 items-center" aria-label="Kontrol Partner">
                                 <img
                                     src="/assets/images/kontrol-white-logo-new.png"
                                     alt="Kontrol"
@@ -410,11 +372,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 />
                             </Link>
                         ) : (
-                            <Link
-                                href="/partner/dashboard"
-                                className="flex flex-1 justify-center"
-                                aria-label="Kontrol Partner"
-                            >
+                            <Link href="/partner/dashboard" className="flex flex-1 justify-center" aria-label="Kontrol Partner">
                                 <img
                                     src="/assets/images/kontrol-icon-white.png"
                                     alt="Kontrol"
@@ -428,11 +386,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                             aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                             className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/[0.06] hover:text-white"
                         >
-                            {isCollapsed ? (
-                                <ChevronDoubleRightIcon className="h-3.5 w-3.5" />
-                            ) : (
-                                <ChevronDoubleLeftIcon className="h-3.5 w-3.5" />
-                            )}
+                            {isCollapsed ? <ChevronDoubleRightIcon className="h-3.5 w-3.5" /> : <ChevronDoubleLeftIcon className="h-3.5 w-3.5" />}
                         </button>
                     </div>
 
@@ -507,9 +461,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-stone-300/45 to-transparent dark:via-white/10"
                                 aria-hidden
                             />
-                            <div
-                                className={`mx-auto flex h-14 items-center justify-between gap-3 px-4 sm:h-[3.75rem] sm:px-6 ${contentMax}`}
-                            >
+                            <div className={`mx-auto flex h-14 items-center justify-between gap-3 px-4 sm:h-[3.75rem] sm:px-6 ${contentMax}`}>
                                 <div className="flex min-w-0 items-center gap-3">
                                     <button
                                         type="button"
@@ -517,14 +469,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                         className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-stone-900/[0.04] text-stone-600 ring-1 ring-stone-900/[0.04] transition hover:bg-stone-900/[0.07] lg:hidden dark:bg-white/[0.06] dark:text-slate-300 dark:ring-white/10"
                                         aria-label="Open menu"
                                     >
-                                        <svg
-                                            className="h-4 w-4"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            aria-hidden
-                                        >
+                                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
                                             <path d="M3 12h18M3 6h18M3 18h18" />
                                         </svg>
                                     </button>
@@ -561,11 +506,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                                             className="inline-flex h-8 w-8 items-center justify-center rounded-full text-stone-500 transition hover:bg-white hover:text-stone-800 hover:shadow-sm dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white"
                                         >
-                                            {theme === 'dark' ? (
-                                                <SunIcon className="h-4 w-4" />
-                                            ) : (
-                                                <MoonIcon className="h-4 w-4" />
-                                            )}
+                                            {theme === 'dark' ? <SunIcon className="h-4 w-4" /> : <MoonIcon className="h-4 w-4" />}
                                         </button>
                                         <NotificationDropdown unreadCount={unread} />
                                         <Link
@@ -573,7 +514,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                             className="group relative ml-0.5 flex items-center rounded-full py-0.5 pr-1 pl-0.5 transition hover:bg-white/80 dark:hover:bg-white/10"
                                             aria-label="Open account"
                                         >
-                                            <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-[11px] font-bold text-white shadow-md shadow-blue-600/25 ring-2 ring-white dark:ring-slate-900">
+                                            <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-[11px] font-bold text-white shadow-md ring-2 shadow-blue-600/25 ring-white dark:ring-slate-900">
                                                 {initials}
                                                 {isVerified && (
                                                     <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-slate-900" />

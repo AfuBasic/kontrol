@@ -59,9 +59,7 @@ export default function ContextBanner({ upcoming }: Props) {
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
                     </span>
                 )}
-                <p className={`text-xs font-semibold tracking-tight ${isImminent ? 'text-amber-950 font-bold' : 'text-slate-600'}`}>
-                    {message}
-                </p>
+                <p className={`text-xs font-semibold tracking-tight ${isImminent ? 'font-bold text-amber-950' : 'text-slate-600'}`}>{message}</p>
             </div>
         </div>
     );

@@ -49,61 +49,61 @@ export default function Properties({ propertyOwner, properties }: Props) {
                 </div>
 
                 <SectionErrorBoundary name="po-properties">
-                <Deferred data="properties" fallback={<TableRowSkeleton rows={6} columns={3} />}>
-                <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
-                    {propertyList.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-slate-100">
-                                <thead className="bg-slate-50/50">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Property Name
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Residents Count
-                                        </th>
-                                        <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                            Created On
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100 bg-white">
-                                    {propertyList.map((property) => (
-                                        <tr key={property.id} className="transition-colors hover:bg-slate-50/50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
-                                                        <BuildingOffice2Icon className="h-5 w-5" />
-                                                    </div>
-                                                    <span className="text-sm font-bold text-slate-900">{property.name}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600">
-                                                    <UsersIcon className="h-4 w-4 shrink-0 text-slate-400" />
-                                                    {property.residents_count}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-slate-550 inline-flex items-center gap-1.5 text-sm font-bold">
-                                                    <CalendarDaysIcon className="h-4 w-4 shrink-0 text-slate-400" />
-                                                    {property.created_at}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                    <Deferred data="properties" fallback={<TableRowSkeleton rows={6} columns={3} />}>
+                        <div className="overflow-hidden rounded-[32px] bg-white shadow-xs ring-1 ring-slate-100">
+                            {propertyList.length > 0 ? (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full divide-y divide-slate-100">
+                                        <thead className="bg-slate-50/50">
+                                            <tr>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Property Name
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Residents Count
+                                                </th>
+                                                <th className="px-6 py-4 text-left text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Created On
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 bg-white">
+                                            {propertyList.map((property) => (
+                                                <tr key={property.id} className="transition-colors hover:bg-slate-50/50">
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 font-bold text-slate-500">
+                                                                <BuildingOffice2Icon className="h-5 w-5" />
+                                                            </div>
+                                                            <span className="text-sm font-bold text-slate-900">{property.name}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="inline-flex items-center gap-1.5 text-sm font-bold text-slate-600">
+                                                            <UsersIcon className="h-4 w-4 shrink-0 text-slate-400" />
+                                                            {property.residents_count}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <span className="text-slate-550 inline-flex items-center gap-1.5 text-sm font-bold">
+                                                            <CalendarDaysIcon className="h-4 w-4 shrink-0 text-slate-400" />
+                                                            {property.created_at}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            ) : (
+                                <div className="py-16 text-center">
+                                    <BuildingOffice2Icon className="mx-auto h-12 w-12 text-slate-300" />
+                                    <h3 className="mt-4 text-lg font-black text-slate-900">No Properties Found</h3>
+                                    <p className="mt-1 text-sm text-slate-500">This Property Owner has not registered any properties yet.</p>
+                                </div>
+                            )}
                         </div>
-                    ) : (
-                        <div className="py-16 text-center">
-                            <BuildingOffice2Icon className="mx-auto h-12 w-12 text-slate-300" />
-                            <h3 className="mt-4 text-lg font-black text-slate-900">No Properties Found</h3>
-                            <p className="mt-1 text-sm text-slate-500">This Property Owner has not registered any properties yet.</p>
-                        </div>
-                    )}
-                </div>
-                </Deferred>
+                    </Deferred>
                 </SectionErrorBoundary>
             </div>
         </>

@@ -109,7 +109,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
             {/* Context bar / Last posted note */}
             <div className="mb-3 flex items-center justify-between gap-2 border-b border-slate-100 pb-3 text-xs font-semibold text-slate-500">
                 <div className="flex items-center gap-2">
-                    <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
                     <span className="font-bold text-slate-900">Post an Announcement</span>
                 </div>
                 {lastBroadcastNote && (
@@ -129,7 +129,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                             value={data.title}
                             onChange={(e) => setData('title', e.target.value)}
                             placeholder="Announcement title..."
-                            className="w-full border-none bg-transparent p-0 text-base font-bold text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-0"
+                            className="w-full border-none bg-transparent p-0 text-base font-bold text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden"
                         />
                         {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title}</p>}
                     </div>
@@ -143,7 +143,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                         onChange={(e) => setData('body', e.target.value)}
                         placeholder="Share an announcement with your estate..."
                         rows={isExpanded ? 3 : 2}
-                        className="w-full resize-none border-none bg-transparent p-0 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-hidden focus:ring-0"
+                        className="w-full resize-none border-none bg-transparent p-0 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden"
                     />
                     {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body}</p>}
                 </div>
@@ -182,7 +182,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                             <select
                                 value={data.audience}
                                 onChange={(e) => setData('audience', e.target.value as PostAudience)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-3 pr-7 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
                             >
                                 {AUDIENCES.map((aud) => (
                                     <option key={aud.value} value={aud.value}>
@@ -200,7 +200,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                                         const value = e.target.value;
                                         setData('zone_ids', value ? [Number(value)] : []);
                                     }}
-                                    className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-3 pr-7 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                    className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
                                 >
                                     <option value="">Entire Estate</option>
                                     {zones.map((zone) => (
@@ -217,7 +217,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                             <select
                                 value={data.category}
                                 onChange={(e) => setData('category', e.target.value as PostCategory)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pl-3 pr-7 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden capitalize"
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 capitalize transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
                             >
                                 {CATEGORIES.map((cat) => (
                                     <option key={cat.value} value={cat.value}>
@@ -266,7 +266,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                         <button
                             type="button"
                             onClick={() => fileInputRef.current?.click()}
-                            className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+                            className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
                             title="Attach files or photos"
                         >
                             <Paperclip className="h-3.5 w-3.5" />
@@ -288,7 +288,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                             <button
                                 type="button"
                                 onClick={handleCancel}
-                                className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition"
+                                className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
                             >
                                 Cancel
                             </button>

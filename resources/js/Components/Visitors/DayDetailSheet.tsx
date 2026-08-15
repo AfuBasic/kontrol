@@ -32,14 +32,7 @@ type Props = {
     isAdminView?: boolean;
 };
 
-export default function DayDetailSheet({
-    date,
-    events,
-    isOpen,
-    onClose,
-    onCreateClick,
-    isAdminView = false,
-}: Props) {
+export default function DayDetailSheet({ date, events, isOpen, onClose, onCreateClick, isAdminView = false }: Props) {
     if (!isOpen || !date) return null;
 
     const dateFormatted = date.toLocaleDateString('en-US', {
@@ -52,15 +45,9 @@ export default function DayDetailSheet({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 backdrop-blur-xs sm:items-center p-0 sm:p-4">
+            <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-0 backdrop-blur-xs sm:items-center sm:p-4">
                 {/* Backdrop Click */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    onClick={onClose}
-                    className="absolute inset-0"
-                />
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0" />
 
                 {/* Sheet Content Card */}
                 <motion.div
@@ -68,14 +55,12 @@ export default function DayDetailSheet({
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="relative w-full max-w-lg rounded-t-3xl sm:rounded-2xl bg-white p-5 shadow-2xl z-10 max-h-[85vh] flex flex-col"
+                    className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col rounded-t-3xl bg-white p-5 shadow-2xl sm:rounded-2xl"
                 >
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
-                            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                Day Schedule
-                            </span>
+                            <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Day Schedule</span>
                             <h3 className="text-base font-extrabold text-slate-900">{dateFormatted}</h3>
                         </div>
 
@@ -86,23 +71,20 @@ export default function DayDetailSheet({
                                         onClose();
                                         onCreateClick(dateStr);
                                     }}
-                                    className="inline-flex items-center gap-1 rounded-xl bg-primary-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-primary-700 transition"
+                                    className="inline-flex items-center gap-1 rounded-xl bg-primary-600 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-primary-700"
                                 >
                                     <Plus className="h-3.5 w-3.5" />
                                     <span>Invite</span>
                                 </button>
                             )}
-                            <button
-                                onClick={onClose}
-                                className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                            >
+                            <button onClick={onClose} className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
                     </div>
 
                     {/* Events List Scrollable Container */}
-                    <div className="mt-4 flex-1 overflow-y-auto space-y-3 pr-1">
+                    <div className="mt-4 flex-1 space-y-3 overflow-y-auto pr-1">
                         {events.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10 text-center">
                                 <div className="rounded-full bg-slate-50 p-4 text-slate-400">
@@ -134,9 +116,7 @@ export default function DayDetailSheet({
                                           minute: '2-digit',
                                       });
 
-                                const detailUrl = isAdminView
-                                    ? '/admin/visitors'
-                                    : `/resident/visitors/${event.id}`;
+                                const detailUrl = isAdminView ? '/admin/visitors' : `/resident/visitors/${event.id}`;
 
                                 return (
                                     <Link
@@ -162,7 +142,7 @@ export default function DayDetailSheet({
                                                 </span>
 
                                                 {isAdminView && event.extendedProps.host_name && (
-                                                    <span className="flex items-center gap-1 text-slate-500 font-medium">
+                                                    <span className="flex items-center gap-1 font-medium text-slate-500">
                                                         <User className="h-3.5 w-3.5 text-slate-400" />
                                                         Host: {event.extendedProps.host_name}
                                                     </span>
@@ -183,7 +163,7 @@ export default function DayDetailSheet({
                                         </div>
 
                                         <div className="text-right">
-                                            <span className="font-mono text-xs font-bold text-slate-900 bg-white/80 px-2 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                                            <span className="rounded-lg border border-slate-200 bg-white/80 px-2 py-1 font-mono text-xs font-bold text-slate-900 shadow-2xs">
                                                 {event.extendedProps.code}
                                             </span>
                                         </div>

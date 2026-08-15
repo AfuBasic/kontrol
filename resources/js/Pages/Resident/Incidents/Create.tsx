@@ -256,7 +256,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
             {!isOnline && (
                 <div className="mb-4 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                     <WifiOff className="mt-0.5 h-4 w-4 shrink-0" />
-                    <p className="text-xs font-semibold leading-relaxed">
+                    <p className="text-xs leading-relaxed font-semibold">
                         You&apos;re offline. Text-only reports can be saved locally and will submit when you reconnect. Attachments require internet.
                     </p>
                 </div>
@@ -265,9 +265,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
             {offlineSaved && (
                 <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
                     <p className="text-xs font-bold">Your report has been saved locally</p>
-                    <p className="mt-1 text-xs font-medium text-emerald-800/90">
-                        It will be submitted automatically when you&apos;re back online.
-                    </p>
+                    <p className="mt-1 text-xs font-medium text-emerald-800/90">It will be submitted automatically when you&apos;re back online.</p>
                     <Link href="/resident/incidents" className="mt-2 inline-block text-xs font-black text-emerald-800 underline">
                         Back to incidents
                     </Link>
