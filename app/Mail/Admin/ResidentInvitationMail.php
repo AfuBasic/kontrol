@@ -24,6 +24,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
         public Invitation|User $user,
         public Estate $estate,
         public ?Invitation $invitation = null,
+        public ?string $zoneName = null,
     ) {
         if ($this->user instanceof Invitation) {
             $token = $this->user->token;
@@ -60,6 +61,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
                 'estateName' => $this->estate->name,
                 'userName' => $this->userName,
                 'invitationUrl' => $this->invitationUrl,
+                'zoneName' => $this->zoneName,
             ],
         );
     }
