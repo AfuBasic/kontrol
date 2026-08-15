@@ -158,7 +158,7 @@ export default function EditRole({ role, permissions }: Props) {
                                     id="name"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="block w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-slate-900 shadow-xs transition-colors placeholder:text-slate-400 focus:border-[#0A3D91] focus:ring-[#0A3D91]"
+                                    className="block w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-slate-900 shadow-xs transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-slate-900"
                                     placeholder="e.g. Security Supervisor"
                                 />
                                 {errors.name && <p className="mt-2 text-sm font-medium text-red-600">{errors.name}</p>}
@@ -182,7 +182,7 @@ export default function EditRole({ role, permissions }: Props) {
                                         type="text"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
-                                        className="block w-full rounded-xl border-slate-200 bg-slate-50/50 py-2 pr-3 pl-9 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-[#0A3D91] focus:bg-white focus:ring-[#0A3D91]"
+                                        className="block w-full rounded-xl border-slate-200 bg-slate-50/50 py-2 pr-3 pl-9 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:bg-white focus:ring-slate-900"
                                         placeholder="Search permissions..."
                                     />
                                 </div>
@@ -225,7 +225,7 @@ export default function EditRole({ role, permissions }: Props) {
                                                     <button
                                                         type="button"
                                                         onClick={() => toggleModule(module)}
-                                                        className="mt-2 text-left text-sm font-medium text-[#0A3D91] hover:text-[#0A3D91]/80 sm:mt-0 sm:text-right"
+                                                        className="mt-2 text-left text-sm font-medium text-slate-950 hover:text-slate-950/80 sm:mt-0 sm:text-right"
                                                     >
                                                         {isFullySelected ? 'Clear all' : 'Select all'}
                                                     </button>
@@ -239,7 +239,7 @@ export default function EditRole({ role, permissions }: Props) {
                                                             <label
                                                                 key={permission.id}
                                                                 className={`relative flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-slate-50 ${
-                                                                    isChecked ? 'border-[#0A3D91]/30 bg-[#0A3D91]/5' : 'border-slate-200/60 bg-white'
+                                                                    isChecked ? 'border-slate-950/30 bg-slate-950/5' : 'border-slate-200/60 bg-white'
                                                                 }`}
                                                             >
                                                                 <div className="flex h-5 items-center">
@@ -247,12 +247,12 @@ export default function EditRole({ role, permissions }: Props) {
                                                                         type="checkbox"
                                                                         checked={isChecked}
                                                                         onChange={() => togglePermission(permission.id)}
-                                                                        className="h-4 w-4 rounded border-slate-300 text-[#0A3D91] transition-colors focus:ring-[#0A3D91]"
+                                                                        className="h-4 w-4 rounded border-slate-300 text-slate-950 transition-colors focus:ring-slate-900"
                                                                     />
                                                                 </div>
                                                                 <div className="flex flex-col">
                                                                     <span
-                                                                        className={`text-sm font-medium ${isChecked ? 'text-[#0A3D91]' : 'text-slate-700'}`}
+                                                                        className={`text-sm font-medium ${isChecked ? 'text-slate-950' : 'text-slate-700'}`}
                                                                     >
                                                                         {getActionFromPermission(permission.name)}
                                                                     </span>
@@ -277,7 +277,7 @@ export default function EditRole({ role, permissions }: Props) {
                             {data.permissions.length === 0 ? (
                                 <p className="text-sm font-medium text-slate-500">No permissions selected yet</p>
                             ) : (
-                                <p className="text-sm font-medium text-[#0A3D91]">{data.permissions.length} permissions selected</p>
+                                <p className="text-sm font-medium text-slate-950">{data.permissions.length} permissions selected</p>
                             )}
                         </div>
                         <div className="flex w-full items-center gap-3 sm:w-auto">
@@ -290,7 +290,7 @@ export default function EditRole({ role, permissions }: Props) {
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="flex-1 justify-center rounded-xl bg-[#0A3D91] px-6 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-[#0A3D91]/90 disabled:opacity-50 sm:flex-none"
+                                className="flex-1 justify-center rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-slate-950/90 disabled:opacity-50 sm:flex-none"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </button>

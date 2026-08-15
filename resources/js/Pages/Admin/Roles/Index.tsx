@@ -63,7 +63,7 @@ export default function Roles({ roles }: Props) {
                     {can('roles.create') && hasRoles && (
                         <Link
                             href={index.url() + '/create'}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#0A3D91] px-4 py-2 text-center text-sm font-medium text-white shadow-xs transition-colors hover:bg-[#0A3D91]/90"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-center text-sm font-medium text-white shadow-xs transition-colors hover:bg-slate-950/90"
                         >
                             Create Role
                         </Link>
@@ -86,7 +86,7 @@ export default function Roles({ roles }: Props) {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="block w-full rounded-xl border border-slate-200 bg-white py-2 pr-3 pl-9 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-[#0A3D91] focus:ring-[#0A3D91] focus:outline-none"
+                                className="block w-full rounded-xl border border-slate-200 bg-white py-2 pr-3 pl-9 text-sm text-slate-900 shadow-sm transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-slate-900 focus:outline-none"
                                 placeholder="Search roles..."
                             />
                         </div>
@@ -122,7 +122,7 @@ export default function Roles({ roles }: Props) {
                                                             {({ active }) => (
                                                                 <Link
                                                                     href={index.url() + `/${role.id}/edit`}
-                                                                    className={`${active ? 'bg-slate-50 text-[#0A3D91]' : 'text-slate-700'} flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors`}
+                                                                    className={`${active ? 'bg-slate-50 text-slate-950' : 'text-slate-700'} flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors`}
                                                                 >
                                                                     <PencilIcon className="h-4 w-4" />
                                                                     Edit
@@ -148,7 +148,7 @@ export default function Roles({ roles }: Props) {
                                         </div>
 
                                         <div>
-                                            <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#F4F7FB] text-[#0A3D91] ring-1 ring-[#0A3D91]/10">
+                                            <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-950 ring-1 ring-slate-950/10">
                                                 <ShieldCheckIcon className="h-5 w-5" />
                                             </div>
                                             <h3 className="text-base font-semibold tracking-tight text-slate-900 capitalize">{role.name}</h3>
@@ -181,7 +181,7 @@ export default function Roles({ roles }: Props) {
                             <MagnifyingGlassIcon className="mb-3 h-10 w-10 text-slate-300" />
                             <h3 className="text-sm font-semibold text-slate-900">No roles match your search</h3>
                             <p className="mt-1 text-sm text-slate-500">We couldn't find any roles matching "{search}".</p>
-                            <button onClick={() => setSearch('')} className="mt-6 text-sm font-medium text-[#0A3D91] hover:text-[#0A3D91]/80">
+                            <button onClick={() => setSearch('')} className="mt-6 text-sm font-medium text-slate-950 hover:text-slate-950/80">
                                 Clear search
                             </button>
                         </motion.div>
@@ -194,7 +194,7 @@ export default function Roles({ roles }: Props) {
                         transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                         className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/60 bg-white px-4 py-24 text-center shadow-sm"
                     >
-                        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F4F7FB] text-[#0A3D91] ring-1 ring-[#0A3D91]/10">
+                        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 text-slate-950 ring-1 ring-slate-950/10">
                             <UserGroupIcon className="h-8 w-8" />
                         </div>
                         <h3 className="text-xl font-semibold tracking-tight text-slate-900">Define your team's responsibilities</h3>
@@ -207,7 +207,7 @@ export default function Roles({ roles }: Props) {
                         {can('roles.create') && (
                             <Link
                                 href={index.url() + '/create'}
-                                className="mt-8 inline-flex items-center justify-center rounded-xl bg-[#0A3D91] px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0A3D91]/90"
+                                className="mt-8 inline-flex items-center justify-center rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-950/90"
                             >
                                 Create your first role
                             </Link>
