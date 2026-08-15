@@ -711,7 +711,7 @@ export default function AdminLayout({ children, title }: Props) {
                     initial={false}
                     animate={{ marginLeft: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="min-h-screen flex flex-col"
+                    className="min-h-screen flex-1 flex flex-col"
                 >
                     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-xl lg:px-8">
                         <div className="flex items-center gap-4">
