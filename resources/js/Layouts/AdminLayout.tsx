@@ -670,7 +670,7 @@ export default function AdminLayout({ children, title }: Props) {
                             <ContextSwitcher variant="light" />
                         </div>
 
-                        <div className="flex flex-1 justify-center px-4 md:px-8">
+                        <div className="hidden flex-1 justify-center px-4 md:flex md:px-8">
                             <button
                                 onClick={() => setCommandPaletteOpen(true)}
                                 className="group flex w-full max-w-md items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-100"
@@ -683,8 +683,17 @@ export default function AdminLayout({ children, title }: Props) {
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-x-4 lg:gap-x-6">
+                        <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-6">
                             <SystemHealthMonitor hideWhenHealthy />
+
+                            {/* Mobile Search Trigger */}
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 md:hidden"
+                            >
+                                <span className="sr-only">Search Kontrol</span>
+                                <Search className="h-5 w-5" />
+                            </button>
 
                             {/* Notifications */}
                             <div className="relative">
