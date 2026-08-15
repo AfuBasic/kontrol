@@ -47,7 +47,7 @@ export const baseNav: NavItem[] = [
         href: DashboardController.url(), 
         icon: Squares2X2Icon,
         description: 'Overview of estate operations',
-        keywords: ['home', 'start']
+        keywords: ['home', 'start', 'overview', 'stats', 'metrics']
     },
 
     // People Group
@@ -59,7 +59,7 @@ export const baseNav: NavItem[] = [
         feature: 'resident-directory',
         group: 'People',
         description: 'Manage people living in the estate',
-        keywords: ['people', 'users', 'tenants']
+        keywords: ['people', 'users', 'tenants', 'add resident', 'create resident', 'new resident', 'invite resident', 'dependents']
     },
     { 
         name: 'Property Owners', 
@@ -68,7 +68,7 @@ export const baseNav: NavItem[] = [
         permission: 'property_owners.view', 
         group: 'People',
         description: 'Manage property owners',
-        keywords: ['landlords', 'owners']
+        keywords: ['landlords', 'owners', 'add owner', 'create owner', 'new owner', 'invite owner']
     },
     {
         name: 'Security',
@@ -78,7 +78,7 @@ export const baseNav: NavItem[] = [
         feature: 'security-personnel-management',
         group: 'People',
         description: 'Manage security personnel',
-        keywords: ['guards', 'personnel', 'team']
+        keywords: ['guards', 'personnel', 'team', 'add guard', 'create security', 'new guard']
     },
 
     // Operations & Estate Group
@@ -89,7 +89,7 @@ export const baseNav: NavItem[] = [
         role: 'admin', 
         group: 'Estate',
         description: 'Manage estate zones and areas',
-        keywords: ['areas', 'blocks', 'phases']
+        keywords: ['areas', 'blocks', 'phases', 'add zone', 'create zone', 'new zone']
     },
     { 
         name: 'Announcements', 
@@ -98,7 +98,7 @@ export const baseNav: NavItem[] = [
         feature: 'estate-board', 
         group: 'Estate',
         description: 'Manage estate announcements',
-        keywords: ['notices', 'board', 'news']
+        keywords: ['notices', 'board', 'news', 'create announcement', 'add announcement', 'new notice', 'broadcast']
     },
     { 
         name: 'Incidents', 
@@ -107,7 +107,7 @@ export const baseNav: NavItem[] = [
         permission: 'incidents.view', 
         group: 'Operations',
         description: 'View and manage incidents',
-        keywords: ['reports', 'issues']
+        keywords: ['reports', 'issues', 'create incident', 'report incident', 'new issue']
     },
     { 
         name: 'Visitors', 
@@ -116,7 +116,7 @@ export const baseNav: NavItem[] = [
         permission: 'visitors.view', 
         group: 'Operations',
         description: 'View visitor logs and passes',
-        keywords: ['guests', 'logs']
+        keywords: ['guests', 'logs', 'create visitor', 'add visitor', 'new pass', 'invite guest']
     },
 
     // Finance Group
@@ -127,7 +127,7 @@ export const baseNav: NavItem[] = [
         feature: 'payment-collection',
         group: 'Finance',
         description: 'Manage payment collections',
-        keywords: ['payments', 'dues', 'fees']
+        keywords: ['payments', 'dues', 'fees', 'create collection', 'add collection', 'new bill', 'invoice']
     },
     {
         name: 'Transactions',
@@ -136,7 +136,7 @@ export const baseNav: NavItem[] = [
         feature: 'payment-collection',
         group: 'Finance',
         description: 'View financial transactions',
-        keywords: ['payments', 'history']
+        keywords: ['payments', 'history', 'receipts', 'view transactions', 'ledger']
     },
 
     // Governance & Access Group
@@ -148,7 +148,7 @@ export const baseNav: NavItem[] = [
         feature: 'user-access-control',
         group: 'Access',
         description: 'Manage administrative responsibilities',
-        keywords: ['team', 'staff', 'assignments', 'managers']
+        keywords: ['team', 'staff', 'assignments', 'managers', 'assign authority', 'add staff', 'new assignment', 'give access']
     },
     {
         name: 'Roles',
@@ -158,7 +158,7 @@ export const baseNav: NavItem[] = [
         feature: 'user-access-control',
         group: 'Access',
         description: 'Manage roles and permissions',
-        keywords: ['permissions', 'access']
+        keywords: ['permissions', 'access', 'create role', 'add role', 'new role']
     },
     { 
         name: 'Users', 
@@ -167,7 +167,7 @@ export const baseNav: NavItem[] = [
         permission: 'admins.view', 
         group: 'Access',
         description: 'Manage admin users',
-        keywords: ['admins', 'accounts']
+        keywords: ['admins', 'accounts', 'add user', 'create admin', 'invite admin', 'new user']
     },
 ];
 
@@ -178,7 +178,7 @@ export const secondaryNav: NavItem[] = [
         icon: Cog6ToothIcon, 
         role: 'admin',
         description: 'Manage estate settings',
-        keywords: ['configuration', 'preferences']
+        keywords: ['configuration', 'preferences', 'edit settings', 'setup', 'update settings']
     }
 ];
 
@@ -187,7 +187,7 @@ export const billingNav: NavItem = {
     href: BillingController.url(), 
     icon: CreditCardIcon,
     description: 'Manage your Kontrol subscription',
-    keywords: ['subscription', 'invoices', 'plan']
+    keywords: ['subscription', 'invoices', 'plan', 'upgrade', 'payment method', 'card']
 };
 
 /**
