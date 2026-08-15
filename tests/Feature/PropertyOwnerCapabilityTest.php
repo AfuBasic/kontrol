@@ -285,20 +285,20 @@ test('admin can manage property owner invite link and users can join', function 
     $response->assertOk();
 
     // 4. Toggle link
-    $response = $this->post(route('admin.property-owners.invite-link.toggle'));
+    $response = $this->post(route('admin.property-owners.invite-link.toggle'), ['id' => $link->id]);
     $response->assertRedirect();
     $link->refresh();
     expect($link->is_active)->toBeFalse();
 
     // Toggle back to active
-    $response = $this->post(route('admin.property-owners.invite-link.toggle'));
+    $response = $this->post(route('admin.property-owners.invite-link.toggle'), ['id' => $link->id]);
     $response->assertRedirect();
     $link->refresh();
     expect($link->is_active)->toBeTrue();
 
     // 5. Regenerate token
     $oldToken = $link->token;
-    $response = $this->post(route('admin.property-owners.invite-link.regenerate'));
+    $response = $this->post(route('admin.property-owners.invite-link.regenerate'), ['id' => $link->id]);
     $response->assertRedirect();
     $link->refresh();
     expect($link->token)->not->toBe($oldToken);
@@ -403,7 +403,7 @@ test('property owner can manage their own invite link and users can join', funct
 
     expect($link)->not->toBeNull();
     expect($link->max_usages)->toBe(5);
-    expect($link->requires_approval)->toBeFalse();
+    expect($link->requires_approval)->toBeTrue(); // Enforced true on backend
     expect($link->role)->toBe('resident');
 
     // 2. Toggle active state
@@ -447,7 +447,7 @@ test('property owner can manage their own invite link and users can join', funct
     setPermissionsTeamId($this->estate->id);
     expect($resident->hasRole('resident'))->toBeTrue();
     expect($resident->profile->property_owner_id)->toBe($owner->id);
-    expect($resident->estates->first()->pivot->status)->toBe('accepted'); // requires_approval was false
+    expect($resident->estates->first()->pivot->status)->toBe('pending'); // Enforced true by backend
 });
 
 test('resident can distinguish between estate and property owner notices and collections', function () {
