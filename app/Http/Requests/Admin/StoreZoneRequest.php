@@ -23,8 +23,7 @@ class StoreZoneRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('zones', 'name')
-                    ->where('estate_id', $estateId)
-                    ->whereNull('deleted_at'),
+                    ->where('estate_id', $estateId),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],
