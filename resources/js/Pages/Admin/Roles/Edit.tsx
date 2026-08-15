@@ -1,6 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { index, update } from '@/actions/App/Http/Controllers/Admin/RoleController';
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { useState, useMemo } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Permission = {
@@ -23,6 +25,24 @@ type GroupedPermissions = {
     [module: string]: Permission[];
 };
 
+function humanizeModule(module: string): string {
+    return module
+        .replace(/[_-]/g, ' ')
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+function getActionFromPermission(permissionName: string): string {
+    const parts = permissionName.split('.');
+    const action = parts.length > 1 ? parts[1] : permissionName;
+    return action
+        .replace(/[_-]/g, ' ')
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 function groupPermissionsByModule(permissions: Permission[]): GroupedPermissions {
     return permissions.reduce((acc: GroupedPermissions, permission) => {
         const module = permission.name.split('.')[0];
@@ -34,19 +54,32 @@ function groupPermissionsByModule(permissions: Permission[]): GroupedPermissions
     }, {});
 }
 
-function getActionFromPermission(permissionName: string): string {
-    const action = permissionName.split('.')[1] || permissionName;
-    return action.replace('-', ' ');
-}
-
 export default function EditRole({ role, permissions }: Props) {
     const { data, setData, put, processing, errors } = useForm({
         name: role.name,
         permissions: role.permissions.map((p) => p.id),
     });
 
-    const groupedPermissions = groupPermissionsByModule(permissions);
+    const [search, setSearch] = useState('');
+
+    const groupedPermissions = useMemo(() => groupPermissionsByModule(permissions), [permissions]);
     const modules = Object.keys(groupedPermissions);
+
+    const filteredModules = useMemo(() => {
+        if (!search.trim()) return modules;
+        const query = search.toLowerCase();
+
+        return modules.filter((module) => {
+            const humanModule = humanizeModule(module).toLowerCase();
+            if (humanModule.includes(query)) return true;
+
+            const modulePermissions = groupedPermissions[module];
+            return modulePermissions.some((p) => {
+                const humanAction = getActionFromPermission(p.name).toLowerCase();
+                return humanAction.includes(query) || p.name.toLowerCase().includes(query);
+            });
+        });
+    }, [modules, groupedPermissions, search]);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -89,16 +122,19 @@ export default function EditRole({ role, permissions }: Props) {
         <>
             <Head title={`Edit Role: ${role.name}`} />
 
-            <div className="mx-auto max-w-3xl">
+            <div className="mx-auto max-w-4xl">
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                     className="mb-8"
                 >
-                    <h1 className="text-2xl font-semibold text-gray-900">Edit Role</h1>
-                    <p className="mt-1 text-gray-500">
-                        Update the <span className="font-medium capitalize">{role.name}</span> role and its permissions.
+                    <Link href={index.url()} className="mb-4 inline-flex items-center text-sm font-medium text-slate-500 hover:text-slate-700">
+                        &larr; Back to Roles
+                    </Link>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Edit Role</h1>
+                    <p className="mt-1 text-sm text-slate-500">
+                        Update the <span className="font-medium text-slate-700 capitalize">{role.name}</span> responsibility and what it can manage.
                     </p>
                 </motion.div>
 
@@ -107,89 +143,158 @@ export default function EditRole({ role, permissions }: Props) {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
                     onSubmit={handleSubmit}
-                    className="space-y-6"
+                    className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs"
                 >
-                    {/* Role Name */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6">
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                            Role Name
-                        </label>
-                        <input
-                            type="text"
-                            id="name"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
-                            placeholder="e.g., Manager, Supervisor, Guest"
-                        />
-                        <p className="mt-1 text-xs text-gray-500">Choose a descriptive name for this role.</p>
-                        {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-                    </div>
+                    <div className="space-y-12 p-6 md:p-8">
+                        {/* ROLE SECTION */}
+                        <section>
+                            <div className="mb-6">
+                                <h2 className="text-lg font-semibold tracking-tight text-slate-900">Role Name</h2>
+                                <p className="mt-1 text-sm text-slate-500">Give this responsibility a clear name that your team will understand.</p>
+                            </div>
+                            <div className="max-w-xl">
+                                <input
+                                    type="text"
+                                    id="name"
+                                    value={data.name}
+                                    onChange={(e) => setData('name', e.target.value)}
+                                    className="block w-full rounded-xl border-slate-200 bg-white px-4 py-2.5 text-slate-900 shadow-xs transition-colors placeholder:text-slate-400 focus:border-[#0A3D91] focus:ring-[#0A3D91]"
+                                    placeholder="e.g. Security Supervisor"
+                                />
+                                {errors.name && <p className="mt-2 text-sm font-medium text-red-600">{errors.name}</p>}
+                            </div>
+                        </section>
 
-                    {/* Permissions */}
-                    <div className="rounded-xl border border-gray-200 bg-white p-6">
-                        <div className="mb-6">
-                            <h2 className="text-lg font-medium text-gray-900">Permissions</h2>
-                            <p className="mt-1 text-sm text-gray-500">Select the permissions this role should have.</p>
-                        </div>
+                        <div className="h-px w-full bg-slate-100" />
 
-                        <div className="space-y-6">
-                            {modules.map((module) => (
-                                <div key={module} className="rounded-lg border border-gray-200 p-4">
-                                    <div className="mb-3 flex items-center gap-3">
-                                        <input
-                                            type="checkbox"
-                                            id={`module-${module}`}
-                                            checked={isModuleFullySelected(module)}
-                                            ref={(el) => {
-                                                if (el) el.indeterminate = isModulePartiallySelected(module);
-                                            }}
-                                            onChange={() => toggleModule(module)}
-                                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                        />
-                                        <label htmlFor={`module-${module}`} className="text-sm font-medium text-gray-900 capitalize">
-                                            {module}
-                                        </label>
-                                        <span className="text-xs text-gray-400">
-                                            ({groupedPermissions[module].filter((p) => data.permissions.includes(p.id)).length}/
-                                            {groupedPermissions[module].length})
-                                        </span>
-                                    </div>
-                                    <div className="ml-7 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                        {groupedPermissions[module].map((permission) => (
-                                            <label key={permission.id} className="flex items-center gap-2 text-sm text-gray-600">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={data.permissions.includes(permission.id)}
-                                                    onChange={() => togglePermission(permission.id)}
-                                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                                />
-                                                <span className="capitalize">{getActionFromPermission(permission.name)}</span>
-                                            </label>
-                                        ))}
-                                    </div>
+                        {/* CAPABILITIES SECTION */}
+                        <section>
+                            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div>
+                                    <h2 className="text-lg font-semibold tracking-tight text-slate-900">Capabilities</h2>
+                                    <p className="mt-1 text-sm text-slate-500">Choose what this responsibility can manage.</p>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="relative w-full sm:w-72">
+                                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <MagnifyingGlassIcon className="h-4 w-4 text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="block w-full rounded-xl border-slate-200 bg-slate-50/50 py-2 pr-3 pl-9 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-[#0A3D91] focus:bg-white focus:ring-[#0A3D91]"
+                                        placeholder="Search permissions..."
+                                    />
+                                </div>
+                            </div>
 
-                        {errors.permissions && <p className="mt-4 text-sm text-red-600">{errors.permissions}</p>}
+                            <div className="space-y-6">
+                                {filteredModules.length === 0 ? (
+                                    <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center">
+                                        <p className="text-sm text-slate-500">No permissions match your search.</p>
+                                    </div>
+                                ) : (
+                                    filteredModules.map((module) => {
+                                        const modulePermissions = groupedPermissions[module];
+                                        const selectedCount = modulePermissions.filter((p) => data.permissions.includes(p.id)).length;
+                                        const isFullySelected = selectedCount === modulePermissions.length;
+
+                                        const visiblePermissions = search.trim()
+                                            ? modulePermissions.filter((p) => {
+                                                  const query = search.toLowerCase();
+                                                  const humanAction = getActionFromPermission(p.name).toLowerCase();
+                                                  const humanMod = humanizeModule(module).toLowerCase();
+                                                  return (
+                                                      humanAction.includes(query) || p.name.toLowerCase().includes(query) || humanMod.includes(query)
+                                                  );
+                                              })
+                                            : modulePermissions;
+
+                                        if (visiblePermissions.length === 0) return null;
+
+                                        return (
+                                            <div key={module} className="rounded-xl border border-slate-200/60 bg-white">
+                                                {/* Group Header */}
+                                                <div className="flex flex-col justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center">
+                                                    <div className="flex items-center gap-3">
+                                                        <h3 className="text-sm font-semibold text-slate-900">{humanizeModule(module)}</h3>
+                                                        <span className="rounded-full bg-slate-200/60 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                                            {selectedCount} of {modulePermissions.length} selected
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => toggleModule(module)}
+                                                        className="mt-2 text-left text-sm font-medium text-[#0A3D91] hover:text-[#0A3D91]/80 sm:mt-0 sm:text-right"
+                                                    >
+                                                        {isFullySelected ? 'Clear all' : 'Select all'}
+                                                    </button>
+                                                </div>
+
+                                                {/* Permissions Grid */}
+                                                <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+                                                    {visiblePermissions.map((permission) => {
+                                                        const isChecked = data.permissions.includes(permission.id);
+                                                        return (
+                                                            <label
+                                                                key={permission.id}
+                                                                className={`relative flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-slate-50 ${
+                                                                    isChecked ? 'border-[#0A3D91]/30 bg-[#0A3D91]/5' : 'border-slate-200/60 bg-white'
+                                                                }`}
+                                                            >
+                                                                <div className="flex h-5 items-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={isChecked}
+                                                                        onChange={() => togglePermission(permission.id)}
+                                                                        className="h-4 w-4 rounded border-slate-300 text-[#0A3D91] transition-colors focus:ring-[#0A3D91]"
+                                                                    />
+                                                                </div>
+                                                                <div className="flex flex-col">
+                                                                    <span
+                                                                        className={`text-sm font-medium ${isChecked ? 'text-[#0A3D91]' : 'text-slate-700'}`}
+                                                                    >
+                                                                        {getActionFromPermission(permission.name)}
+                                                                    </span>
+                                                                </div>
+                                                            </label>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
+
+                            {errors.permissions && <p className="mt-4 text-sm font-medium text-red-600">{errors.permissions}</p>}
+                        </section>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center justify-end gap-4">
-                        <Link
-                            href={index.url()}
-                            className="rounded-lg px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
-                        >
-                            Cancel
-                        </Link>
-                        <button
-                            type="submit"
-                            disabled={processing}
-                            className="rounded-lg bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
-                        >
-                            {processing ? 'Saving...' : 'Save Changes'}
-                        </button>
+                    {/* FOOTER */}
+                    <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-100 bg-slate-50/50 px-6 py-4 sm:flex-row md:px-8">
+                        <div>
+                            {data.permissions.length === 0 ? (
+                                <p className="text-sm font-medium text-slate-500">No permissions selected yet</p>
+                            ) : (
+                                <p className="text-sm font-medium text-[#0A3D91]">{data.permissions.length} permissions selected</p>
+                            )}
+                        </div>
+                        <div className="flex w-full items-center gap-3 sm:w-auto">
+                            <Link
+                                href={index.url()}
+                                className="flex-1 justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-200/50 sm:flex-none"
+                            >
+                                Cancel
+                            </Link>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="flex-1 justify-center rounded-xl bg-[#0A3D91] px-6 py-2.5 text-sm font-medium text-white shadow-xs transition-colors hover:bg-[#0A3D91]/90 disabled:opacity-50 sm:flex-none"
+                            >
+                                {processing ? 'Saving...' : 'Save Changes'}
+                            </button>
+                        </div>
                     </div>
                 </motion.form>
             </div>

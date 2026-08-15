@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Models\AdministrativeAssignment;
 use App\Services\EstateContextService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Collection;
@@ -27,7 +28,7 @@ class RoleService
             ->where('estate_id', $estateId)
             ->whereNotIn('name', RoleSeeder::RESERVED_ROLES)
             ->addSelect([
-                'assignments_count' => \App\Models\AdministrativeAssignment::selectRaw('count(*)')
+                'assignments_count' => AdministrativeAssignment::selectRaw('count(*)')
                     ->whereColumn('role_id', 'roles.id')
                     ->where('estate_id', $estateId),
             ])
