@@ -177,7 +177,21 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsToMany(Estate::class, 'estate_users_membership', 'user_id', 'estate_id')
             ->using(EstateMembership::class)
-            ->withPivot(['status', 'zone_id', 'relationship_type', 'property_owner_id'])
+            ->withPivot([
+                'status',
+                'zone_id',
+                'relationship_type',
+                'property_owner_id',
+                'created_via',
+                'initiated_by',
+                'initiated_at',
+                'last_invited_by',
+                'last_invited_at',
+                'invitation_id',
+                'invitation_link_id',
+                'import_batch',
+                'accepted_at',
+            ])
             ->withTimestamps();
     }
 

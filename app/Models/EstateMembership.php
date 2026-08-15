@@ -15,6 +15,9 @@ class EstateMembership extends Pivot
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'initiated_at' => 'datetime',
+        'last_invited_at' => 'datetime',
+        'accepted_at' => 'datetime',
     ];
 
     public function estate()
@@ -35,5 +38,25 @@ class EstateMembership extends Pivot
     public function propertyOwner()
     {
         return $this->belongsTo(User::class, 'property_owner_id');
+    }
+
+    public function initiatedBy()
+    {
+        return $this->belongsTo(User::class, 'initiated_by');
+    }
+
+    public function lastInvitedBy()
+    {
+        return $this->belongsTo(User::class, 'last_invited_by');
+    }
+
+    public function invitation()
+    {
+        return $this->belongsTo(Invitation::class, 'invitation_id');
+    }
+
+    public function invitationLink()
+    {
+        return $this->belongsTo(EstateInviteLink::class, 'invitation_link_id');
     }
 }
