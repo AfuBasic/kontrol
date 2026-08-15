@@ -1,5 +1,5 @@
 import { Menu, Transition } from '@headlessui/react';
-import { EllipsisVerticalIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { EllipsisVerticalIcon, PencilSquareIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
 import { destroy, edit, resetPassword } from '@/actions/App/Http/Controllers/Admin/UserController';
@@ -42,6 +42,33 @@ export default function UserActions({ user }: { user: User }) {
 
     const ActionItems = ({ isMobile = false }) => (
         <div className={isMobile ? 'flex flex-col gap-3' : 'p-1'}>
+            {/* View Profile */}
+            <div className={isMobile ? '' : 'contents p-1'}>
+                {isMobile ? (
+                    <Link
+                        href={`/admin/residents/${user.id}`}
+                        className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
+                    >
+                        <EyeIcon className="h-6 w-6 text-slate-400" />
+                        View Profile
+                    </Link>
+                ) : (
+                    <Menu.Item>
+                        {({ active }) => (
+                            <Link
+                                href={`/admin/residents/${user.id}`}
+                                className={`${
+                                    active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                            >
+                                <EyeIcon className="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
+                                View Profile
+                            </Link>
+                        )}
+                    </Menu.Item>
+                )}
+            </div>
+
             {can('users.edit') && user.status !== 'accepted' && (
                 <div className={isMobile ? '' : 'contents p-1'}>
                     {isMobile ? (

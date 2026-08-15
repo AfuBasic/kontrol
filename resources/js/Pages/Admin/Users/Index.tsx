@@ -167,9 +167,12 @@ export default function UsersIndex({ users, filters }: Props) {
                                                                 {initial}
                                                             </div>
                                                             <div className="min-w-0">
-                                                                <span className="block max-w-[150px] truncate text-xs font-bold text-slate-900">
+                                                                <Link
+                                                                    href={`/admin/residents/${user.id}`}
+                                                                    className="block max-w-[150px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                                >
                                                                     {user.name}
-                                                                </span>
+                                                                </Link>
                                                                 <span className="mt-0.5 block truncate text-[10px] font-bold text-slate-400">
                                                                     {user.email}
                                                                 </span>

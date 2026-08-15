@@ -1,4 +1,4 @@
-import { ArrowPathIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, NoSymbolIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, EllipsisVerticalIcon, PencilIcon, TrashIcon, NoSymbolIcon, CheckCircleIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Link, router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState, useRef, useEffect } from 'react';
@@ -116,6 +116,27 @@ export default function SecurityActions({ security }: Props) {
 
     const ActionItems = ({ isMobile = false }) => (
         <div className={isMobile ? 'flex flex-col gap-3' : 'space-y-0.5'}>
+            {/* View Profile */}
+            <div className={isMobile ? '' : 'contents'}>
+                {isMobile ? (
+                    <Link
+                        href={`/admin/residents/${security.id}`}
+                        className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
+                    >
+                        <EyeIcon className="h-6 w-6 text-slate-400" />
+                        View Profile
+                    </Link>
+                ) : (
+                    <Link
+                        href={`/admin/residents/${security.id}`}
+                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-50 hover:text-primary-600"
+                    >
+                        <EyeIcon className="h-4 w-4 text-slate-400" />
+                        View Profile
+                    </Link>
+                )}
+            </div>
+
             {/* Edit */}
             {can('security.edit') && (
                 <div className={isMobile ? '' : 'contents'}>

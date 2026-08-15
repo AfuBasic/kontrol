@@ -326,9 +326,12 @@ export default function SecurityPersonnel({
                                                                     {initial}
                                                                 </div>
                                                                 <div className="min-w-0">
-                                                                    <span className="block max-w-[150px] truncate text-xs font-bold text-slate-900">
+                                                                    <Link
+                                                                        href={`/admin/residents/${person.id}`}
+                                                                        className="block max-w-[150px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                                    >
                                                                         {person.name}
-                                                                    </span>
+                                                                    </Link>
                                                                 </div>
                                                             </div>
                                                         </td>
