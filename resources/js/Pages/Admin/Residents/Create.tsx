@@ -175,7 +175,11 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
 
         router.post(
             bulkInvite.url(),
-            { emails: extractedEmails, zone_id: selectedZone || null },
+            {
+                emails: extractedEmails,
+                zone_id: selectedZone || null,
+                source: activeTab === 'bulk' ? 'bulk_upload' : 'email_paste'
+            },
             {
                 onSuccess: () => {
                     setExtractedEmails([]);
@@ -185,7 +189,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                 },
             },
         );
-    }, [extractedEmails]);
+    }, [extractedEmails, selectedZone, activeTab]);
 
     // Clear current selection
     const handleClear = useCallback(() => {
