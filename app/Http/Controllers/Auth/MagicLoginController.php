@@ -8,6 +8,7 @@ use App\Models\MagicLoginToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MagicLoginController extends Controller
 {
@@ -35,7 +36,7 @@ class MagicLoginController extends Controller
         // 3.5 Accept any pending estate memberships
         // This ensures that newly invited admins can access the admin dashboard
         // without being blocked by authorization checks that require an active membership.
-        \Illuminate\Support\Facades\DB::table('estate_users_membership')
+        DB::table('estate_users_membership')
             ->where('user_id', $magicToken->user->id)
             ->where('status', 'pending')
             ->update(['status' => 'accepted']);
