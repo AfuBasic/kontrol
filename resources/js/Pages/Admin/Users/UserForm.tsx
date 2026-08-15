@@ -1,6 +1,7 @@
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Link, useForm } from '@inertiajs/react';
 import { type FormEventHandler, useEffect } from 'react';
+import SearchableSelect from '@/Components/UI/SearchableSelect';
 
 type Props = {
     user?: {
@@ -82,7 +83,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                 id="email"
                                 type="email"
                                 value={data.email}
-                                disabled={!!data.email}
+                                disabled={method === 'put'}
                                 onChange={(e) => setData('email', e.target.value)}
                                 className="w-full rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
                                 placeholder="e.g. jane@example.com"
@@ -97,33 +98,15 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                 <label htmlFor="role" className="mb-1.5 block text-sm font-medium text-gray-700">
                                     Role
                                 </label>
-                                <div className="relative">
-                                    <select
-                                        id="role"
-                                        value={data.role}
-                                        onChange={(e) => setData('role', e.target.value)}
-                                        className="w-full appearance-none rounded-xl border border-gray-200 bg-gray-50/50 px-4 py-3.5 text-gray-900 placeholder-gray-400 transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]/20 focus:outline-none"
-                                        required
-                                    >
-                                        <option value="" disabled>
-                                            Select a role...
-                                        </option>
-                                        {roles.map((role) => (
-                                            <option key={role.name} value={role.name}>
-                                                {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9"
-                                            />
-                                        </svg>
-                                    </div>
-                                </div>
+                                <SearchableSelect
+                                    options={roles.map((r) => ({
+                                        value: r.name,
+                                        label: r.name.charAt(0).toUpperCase() + r.name.slice(1),
+                                    }))}
+                                    value={data.role}
+                                    onChange={(value) => setData('role', value)}
+                                    placeholder="Select a role..."
+                                />
                                 {(errors as any).role && <p className="mt-1.5 text-sm text-red-600">{(errors as any).role}</p>}
                             </div>
                         )}
