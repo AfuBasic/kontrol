@@ -243,6 +243,17 @@ class ResidentController extends Controller
         // Ensure this resident is managed by the Property Owner
         abort_if($resident->profile?->property_owner_id !== $user->id, 403);
 
+        // Ensure the resident is not already accepted in the estate
+        $status = $resident->estates()
+            ->where('estates.id', $estate->id)
+            ->first()
+            ?->pivot
+            ?->status;
+
+        if ($status === 'accepted') {
+            return back()->with('error', 'Cannot resend invitation. This resident has already accepted.');
+        }
+
         $action->execute($resident, $estate);
 
         return back()->with('success', 'Invitation resent successfully.');
