@@ -293,7 +293,7 @@ class ResidentController extends Controller
     ): RedirectResponse {
         $this->authorize('residents.edit');
         $context = app(ContextManager::class)->current();
-        abort_if($context && !$context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -322,7 +322,7 @@ class ResidentController extends Controller
                 Rule::exists('properties', 'id'),
                 function ($attribute, $value, $fail) use ($context) {
                     if ($context && $context->isZoneScoped()) {
-                        $property = \App\Models\Property::withoutZoneIsolation()->find($value);
+                        $property = Property::withoutZoneIsolation()->find($value);
                         if ($property && $property->zone_id !== $context->zoneId) {
                             $fail('The selected property must belong to your authorized zone.');
                         }
@@ -346,7 +346,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.delete');
         $context = app(ContextManager::class)->current();
-        abort_if($context && !$context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -363,7 +363,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.suspend');
         $context = app(ContextManager::class)->current();
-        abort_if($context && !$context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -382,7 +382,7 @@ class ResidentController extends Controller
     {
         $this->authorize('property_owners.create');
         $context = app(ContextManager::class)->current();
-        abort_if($context && !$context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -397,7 +397,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.reset-password');
         $context = app(ContextManager::class)->current();
-        abort_if($context && !$context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -598,7 +598,7 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.view');
         $context = app(ContextManager::class)->current();
-        abort_if($context && !$context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         // Scope validation: Ensure resident belongs to this estate
