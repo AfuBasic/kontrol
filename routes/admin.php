@@ -202,15 +202,15 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     });
 
     // Administrative assignment management (User × Estate × Role × Scope)
-    Route::middleware(['role:admin', 'feature:user-access-control'])->group(function (): void {
+    Route::middleware(['permission:assignments.view', 'feature:user-access-control'])->group(function (): void {
         Route::get('assignments', [AdministrativeAssignmentController::class, 'index'])->name('assignments.index');
-        Route::get('assignments/create', [AdministrativeAssignmentController::class, 'create'])->name('assignments.create');
-        Route::post('assignments', [AdministrativeAssignmentController::class, 'store'])->name('assignments.store');
-        Route::get('assignments/{assignment}/edit', [AdministrativeAssignmentController::class, 'edit'])->name('assignments.edit');
-        Route::put('assignments/{assignment}', [AdministrativeAssignmentController::class, 'update'])->name('assignments.update');
-        Route::post('assignments/{assignment}/deactivate', [AdministrativeAssignmentController::class, 'deactivate'])->name('assignments.deactivate');
-        Route::post('assignments/{assignment}/activate', [AdministrativeAssignmentController::class, 'activate'])->name('assignments.activate');
-        Route::delete('assignments/{assignment}', [AdministrativeAssignmentController::class, 'destroy'])->name('assignments.destroy');
+        Route::get('assignments/create', [AdministrativeAssignmentController::class, 'create'])->middleware('permission:assignments.create')->name('assignments.create');
+        Route::post('assignments', [AdministrativeAssignmentController::class, 'store'])->middleware('permission:assignments.create')->name('assignments.store');
+        Route::get('assignments/{assignment}/edit', [AdministrativeAssignmentController::class, 'edit'])->middleware('permission:assignments.edit')->name('assignments.edit');
+        Route::put('assignments/{assignment}', [AdministrativeAssignmentController::class, 'update'])->middleware('permission:assignments.edit')->name('assignments.update');
+        Route::post('assignments/{assignment}/deactivate', [AdministrativeAssignmentController::class, 'deactivate'])->middleware('permission:assignments.edit')->name('assignments.deactivate');
+        Route::post('assignments/{assignment}/activate', [AdministrativeAssignmentController::class, 'activate'])->middleware('permission:assignments.edit')->name('assignments.activate');
+        Route::delete('assignments/{assignment}', [AdministrativeAssignmentController::class, 'destroy'])->middleware('permission:assignments.delete')->name('assignments.destroy');
     });
 
     // Notifications
