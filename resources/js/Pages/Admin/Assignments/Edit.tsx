@@ -51,10 +51,9 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                         <ArrowLeftIcon className="mr-1 h-4 w-4" />
                         Back to Staff & Authority
                     </Link>
-                    <h1 className="text-2xl font-semibold text-gray-900">Edit Authority</h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Update the responsibility, coverage, or active state for{' '}
-                        <span className="font-medium text-gray-700">{assignment.user.name}</span>.
+                    <h1 className="text-2xl font-black tracking-tight text-slate-900">Edit Authority</h1>
+                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                        Modify the administrative responsibility for this member.
                     </p>
                 </div>
 
@@ -66,7 +65,7 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                     <div className="mt-1 text-xs text-gray-500">The person assigned cannot be changed.</div>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+                <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
                     <form onSubmit={submit} className="space-y-6 p-6">
                         <div>
                             <label htmlFor="role_id" className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -189,17 +188,17 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                             </div>
                         )}
 
-                        <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-6">
+                        <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
                             <Link
                                 href={index.url()}
-                                className="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 transition-colors hover:bg-slate-50"
                             >
                                 Cancel
                             </Link>
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-60"
+                                className="rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-60"
                             >
                                 {processing ? 'Saving...' : 'Save Changes'}
                             </button>
