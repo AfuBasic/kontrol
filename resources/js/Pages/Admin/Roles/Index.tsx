@@ -48,7 +48,7 @@ export default function Roles({ roles }: Props) {
         <>
             <Head title="Roles & Responsibilities" />
 
-            <div className="mx-auto max-w-5xl">
+            <div className="mx-auto max-w-full">
                 {/* Page Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}

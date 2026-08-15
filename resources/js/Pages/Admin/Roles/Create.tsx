@@ -115,7 +115,7 @@ export default function CreateRole({ permissions }: Props) {
         <>
             <Head title="Create Role" />
 
-            <div className="mx-auto max-w-4xl">
+            <div className="mx-auto max-w-full">
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
