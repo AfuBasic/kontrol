@@ -19,6 +19,7 @@ import {
     LinkIcon,
     Home,
     Building,
+    Eye,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
@@ -602,9 +603,12 @@ export default function Residents({
                                                             {initial}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <span className="block max-w-[130px] truncate text-xs font-bold text-slate-900">
+                                                            <Link
+                                                                href={`/admin/residents/${resident.id}`}
+                                                                className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                            >
                                                                 {resident.name}
-                                                            </span>
+                                                            </Link>
                                                             <span className="mt-0.5 inline-flex rounded-md bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-400 uppercase ring-1 ring-slate-100">
                                                                 {resident.role_label}
                                                             </span>
@@ -729,6 +733,13 @@ export default function Residents({
                                                             <>
                                                                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
                                                                 <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
+                                                                    <Link
+                                                                        href={`/admin/residents/${resident.id}`}
+                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                    >
+                                                                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                                                                        View Profile
+                                                                    </Link>
                                                                     {!resident.is_estate_creator && (
                                                                         <button
                                                                             onClick={() => {
