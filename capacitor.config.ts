@@ -6,7 +6,6 @@ import * as path from 'path';
 const isDev = process.env.NODE_ENV !== 'production' && process.env.CAPACITOR_PROD !== 'true';
 
 // Default local URL
-const isAndroid = process.argv.includes('android') || process.env.CAPACITOR_PLATFORM_NAME === 'android';
 let devUrl = 'https://app.usekontrol.afuwapetunde.com';
 // hostname must match the actual URL being loaded
 let devHostname = 'app.usekontrol.afuwapetunde.com';
@@ -26,8 +25,8 @@ try {
     console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
 }
 
-const prodUrl = isAndroid ? 'https://app.usekontrol.afuwapetunde.com' : 'https://app.usekontrol.com';
-const prodHostname = isAndroid ? 'app.usekontrol.afuwapetunde.com' : 'app.usekontrol.com';
+const prodUrl = 'https://app.usekontrol.afuwapetunde.com';
+const prodHostname = 'app.usekontrol.afuwapetunde.com';
 
 const config: CapacitorConfig = {
     appId: 'com.kontrol.hq',
