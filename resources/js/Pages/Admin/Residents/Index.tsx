@@ -560,6 +560,9 @@ export default function Residents({
                                         <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                             Status
                                         </th>
+                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            Zone
+                                        </th>
                                         <th className="w-20 px-4 py-3.5 text-right"></th>
                                     </tr>
                                 </thead>
@@ -674,6 +677,17 @@ export default function Residents({
                                                     >
                                                         {resident.status}
                                                     </span>
+                                                </td>
+
+                                                {/* Zone */}
+                                                <td className="px-4 py-3.5">
+                                                    {resident.zone_name ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 ring-1 ring-violet-100">
+                                                            {resident.zone_name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-[10px] font-bold text-slate-300">—</span>
+                                                    )}
                                                 </td>
 
                                                 {/* Actions */}
