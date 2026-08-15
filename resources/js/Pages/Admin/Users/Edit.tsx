@@ -1,6 +1,5 @@
 import { Head } from '@inertiajs/react';
 import { update, index } from '@/actions/App/Http/Controllers/Admin/UserController';
-import AdminLayout from '@/Layouts/AdminLayout';
 import UserForm from './UserForm';
 
 type Props = {
@@ -17,11 +16,11 @@ type Props = {
 export default function Edit({ user, roles }: Props) {
     return (
         <>
-            <Head title="Edit Admin" />
+            <Head title="Edit Staff Member" />
             <UserForm
                 user={user}
-                title="Edit Administrator"
-                description="Update the details of this administrator."
+                title="Edit Staff Member"
+                description="Update the details of this staff member."
                 submitUrl={user?.ulid ? update.url({ user: user.ulid }) : ''}
                 method="put"
                 submitText="Save Changes"

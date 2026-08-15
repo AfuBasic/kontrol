@@ -1,6 +1,5 @@
 import { Head } from '@inertiajs/react';
 import { store, index } from '@/actions/App/Http/Controllers/Admin/UserController';
-import AdminLayout from '@/Layouts/AdminLayout';
 import UserForm from './UserForm';
 
 type Props = {
@@ -10,10 +9,10 @@ type Props = {
 export default function Create({ roles }: Props) {
     return (
         <>
-            <Head title="Invite User" />
+            <Head title="Add Staff Member" />
             <UserForm
-                title="Invite User"
-                description="Send an invitation to a new user. They will receive an email to set up their password."
+                title="Add Staff Member"
+                description="Add someone who will help operate this estate. An invitation email will be sent to them."
                 submitUrl={store.url()}
                 method="post"
                 submitText="Send Invitation"
