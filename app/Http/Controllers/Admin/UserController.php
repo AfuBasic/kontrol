@@ -26,8 +26,7 @@ class UserController extends Controller
         protected RoleService $roleService,
         protected UserService $userService,
         protected EstateContextService $estateContext
-    ) {
-    }
+    ) {}
 
     /**
      * Display a listing of the admins.
@@ -39,7 +38,7 @@ class UserController extends Controller
         $estateId = $this->estateContext->getEstateId();
 
         $users = $this->userService->getPaginatedUsers(10, $request->only(['search']))
-            ->through(fn($user) => [
+            ->through(fn ($user) => [
                 'ulid' => $user->ulid,
                 'id' => $user->id,
                 'name' => $user->name,
@@ -62,7 +61,7 @@ class UserController extends Controller
     {
         $this->authorize('users.create');
 
-        $roles = $this->roleService->getManageableRoles();
+        $roles = $this->roleService->getAssignableRoles();
 
         return Inertia::render('Admin/Users/Create', [
             'roles' => $roles,
@@ -95,7 +94,7 @@ class UserController extends Controller
         $this->authorize('users.edit');
 
         $estateId = $this->estateContext->getEstateId();
-        $roles = $this->roleService->getManageableRoles();
+        $roles = $this->roleService->getAssignableRoles();
 
         // Load roles for the user in the context of this estate
         app(ContextManager::class)->setSystemContext($estateId);

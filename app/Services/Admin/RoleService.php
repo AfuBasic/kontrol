@@ -37,6 +37,27 @@ class RoleService
     }
 
     /**
+     * Get roles that can be assigned to users in the estate.
+     * Includes both custom estate roles and specific system roles (admin, security).
+     */
+    public function getAssignableRoles(): Collection
+    {
+        $estateId = $this->estateContext->getEstateId();
+
+        // Assignable roles include the estate's custom roles and the global 'admin' and 'security' roles
+        return Role::query()
+            ->where(function ($query) use ($estateId) {
+                $query->where('estate_id', $estateId)
+                    ->orWhere(function ($q) {
+                        $q->whereNull('estate_id')
+                            ->whereIn('name', ['admin', 'security']);
+                    });
+            })
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
      * Get all available permissions.
      */
     public function getAvailablePermissions(): Collection
