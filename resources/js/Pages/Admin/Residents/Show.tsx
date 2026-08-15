@@ -148,7 +148,7 @@ export default function Show({ resident, provenance, residence, financials, acti
     };
 
     return (
-        <AdminLayout>
+        <>
             <Head title={`Resident Profile: ${resident.name}`} />
 
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
@@ -551,6 +551,6 @@ export default function Show({ resident, provenance, residence, financials, acti
                     )}
                 </div>
             </div>
-        </AdminLayout>
+        </>
     );
 }
