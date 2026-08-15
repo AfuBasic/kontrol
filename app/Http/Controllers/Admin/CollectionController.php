@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
@@ -307,9 +308,15 @@ class CollectionController extends Controller
                 ];
             });
 
+        $context = app(ContextManager::class)->current();
+        $zones = $this->zoneAudience->zonesForEstate($estate->id);
+        if ($context && $context->isZoneScoped()) {
+            $zones = $zones->where('id', $context->zoneId);
+        }
+
         return Inertia::render('Admin/Collections/Create', [
             'residents' => $residents,
-            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
+            'zones' => $zones,
         ]);
     }
 
@@ -453,10 +460,16 @@ class CollectionController extends Controller
                 ];
             });
 
+        $context = app(ContextManager::class)->current();
+        $zones = $this->zoneAudience->zonesForEstate($estate->id);
+        if ($context && $context->isZoneScoped()) {
+            $zones = $zones->where('id', $context->zoneId);
+        }
+
         return Inertia::render('Admin/Collections/Edit', [
             'collection' => $collection,
             'residents' => $residents,
-            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
+            'zones' => $zones,
         ]);
     }
 
@@ -502,6 +515,9 @@ class CollectionController extends Controller
 
     public function recordPayment(Request $request, CollectionAssignment $assignment): RedirectResponse
     {
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($assignment), 403, 'Unauthorized zone scope.');
+
         $remaining = $assignment->amount_due - $assignment->amount_paid;
 
         $request->validate([
@@ -541,6 +557,9 @@ class CollectionController extends Controller
         if ($collection->estate_id !== $estate->id) {
             abort(403);
         }
+
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($collection), 403, 'Unauthorized zone scope.');
     }
 
     private function ensureIsDraft(Collection $collection): void
