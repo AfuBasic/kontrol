@@ -20,13 +20,14 @@ type Assignment = {
 
 type Props = {
     assignment: Assignment;
+    user_role_ids: string[];
     roles: OptionRole[];
     zones: OptionZone[];
 };
 
-export default function EditAssignment({ assignment, roles, zones }: Props) {
+export default function EditAssignment({ assignment, user_role_ids, roles, zones }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        role_id: String(assignment.role.id ?? ''),
+        role_ids: user_role_ids,
         scope_type: assignment.scope_type,
         zone_id: assignment.zone ? String(assignment.zone.id) : '',
         is_active: assignment.is_active,
@@ -37,10 +38,17 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
         put(update.url(assignment.id));
     };
 
-    const selectedRole = roles.find((r) => r.id.toString() === data.role_id);
     const selectedZone = zones.find((z) => z.id.toString() === data.zone_id);
 
-    const isReadyToSubmit = data.role_id && (data.scope_type === 'estate' || data.zone_id);
+    const handleRoleToggle = (roleId: string) => {
+        if (data.role_ids.includes(roleId)) {
+            setData('role_ids', data.role_ids.filter((id) => id !== roleId));
+        } else {
+            setData('role_ids', [...data.role_ids, roleId]);
+        }
+    };
+
+    const isReadyToSubmit = data.role_ids.length > 0 && (data.scope_type === 'estate' || data.zone_id);
 
     const initial = assignment.user.name ? assignment.user.name.charAt(0).toUpperCase() : 'U';
 
@@ -98,30 +106,33 @@ export default function EditAssignment({ assignment, roles, zones }: Props) {
                                 </div>
                                 <div className="max-w-2xl">
                                     <div className="grid gap-3 sm:grid-cols-2">
-                                        {roles.map((role) => (
-                                            <label
-                                                key={role.id}
-                                                className={`relative flex cursor-pointer rounded-xl border p-4 transition-all ${
-                                                    data.role_id === role.id.toString()
-                                                        ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
-                                                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="role_id"
-                                                    value={role.id}
-                                                    checked={data.role_id === role.id.toString()}
-                                                    onChange={(e) => setData('role_id', e.target.value)}
-                                                    className="sr-only"
-                                                />
-                                                <div className="flex flex-col">
-                                                    <span className="text-sm font-black text-slate-900">{role.name}</span>
-                                                </div>
-                                            </label>
-                                        ))}
+                                        {roles.map((role) => {
+                                            const isSelected = data.role_ids.includes(role.id.toString());
+                                            return (
+                                                <label
+                                                    key={role.id}
+                                                    className={`relative flex cursor-pointer rounded-xl border p-4 transition-all ${
+                                                        isSelected
+                                                            ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
+                                                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
+                                                    }`}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        name="role_ids"
+                                                        value={role.id}
+                                                        checked={isSelected}
+                                                        onChange={() => handleRoleToggle(role.id.toString())}
+                                                        className="sr-only"
+                                                    />
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-black text-slate-900">{role.name}</span>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
                                     </div>
-                                    {errors.role_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.role_id}</p>}
+                                    {errors.role_ids && <p className="mt-2 text-xs font-bold text-red-600">{errors.role_ids}</p>}
                                     {errors.role && <p className="mt-2 text-xs font-bold text-red-600">{errors.role}</p>}
                                 </div>
                             </section>
