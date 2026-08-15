@@ -277,6 +277,8 @@ class PropertyOwnerController extends Controller
     public function edit(User $propertyOwner): Response
     {
         $this->authorize('property_owners.edit');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $propertyOwner->load('profile');
 
         return Inertia::render('Admin/PropertyOwners/Edit', [
@@ -299,6 +301,8 @@ class PropertyOwnerController extends Controller
     public function update(Request $request, User $propertyOwner): RedirectResponse
     {
         $this->authorize('property_owners.edit');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -340,6 +344,8 @@ class PropertyOwnerController extends Controller
     public function suspend(User $propertyOwner, SuspendPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.suspend');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $isActive = $action->execute($propertyOwner, $estate);
@@ -356,6 +362,8 @@ class PropertyOwnerController extends Controller
     public function residents(Request $request, User $propertyOwner): Response
     {
         $this->authorize('property_owners.view');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         return Inertia::render('Admin/PropertyOwners/Residents', [
@@ -388,6 +396,8 @@ class PropertyOwnerController extends Controller
     public function availableResidents(Request $request, User $propertyOwner)
     {
         $this->authorize('property_owners.edit');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
         $search = $request->query('search');
 
@@ -435,6 +445,8 @@ class PropertyOwnerController extends Controller
     public function assignResidents(Request $request, User $propertyOwner, AssignResidentsToPropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.edit');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
 
         $validated = $request->validate([
             'resident_ids' => ['required', 'array', 'min:1'],
@@ -454,6 +466,8 @@ class PropertyOwnerController extends Controller
     public function properties(User $propertyOwner): Response
     {
         $this->authorize('property_owners.view');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         return Inertia::render('Admin/PropertyOwners/Properties', [
@@ -484,6 +498,8 @@ class PropertyOwnerController extends Controller
     public function makeResident(User $propertyOwner, MarkPropertyOwnerAsResidentAction $action): RedirectResponse
     {
         $this->authorize('property_owners.edit');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($propertyOwner, $estate);
@@ -494,6 +510,8 @@ class PropertyOwnerController extends Controller
     public function destroy(User $propertyOwner, DeletePropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.delete');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($propertyOwner, $estate);
@@ -507,10 +525,21 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.delete');
         $estate = $this->estateContext->getEstate();
+        $context = app(\App\Auth\ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected property owners are outside your authorized zone.');
+        }
 
         $total = $action->execute($validated['ids'], $estate);
 
@@ -523,10 +552,21 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
+        $context = app(\App\Auth\ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected property owners are outside your authorized zone.');
+        }
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
@@ -540,10 +580,21 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.suspend');
         $estate = $this->estateContext->getEstate();
+        $context = app(\App\Auth\ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected property owners are outside your authorized zone.');
+        }
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
@@ -557,10 +608,21 @@ class PropertyOwnerController extends Controller
     {
         $this->authorize('property_owners.reset-password');
         $estate = $this->estateContext->getEstate();
+        $context = app(\App\Auth\ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected property owners are outside your authorized zone.');
+        }
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
@@ -575,6 +637,8 @@ class PropertyOwnerController extends Controller
     public function resendInvitation(Request $request, User $propertyOwner, ResendResidentInvitationAction $action): RedirectResponse
     {
         $this->authorize('property_owners.reset-password');
+        $context = app(\App\Auth\ContextManager::class)->current();
+        abort_if($context && !$context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         if (! $propertyOwner->password) {
