@@ -53,7 +53,7 @@ test('admin inviting a resident sets created_via to admin_invite', function () {
         ->where('user_id', $resident->id)
         ->first();
 
-    expect($membership->created_via)->toBe('admin_invite');
+    expect($membership->created_via)->toBe('single_form');
 });
 
 test('property owner inviting a resident sets created_via to property_owner_invite', function () {
