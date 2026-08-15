@@ -42,6 +42,31 @@ test('resident can view incidents feed and create a new incident', function () {
     ]);
 });
 
+test('resident can report an incident with a custom category', function () {
+    $estate = Estate::factory()->create();
+    $user = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('resident');
+    $user->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.incidents.store'), [
+            'title' => 'Vandalism at main gate',
+            'body' => 'Someone spray-painted the wall near the estate entrance gate.',
+            'category' => 'Vandalism',
+        ]);
+
+    $response->assertRedirect();
+    $this->assertDatabaseHas('incidents', [
+        'title' => 'Vandalism at main gate',
+        'category' => 'Vandalism',
+        'estate_id' => $estate->id,
+        'reporter_id' => $user->id,
+    ]);
+});
+
 test('property owner can report an incident', function () {
     $estate = Estate::factory()->create();
     $user = User::factory()->create();
