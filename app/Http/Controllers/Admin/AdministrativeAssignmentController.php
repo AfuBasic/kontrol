@@ -66,19 +66,31 @@ class AdministrativeAssignmentController extends Controller
         $estate = $this->estateContext->getEstate();
         $validated = $request->validated();
 
-        $action->execute(
-            user: User::findOrFail($validated['user_id']),
-            estate: $estate,
-            role: Role::findOrFail($validated['role_id']),
-            scopeType: AssignmentScope::from($validated['scope_type']),
-            zone: isset($validated['zone_id']) ? Zone::find($validated['zone_id']) : null,
-            isPrimary: (bool) ($validated['is_primary'] ?? false),
-            isActive: (bool) ($validated['is_active'] ?? true),
-        );
+        $user = User::findOrFail($validated['user_id']);
+        $roleIds = $validated['role_ids'];
+
+        foreach ($roleIds as $roleId) {
+            $exists = AdministrativeAssignment::where('user_id', $user->id)
+                ->where('estate_id', $estate->id)
+                ->where('role_id', $roleId)
+                ->exists();
+
+            if (! $exists) {
+                $action->execute(
+                    user: $user,
+                    estate: $estate,
+                    role: Role::findOrFail($roleId),
+                    scopeType: AssignmentScope::from($validated['scope_type']),
+                    zone: isset($validated['zone_id']) ? Zone::find($validated['zone_id']) : null,
+                    isPrimary: (bool) ($validated['is_primary'] ?? false),
+                    isActive: (bool) ($validated['is_active'] ?? true),
+                );
+            }
+        }
 
         return redirect()
             ->route('admin.assignments.index')
-            ->with('success', 'Assignment created successfully.');
+            ->with('success', 'Assignments created successfully.');
     }
 
     public function edit(AdministrativeAssignment $assignment): Response
@@ -88,8 +100,16 @@ class AdministrativeAssignmentController extends Controller
 
         $assignment->load(['user', 'role', 'zone']);
 
+        $userRoleIds = AdministrativeAssignment::where('user_id', $assignment->user_id)
+            ->where('estate_id', $assignment->estate_id)
+            ->where('is_primary', false)
+            ->pluck('role_id')
+            ->map(fn($id) => (string)$id)
+            ->toArray();
+
         return Inertia::render('Admin/Assignments/Edit', [
             'assignment' => $this->transformAssignment($assignment),
+            'user_role_ids' => $userRoleIds,
             'roles' => $this->assignmentService->getAssignableRoles(),
             'zones' => $this->assignmentService->getAssignableZones(),
         ]);
@@ -98,16 +118,57 @@ class AdministrativeAssignmentController extends Controller
     public function update(
         UpdateAdministrativeAssignmentRequest $request,
         AdministrativeAssignment $assignment,
-        UpdateAdministrativeAssignmentAction $action
+        UpdateAdministrativeAssignmentAction $action,
+        CreateAdministrativeAssignmentAction $createAction
     ): RedirectResponse {
         $this->authorize('update', $assignment);
         $this->ensureAssignmentInCurrentEstate($assignment);
 
-        $action->execute($assignment, $request->validated());
+        $estate = $this->estateContext->getEstate();
+        $validated = $request->validated();
+        $roleIds = $validated['role_ids'];
+
+        // 1. Delete assignments for roles that are no longer selected
+        $assignmentsToDelete = AdministrativeAssignment::where('user_id', $assignment->user_id)
+            ->where('estate_id', $estate->id)
+            ->where('is_primary', false)
+            ->whereNotIn('role_id', $roleIds)
+            ->get();
+
+        $deleteAction = app(DeleteAdministrativeAssignmentAction::class);
+        foreach ($assignmentsToDelete as $delAssignment) {
+            $deleteAction->execute($delAssignment);
+        }
+
+        // 2. Add or update assignments for selected roles
+        foreach ($roleIds as $roleId) {
+            $existing = AdministrativeAssignment::where('user_id', $assignment->user_id)
+                ->where('estate_id', $estate->id)
+                ->where('role_id', $roleId)
+                ->first();
+
+            if ($existing) {
+                $action->execute($existing, [
+                    'scope_type' => $validated['scope_type'],
+                    'zone_id' => $validated['zone_id'] ?? null,
+                    'is_active' => (bool) ($validated['is_active'] ?? true),
+                ]);
+            } else {
+                $createAction->execute(
+                    user: $assignment->user,
+                    estate: $estate,
+                    role: Role::findOrFail($roleId),
+                    scopeType: AssignmentScope::from($validated['scope_type']),
+                    zone: isset($validated['zone_id']) ? Zone::find($validated['zone_id']) : null,
+                    isPrimary: false,
+                    isActive: (bool) ($validated['is_active'] ?? true),
+                );
+            }
+        }
 
         return redirect()
             ->route('admin.assignments.index')
-            ->with('success', 'Assignment updated successfully.');
+            ->with('success', 'Assignments updated successfully.');
     }
 
     public function deactivate(
