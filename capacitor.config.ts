@@ -84,7 +84,6 @@ const config: CapacitorConfig = {
         Keyboard: {
             resize: 'native', // 'body' collapses WebView on older Android — native lets the OS handle insets
             style: 'DARK',
-            resizeOnFullScreen: true,
         },
         StatusBar: {
             style: 'LIGHT',
