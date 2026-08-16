@@ -33,6 +33,11 @@ export default function InteractiveTilt({ children, className = '', maxRotation 
     const glareX = useSpring(useTransform(x, [0, 1], ['0%', '100%']), springConfig);
     const glareY = useSpring(useTransform(y, [0, 1], ['0%', '100%']), springConfig);
 
+    const glareBackground = useTransform(
+        [glareX, glareY],
+        ([gx, gy]) => `radial-gradient(circle 250px at ${gx} ${gy}, rgba(255,255,255,0.12), transparent 80%)`
+    );
+
     const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
         if (isReducedMotion) return;
 
@@ -77,10 +82,7 @@ export default function InteractiveTilt({ children, className = '', maxRotation 
             <motion.div
                 className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 transition-opacity duration-300 group-hover:opacity-20"
                 style={{
-                    background: useTransform(
-                        [glareX, glareY],
-                        ([gx, gy]) => `radial-gradient(circle 250px at ${gx} ${gy}, rgba(255,255,255,0.12), transparent 80%)`,
-                    ),
+                    background: glareBackground,
                     mixBlendMode: 'overlay',
                 }}
             />
