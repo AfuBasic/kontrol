@@ -146,7 +146,7 @@ class CollectionService
                     ->pluck('users.id')
                     ->toArray();
             } else {
-                $userIds = User::withRole('resident', $estate->id)
+                $userIds = User::withRole(['resident', 'property_owner'], $estate->id)
                     ->active()
                     ->pluck('users.id')
                     ->toArray();

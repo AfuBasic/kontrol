@@ -362,13 +362,7 @@ class User extends Authenticatable implements MustVerifyEmail
         });
     }
 
-    /**
-     * Scope: Users with a specific role scoped to an estate.
-     *
-     * @param  Builder<User>  $query
-     * @return Builder<User>
-     */
-    public function scopeWithRole(Builder $query, string $roleName, ?int $estateId): Builder
+    public function scopeWithRole(Builder $query, string|array $roleName, ?int $estateId): Builder
     {
         return $query->whereExists(function ($query) use ($roleName, $estateId) {
             $query->select(DB::raw(1))
@@ -376,7 +370,11 @@ class User extends Authenticatable implements MustVerifyEmail
                 ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
                 ->whereColumn('model_has_roles.model_id', 'users.id')
                 ->where('model_has_roles.model_type', User::class)
-                ->where('roles.name', $roleName)
+                ->when(is_array($roleName), function ($q) use ($roleName) {
+                    $q->whereIn('roles.name', $roleName);
+                }, function ($q) use ($roleName) {
+                    $q->where('roles.name', $roleName);
+                })
                 ->where('model_has_roles.estate_id', $estateId);
         });
     }
