@@ -13,8 +13,8 @@ type Zone = {
     name: string;
     description: string | null;
     is_active: boolean;
-    memberships_count?: number;
-    assignments_count?: number;
+    residents_count?: number;
+    property_owners_count?: number;
     created_at: string;
 };
 
@@ -225,7 +225,7 @@ export default function ZonesIndex({ zones }: Props) {
                                                     <Users className="h-4 w-4 text-slate-400" />
                                                     <div className="min-w-0">
                                                         <p className="text-xs leading-none font-black text-slate-900">
-                                                            {zone.memberships_count ?? 0}
+                                                            {zone.residents_count ?? 0}
                                                         </p>
                                                         <p className="mt-0.5 truncate text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                                                             Residents
@@ -234,17 +234,17 @@ export default function ZonesIndex({ zones }: Props) {
                                                 </Link>
 
                                                 <Link
-                                                    href={`/admin/assignments?search=${encodeURIComponent(zone.name)}`}
+                                                    href={`/admin/property-owners?zone=${zone.id}`}
                                                     className="flex items-center gap-2.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 transition-all hover:border-slate-200 hover:bg-slate-100"
-                                                    title={`View staff assigned to ${zone.name}`}
+                                                    title={`View landlords in ${zone.name}`}
                                                 >
-                                                    <Shield className="h-4 w-4 text-slate-400" />
+                                                    <Building2 className="h-4 w-4 text-slate-400" />
                                                     <div className="min-w-0">
                                                         <p className="text-xs leading-none font-black text-slate-900">
-                                                            {zone.assignments_count ?? 0}
+                                                            {zone.property_owners_count ?? 0}
                                                         </p>
                                                         <p className="mt-0.5 truncate text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
-                                                            Personnel
+                                                            Landlords
                                                         </p>
                                                     </div>
                                                 </Link>

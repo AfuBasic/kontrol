@@ -26,6 +26,16 @@ class Zone extends Model
         return $this->hasMany(EstateMembership::class);
     }
 
+    public function residents()
+    {
+        return $this->hasMany(EstateMembership::class)->where('relationship_type', 'resident');
+    }
+
+    public function propertyOwners()
+    {
+        return $this->hasMany(EstateMembership::class)->where('relationship_type', 'property_owner');
+    }
+
     public function assignments()
     {
         return $this->hasMany(AdministrativeAssignment::class);

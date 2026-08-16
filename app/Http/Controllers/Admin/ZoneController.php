@@ -22,7 +22,7 @@ class ZoneController extends Controller
 
         $zones = Zone::withoutGlobalScope(ZoneScope::class)
             ->where('estate_id', $context->estateId)
-            ->withCount(['memberships', 'assignments'])
+            ->withCount(['residents', 'propertyOwners'])
             ->latest()
             ->get();
 
