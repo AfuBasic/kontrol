@@ -216,6 +216,17 @@ class PaystackService
      */
     public function createSubaccount(array $data): array
     {
+        $isTestMode = str_starts_with(config('services.paystack.secret_key', ''), 'sk_test_');
+
+        if ($isTestMode) {
+            if (isset($data['settlement_bank'])) {
+                $data['settlement_bank'] = config('services.paystack.test_bank_code') ?: $data['settlement_bank'];
+            }
+            if (isset($data['account_number'])) {
+                $data['account_number'] = config('services.paystack.test_account_number') ?: $data['account_number'];
+            }
+        }
+
         try {
             $response = $this->client->post('/subaccount', [
                 'business_name' => $data['business_name'],
@@ -225,8 +236,8 @@ class PaystackService
             ]);
 
             if (! $response->successful()) {
-                if (app()->environment('local', 'testing')) {
-                    Log::warning('Paystack createSubaccount failed in local/testing. Returning mock code.', [
+                if ($isTestMode) {
+                    Log::warning('Paystack createSubaccount failed in test mode. Returning mock code.', [
                         'response' => $response->body(),
                     ]);
 
@@ -239,8 +250,8 @@ class PaystackService
 
             return $response->json('data');
         } catch (\Exception $e) {
-            if (app()->environment('local', 'testing')) {
-                Log::warning('Paystack createSubaccount threw exception in local/testing. Returning mock code.', [
+            if ($isTestMode) {
+                Log::warning('Paystack createSubaccount threw exception in test mode. Returning mock code.', [
                     'exception' => $e->getMessage(),
                 ]);
 
@@ -257,12 +268,23 @@ class PaystackService
      */
     public function updateSubaccount(string $subaccountCode, array $data): array
     {
+        $isTestMode = str_starts_with(config('services.paystack.secret_key', ''), 'sk_test_');
+
+        if ($isTestMode) {
+            if (isset($data['settlement_bank'])) {
+                $data['settlement_bank'] = config('services.paystack.test_bank_code') ?: $data['settlement_bank'];
+            }
+            if (isset($data['account_number'])) {
+                $data['account_number'] = config('services.paystack.test_account_number') ?: $data['account_number'];
+            }
+        }
+
         try {
             $response = $this->client->put("/subaccount/{$subaccountCode}", $data);
 
             if (! $response->successful()) {
-                if (app()->environment('local', 'testing')) {
-                    Log::warning('Paystack updateSubaccount failed in local/testing. Returning mock data.', [
+                if ($isTestMode) {
+                    Log::warning('Paystack updateSubaccount failed in test mode. Returning mock data.', [
                         'response' => $response->body(),
                     ]);
 
@@ -275,8 +297,8 @@ class PaystackService
 
             return $response->json('data');
         } catch (\Exception $e) {
-            if (app()->environment('local', 'testing')) {
-                Log::warning('Paystack updateSubaccount threw exception in local/testing. Returning mock data.', [
+            if ($isTestMode) {
+                Log::warning('Paystack updateSubaccount threw exception in test mode. Returning mock data.', [
                     'exception' => $e->getMessage(),
                 ]);
 
