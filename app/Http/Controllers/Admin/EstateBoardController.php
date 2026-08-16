@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Actions\EstateBoard\CreatePostAction;
 use App\Actions\EstateBoard\DeletePostAction;
 use App\Actions\EstateBoard\UpdatePostAction;
+use App\Auth\ContextManager;
 use App\Enums\EstateBoardPostAudience;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EstateBoard\StorePostRequest;
@@ -18,6 +19,7 @@ use App\Services\Admin\UserService;
 use App\Services\EstateContextService;
 use App\Services\ZoneAudienceResolver;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,7 +61,7 @@ class EstateBoardController extends Controller
                 'category' => $category ?? '',
                 'priority' => $priority ?? '',
             ],
-            'zones' => $this->zoneAudience->zonesForEstate($estateId),
+            'zones' => $this->zonesForComposer(),
         ]);
     }
 
@@ -86,7 +88,7 @@ class EstateBoardController extends Controller
         $this->authorize('create', EstateBoardPost::class);
 
         return Inertia::render('Admin/EstateBoard/Create', [
-            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+            'zones' => $this->zonesForComposer(),
         ]);
     }
 
@@ -191,7 +193,7 @@ class EstateBoardController extends Controller
 
         return Inertia::render('Admin/EstateBoard/Edit', [
             'post' => $post,
-            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+            'zones' => $this->zonesForComposer(),
         ]);
     }
 
@@ -227,5 +229,20 @@ class EstateBoardController extends Controller
         return redirect()
             ->route('admin.estate-board.manage')
             ->with('success', 'Post deleted successfully.');
+    }
+
+    /**
+     * @return Collection<int, Zone>
+     */
+    private function zonesForComposer()
+    {
+        $zones = $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId());
+        $context = app(ContextManager::class)->current();
+
+        if ($context?->isZoneScoped()) {
+            return $zones->where('id', $context->zoneId)->values();
+        }
+
+        return $zones;
     }
 }
