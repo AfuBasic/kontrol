@@ -24,6 +24,16 @@ export type UserProfile = {
     unit_number?: string | null;
 };
 
+export type UserContext = {
+    id: number;
+    estate_id: number;
+    estate_name?: string | null;
+    role_name?: string;
+    scope_type?: 'estate' | 'zone';
+    zone_id?: number | null;
+    zone_name?: string | null;
+};
+
 export type User = {
     id: number;
     name: string;
@@ -32,6 +42,7 @@ export type User = {
     email_verified_at: string | null;
     permissions?: Permission[];
     roles?: string[];
+    context?: UserContext | null;
     created_at: string;
     updated_at: string;
     current_estate_id?: number;
