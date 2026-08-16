@@ -3,15 +3,20 @@
 namespace App\Services\Admin;
 
 use App\Jobs\Admin\PublishCollectionJob;
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateSettings;
+use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
 use App\Notifications\Resident\CollectionReminderNotification;
+use App\Services\ZoneAudienceResolver;
 use Carbon\Carbon;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -108,6 +113,168 @@ class CollectionService
 
         // Dispatch job to generate initial assignments
         PublishCollectionJob::dispatch($collection->id);
+    }
+
+    /**
+     * User IDs that will receive assignments when this collection is published.
+     *
+     * @return array<int>
+     */
+    public function resolveTargetUserIds(Collection $collection): array
+    {
+        $collection->loadMissing(['targets', 'creator', 'estate']);
+        $estate = $collection->estate;
+        $creator = $collection->creator;
+        $isPropertyOwner = false;
+
+        if ($creator) {
+            $assignment = AdministrativeAssignment::with('role')
+                ->where('user_id', $creator->id)
+                ->where('estate_id', $estate->id)
+                ->where('is_active', true)
+                ->first();
+            $isPropertyOwner = $assignment?->role?->name === 'property_owner';
+        }
+
+        $userIds = [];
+
+        if ($collection->applies_to === 'all') {
+            if ($isPropertyOwner) {
+                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
+                    ->active()
+                    ->pluck('users.id')
+                    ->toArray();
+            } else {
+                $userIds = User::withRole('resident', $estate->id)
+                    ->active()
+                    ->pluck('users.id')
+                    ->toArray();
+            }
+        } elseif ($collection->applies_to === 'property_owner') {
+            $userIds = User::withRole('property_owner', $estate->id)
+                ->active()
+                ->pluck('users.id')
+                ->toArray();
+        } elseif ($collection->applies_to === 'zone') {
+            $zoneIds = $collection->targets
+                ->filter(fn ($target) => $this->isZoneTarget($target->target_type))
+                ->pluck('target_id')
+                ->all();
+
+            $userIds = app(ZoneAudienceResolver::class)->userIdsInZones($estate->id, $zoneIds);
+        } else {
+            foreach ($collection->targets as $target) {
+                if ($target->target_type === User::class || $target->target_type === 'user') {
+                    $userIds[] = $target->target_id;
+                } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
+                    $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
+                        ->active()
+                        ->pluck('id')
+                        ->toArray();
+                    $userIds = array_merge($userIds, $propertyResidentIds);
+                } elseif ($this->isZoneTarget($target->target_type)) {
+                    $zoneResidentIds = app(ZoneAudienceResolver::class)->userIdsInZones($estate->id, [(int) $target->target_id]);
+                    $userIds = array_merge($userIds, $zoneResidentIds);
+                }
+            }
+        }
+
+        if ($collection->include_creator) {
+            $userIds[] = $collection->created_by;
+
+            return array_values(array_unique($userIds));
+        }
+
+        return array_values(array_filter(array_unique($userIds), fn ($id) => (int) $id !== (int) $collection->created_by));
+    }
+
+    /**
+     * @return SupportCollection<int, User>
+     */
+    public function resolveTargetUsers(Collection $collection): SupportCollection
+    {
+        $userIds = $this->resolveTargetUserIds($collection);
+
+        if ($userIds === []) {
+            return collect();
+        }
+
+        return User::query()
+            ->whereIn('id', $userIds)
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
+    }
+
+    /**
+     * @return array{
+     *     total_assignments: int,
+     *     paid_count: int,
+     *     pending_count: int,
+     *     overdue_count: int,
+     *     total_expected: int,
+     *     total_collected: int
+     * }
+     */
+    public function getDraftPreviewStats(Collection $collection): array
+    {
+        $count = count($this->resolveTargetUserIds($collection));
+
+        return [
+            'total_assignments' => $count,
+            'paid_count' => 0,
+            'pending_count' => $count,
+            'overdue_count' => 0,
+            'total_expected' => $count * (int) $collection->amount,
+            'total_collected' => 0,
+        ];
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, array<string, mixed>>
+     */
+    public function previewDraftAssignments(Collection $collection, Request $request, int $perPage = 15): LengthAwarePaginator
+    {
+        $users = $this->resolveTargetUsers($collection);
+        $search = $request->input('search');
+
+        if (filled($search)) {
+            $needle = mb_strtolower((string) $search);
+            $users = $users->filter(function (User $user) use ($needle) {
+                return str_contains(mb_strtolower($user->name), $needle)
+                    || str_contains(mb_strtolower($user->email), $needle);
+            })->values();
+        }
+
+        $page = max(1, (int) $request->input('page', 1));
+        $dueDate = $collection->due_at ?? $collection->start_date;
+
+        $items = $users->forPage($page, $perPage)->values()->map(fn (User $user) => [
+            'ulid' => $collection->ulid.'-'.$user->id,
+            'id' => $user->id,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ],
+            'amount_due' => $collection->amount,
+            'amount_paid' => 0,
+            'status' => 'draft_pending',
+            'due_date' => $dueDate?->toDateString(),
+            'paid_at' => null,
+            'created_at' => $collection->created_at?->toIso8601String(),
+        ]);
+
+        return new LengthAwarePaginator(
+            $items,
+            $users->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ],
+        );
     }
 
     public function getCollectionStats(Collection $collection): array
@@ -227,5 +394,10 @@ class CollectionService
                 'paid_at' => now(),
             ]);
         });
+    }
+
+    private function isZoneTarget(string $targetType): bool
+    {
+        return $targetType === Zone::class || $targetType === 'zone' || $targetType === 'App\Models\Zone';
     }
 }
