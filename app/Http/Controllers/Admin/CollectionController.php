@@ -588,7 +588,7 @@ class CollectionController extends Controller
             'applies_to' => ['required', 'string', 'in:all,target,property_owner,zone'],
             'targets' => ['required_if:applies_to,target', 'array'],
             'targets.*' => ['integer', 'exists:users,id'],
-            'zones' => ['required_if:applies_to,zone', 'array', 'min:1'],
+            'zones' => [$request->applies_to === 'zone' ? 'required' : 'nullable', 'array', $request->applies_to === 'zone' ? 'min:1' : 'nullable'],
             'zones.*' => ['integer', Rule::exists('zones', 'id')->where('estate_id', $estateId)],
         ]);
     }
