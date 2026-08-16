@@ -11,7 +11,6 @@ import {
     ChevronRight,
     Download,
     Info,
-    User,
     CreditCard,
     ShieldCheck,
     Trash2,
@@ -25,6 +24,7 @@ import {
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { index, publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
+import { show as showResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import SearchInput from '@/Components/SearchInput';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -61,10 +61,10 @@ type Stats = {
 type Assignment = {
     ulid: string;
     id: number;
-    user: { id: number; name: string; email: string };
+    user: { id: number; ulid?: string; name: string; email: string };
     amount_due: number;
     amount_paid: number;
-    status: 'pending' | 'paid' | 'overdue' | 'partial' | 'grace';
+    status: 'pending' | 'paid' | 'overdue' | 'partial' | 'grace' | 'draft_pending';
     due_date: string;
     paid_at: string | null;
     created_at: string;
@@ -354,9 +354,19 @@ export default function ShowCollection({
     const remindableCount = Number(stats.pending_count) + Number(stats.overdue_count);
 
     // ── Intelligence Banner logic
+    const isDraft = collection.status === 'draft';
+    const targetCount = assignments.total;
+
     const banner = useMemo(() => {
-        if (collection.status === 'draft') {
-            return { Icon: Edit2, text: 'This collection is in draft mode. Publish to start collecting payments.', color: 'indigo' };
+        if (isDraft) {
+            return {
+                Icon: Users,
+                text:
+                    targetCount > 0
+                        ? `This collection is still a draft. ${targetCount} resident${targetCount === 1 ? '' : 's'} will be billed as soon as you publish.`
+                        : 'This collection is still a draft. No residents currently match the selected audience.',
+                color: 'indigo',
+            };
         }
         if (collection.status === 'archived') {
             return { Icon: Info, text: 'This collection is archived.', color: 'slate' };
@@ -386,7 +396,7 @@ export default function ShowCollection({
             text: `Collections are on track - ${collectionRate}% collected${daysLeft !== null ? ` with ${daysLeft} days remaining` : ''}.`,
             color: 'emerald',
         };
-    }, [collection.status, stats, collectionRate, daysLeft]);
+    }, [isDraft, targetCount, collection.status, stats, collectionRate, daysLeft]);
 
     const handleRemind = () => {
         setIsReminding(true);
@@ -648,7 +658,11 @@ export default function ShowCollection({
                                 </div>
                                 <div>
                                     <p className="font-bold text-white">Ready to launch?</p>
-                                    <p className="text-sm text-white/60">Publishing will notify residents and start collections.</p>
+                                    <p className="text-sm text-white/60">
+                                        {targetCount > 0
+                                            ? `Publishing will notify ${targetCount} resident${targetCount === 1 ? '' : 's'} and generate their invoices.`
+                                            : 'Publishing will notify residents and start collections.'}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex gap-2">
@@ -799,48 +813,56 @@ export default function ShowCollection({
                         <div className="border-b border-slate-50 bg-slate-50/50 p-5 sm:p-6">
                             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <h3 className="font-bold text-slate-900">Resident Status</h3>
-                                    <p className="text-xs text-slate-400">{assignments.total} total assignments</p>
+                                    <h3 className="font-bold text-slate-900">{isDraft ? 'Targeted Residents' : 'Resident Status'}</h3>
+                                    <p className="text-xs text-slate-400">
+                                        {isDraft
+                                            ? `${targetCount} resident${targetCount === 1 ? '' : 's'} will be billed when you publish`
+                                            : `${assignments.total} total assignments`}
+                                    </p>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => setIsRemindModalOpen(true)}
-                                        disabled={remindableCount === 0}
-                                        title={
-                                            remindableCount === 0
-                                                ? 'No residents to remind'
-                                                : `Remind ${remindableCount} resident${remindableCount === 1 ? '' : 's'}`
-                                        }
-                                        className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        <Bell className="h-3.5 w-3.5" /> Send Reminders
-                                    </button>
-                                    <button
-                                        onClick={handleExport}
-                                        className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
-                                    >
-                                        <Download className="h-3.5 w-3.5" /> Export
-                                    </button>
-                                </div>
+                                {!isDraft && (
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={() => setIsRemindModalOpen(true)}
+                                            disabled={remindableCount === 0}
+                                            title={
+                                                remindableCount === 0
+                                                    ? 'No residents to remind'
+                                                    : `Remind ${remindableCount} resident${remindableCount === 1 ? '' : 's'}`
+                                            }
+                                            className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                        >
+                                            <Bell className="h-3.5 w-3.5" /> Send Reminders
+                                        </button>
+                                        <button
+                                            onClick={handleExport}
+                                            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                                        >
+                                            <Download className="h-3.5 w-3.5" /> Export
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <div className="flex-1">
                                     <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents by name or email…" />
                                 </div>
-                                <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
-                                    {(['all', 'paid', 'pending', 'overdue'] as const).map((f) => (
-                                        <button
-                                            key={f}
-                                            onClick={() => handleFilterChange(f)}
-                                            className={`rounded-lg px-4 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-all ${
-                                                statusFilter === f ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-700'
-                                            }`}
-                                        >
-                                            {f}
-                                        </button>
-                                    ))}
-                                </div>
+                                {!isDraft && (
+                                    <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
+                                        {(['all', 'paid', 'pending', 'overdue'] as const).map((f) => (
+                                            <button
+                                                key={f}
+                                                onClick={() => handleFilterChange(f)}
+                                                className={`rounded-lg px-4 py-1.5 text-[10px] font-bold tracking-widest whitespace-nowrap uppercase transition-all ${
+                                                    statusFilter === f ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-700'
+                                                }`}
+                                            >
+                                                {f}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -854,7 +876,7 @@ export default function ShowCollection({
                                         <th className="px-5 py-4 text-right">Paid</th>
                                         <th className="px-5 py-4">Status</th>
                                         <th className="hidden px-5 py-4 sm:table-cell">Due</th>
-                                        <th className="px-5 py-4 text-right">Action</th>
+                                        {!isDraft && <th className="px-5 py-4 text-right">Action</th>}
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -873,7 +895,9 @@ export default function ShowCollection({
                                                           ? 'border-l-2 border-l-rose-400'
                                                           : a.status === 'partial'
                                                             ? 'border-l-2 border-l-blue-400'
-                                                            : 'border-l-2 border-l-transparent'
+                                                            : a.status === 'draft_pending'
+                                                              ? 'border-l-2 border-l-indigo-400'
+                                                              : 'border-l-2 border-l-transparent'
                                                 }`}
                                             >
                                                 <td className="px-5 py-4">
@@ -886,7 +910,9 @@ export default function ShowCollection({
                                                                       ? 'bg-rose-50 text-rose-600'
                                                                       : a.status === 'partial'
                                                                         ? 'bg-blue-50 text-blue-600'
-                                                                        : 'bg-slate-100 text-slate-500'
+                                                                        : a.status === 'draft_pending'
+                                                                          ? 'bg-indigo-50 text-indigo-600'
+                                                                          : 'bg-slate-100 text-slate-500'
                                                             }`}
                                                         >
                                                             {a.user.name.charAt(0).toUpperCase()}
@@ -916,12 +942,15 @@ export default function ShowCollection({
                                                                   ? 'bg-rose-50 text-rose-600'
                                                                   : a.status === 'partial'
                                                                     ? 'bg-blue-50 text-blue-600'
-                                                                    : 'bg-amber-50 text-amber-600'
+                                                                    : a.status === 'draft_pending'
+                                                                      ? 'bg-indigo-50 text-indigo-600'
+                                                                      : 'bg-amber-50 text-amber-600'
                                                         }`}
                                                     >
                                                         {a.status === 'paid' && <CheckCircle className="h-2.5 w-2.5" />}
                                                         {a.status === 'overdue' && <AlertCircle className="h-2.5 w-2.5" />}
-                                                        {a.status}
+                                                        {a.status === 'draft_pending' && <Clock className="h-2.5 w-2.5" />}
+                                                        {a.status === 'draft_pending' ? 'Targeted Resident (Pending Launch)' : a.status}
                                                     </span>
                                                 </td>
                                                 <td className="hidden px-5 py-4 sm:table-cell">
@@ -937,33 +966,49 @@ export default function ShowCollection({
                                                         </p>
                                                     )}
                                                 </td>
-                                                <td className="px-5 py-4 text-right">
-                                                    {a.status !== 'paid' && (
-                                                        <button
-                                                            onClick={() => {
-                                                                setSelectedAssignment(a);
-                                                                setRecordData({ ...recordData, amount: (a.amount_due - a.amount_paid).toString() });
-                                                                setIsRecordModalOpen(true);
-                                                            }}
-                                                            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-emerald-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:ring-emerald-200 active:scale-95"
-                                                        >
-                                                            <CreditCard className="h-3.5 w-3.5" />
-                                                            <span className="hidden sm:inline">Record</span>
-                                                        </button>
-                                                    )}
-                                                </td>
+                                                {!isDraft && (
+                                                    <td className="px-5 py-4 text-right">
+                                                        {a.status !== 'paid' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedAssignment(a);
+                                                                    setRecordData({
+                                                                        ...recordData,
+                                                                        amount: (a.amount_due - a.amount_paid).toString(),
+                                                                    });
+                                                                    setIsRecordModalOpen(true);
+                                                                }}
+                                                                className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-white px-3 text-xs font-bold text-emerald-600 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-emerald-50 hover:ring-emerald-200 active:scale-95"
+                                                            >
+                                                                <CreditCard className="h-3.5 w-3.5" />
+                                                                <span className="hidden sm:inline">Record</span>
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                )}
                                             </motion.tr>
                                         ))}
                                     </AnimatePresence>
 
                                     {assignments.data.length === 0 && (
                                         <tr>
-                                            <td colSpan={6} className="px-8 py-16 text-center">
+                                            <td colSpan={isDraft ? 5 : 6} className="px-8 py-16 text-center">
                                                 <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-slate-300">
-                                                    <Search className="h-7 w-7" />
+                                                    {isDraft && !searchQuery ? <Users className="h-7 w-7" /> : <Search className="h-7 w-7" />}
                                                 </div>
-                                                <p className="font-bold text-slate-900">No results found</p>
-                                                <p className="text-sm text-slate-400">Try adjusting your search or filter.</p>
+                                                {isDraft && !searchQuery ? (
+                                                    <>
+                                                        <p className="font-bold text-slate-900">No targeted residents yet</p>
+                                                        <p className="text-sm text-slate-400">
+                                                            Adjust who this collection applies to before you publish.
+                                                        </p>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <p className="font-bold text-slate-900">No results found</p>
+                                                        <p className="text-sm text-slate-400">Try adjusting your search or filter.</p>
+                                                    </>
+                                                )}
                                             </td>
                                         </tr>
                                     )}
