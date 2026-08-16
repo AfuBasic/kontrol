@@ -97,7 +97,6 @@ class CreatePropertyOwnerAction
                 }
             };
 
-            $assignRole($residentRole);
             $assignRole($poRole);
 
             // 4. Create user profile with additional data
