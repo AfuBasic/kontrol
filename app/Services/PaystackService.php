@@ -293,7 +293,10 @@ class PaystackService
      */
     public function resolveAccountNumber(string $accountNumber, string $bankCode): array
     {
-        // $bankCode = 001;
+        if (app()->environment('testing', 'local')) {
+            $bankCode = '001';
+        }
+
         try {
             $response = $this->client->get('/bank/resolve', [
                 'account_number' => $accountNumber,

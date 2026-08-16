@@ -483,6 +483,18 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Scope: Users who are top-level residents of an estate (not merely a dependent household member).
+     *
+     * @param  Builder<User>  $query
+     */
+    public function scopeTopLevelResident(Builder $query, int $estateId): Builder
+    {
+        return $query->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
+            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+            ->whereDoesntHave('householdOf', fn ($q) => $q->where('estate_id', $estateId));
+    }
+
+    /**
      * Find user by Telegram chat ID.
      */
     public static function findByTelegramChatId(string $chatId): ?self

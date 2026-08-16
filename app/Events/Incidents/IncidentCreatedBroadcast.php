@@ -33,19 +33,20 @@ class IncidentCreatedBroadcast implements ShouldBroadcast
         $estateId = $this->incident->estate_id;
         $zoneId = $this->incident->zone_id;
 
-        // If scoped to a specific zone:
-        if ($zoneId !== null) {
-            return [
-                new PrivateChannel("estates.{$estateId}.zones.{$zoneId}.residents"),
-                new PrivateChannel("estates.{$estateId}"),
-            ];
+        $channels = [];
+
+        // Always notify the estate admins/staff channel
+        $channels[] = new PrivateChannel("estates.{$estateId}");
+
+        if (! $this->incident->is_private) {
+            if ($zoneId !== null) {
+                $channels[] = new PrivateChannel("estates.{$estateId}.zones.{$zoneId}.residents");
+            } else {
+                $channels[] = new PrivateChannel("estates.{$estateId}.residents");
+            }
         }
 
-        // Entire estate broadcast:
-        return [
-            new PrivateChannel("estates.{$estateId}.residents"),
-            new PrivateChannel("estates.{$estateId}"),
-        ];
+        return $channels;
     }
 
     /**

@@ -89,24 +89,24 @@ class ResidentController extends Controller
             }));
 
         // Section 1: Overview stats
-        $totalResidents = User::query()->forEstate($estate->id)->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))->count();
+        $totalResidents = User::query()->forEstate($estate->id)->topLevelResident($estate->id)->count();
         $activeResidents = User::query()->forEstate($estate->id)
+            ->topLevelResident($estate->id)
             ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
-            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'accepted'))
             ->count();
         $pendingMembership = User::query()
             ->forEstate($estate->id)
+            ->topLevelResident($estate->id)
             ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', true))
-            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', 'pending'));
 
         $unacceptedInvitations = (clone $pendingMembership)->whereNull('email_verified_at')->count();
         $awaitingApproval = (clone $pendingMembership)->whereNotNull('email_verified_at')->count();
         $pendingAccess = $unacceptedInvitations + $awaitingApproval;
         $inactiveResidents = User::query()->forEstate($estate->id)
+            ->topLevelResident($estate->id)
             ->whereHas('administrativeAssignments', fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles)->where('is_active', false))
-            ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
             ->count();
 
         $totalProperties = Property::where('estate_id', $estate->id)->whereNull('archived_at')->count();
@@ -159,8 +159,7 @@ class ResidentController extends Controller
                 }
                 $joinedThisMonth = User::query()
                     ->forEstate($estate->id)
-                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
-                    ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+                    ->topLevelResident($estate->id)
                     ->where('users.created_at', '>=', now()->startOfMonth())
                     ->count();
                 if ($joinedThisMonth > 0) {
@@ -168,8 +167,7 @@ class ResidentController extends Controller
                 }
                 $profileIncomplete = User::query()
                     ->forEstate($estate->id)
-                    ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
-                    ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+                    ->topLevelResident($estate->id)
                     ->where(function ($query) {
                         $query->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
                             ->orWhereDoesntHave('profile');
@@ -183,8 +181,7 @@ class ResidentController extends Controller
             }),
             'incompleteResidents' => Inertia::defer(fn () => User::query()
                 ->forEstate($estate->id)
-                ->whereHas('roles', fn ($q) => $q->whereIn('name', ['resident', 'household_member']))
-                ->whereDoesntHave('roles', fn ($q) => $q->where('name', 'property_owner'))
+                ->topLevelResident($estate->id)
                 ->where(function ($query) {
                     $query->whereHas('profile', fn ($q) => $q->whereNull('phone')->orWhereNull('unit_number'))
                         ->orWhereDoesntHave('profile');
@@ -655,7 +652,13 @@ class ResidentController extends Controller
         abort_if(! $membership, 404, 'Resident does not belong to this estate.');
 
         // Load profile and related properties
-        $resident->load(['profile.property.zone', 'profile.propertyOwner', 'roles']);
+        $resident->load([
+            'profile.property.zone', 
+            'profile.propertyOwner', 
+            'roles',
+            'householdMembers' => fn($q) => $q->where('estate_id', $estate->id)->with('member.profile'),
+            'householdOf' => fn($q) => $q->where('estate_id', $estate->id)->with('primaryResident.profile'),
+        ]);
 
         // Count other residents at the same property
         $residentsCount = 0;
@@ -772,6 +775,30 @@ class ResidentController extends Controller
             ->first();
         $isActive = $assignment ? $assignment->is_active : true;
 
+        $household = collect();
+
+        foreach ($resident->householdMembers as $hm) {
+            if ($hm->member) {
+                $household->push([
+                    'id' => $hm->member->id,
+                    'name' => $hm->member->name,
+                    'type' => 'Dependent',
+                    'is_primary' => false,
+                ]);
+            }
+        }
+
+        foreach ($resident->householdOf as $ho) {
+            if ($ho->primaryResident) {
+                $household->push([
+                    'id' => $ho->primaryResident->id,
+                    'name' => $ho->primaryResident->name,
+                    'type' => 'Primary Resident',
+                    'is_primary' => true,
+                ]);
+            }
+        }
+
         return Inertia::render('Admin/Residents/Show', [
             'resident' => [
                 'id' => $resident->id,
@@ -821,6 +848,7 @@ class ResidentController extends Controller
                 'property_owner_financials' => $poAssignments,
             ],
             'activities' => $activities,
+            'household' => $household,
         ]);
     }
 

@@ -29,19 +29,14 @@ class ResidentService
 
         return User::query()
             ->forEstate($estate->id)
-            ->whereHas('roles', function ($q) {
-                $q->whereIn('name', ['resident', 'household_member']);
-            })
-            ->whereDoesntHave('roles', function ($q) {
-                $q->where('name', 'property_owner');
-            })
+            ->topLevelResident($estate->id)
             ->with([
                 'roles',
                 'profile.property',
                 'estates' => fn ($q) => $q->where('estates.id', $estate->id)->withPivot('zone_id'),
                 'administrativeAssignments' => fn ($q) => $q->where('estate_id', $estate->id)->whereIn('role_id', $residentRoles),
             ])
-            ->withCount('householdMembers')
+            ->withCount(['householdMembers' => fn ($q) => $q->where('estate_id', $estate->id)])
             ->when($filters['zone'] ?? null, function ($query, $zoneId) use ($estate) {
                 $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.zone_id', $zoneId));
             })

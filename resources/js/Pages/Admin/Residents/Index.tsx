@@ -818,9 +818,11 @@ export default function Residents({
                                                     <div className="flex items-center gap-1 text-xs font-semibold text-slate-600">
                                                         <Users className="h-3.5 w-3.5 text-slate-400" />
                                                         {resident.household_members_count > 0 ? (
-                                                            <span>{resident.household_members_count + 1} Members</span>
+                                                            <Link href={`/admin/residents/${resident.id}#household`} className="text-[#0A3D91] hover:underline">
+                                                                {resident.household_members_count} {resident.household_members_count === 1 ? 'Member' : 'Members'} &rarr;
+                                                            </Link>
                                                         ) : (
-                                                            <span className="text-slate-400">1 Member</span>
+                                                            <span className="text-slate-400">No members</span>
                                                         )}
                                                     </div>
                                                 </td>
