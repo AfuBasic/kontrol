@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import * as EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
@@ -41,6 +42,7 @@ import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 
 export default function Edit({ telegram, profile, stats, emergency_contacts, subscription }: Props) {
+    const { confirm } = useResidentConfirmation();
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
@@ -483,13 +485,12 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                     onClick={() => {
                                         const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                         if (isIPadOrDesktop) {
-                                            if (
-                                                window.confirm(
-                                                    `Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`,
-                                                )
-                                            ) {
-                                                router.delete(EmergencyContactController.destroy.url(contact.id));
-                                            }
+                                            confirm({
+                                                title: 'Remove emergency contact',
+                                                message: `Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`,
+                                                confirmLabel: 'Remove contact',
+                                                onConfirm: () => router.delete(EmergencyContactController.destroy.url(contact.id)),
+                                            });
                                         } else {
                                             setContactToDelete({ id: contact.id, name: contact.name });
                                         }

@@ -3,6 +3,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, CheckCircle2, Clock, Eye, Lock, MapPin, MessageSquare, MessageSquareMore, Send, Trash2, Wrench, X, ZoomIn } from 'lucide-react';
 import React, { useState } from 'react';
 
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import Modal from '@/Components/Modal';
 import type { Incident, IncidentComment, IncidentStatus, PaginatedData, SharedData } from '@/types';
 
@@ -37,6 +38,7 @@ const getStatusStyles = (status: IncidentStatus) => {
 };
 
 export default function Show({ incident, comments }: Props) {
+    const { confirm } = useAdminConfirmation();
     const { auth } = usePage<SharedData>().props;
     const authUser = auth?.user;
 
@@ -50,9 +52,12 @@ export default function Show({ incident, comments }: Props) {
     const currentStatusIdx = statusSteps.findIndex((s) => s.key === incident.status);
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this incident report? This action cannot be undone.')) {
-            router.delete(`/security/incidents/${incident.hashid}`);
-        }
+        confirm({
+            title: 'Delete incident report',
+            message: 'Are you sure you want to delete this incident report? This action cannot be undone.',
+            confirmLabel: 'Delete report',
+            onConfirm: () => router.delete(`/security/incidents/${incident.hashid}`),
+        });
     };
 
     const handleCommentSubmit = (e: React.FormEvent) => {
@@ -78,11 +83,15 @@ export default function Show({ incident, comments }: Props) {
     };
 
     const handleDeleteComment = (commentId: number) => {
-        if (confirm('Are you sure you want to delete this comment?')) {
-            router.delete(`/security/incidents/comments/${commentId}`, {
-                preserveScroll: true,
-            });
-        }
+        confirm({
+            title: 'Delete comment',
+            message: 'Are you sure you want to delete this comment?',
+            confirmLabel: 'Delete comment',
+            onConfirm: () =>
+                router.delete(`/security/incidents/comments/${commentId}`, {
+                    preserveScroll: true,
+                }),
+        });
     };
 
     const statusStyle = getStatusStyles(incident.status);

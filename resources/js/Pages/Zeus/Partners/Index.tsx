@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 
 interface Partner {
     id: number;
@@ -53,6 +54,7 @@ function formatCommission(rate: number, type: 'percentage' | 'fixed'): string {
 }
 
 export default function PartnersIndex({ partners, filters }: Props) {
+    const { confirm } = useAdminConfirmation();
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
 
@@ -72,9 +74,12 @@ export default function PartnersIndex({ partners, filters }: Props) {
     const [isInviting, setIsInviting] = useState(false);
 
     function handleDelete(partnerId: number, name: string) {
-        if (confirm(`Delete ${name}? This action cannot be undone.`)) {
-            router.delete(`/zeus/partners/${partnerId}`, { preserveState: true });
-        }
+        confirm({
+            title: 'Delete partner',
+            message: `Delete ${name}? This action cannot be undone.`,
+            confirmLabel: 'Delete partner',
+            onConfirm: () => router.delete(`/zeus/partners/${partnerId}`, { preserveState: true }),
+        });
     }
 
     function initiateResend(partnerId: number, memberId: number) {

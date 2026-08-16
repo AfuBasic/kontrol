@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Power, RefreshCw, Share2, Trash2, AlertCircle, ArrowLeft, Clock, Users, Shield } from 'lucide-react';
 import { useState } from 'react';
 import { index as propertyOwnersIndex, create as propertyOwnersCreate } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import {
     toggle as inviteLinkToggle,
     regenerate as inviteLinkRegenerate,
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function InviteLinkManagement({ inviteLink }: Props) {
+    const { confirm } = useAdminConfirmation();
     const { auth } = usePage<any>().props;
     const [isCopied, setIsCopied] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
@@ -69,8 +71,13 @@ export default function InviteLinkManagement({ inviteLink }: Props) {
     };
 
     const handleRegenerateLink = () => {
-        if (!confirm('Are you sure? This will invalidate the current link and reset its usage count.')) return;
-        router.post(inviteLinkRegenerate.url(), {}, { preserveScroll: true });
+        confirm({
+            title: 'Regenerate invite link',
+            message: 'Are you sure? This will invalidate the current link and reset its usage count.',
+            confirmLabel: 'Regenerate link',
+            type: 'warning',
+            onConfirm: () => router.post(inviteLinkRegenerate.url(), {}, { preserveScroll: true }),
+        });
     };
 
     const handleDeleteLink = () => {

@@ -4,6 +4,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { destroy, index } from '@/actions/App/Http/Controllers/Admin/RoleController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
 
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export default function Roles({ roles }: Props) {
+    const { confirm } = useAdminConfirmation();
     const { can } = usePermission();
     const [search, setSearch] = useState('');
 
@@ -39,9 +41,12 @@ export default function Roles({ roles }: Props) {
     const hasResults = filteredRoles.length > 0;
 
     function handleDelete(role: Role) {
-        if (confirm(`Are you sure you want to delete the "${role.name}" role? This action cannot be undone.`)) {
-            router.delete(destroy.url({ role: role.id }));
-        }
+        confirm({
+            title: 'Delete role',
+            message: `Are you sure you want to delete the "${role.name}" role? This action cannot be undone.`,
+            confirmLabel: 'Delete role',
+            onConfirm: () => router.delete(destroy.url({ role: role.id })),
+        });
     }
 
     return (

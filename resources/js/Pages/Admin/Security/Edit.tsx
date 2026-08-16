@@ -1,6 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type SecurityPerson = {
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export default function EditSecurity({ security }: Props) {
+    const { confirm } = useAdminConfirmation();
     const isVerified = !!security.email_verified_at;
     const { data, setData, put, processing, errors } = useForm({
         name: security.name,
@@ -32,9 +34,12 @@ export default function EditSecurity({ security }: Props) {
     }
 
     function handleDelete() {
-        if (confirm('Are you sure you want to remove this security personnel? This action cannot be undone.')) {
-            router.delete(destroy.url({ security: security.ulid }));
-        }
+        confirm({
+            title: 'Remove security personnel',
+            message: 'Are you sure you want to remove this security personnel? This action cannot be undone.',
+            confirmLabel: 'Remove personnel',
+            onConfirm: () => router.delete(destroy.url({ security: security.ulid })),
+        });
     }
 
     return (

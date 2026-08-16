@@ -21,6 +21,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Admin/EstateBoardCommentController';
 import { index, destroy, edit } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
 
 interface Target {
@@ -134,6 +135,7 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
 }
 
 export default function EstateBoardShow({ post, comments, metrics, targets }: Props) {
+    const { confirm } = useAdminConfirmation();
     const [showActions, setShowActions] = useState(false);
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
@@ -142,9 +144,12 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
     const { data, setData, post: submitComment, processing, reset, errors } = useForm({ body: '' });
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this broadcast? This action cannot be undone.')) {
-            router.delete(destroy.url({ post: post.hashid as any }));
-        }
+        confirm({
+            title: 'Delete broadcast',
+            message: 'Are you sure you want to delete this broadcast? This action cannot be undone.',
+            confirmLabel: 'Delete broadcast',
+            onConfirm: () => router.delete(destroy.url({ post: post.hashid as any })),
+        });
     };
 
     const loadMore = useCallback(() => {

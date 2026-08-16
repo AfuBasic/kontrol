@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { properties, residents, create, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -80,6 +81,7 @@ interface Props {
 }
 
 export default function Index({ propertyOwners, filters: initialFilters, stats, insights, incompleteOwners, inviteLink, zones = [] }: Props) {
+    const { confirm } = useAdminConfirmation();
     const filters = !Array.isArray(initialFilters) ? initialFilters || {} : {};
     const { can } = usePermission();
 
@@ -283,17 +285,22 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
     };
 
     const handleMakeResident = (owner: PropertyOwner) => {
-        if (!confirm(`Convert ${owner.name} to a Resident? Their property owner role will be removed and converted to a resident account.`)) {
-            return;
-        }
-
-        router.post(makeResident.url(owner.ulid), {}, { preserveScroll: true });
+        confirm({
+            title: 'Convert to resident',
+            message: `Convert ${owner.name} to a Resident? Their property owner role will be removed and converted to a resident account.`,
+            confirmLabel: 'Convert account',
+            type: 'warning',
+            onConfirm: () => router.post(makeResident.url(owner.ulid), {}, { preserveScroll: true }),
+        });
     };
 
     const handleDeleteOwner = (id: number) => {
-        if (confirm('Are you sure you want to remove this property owner?')) {
-            router.delete(`/admin/property-owners/${id}`, { preserveScroll: true });
-        }
+        confirm({
+            title: 'Remove property owner',
+            message: 'Are you sure you want to remove this property owner?',
+            confirmLabel: 'Remove owner',
+            onConfirm: () => router.delete(`/admin/property-owners/${id}`, { preserveScroll: true }),
+        });
     };
 
     return (
@@ -372,12 +379,10 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                     const [showDrawer, setShowDrawer] = useState(false);
                     const [drawerSearch, setDrawerSearch] = useState('');
 
-                    const filteredIncomplete = (incompleteOwners || []).filter(o => 
-                        o.name.toLowerCase().includes(drawerSearch.toLowerCase())
-                    );
+                    const filteredIncomplete = (incompleteOwners || []).filter((o) => o.name.toLowerCase().includes(drawerSearch.toLowerCase()));
 
                     const hasIncomplete = incompleteOwners && incompleteOwners.length > 0;
-                    const otherInsights = insights.filter(insight => !insight.includes('no properties assigned'));
+                    const otherInsights = insights.filter((insight) => !insight.includes('no properties assigned'));
                     const hasInsights = otherInsights.length > 0 || hasIncomplete;
 
                     if (!hasInsights) return null;
@@ -393,10 +398,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                     onClick={() => setIsCollapsed(!isCollapsed)}
                                     className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
                                 >
-                                    <motion.span
-                                        animate={{ rotate: isCollapsed ? 180 : 0 }}
-                                        className="block"
-                                    >
+                                    <motion.span animate={{ rotate: isCollapsed ? 180 : 0 }} className="block">
                                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
                                         </svg>
@@ -425,7 +427,8 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                     <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                                                         <div>
                                                             <p className="text-xs font-bold text-slate-800">
-                                                                {incompleteOwners.length} landlord{incompleteOwners.length > 1 ? 's' : ''} require property assignment
+                                                                {incompleteOwners.length} landlord{incompleteOwners.length > 1 ? 's' : ''} require
+                                                                property assignment
                                                             </p>
                                                             <div className="mt-1.5 flex items-center gap-1.5">
                                                                 <div className="flex -space-x-1.5 overflow-hidden">
@@ -439,7 +442,10 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                                     ))}
                                                                 </div>
                                                                 <span className="text-[10px] font-bold text-slate-400">
-                                                                    {incompleteOwners.slice(0, 3).map(o => o.name).join(', ')}
+                                                                    {incompleteOwners
+                                                                        .slice(0, 3)
+                                                                        .map((o) => o.name)
+                                                                        .join(', ')}
                                                                     {incompleteOwners.length > 3 && ` +${incompleteOwners.length - 3} more`}
                                                                 </span>
                                                             </div>
@@ -457,7 +463,9 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                     </motion.div>
                                 ) : (
                                     <div className="mt-1 text-[11px] font-semibold text-slate-400">
-                                        {hasIncomplete ? `${incompleteOwners.length} property assignment items pending` : 'Operational alerts collapsed'}
+                                        {hasIncomplete
+                                            ? `${incompleteOwners.length} property assignment items pending`
+                                            : 'Operational alerts collapsed'}
                                     </div>
                                 )}
                             </AnimatePresence>
@@ -481,12 +489,14 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                             animate={{ x: 0 }}
                                             exit={{ x: '100%' }}
                                             transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                                            className="fixed right-0 bottom-0 top-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
+                                            className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
                                         >
                                             {/* Header */}
                                             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                                                 <div>
-                                                    <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">Property Assignment Needed</h3>
+                                                    <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">
+                                                        Property Assignment Needed
+                                                    </h3>
                                                     <p className="mt-0.5 text-[10px] font-bold text-slate-400">{incompleteOwners.length} Landlords</p>
                                                 </div>
                                                 <button
@@ -512,14 +522,14 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                             </div>
 
                                             {/* Incomplete landlord list */}
-                                            <div className="flex-1 overflow-y-auto divide-y divide-slate-50 p-4">
+                                            <div className="flex-1 divide-y divide-slate-50 overflow-y-auto p-4">
                                                 {filteredIncomplete.length > 0 ? (
                                                     filteredIncomplete.map((o) => (
                                                         <div key={o.id} className="flex items-center justify-between py-3">
                                                             <div className="flex items-center gap-3">
-                                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
-                                                                        {o.name.charAt(0).toUpperCase()}
-                                                                    </div>
+                                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
+                                                                    {o.name.charAt(0).toUpperCase()}
+                                                                </div>
                                                                 <div>
                                                                     <p className="text-xs font-bold text-slate-800">{o.name}</p>
                                                                     <span className="mt-0.5 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-100">
@@ -537,7 +547,9 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                     ))
                                                 ) : (
                                                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                                                        <p className="text-xs font-semibold text-slate-400">No matching landlords requiring attention.</p>
+                                                        <p className="text-xs font-semibold text-slate-400">
+                                                            No matching landlords requiring attention.
+                                                        </p>
                                                     </div>
                                                 )}
                                             </div>
@@ -653,9 +665,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                         <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                             Status
                                         </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Zone
-                                        </th>
+                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">Zone</th>
                                         <th className="w-20 px-4 py-3.5 text-right"></th>
                                     </tr>
                                 </thead>
@@ -787,7 +797,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                         >
                                                             <Eye className="h-3.5 w-3.5" />
                                                         </Link>
-                                                        
+
                                                         {/* Direct Profile Edit */}
                                                         <Link
                                                             href={`/admin/property-owners/${owner.id}/edit`}

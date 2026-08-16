@@ -21,6 +21,7 @@ import {
     Calendar,
 } from 'lucide-react';
 import { show, destroy, edit } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import type { EstateBoardPost, PostAudience } from '@/types';
 import CategoryTag from './CategoryTag';
 
@@ -49,6 +50,7 @@ function stripHtml(html: string): string {
 }
 
 export default function AnnouncementCard({ post, isPinned = false }: Props) {
+    const { confirm } = useAdminConfirmation();
     const [showMenu, setShowMenu] = useState(false);
     const audienceConfig = getAudienceConfig(post.audience);
     const AudienceIcon = audienceConfig.icon;
@@ -63,9 +65,12 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
     const handleDelete = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this announcement?')) {
-            router.delete(destroy.url({ post: post.hashid }));
-        }
+        confirm({
+            title: 'Delete announcement',
+            message: 'Are you sure you want to delete this announcement?',
+            confirmLabel: 'Delete announcement',
+            onConfirm: () => router.delete(destroy.url({ post: post.hashid })),
+        });
     };
 
     return (
