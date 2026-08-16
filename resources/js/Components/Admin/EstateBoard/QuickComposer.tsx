@@ -19,6 +19,7 @@ import {
     Clock,
 } from 'lucide-react';
 import { store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { useActiveContext } from '@/Hooks/useActiveContext';
 import type { PostAudience, PostCategory, PostPriority } from '@/types';
 
 type Props = {
@@ -48,6 +49,7 @@ const PRIORITIES: { value: PostPriority; label: string; badge: string; icon: Rea
 ];
 
 export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = [] }: Props) {
+    const { isZoneScoped, zoneId, zoneName } = useActiveContext();
     const [isExpanded, setIsExpanded] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +61,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
         priority: 'normal' as PostPriority,
         audience: 'all' as PostAudience,
         status: 'published' as const,
-        zone_ids: [] as number[],
+        zone_ids: isZoneScoped && zoneId ? [zoneId] : ([] as number[]),
         media: [] as File[],
     });
 
@@ -177,39 +179,46 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                 {/* Quick Controls Bar */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
                     <div className="flex flex-wrap items-center gap-2">
-                        {/* Audience Selector */}
-                        <div className="relative">
-                            <select
-                                value={data.audience}
-                                onChange={(e) => setData('audience', e.target.value as PostAudience)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                            >
-                                {AUDIENCES.map((aud) => (
-                                    <option key={aud.value} value={aud.value}>
-                                        Audience: {aud.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {isZoneScoped ? (
+                            <span className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700">
+                                Zone: {zoneName ?? zones[0]?.name ?? 'Your zone'}
+                            </span>
+                        ) : (
+                            <>
+                                <div className="relative">
+                                    <select
+                                        value={data.audience}
+                                        onChange={(e) => setData('audience', e.target.value as PostAudience)}
+                                        className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                    >
+                                        {AUDIENCES.map((aud) => (
+                                            <option key={aud.value} value={aud.value}>
+                                                Audience: {aud.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                        {zones.length > 0 && (
-                            <div className="relative">
-                                <select
-                                    value={data.zone_ids[0] ?? ''}
-                                    onChange={(e) => {
-                                        const value = e.target.value;
-                                        setData('zone_ids', value ? [Number(value)] : []);
-                                    }}
-                                    className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                                >
-                                    <option value="">Entire Estate</option>
-                                    {zones.map((zone) => (
-                                        <option key={zone.id} value={zone.id}>
-                                            Zone: {zone.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                                {zones.length > 0 && (
+                                    <div className="relative">
+                                        <select
+                                            value={data.zone_ids[0] ?? ''}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setData('zone_ids', value ? [Number(value)] : []);
+                                            }}
+                                            className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                        >
+                                            <option value="">Entire Estate</option>
+                                            {zones.map((zone) => (
+                                                <option key={zone.id} value={zone.id}>
+                                                    Zone: {zone.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </>
                         )}
 
                         {/* Category Selector (Pills when expanded, dropdown when compact) */}
