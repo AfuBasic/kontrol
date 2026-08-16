@@ -56,6 +56,10 @@ type Incident = {
         id: number;
         name: string;
     } | null;
+    zone: {
+        id: number;
+        name: string;
+    } | null;
 };
 
 type Props = {
@@ -713,8 +717,8 @@ export default function IncidentsIndex({
                                                         key={incident.id}
                                                         className="group relative rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300 hover:shadow-sm"
                                                     >
-                                                        {/* Priority & SLA */}
-                                                        <div className="mb-2 flex items-center justify-between gap-2">
+                                                        {/* Priority, SLA & Zone */}
+                                                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
                                                             <span
                                                                 className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
                                                             >
@@ -723,6 +727,15 @@ export default function IncidentsIndex({
                                                             <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
                                                                 {slaInfo.label}
                                                             </span>
+                                                            {incident.zone ? (
+                                                                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase border border-indigo-100">
+                                                                    {incident.zone.name}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase border border-slate-200/50">
+                                                                    Entire Estate
+                                                                </span>
+                                                            )}
                                                         </div>
 
                                                         {/* Title */}
@@ -857,6 +870,9 @@ export default function IncidentsIndex({
                                                 Status
                                             </th>
                                             <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Scope/Zone
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                                 Age
                                             </th>
                                             <th className="w-10 px-6 py-3.5"></th>
@@ -913,7 +929,6 @@ export default function IncidentsIndex({
                                                             {incident.source.replace('_', ' ')}
                                                         </span>
                                                     </td>
-
                                                     {/* Location */}
                                                     <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
                                                         {incident.location || '-'}
@@ -935,6 +950,19 @@ export default function IncidentsIndex({
                                                         >
                                                             {statusInfo.label}
                                                         </span>
+                                                    </td>
+
+                                                    {/* Scope/Zone */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                        {incident.zone ? (
+                                                            <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700 uppercase border border-indigo-100">
+                                                                {incident.zone.name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase border border-slate-200/50">
+                                                                Entire Estate
+                                                            </span>
+                                                        )}
                                                     </td>
 
                                                     {/* Age */}

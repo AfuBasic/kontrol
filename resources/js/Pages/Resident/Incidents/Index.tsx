@@ -482,6 +482,15 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                                                             {incident.location}
                                                         </span>
                                                     )}
+                                                    {incident.zone ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-indigo-250 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-700 uppercase">
+                                                            Scope: {incident.zone.name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-slate-250 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
+                                                            Scope: Entire Estate
+                                                        </span>
+                                                    )}
                                                     <span className="xs:inline hidden text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
                                                         &middot; {formatDistanceToNow(new Date(incident.created_at), { addSuffix: true })}
                                                     </span>
