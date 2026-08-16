@@ -788,15 +788,13 @@ class ResidentController extends Controller
             }
         }
 
-        foreach ($resident->householdOf as $ho) {
-            if ($ho->primaryResident) {
-                $household->push([
-                    'id' => $ho->primaryResident->id,
-                    'name' => $ho->primaryResident->name,
-                    'type' => 'Primary Resident',
-                    'is_primary' => true,
-                ]);
-            }
+        if ($resident->householdOf && $resident->householdOf->primaryResident) {
+            $household->push([
+                'id' => $resident->householdOf->primaryResident->id,
+                'name' => $resident->householdOf->primaryResident->name,
+                'type' => 'Primary Resident',
+                'is_primary' => true,
+            ]);
         }
 
         return Inertia::render('Admin/Residents/Show', [
