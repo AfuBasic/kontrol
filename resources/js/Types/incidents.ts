@@ -44,6 +44,10 @@ export type Incident = {
     resolving_at?: string | null;
     solved_at?: string | null;
     closed_at?: string | null;
+    zone?: {
+        id: number;
+        name: string;
+    } | null;
 };
 
 export type IncidentComment = {
