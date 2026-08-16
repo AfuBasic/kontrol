@@ -24,7 +24,7 @@ class IncidentService
 
         $query = Incident::query()
             ->forEstate($estateId)
-            ->with(['reporter', 'assignee'])
+            ->with(['reporter', 'assignee', 'zone'])
             ->withExists(['upvotes as is_upvoted' => function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             }]);
