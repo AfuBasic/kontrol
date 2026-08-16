@@ -52,7 +52,7 @@ beforeEach(function () {
     ]);
 });
 
-function asAdmin()
+function asZoneScopeDisplayAdmin()
 {
     return test()->actingAs(test()->admin)
         ->withSession(['active_context_assignment_id' => test()->adminAssignment->id]);
@@ -67,7 +67,7 @@ it('labels estate-scoped residents as Entire Estate', function () {
         'zone_id' => null,
     ]);
 
-    asAdmin()
+    asZoneScopeDisplayAdmin()
         ->get(route('admin.residents.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -94,7 +94,7 @@ it('labels zone-scoped residents with their zone name', function () {
         'zone_id' => $zone->id,
     ]);
 
-    asAdmin()
+    asZoneScopeDisplayAdmin()
         ->get(route('admin.residents.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -116,7 +116,7 @@ it('labels estate-scoped property owners as Entire Estate', function () {
         'zone_id' => null,
     ]);
 
-    asAdmin()
+    asZoneScopeDisplayAdmin()
         ->get(route('admin.property-owners.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -140,7 +140,7 @@ it('labels zone-scoped property owners with their zone name', function () {
         'zone_id' => $zone->id,
     ]);
 
-    asAdmin()
+    asZoneScopeDisplayAdmin()
         ->get(route('admin.property-owners.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -151,7 +151,7 @@ it('labels zone-scoped property owners with their zone name', function () {
 });
 
 it('resolves ContextManager on resident pages that use it', function () {
-    asAdmin()
+    asZoneScopeDisplayAdmin()
         ->get(route('admin.residents.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('Admin/Residents/Create'));
