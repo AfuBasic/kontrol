@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
@@ -51,7 +50,7 @@ function asProfileAdmin()
         ->withSession(['active_context_assignment_id' => test()->adminAssignment->id]);
 }
 
-it('renders the account page with the person and estate as separate props', function () {
+it('renders the profile with personal details and the active estate access', function () {
     asProfileAdmin()
         ->get(route('admin.profile'))
         ->assertSuccessful()
@@ -59,18 +58,19 @@ it('renders the account page with the person and estate as separate props', func
             ->component('Admin/Profile/Index')
             ->where('account.name', 'Silverwood Bane')
             ->where('account.email', 'admin@example.com')
-            ->where('account.role_label', 'Administrator')
+            ->where('account.role_label', 'Estate Administrator')
             ->where('estate_context.name', 'The Squatters')
-            ->where('estate_context.access_label', 'Administrator')
-            ->where('estate_context.scope_label', 'Estate-wide')
+            ->where('estate_context.access_label', 'Estate Administrator')
+            ->where('estate_context.scope_label', 'Estate-wide access')
             ->where('estate_context.can_switch', false)
-            ->where('estate_context.shares_account_name', false)
+            ->where('estate_context.can_view_authority', true)
             ->where('user.name', 'Silverwood Bane')
+            ->missing('estate_context.shares_account_name')
             ->missing('estate_context.editable')
         );
 });
 
-it('flags when the estate and account share the same display name', function () {
+it('does not expose account and estate relationship metadata', function () {
     test()->estate->update(['name' => 'Silverwood Bane']);
 
     asProfileAdmin()
@@ -79,7 +79,7 @@ it('flags when the estate and account share the same display name', function () 
         ->assertInertia(fn (Assert $page) => $page
             ->where('account.name', 'Silverwood Bane')
             ->where('estate_context.name', 'Silverwood Bane')
-            ->where('estate_context.shares_account_name', true)
+            ->missing('estate_context.shares_account_name')
         );
 });
 
@@ -137,7 +137,9 @@ it('updates the administrator name without requiring a password', function () {
     expect(test()->admin->fresh()->name)->toBe('Ada Lovelace');
 });
 
-it('updates the administrator password when one is provided', function () {
+it('does not change the administrator password through the profile endpoint', function () {
+    $existingPassword = test()->admin->password;
+
     asProfileAdmin()
         ->from(route('admin.profile'))
         ->put(route('admin.profile.update'), [
@@ -148,7 +150,7 @@ it('updates the administrator password when one is provided', function () {
         ->assertRedirect(route('admin.profile'))
         ->assertSessionHas('success', 'Profile updated successfully.');
 
-    expect(Hash::check('new-secure-password', test()->admin->fresh()->password))->toBeTrue();
+    expect(test()->admin->fresh()->password)->toBe($existingPassword);
 });
 
 it('rejects an empty administrator name', function () {

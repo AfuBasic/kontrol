@@ -31,6 +31,7 @@ class CreateEstateFromPartnerRequestJob implements ShouldQueue
 
             $estate = $createEstateAction->execute([
                 'name' => $partnerRequest->estate_name,
+                'admin_name' => $partnerRequest->chairman_name,
                 'email' => $partnerRequest->chairman_email,
                 'address' => $partnerRequest->estate_address,
                 'plan_id' => $defaultPlan?->id,

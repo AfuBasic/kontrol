@@ -31,7 +31,7 @@ class CreateEstateAction
     ) {}
 
     /**
-     * @param  array{name: string, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
+     * @param  array{name: string, admin_name?: string|null, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
      */
     public function execute(array $data): Estate
     {
@@ -46,9 +46,9 @@ class CreateEstateAction
                 'status' => 'inactive',
             ]);
 
-            // 2. Create user with estate email (no password)
+            // 2. Create the primary administrator with their own name (no password)
             $user = User::create([
-                'name' => $data['name'],
+                'name' => $data['admin_name'] ?? $data['name'],
                 'email' => $data['email'],
                 'password' => null,
             ]);

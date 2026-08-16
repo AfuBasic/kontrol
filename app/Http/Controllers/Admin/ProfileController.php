@@ -11,7 +11,6 @@ use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,10 +25,10 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $context = app(ContextManager::class)->current();
-        $estate = $context ? Estate::query()->find($context->estateId) : null;
         $assignment = ($context && $context->assignmentId > 0)
-            ? AdministrativeAssignment::query()->with(['role', 'zone'])->find($context->assignmentId)
+            ? AdministrativeAssignment::query()->with(['estate', 'role', 'zone'])->find($context->assignmentId)
             : null;
+        $estate = $assignment?->estate ?? ($context ? Estate::query()->find($context->estateId) : null);
 
         $canSwitchEstate = AdministrativeAssignment::query()
             ->where('user_id', $user->id)
@@ -50,7 +49,7 @@ class ProfileController extends Controller
                 'access_label' => $roleLabel,
                 'scope_label' => $this->formatScopeLabel($context?->isZoneScoped() ?? false, $assignment?->zone?->name),
                 'can_switch' => $canSwitchEstate,
-                'shares_account_name' => $estate->name === $user->name,
+                'can_view_authority' => $user->contextHasRole('admin') || $user->contextCan('assignments.view'),
             ] : null,
         ]);
     }
@@ -86,11 +85,6 @@ class ProfileController extends Controller
 
         $user = $request->user();
         $user->name = $validated['name'];
-
-        if (! empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-        }
-
         $user->save();
 
         return back()->with('success', 'Profile updated successfully.');
@@ -103,7 +97,7 @@ class ProfileController extends Controller
         }
 
         return match ($roleName) {
-            'admin' => 'Administrator',
+            'admin' => 'Estate Administrator',
             'property_owner' => 'Property Owner',
             default => Str::title(str_replace('_', ' ', $roleName)),
         };
@@ -115,6 +109,6 @@ class ProfileController extends Controller
             return filled($zoneName) ? 'Zone · '.$zoneName : 'Zone-scoped';
         }
 
-        return 'Estate-wide';
+        return 'Estate-wide access';
     }
 }

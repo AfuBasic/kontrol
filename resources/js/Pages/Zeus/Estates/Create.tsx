@@ -1,6 +1,7 @@
 import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
+import { store } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 type Feature = {
@@ -38,6 +39,7 @@ type Props = {
 export default function CreateEstate({ plans, partners }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
+        admin_name: '',
         email: '',
         address: '',
         plan_id: plans.length > 0 ? plans[0].id : '',
@@ -56,7 +58,7 @@ export default function CreateEstate({ plans, partners }: Props) {
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        post('/zeus/estates');
+        post(store.url());
     }
 
     return (
@@ -135,22 +137,41 @@ export default function CreateEstate({ plans, partners }: Props) {
                             </p>
                         </div>
                         <div className="rounded-xl border border-slate-200/50 bg-white/50 p-6 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-[#0f1423]">
-                            <div>
-                                <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
-                                    Administrator email
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    value={data.email}
-                                    onChange={(e) => setData('email', e.target.value)}
-                                    className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
-                                    placeholder="admin@example.com"
-                                />
-                                <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-                                    Login credentials and setup instructions will be sent to this email address.
-                                </p>
-                                {errors.email && <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.email}</p>}
+                            <div className="space-y-6">
+                                <div>
+                                    <label htmlFor="admin_name" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Administrator name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="admin_name"
+                                        value={data.admin_name}
+                                        onChange={(e) => setData('admin_name', e.target.value)}
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                                        placeholder="e.g. Ada Okafor"
+                                    />
+                                    {errors.admin_name && (
+                                        <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.admin_name}</p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Administrator email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        value={data.email}
+                                        onChange={(e) => setData('email', e.target.value)}
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none dark:border-white/10 dark:bg-slate-900/50 dark:text-white dark:focus:border-blue-500 dark:focus:ring-blue-500/20"
+                                        placeholder="admin@example.com"
+                                    />
+                                    <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                                        Login credentials and setup instructions will be sent to this email address.
+                                    </p>
+                                    {errors.email && <p className="mt-1.5 text-xs font-medium text-red-500 dark:text-red-400">{errors.email}</p>}
+                                </div>
                             </div>
                         </div>
                     </motion.div>
