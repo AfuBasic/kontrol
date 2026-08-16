@@ -7,6 +7,7 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class PaystackService
 {
@@ -216,7 +217,7 @@ class PaystackService
      */
     public function createSubaccount(array $data): array
     {
-        $isTestMode = str_starts_with(config('services.paystack.secret_key', ''), 'sk_test_');
+        $isTestMode = str_starts_with((string) config('services.paystack.secret_key', ''), 'sk_test_');
 
         if ($isTestMode) {
             if (isset($data['settlement_bank'])) {
@@ -242,7 +243,7 @@ class PaystackService
                     ]);
 
                     return [
-                        'subaccount_code' => 'ACCT_mock_'.strtolower(str_random(8)),
+                        'subaccount_code' => 'ACCT_mock_'.strtolower(Str::random(8)),
                     ];
                 }
                 throw new \Exception('Failed to create Paystack subaccount: '.$response->body());
@@ -256,7 +257,7 @@ class PaystackService
                 ]);
 
                 return [
-                    'subaccount_code' => 'ACCT_mock_'.strtolower(str_random(8)),
+                    'subaccount_code' => 'ACCT_mock_'.strtolower(Str::random(8)),
                 ];
             }
             throw $e;
@@ -268,7 +269,7 @@ class PaystackService
      */
     public function updateSubaccount(string $subaccountCode, array $data): array
     {
-        $isTestMode = str_starts_with(config('services.paystack.secret_key', ''), 'sk_test_');
+        $isTestMode = str_starts_with((string) config('services.paystack.secret_key', ''), 'sk_test_');
 
         if ($isTestMode) {
             if (isset($data['settlement_bank'])) {
@@ -315,7 +316,7 @@ class PaystackService
      */
     public function resolveAccountNumber(string $accountNumber, string $bankCode): array
     {
-        $isTestMode = str_starts_with(config('services.paystack.secret_key', ''), 'sk_test_');
+        $isTestMode = str_starts_with((string) config('services.paystack.secret_key', ''), 'sk_test_');
 
         if ($isTestMode) {
             $bankCode = config('services.paystack.test_bank_code') ?: $bankCode;
