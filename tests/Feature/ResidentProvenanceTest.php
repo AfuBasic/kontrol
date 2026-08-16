@@ -1,20 +1,19 @@
 <?php
 
-use App\Models\Estate;
-use App\Models\User;
-use App\Models\UserProfile;
-use App\Models\EstateInviteLink;
-use App\Models\AdministrativeAssignment;
-use App\Enums\AssignmentScope;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\BulkInviteResidentsAction;
+use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Invitation\AcceptInvitationAction;
+use App\Enums\AssignmentScope;
+use App\Models\AdministrativeAssignment;
+use App\Models\Estate;
+use App\Models\Invitation;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
@@ -140,7 +139,7 @@ test('accepting invitation sets accepted_at timestamp', function () {
         'email' => 'alicedoe@example.com',
     ], $this->estate, 'single_form');
 
-    $invitation = \App\Models\Invitation::withoutGlobalScopes()
+    $invitation = Invitation::withoutGlobalScopes()
         ->where('email', 'alicedoe@example.com')
         ->first();
 
@@ -184,5 +183,34 @@ test('resident profile show page returns correct Inertia structure and provenanc
         ->has('activities')
         ->where('provenance.created_via', 'single_form')
         ->where('provenance.initiated_by_name', $this->adminUser->name)
+        ->where('resident.can_resend_invitation', true)
     );
+});
+
+test('resident profile hides resend invitation after the account is verified', function () {
+    $this->actingAs($this->adminUser);
+    session(['current_estate_id' => $this->estate->id]);
+
+    $action = app(CreateResidentAction::class);
+    $resident = $action->execute([
+        'name' => 'Verified Doe',
+        'email' => 'verifieddoe@example.com',
+    ], $this->estate, 'single_form');
+
+    $resident->update(['email_verified_at' => now(), 'password' => null]);
+
+    $this->get("/admin/residents/{$resident->id}")
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Residents/Show')
+            ->where('resident.is_verified', true)
+            ->where('resident.can_resend_invitation', false)
+        );
+
+    $this->from("/admin/residents/{$resident->id}")
+        ->post(route('admin.residents.resend-invitation', $resident))
+        ->assertRedirect("/admin/residents/{$resident->id}")
+        ->assertSessionHas('error', 'Cannot resend invitation. This resident has already accepted.');
+
+    expect($resident->fresh()->email_verified_at)->not->toBeNull();
 });
