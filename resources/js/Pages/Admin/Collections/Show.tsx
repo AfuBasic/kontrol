@@ -719,7 +719,7 @@ export default function ShowCollection({
                             <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
                                 <CheckCircle className="h-5 w-5" />
                             </div>
-                            <p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Residents Paid</p>
+                            <p className="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Accounts Paid</p>
                             <p className="text-3xl font-black tracking-tight text-slate-900">
                                 <AnimatedNumber value={stats.paid_count} />
                             </p>
@@ -804,11 +804,11 @@ export default function ShowCollection({
 
                 {/* ══════════════════════════════════════════════════════════
                     ZONES 4 / 5 / 6 - TWO-COLUMN COMMAND LAYOUT
-                    Left (2/3): Resident table - PRIMARY work area
+                    Left (2/3): Account table - PRIMARY work area
                     Right (1/3): Progress + Trend + Recent Payments sidebar
                 ══════════════════════════════════════════════════════════ */}
                 <div className="grid gap-4 lg:grid-cols-3">
-                    {/* ── LEFT: Resident Work Area (dominant 2/3) ── */}
+                    {/* ── LEFT: Account Work Area (dominant 2/3) ── */}
                     <motion.div
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -819,10 +819,10 @@ export default function ShowCollection({
                         <div className="border-b border-slate-50 bg-slate-50/50 p-5 sm:p-6">
                             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                    <h3 className="font-bold text-slate-900">{isDraft ? 'Targeted Residents' : 'Resident Status'}</h3>
+                                    <h3 className="font-bold text-slate-900">{isDraft ? 'Targeted Accounts' : 'Account Status'}</h3>
                                     <p className="text-xs text-slate-400">
                                         {isDraft
-                                            ? `${targetCount} resident${targetCount === 1 ? '' : 's'} will be billed when you publish`
+                                            ? `${targetCount} account${targetCount === 1 ? '' : 's'} will be billed when you publish`
                                             : `${assignments.total} total assignments`}
                                     </p>
                                 </div>
@@ -833,8 +833,8 @@ export default function ShowCollection({
                                             disabled={remindableCount === 0}
                                             title={
                                                 remindableCount === 0
-                                                    ? 'No residents to remind'
-                                                    : `Remind ${remindableCount} resident${remindableCount === 1 ? '' : 's'}`
+                                                    ? 'No accounts to remind'
+                                                    : `Remind ${remindableCount} account${remindableCount === 1 ? '' : 's'}`
                                             }
                                             className="flex items-center gap-2 rounded-xl bg-[#0A3D91] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0f4fb5] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                                         >
@@ -852,7 +852,7 @@ export default function ShowCollection({
 
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                                 <div className="flex-1">
-                                    <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search residents by name or email…" />
+                                    <SearchInput value={searchQuery} onChange={handleSearchChange} placeholder="Search accounts by name or email…" />
                                 </div>
                                 {!isDraft && (
                                     <div className="no-scrollbar flex overflow-x-auto rounded-xl bg-white p-1 ring-1 ring-slate-200">
@@ -877,7 +877,7 @@ export default function ShowCollection({
                             <table className="w-full min-w-[560px] text-left">
                                 <thead>
                                     <tr className="border-b border-slate-50 text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                        <th className="px-5 py-4">Resident</th>
+                                        <th className="px-5 py-4">Account</th>
                                         <th className="px-5 py-4 text-right">Amount Due</th>
                                         <th className="px-5 py-4 text-right">Paid</th>
                                         <th className="px-5 py-4">Status</th>
@@ -965,7 +965,7 @@ export default function ShowCollection({
                                                         {a.status === 'paid' && <CheckCircle className="h-2.5 w-2.5" />}
                                                         {a.status === 'overdue' && <AlertCircle className="h-2.5 w-2.5" />}
                                                         {a.status === 'draft_pending' && <Clock className="h-2.5 w-2.5" />}
-                                                        {a.status === 'draft_pending' ? 'Targeted Resident (Pending Launch)' : a.status}
+                                                        {a.status === 'draft_pending' ? 'Targeted (Pending Launch)' : a.status}
                                                     </span>
                                                 </td>
                                                 <td className="hidden px-5 py-4 sm:table-cell">
@@ -1013,7 +1013,7 @@ export default function ShowCollection({
                                                 </div>
                                                 {isDraft && !searchQuery ? (
                                                     <>
-                                                        <p className="font-bold text-slate-900">No targeted residents yet</p>
+                                                        <p className="font-bold text-slate-900">No targeted accounts yet</p>
                                                         <p className="text-sm text-slate-400">
                                                             Adjust who this collection applies to before you publish.
                                                         </p>
