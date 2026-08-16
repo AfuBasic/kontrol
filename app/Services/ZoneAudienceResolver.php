@@ -79,7 +79,7 @@ class ZoneAudienceResolver
             ->pluck('id');
 
         $query = User::query()
-            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.status', 'accepted'))
             ->where(function ($q) use ($estateId, $zoneIds, $propertyIds) {
                 $q->whereHas('profile', fn ($pq) => $pq->whereIn('property_id', $propertyIds))
                     ->orWhereHas('estates', fn ($eq) => $eq
@@ -88,7 +88,7 @@ class ZoneAudienceResolver
             });
 
         if ($activeOnly) {
-            $query->active()->acceptedInvitation();
+            $query->active();
         }
 
         return $query->pluck('users.id')->unique()->values()->all();
