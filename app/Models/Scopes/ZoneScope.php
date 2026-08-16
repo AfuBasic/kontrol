@@ -35,7 +35,11 @@ class ZoneScope implements Scope
 
         if ($zoneId !== null) {
             // Case A: Zone-scoped context
-            $builder->where($model->getTable().'.zone_id', $zoneId);
+            // Can access zone-specific records OR estate-wide (null zone_id) records.
+            $builder->where(function ($q) use ($model, $zoneId) {
+                $q->where($model->getTable().'.zone_id', $zoneId)
+                    ->orWhereNull($model->getTable().'.zone_id');
+            });
         } else {
             // Case B: Estate-scoped context
             // Estate administrator can access all zones belonging to the estate.

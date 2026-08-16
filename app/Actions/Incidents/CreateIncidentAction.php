@@ -129,6 +129,9 @@ class CreateIncidentAction
                 }
             }
 
+            // Dispatch real-time websocket broadcast event
+            event(new \App\Events\Incidents\IncidentCreatedBroadcast($incident));
+
             return $incident;
         });
     }
