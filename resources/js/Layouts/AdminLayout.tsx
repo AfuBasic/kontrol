@@ -275,6 +275,15 @@ export default function AdminLayout({ children, title }: Props) {
 
                 router.reload({ only: ['auth'] });
             });
+
+            channel.listen('.incident.created', (e: any) => {
+                const message = e.message || 'A new incident was reported.';
+                setToastMessage(message);
+                setToastType('info');
+                setToastUrl(e.incident?.hashid ? `/admin/incidents/${e.incident.hashid}` : null);
+                setShowToast(true);
+                router.reload({ only: ['auth'] });
+            });
         }
 
         return () => {

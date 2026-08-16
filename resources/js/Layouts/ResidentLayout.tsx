@@ -128,18 +128,46 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
             // Show toast
             setToastMessage(notification.message || 'New notification received');
+            setToastType(notification.type || 'info');
             setShowToast(true);
 
             // Reload auth data to keep state in sync
             router.reload({ only: ['auth'] });
         });
 
+        // Listen for real-time incident broadcasts scoped to user's context/estate/zone
+        const estateId = auth.user.current_estate_id;
+        const activeContext = auth.user.active_context;
+        const zoneId = activeContext?.zone_id;
+
+        const channelsToListen: string[] = [];
+        if (estateId) {
+            channelsToListen.push(`estates.${estateId}.residents`);
+            if (zoneId) {
+                channelsToListen.push(`estates.${estateId}.zones.${zoneId}.residents`);
+            }
+        }
+
+        const activeChannels = channelsToListen.map((channelName) => {
+            const chan = window.Echo.private(channelName);
+            chan.listen('.incident.created', (e: { incident: any; message: string }) => {
+                setToastMessage(e.message);
+                setToastType('info');
+                setShowToast(true);
+                router.reload({ only: ['auth'] });
+            });
+            return { name: channelName, channel: chan };
+        });
+
         return () => {
             if (auth.user?.id) {
                 window.Echo.leave(`App.Models.User.${auth.user.id}`);
             }
+            activeChannels.forEach(({ name }) => {
+                window.Echo.leave(name);
+            });
         };
-    }, [auth?.user?.id]);
+    }, [auth?.user?.id, auth?.user?.current_estate_id, auth?.user?.active_context?.zone_id]);
 
     const handleNotificationClick = (notification: Notification) => {
         setSelectedNotification(notification);
