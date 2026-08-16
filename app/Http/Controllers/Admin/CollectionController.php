@@ -324,9 +324,9 @@ class CollectionController extends Controller
     {
         $this->ensureBankingIsSetup();
         $estate = $this->estateContext->getEstate();
-        $this->collectionService->createCollection($estate, $this->validatedCollectionPayload($request, $estate->id));
+        $collection = $this->collectionService->createCollection($estate, $this->validatedCollectionPayload($request, $estate->id));
 
-        return redirect()->route('admin.collections.index')
+        return redirect()->route('admin.collections.show', $collection->ulid)
             ->with('success', 'Collection created successfully.');
     }
 
@@ -480,7 +480,7 @@ class CollectionController extends Controller
         $this->ensureIsDraft($collection);
         $this->collectionService->updateCollection($collection, $this->validatedCollectionPayload($request, $collection->estate_id));
 
-        return redirect()->route('admin.collections.index')
+        return redirect()->route('admin.collections.show', $collection->ulid)
             ->with('success', 'Collection updated successfully.');
     }
 

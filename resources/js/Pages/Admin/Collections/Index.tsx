@@ -225,6 +225,7 @@ export default function CollectionsIndex({
     const debouncedSearch = useDebounce(search, 300);
     const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
     const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'overview' | 'list'>('overview');
     const { quality, isOnline } = useNetworkQuality();
     const skipCharts = quality === 'poor' || quality === 'offline' || !isOnline;
 
@@ -441,6 +442,34 @@ export default function CollectionsIndex({
                     </div>
                 </div>
 
+                {/* ── Tab Switcher ── */}
+                {showFinancialDashboard && (
+                    <div className="flex border-b border-slate-200">
+                        <button
+                            onClick={() => setActiveTab('overview')}
+                            className={cn(
+                                'border-b-2 px-6 py-3 text-xs font-black tracking-wider uppercase transition-all',
+                                activeTab === 'overview'
+                                    ? 'border-[#1F6FDB] text-[#1F6FDB]'
+                                    : 'border-transparent text-slate-400 hover:text-slate-700'
+                            )}
+                        >
+                            Overview
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('list')}
+                            className={cn(
+                                'border-b-2 px-6 py-3 text-xs font-black tracking-wider uppercase transition-all',
+                                activeTab === 'list'
+                                    ? 'border-[#1F6FDB] text-[#1F6FDB]'
+                                    : 'border-transparent text-slate-400 hover:text-slate-700'
+                            )}
+                        >
+                            Collections List
+                        </button>
+                    </div>
+                )}
+
                 {!showFinancialDashboard ? (
                     <motion.div
                         initial={{ opacity: 0, y: 16 }}
@@ -476,19 +505,21 @@ export default function CollectionsIndex({
                     </motion.div>
                 ) : (
                     <>
-                        {/* ══════════════════════════════════════════════════════════════
-                    ZONE 1 - FINANCIAL HEALTH HERO
-                ══════════════════════════════════════════════════════════════ */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 16 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="relative overflow-hidden rounded-3xl bg-[#0A0F1C] p-7 text-white shadow-2xl ring-1 ring-white/5 sm:p-9"
-                        >
-                            {/* Background glows */}
-                            <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/20 blur-[80px]" />
-                            <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
+                        {activeTab === 'overview' && (
+                            <>
+                                {/* ══════════════════════════════════════════════════════════════
+                            ZONE 1 - FINANCIAL HEALTH HERO
+                        ══════════════════════════════════════════════════════════════ */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 16 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="relative overflow-hidden rounded-3xl bg-[#0A0F1C] p-7 text-white shadow-2xl ring-1 ring-white/5 sm:p-9"
+                                >
+                                    {/* Background glows */}
+                                    <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/20 blur-[80px]" />
+                                    <div className="pointer-events-none absolute -bottom-32 -left-32 h-64 w-64 rounded-full bg-emerald-500/10 blur-[80px]" />
 
-                            <div className="relative z-10">
+                                    <div className="relative z-10">
                                 {/* Top row */}
                                 <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                                     {/* Left: Health Score */}
@@ -981,18 +1012,18 @@ export default function CollectionsIndex({
                                 </div>
                             </motion.div>
                         </div>
+                            </>
+                        )}
 
-                        {/* ══════════════════════════════════════════════════════════════
-                    ZONE 5+6 - COLLECTIONS LIST + RECENT ACTIVITY
-                ══════════════════════════════════════════════════════════════ */}
-                        <div className="grid gap-4 lg:grid-cols-3">
-                            {/* Zone 5 - Collections List (primary, 2/3) */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 12 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100 lg:col-span-2"
-                            >
+                        {activeTab === 'list' && (
+                            <div className="grid gap-4 lg:grid-cols-3">
+                                {/* Zone 5 - Collections List (primary, 2/3) */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 12 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="overflow-hidden rounded-2xl bg-white ring-1 ring-slate-100 lg:col-span-2"
+                                >
                                 {/* Toolbar */}
                                 <div className="border-b border-slate-50 bg-slate-50/50 p-4 sm:p-5">
                                     <div className="mb-3 flex items-center justify-between gap-3">
@@ -1279,6 +1310,7 @@ export default function CollectionsIndex({
                                 </Deferred>
                             </motion.div>
                         </div>
+                        )}
                     </>
                 )}
             </div>
