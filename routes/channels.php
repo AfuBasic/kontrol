@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Support\Facades\Broadcast;
 
 // Register broadcasting authentication routes
@@ -40,4 +41,14 @@ Broadcast::channel('estates.{id}.security', function ($user, $id) {
 
     // Security is a global role, check it directly
     return $user->hasRole('security');
+});
+
+Broadcast::channel('estates.{id}.zones.{zoneId}.residents', function ($user, $id, $zoneId) {
+    if (! $user->estates()->where('estates.id', $id)->exists()) {
+        return false;
+    }
+
+    $userZoneIds = app(ZoneAudienceResolver::class)->zoneIdsForUser($user, (int) $id);
+
+    return in_array((int) $zoneId, $userZoneIds, true) || $user->hasRole('admin');
 });

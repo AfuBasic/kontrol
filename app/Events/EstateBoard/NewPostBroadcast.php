@@ -27,6 +27,16 @@ class NewPostBroadcast implements ShouldBroadcast
     {
         $estateId = $this->post->estate_id;
 
+        if ($this->post->applies_to === 'custom') {
+            $targets = $this->post->targets()->where('target_type', 'zone')->pluck('target_id');
+            $channels = [];
+            foreach ($targets as $zoneId) {
+                $channels[] = new PrivateChannel("estates.{$estateId}.zones.{$zoneId}.residents");
+            }
+
+            return $channels;
+        }
+
         return match ($this->post->audience) {
             EstateBoardPostAudience::All => [
                 new PrivateChannel("estates.{$estateId}.residents"),
