@@ -64,8 +64,22 @@ it('renders the account page with the person and estate as separate props', func
             ->where('estate_context.access_label', 'Administrator')
             ->where('estate_context.scope_label', 'Estate-wide')
             ->where('estate_context.can_switch', false)
+            ->where('estate_context.shares_account_name', false)
             ->where('user.name', 'Silverwood Bane')
             ->missing('estate_context.editable')
+        );
+});
+
+it('flags when the estate and account share the same display name', function () {
+    test()->estate->update(['name' => 'Silverwood Bane']);
+
+    asProfileAdmin()
+        ->get(route('admin.profile'))
+        ->assertSuccessful()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('account.name', 'Silverwood Bane')
+            ->where('estate_context.name', 'Silverwood Bane')
+            ->where('estate_context.shares_account_name', true)
         );
 });
 

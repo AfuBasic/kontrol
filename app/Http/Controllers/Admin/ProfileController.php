@@ -50,6 +50,7 @@ class ProfileController extends Controller
                 'access_label' => $roleLabel,
                 'scope_label' => $this->formatScopeLabel($context?->isZoneScoped() ?? false, $assignment?->zone?->name),
                 'can_switch' => $canSwitchEstate,
+                'shares_account_name' => $estate->name === $user->name,
             ] : null,
         ]);
     }

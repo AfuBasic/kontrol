@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Building2, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { ArrowRight, Building2, Eye, EyeOff, Loader2, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
@@ -17,6 +17,7 @@ type EstateContext = {
     access_label: string;
     scope_label: string;
     can_switch: boolean;
+    shares_account_name: boolean;
 };
 
 type Props = {
@@ -68,65 +69,99 @@ export default function Profile({ user, account, estate_context }: Props) {
             <Head title="Account" />
 
             <div className="space-y-10">
-                <header>
+                <header className="max-w-3xl">
                     <p className="text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase">Kontrol account</p>
                     <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">Account</h1>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                        Manage your personal information, security, and the estate you are currently operating.
+                        Manage the person signed in to Kontrol, and review the estate context they are operating inside.
                     </p>
                 </header>
 
-                <section className="grid gap-8 border-y border-slate-200 py-8 lg:grid-cols-12 lg:gap-12">
-                    <div className="flex items-start gap-4 lg:col-span-7">
-                        <div
-                            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#0A3D91] text-base font-semibold tracking-wide text-white shadow-sm shadow-[#0A3D91]/20"
-                            aria-hidden="true"
-                        >
-                            {initials(account.name)}
-                        </div>
-                        <div className="min-w-0">
-                            <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">Your account</p>
-                            <h2 className="mt-1 truncate text-xl font-semibold tracking-tight text-slate-900">{account.name}</h2>
-                            <p className="mt-0.5 truncate text-sm text-slate-500">{account.email}</p>
-                            <p className="mt-3 text-sm text-slate-600">{account.role_label}</p>
-                        </div>
-                    </div>
-
-                    {estate_context && (
-                        <div className="border-t border-slate-200 pt-8 lg:col-span-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-12">
-                            <div className="flex items-start gap-4 rounded-2xl bg-slate-50/80 p-4 ring-1 ring-slate-200/70">
+                <section className="border-y border-slate-200 py-8">
+                    <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                        <div className="rounded-2xl bg-white p-5 ring-1 ring-slate-200">
+                            <div className="flex items-start gap-4">
                                 <div
-                                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-slate-600 ring-1 ring-slate-200"
+                                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[#0A3D91] text-base font-semibold tracking-wide text-white shadow-sm shadow-[#0A3D91]/20"
                                     aria-hidden="true"
                                 >
-                                    <Building2 className="h-5 w-5" />
+                                    {initials(account.name)}
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">Current estate</p>
-                                    <h2 className="mt-1 truncate text-xl font-semibold tracking-tight text-slate-900">{estate_context.name}</h2>
-                                    <p className="mt-0.5 text-sm text-slate-500">Estate management</p>
-                                    <dl className="mt-4 space-y-1 text-sm">
-                                        <div className="flex flex-wrap gap-x-2">
-                                            <dt className="text-slate-400">Access</dt>
-                                            <dd className="text-slate-700">{estate_context.access_label}</dd>
-                                        </div>
-                                        <div className="flex flex-wrap gap-x-2">
-                                            <dt className="text-slate-400">Scope</dt>
-                                            <dd className="text-slate-700">{estate_context.scope_label}</dd>
-                                        </div>
-                                    </dl>
-                                    {estate_context.can_switch && (
-                                        <Link
-                                            href={ContextController.index.url()}
-                                            className="mt-4 inline-flex text-sm font-medium text-[#0A3D91] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A3D91]"
-                                        >
-                                            Switch estate
-                                        </Link>
-                                    )}
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <UserRound className="h-4 w-4 text-[#0A3D91]" aria-hidden="true" />
+                                        <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">Person</p>
+                                    </div>
+                                    <h2 className="mt-2 truncate text-2xl font-semibold tracking-tight text-slate-950">{account.name}</h2>
+                                    <p className="mt-1 truncate text-sm text-slate-500">{account.email}</p>
+                                    <p className="mt-4 text-sm font-medium text-slate-700">{account.role_label}</p>
+                                    <p className="mt-1 text-xs text-slate-400">This is the administrator account you edit on this page.</p>
                                 </div>
                             </div>
                         </div>
-                    )}
+
+                        <div className="hidden items-center px-1 lg:flex">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400 ring-1 ring-slate-200">
+                                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                            </div>
+                        </div>
+
+                        {estate_context && (
+                            <div className="rounded-2xl bg-slate-900 p-5 text-white">
+                                <div className="flex items-start gap-4">
+                                    <div
+                                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white ring-1 ring-white/15"
+                                        aria-hidden="true"
+                                    >
+                                        <Building2 className="h-6 w-6" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-[11px] font-bold tracking-[0.16em] text-white/45 uppercase">Operating estate</p>
+                                        <h2 className="mt-2 truncate text-2xl font-semibold tracking-tight text-white">{estate_context.name}</h2>
+                                        <p className="mt-1 text-sm text-white/60">Current estate management context</p>
+                                        <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+                                            <div>
+                                                <dt className="text-[11px] font-bold tracking-[0.14em] text-white/35 uppercase">Access</dt>
+                                                <dd className="mt-1 text-white/85">{estate_context.access_label}</dd>
+                                            </div>
+                                            <div>
+                                                <dt className="text-[11px] font-bold tracking-[0.14em] text-white/35 uppercase">Scope</dt>
+                                                <dd className="mt-1 text-white/85">{estate_context.scope_label}</dd>
+                                            </div>
+                                        </dl>
+                                        {estate_context.shares_account_name && (
+                                            <p className="mt-4 rounded-xl bg-white/10 px-3 py-2 text-xs leading-5 text-white/70">
+                                                This estate record currently shares the same display name as your account. It is still a separate
+                                                operating context.
+                                            </p>
+                                        )}
+                                        {estate_context.can_switch && (
+                                            <Link
+                                                href={ContextController.index.url()}
+                                                className="mt-4 inline-flex text-sm font-medium text-white underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                                            >
+                                                Switch estate
+                                            </Link>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {!estate_context && (
+                            <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+                                <div
+                                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-slate-500 ring-1 ring-slate-200"
+                                    aria-hidden="true"
+                                >
+                                    <Building2 className="h-6 w-6" />
+                                </div>
+                                <p className="mt-4 text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">Operating estate</p>
+                                <h2 className="mt-2 text-xl font-semibold text-slate-900">No active estate context</h2>
+                                <p className="mt-1 text-sm text-slate-500">Select an estate context to manage estate operations.</p>
+                            </div>
+                        )}
+                    </div>
                 </section>
 
                 <form onSubmit={handleSubmit} className="space-y-10">
