@@ -184,6 +184,10 @@ it('broadcasts invitation resent instead of password reset', function () {
     Event::fake([ResidentCreated::class]);
 
     $resident = createEstateResident();
+    $resident->update([
+        'email_verified_at' => null,
+        'password' => null,
+    ]);
 
     asAdmin()
         ->from(route('admin.residents.index'))
