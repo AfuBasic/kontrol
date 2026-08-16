@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, AlertCircle, Loader2 } from 'lucide-react';
@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import { show as showResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 
 interface TransactionDetail {
     ulid: string;
@@ -22,7 +23,7 @@ interface TransactionDetail {
     coupon_code: string | null;
     created_at: string | null;
     paid_at: string | null;
-    resident: { id: number; name: string; email: string } | null;
+    resident: { id: number; ulid: string; name: string; email: string } | null;
     collection: { id: number; name: string } | null;
     created_by: { id: number; name: string } | null;
     approved_by: { id: number; name: string } | null;
@@ -179,7 +180,12 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                         </div>
                                         {transaction.resident ? (
                                             <div>
-                                                <p className="text-sm font-extrabold text-slate-800">{transaction.resident.name}</p>
+                                                <Link
+                                                    href={showResident.url(transaction.resident.ulid)}
+                                                    className="text-sm font-extrabold text-slate-800 transition-colors hover:text-indigo-600"
+                                                >
+                                                    {transaction.resident.name}
+                                                </Link>
                                                 <p className="text-xs font-semibold text-slate-400">{transaction.resident.email}</p>
                                             </div>
                                         ) : (
