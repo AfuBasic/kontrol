@@ -4,6 +4,7 @@ import { ShieldCheck, UserMinus, X, Pencil, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { activate, create, deactivate, destroy, edit, index } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import AuthorityEmptyState from '@/Components/Admin/Assignments/AuthorityEmptyState';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 type AssignmentUser = {
@@ -46,6 +47,7 @@ type Props = {
 };
 
 export default function AssignmentsIndex({ assignments, filters, has_assignable_roles, has_assignable_users }: Props) {
+    const { confirm } = useAdminConfirmation();
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [scopeType, setScopeType] = useState(filters.scope_type || '');
@@ -90,27 +92,23 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
         const action = assignment.is_active ? deactivate : activate;
         const label = assignment.is_active ? 'deactivate' : 'activate';
 
-        if (
-            !confirm(
-                `Are you sure you want to ${label} this assignment?\n\nThis will remove this person's active administrative authority, but will not delete the user.`,
-            )
-        ) {
-            return;
-        }
-
-        router.post(action.url(assignment.id), {}, { preserveScroll: true });
+        confirm({
+            title: `${label.charAt(0).toUpperCase()}${label.slice(1)} assignment`,
+            message: `Are you sure you want to ${label} this assignment? This will remove this person's active administrative authority, but will not delete the user.`,
+            confirmLabel: `${label.charAt(0).toUpperCase()}${label.slice(1)} assignment`,
+            type: 'warning',
+            onConfirm: () => router.post(action.url(assignment.id), {}, { preserveScroll: true }),
+        });
     }
 
     function handleDelete(assignment: Assignment) {
-        if (
-            !confirm(
-                `Are you sure you want to completely delete this authority?\n\nThis action cannot be undone and will immediately revoke their access for this role.`
-            )
-        ) {
-            return;
-        }
-
-        router.delete(destroy.url(assignment.id), { preserveScroll: true });
+        confirm({
+            title: 'Delete authority',
+            message:
+                'Are you sure you want to completely delete this authority? This action cannot be undone and will immediately revoke their access for this role.',
+            confirmLabel: 'Delete authority',
+            onConfirm: () => router.delete(destroy.url(assignment.id), { preserveScroll: true }),
+        });
     }
 
     return (

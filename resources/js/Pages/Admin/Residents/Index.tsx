@@ -25,6 +25,7 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import { bulkDelete, index, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 import AdminLayout from '@/Layouts/AdminLayout';
@@ -103,6 +104,7 @@ export default function Residents({
     inviteLink,
     zones = [],
 }: Props) {
+    const { confirm } = useAdminConfirmation();
     const residents = initialResidents || { data: [], current_page: 1, last_page: 1, total: 0, links: [], next_page_url: null };
     const hasResidents = residents.data.length > 0;
     const isLoading = initialResidents === undefined;
@@ -320,17 +322,22 @@ export default function Residents({
     };
 
     const handleMarkAsPropertyOwner = (resident: Resident) => {
-        if (!confirm(`Convert ${resident.name} to a Property Owner (Landlord)? They will keep resident access.`)) {
-            return;
-        }
-
-        router.patch(markAsPropertyOwner.url(resident.ulid), {}, { preserveScroll: true });
+        confirm({
+            title: 'Convert to property owner',
+            message: `Convert ${resident.name} to a Property Owner (Landlord)? They will keep resident access.`,
+            confirmLabel: 'Convert account',
+            type: 'warning',
+            onConfirm: () => router.patch(markAsPropertyOwner.url(resident.ulid), {}, { preserveScroll: true }),
+        });
     };
 
     const handleDeleteResident = (id: number) => {
-        if (confirm('Are you sure you want to remove this resident?')) {
-            router.delete(`/admin/residents/${id}`, { preserveScroll: true });
-        }
+        confirm({
+            title: 'Remove resident',
+            message: 'Are you sure you want to remove this resident?',
+            confirmLabel: 'Remove resident',
+            onConfirm: () => router.delete(`/admin/residents/${id}`, { preserveScroll: true }),
+        });
     };
 
     return (
@@ -411,12 +418,12 @@ export default function Residents({
                         const [showDrawer, setShowDrawer] = useState(false);
                         const [drawerSearch, setDrawerSearch] = useState('');
 
-                        const filteredIncomplete = (incompleteResidents || []).filter(r => 
-                            r.name.toLowerCase().includes(drawerSearch.toLowerCase())
+                        const filteredIncomplete = (incompleteResidents || []).filter((r) =>
+                            r.name.toLowerCase().includes(drawerSearch.toLowerCase()),
                         );
 
                         const hasIncomplete = incompleteResidents && incompleteResidents.length > 0;
-                        const otherInsights = insights.filter(insight => !insight.includes('require profile completion'));
+                        const otherInsights = insights.filter((insight) => !insight.includes('require profile completion'));
                         const hasInsights = otherInsights.length > 0 || hasIncomplete;
 
                         if (!hasInsights) return null;
@@ -432,10 +439,7 @@ export default function Residents({
                                         onClick={() => setIsCollapsed(!isCollapsed)}
                                         className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
                                     >
-                                        <motion.span
-                                            animate={{ rotate: isCollapsed ? 180 : 0 }}
-                                            className="block"
-                                        >
+                                        <motion.span animate={{ rotate: isCollapsed ? 180 : 0 }} className="block">
                                             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
                                             </svg>
@@ -464,7 +468,8 @@ export default function Residents({
                                                         <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                                                             <div>
                                                                 <p className="text-xs font-bold text-slate-800">
-                                                                    {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile completion
+                                                                    {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''}{' '}
+                                                                    require profile completion
                                                                 </p>
                                                                 <div className="mt-1.5 flex items-center gap-1.5">
                                                                     <div className="flex -space-x-1.5 overflow-hidden">
@@ -478,7 +483,10 @@ export default function Residents({
                                                                         ))}
                                                                     </div>
                                                                     <span className="text-[10px] font-bold text-slate-400">
-                                                                        {incompleteResidents.slice(0, 3).map(r => r.name).join(', ')}
+                                                                        {incompleteResidents
+                                                                            .slice(0, 3)
+                                                                            .map((r) => r.name)
+                                                                            .join(', ')}
                                                                         {incompleteResidents.length > 3 && ` +${incompleteResidents.length - 3} more`}
                                                                     </span>
                                                                 </div>
@@ -496,7 +504,9 @@ export default function Residents({
                                         </motion.div>
                                     ) : (
                                         <div className="mt-1 text-[11px] font-semibold text-slate-400">
-                                            {hasIncomplete ? `${incompleteResidents.length} profile completion items pending` : 'Operational alerts collapsed'}
+                                            {hasIncomplete
+                                                ? `${incompleteResidents.length} profile completion items pending`
+                                                : 'Operational alerts collapsed'}
                                         </div>
                                     )}
                                 </AnimatePresence>
@@ -520,13 +530,17 @@ export default function Residents({
                                                 animate={{ x: 0 }}
                                                 exit={{ x: '100%' }}
                                                 transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                                                className="fixed right-0 bottom-0 top-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
+                                                className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
                                             >
                                                 {/* Header */}
                                                 <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                                                     <div>
-                                                        <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">Profile Completion Needed</h3>
-                                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400">{incompleteResidents.length} Residents</p>
+                                                        <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">
+                                                            Profile Completion Needed
+                                                        </h3>
+                                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400">
+                                                            {incompleteResidents.length} Residents
+                                                        </p>
                                                     </div>
                                                     <button
                                                         onClick={() => setShowDrawer(false)}
@@ -551,7 +565,7 @@ export default function Residents({
                                                 </div>
 
                                                 {/* Incomplete resident list */}
-                                                <div className="flex-1 overflow-y-auto divide-y divide-slate-50 p-4">
+                                                <div className="flex-1 divide-y divide-slate-50 overflow-y-auto p-4">
                                                     {filteredIncomplete.length > 0 ? (
                                                         filteredIncomplete.map((r) => (
                                                             <div key={r.id} className="flex items-center justify-between py-3">
@@ -576,7 +590,9 @@ export default function Residents({
                                                         ))
                                                     ) : (
                                                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                                                            <p className="text-xs font-semibold text-slate-400">No matching residents requiring attention.</p>
+                                                            <p className="text-xs font-semibold text-slate-400">
+                                                                No matching residents requiring attention.
+                                                            </p>
                                                         </div>
                                                     )}
                                                 </div>
@@ -721,9 +737,7 @@ export default function Residents({
                                         <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                             Status
                                         </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Zone
-                                        </th>
+                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">Zone</th>
                                         <th className="w-20 px-4 py-3.5 text-right"></th>
                                     </tr>
                                 </thead>
@@ -804,9 +818,11 @@ export default function Residents({
                                                     <div className="flex items-center gap-1 text-xs font-semibold text-slate-600">
                                                         <Users className="h-3.5 w-3.5 text-slate-400" />
                                                         {resident.household_members_count > 0 ? (
-                                                            <span>{resident.household_members_count + 1} Members</span>
+                                                            <Link href={`/admin/residents/${resident.id}#household`} className="text-[#0A3D91] hover:underline">
+                                                                {resident.household_members_count} {resident.household_members_count === 1 ? 'Member' : 'Members'} &rarr;
+                                                            </Link>
                                                         ) : (
-                                                            <span className="text-slate-400">1 Member</span>
+                                                            <span className="text-slate-400">No members</span>
                                                         )}
                                                     </div>
                                                 </td>

@@ -37,6 +37,7 @@ import DirectoryController from '@/actions/App/Http/Controllers/Resident/Directo
 import SettingsController from '@/actions/App/Http/Controllers/Resident/SettingsController';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import ContextSwitcher from '@/Components/ContextSwitcher';
@@ -73,6 +74,7 @@ interface Props {
 }
 
 export default function ResidentLayout({ children, hideHeader = false, hideNav = false, className }: Props) {
+    const { confirm } = useResidentConfirmation();
     const { component, url: currentPath, props } = usePage<SharedData & { webpush_public_key?: string }>();
     const { auth, webpush_public_key } = props;
 
@@ -578,9 +580,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             onClick={() => {
                                 const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                 if (isIPadOrDesktop) {
-                                    if (window.confirm('Are you sure you want to sign out of your account?')) {
-                                        handleLogout();
-                                    }
+                                    confirm({
+                                        title: 'Sign out',
+                                        message: 'Are you sure you want to sign out of your account?',
+                                        confirmLabel: 'Sign out',
+                                        onConfirm: handleLogout,
+                                    });
                                 } else {
                                     setShowLogoutConfirmation(true);
                                 }
@@ -877,9 +882,12 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         setMoreMenuOpen(false);
                                         const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                         if (isIPadOrDesktop) {
-                                            if (window.confirm('Are you sure you want to sign out of your account?')) {
-                                                handleLogout();
-                                            }
+                                            confirm({
+                                                title: 'Sign out',
+                                                message: 'Are you sure you want to sign out of your account?',
+                                                confirmLabel: 'Sign out',
+                                                onConfirm: handleLogout,
+                                            });
                                         } else {
                                             setShowLogoutConfirmation(true);
                                         }

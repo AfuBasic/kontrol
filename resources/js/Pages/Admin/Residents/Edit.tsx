@@ -1,6 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Resident = {
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export default function EditResident({ resident, propertyOwners = [], zones = [] }: Props) {
+    const { confirm } = useAdminConfirmation();
     const isVerified = !!resident.email_verified_at;
 
     const { data, setData, put, processing, errors } = useForm({
@@ -44,9 +46,12 @@ export default function EditResident({ resident, propertyOwners = [], zones = []
     }
 
     function handleDelete() {
-        if (confirm('Are you sure you want to remove this resident? This action cannot be undone.')) {
-            router.delete(destroy.url({ resident: resident.ulid ?? String(resident.id) }));
-        }
+        confirm({
+            title: 'Remove resident',
+            message: 'Are you sure you want to remove this resident? This action cannot be undone.',
+            confirmLabel: 'Remove resident',
+            onConfirm: () => router.delete(destroy.url({ resident: resident.ulid ?? String(resident.id) })),
+        });
     }
 
     return (

@@ -3,6 +3,7 @@ import { router } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Plus, Power, RefreshCw, Share2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 
 export interface InviteLink {
     id: number;
@@ -31,6 +32,7 @@ interface InviteLinksTabProps {
 }
 
 export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }: InviteLinksTabProps) {
+    const { confirm } = useAdminConfirmation();
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [createdLink, setCreatedLink] = useState<InviteLink | null>(null);
@@ -125,8 +127,13 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
     };
 
     const handleRegenerate = (id: number) => {
-        if (!confirm('Are you sure? This will invalidate the previous link and reset its usage count.')) return;
-        router.post(urls.regenerate, { id }, { preserveScroll: true });
+        confirm({
+            title: 'Regenerate invite link',
+            message: 'Are you sure? This will invalidate the previous link and reset its usage count.',
+            confirmLabel: 'Regenerate link',
+            type: 'warning',
+            onConfirm: () => router.post(urls.regenerate, { id }, { preserveScroll: true }),
+        });
     };
 
     const handleDelete = (id: number, isActive: boolean) => {
@@ -134,8 +141,12 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
             alert('Please disable the link before deleting it.');
             return;
         }
-        if (!confirm('Are you sure you want to delete this invite link?')) return;
-        router.delete(urls.destroy, { data: { id }, preserveScroll: true });
+        confirm({
+            title: 'Delete invite link',
+            message: 'Are you sure you want to delete this invite link?',
+            confirmLabel: 'Delete link',
+            onConfirm: () => router.delete(urls.destroy, { data: { id }, preserveScroll: true }),
+        });
     };
 
     const handleShareWhatsApp = (url: string) => {

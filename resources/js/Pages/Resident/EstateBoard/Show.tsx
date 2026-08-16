@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Resident/EstateBoardCommentController';
 import { index } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
@@ -97,14 +98,18 @@ function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; pos
 }
 
 export default function EstateBoardShow({ post, comments }: Props) {
+    const { confirm } = useResidentConfirmation();
     const { auth } = usePage<any>().props;
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
     const handleDeletePost = () => {
-        if (confirm('Are you sure you want to delete this announcement?')) {
-            router.delete(`/resident/property-owner/announcements/${post.hashid}`);
-        }
+        confirm({
+            title: 'Delete announcement',
+            message: 'Are you sure you want to delete this announcement?',
+            confirmLabel: 'Delete announcement',
+            onConfirm: () => router.delete(`/resident/property-owner/announcements/${post.hashid}`),
+        });
     };
 
     const {

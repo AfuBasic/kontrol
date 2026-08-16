@@ -11,6 +11,7 @@ import {
     toggleInviteLink,
     destroyInviteLink,
 } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { SharedData } from '@/types';
 
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function CreateResident({ inviteLink, properties = [] }: Props) {
+    const { confirm } = useResidentConfirmation();
     const [activeTab, setActiveTab] = useState<TabType>('invite_link');
     const { auth } = usePage<SharedData>().props;
     const [isCopied, setIsCopied] = useState(false);
@@ -159,15 +161,20 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
     };
 
     const handleRegenerateLink = () => {
-        if (!confirm('Are you sure? This will invalidate the previous link and reset its usage count.')) return;
-
-        router.post(
-            regenerateInviteLink.url(),
-            {},
-            {
-                preserveScroll: true,
-            },
-        );
+        confirm({
+            title: 'Regenerate invite link',
+            message: 'Are you sure? This will invalidate the previous link and reset its usage count.',
+            confirmLabel: 'Regenerate link',
+            type: 'warning',
+            onConfirm: () =>
+                router.post(
+                    regenerateInviteLink.url(),
+                    {},
+                    {
+                        preserveScroll: true,
+                    },
+                ),
+        });
     };
 
     const handleToggleLink = () => {
@@ -181,9 +188,11 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
     };
 
     const handleClearLink = () => {
-        if (!confirm('Are you sure you want to delete this invite link? Users will no longer be able to use it to join.')) return;
-        router.delete(destroyInviteLink.url(), {
-            preserveScroll: true,
+        confirm({
+            title: 'Delete invite link',
+            message: 'Are you sure you want to delete this invite link? Users will no longer be able to use it to join.',
+            confirmLabel: 'Delete link',
+            onConfirm: () => router.delete(destroyInviteLink.url(), { preserveScroll: true }),
         });
     };
 

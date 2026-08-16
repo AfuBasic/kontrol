@@ -1,5 +1,6 @@
 import { Head, router, usePage, InfiniteScroll } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import {
     Bell,
     BellOff,
@@ -126,6 +127,7 @@ function groupActivitiesByDate(activities: ActivityItem[]): Record<string, Activ
 }
 
 export default function Activity({ activities, notifications = [], unreadCount = 0, filters }: Props) {
+    const { confirm } = useResidentConfirmation();
     const groupedActivities = groupActivitiesByDate(activities?.data || []);
     const dateLabels = Object.keys(groupedActivities);
 
@@ -427,8 +429,12 @@ export default function Activity({ activities, notifications = [], unreadCount =
                                     </button>
                                     <button
                                         onClick={() => {
-                                            if (!confirm('Clear all notifications?')) return;
-                                            router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true });
+                                            confirm({
+                                                title: 'Clear notifications',
+                                                message: 'Clear all notifications?',
+                                                confirmLabel: 'Clear all',
+                                                onConfirm: () => router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true }),
+                                            });
                                         }}
                                         className="flex flex-1 items-center justify-center gap-2 rounded-[22px] bg-white py-3.5 text-[10px] font-black tracking-widest text-slate-900 uppercase shadow-sm ring-1 ring-slate-200 transition-all hover:bg-rose-50 hover:text-rose-600 hover:ring-rose-100 active:scale-[0.98]"
                                     >

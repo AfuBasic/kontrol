@@ -10,6 +10,7 @@ import '../css/app.css';
 import './echo';
 
 import AppLoader from './Components/AppLoader';
+import { ConfirmationProvider } from './Components/ConfirmationProvider';
 import AppErrorBoundary from './Components/ErrorBoundary/AppErrorBoundary';
 import RouteProgressBar from './Components/UI/RouteProgressBar';
 import AdminLayout from './Layouts/AdminLayout';
@@ -100,14 +101,16 @@ createInertiaApp({
 
             return (
                 <AppErrorBoundary>
-                    {isBooting ? (
-                        <AppLoader isExiting={isExiting} />
-                    ) : (
-                        <>
-                            <App {...props} />
-                            <RouteProgressBar />
-                        </>
-                    )}
+                    <ConfirmationProvider>
+                        {isBooting ? (
+                            <AppLoader isExiting={isExiting} />
+                        ) : (
+                            <>
+                                <App {...props} />
+                                <RouteProgressBar />
+                            </>
+                        )}
+                    </ConfirmationProvider>
                 </AppErrorBoundary>
             );
         }

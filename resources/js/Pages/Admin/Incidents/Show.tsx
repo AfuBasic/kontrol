@@ -25,6 +25,7 @@ import {
     CornerDownRight,
 } from 'lucide-react';
 import React, { useState } from 'react';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import Modal from '@/Components/Modal';
 
 type AdminUser = {
@@ -119,6 +120,7 @@ type Props = {
 };
 
 export default function IncidentShow({ incident, comments, admins, statuses, categories, activities }: Props) {
+    const { confirm } = useAdminConfirmation();
     const commentList = comments?.data ?? [];
     const activityList = activities ?? [];
     const [commentText, setCommentText] = useState('');
@@ -174,17 +176,24 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
     };
 
     const handleDeleteComment = (commentId: number) => {
-        if (confirm('Are you sure you want to delete this comment?')) {
-            router.delete(`/admin/incidents/comments/${commentId}`, {
-                preserveScroll: true,
-            });
-        }
+        confirm({
+            title: 'Delete comment',
+            message: 'Are you sure you want to delete this comment?',
+            confirmLabel: 'Delete comment',
+            onConfirm: () =>
+                router.delete(`/admin/incidents/comments/${commentId}`, {
+                    preserveScroll: true,
+                }),
+        });
     };
 
     const handleDeleteIncident = () => {
-        if (confirm('Are you sure you want to delete this incident report permanently? This action cannot be undone.')) {
-            router.delete(`/admin/incidents/${incident.hashid}`);
-        }
+        confirm({
+            title: 'Delete incident report',
+            message: 'Are you sure you want to delete this incident report permanently? This action cannot be undone.',
+            confirmLabel: 'Delete report',
+            onConfirm: () => router.delete(`/admin/incidents/${incident.hashid}`),
+        });
     };
 
     // SLA helper calculations

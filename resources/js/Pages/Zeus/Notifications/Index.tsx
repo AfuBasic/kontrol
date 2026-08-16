@@ -1,6 +1,7 @@
 import { BellIcon, CheckCircleIcon, MagnifyingGlassIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface ZeusNotificationItem {
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export default function ZeusNotificationsIndex({ notifications, filters, unreadCount }: Props) {
+    const { confirm } = useAdminConfirmation();
     const [search, setSearch] = useState(filters.search ?? '');
     const [type, setType] = useState(filters.type ?? 'all');
 
@@ -89,11 +91,14 @@ export default function ZeusNotificationsIndex({ notifications, filters, unreadC
                         {notifications.total > 0 && (
                             <button
                                 type="button"
-                                onClick={() => {
-                                    if (confirm('Clear all Zeus notifications?')) {
-                                        router.post('/zeus/notifications/clear-all', {}, { preserveScroll: true });
-                                    }
-                                }}
+                                onClick={() =>
+                                    confirm({
+                                        title: 'Clear notifications',
+                                        message: 'Clear all Zeus notifications?',
+                                        confirmLabel: 'Clear all',
+                                        onConfirm: () => router.post('/zeus/notifications/clear-all', {}, { preserveScroll: true }),
+                                    })
+                                }
                                 className="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-600 shadow-sm transition hover:bg-rose-50 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300"
                             >
                                 <TrashIcon className="h-4 w-4" />

@@ -13,6 +13,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { index, destroy } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 
 interface Target {
     type: string;
@@ -53,12 +54,16 @@ const PRIORITY_STYLES: Record<string, { badge: string; border: string; bg: strin
 };
 
 export default function Show({ announcement, metrics, targets }: Props) {
+    const { confirm } = useResidentConfirmation();
     const [showActions, setShowActions] = useState(false);
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this broadcast? This action cannot be undone.')) {
-            router.delete(destroy.url(announcement.hashid as any));
-        }
+        confirm({
+            title: 'Delete broadcast',
+            message: 'Are you sure you want to delete this broadcast? This action cannot be undone.',
+            confirmLabel: 'Delete broadcast',
+            onConfirm: () => router.delete(destroy.url(announcement.hashid as any)),
+        });
     };
 
     const priorityStyle = PRIORITY_STYLES[announcement.priority || 'normal'];

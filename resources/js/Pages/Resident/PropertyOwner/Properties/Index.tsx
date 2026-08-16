@@ -3,6 +3,7 @@ import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { store, update, destroy, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/PropertyController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 
 interface Property {
     id: number;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function Index({ properties }: Props) {
+    const { confirm } = useResidentConfirmation();
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
@@ -51,9 +53,12 @@ export default function Index({ properties }: Props) {
     };
 
     const deleteProperty = (property: Property) => {
-        if (confirm('Are you sure you want to archive this property? Any assigned residents will be unassigned.')) {
-            router.delete(destroy.url(property.ulid));
-        }
+        confirm({
+            title: 'Archive property',
+            message: 'Are you sure you want to archive this property? Any assigned residents will be unassigned.',
+            confirmLabel: 'Archive property',
+            onConfirm: () => router.delete(destroy.url(property.ulid)),
+        });
     };
 
     return (

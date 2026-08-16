@@ -16,6 +16,7 @@ import {
 import { CheckCircleIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import MobileSheet from '@/Components/MobileSheet';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { show as showAnnouncement } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
@@ -129,6 +130,7 @@ export default function Show({
     eligibleResidents,
     filters,
 }: Props) {
+    const { confirm } = useResidentConfirmation();
     const { url } = usePage();
     const [activeTab, setActiveTab] = useState<Tab>(() => {
         // Only force collections tab if query params are explicitly set in the URL
@@ -198,9 +200,12 @@ export default function Show({
     };
 
     const handleRemoveResident = (residentId: number) => {
-        if (confirm('Are you sure you want to remove this resident from the property?')) {
-            router.post(removeResident.url(property.ulid), { resident_id: residentId });
-        }
+        confirm({
+            title: 'Remove resident',
+            message: 'Are you sure you want to remove this resident from the property?',
+            confirmLabel: 'Remove resident',
+            onConfirm: () => router.post(removeResident.url(property.ulid), { resident_id: residentId }),
+        });
     };
 
     return (

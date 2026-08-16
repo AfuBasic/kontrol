@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { index, publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import { show as showResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -331,6 +332,7 @@ export default function ShowCollection({
     recentPayments,
     dailyTrend,
 }: Props) {
+    const { confirm } = useAdminConfirmation();
     const { post, processing } = useForm();
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || 'all');
@@ -464,9 +466,13 @@ export default function ShowCollection({
     };
 
     const handlePublish = () => {
-        if (confirm('Publish this collection? This will notify residents and generate payment assignments.')) {
-            post(publish.url(collection.ulid));
-        }
+        confirm({
+            title: 'Publish collection',
+            message: 'Publish this collection? This will notify residents and generate payment assignments.',
+            confirmLabel: 'Publish collection',
+            type: 'warning',
+            onConfirm: () => post(publish.url(collection.ulid)),
+        });
     };
 
     const paidPct = stats.total_assignments > 0 ? (stats.paid_count / stats.total_assignments) * 100 : 0;
@@ -921,7 +927,7 @@ export default function ShowCollection({
                                                             {a.user.ulid ? (
                                                                 <Link
                                                                     href={showResident.url(a.user.ulid)}
-                                                                    className="truncate block text-sm font-bold text-slate-900 transition-colors hover:text-indigo-600"
+                                                                    className="block truncate text-sm font-bold text-slate-900 transition-colors hover:text-indigo-600"
                                                                 >
                                                                     {a.user.name}
                                                                 </Link>

@@ -8,6 +8,7 @@ import {
     markAsRead as markAsReadAction,
     clearAll as clearAllAction,
 } from '@/actions/App/Http/Controllers/Admin/NotificationController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import AdminLayout from '@/Layouts/AdminLayout';
 import type { SharedData } from '@/types';
 
@@ -45,6 +46,7 @@ interface Props {
 }
 
 export default function NotificationsIndex({ notifications, filters }: Props) {
+    const { confirm } = useAdminConfirmation();
     const { name } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search || '');
     const [type, setType] = useState(filters.type || 'all');
@@ -68,8 +70,12 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
     };
 
     const clearAll = () => {
-        if (!confirm('Are you sure you want to delete all notifications?')) return;
-        router.post(clearAllAction.url());
+        confirm({
+            title: 'Clear notifications',
+            message: 'Are you sure you want to delete all notifications?',
+            confirmLabel: 'Clear all',
+            onConfirm: () => router.post(clearAllAction.url()),
+        });
     };
 
     return (

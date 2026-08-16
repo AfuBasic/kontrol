@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AlertTriangle, BellOff, Check, CheckCircle, ChevronDown, Info, ShieldX, Trash2, User as UserIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import * as NotificationController from '@/actions/App/Http/Controllers/Security/NotificationController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 
 type NotificationType = 'validation' | 'denied' | 'visitor' | 'alert' | 'system' | 'info';
 type Severity = 'critical' | 'warning' | 'info';
@@ -81,6 +82,7 @@ function iconFor(type: NotificationType) {
 }
 
 export default function NotificationsIndex({ notifications, pagination, unreadCount }: Props) {
+    const { confirm } = useAdminConfirmation();
     const safePagination = pagination ?? EMPTY_PAGINATION;
     const [items, setItems] = useState<Notification[]>(notifications ?? []);
     const [localUnread, setLocalUnread] = useState(unreadCount ?? 0);
@@ -114,10 +116,16 @@ export default function NotificationsIndex({ notifications, pagination, unreadCo
 
     const handleClearAll = () => {
         if (items.length === 0) return;
-        if (!confirm('Are you sure you want to delete all notifications? This cannot be undone.')) return;
-        setItems([]);
-        setLocalUnread(0);
-        router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true, preserveState: true });
+        confirm({
+            title: 'Clear notifications',
+            message: 'Are you sure you want to delete all notifications? This cannot be undone.',
+            confirmLabel: 'Clear all',
+            onConfirm: () => {
+                setItems([]);
+                setLocalUnread(0);
+                router.post(NotificationController.clearAll.url(), {}, { preserveScroll: true, preserveState: true });
+            },
+        });
     };
 
     const handleLoadMore = () => {

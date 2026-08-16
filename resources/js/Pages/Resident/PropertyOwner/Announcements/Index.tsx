@@ -12,6 +12,7 @@ import {
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
 import { index, create, destroy, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -64,6 +65,7 @@ const PRIORITY_STYLES: Record<string, { badge: string; border: string }> = {
 };
 
 export default function Index({ announcements, metrics, filters }: Props) {
+    const { confirm } = useResidentConfirmation();
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
 
@@ -88,9 +90,12 @@ export default function Index({ announcements, metrics, filters }: Props) {
     }, []);
 
     const deleteAnnouncement = (hashid: string) => {
-        if (confirm('Are you sure you want to delete this broadcast? This will remove it from target feeds.')) {
-            router.delete(destroy.url(hashid as any));
-        }
+        confirm({
+            title: 'Delete broadcast',
+            message: 'Are you sure you want to delete this broadcast? This will remove it from target feeds.',
+            confirmLabel: 'Delete broadcast',
+            onConfirm: () => router.delete(destroy.url(hashid as any)),
+        });
     };
 
     const hasActiveFilters = Boolean(search || filters.category || filters.priority);

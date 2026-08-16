@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import {
     AlertCircle,
     ArrowLeft,
@@ -57,6 +58,7 @@ const getStatusStyles = (status: IncidentStatus) => {
 };
 
 export default function Show({ incident, comments, canClose }: Props) {
+    const { confirm } = useResidentConfirmation();
     const { auth } = usePage<SharedData>().props;
     const authUser = auth?.user;
 
@@ -97,9 +99,12 @@ export default function Show({ incident, comments, canClose }: Props) {
     };
 
     const handleDelete = () => {
-        if (confirm('Are you sure you want to delete this incident report? This action cannot be undone.')) {
-            router.delete(`/resident/incidents/${incident.hashid}`);
-        }
+        confirm({
+            title: 'Delete incident report',
+            message: 'Are you sure you want to delete this incident report? This action cannot be undone.',
+            confirmLabel: 'Delete report',
+            onConfirm: () => router.delete(`/resident/incidents/${incident.hashid}`),
+        });
     };
 
     const handleCommentSubmit = (e: React.FormEvent) => {
@@ -125,11 +130,15 @@ export default function Show({ incident, comments, canClose }: Props) {
     };
 
     const handleDeleteComment = (commentId: number) => {
-        if (confirm('Are you sure you want to delete this comment?')) {
-            router.delete(`/resident/incidents/comments/${commentId}`, {
-                preserveScroll: true,
-            });
-        }
+        confirm({
+            title: 'Delete comment',
+            message: 'Are you sure you want to delete this comment?',
+            confirmLabel: 'Delete comment',
+            onConfirm: () =>
+                router.delete(`/resident/incidents/comments/${commentId}`, {
+                    preserveScroll: true,
+                }),
+        });
     };
 
     return (

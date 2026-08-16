@@ -16,6 +16,7 @@ import {
 import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
 import { suspend, destroy, edit, create, index, resendInvitation } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 interface Resident {
@@ -49,6 +50,7 @@ interface Props {
 }
 
 export default function Index({ residents, totalUnfiltered, filters }: Props) {
+    const { confirm } = useResidentConfirmation();
     const [activeMenuId, setActiveMenuId] = useState<number | null>(null);
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
@@ -73,15 +75,22 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
     }, []);
 
     const toggleSuspend = (resident: Resident) => {
-        if (confirm("Are you sure you want to change this resident's activation status?")) {
-            router.patch(suspend.url(resident.ulid));
-        }
+        confirm({
+            title: 'Change activation status',
+            message: "Are you sure you want to change this resident's activation status?",
+            confirmLabel: 'Update status',
+            type: 'warning',
+            onConfirm: () => router.patch(suspend.url(resident.ulid)),
+        });
     };
 
     const removeDelegation = (resident: Resident) => {
-        if (confirm("Are you sure you want to stop managing this resident? They will remain in the estate system but won't be delegated to you.")) {
-            router.delete(destroy.url(resident.ulid));
-        }
+        confirm({
+            title: 'Stop managing resident',
+            message: "Are you sure you want to stop managing this resident? They will remain in the estate system but won't be delegated to you.",
+            confirmLabel: 'Stop managing',
+            onConfirm: () => router.delete(destroy.url(resident.ulid)),
+        });
     };
 
     const hasActiveFilters = Boolean(search || status);
@@ -205,11 +214,13 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                                                 {resident.status !== 'accepted' && (
                                                     <button
                                                         onClick={() => {
-                                                            if (
-                                                                confirm(`Are you sure you want to resend the invitation email to ${resident.name}?`)
-                                                            ) {
-                                                                router.post(resendInvitation.url(resident.ulid));
-                                                            }
+                                                            confirm({
+                                                                title: 'Resend invitation',
+                                                                message: `Are you sure you want to resend the invitation email to ${resident.name}?`,
+                                                                confirmLabel: 'Resend invitation',
+                                                                type: 'warning',
+                                                                onConfirm: () => router.post(resendInvitation.url(resident.ulid)),
+                                                            });
                                                             setActiveMenuId(null);
                                                         }}
                                                         className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"

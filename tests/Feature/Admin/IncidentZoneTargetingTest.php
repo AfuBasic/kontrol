@@ -78,6 +78,29 @@ it('lets an admin assign a new incident to a zone', function () {
     ]);
 });
 
+it('lets an estate-scoped admin delete an incident reported by another user', function () {
+    $reporter = User::factory()->create();
+    $incident = Incident::withoutZoneIsolation()->create([
+        'estate_id' => $this->estate->id,
+        'reporter_id' => $reporter->id,
+        'reporter_type' => User::class,
+        'source' => IncidentSource::ResidentReport,
+        'title' => 'Broken gate light',
+        'body' => 'The light at the main gate has been out since last night.',
+        'category' => IncidentCategory::Lighting,
+        'priority' => IncidentPriority::Medium,
+        'status' => IncidentStatus::Pending,
+        'is_private' => false,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->delete(route('admin.incidents.destroy', $incident->hashid))
+        ->assertRedirect(route('admin.incidents.index'));
+
+    $this->assertSoftDeleted('incidents', ['id' => $incident->id]);
+});
+
 it('hides zone-assigned incidents from residents outside that zone', function () {
     $incident = Incident::withoutZoneIsolation()->create([
         'estate_id' => $this->estate->id,

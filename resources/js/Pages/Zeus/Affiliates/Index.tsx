@@ -2,6 +2,7 @@ import { HandRaisedIcon, PencilIcon, TrashIcon, PlusIcon, MagnifyingGlassIcon } 
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface Affiliate {
@@ -39,6 +40,7 @@ const statusColors: Record<string, string> = {
 };
 
 export default function AffiliatesIndex({ affiliates, filters }: Props) {
+    const { confirm } = useAdminConfirmation();
     const [search, setSearch] = useState(filters.search);
     const [status, setStatus] = useState(filters.status);
 
@@ -53,9 +55,12 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
     }
 
     function handleDelete(affiliateId: number, name: string) {
-        if (confirm(`Delete ${name}? This action cannot be undone.`)) {
-            router.delete(`/zeus/affiliates/${affiliateId}`, { preserveState: true });
-        }
+        confirm({
+            title: 'Delete affiliate',
+            message: `Delete ${name}? This action cannot be undone.`,
+            confirmLabel: 'Delete affiliate',
+            onConfirm: () => router.delete(`/zeus/affiliates/${affiliateId}`, { preserveState: true }),
+        });
     }
 
     function clearFilters() {

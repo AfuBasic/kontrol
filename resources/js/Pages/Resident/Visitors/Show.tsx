@@ -1,6 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { ArrowLeft, Copy, Share2, Clock, X, Loader2, CheckCircle2 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import PassCard from '@/Components/Resident/PassCard';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
@@ -19,6 +20,7 @@ type Props = {
 };
 
 export default function CodeShow({ accessCode, usageLogs, durationOptions = [], allowExtendPasses = true }: Props) {
+    const { confirm } = useResidentConfirmation();
     const [copied, setCopied] = useState(false);
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
     const [selectedDuration, setSelectedDuration] = useState<number>(durationOptions[0]?.minutes || 120);
@@ -52,9 +54,12 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
     }
 
     function revokeCode() {
-        if (confirm('Are you sure you want to revoke this pass? It will immediately become invalid.')) {
-            router.delete(resident.visitors.destroy.url(accessCode.id));
-        }
+        confirm({
+            title: 'Revoke visitor pass',
+            message: 'Are you sure you want to revoke this pass? It will immediately become invalid.',
+            confirmLabel: 'Revoke pass',
+            onConfirm: () => router.delete(resident.visitors.destroy.url(accessCode.id)),
+        });
     }
 
     function handleExtendPass(e: React.FormEvent) {

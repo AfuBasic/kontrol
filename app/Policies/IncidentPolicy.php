@@ -119,6 +119,10 @@ class IncidentPolicy extends BaseContextPolicy
             return false;
         }
 
+        if ($user->contextHasRole('admin')) {
+            return true;
+        }
+
         return $incident->reporter_id === $user->id
             && $incident->status === IncidentStatus::Pending;
     }
