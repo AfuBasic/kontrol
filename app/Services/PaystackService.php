@@ -293,9 +293,11 @@ class PaystackService
      */
     public function resolveAccountNumber(string $accountNumber, string $bankCode): array
     {
-        if (app()->environment('testing', 'local')) {
-            $bankCode = config('services.paystack.test_bank_code', $bankCode);
-            $accountNumber = config('services.paystack.test_account_number', $accountNumber);
+        $isTestMode = str_starts_with(config('services.paystack.secret_key', ''), 'sk_test_');
+
+        if ($isTestMode) {
+            $bankCode = config('services.paystack.test_bank_code') ?: $bankCode;
+            $accountNumber = config('services.paystack.test_account_number') ?: $accountNumber;
         }
 
         try {
@@ -305,8 +307,8 @@ class PaystackService
             ]);
 
             if (! $response->successful()) {
-                if (app()->environment('local', 'testing')) {
-                    Log::warning('Paystack resolveAccountNumber failed in local/testing environment. Returning mock data.', [
+                if ($isTestMode) {
+                    Log::warning('Paystack resolveAccountNumber failed in test mode. Returning mock data.', [
                         'response' => $response->body(),
                     ]);
 
@@ -320,8 +322,8 @@ class PaystackService
 
             return $response->json('data');
         } catch (\Exception $e) {
-            if (app()->environment('local', 'testing')) {
-                Log::warning('Paystack resolveAccountNumber threw exception in local/testing environment. Returning mock data.', [
+            if ($isTestMode) {
+                Log::warning('Paystack resolveAccountNumber threw exception in test mode. Returning mock data.', [
                     'exception' => $e->getMessage(),
                 ]);
 
