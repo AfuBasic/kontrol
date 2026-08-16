@@ -138,7 +138,7 @@ class CreateIncidentAction
 
             if ($incident->zone_id !== null) {
                 // Scoped to a specific zone
-                $targetUserIds = $audienceResolver->userIdsInZones([$incident->zone_id]);
+                $targetUserIds = $audienceResolver->userIdsInZones($estate->id, [$incident->zone_id]);
             } else {
                 // Entire estate - fetch all accepted resident memberships
                 $targetUserIds = EstateMembership::where('estate_id', $estate->id)
