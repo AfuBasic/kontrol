@@ -21,13 +21,10 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
     public function __construct(
         public User $user,
         public Estate $estate,
-        public bool $isPasswordReset = false,
+        public bool $isResend = false,
     ) {
         // Generate signed URL on app domain that expires in 72 hours
         $parameters = ['token' => $user->id];
-        if ($this->isPasswordReset) {
-            $parameters['password_reset'] = 1;
-        }
 
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';
@@ -45,8 +42,8 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $subject = $this->isPasswordReset
-            ? "Password Reset Request for {$this->estate->name}"
+        $subject = $this->isResend
+            ? "Your invitation to {$this->estate->name} has been resent"
             : "You've been invited to join {$this->estate->name} as a Property Owner";
 
         return new Envelope(
@@ -62,7 +59,7 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
                 'estateName' => $this->estate->name,
                 'userName' => $this->user->name,
                 'invitationUrl' => $this->invitationUrl,
-                'isPasswordReset' => $this->isPasswordReset,
+                'isResend' => $this->isResend,
             ],
         );
     }

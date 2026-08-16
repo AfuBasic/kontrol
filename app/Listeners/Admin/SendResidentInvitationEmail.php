@@ -17,21 +17,18 @@ class SendResidentInvitationEmail implements ShouldQueue
     {
         app(ContextManager::class)->setSystemContext($event->estate->id);
 
-        $zoneName = null;
-        if (! $event->isPasswordReset) {
-            $membership = DB::table('estate_users_membership')
-                ->where('user_id', $event->user->id)
-                ->where('estate_id', $event->estate->id)
-                ->first();
+        $membership = DB::table('estate_users_membership')
+            ->where('user_id', $event->user->id)
+            ->where('estate_id', $event->estate->id)
+            ->first();
 
-            if ($membership?->zone_id) {
-                $zone = Zone::find($membership->zone_id);
-                $zoneName = $zone?->name;
-            }
+        $zoneName = null;
+        if ($membership?->zone_id) {
+            $zoneName = Zone::find($membership->zone_id)?->name;
         }
 
         $mailable = $event->user->hasRole('property_owner')
-            ? new PropertyOwnerInvitationMail($event->user, $event->estate, $event->isPasswordReset)
+            ? new PropertyOwnerInvitationMail($event->user, $event->estate, $event->isResend)
             : new ResidentInvitationMail($event->user, $event->estate, null, $zoneName);
 
         Mail::to($event->user->email)->send($mailable);

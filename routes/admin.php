@@ -112,6 +112,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('residents/bulk-suspend', [ResidentController::class, 'bulkSuspend'])->name('residents.bulk-suspend');
         Route::post('residents/bulk-activate', [ResidentController::class, 'bulkActivate'])->name('residents.bulk-activate');
         Route::post('residents/bulk-resend-invitation', [ResidentController::class, 'bulkResendInvitation'])->name('residents.bulk-resend-invitation');
+        Route::post('residents/bulk-assign-zone', [ResidentController::class, 'bulkAssignZone'])->name('residents.bulk-assign-zone');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
         Route::patch('residents/{resident}/mark-as-property-owner', [ResidentController::class, 'markAsPropertyOwner'])->name('residents.mark-as-property-owner');
         Route::post('residents/{resident}/resend-invitation', [ResidentController::class, 'resendInvitation'])->name('residents.resend-invitation');
@@ -142,6 +143,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('property-owners/bulk-suspend', [PropertyOwnerController::class, 'bulkSuspend'])->name('property-owners.bulk-suspend');
         Route::post('property-owners/bulk-activate', [PropertyOwnerController::class, 'bulkActivate'])->name('property-owners.bulk-activate');
         Route::post('property-owners/bulk-resend-invitation', [PropertyOwnerController::class, 'bulkResendInvitation'])->name('property-owners.bulk-resend-invitation');
+        Route::post('property-owners/bulk-assign-zone', [PropertyOwnerController::class, 'bulkAssignZone'])->name('property-owners.bulk-assign-zone');
         Route::post('property-owners/{propertyOwner}/resend-invitation', [PropertyOwnerController::class, 'resendInvitation'])->name('property-owners.resend-invitation');
         Route::patch('property-owners/{propertyOwner}/suspend', [PropertyOwnerController::class, 'suspend'])->name('property-owners.suspend');
         Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');

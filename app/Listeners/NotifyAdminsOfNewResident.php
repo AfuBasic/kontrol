@@ -13,7 +13,7 @@ class NotifyAdminsOfNewResident implements ShouldQueue
 {
     public function handle(ResidentCreated $event): void
     {
-        if ($event->isPasswordReset) {
+        if ($event->isResend) {
             return;
         }
 
