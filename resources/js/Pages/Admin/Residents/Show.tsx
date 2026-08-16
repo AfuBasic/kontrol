@@ -36,6 +36,7 @@ type ResidentProp = {
     email_verified_at: string | null;
     is_verified: boolean;
     has_password: boolean;
+    can_resend_invitation: boolean;
     role_label: string;
 };
 
@@ -163,7 +164,7 @@ export default function Show({ resident, provenance, residence, financials, acti
                     </Link>
 
                     <div className="flex items-center gap-3">
-                        {!resident.has_password && (
+                        {resident.can_resend_invitation && (
                             <button
                                 onClick={handleResendInvitation}
                                 disabled={isResending}
@@ -251,14 +252,12 @@ export default function Show({ resident, provenance, residence, financials, acti
                                         <span className="font-bold text-amber-400">Pending</span>
                                     )}
                                 </div>
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="text-slate-300">Password Set:</span>
-                                    {resident.has_password ? (
+                                {resident.has_password && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-slate-300">Password Set:</span>
                                         <span className="font-bold text-emerald-400">Yes</span>
-                                    ) : (
-                                        <span className="font-bold text-amber-400">No</span>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
