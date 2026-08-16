@@ -307,6 +307,30 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
                                 </div>
 
+                                {/* Assignee */}
+                                <div>
+                                    <label
+                                        htmlFor="assigned_to"
+                                        className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase"
+                                    >
+                                        Assign To (Optional)
+                                    </label>
+                                    <select
+                                        id="assigned_to"
+                                        value={data.assigned_to}
+                                        onChange={(e) => setData('assigned_to', e.target.value)}
+                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
+                                    >
+                                        <option value="">Unassigned</option>
+                                        {admins.map((adm) => (
+                                            <option key={adm.id} value={adm.id}>
+                                                {adm.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.assigned_to && <span className="mt-1 block text-xs font-medium text-red-600">{errors.assigned_to}</span>}
+                                </div>
+
                                 {/* Zone */}
                                 {zones.length > 0 && (
                                     <div className="sm:col-span-2">
@@ -335,30 +359,6 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                         </p>
                                     </div>
                                 )}
-
-                                {/* Assignee */}
-                                <div>
-                                    <label
-                                        htmlFor="assigned_to"
-                                        className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase"
-                                    >
-                                        Assign To (Optional)
-                                    </label>
-                                    <select
-                                        id="assigned_to"
-                                        value={data.assigned_to}
-                                        onChange={(e) => setData('assigned_to', e.target.value)}
-                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
-                                    >
-                                        <option value="">Unassigned</option>
-                                        {admins.map((adm) => (
-                                            <option key={adm.id} value={adm.id}>
-                                                {adm.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.assigned_to && <span className="mt-1 block text-xs font-medium text-red-600">{errors.assigned_to}</span>}
-                                </div>
                             </div>
                         </div>
                     </div>
