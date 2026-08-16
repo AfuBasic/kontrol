@@ -56,6 +56,8 @@ return [
     'paystack' => [
         'public_key' => env('PAYSTACK_PUBLIC_KEY'),
         'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'test_bank_code' => env('PAYSTACK_TEST_BANK_CODE'),
+        'test_account_number' => env('PAYSTACK_TEST_ACCOUNT_NUMBER'),
     ],
     'termii' => [
         'api_key' => env('TERMII_API_KEY'),

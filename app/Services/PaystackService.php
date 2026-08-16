@@ -294,7 +294,8 @@ class PaystackService
     public function resolveAccountNumber(string $accountNumber, string $bankCode): array
     {
         if (app()->environment('testing', 'local')) {
-            $bankCode = '001';
+            $bankCode = config('services.paystack.test_bank_code', $bankCode);
+            $accountNumber = config('services.paystack.test_account_number', $accountNumber);
         }
 
         try {
