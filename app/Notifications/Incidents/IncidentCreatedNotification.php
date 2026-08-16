@@ -55,6 +55,17 @@ class IncidentCreatedNotification extends Notification implements ShouldQueue
     {
         $reporterName = $this->incident->reporter?->name ?? 'A resident';
 
+        $isAdmin = false;
+        if (method_exists($notifiable, 'contextHasRole')) {
+            $isAdmin = $notifiable->contextHasRole('admin');
+        } elseif (method_exists($notifiable, 'hasRole')) {
+            $isAdmin = $notifiable->hasRole('admin');
+        }
+
+        $url = $isAdmin
+            ? '/admin/incidents/'.$this->incident->hashid
+            : '/resident/incidents/'.$this->incident->hashid;
+
         return [
             'title' => 'New Incident Reported',
             'message' => "'{$this->incident->title}' reported by {$reporterName}.",
@@ -62,7 +73,7 @@ class IncidentCreatedNotification extends Notification implements ShouldQueue
             'incident_hashid' => $this->incident->hashid,
             'reporter_name' => $reporterName,
             'type' => 'incident_created',
-            'action_url' => '/admin/incidents/'.$this->incident->hashid,
+            'action_url' => $url,
         ];
     }
 
