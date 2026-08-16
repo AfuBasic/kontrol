@@ -407,6 +407,10 @@ class ResidentController extends Controller
         abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
+        if ($resident->email_verified_at !== null) {
+            return back()->with('error', 'Cannot resend invitation. This resident has already accepted.');
+        }
+
         $action->execute($resident, $estate);
 
         return back()->with('success', 'Invitation resent successfully.');
@@ -783,6 +787,7 @@ class ResidentController extends Controller
                 'email_verified_at' => $resident->email_verified_at?->format('d M Y, h:i A'),
                 'is_verified' => $resident->email_verified_at !== null,
                 'has_password' => $resident->password !== null,
+                'can_resend_invitation' => $resident->email_verified_at === null,
                 'role_label' => $resident->roles->contains('name', 'property_owner')
                     ? 'Property Owner'
                     : ($resident->roles->contains('name', 'security')
