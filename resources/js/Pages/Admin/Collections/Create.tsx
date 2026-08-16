@@ -286,7 +286,9 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
                                 >
                                     {zones.length === 0 ? (
                                         <div className="rounded-3xl bg-amber-50 p-8 text-center ring-1 ring-amber-100">
-                                            <p className="text-sm font-bold text-amber-800">No zones have been created yet. Add a zone first to target collections geographically.</p>
+                                            <p className="text-sm font-bold text-amber-800">
+                                                No zones have been created yet. Add a zone first to target collections geographically.
+                                            </p>
                                         </div>
                                     ) : (
                                         <div className="grid gap-3">
@@ -304,7 +306,9 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
                                                         }`}
                                                     >
                                                         <div className="flex items-center gap-4">
-                                                            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}>
+                                                            <div
+                                                                className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}
+                                                            >
                                                                 <MapPin className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
                                                             </div>
                                                             <p className="text-sm font-black tracking-tight">{zone.name}</p>
@@ -315,7 +319,9 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
                                             })}
                                         </div>
                                     )}
-                                    <p className="mt-4 text-xs font-bold text-slate-500">{data.zones.length} zone{data.zones.length === 1 ? '' : 's'} selected</p>
+                                    <p className="mt-4 text-xs font-bold text-slate-500">
+                                        {data.zones.length} zone{data.zones.length === 1 ? '' : 's'} selected
+                                    </p>
                                     {errors.zones && <p className="mt-2 text-sm font-bold text-red-500">{errors.zones}</p>}
                                 </motion.div>
                             ) : data.applies_to === 'target' ? (
@@ -471,7 +477,7 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
                         <button
                             type="submit"
                             disabled={processing}
-                            className="flex items-center gap-3 rounded-[1.5rem] bg-[#1F6FDB] px-12 py-5 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-blue-700 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
+                            className="flex items-center gap-3 rounded-[1.5rem] bg-[#1F6FDB] px-12 py-5 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-slate-800 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
                         >
                             <Save className="h-5 w-5" />
                             {processing ? 'Creating Collection...' : 'Create Collection'}

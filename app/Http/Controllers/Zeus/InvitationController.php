@@ -22,10 +22,28 @@ class InvitationController extends Controller
 {
     public function show(Request $request, string $token): Response|RedirectResponse
     {
-        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->where('token', $token)->first();
+        $invitation = Invitation::withoutGlobalScope(ZoneScope::class)->with('estate')->where('token', $token)->first();
 
-        if (! $invitation || ! $invitation->isPending()) {
+        if (! $invitation) {
             return redirect()->route('invitation.invalid');
+        }
+
+        if ($invitation->isAccepted()) {
+            if (Auth::check() && strtolower(Auth::user()->email) === strtolower($invitation->email)) {
+                return redirect()->route('admin.dashboard');
+            }
+
+            return Inertia::render('Invitation/Invalid', [
+                'type' => 'admin_accepted',
+                'estateName' => $invitation->estate->name,
+            ]);
+        }
+
+        if ($invitation->isExpired() || $invitation->isCancelled()) {
+            return Inertia::render('Invitation/Invalid', [
+                'type' => 'admin_expired',
+                'estateName' => $invitation->estate->name,
+            ]);
         }
 
         $user = User::where('email', $invitation->email)->first();
@@ -47,14 +65,14 @@ class InvitationController extends Controller
             );
         }
 
-        return Inertia::render('Invitation/Accept', [
+        return Inertia::render('Invitation/AdminActivation', [
             'acceptUrl' => route('invitation.store', ['token' => $token]),
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
             ],
-            'isPasswordReset' => false,
+            'estate_name' => $invitation->estate->name,
             'token' => $token,
         ]);
     }
@@ -97,15 +115,11 @@ class InvitationController extends Controller
             return redirect()->route('partner.dashboard');
         }
 
-        $activateContext = app(ActivateContext::class);
-        $redirectUrl = $activateContext->execute($user);
+        // Initialize the context
+        app(ActivateContext::class)->execute($user);
 
-        // Security and Resident roles should see the success page
-        if ($user->contextHasRole(['security', 'resident', 'household_member'])) {
-            return redirect()->route('invitation.success');
-        }
-
-        return redirect()->intended($redirectUrl);
+        // Instead of directly going to admin.dashboard, route to setup
+        return redirect()->route('admin.setup');
     }
 
     public function success(): Response

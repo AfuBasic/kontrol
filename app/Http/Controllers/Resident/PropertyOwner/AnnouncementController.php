@@ -120,7 +120,8 @@ class AnnouncementController extends Controller
         $user = auth()->user();
 
         $residents = User::query()
-            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
             ->get(['id', 'name']);
 
@@ -148,8 +149,8 @@ class AnnouncementController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'body' => ['required', 'string', 'max:10000'],
-            'category' => ['required', 'string', 'in:general,meeting,maintenance,security,event'],
-            'priority' => ['required', 'string', 'in:normal,important,critical'],
+            'category' => ['nullable', 'string', 'in:general,meeting,maintenance,security,event'],
+            'priority' => ['nullable', 'string', 'in:normal,important,critical'],
             'applies_to' => ['required', 'string', 'in:all,target'],
             'targets' => ['required_if:applies_to,target', 'array'],
             'targets.*.type' => ['required', 'string', 'in:user,property'],
@@ -163,8 +164,8 @@ class AnnouncementController extends Controller
                 'property_owner_id' => $user->id,
                 'title' => $validated['title'],
                 'body' => $validated['body'],
-                'category' => $validated['category'],
-                'priority' => $validated['priority'],
+                'category' => $validated['category'] ?? 'general',
+                'priority' => $validated['priority'] ?? 'normal',
                 'status' => EstateBoardPostStatus::Published,
                 'audience' => EstateBoardPostAudience::Residents,
                 'applies_to' => $validated['applies_to'],
@@ -201,7 +202,8 @@ class AnnouncementController extends Controller
 
             if ($post->applies_to === 'all') {
                 $usersToNotify = User::query()
-                    ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                    ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
                     ->forEstate($estate->id)
                     ->active()
                     ->get();
@@ -213,7 +215,8 @@ class AnnouncementController extends Controller
                             $usersToNotify->push($targetUser);
                         }
                     } else {
-                        $propertyUsers = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                        $propertyUsers = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+                            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
                             ->whereHas('profile', fn ($q) => $q->where('property_id', $t['id']))
                             ->active()
                             ->get();
@@ -246,7 +249,8 @@ class AnnouncementController extends Controller
         // Calculate delivery insights
         $targetsCount = 0;
         if ($announcement->applies_to === 'all') {
-            $targetsCount = User::whereHas('estates', fn ($q) => $q->where('estates.id', $announcement->estate_id)->where('estate_users_membership.property_owner_id', $user->id))
+            $targetsCount = User::whereHas('estates', fn ($q) => $q->where('estates.id', $announcement->estate_id))
+                ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
                 ->forEstate($announcement->estate_id)
                 ->active()
                 ->count();
@@ -255,7 +259,8 @@ class AnnouncementController extends Controller
                 if ($target->target_type === 'user') {
                     $targetsCount += 1;
                 } else {
-                    $propertyUsersCount = User::whereHas('estates', fn ($q) => $q->where('estates.id', $announcement->estate_id)->where('estate_users_membership.property_owner_id', $user->id))
+                    $propertyUsersCount = User::whereHas('estates', fn ($q) => $q->where('estates.id', $announcement->estate_id))
+                        ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
                         ->whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
                         ->active()
                         ->count();

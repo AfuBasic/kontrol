@@ -5,13 +5,16 @@ namespace App\Actions\Incidents;
 use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
+use App\Events\Incidents\IncidentCreatedBroadcast;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
+use App\Models\EstateMembership;
 use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
 use App\Notifications\Incidents\IncidentCreatedNotification;
 use App\Services\CloudinaryService;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -128,6 +131,35 @@ class CreateIncidentAction
                     Notification::send($admins, new IncidentCreatedNotification($incident));
                 }
             }
+
+            // Notify the targeted audience (residents/members in the zone or the entire estate)
+            $audienceResolver = app(ZoneAudienceResolver::class);
+            $targetUserIds = [];
+
+            if ($incident->zone_id !== null) {
+                // Scoped to a specific zone
+                $targetUserIds = $audienceResolver->userIdsInZones($estate->id, [$incident->zone_id]);
+            } else {
+                // Entire estate - fetch all accepted resident memberships
+                $targetUserIds = EstateMembership::where('estate_id', $estate->id)
+                    ->where('status', 'accepted')
+                    ->pluck('user_id')
+                    ->toArray();
+            }
+
+            // Exclude the reporter and current active admins who already received/sent it
+            $excludeIds = array_merge([$user->id], $adminIds ?? []);
+            $targetUserIds = array_diff($targetUserIds, $excludeIds);
+
+            if (! empty($targetUserIds)) {
+                $residentsToNotify = User::whereIn('id', $targetUserIds)->active()->get();
+                if ($residentsToNotify->isNotEmpty()) {
+                    Notification::send($residentsToNotify, new IncidentCreatedNotification($incident));
+                }
+            }
+
+            // Dispatch real-time websocket broadcast event
+            event(new IncidentCreatedBroadcast($incident));
 
             return $incident;
         });

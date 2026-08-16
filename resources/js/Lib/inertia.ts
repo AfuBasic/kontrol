@@ -32,9 +32,7 @@ export function getVisitPathname(url: InertiaVisit['url']): string | null {
     }
 
     try {
-        const pathname = typeof url === 'string'
-            ? new URL(url, window.location.origin).pathname
-            : url.pathname;
+        const pathname = typeof url === 'string' ? new URL(url, window.location.origin).pathname : url.pathname;
 
         return normalizePathname(pathname);
     } catch {
@@ -47,9 +45,7 @@ export function isPrefetchVisit(event: InertiaVisitEvent): boolean {
 }
 
 export function isSilentVisit(event: InertiaVisitEvent): boolean {
-    return Boolean(
-        event.detail.visit.silent || event.detail.visit.headers?.['X-Background-Reload'],
-    );
+    return Boolean(event.detail.visit.silent || event.detail.visit.headers?.['X-Background-Reload']);
 }
 
 export function isBackgroundVisit(event: InertiaVisitEvent): boolean {
@@ -57,12 +53,7 @@ export function isBackgroundVisit(event: InertiaVisitEvent): boolean {
 }
 
 export function isPartialVisit(visit: InertiaVisit): boolean {
-    return (
-        (visit.only?.length ?? 0) > 0
-        || (visit.except?.length ?? 0) > 0
-        || (visit.reset?.length ?? 0) > 0
-        || visit.deferredProps === true
-    );
+    return (visit.only?.length ?? 0) > 0 || (visit.except?.length ?? 0) > 0 || (visit.reset?.length ?? 0) > 0 || visit.deferredProps === true;
 }
 
 export function isRouteChangeVisit(event: InertiaVisitEvent): boolean {

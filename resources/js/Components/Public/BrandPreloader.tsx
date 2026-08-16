@@ -221,8 +221,6 @@ export default function BrandPreloader({ onComplete, skipToKontrol = false }: Pr
 
                             <h2 className="mt-8 text-3xl font-extrabold tracking-widest text-white uppercase">Kontrol</h2>
                             <p className="mt-2 text-sm font-bold tracking-wider text-blue-400">The Operating System for Modern Estates.</p>
-
-
                         </motion.div>
                     )}
                 </AnimatePresence>

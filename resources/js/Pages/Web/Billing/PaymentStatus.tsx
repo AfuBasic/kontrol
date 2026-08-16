@@ -1,15 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import {
-    CheckCircle2,
-    Clock3,
-    AlertCircle,
-    Wallet,
-    ArrowRight,
-    ShieldCheck,
-    RefreshCw,
-    FileText,
-} from 'lucide-react';
+import { CheckCircle2, Clock3, AlertCircle, Wallet, ArrowRight, ShieldCheck, RefreshCw, FileText } from 'lucide-react';
 
 type BulkAssignment = {
     ulid: string;
@@ -66,9 +57,7 @@ export default function PaymentStatus({
             icon: CheckCircle2,
             iconWrap: 'bg-emerald-50 text-emerald-500',
             title: 'Payment received',
-            subtitle: isBulk
-                ? 'All selected bills have been settled successfully.'
-                : `Your payment for ${collectionName} has been received in full.`,
+            subtitle: isBulk ? 'All selected bills have been settled successfully.' : `Your payment for ${collectionName} has been received in full.`,
             badge: 'Settled',
             badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-100',
         },
@@ -200,9 +189,7 @@ export default function PaymentStatus({
                                             <FileText className="h-4 w-4 shrink-0 text-slate-400" />
                                             <span className="truncate text-sm font-bold text-slate-700">{item.name}</span>
                                         </div>
-                                        <span className="ml-3 shrink-0 text-sm font-black text-slate-900">
-                                            {formatCurrency(item.amount_due)}
-                                        </span>
+                                        <span className="ml-3 shrink-0 text-sm font-black text-slate-900">{formatCurrency(item.amount_due)}</span>
                                     </div>
                                 ))}
                             </div>
@@ -242,9 +229,7 @@ export default function PaymentStatus({
                         )}
 
                         {(status === 'paid_in_full' || status === 'partial') && (
-                            <p className="pt-2 text-center text-xs font-bold tracking-widest text-slate-400 uppercase">
-                                You may close this window
-                            </p>
+                            <p className="pt-2 text-center text-xs font-bold tracking-widest text-slate-400 uppercase">You may close this window</p>
                         )}
                     </div>
 

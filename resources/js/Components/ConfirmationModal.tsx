@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { ExclamationTriangleIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { AlertTriangle, Info, Loader2, X } from 'lucide-react';
 import { Fragment, useEffect, useState } from 'react';
 import ConfirmationSheet from './ConfirmationSheet';
 
@@ -50,28 +50,19 @@ export default function ConfirmationModal({
         switch (type) {
             case 'danger':
                 return {
-                    iconBg: 'bg-error-50',
-                    iconColor: 'text-error-600',
-                    buttonBg: 'bg-error-600',
-                    buttonHover: 'hover:bg-error-700',
-                    focusRing: 'focus:ring-error-500',
+                    iconBg: 'bg-rose-50 text-rose-600 ring-rose-100/50',
+                    confirmBtn: 'bg-rose-600 hover:bg-rose-700 hover:shadow-rose-600/20 text-white',
                 };
             case 'warning':
                 return {
-                    iconBg: 'bg-warning-50',
-                    iconColor: 'text-warning-600',
-                    buttonBg: 'bg-warning-600',
-                    buttonHover: 'hover:bg-warning-700',
-                    focusRing: 'focus:ring-warning-500',
+                    iconBg: 'bg-amber-50 text-amber-600 ring-amber-100/50',
+                    confirmBtn: 'bg-amber-600 hover:bg-amber-700 hover:shadow-amber-600/20 text-white',
                 };
             case 'info':
             default:
                 return {
-                    iconBg: 'bg-primary-50',
-                    iconColor: 'text-primary-600',
-                    buttonBg: 'bg-primary-600',
-                    buttonHover: 'hover:bg-primary-700',
-                    focusRing: 'focus:ring-primary-500',
+                    iconBg: 'bg-indigo-50 text-indigo-600 ring-indigo-100/50',
+                    confirmBtn: 'bg-[#1F6FDB] hover:bg-slate-800 hover:shadow-blue-500/20 text-white',
                 };
         }
     };
@@ -92,7 +83,7 @@ export default function ConfirmationModal({
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" />
+                        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" />
                     </Transition.Child>
 
                     <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -106,71 +97,51 @@ export default function ConfirmationModal({
                                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                             >
-                                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
-                                    <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
+                                <Dialog.Panel className="relative transform overflow-hidden rounded-[2.5rem] bg-white p-8 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-10 border border-slate-100">
+                                    <div className="absolute top-6 right-6">
                                         <button
                                             type="button"
-                                            className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+                                            className="rounded-full bg-slate-50 p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-800 focus:outline-none"
                                             onClick={onClose}
                                         >
                                             <span className="sr-only">Close</span>
-                                            <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                                            <X className="h-4 w-4" aria-hidden="true" />
                                         </button>
                                     </div>
-                                    <div className="sm:flex sm:items-start">
+                                    <div className="flex flex-col items-center text-center">
+                                        {/* Icon wrapper */}
                                         <div
-                                            className={`mx-auto flex h-12 w-12 shrink-0 items-center justify-center rounded-full sm:mx-0 sm:h-10 sm:w-10 ${colors.iconBg}`}
+                                            className={`flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-50 ring-4 ${colors.iconBg}`}
                                         >
                                             {type === 'info' ? (
-                                                <InformationCircleIcon className={`h-6 w-6 ${colors.iconColor}`} aria-hidden="true" />
+                                                <Info className="h-7 w-7" aria-hidden="true" />
                                             ) : (
-                                                <ExclamationTriangleIcon className={`h-6 w-6 ${colors.iconColor}`} aria-hidden="true" />
+                                                <AlertTriangle className="h-7 w-7" aria-hidden="true" />
                                             )}
                                         </div>
-                                        <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                                            <Dialog.Title as="h3" className="text-base leading-6 font-semibold text-gray-900">
+                                        <div className="mt-6">
+                                            <Dialog.Title as="h3" className="text-xl font-black tracking-tight text-slate-900">
                                                 {title}
                                             </Dialog.Title>
-                                            <div className="mt-2">
-                                                <p className="text-sm text-gray-500">{message}</p>
-                                                {children}
+                                            <div className="mt-3">
+                                                <p className="text-sm font-semibold leading-relaxed text-slate-400">{message}</p>
+                                                {children && <div className="mt-4">{children}</div>}
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                                    <div className="mt-8 flex flex-col gap-3 sm:flex-row-reverse sm:gap-4">
                                         <button
                                             type="button"
                                             disabled={isLoading}
-                                            className={`inline-flex w-full justify-center rounded-md px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto ${colors.buttonBg} ${colors.buttonHover} focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${isLoading ? 'cursor-not-allowed opacity-75' : ''}`}
+                                            className={`inline-flex w-full justify-center items-center gap-2 rounded-[1.5rem] px-8 py-4.5 text-xs font-black tracking-wider uppercase shadow-xl transition-all active:scale-95 disabled:opacity-50 sm:w-auto ${colors.confirmBtn}`}
                                             onClick={onConfirm}
                                         >
-                                            {isLoading ? (
-                                                <svg
-                                                    className="mr-2 -ml-1 h-4 w-4 animate-spin text-white"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <circle
-                                                        className="opacity-25"
-                                                        cx="12"
-                                                        cy="12"
-                                                        r="10"
-                                                        stroke="currentColor"
-                                                        strokeWidth="4"
-                                                    ></circle>
-                                                    <path
-                                                        className="opacity-75"
-                                                        fill="currentColor"
-                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                    ></path>
-                                                </svg>
-                                            ) : null}
+                                            {isLoading && <Loader2 className="h-4.5 w-4.5 animate-spin" />}
                                             {confirmLabel}
                                         </button>
                                         <button
                                             type="button"
-                                            className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                            className="inline-flex w-full justify-center rounded-[1.5rem] bg-slate-50 px-8 py-4.5 text-xs font-black tracking-wider text-slate-500 uppercase transition-all hover:bg-slate-100 active:scale-95 sm:w-auto"
                                             onClick={onClose}
                                         >
                                             {cancelLabel}

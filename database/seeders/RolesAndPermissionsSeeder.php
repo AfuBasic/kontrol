@@ -24,9 +24,13 @@ class RolesAndPermissionsSeeder extends Seeder
         $affiliateRole = Role::firstOrCreate(['name' => 'affiliate', 'estate_id' => null]);
         $poRole = Role::firstOrCreate(['name' => 'property_owner', 'estate_id' => null]);
 
-        // 4. Assign all permissions to the global admin role
+        // 4. Assign all permissions to the global admin role and all estate-scoped admin roles
         $allPermissions = PermissionSeeder::getAllPermissionNames();
         $adminRole->syncPermissions($allPermissions);
+
+        Role::where('name', 'admin')->get()->each(function ($role) use ($allPermissions) {
+            $role->syncPermissions($allPermissions);
+        });
 
         // 5. Assign specific permissions to other roles
         $securityRole->syncPermissions(['estate-board.view', 'visitors.view']);

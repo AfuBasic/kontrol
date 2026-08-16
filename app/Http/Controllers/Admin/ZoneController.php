@@ -16,15 +16,13 @@ class ZoneController extends Controller
 {
     public function index(): Response
     {
-        $context = app(ContextManager::class)->current();
+        $this->authorize('viewAny', Zone::class);
 
-        if (! $context) {
-            abort(403, 'No active context.');
-        }
+        $context = app(ContextManager::class)->current();
 
         $zones = Zone::withoutGlobalScope(ZoneScope::class)
             ->where('estate_id', $context->estateId)
-            ->withCount(['memberships', 'assignments'])
+            ->withCount(['residents', 'propertyOwners'])
             ->latest()
             ->get();
 
@@ -70,6 +68,8 @@ class ZoneController extends Controller
 
     public function destroy(Zone $zone): RedirectResponse
     {
+        $this->authorize('delete', $zone);
+
         $context = app(ContextManager::class)->current();
 
         if (! $context || $zone->estate_id !== $context->estateId) {

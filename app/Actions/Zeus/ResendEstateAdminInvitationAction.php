@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
-class ResetEstateAdminPasswordAction
+class ResendEstateAdminInvitationAction
 {
     public function execute(Estate $estate): void
     {
@@ -23,9 +23,6 @@ class ResetEstateAdminPasswordAction
         }
 
         DB::transaction(function () use ($estate, $user) {
-            // Reset password to null (forces re-setup)
-            $user->update(['password' => null]);
-
             // Reset pivot status to pending
             DB::table('estate_users_membership')
                 ->where('estate_id', $estate->id)

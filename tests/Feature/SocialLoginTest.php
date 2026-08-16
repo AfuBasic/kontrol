@@ -31,6 +31,14 @@ test('google login with existing user triggers authentication or trusted device 
     $user->estates()->attach($estate->id, ['status' => 'accepted']);
     $user->assignRole('resident');
 
+    \App\Models\AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'role_id' => Role::where('name', 'resident')->first()->id,
+        'scope_type' => 'estate',
+        'is_active' => true,
+    ]);
+
     $abstractUser = Mockery::mock('Laravel\Socialite\Two\User');
     $abstractUser->shouldReceive('getEmail')->andReturn('resident.existing@example.com');
     $abstractUser->shouldReceive('getId')->andReturn('google-987654');
@@ -44,5 +52,5 @@ test('google login with existing user triggers authentication or trusted device 
     $response = $this->get('/auth/google/callback');
 
     $this->assertAuthenticatedAs($user);
-    $response->assertRedirect(route('resident.home'));
+    $response->assertRedirect(route('resident.dashboard'));
 });

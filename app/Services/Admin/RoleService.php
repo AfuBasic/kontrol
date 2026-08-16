@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Models\AdministrativeAssignment;
 use App\Services\EstateContextService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Support\Collection;
@@ -26,6 +27,32 @@ class RoleService
             ->with('permissions')
             ->where('estate_id', $estateId)
             ->whereNotIn('name', RoleSeeder::RESERVED_ROLES)
+            ->addSelect([
+                'assignments_count' => AdministrativeAssignment::selectRaw('count(*)')
+                    ->whereColumn('role_id', 'roles.id')
+                    ->where('estate_id', $estateId),
+            ])
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Get roles that can be assigned to users in the estate.
+     * Includes both custom estate roles and specific system roles (admin, security).
+     */
+    public function getAssignableRoles(): Collection
+    {
+        $estateId = $this->estateContext->getEstateId();
+
+        // Assignable roles include the estate's custom roles and the global 'admin' and 'security' roles
+        return Role::query()
+            ->where(function ($query) use ($estateId) {
+                $query->where('estate_id', $estateId)
+                    ->orWhere(function ($q) {
+                        $q->whereNull('estate_id')
+                            ->whereIn('name', ['admin', 'security']);
+                    });
+            })
             ->orderBy('name')
             ->get();
     }

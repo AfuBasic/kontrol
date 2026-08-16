@@ -67,7 +67,7 @@ beforeEach(function () {
     };
 });
 
-it('Test 1 — Admin to Resident: revokes Admin permissions', function () {
+it('Test 1 - Admin to Resident: revokes Admin permissions', function () {
     // Act as Admin in Estate A
     $this->contextManager->activate($this->assignmentAdminA);
     $this->contextManager->resolve(($this->makeRequest)());
@@ -85,7 +85,7 @@ it('Test 1 — Admin to Resident: revokes Admin permissions', function () {
     expect($this->user->contextHasRole('resident'))->toBeTrue();
 });
 
-it('Test 2 — Resident to Admin: grants Admin permissions', function () {
+it('Test 2 - Resident to Admin: grants Admin permissions', function () {
     // Act as Resident in Estate B
     $this->contextManager->activate($this->assignmentResidentB);
     $this->contextManager->resolve(($this->makeRequest)());
@@ -100,7 +100,7 @@ it('Test 2 — Resident to Admin: grants Admin permissions', function () {
     expect($this->user->contextCan('admin-only'))->toBeTrue();
 });
 
-it('Test 3 — No stale permissions', function () {
+it('Test 3 - No stale permissions', function () {
     $this->contextManager->activate($this->assignmentAdminA);
     $this->contextManager->resolve(($this->makeRequest)());
 
@@ -112,7 +112,7 @@ it('Test 3 — No stale permissions', function () {
     expect($this->user->contextCan('admin-only'))->toBeFalse();
 });
 
-it('Test 4 — No stale roles', function () {
+it('Test 4 - No stale roles', function () {
     $this->contextManager->activate($this->assignmentAdminA);
     $this->contextManager->resolve(($this->makeRequest)());
 
@@ -124,7 +124,7 @@ it('Test 4 — No stale roles', function () {
     expect($this->user->contextHasRole('admin'))->toBeFalse();
 });
 
-it('Test 5 — Global role injection fails against Context', function () {
+it('Test 5 - Global role injection fails against Context', function () {
     // Attempt to inject a global role into Spatie
     setPermissionsTeamId($this->estateB->id); // Pretend we give it to them here
     $this->user->assignRole($this->globalRole);
@@ -137,7 +137,7 @@ it('Test 5 — Global role injection fails against Context', function () {
     expect($this->user->contextHasRole('global-admin'))->toBeFalse();
 });
 
-it('Test 6 — Wrong-estate assignment fails', function () {
+it('Test 6 - Wrong-estate assignment fails', function () {
     // Manually mess up the database to simulate a bad assignment
     $this->assignmentResidentB->update(['estate_id' => $this->estateA->id]);
 
@@ -156,7 +156,7 @@ it('Test 6 — Wrong-estate assignment fails', function () {
     expect($this->user->contextHasRole('resident'))->toBeFalse();
 });
 
-it('Test 7 — Inactive assignment fails', function () {
+it('Test 7 - Inactive assignment fails', function () {
     $this->assignmentAdminA->update(['is_active' => false]);
 
     // Activation might throw exception based on our ContextManager isValid logic
@@ -167,7 +167,7 @@ it('Test 7 — Inactive assignment fails', function () {
     expect($this->user->contextHasRole('admin'))->toBeFalse();
 });
 
-it('Test 8 — Route spoofing fails', function () {
+it('Test 8 - Route spoofing fails', function () {
     // User is active in Estate A
     $this->contextManager->activate($this->assignmentAdminA);
     $this->contextManager->resolve(($this->makeRequest)());

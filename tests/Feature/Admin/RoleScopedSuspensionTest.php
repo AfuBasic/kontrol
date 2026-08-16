@@ -2,7 +2,6 @@
 
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Admin\CreateSecurityAction;
-use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\SuspendSecurityAction;
 use App\Enums\AssignmentScope;
 use App\Models\AdministrativeAssignment;

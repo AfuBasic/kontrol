@@ -1,17 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Megaphone,
-    Search,
-    Filter,
-    X,
-    Settings,
-    Pin,
-    CalendarDays,
-    Globe,
-    Users,
-    Shield,
-} from 'lucide-react';
+import { Megaphone, Search, Filter, X, Settings, Pin, CalendarDays, Globe, Users, Shield } from 'lucide-react';
 
 import { index as boardIndex, manage } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, PostCategory } from '@/types';
@@ -65,7 +54,7 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                     category: filters.category,
                     priority: filters.priority,
                 },
-                { preserveState: true, preserveScroll: true, replace: true }
+                { preserveState: true, preserveScroll: true, replace: true },
             );
         }
     }, [debouncedSearch, filters.audience, filters.category, filters.priority]);
@@ -97,7 +86,7 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                 onFinish: () => {
                     isLoadingMore.current = false;
                 },
-            }
+            },
         );
     }, [posts.next_page_url]);
 
@@ -108,7 +97,7 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                     loadMore();
                 }
             },
-            { threshold: 0.1 }
+            { threshold: 0.1 },
         );
 
         if (loadMoreRef.current) {
@@ -126,19 +115,13 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
         }
     };
 
-    const hasActiveFilters = Boolean(
-        search || (filters.audience && filters.audience !== 'all') || filters.category || filters.priority
-    );
+    const hasActiveFilters = Boolean(search || (filters.audience && filters.audience !== 'all') || filters.category || filters.priority);
 
     // Separate Pinned / High Priority posts from general chronological feed
-    const pinnedPosts = posts.data.filter(
-        (post) => post.priority === 'important' || post.priority === 'critical'
-    );
+    const pinnedPosts = posts.data.filter((post) => post.priority === 'important' || post.priority === 'critical');
 
     // Feed posts excluding pinned (or including if filters active)
-    const regularPosts = hasActiveFilters
-        ? posts.data
-        : posts.data.filter((post) => post.priority !== 'important' && post.priority !== 'critical');
+    const regularPosts = hasActiveFilters ? posts.data : posts.data.filter((post) => post.priority !== 'important' && post.priority !== 'critical');
 
     return (
         <div className="w-full space-y-6 pb-32">
@@ -174,18 +157,18 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     {/* Search Input */}
                     <div className="relative flex-1">
-                        <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search title, content, or author..."
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 text-xs font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 shadow-2xs transition focus:border-primary-500 focus:outline-hidden"
+                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pr-4 pl-9 text-xs font-semibold text-slate-900 shadow-2xs transition placeholder:font-normal placeholder:text-slate-400 focus:border-primary-500 focus:outline-hidden"
                         />
                     </div>
 
                     {/* Audience & Category Filter Controls */}
-                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                    <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                         {/* Category Dropdown */}
                         <div className="relative">
                             <select
@@ -217,7 +200,7 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                         {/* Priority / Important Filter */}
                         <button
                             onClick={() => setFilter('priority', 'important')}
-                            className={`inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs shrink-0 ${
+                            className={`inline-flex shrink-0 items-center gap-1 rounded-xl border px-3 py-2 text-xs font-bold shadow-2xs transition ${
                                 filters.priority === 'important'
                                     ? 'border-amber-300 bg-amber-50 text-amber-700'
                                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -231,7 +214,7 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                         {hasActiveFilters && (
                             <button
                                 onClick={clearFilters}
-                                className="inline-flex items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-200 shrink-0"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-200"
                             >
                                 <X className="h-3.5 w-3.5" />
                                 <span>Clear</span>
@@ -241,17 +224,17 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                 </div>
 
                 {/* Category Chips Bar (Quick 1-tap filter) */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto pb-1">
                     {CATEGORIES.map((cat) => {
                         const isActive = (filters.category || 'all') === cat.value;
                         return (
                             <button
                                 key={cat.value}
                                 onClick={() => setFilter('category', cat.value)}
-                                className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition shrink-0 ${
+                                className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-[11px] font-bold tracking-wide transition ${
                                     isActive
-                                        ? 'bg-primary-600 text-white shadow-2xs'
-                                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                        ? 'bg-slate-950 text-white shadow-2xs'
+                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                                 }`}
                             >
                                 <span>{cat.label}</span>
@@ -263,17 +246,11 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
 
             {/* Main Feed Content Area */}
             {posts.data.length === 0 ? (
-                <EmptyState
-                    hasActiveFilters={hasActiveFilters}
-                    onClearFilters={clearFilters}
-                    onFocusComposer={handleFocusComposer}
-                />
+                <EmptyState hasActiveFilters={hasActiveFilters} onClearFilters={clearFilters} onFocusComposer={handleFocusComposer} />
             ) : (
                 <div className="space-y-8">
                     {/* Dedicated Pinned Section */}
-                    {!hasActiveFilters && pinnedPosts.length > 0 && (
-                        <PinnedSection pinnedPosts={pinnedPosts} />
-                    )}
+                    {!hasActiveFilters && pinnedPosts.length > 0 && <PinnedSection pinnedPosts={pinnedPosts} />}
 
                     {/* Chronological Feed (Grouped by Today / Yesterday / This Week / Earlier) */}
                     <FeedGroup posts={regularPosts} hasActiveFilters={hasActiveFilters} />

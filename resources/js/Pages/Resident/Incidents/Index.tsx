@@ -411,20 +411,14 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                     <p className="truncate text-sm font-bold text-slate-900">{item.title || 'Incident report'}</p>
-                                    <p className="mt-0.5 text-[11px] text-slate-500">
-                                        {item.category || 'General'} · will submit when online
-                                    </p>
+                                    <p className="mt-0.5 text-[11px] text-slate-500">{item.category || 'General'} · will submit when online</p>
                                 </div>
                                 <span className="shrink-0 rounded-full border border-amber-200 bg-white px-2 py-0.5 text-[10px] font-bold text-amber-800">
                                     {item.status === SyncStatus.Failed ? 'Failed' : item.status === SyncStatus.Syncing ? 'Syncing' : 'Pending'}
                                 </span>
                             </div>
                             {item.status === SyncStatus.Failed && (
-                                <button
-                                    type="button"
-                                    onClick={() => void retryOperation(item.id)}
-                                    className="mt-2 text-xs font-bold text-indigo-600"
-                                >
+                                <button type="button" onClick={() => void retryOperation(item.id)} className="mt-2 text-xs font-bold text-indigo-600">
                                     Retry
                                 </button>
                             )}
@@ -486,6 +480,15 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                                                         <span className="inline-flex items-center gap-1 rounded-md border border-slate-200/50 bg-slate-50 px-1.5 py-0.5 text-[9px] font-semibold text-slate-500">
                                                             <MapPin className="h-2.5 w-2.5 text-indigo-500" />
                                                             {incident.location}
+                                                        </span>
+                                                    )}
+                                                    {incident.zone ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-indigo-250 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-700 uppercase">
+                                                            Scope: {incident.zone.name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 rounded-md border border-slate-250 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
+                                                            Scope: Entire Estate
                                                         </span>
                                                     )}
                                                     <span className="xs:inline hidden text-[10px] font-semibold tracking-wider text-slate-400 uppercase">

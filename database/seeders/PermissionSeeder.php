@@ -66,21 +66,32 @@ class PermissionSeeder extends Seeder
         ],
         'transactions' => [
             'transactions.view' => 'View estate financial ledger and transactions',
-            'transactions.view_own' => 'View own transaction records only',
-            'transactions.create' => 'Create transaction records',
-            'transactions.record_offline_payment' => 'Record offline payments',
             'transactions.view_receipts' => 'View transaction receipts',
             'transactions.download_receipts' => 'Download transaction receipts',
-            'transactions.export' => 'Export transaction data',
+            'transactions.record_offline_payment' => 'Record offline payments',
             'transactions.refund' => 'Issue refunds',
             'transactions.adjust' => 'Create manual adjustments',
-            'transactions.reverse' => 'Reverse transactions',
-            'transactions.delete' => 'Delete transaction records',
-            'transactions.manage' => 'Manage all transaction operations',
+            'transactions.export' => 'Export transaction data',
             'transactions.audit' => 'View transaction audit history',
             'transactions.reports' => 'Generate financial reports',
-            'transactions.insights' => 'View financial insights',
-            'transactions.settings' => 'Manage transaction module settings',
+        ],
+        'collections' => [
+            'collections.view' => 'View collections list and details',
+            'collections.create' => 'Create new collections',
+            'collections.edit' => 'Edit existing collections',
+            'collections.delete' => 'Delete collections',
+        ],
+        'assignments' => [
+            'assignments.view' => 'View staff and authority assignments',
+            'assignments.create' => 'Create new staff and authority assignments',
+            'assignments.edit' => 'Edit existing staff and authority assignments',
+            'assignments.delete' => 'Delete staff and authority assignments',
+        ],
+        'zones' => [
+            'zones.view' => 'View zones list and details',
+            'zones.create' => 'Create new zones',
+            'zones.edit' => 'Edit existing zones',
+            'zones.delete' => 'Delete zones',
         ],
     ];
 
@@ -113,6 +124,10 @@ class PermissionSeeder extends Seeder
                 }
             }
         }
+
+        // Prune database permissions that are no longer defined in this seeder
+        $allSeededNames = self::getAllPermissionNames();
+        Permission::whereNotIn('name', $allSeededNames)->delete();
 
         $this->command->newLine();
         $this->command->info("Permissions seeded: {$created} created, {$skipped} skipped.");

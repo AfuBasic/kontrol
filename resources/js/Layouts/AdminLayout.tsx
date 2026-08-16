@@ -64,6 +64,8 @@ import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
 import ContextSwitcher from '@/Components/ContextSwitcher';
+import CommandPalette from '@/Components/Admin/CommandPalette';
+import { baseNav, secondaryNav, type NavItem } from '@/Config/navigation';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
 import usePathFromUrl from '@/Hooks/usePathFromUrl';
@@ -81,160 +83,59 @@ interface Props {
     title?: string;
 }
 
-type NavItem = {
-    name: string;
-    href: string;
-    icon: React.ComponentType<{ className?: string }>;
-    permission?: string;
-    role?: string;
-    feature?: string;
-    group?: string;
-    comingSoon?: boolean;
-};
-
-const baseNav: NavItem[] = [
-    { name: 'Dashboard', href: DashboardController.url(), icon: Squares2X2Icon },
-
-    // People Group
-    {
-        name: 'Residents',
-        href: ResidentController.index.url(),
-        icon: UsersIcon,
-        permission: 'residents.view',
-        feature: 'resident-directory',
-        group: 'People',
-    },
-    { name: 'Property Owners', href: PropertyOwnerController.index.url(), icon: UsersIcon, permission: 'property_owners.view', group: 'People' },
-    {
-        name: 'Security',
-        href: SecurityPersonnelController.index.url(),
-        icon: ShieldCheckIcon,
-        permission: 'security.view',
-        feature: 'security-personnel-management',
-        group: 'People',
-    },
-
-    // Operations & Estate Group
-    { name: 'Zones', href: '/admin/zones', icon: BuildingOfficeIcon, role: 'admin', group: 'Estate' },
-    { name: 'Announcements', href: EstateBoardController.index.url(), icon: MegaphoneIcon, feature: 'estate-board', group: 'Estate' },
-    { name: 'Incidents', href: IncidentController.index.url(), icon: ClipboardDocumentListIcon, permission: 'incidents.view', group: 'Operations' },
-    { name: 'Visitors', href: VisitorLogController.index.url(), icon: ShieldCheckIcon, permission: 'visitors.view', group: 'Operations' },
-
-    // Finance Group
-    {
-        name: 'Collections',
-        href: CollectionController.index.url(),
-        icon: BanknotesIcon,
-        feature: 'payment-collection',
-        group: 'Finance',
-    },
-    {
-        name: 'Transactions',
-        href: TransactionController.index.url(),
-        icon: CurrencyDollarIcon,
-        feature: 'payment-collection',
-        group: 'Finance',
-    },
-
-    // Governance & Access Group
-    {
-        name: 'Staff & Authority',
-        href: AdministrativeAssignmentController.index.url(),
-        icon: UserGroupIcon,
-        role: 'admin',
-        feature: 'user-access-control',
-        group: 'Access',
-    },
-    {
-        name: 'Roles',
-        href: RoleController.index.url(),
-        icon: UserGroupIcon,
-        permission: 'roles.view',
-        feature: 'user-access-control',
-        group: 'Access',
-    },
-    { name: 'Users', href: UserController.index.url(), icon: UserGroupIcon, permission: 'admins.view', group: 'Access' },
-];
-
 const primaryNav: NavItem[] = baseNav;
 
-const secondaryNav: NavItem[] = [{ name: 'Settings', href: SettingsController.index.url(), icon: Cog6ToothIcon, role: 'admin' }];
-
 const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
-    const hasActiveChild = items.some((item: any) => isCurrentPath(item.href));
-    const [isExpanded, setIsExpanded] = useState(group === 'Main' || hasActiveChild);
-
-    useEffect(() => {
-        if (hasActiveChild) {
-            setIsExpanded(true);
-        }
-    }, [hasActiveChild]);
-
     return (
-        <div className="space-y-1">
+        <div className="space-y-1 mb-6">
             {!isCollapsed && group !== 'Main' && (
-                <button
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    className="mt-2 mb-1 flex w-full items-center justify-between px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase transition-colors hover:text-white/60"
-                >
-                    <span>{group}</span>
-                    <ChevronDownIcon className={`h-3 w-3 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                </button>
+                <div className="mt-4 mb-2 px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase">
+                    {group}
+                </div>
             )}
 
-            <AnimatePresence initial={false}>
-                {(isExpanded || isCollapsed || group === 'Main') && (
-                    <motion.div
-                        key="content"
-                        initial={(isCollapsed ? false : { height: 0, opacity: 0 }) as any}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={(isCollapsed ? false : { height: 0, opacity: 0 }) as any}
-                        transition={{ duration: 0.2 }}
-                        className="space-y-1 overflow-hidden"
-                    >
-                        {items.map((item: any) =>
-                            item.comingSoon ? (
-                                <div
-                                    key={item.name}
-                                    title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
-                                    className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
-                                >
-                                    <item.icon className="h-5 w-5 shrink-0 text-white/30" />
-                                    {!isCollapsed && (
-                                        <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
-                                            <span>{item.name}</span>
-                                            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">Soon</span>
-                                        </div>
-                                    )}
+            <div className="space-y-1">
+                {items.map((item: any) =>
+                    item.comingSoon ? (
+                        <div
+                            key={item.name}
+                            title={isCollapsed ? `${item.name} (Coming Soon)` : undefined}
+                            className="group relative flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/40"
+                        >
+                            <item.icon className="h-5 w-5 shrink-0 text-white/30" />
+                            {!isCollapsed && (
+                                <div className="flex flex-1 items-center justify-between overflow-hidden whitespace-nowrap">
+                                    <span>{item.name}</span>
+                                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">Soon</span>
                                 </div>
-                            ) : (
-                                <Link
-                                    key={item.name}
-                                    href={item.href}
-                                    prefetch="click"
-                                    title={isCollapsed ? item.name : undefined}
-                                    className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
-                                        isCurrentPath(item.href)
-                                            ? 'bg-white/20 text-white shadow-sm'
-                                            : 'text-white/70 hover:bg-white/10 hover:text-white'
-                                    }`}
-                                >
-                                    {isCurrentPath(item.href) && (
-                                        <motion.div
-                                            layoutId="activeIndicator"
-                                            className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
-                                        />
-                                    )}
-                                    <item.icon
-                                        className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
-                                    />
-                                    {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
-                                </Link>
-                            ),
-                        )}
-                    </motion.div>
+                            )}
+                        </div>
+                    ) : (
+                        <Link
+                            key={item.name}
+                            href={item.href}
+                            prefetch="click"
+                            title={isCollapsed ? item.name : undefined}
+                            className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
+                                isCurrentPath(item.href)
+                                    ? 'bg-white/20 text-white shadow-sm'
+                                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                            }`}
+                        >
+                            {isCurrentPath(item.href) && (
+                                <motion.div
+                                    layoutId="activeIndicator"
+                                    className="absolute top-1/2 left-0 h-6 w-1 -translate-y-1/2 rounded-r-full bg-white"
+                                />
+                            )}
+                            <item.icon
+                                className={`h-5 w-5 shrink-0 ${isCurrentPath(item.href) ? 'text-white' : 'text-white/60 group-hover:text-white'}`}
+                            />
+                            {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
+                        </Link>
+                    ),
                 )}
-            </AnimatePresence>
+            </div>
         </div>
     );
 };
@@ -262,6 +163,7 @@ export default function AdminLayout({ children, title }: Props) {
     const [lastReceivedNotification, setLastReceivedNotification] = useState<any>(null);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const { isCollapsed, toggle } = useSidebarState();
     useForceLogout(auth?.user?.id);
 
@@ -292,6 +194,25 @@ export default function AdminLayout({ children, title }: Props) {
         setUnreadCount(auth.user?.unread_notifications_count || 0);
         setNotifications(auth.user?.notifications || []);
     }, [auth.user?.unread_notifications_count, auth.user?.notifications]);
+
+    // Command Palette Keyboard Shortcut
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                // Don't trigger if user is actively typing in an input, textarea, or select
+                const activeElement = document.activeElement as HTMLElement;
+                const isInputFocused = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA' || activeElement?.tagName === 'SELECT' || activeElement?.isContentEditable;
+                
+                if (!isInputFocused) {
+                    e.preventDefault();
+                    setCommandPaletteOpen(true);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     // Force light mode for Admin panel
     useEffect(() => {
@@ -352,6 +273,15 @@ export default function AdminLayout({ children, title }: Props) {
                     ...prev,
                 ]);
 
+                router.reload({ only: ['auth'] });
+            });
+
+            channel.listen('.incident.created', (e: any) => {
+                const message = e.message || 'A new incident was reported.';
+                setToastMessage(message);
+                setToastType('info');
+                setToastUrl(e.incident?.hashid ? `/admin/incidents/${e.incident.hashid}` : null);
+                setShowToast(true);
                 router.reload({ only: ['auth'] });
             });
         }
@@ -613,7 +543,14 @@ export default function AdminLayout({ children, title }: Props) {
 
                         <div className="flex items-center gap-2">
                             <SystemHealthMonitor hideWhenHealthy />
-                            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-all active:scale-90 active:bg-slate-100"
+                            >
+                                <span className="sr-only">Search Kontrol</span>
+                                <Search className="h-5 w-5" />
+                            </button>
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
                                 <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
                             </div>
                         </div>
@@ -627,6 +564,13 @@ export default function AdminLayout({ children, title }: Props) {
                             <PullToRefresh>{children}</PullToRefresh>
                         </div>
                     </main>
+
+                    <CommandPalette 
+                        isOpen={commandPaletteOpen} 
+                        setIsOpen={setCommandPaletteOpen} 
+                        canAccess={canAccess} 
+                        billingEnabled={billing_enabled || false} 
+                    />
 
                     <MobileBottomNav url={url} unreadNotifications={unreadCount} />
                 </Suspense>
@@ -720,7 +664,7 @@ export default function AdminLayout({ children, title }: Props) {
                     <div className="border-t border-white/10 p-3">
                         <button
                             onClick={toggle}
-                            className="mb-2 flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                            className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:bg-white/10 hover:text-white"
                         >
                             {isCollapsed ? (
                                 <ChevronDoubleRightIcon className="h-5 w-5 shrink-0" />
@@ -728,76 +672,6 @@ export default function AdminLayout({ children, title }: Props) {
                                 <ChevronDoubleLeftIcon className="h-5 w-5 shrink-0" />
                             )}
                         </button>
-
-                        <div className="relative">
-                            <button
-                                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-white/10"
-                            >
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1F6FDB] ring-2 ring-white/30">
-                                    <span className="text-xs font-semibold text-white">{auth.user?.name?.charAt(0).toUpperCase()}</span>
-                                </div>
-                                {!isCollapsed && (
-                                    <div className="flex flex-1 items-center justify-between overflow-hidden">
-                                        <p className="truncate text-left text-sm font-medium text-white">{auth.user?.name}</p>
-                                        <ChevronDownIcon
-                                            className={`h-4 w-4 shrink-0 text-white/60 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
-                                        />
-                                    </div>
-                                )}
-                            </button>
-                            <AnimatePresence>
-                                {userMenuOpen && (
-                                    <>
-                                        <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                            className="absolute bottom-full left-0 z-20 mb-2 w-56 origin-bottom-left rounded-xl border border-[#1F6FDB]/20 bg-white p-1.5 shadow-xl"
-                                        >
-                                            <Link
-                                                href={ProfileController.edit.url()}
-                                                onClick={() => setUserMenuOpen(false)}
-                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                            >
-                                                <UserCircleIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                Profile
-                                            </Link>
-                                            {isAdmin && hasActivityLogs && (
-                                                <Link
-                                                    href={ActivityLogController.index.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                >
-                                                    <ClipboardDocumentListIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Activity Log
-                                                </Link>
-                                            )}
-
-                                            {(auth.user?.available_contexts?.length || 0) > 1 && (
-                                                <Link
-                                                    href={ContextController.index.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                                >
-                                                    <BuildingOfficeIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                    Switch Workspace
-                                                </Link>
-                                            )}
-
-                                            <button
-                                                onClick={() => setShowLogoutConfirmation(true)}
-                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#1F6FDB]"
-                                            >
-                                                <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-[#1F6FDB]" />
-                                                Sign out
-                                            </button>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
                     </div>
                 </motion.aside>
 
@@ -805,22 +679,50 @@ export default function AdminLayout({ children, title }: Props) {
                     initial={false}
                     animate={{ marginLeft: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="min-h-screen flex-1 px-6 py-8 lg:px-8"
+                    className="min-h-screen flex-1 flex flex-col"
                 >
-                    <header className="mb-8 flex items-center justify-end">
-                        <div className="flex items-center gap-3">
-                            <ContextSwitcher />
+                    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-xl lg:px-8">
+                        <div className="flex items-center gap-4">
+                            <ContextSwitcher variant="light" />
+                        </div>
+
+                        <div className="hidden flex-1 justify-center px-4 md:flex md:px-8">
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="group flex w-full max-w-md items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-100"
+                            >
+                                <Search className="h-4 w-4 text-slate-400 group-hover:text-slate-500" />
+                                <span className="flex-1 text-left">Search Kontrol...</span>
+                                <kbd className="hidden rounded bg-white px-2 py-0.5 text-xs font-semibold text-slate-400 ring-1 ring-slate-200 ring-inset sm:block">
+                                    <span className="text-xs">⌘</span>K
+                                </kbd>
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-6">
                             <SystemHealthMonitor hideWhenHealthy />
+
+                            {/* Mobile Search Trigger */}
+                            <button
+                                onClick={() => setCommandPaletteOpen(true)}
+                                className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 md:hidden"
+                            >
+                                <span className="sr-only">Search Kontrol</span>
+                                <Search className="h-5 w-5" />
+                            </button>
+
+                            {/* Notifications */}
                             <div className="relative">
                                 <button
                                     onClick={() => setNotificationOpen(!notificationOpen)}
-                                    className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-all hover:text-[#1F6FDB] hover:shadow-md"
+                                    className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2"
                                 >
-                                    <BellIcon className="h-6 w-6" />
+                                    <span className="sr-only">View notifications</span>
+                                    <BellIcon className="h-5 w-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-2 right-2 flex h-2.5 w-2.5">
+                                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white"></span>
+                                            <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                                         </span>
                                     )}
                                 </button>
@@ -878,7 +780,6 @@ export default function AdminLayout({ children, title }: Props) {
                                                             setUnreadCount(0);
                                                             setNotifications([]);
                                                             setNotificationOpen(false);
-                                                            // Clear native notifications and badge
                                                             if (Capacitor.isNativePlatform()) {
                                                                 PushNotifications.removeAllDeliveredNotifications();
                                                                 if ('setAppBadge' in navigator) {
@@ -896,11 +797,83 @@ export default function AdminLayout({ children, title }: Props) {
                                     )}
                                 </AnimatePresence>
                             </div>
+
+                            <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200" aria-hidden="true" />
+
+                            {/* User Profile */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                    className="flex items-center gap-2 rounded-full p-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2"
+                                >
+                                    <span className="sr-only">Open user menu</span>
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A3D91] text-xs font-semibold text-white ring-2 ring-white">
+                                        {auth.user?.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="hidden lg:block max-w-[120px] truncate">{auth.user?.name}</span>
+                                    <ChevronDownIcon
+                                        className={`hidden lg:block h-4 w-4 shrink-0 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                                    />
+                                </button>
+                                <AnimatePresence>
+                                    {userMenuOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                                                className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-xl border border-slate-200/60 bg-white p-1.5 shadow-xl"
+                                            >
+                                                <Link
+                                                    href={ProfileController.edit.url()}
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                >
+                                                    <UserCircleIcon className="h-4 w-4 text-slate-400" />
+                                                    Profile
+                                                </Link>
+                                                {isAdmin && hasActivityLogs && (
+                                                    <Link
+                                                        href={ActivityLogController.index.url()}
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                    >
+                                                        <ClipboardDocumentListIcon className="h-4 w-4 text-slate-400" />
+                                                        Activity Log
+                                                    </Link>
+                                                )}
+
+                                                {(auth.user?.available_contexts?.length || 0) > 1 && (
+                                                    <Link
+                                                        href={ContextController.index.url()}
+                                                        onClick={() => setUserMenuOpen(false)}
+                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                    >
+                                                        <BuildingOfficeIcon className="h-4 w-4 text-slate-400" />
+                                                        Switch Workspace
+                                                    </Link>
+                                                )}
+
+                                                <button
+                                                    onClick={() => setShowLogoutConfirmation(true)}
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"
+                                                >
+                                                    <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-slate-400" />
+                                                    Sign out
+                                                </button>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </header>
 
-                    <PendingInvoiceNotification invoice={pendingInvoice} />
-                    {children}
+                    <main className="flex-1 px-6 py-8 lg:px-8">
+                        <PendingInvoiceNotification invoice={pendingInvoice} />
+                        {children}
+                    </main>
                 </motion.div>
             </div>
 

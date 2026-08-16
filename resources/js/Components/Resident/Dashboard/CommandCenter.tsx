@@ -114,16 +114,18 @@ export default function CommandCenter({ expectedToday, lastActivity, onAction, c
 
                 <div className={`mb-10 grid grid-cols-1 ${canGenerate ? 'sm:grid-cols-2' : ''} items-stretch gap-4`}>
                     {/* Expected Today Card with gradient & glowing effect */}
-                    <div className="relative overflow-hidden flex flex-col justify-center rounded-[24px] bg-linear-to-br from-indigo-500/10 via-indigo-600/5 to-transparent p-5 ring-1 ring-indigo-500/20 backdrop-blur-md transition-all hover:ring-indigo-500/40">
+                    <div className="relative flex flex-col justify-center overflow-hidden rounded-[24px] bg-linear-to-br from-indigo-500/10 via-indigo-600/5 to-transparent p-5 ring-1 ring-indigo-500/20 backdrop-blur-md transition-all hover:ring-indigo-500/40">
                         {/* Corner Glow */}
-                        <div className="absolute top-0 right-0 h-16 w-16 bg-indigo-500/25 rounded-full blur-xl pointer-events-none" />
+                        <div className="pointer-events-none absolute top-0 right-0 h-16 w-16 rounded-full bg-indigo-500/25 blur-xl" />
 
                         <p className="mb-1 text-[10px] font-black tracking-widest text-indigo-400/80 uppercase">Expected Today</p>
                         <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-black text-white tracking-tight">
+                            <span className="text-3xl font-black tracking-tight text-white">
                                 <CountUpNumber value={expectedToday} />
                             </span>
-                            <span className="text-xs font-bold text-indigo-300/60">visitors</span>
+                            <span className="text-xs font-bold text-indigo-300/60">
+                                {expectedToday === 1 ? 'visitor' : 'visitors'}
+                            </span>
                         </div>
                     </div>
 

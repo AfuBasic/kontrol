@@ -19,6 +19,8 @@ import {
     LinkIcon,
     Home,
     Building,
+    Eye,
+    MapPin,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
@@ -99,6 +101,7 @@ export default function Residents({
     insights: initialInsights,
     incompleteResidents,
     inviteLink,
+    zones = [],
 }: Props) {
     const residents = initialResidents || { data: [], current_page: 1, last_page: 1, total: 0, links: [], next_page_url: null };
     const hasResidents = residents.data.length > 0;
@@ -119,6 +122,8 @@ export default function Residents({
 
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showMoveToZone, setShowMoveToZone] = useState(false);
+    const [selectedZoneId, setSelectedZoneId] = useState('');
     const [showInviteModal, setShowInviteModal] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isBulkActionRunning, setIsBulkActionRunning] = useState(false);
@@ -278,6 +283,23 @@ export default function Residents({
         );
     };
 
+    const handleBulkAssignZone = () => {
+        if (selectedIds.length === 0) return;
+        setIsBulkActionRunning(true);
+        router.post(
+            '/admin/residents/bulk-assign-zone',
+            { ids: selectedIds, zone_id: selectedZoneId || null },
+            {
+                onSuccess: () => {
+                    setSelectedIds([]);
+                    setShowMoveToZone(false);
+                    setSelectedZoneId('');
+                },
+                onFinish: () => setIsBulkActionRunning(false),
+            },
+        );
+    };
+
     // Toggle invite link
     const toggleInviteLink = () => {
         router.post('/admin/residents/invite-link/toggle', {}, { preserveScroll: true });
@@ -384,47 +406,187 @@ export default function Residents({
                     data={['insights', 'incompleteResidents']}
                     fallback={<div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />}
                 >
-                    {((insights && insights.length > 0) || (incompleteResidents && incompleteResidents.length > 0)) && (
-                        <div className="rounded-2xl border border-blue-100/50 bg-linear-to-br from-blue-50/40 to-indigo-50/20 p-4.5 shadow-xs">
-                            <div className="mb-2.5 flex items-center gap-2">
-                                <AlertCircle className="h-4 w-4 text-blue-600" />
-                                <h3 className="text-xs font-black tracking-wider text-blue-900 uppercase">Attention Required</h3>
-                            </div>
-                            <ul className="space-y-2">
-                                {insights.map((insight, idx) => {
-                                    if (insight.includes('require profile completion')) return null;
-                                    return (
-                                        <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                                            <span>{insight}</span>
-                                        </li>
-                                    );
-                                })}
-                                {incompleteResidents && incompleteResidents.length > 0 && (
-                                    <li className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
-                                        <span>
-                                            {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile
-                                            completion:{' '}
-                                            <span className="inline-flex flex-wrap gap-x-1.5 gap-y-0.5">
-                                                {incompleteResidents.map((r, idx) => (
-                                                    <span key={r.id} className="inline-flex items-center">
-                                                        <Link
-                                                            href={`/admin/residents/${r.id}/edit`}
-                                                            className="font-bold text-blue-700 underline hover:text-blue-900"
-                                                        >
-                                                            {r.name}
-                                                        </Link>
-                                                        {idx < incompleteResidents.length - 1 && <span className="mr-1 text-blue-950/80">,</span>}
-                                                    </span>
+                    {(() => {
+                        const [isCollapsed, setIsCollapsed] = useState(false);
+                        const [showDrawer, setShowDrawer] = useState(false);
+                        const [drawerSearch, setDrawerSearch] = useState('');
+
+                        const filteredIncomplete = (incompleteResidents || []).filter(r => 
+                            r.name.toLowerCase().includes(drawerSearch.toLowerCase())
+                        );
+
+                        const hasIncomplete = incompleteResidents && incompleteResidents.length > 0;
+                        const otherInsights = insights.filter(insight => !insight.includes('require profile completion'));
+                        const hasInsights = otherInsights.length > 0 || hasIncomplete;
+
+                        if (!hasInsights) return null;
+
+                        return (
+                            <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <AlertCircle className="h-4.5 w-4.5 text-indigo-600" />
+                                        <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Attention Required</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsCollapsed(!isCollapsed)}
+                                        className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                                    >
+                                        <motion.span
+                                            animate={{ rotate: isCollapsed ? 180 : 0 }}
+                                            className="block"
+                                        >
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                        </motion.span>
+                                    </button>
+                                </div>
+
+                                <AnimatePresence initial={false}>
+                                    {!isCollapsed ? (
+                                        <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="mt-3.5 space-y-3">
+                                                {otherInsights.map((insight, idx) => (
+                                                    <div key={idx} className="flex items-start gap-2.5 text-xs font-semibold text-slate-600">
+                                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                                                        <span>{insight}</span>
+                                                    </div>
                                                 ))}
-                                            </span>
-                                        </span>
-                                    </li>
-                                )}
-                            </ul>
-                        </div>
-                    )}
+
+                                                {hasIncomplete && (
+                                                    <div className="rounded-xl bg-slate-50/70 p-3 ring-1 ring-slate-100/30">
+                                                        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                                                            <div>
+                                                                <p className="text-xs font-bold text-slate-800">
+                                                                    {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile completion
+                                                                </p>
+                                                                <div className="mt-1.5 flex items-center gap-1.5">
+                                                                    <div className="flex -space-x-1.5 overflow-hidden">
+                                                                        {incompleteResidents.slice(0, 3).map((r, i) => (
+                                                                            <div
+                                                                                key={r.id}
+                                                                                className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] font-black text-slate-700 ring-2 ring-white"
+                                                                            >
+                                                                                {r.name.charAt(0).toUpperCase()}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-[10px] font-bold text-slate-400">
+                                                                        {incompleteResidents.slice(0, 3).map(r => r.name).join(', ')}
+                                                                        {incompleteResidents.length > 3 && ` +${incompleteResidents.length - 3} more`}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => setShowDrawer(true)}
+                                                                className="self-start rounded-lg bg-indigo-50 px-3 py-1.5 text-[11px] font-black tracking-wide text-indigo-700 uppercase hover:bg-indigo-100 sm:self-center"
+                                                            >
+                                                                Review Residents &rarr;
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    ) : (
+                                        <div className="mt-1 text-[11px] font-semibold text-slate-400">
+                                            {hasIncomplete ? `${incompleteResidents.length} profile completion items pending` : 'Operational alerts collapsed'}
+                                        </div>
+                                    )}
+                                </AnimatePresence>
+
+                                {/* SIDE DRAWER / BOTTOM SHEET */}
+                                <AnimatePresence>
+                                    {showDrawer && (
+                                        <>
+                                            {/* Backdrop */}
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                onClick={() => setShowDrawer(false)}
+                                                className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs"
+                                            />
+
+                                            {/* Drawer Container */}
+                                            <motion.div
+                                                initial={{ x: '100%' }}
+                                                animate={{ x: 0 }}
+                                                exit={{ x: '100%' }}
+                                                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                                                className="fixed right-0 bottom-0 top-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
+                                            >
+                                                {/* Header */}
+                                                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                                                    <div>
+                                                        <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">Profile Completion Needed</h3>
+                                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400">{incompleteResidents.length} Residents</p>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setShowDrawer(false)}
+                                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                                                    >
+                                                        <X className="h-5 w-5" />
+                                                    </button>
+                                                </div>
+
+                                                {/* Search bar inside drawer */}
+                                                <div className="border-b border-slate-100 p-4">
+                                                    <div className="relative">
+                                                        <MagnifyingGlassIcon className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-slate-400" />
+                                                        <input
+                                                            type="text"
+                                                            value={drawerSearch}
+                                                            onChange={(e) => setDrawerSearch(e.target.value)}
+                                                            placeholder="Search incomplete residents..."
+                                                            className="w-full rounded-xl border border-slate-200 py-2 pr-3 pl-9.5 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Incomplete resident list */}
+                                                <div className="flex-1 overflow-y-auto divide-y divide-slate-50 p-4">
+                                                    {filteredIncomplete.length > 0 ? (
+                                                        filteredIncomplete.map((r) => (
+                                                            <div key={r.id} className="flex items-center justify-between py-3">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
+                                                                        {r.name.charAt(0).toUpperCase()}
+                                                                    </div>
+                                                                    <div>
+                                                                        <p className="text-xs font-bold text-slate-800">{r.name}</p>
+                                                                        <span className="mt-0.5 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-100">
+                                                                            Profile Incomplete
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                                <Link
+                                                                    href={`/admin/residents/${r.id}/edit`}
+                                                                    className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] font-black tracking-wider text-slate-700 uppercase hover:bg-slate-100"
+                                                                >
+                                                                    Edit Profile
+                                                                </Link>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                                                            <p className="text-xs font-semibold text-slate-400">No matching residents requiring attention.</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        );
+                    })()}
                 </Deferred>
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
@@ -559,6 +721,9 @@ export default function Residents({
                                         <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                             Status
                                         </th>
+                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                            Zone
+                                        </th>
                                         <th className="w-20 px-4 py-3.5 text-right"></th>
                                     </tr>
                                 </thead>
@@ -602,9 +767,12 @@ export default function Residents({
                                                             {initial}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <span className="block max-w-[130px] truncate text-xs font-bold text-slate-900">
+                                                            <Link
+                                                                href={`/admin/residents/${resident.id}`}
+                                                                className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                            >
                                                                 {resident.name}
-                                                            </span>
+                                                            </Link>
                                                             <span className="mt-0.5 inline-flex rounded-md bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-400 uppercase ring-1 ring-slate-100">
                                                                 {resident.role_label}
                                                             </span>
@@ -672,6 +840,19 @@ export default function Residents({
                                                     </span>
                                                 </td>
 
+                                                {/* Zone */}
+                                                <td className="px-4 py-3.5">
+                                                    {resident.zone_name && resident.zone_name !== 'Entire Estate' ? (
+                                                        <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 ring-1 ring-violet-100">
+                                                            {resident.zone_name}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                                            Entire Estate
+                                                        </span>
+                                                    )}
+                                                </td>
+
                                                 {/* Actions */}
                                                 <td className="relative px-4 py-3.5 text-right">
                                                     <div className="flex items-center justify-end gap-1">
@@ -729,6 +910,13 @@ export default function Residents({
                                                             <>
                                                                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
                                                                 <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
+                                                                    <Link
+                                                                        href={`/admin/residents/${resident.id}`}
+                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                    >
+                                                                        <Eye className="h-3.5 w-3.5 text-slate-400" />
+                                                                        View Profile
+                                                                    </Link>
                                                                     {!resident.is_estate_creator && (
                                                                         <button
                                                                             onClick={() => {
@@ -922,7 +1110,7 @@ export default function Residents({
                         initial={{ opacity: 0, y: 100 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 100 }}
-                        className="fixed bottom-6 left-1/2 z-40 w-full max-w-2xl -translate-x-1/2 px-4"
+                        className="fixed bottom-6 left-1/2 z-40 w-full max-w-3xl -translate-x-1/2 px-4"
                     >
                         <div className="flex items-center justify-between gap-4 rounded-2xl border border-slate-900/10 bg-slate-950/95 px-6 py-4.5 shadow-xl backdrop-blur-md">
                             <div className="flex items-center gap-2">
@@ -931,6 +1119,15 @@ export default function Residents({
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
+                                {zones.length > 0 && (
+                                    <button
+                                        onClick={() => setShowMoveToZone(true)}
+                                        disabled={isBulkActionRunning}
+                                        className="rounded-xl bg-slate-800 px-3.5 py-2 text-[11px] font-black tracking-wider text-white uppercase transition hover:bg-slate-700 disabled:opacity-40"
+                                    >
+                                        Move to Zone
+                                    </button>
+                                )}
                                 <button
                                     onClick={handleBulkResend}
                                     disabled={isBulkActionRunning}
@@ -1011,6 +1208,68 @@ export default function Residents({
                                     className="inline-flex items-center gap-2 rounded-xl bg-red-600 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-50"
                                 >
                                     {isDeleting ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : 'Yes, Delete Selected'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showMoveToZone && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50 text-violet-700 shadow-inner">
+                                <MapPin className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-base font-black tracking-wide text-slate-900 uppercase">Move to Zone</h3>
+                            <p className="mt-2 text-xs leading-relaxed font-semibold text-slate-600">
+                                Assign {selectedIds.length} selected resident{selectedIds.length === 1 ? '' : 's'} to a zone, or keep them
+                                estate-wide.
+                            </p>
+                            <label htmlFor="bulk_zone_id" className="mt-5 block text-xs font-black tracking-wider text-slate-700 uppercase">
+                                Zone
+                            </label>
+                            <select
+                                id="bulk_zone_id"
+                                value={selectedZoneId}
+                                onChange={(e) => setSelectedZoneId(e.target.value)}
+                                className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                            >
+                                <option value="">Entire Estate</option>
+                                {zones.map((zone) => (
+                                    <option key={zone.id} value={zone.id}>
+                                        {zone.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <div className="mt-6 flex justify-end gap-2.5">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowMoveToZone(false)}
+                                    disabled={isBulkActionRunning}
+                                    className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleBulkAssignZone}
+                                    disabled={isBulkActionRunning}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4.5 py-2.5 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-50"
+                                >
+                                    {isBulkActionRunning ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : 'Move Selected'}
                                 </button>
                             </div>
                         </motion.div>

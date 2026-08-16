@@ -349,8 +349,10 @@ export default function Login() {
     }, []);
     /* eslint-enable react-hooks/exhaustive-deps */
 
-    function submit(e: React.FormEvent) {
-        e.preventDefault();
+    function submit(e?: React.FormEvent | React.KeyboardEvent) {
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
         setLoginError(null);
         clearErrors();
         post('/login', {
@@ -687,7 +689,7 @@ export default function Login() {
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.4, delay: 0.1 }}
-                            onSubmit={submit}
+                            onSubmit={(e) => submit(e)}
                             className="space-y-5 lg:mt-8"
                         >
                             <div>
@@ -699,6 +701,13 @@ export default function Login() {
                                     type="email"
                                     value={data.email}
                                     onChange={(e) => setData('email', e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            submit(e);
+                                        }
+                                    }}
+                                    enterKeyHint="go"
                                     className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:outline-none"
                                     placeholder="you@example.com"
                                     autoComplete="email"

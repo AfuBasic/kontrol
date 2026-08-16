@@ -1,14 +1,7 @@
 import { isConflictStatus, resolveConflict, ConflictStrategy } from './ConflictResolver';
 import { NetworkMonitor, type NetworkQuality } from './NetworkMonitor';
 import { clear, createId, get, getAll, put, remove, type StoreConfig } from './OfflineStorage/BaseStore';
-import {
-    computeBackoffMs,
-    getRetryPolicy,
-    hasExhaustedRetries,
-    isExpired,
-    type RetryPolicy,
-    type RetryPolicyKey,
-} from './RetryPolicy';
+import { computeBackoffMs, getRetryPolicy, hasExhaustedRetries, isExpired, type RetryPolicy, type RetryPolicyKey } from './RetryPolicy';
 import { SyncStatus, type HttpMethod, type OperationType } from './SyncStatus';
 
 export interface QueuedOperation {
@@ -292,9 +285,7 @@ class SyncEngineImpl {
 
     async clearSynced(): Promise<void> {
         const operations = await this.loadOperations();
-        await Promise.all(
-            operations.filter((op) => op.status === SyncStatus.Synced).map((op) => remove(queueConfig, QUEUE_STORE, op.id)),
-        );
+        await Promise.all(operations.filter((op) => op.status === SyncStatus.Synced).map((op) => remove(queueConfig, QUEUE_STORE, op.id)));
         await this.emit();
     }
 
@@ -491,9 +482,7 @@ class SyncEngineImpl {
     }
 
     private buildState(operations: QueuedOperation[]): SyncState {
-        const pendingCount = operations.filter(
-            (op) => op.status === SyncStatus.Pending || op.status === SyncStatus.Syncing,
-        ).length;
+        const pendingCount = operations.filter((op) => op.status === SyncStatus.Pending || op.status === SyncStatus.Syncing).length;
         const failedCount = operations.filter((op) => op.status === SyncStatus.Failed).length;
         const conflictCount = operations.filter((op) => op.status === SyncStatus.Conflict).length;
 

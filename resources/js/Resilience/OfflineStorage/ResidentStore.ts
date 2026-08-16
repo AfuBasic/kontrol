@@ -1,4 +1,4 @@
-import { SyncStatus } from '../SyncStatus';
+import type { SyncStatus } from '../SyncStatus';
 import { clear, get, getAll, put, remove, type StoreConfig } from './BaseStore';
 
 const PASSES_STORE = 'pending_passes';

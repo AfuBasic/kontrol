@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, AlertCircle, Loader2 } from 'lucide-react';
@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+import { show as showResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 
 interface TransactionDetail {
     ulid: string;
@@ -22,7 +23,7 @@ interface TransactionDetail {
     coupon_code: string | null;
     created_at: string | null;
     paid_at: string | null;
-    resident: { id: number; name: string; email: string } | null;
+    resident: { id: number; ulid: string; name: string; email: string } | null;
     collection: { id: number; name: string } | null;
     created_by: { id: number; name: string } | null;
     approved_by: { id: number; name: string } | null;
@@ -114,22 +115,20 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-                        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col bg-slate-50 shadow-2xl border-l border-slate-200/50"
+                        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-slate-200/50 bg-slate-50 shadow-2xl"
                     >
                         {/* Drawer Header */}
-                        <div className="flex items-center justify-between px-6 py-4.5 bg-white border-b border-slate-200/50">
+                        <div className="flex items-center justify-between border-b border-slate-200/50 bg-white px-6 py-4.5">
                             <div>
-                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
-                                    Ledger Receipt
-                                </span>
-                                <h2 className="text-sm font-black text-slate-900 tracking-tight mt-0.5">
+                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Ledger Receipt</span>
+                                <h2 className="mt-0.5 text-sm font-black tracking-tight text-slate-900">
                                     {transaction?.reference_number || 'Loading details...'}
                                 </h2>
                             </div>
                             <button
                                 type="button"
                                 onClick={onClose}
-                                className="rounded-xl p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                                className="rounded-xl p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                             >
                                 <X className="h-4.5 w-4.5" />
                             </button>
@@ -139,8 +138,8 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6">
                             {loading && (
                                 <div className="space-y-4">
-                                    <div className="h-28 animate-pulse rounded-3xl bg-white border border-slate-150" />
-                                    <div className="h-40 animate-pulse rounded-3xl bg-white border border-slate-150" />
+                                    <div className="border-slate-150 h-28 animate-pulse rounded-3xl border bg-white" />
+                                    <div className="border-slate-150 h-40 animate-pulse rounded-3xl border bg-white" />
                                 </div>
                             )}
 
@@ -149,60 +148,72 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                     {/* ── Apple Wallet style Premium Invoice Bill header ── */}
                                     <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-xs">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
                                                 {transaction.type_label}
                                             </span>
-                                            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-extrabold uppercase ${
-                                                transaction.status_label.toLowerCase().includes('success') || transaction.status_label.toLowerCase().includes('paid')
-                                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                                                    : transaction.status_label.toLowerCase().includes('fail')
-                                                    ? 'bg-rose-50 text-rose-700 border border-rose-105'
-                                                    : 'bg-amber-50 text-amber-700 border border-amber-105'
-                                            }`}>
+                                            <span
+                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-extrabold uppercase ${
+                                                    transaction.status_label.toLowerCase().includes('success') ||
+                                                    transaction.status_label.toLowerCase().includes('paid')
+                                                        ? 'border border-emerald-100 bg-emerald-50 text-emerald-700'
+                                                        : transaction.status_label.toLowerCase().includes('fail')
+                                                          ? 'border-rose-105 border bg-rose-50 text-rose-700'
+                                                          : 'border-amber-105 border bg-amber-50 text-amber-700'
+                                                }`}
+                                            >
                                                 {transaction.status_label}
                                             </span>
                                         </div>
                                         <h3 className="mt-3 text-3xl font-black tracking-tight text-slate-900">
                                             {formatCurrency(transaction.amount)}
                                         </h3>
-                                        <p className="mt-1 text-xs text-slate-500 font-medium">
+                                        <p className="mt-1 text-xs font-medium text-slate-500">
                                             {transaction.description || 'No transaction description recorded.'}
                                         </p>
                                     </div>
 
                                     {/* Resident card */}
                                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
-                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                        <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
                                             <User className="h-4 w-4 text-slate-400" />
                                             <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Resident Owner</span>
                                         </div>
                                         {transaction.resident ? (
                                             <div>
-                                                <p className="font-extrabold text-slate-800 text-sm">{transaction.resident.name}</p>
-                                                <p className="text-xs text-slate-400 font-semibold">{transaction.resident.email}</p>
+                                                <Link
+                                                    href={showResident.url(transaction.resident.ulid)}
+                                                    className="text-sm font-extrabold text-slate-800 transition-colors hover:text-indigo-600"
+                                                >
+                                                    {transaction.resident.name}
+                                                </Link>
+                                                <p className="text-xs font-semibold text-slate-400">{transaction.resident.email}</p>
                                             </div>
                                         ) : (
-                                            <p className="text-xs text-slate-400 font-semibold">No resident linked</p>
+                                            <p className="text-xs font-semibold text-slate-400">No resident linked</p>
                                         )}
                                     </div>
 
                                     {/* Collection details */}
                                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
-                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                        <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
                                             <ShieldCheck className="h-4 w-4 text-slate-400" />
                                             <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Linked Levy</span>
                                         </div>
-                                        <p className="font-extrabold text-slate-800 text-sm">{transaction.collection?.name || 'Manual system ledger entry'}</p>
+                                        <p className="text-sm font-extrabold text-slate-800">
+                                            {transaction.collection?.name || 'Manual system ledger entry'}
+                                        </p>
                                         {transaction.assignment && (
-                                            <p className="mt-1.5 text-xs text-slate-500 font-medium leading-relaxed">
-                                                Paid {formatCurrency(transaction.assignment.amount_paid)} of {formatCurrency(transaction.assignment.amount_due)} outstanding balance ({transaction.assignment.status}).
+                                            <p className="mt-1.5 text-xs leading-relaxed font-medium text-slate-500">
+                                                Paid {formatCurrency(transaction.assignment.amount_paid)} of{' '}
+                                                {formatCurrency(transaction.assignment.amount_due)} outstanding balance (
+                                                {transaction.assignment.status}).
                                             </p>
                                         )}
                                     </div>
 
                                     {/* Payment details */}
                                     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
-                                        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                        <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
                                             <CreditCard className="h-4 w-4 text-slate-400" />
                                             <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Payment Metadata</span>
                                         </div>
@@ -212,31 +223,38 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                             <InfoRow label="Gateway Ref" value={transaction.gateway_reference} />
                                             <InfoRow label="Receipt Number" value={transaction.receipt_number || transaction.reference_number} />
                                             {transaction.coupon_code && <InfoRow label="Coupon" value={transaction.coupon_code} />}
-                                            <InfoRow label="Initiated At" value={transaction.created_at ? format(parseISO(transaction.created_at), 'PPpp') : null} />
-                                            <InfoRow label="Cleared At" value={transaction.paid_at ? format(parseISO(transaction.paid_at), 'PPpp') : null} />
+                                            <InfoRow
+                                                label="Initiated At"
+                                                value={transaction.created_at ? format(parseISO(transaction.created_at), 'PPpp') : null}
+                                            />
+                                            <InfoRow
+                                                label="Cleared At"
+                                                value={transaction.paid_at ? format(parseISO(transaction.paid_at), 'PPpp') : null}
+                                            />
                                         </div>
                                     </div>
 
                                     {/* Audit History */}
                                     {permissions.audit && transaction.audit_trail.length > 0 && (
                                         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
-                                            <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                            <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
                                                 <RefreshCcw className="h-4 w-4 text-slate-400" />
-                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Ledger Audit Trail</span>
+                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Ledger Audit Trail
+                                                </span>
                                             </div>
                                             <div className="space-y-3">
                                                 {transaction.audit_trail.map((audit, i) => (
-                                                    <div key={i} className="flex gap-2.5 items-start">
-                                                        <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-slate-350" />
+                                                    <div key={i} className="flex items-start gap-2.5">
+                                                        <div className="bg-slate-350 mt-1 h-2 w-2 shrink-0 rounded-full" />
                                                         <div className="min-w-0">
-                                                            <p className="text-xs font-bold text-slate-800 leading-tight">{audit.action}</p>
+                                                            <p className="text-xs leading-tight font-bold text-slate-800">{audit.action}</p>
                                                             {audit.reason && (
-                                                                <p className="mt-0.5 text-[11px] text-slate-400 italic">
-                                                                    "{audit.reason}"
-                                                                </p>
+                                                                <p className="mt-0.5 text-[11px] text-slate-400 italic">"{audit.reason}"</p>
                                                             )}
-                                                            <p className="mt-0.5 text-[10px] text-slate-400 font-semibold">
-                                                                By {audit.user?.name || 'System'} • {audit.created_at ? format(parseISO(audit.created_at), 'PP') : ''}
+                                                            <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                                                                By {audit.user?.name || 'System'} •{' '}
+                                                                {audit.created_at ? format(parseISO(audit.created_at), 'PP') : ''}
                                                             </p>
                                                         </div>
                                                     </div>
@@ -248,14 +266,21 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                     {/* Related Transactions */}
                                     {transaction.related_transactions.length > 0 && (
                                         <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-2xs">
-                                            <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2">
+                                            <div className="mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
                                                 <ArrowDownLeft className="h-4 w-4 text-slate-400" />
-                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Related Adjustments</span>
+                                                <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
+                                                    Related Adjustments
+                                                </span>
                                             </div>
                                             <div className="space-y-2">
                                                 {transaction.related_transactions.map((related) => (
-                                                    <div key={related.reference_number} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold">
-                                                        <span className="text-slate-600">{related.reference_number} • {related.type_label}</span>
+                                                    <div
+                                                        key={related.reference_number}
+                                                        className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold"
+                                                    >
+                                                        <span className="text-slate-600">
+                                                            {related.reference_number} • {related.type_label}
+                                                        </span>
                                                         <span className="text-slate-900">{formatCurrency(related.amount)}</span>
                                                     </div>
                                                 ))}
@@ -274,7 +299,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                         type="button"
                                         onClick={downloadPdf}
                                         disabled={downloading}
-                                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black tracking-wider uppercase text-slate-700 hover:bg-slate-50 active:scale-98 transition w-full disabled:opacity-60 disabled:cursor-not-allowed"
+                                        className="inline-flex w-full flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-black tracking-wider text-slate-700 uppercase transition hover:bg-slate-50 active:scale-98 disabled:cursor-not-allowed disabled:opacity-60"
                                     >
                                         {downloading ? (
                                             <>
@@ -300,8 +325,8 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
     if (!value) return null;
     return (
         <div className="flex items-center justify-between gap-4 py-2 text-xs font-bold">
-            <span className="text-slate-400 font-semibold">{label}</span>
-            <span className="text-slate-800 text-right truncate max-w-[240px]">{value}</span>
+            <span className="font-semibold text-slate-400">{label}</span>
+            <span className="max-w-[240px] truncate text-right text-slate-800">{value}</span>
         </div>
     );
 }

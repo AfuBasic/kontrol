@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\SecurityInviteLinkController;
 use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SettlementController;
+use App\Http\Controllers\Admin\SetupController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VisitorLogController;
@@ -54,6 +55,10 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('/violations/{violation}/payment-plan', [ComplianceController::class, 'approvePaymentPlan'])->name('violations.payment-plan');
         Route::post('/violations/{violation}/resolve', [ComplianceController::class, 'resolveViolation'])->name('violations.resolve');
     });
+
+    // Setup / Onboarding
+    Route::get('/setup', [SetupController::class, 'show'])->name('setup');
+    Route::post('/setup/complete', [SetupController::class, 'complete'])->name('setup.complete');
 
     // Legacy dashboard redirect
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -107,17 +112,20 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('residents/bulk-suspend', [ResidentController::class, 'bulkSuspend'])->name('residents.bulk-suspend');
         Route::post('residents/bulk-activate', [ResidentController::class, 'bulkActivate'])->name('residents.bulk-activate');
         Route::post('residents/bulk-resend-invitation', [ResidentController::class, 'bulkResendInvitation'])->name('residents.bulk-resend-invitation');
+        Route::post('residents/bulk-assign-zone', [ResidentController::class, 'bulkAssignZone'])->name('residents.bulk-assign-zone');
         Route::patch('residents/{resident}/suspend', [ResidentController::class, 'suspend'])->name('residents.suspend');
         Route::patch('residents/{resident}/mark-as-property-owner', [ResidentController::class, 'markAsPropertyOwner'])->name('residents.mark-as-property-owner');
         Route::post('residents/{resident}/resend-invitation', [ResidentController::class, 'resendInvitation'])->name('residents.resend-invitation');
 
         Route::prefix('residents/approvals')->name('residents.approvals.')->middleware('feature:approval-portal')->group(function (): void {
             Route::get('/', [ResidentApprovalController::class, 'index'])->name('index');
+            Route::post('/approve-all', [ResidentApprovalController::class, 'approveAll'])->name('approve-all');
             Route::post('/{user}/approve', [ResidentApprovalController::class, 'approve'])->name('approve');
             Route::post('/{user}/reject', [ResidentApprovalController::class, 'reject'])->name('reject');
         });
 
         Route::resource('residents', ResidentController::class)->except(['show'])->middleware('feature:resident-directory');
+        Route::get('residents/{resident}', [ResidentController::class, 'show'])->name('residents.show')->middleware('feature:resident-directory');
     });
 
     // Property Owners management
@@ -135,6 +143,8 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('property-owners/bulk-suspend', [PropertyOwnerController::class, 'bulkSuspend'])->name('property-owners.bulk-suspend');
         Route::post('property-owners/bulk-activate', [PropertyOwnerController::class, 'bulkActivate'])->name('property-owners.bulk-activate');
         Route::post('property-owners/bulk-resend-invitation', [PropertyOwnerController::class, 'bulkResendInvitation'])->name('property-owners.bulk-resend-invitation');
+        Route::post('property-owners/bulk-assign-zone', [PropertyOwnerController::class, 'bulkAssignZone'])->name('property-owners.bulk-assign-zone');
+        Route::post('property-owners/{propertyOwner}/resend-invitation', [PropertyOwnerController::class, 'resendInvitation'])->name('property-owners.resend-invitation');
         Route::patch('property-owners/{propertyOwner}/suspend', [PropertyOwnerController::class, 'suspend'])->name('property-owners.suspend');
         Route::get('property-owners/{propertyOwner}/residents', [PropertyOwnerController::class, 'residents'])->name('property-owners.residents');
         Route::get('property-owners/{propertyOwner}/available-residents', [PropertyOwnerController::class, 'availableResidents'])->name('property-owners.available-residents');
@@ -165,7 +175,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         // Explicit routes must come before resource to avoid {security} matching "bulk-delete"
         Route::delete('security/bulk-delete', [SecurityPersonnelController::class, 'bulkDelete'])->name('security.bulk-delete');
         Route::patch('security/{security}/suspend', [SecurityPersonnelController::class, 'suspend'])->name('security.suspend');
-        Route::post('security/{security}/reset-password', [SecurityPersonnelController::class, 'resetPassword'])->name('security.reset-password');
+        Route::post('security/{security}/resend-invitation', [SecurityPersonnelController::class, 'resendInvitation'])->name('security.resend-invitation');
         Route::resource('security', SecurityPersonnelController::class)->except(['show']);
     });
 
@@ -195,14 +205,15 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     });
 
     // Administrative assignment management (User × Estate × Role × Scope)
-    Route::middleware(['role:admin', 'feature:user-access-control'])->group(function (): void {
+    Route::middleware(['permission:assignments.view', 'feature:user-access-control'])->group(function (): void {
         Route::get('assignments', [AdministrativeAssignmentController::class, 'index'])->name('assignments.index');
-        Route::get('assignments/create', [AdministrativeAssignmentController::class, 'create'])->name('assignments.create');
-        Route::post('assignments', [AdministrativeAssignmentController::class, 'store'])->name('assignments.store');
-        Route::get('assignments/{assignment}/edit', [AdministrativeAssignmentController::class, 'edit'])->name('assignments.edit');
-        Route::put('assignments/{assignment}', [AdministrativeAssignmentController::class, 'update'])->name('assignments.update');
-        Route::post('assignments/{assignment}/deactivate', [AdministrativeAssignmentController::class, 'deactivate'])->name('assignments.deactivate');
-        Route::post('assignments/{assignment}/activate', [AdministrativeAssignmentController::class, 'activate'])->name('assignments.activate');
+        Route::get('assignments/create', [AdministrativeAssignmentController::class, 'create'])->middleware('permission:assignments.create')->name('assignments.create');
+        Route::post('assignments', [AdministrativeAssignmentController::class, 'store'])->middleware('permission:assignments.create')->name('assignments.store');
+        Route::get('assignments/{assignment}/edit', [AdministrativeAssignmentController::class, 'edit'])->middleware('permission:assignments.edit')->name('assignments.edit');
+        Route::put('assignments/{assignment}', [AdministrativeAssignmentController::class, 'update'])->middleware('permission:assignments.edit')->name('assignments.update');
+        Route::post('assignments/{assignment}/deactivate', [AdministrativeAssignmentController::class, 'deactivate'])->middleware('permission:assignments.edit')->name('assignments.deactivate');
+        Route::post('assignments/{assignment}/activate', [AdministrativeAssignmentController::class, 'activate'])->middleware('permission:assignments.edit')->name('assignments.activate');
+        Route::delete('assignments/{assignment}', [AdministrativeAssignmentController::class, 'destroy'])->middleware('permission:assignments.delete')->name('assignments.destroy');
     });
 
     // Notifications
@@ -213,6 +224,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
     // Admin User management (manage other admins)
     Route::middleware('role:admin')->group(function (): void {
+        Route::post('users/{user}/resend-invitation', [UserController::class, 'resetPassword'])->name('users.resend-invitation');
         Route::resource('users', UserController::class)->except(['show']);
     });
 
@@ -242,19 +254,19 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
     });
 
     // Collections (Resident dues management)
-    Route::prefix('collections')->name('collections.')->middleware('feature:payment-collection')->group(function (): void {
+    Route::prefix('collections')->name('collections.')->middleware(['feature:payment-collection', 'permission:collections.view'])->group(function (): void {
         Route::get('/', [CollectionController::class, 'index'])->name('index');
         Route::get('/analytics', [CollectionAnalyticsController::class, 'index'])->name('analytics');
-        Route::get('/create', [CollectionController::class, 'create'])->name('create');
-        Route::post('/', [CollectionController::class, 'store'])->name('store');
+        Route::get('/create', [CollectionController::class, 'create'])->middleware('permission:collections.create')->name('create');
+        Route::post('/', [CollectionController::class, 'store'])->middleware('permission:collections.create')->name('store');
         Route::get('/{collection}', [CollectionController::class, 'show'])->name('show');
-        Route::get('/{collection}/edit', [CollectionController::class, 'edit'])->name('edit');
-        Route::put('/{collection}', [CollectionController::class, 'update'])->name('update');
-        Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->name('publish');
-        Route::post('/{collection}/remind', [CollectionController::class, 'remind'])->name('remind');
+        Route::get('/{collection}/edit', [CollectionController::class, 'edit'])->middleware('permission:collections.edit')->name('edit');
+        Route::put('/{collection}', [CollectionController::class, 'update'])->middleware('permission:collections.edit')->name('update');
+        Route::post('/{collection}/publish', [CollectionController::class, 'publish'])->middleware('permission:collections.edit')->name('publish');
+        Route::post('/{collection}/remind', [CollectionController::class, 'remind'])->middleware('permission:collections.edit')->name('remind');
         Route::get('/{collection}/export', [CollectionController::class, 'export'])->name('export');
-        Route::post('/assignments/{assignment}/record-payment', [CollectionController::class, 'recordPayment'])->name('assignments.record-payment');
-        Route::delete('/{collection}', [CollectionController::class, 'destroy'])->name('destroy');
+        Route::post('/assignments/{assignment}/record-payment', [CollectionController::class, 'recordPayment'])->middleware('permission:collections.edit')->name('assignments.record-payment');
+        Route::delete('/{collection}', [CollectionController::class, 'destroy'])->middleware('permission:collections.delete')->name('destroy');
     });
 
     // Incidents management

@@ -112,7 +112,7 @@ class CollectionPaymentController extends Controller
         if (empty($subaccount)) {
             $collection = $assignment->collection;
             $creator = $collection->creator;
-            if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
+            if ($creator && $creator->hasRole('property_owner')) {
                 return response()->json([
                     'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
                 ], 400);
@@ -161,7 +161,7 @@ class CollectionPaymentController extends Controller
 
                             $lockedAssignment->loadMissing('collection.creator');
                             $creator = $lockedAssignment->collection?->creator;
-                            if ($creator && $creator->getRoleNameForEstate($lockedAssignment->estate_id) === 'property_owner') {
+                            if ($creator && $creator->hasRole('property_owner')) {
                                 $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $lockedPayment->amount));
                             } else {
                                 $adminIds = AdministrativeAssignment::where('estate_id', $lockedAssignment->estate_id)
@@ -288,7 +288,7 @@ class CollectionPaymentController extends Controller
 
                     $assignment->loadMissing('collection.creator');
                     $creator = $assignment->collection?->creator;
-                    if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
+                    if ($creator && $creator->hasRole('property_owner')) {
                         $creator->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
                     } else {
                         $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
@@ -332,7 +332,7 @@ class CollectionPaymentController extends Controller
 
                         $assignment->loadMissing('collection.creator');
                         $creator = $assignment->collection?->creator;
-                        if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
+                        if ($creator && $creator->hasRole('property_owner')) {
                             $creator->notify(new CollectionPaymentReceivedNotification($assignment, $due));
                         } else {
                             $adminIds = AdministrativeAssignment::where('estate_id', $assignment->estate_id)
@@ -478,7 +478,7 @@ class CollectionPaymentController extends Controller
         if (empty($firstSubaccount)) {
             $collection = $first->collection;
             $creator = $collection->creator;
-            if ($creator && $creator->getRoleNameForEstate($first->estate_id) === 'property_owner') {
+            if ($creator && $creator->hasRole('property_owner')) {
                 abort(400, 'Landlord settlement account is not configured. Please contact the landlord.');
             }
             abort(400, 'Estate settlement account is not configured.');
@@ -494,7 +494,7 @@ class CollectionPaymentController extends Controller
             if (empty($currentSubaccount)) {
                 $collection = $a->collection;
                 $creator = $collection->creator;
-                if ($creator && $creator->getRoleNameForEstate($a->estate_id) === 'property_owner') {
+                if ($creator && $creator->hasRole('property_owner')) {
                     abort(400, 'Landlord settlement account is not configured. Please contact the landlord.');
                 }
                 abort(400, 'Estate settlement account is not configured.');
@@ -560,7 +560,7 @@ class CollectionPaymentController extends Controller
             if (empty($currentSubaccount)) {
                 $collection = $a->collection;
                 $creator = $collection->creator;
-                if ($creator && $creator->getRoleNameForEstate($a->estate_id) === 'property_owner') {
+                if ($creator && $creator->hasRole('property_owner')) {
                     return response()->json([
                         'message' => 'Landlord has not configured their settlement account. Please contact your landlord to set up banking details.',
                     ], 400);
@@ -651,7 +651,7 @@ class CollectionPaymentController extends Controller
 
                                         $lockedAssignment->loadMissing('collection.creator');
                                         $creator = $lockedAssignment->collection ?? null ? $lockedAssignment->collection->creator : null;
-                                        if ($creator && $creator->getRoleNameForEstate($lockedAssignment->estate_id) === 'property_owner') {
+                                        if ($creator && $creator->hasRole('property_owner')) {
                                             $creator->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
                                         } else {
                                             $adminIds = AdministrativeAssignment::where('estate_id', $lockedAssignment->estate_id)
@@ -758,7 +758,7 @@ class CollectionPaymentController extends Controller
         $collection = $assignment->collection;
         $creator = $collection->creator;
 
-        if ($creator && $creator->getRoleNameForEstate($assignment->estate_id) === 'property_owner') {
+        if ($creator && $creator->hasRole('property_owner')) {
             return $creator->profile?->paystack_subaccount_code;
         }
 

@@ -14,7 +14,7 @@ class BulkInviteResidentsAction
      * @param  array<string>  $emails
      * @return array{invited: int, skipped: int, duplicates: int}
      */
-    public function execute(array $emails, Estate $estate, ?int $zoneId = null): array
+    public function execute(array $emails, Estate $estate, ?int $zoneId = null, string $source = 'bulk_upload'): array
     {
         // 1. Normalize and deduplicate emails from the input
         $normalizedEmails = array_map(fn ($email) => strtolower(trim($email)), $emails);
@@ -26,6 +26,8 @@ class BulkInviteResidentsAction
 
         $createResidentAction = app(CreateResidentAction::class);
         $user = Auth::user();
+
+        $importBatch = $source === 'bulk_upload' ? 'Residents — ' . now()->format('F Y') : null;
 
         // 2. Iterate and create invitations
         foreach ($uniqueEmails as $email) {
@@ -50,7 +52,7 @@ class BulkInviteResidentsAction
                 'name' => strstr($email, '@', true) ?: $email,
                 'email' => $email,
                 'zone_id' => $zoneId,
-            ], $estate);
+            ], $estate, $source, $importBatch);
 
             $invitation = Invitation::withoutGlobalScopes()
                 ->where('email', $email)

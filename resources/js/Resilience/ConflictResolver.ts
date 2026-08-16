@@ -21,10 +21,7 @@ export interface ConflictResolution {
  * Resolve a conflict given HTTP status / strategy.
  * ServerWins (default): discard optimistic local state and mark Conflict.
  */
-export function resolveConflict(
-    strategy: ConflictStrategy = ConflictStrategy.ServerWins,
-    context?: { operationType?: string },
-): ConflictResolution {
+export function resolveConflict(strategy: ConflictStrategy = ConflictStrategy.ServerWins, context?: { operationType?: string }): ConflictResolution {
     const label = context?.operationType?.replace(/_/g, ' ') ?? 'change';
 
     switch (strategy) {

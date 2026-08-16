@@ -188,13 +188,16 @@ export default function VerifyOtp({ email }: Props) {
                 {/* Ambient Depth & Glow Background */}
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
                     <div className="absolute top-1/4 left-1/2 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-600/12 blur-[140px]" />
-                    <div className="absolute bottom-10 left-1/2 h-[380px] w-[380px] -translate-x-1/2 rounded-full bg-purple-600/08 blur-[120px]" />
+                    <div className="bg-purple-600/08 absolute bottom-10 left-1/2 h-[380px] w-[380px] -translate-x-1/2 rounded-full blur-[120px]" />
                     <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15" />
                 </div>
 
                 {/* Top Brand Header */}
                 <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
-                    <Link href="/login" className="group flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white">
+                    <Link
+                        href="/login"
+                        className="group flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
+                    >
                         <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
                         <span>Back to sign in</span>
                     </Link>
@@ -204,29 +207,25 @@ export default function VerifyOtp({ email }: Props) {
                 <main className="relative z-10 mx-auto my-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-6 sm:px-6">
                     <motion.div
                         initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                        animate={
-                            isShaking
-                                ? { x: [-8, 8, -6, 6, -3, 3, 0], transition: { duration: 0.5 } }
-                                : { opacity: 1, y: 0, scale: 1 }
-                        }
+                        animate={isShaking ? { x: [-8, 8, -6, 6, -3, 3, 0], transition: { duration: 0.5 } } : { opacity: 1, y: 0, scale: 1 }}
                         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
                         className="rounded-[32px] border border-slate-800/80 bg-slate-900/80 p-7 shadow-2xl shadow-slate-950/80 backdrop-blur-xl sm:p-9"
                     >
                         {/* Official Kontrol Logo */}
                         <div className="mb-6 flex justify-center">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/15 to-indigo-600/05 p-2.5 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
-                                <img src="/assets/images/app-icon.png" alt="Kontrol Icon" className="h-full w-full object-contain rounded-xl" />
+                            <div className="to-indigo-600/05 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-500/25 bg-gradient-to-b from-indigo-500/15 p-2.5 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
+                                <img src="/assets/images/app-icon.png" alt="Kontrol Icon" className="h-full w-full rounded-xl object-contain" />
                             </div>
                         </div>
 
                         {/* Title & Hierarchy */}
                         <div className="text-center">
                             <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Verify your identity</h1>
-                            <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-indigo-400">Almost there</p>
+                            <p className="mt-1 text-xs font-semibold tracking-widest text-indigo-400 uppercase">Almost there</p>
                             <p className="mt-3 text-sm leading-relaxed text-slate-400">
                                 We&apos;ve sent a secure 6-digit verification code to
                                 <br />
-                                <span className="mt-1 inline-block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1 text-xs font-semibold text-slate-200 tracking-wide">
+                                <span className="mt-1 inline-block rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1 text-xs font-semibold tracking-wide text-slate-200">
                                     {maskedEmail}
                                 </span>
                             </p>
@@ -273,7 +272,7 @@ export default function VerifyOtp({ email }: Props) {
                                             ref={(el) => {
                                                 inputRefs.current[i] = el;
                                             }}
-                                            type="text"
+                                            type="tel"
                                             inputMode="numeric"
                                             pattern="[0-9]*"
                                             maxLength={1}
@@ -281,11 +280,11 @@ export default function VerifyOtp({ email }: Props) {
                                             onChange={(e) => handleDigitChange(i, e.target.value)}
                                             onKeyDown={(e) => handleKeyDown(i, e)}
                                             disabled={isSubmitting}
-                                            className={`h-13 w-11 sm:h-14 sm:w-12 rounded-2xl border text-center text-xl font-extrabold text-white transition-all duration-200 focus:outline-none ${
+                                            className={`h-13 w-11 rounded-2xl border text-center text-xl font-extrabold text-white transition-all duration-200 focus:outline-none sm:h-14 sm:w-12 ${
                                                 errors.code
                                                     ? 'border-rose-500/50 bg-rose-950/20 text-rose-200 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/15'
                                                     : hasValue
-                                                      ? 'border-indigo-500/60 bg-indigo-950/25 ring-2 ring-indigo-500/20 shadow-lg shadow-indigo-500/10'
+                                                      ? 'border-indigo-500/60 bg-indigo-950/25 shadow-lg ring-2 shadow-indigo-500/10 ring-indigo-500/20'
                                                       : 'border-slate-800 bg-slate-950/60 focus:border-indigo-500 focus:bg-slate-950 focus:ring-4 focus:ring-indigo-500/15'
                                             }`}
                                             autoComplete="one-time-code"
@@ -345,7 +344,7 @@ export default function VerifyOtp({ email }: Props) {
 
                 {/* Footer */}
                 <footer className="relative z-10 py-6 text-center text-xs text-slate-500">
-                    <div className="flex items-center justify-center gap-1.5 mb-1.5 text-slate-400">
+                    <div className="mb-1.5 flex items-center justify-center gap-1.5 text-slate-400">
                         <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
                         <span>256-bit Encrypted Identity Verification</span>
                     </div>

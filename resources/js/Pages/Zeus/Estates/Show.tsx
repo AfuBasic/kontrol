@@ -21,7 +21,7 @@ import {
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import PartnerTimeline from '@/Components/PartnerTimeline';
-import { toggleStatus, destroy, resetPassword } from '@/actions/App/Http/Controllers/Zeus/EstateController';
+import { toggleStatus, destroy, resendInvitation } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 
 interface Partner {
     id: number;
@@ -147,7 +147,7 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
         } else if (actionToConfirm === 'delete') {
             router.delete(destroy.url({ estate: estate.ulid }), { preserveScroll: true, onFinish });
         } else if (actionToConfirm === 'reset') {
-            router.post(resetPassword.url({ estate: estate.ulid }), {}, { preserveScroll: true, onFinish });
+            router.post(resendInvitation.url({ estate: estate.ulid }), {}, { preserveScroll: true, onFinish });
         }
     };
 
@@ -226,13 +226,15 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                                     <Power className="h-4 w-4" />
                                                     Toggle Status
                                                 </button>
-                                                <button
-                                                    onClick={() => setActionToConfirm('reset')}
-                                                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                                >
-                                                    <Lock className="h-4 w-4" />
-                                                    Resend Invitation
-                                                </button>
+                                                {!admin && (
+                                                    <button
+                                                        onClick={() => setActionToConfirm('reset')}
+                                                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                                    >
+                                                        <Lock className="h-4 w-4" />
+                                                        Resend Invitation
+                                                    </button>
+                                                )}
                                                 <div className="my-1 border-t border-slate-100 dark:border-slate-800/50"></div>
                                                 <button
                                                     onClick={() => setActionToConfirm('delete')}
@@ -328,17 +330,25 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                         <p className="text-xs text-slate-500 dark:text-slate-400">{estate.partner.email}</p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Commission Rate</p>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                            Commission Rate
+                                        </p>
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
                                             {estate.commission_plan?.commission_rate ?? estate.partner.commission_rate}%
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Partner Date</p>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{formatDate(estate.partner_date ?? null)}</p>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                            Partner Date
+                                        </p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            {formatDate(estate.partner_date ?? null)}
+                                        </p>
                                     </div>
                                     <div>
-                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Days Remaining</p>
+                                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                                            Days Remaining
+                                        </p>
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white">
                                             {estate.commission_days_remaining ?? '-'}
                                         </p>
@@ -355,8 +365,16 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                             { key: 'approved', label: 'Approved' },
                                             { key: 'estate_created', label: 'Estate Created', date: formatDate(estate.created_at) },
                                             { key: 'activated', label: 'Activated', date: formatDate(estate.activation_date ?? null) },
-                                            { key: 'commission_active', label: 'Commission Active', date: formatDate(estate.commission_starts_at ?? null) },
-                                            { key: 'commission_expired', label: 'Commission Expired', date: formatDate(estate.commission_ends_at ?? null) },
+                                            {
+                                                key: 'commission_active',
+                                                label: 'Commission Active',
+                                                date: formatDate(estate.commission_starts_at ?? null),
+                                            },
+                                            {
+                                                key: 'commission_expired',
+                                                label: 'Commission Expired',
+                                                date: formatDate(estate.commission_ends_at ?? null),
+                                            },
                                         ]}
                                     />
                                 )}

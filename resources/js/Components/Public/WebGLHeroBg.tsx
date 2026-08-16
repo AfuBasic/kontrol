@@ -189,7 +189,7 @@ export default function WebGLHeroBg() {
 
         // Render loop
         let animationId: number;
-        let startTime = performance.now();
+        const startTime = performance.now();
 
         const render = () => {
             const now = performance.now();

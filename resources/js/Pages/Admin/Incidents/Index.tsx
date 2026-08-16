@@ -56,6 +56,10 @@ type Incident = {
         id: number;
         name: string;
     } | null;
+    zone: {
+        id: number;
+        name: string;
+    } | null;
 };
 
 type Props = {
@@ -428,7 +432,9 @@ export default function IncidentsIndex({
                 {/* SECTION 1.5 - INCIDENT SOURCE BREAKDOWN */}
                 {stats.source_breakdown && stats.source_breakdown.length > 0 && (
                     <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">Operational Incident Origin (Sources)</h3>
+                        <h3 className="mb-3 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                            Operational Incident Origin (Sources)
+                        </h3>
                         <div className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100">
                             {stats.source_breakdown.map((src, idx) => {
                                 const colors = ['bg-indigo-600', 'bg-emerald-500', 'bg-amber-500', 'bg-blue-500', 'bg-rose-500'];
@@ -449,8 +455,8 @@ export default function IncidentsIndex({
                                     <div key={src.source} className="flex items-center gap-1.5">
                                         <span className={`h-2.5 w-2.5 rounded-full ${dotColors[idx % dotColors.length]}`} />
                                         <span className="text-slate-600">{src.label}</span>
-                                        <span className="text-slate-900 font-extrabold">{src.percentage}%</span>
-                                        <span className="text-slate-400 font-normal">({src.count})</span>
+                                        <span className="font-extrabold text-slate-900">{src.percentage}%</span>
+                                        <span className="font-normal text-slate-400">({src.count})</span>
                                     </div>
                                 );
                             })}
@@ -711,8 +717,8 @@ export default function IncidentsIndex({
                                                         key={incident.id}
                                                         className="group relative rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300 hover:shadow-sm"
                                                     >
-                                                        {/* Priority & SLA */}
-                                                        <div className="mb-2 flex items-center justify-between gap-2">
+                                                        {/* Priority, SLA & Zone */}
+                                                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
                                                             <span
                                                                 className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
                                                             >
@@ -721,6 +727,15 @@ export default function IncidentsIndex({
                                                             <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
                                                                 {slaInfo.label}
                                                             </span>
+                                                            {incident.zone ? (
+                                                                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase border border-indigo-100">
+                                                                    {incident.zone.name}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase border border-slate-200/50">
+                                                                    Entire Estate
+                                                                </span>
+                                                            )}
                                                         </div>
 
                                                         {/* Title */}
@@ -740,7 +755,7 @@ export default function IncidentsIndex({
                                                                 </span>
                                                             </span>
                                                             <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500">
-                                                                <span className="rounded bg-slate-100 px-1 py-0.2 text-[8px] uppercase font-black text-slate-500">
+                                                                <span className="py-0.2 rounded bg-slate-100 px-1 text-[8px] font-black text-slate-500 uppercase">
                                                                     {incident.source.replace('_', ' ')}
                                                                 </span>
                                                                 {incident.location && <span>@ {incident.location}</span>}
@@ -855,6 +870,9 @@ export default function IncidentsIndex({
                                                 Status
                                             </th>
                                             <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Scope/Zone
+                                            </th>
+                                            <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                                 Age
                                             </th>
                                             <th className="w-10 px-6 py-3.5"></th>
@@ -906,12 +924,11 @@ export default function IncidentsIndex({
                                                     </td>
 
                                                     {/* Source */}
-                                                    <td className="px-6 py-3.5 whitespace-nowrap text-xs font-bold text-slate-500">
-                                                        <span className="rounded bg-slate-50 border border-slate-200/60 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
+                                                    <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
+                                                        <span className="rounded border border-slate-200/60 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
                                                             {incident.source.replace('_', ' ')}
                                                         </span>
                                                     </td>
-
                                                     {/* Location */}
                                                     <td className="px-6 py-3.5 text-xs font-bold whitespace-nowrap text-slate-500">
                                                         {incident.location || '-'}
@@ -933,6 +950,19 @@ export default function IncidentsIndex({
                                                         >
                                                             {statusInfo.label}
                                                         </span>
+                                                    </td>
+
+                                                    {/* Scope/Zone */}
+                                                    <td className="px-6 py-3.5 whitespace-nowrap">
+                                                        {incident.zone ? (
+                                                            <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700 uppercase border border-indigo-100">
+                                                                {incident.zone.name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase border border-slate-200/50">
+                                                                Entire Estate
+                                                            </span>
+                                                        )}
                                                     </td>
 
                                                     {/* Age */}
@@ -967,7 +997,7 @@ export default function IncidentsIndex({
                             issues, or security concerns directly.
                         </p>
                         <Link
-                            href="/resident/incidents/create"
+                            href="/admin/incidents/create"
                             className="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800"
                         >
                             <Plus className="h-4 w-4" />
@@ -1003,8 +1033,6 @@ export default function IncidentsIndex({
                         </div>
                     </div>
                 )}
-
-
             </div>
         </>
     );

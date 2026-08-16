@@ -11,8 +11,12 @@ use Illuminate\Support\Facades\DB;
 
 class UpdateResidentAction
 {
+    public function __construct(
+        private AssignUsersToZoneAction $assignUsersToZone,
+    ) {}
+
     /**
-     * @param  array{name: string, phone?: string|null, unit_number?: string|null, address?: string|null}  $data
+     * @param  array{name: string, phone?: string|null, unit_number?: string|null, address?: string|null, zone_id?: int|null}  $data
      */
     public function execute(User $resident, array $data, Estate $estate): User
     {
@@ -60,6 +64,14 @@ class UpdateResidentAction
                     ->update([
                         'property_owner_id' => $data['property_owner_id'],
                     ]);
+            }
+
+            if (array_key_exists('zone_id', $data)) {
+                $this->assignUsersToZone->execute(
+                    [$resident->id],
+                    $estate,
+                    $data['zone_id'] !== null ? (int) $data['zone_id'] : null,
+                );
             }
 
             activity()

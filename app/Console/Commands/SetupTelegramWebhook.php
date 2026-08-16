@@ -13,6 +13,7 @@ class SetupTelegramWebhook extends Command
      * @var string
      */
     protected $signature = 'telegram:webhook
+                            {url? : Optional custom webhook URL to set}
                             {--remove : Remove the webhook instead of setting it}
                             {--info : Show current webhook info}';
 
@@ -50,7 +51,7 @@ class SetupTelegramWebhook extends Command
      */
     private function setWebhook(): int
     {
-        $webhookUrl = route('telegram.webhook');
+        $webhookUrl = $this->argument('url') ?: route('telegram.webhook');
 
         $this->info('Setting up Telegram webhook...');
         $this->newLine();

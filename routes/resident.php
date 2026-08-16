@@ -162,7 +162,7 @@ Route::middleware('role:resident,property_owner')->group(function (): void {
             Route::post('/', [HouseholdMemberController::class, 'store'])->name('store');
             Route::delete('/{householdMember}', [HouseholdMemberController::class, 'destroy'])->name('destroy');
         });
-        Route::post('/{householdMember}/reset-password', [HouseholdMemberController::class, 'resetPassword'])->name('reset-password');
+        Route::post('/{householdMember}/resend-invitation', [HouseholdMemberController::class, 'resendInvitation'])->name('resend-invitation');
     });
 });
 

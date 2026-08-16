@@ -261,6 +261,7 @@ class TransactionOverviewService
             'paid_at' => $transaction->paid_at?->toIso8601String(),
             'resident' => $transaction->user ? [
                 'id' => $transaction->user->id,
+                'ulid' => $transaction->user->ulid,
                 'name' => $transaction->user->name,
                 'email' => $transaction->user->email,
             ] : null,

@@ -25,6 +25,7 @@ class DashboardController extends Controller
             'estateShell' => [
                 'name' => $estate->name,
                 'address' => $estate->address,
+                'onboarding_completed' => $estate->settings->onboarding_completed ?? false,
             ],
             'stats' => $this->safe(fn () => $this->dashboardService->getOverviewStats()),
 

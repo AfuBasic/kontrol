@@ -66,6 +66,7 @@ class CreateAdministrativeAssignmentAction
 
     private function assertRoleBelongsToEstate(Role $role, Estate $estate): void
     {
+        // Global roles (estate_id = null) are allowed, or roles specific to this estate.
         if ($role->estate_id !== null && (int) $role->estate_id !== (int) $estate->id) {
             throw ValidationException::withMessages([
                 'role' => 'Role does not belong to the given estate.',

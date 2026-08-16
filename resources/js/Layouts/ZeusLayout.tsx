@@ -61,9 +61,7 @@ export default function ZeusLayout({ children, backUrl }: Props) {
         zeusUnreadNotificationsCount?: number;
     }>().props;
     const unreadCount = zeusUnreadNotificationsCount ?? 0;
-    const navItems = baseNavItems.map((item) =>
-        item.href === '/zeus/notifications' ? { ...item, badge: unreadCount } : item,
-    );
+    const navItems = baseNavItems.map((item) => (item.href === '/zeus/notifications' ? { ...item, badge: unreadCount } : item));
     const { url: fullUrl } = usePage();
     const url = fullUrl.split('?')[0];
     const { isCollapsed, toggle } = useSidebarState();

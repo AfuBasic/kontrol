@@ -28,7 +28,7 @@ beforeEach(function () {
     ]);
 });
 
-it('Test 1 — Estate role migration creates administrative assignment', function () {
+it('Test 1 - Estate role migration creates administrative assignment', function () {
     // Manually insert into model_has_roles to simulate existing state
     DB::table('model_has_roles')->insert([
         'role_id' => $this->role->id,
@@ -50,7 +50,7 @@ it('Test 1 — Estate role migration creates administrative assignment', functio
     ]);
 });
 
-it('Test 2 — Global role ignored and reported', function () {
+it('Test 2 - Global role ignored and reported', function () {
     $globalRole = Role::create([
         'name' => 'global_admin',
         'guard_name' => 'web',
@@ -73,7 +73,7 @@ it('Test 2 — Global role ignored and reported', function () {
     ]);
 });
 
-it('Test 3 — Missing membership prevents assignment creation', function () {
+it('Test 3 - Missing membership prevents assignment creation', function () {
     $stranger = User::factory()->create();
     // No membership attached
 
@@ -93,7 +93,7 @@ it('Test 3 — Missing membership prevents assignment creation', function () {
     ]);
 });
 
-it('Test 4 — Wrong membership prevents assignment creation', function () {
+it('Test 4 - Wrong membership prevents assignment creation', function () {
     $otherEstate = Estate::factory()->create();
     $stranger = User::factory()->create();
     $stranger->estates()->attach($otherEstate->id, ['status' => 'accepted']);
@@ -115,7 +115,7 @@ it('Test 4 — Wrong membership prevents assignment creation', function () {
     ]);
 });
 
-it('Test 5 — Idempotency', function () {
+it('Test 5 - Idempotency', function () {
     DB::table('model_has_roles')->insert([
         'role_id' => $this->role->id,
         'model_type' => User::class,
@@ -137,7 +137,7 @@ it('Test 5 — Idempotency', function () {
     expect(AdministrativeAssignment::count())->toBe(1);
 });
 
-it('Test 6 — Dry run mode makes no database changes', function () {
+it('Test 6 - Dry run mode makes no database changes', function () {
     DB::table('model_has_roles')->insert([
         'role_id' => $this->role->id,
         'model_type' => User::class,
@@ -152,7 +152,7 @@ it('Test 6 — Dry run mode makes no database changes', function () {
     expect(AdministrativeAssignment::count())->toBe(0);
 });
 
-it('Test 7 — Role/estate invariant rejected by domain layer', function () {
+it('Test 7 - Role/estate invariant rejected by domain layer', function () {
     $otherEstate = Estate::factory()->create();
     $this->user->estates()->attach($otherEstate->id, ['status' => 'accepted']);
 
@@ -175,7 +175,7 @@ it('Test 7 — Role/estate invariant rejected by domain layer', function () {
     }
 });
 
-it('Test 8 — Zone invariant', function () {
+it('Test 8 - Zone invariant', function () {
     $action = app(CreateAdministrativeAssignmentAction::class);
     $dummyZone = Zone::create(['estate_id' => $this->estate->id, 'name' => 'Zone 1']);
 

@@ -6,6 +6,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\User;
 use App\Models\Zone;
 use App\Services\EstateContextService;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Role;
@@ -14,7 +15,8 @@ class AdministrativeAssignmentService
 {
     public function __construct(
         protected EstateContextService $estateContext
-    ) {}
+    ) {
+    }
 
     /**
      * Paginated assignments for the authoritative current estate context.
@@ -28,6 +30,10 @@ class AdministrativeAssignmentService
 
         return AdministrativeAssignment::query()
             ->forEstate($estateId)
+            ->where('is_primary', false)
+            ->whereHas('role', function ($query) {
+                $query->whereNotIn('name', ['property_owner', 'resident', 'household_member']);
+            })
             ->with(['user', 'role', 'zone'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -39,16 +45,16 @@ class AdministrativeAssignmentService
                     });
                 });
             })
-            ->when(($filters['status'] ?? null) === 'active', fn ($q) => $q->where('is_active', true))
-            ->when(($filters['status'] ?? null) === 'inactive', fn ($q) => $q->where('is_active', false))
-            ->when($filters['scope_type'] ?? null, fn ($q, $scope) => $q->where('scope_type', $scope))
+            ->when(($filters['status'] ?? null) === 'active', fn($q) => $q->where('is_active', true))
+            ->when(($filters['status'] ?? null) === 'inactive', fn($q) => $q->where('is_active', false))
+            ->when($filters['scope_type'] ?? null, fn($q, $scope) => $q->where('scope_type', $scope))
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
     }
 
     /**
-     * Estate-scoped Spatie roles available for assignment in the current estate.
+     * Spatie roles available for assignment in the current estate.
      *
      * @return Collection<int, Role>
      */
@@ -58,6 +64,7 @@ class AdministrativeAssignmentService
 
         return Role::query()
             ->where('estate_id', $estateId)
+            ->whereNotIn('name', RoleSeeder::RESERVED_ROLES)
             ->orderBy('name')
             ->get(['id', 'name', 'estate_id']);
     }
@@ -76,6 +83,13 @@ class AdministrativeAssignmentService
             ->whereHas('estates', function ($query) use ($estateId) {
                 $query->where('estates.id', $estateId)
                     ->where('estate_users_membership.status', 'accepted');
+            })
+            ->whereDoesntHave('administrativeAssignments', function ($query) use ($estateId) {
+                $query->where('estate_id', $estateId)
+                    ->where('is_primary', true);
+            })
+            ->whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'property_owner');
             })
             ->orderBy('name')
             ->get(['id', 'ulid', 'name', 'email']);

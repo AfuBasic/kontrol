@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Resident;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\EstateSettings;
+use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ class AccessCodeController extends Controller
 {
     public function __construct(
         protected AccessCodeService $accessCodeService,
+        protected EstateContextService $estateContext,
     ) {}
 
     /**

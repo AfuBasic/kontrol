@@ -15,7 +15,7 @@ class SendSecurityInvitationEmail implements ShouldQueue
         app(ContextManager::class)->setSystemContext($event->estate->id);
 
         Mail::to($event->user->email)->send(
-            new SecurityInvitationMail($event->user, $event->estate, $event->isPasswordReset)
+            new SecurityInvitationMail($event->user, $event->estate)
         );
     }
 }

@@ -5,10 +5,9 @@ use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\User;
-use App\Notifications\Resident\CollectionReminderNotification;
+use App\Models\Compliance\Violation;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -16,13 +15,19 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
-it('sends collection reminders according to the scheduled intervals', function () {
-    Notification::fake();
-
+it('raises compliance violations according to the scheduled intervals', function () {
     $estate = Estate::factory()->create();
     $admin = User::factory()->create();
     setPermissionsTeamId($estate->id);
     $admin->assignRole('admin');
+
+    // Create active compliance policy for the estate
+    $policy = \App\Models\Compliance\CompliancePolicy::create([
+        'estate_id' => $estate->id,
+        'name' => 'Default Collection Policy',
+        'violation_type' => 'collection_overdue',
+        'is_active' => true,
+    ]);
 
     $collection = Collection::create([
         'estate_id' => $estate->id,
@@ -111,24 +116,13 @@ it('sends collection reminders according to the scheduled intervals', function (
     // Dispatch the job
     (new SendCollectionRemindersJob)->handle();
 
-    // Assert notifications sent
-    Notification::assertSentTo($resident1, CollectionReminderNotification::class, function ($notification) use ($assignment1) {
-        return $notification->assignment->id === $assignment1->id;
-    });
-
-    Notification::assertSentTo($resident2, CollectionReminderNotification::class, function ($notification) use ($assignment2) {
-        return $notification->assignment->id === $assignment2->id;
-    });
-
-    Notification::assertSentTo($resident3, CollectionReminderNotification::class, function ($notification) use ($assignment3) {
-        return $notification->assignment->id === $assignment3->id;
-    });
-
-    Notification::assertSentTo($resident4, CollectionReminderNotification::class, function ($notification) use ($assignment4) {
-        return $notification->assignment->id === $assignment4->id;
-    });
-
-    // Assert notifications NOT sent
-    Notification::assertNotSentTo($resident5, CollectionReminderNotification::class);
-    Notification::assertNotSentTo($resident6, CollectionReminderNotification::class);
+    // With ComplianceEngine, all these unpaid assignments should have violations raised
+    // The previous day-based logic was replaced by policy-driven evaluation
+    
+    expect(Violation::where('violatable_id', $assignment1->id)->exists())->toBeTrue()
+        ->and(Violation::where('violatable_id', $assignment2->id)->exists())->toBeTrue()
+        ->and(Violation::where('violatable_id', $assignment3->id)->exists())->toBeTrue()
+        ->and(Violation::where('violatable_id', $assignment4->id)->exists())->toBeTrue()
+        ->and(Violation::where('violatable_id', $assignment5->id)->exists())->toBeTrue()
+        ->and(Violation::where('violatable_id', $assignment6->id)->exists())->toBeTrue();
 });

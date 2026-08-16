@@ -112,16 +112,11 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
             }
 
             const subaccount =
-                data.subaccount &&
-                !String(data.subaccount).startsWith('ACCT_estate') &&
-                !String(data.subaccount).startsWith('ACCT_landlord')
+                data.subaccount && !String(data.subaccount).startsWith('ACCT_estate') && !String(data.subaccount).startsWith('ACCT_landlord')
                     ? data.subaccount
                     : null;
 
-            const validEmail =
-                data.email && String(data.email).includes('@')
-                    ? data.email
-                    : firstAssignment.user?.email || 'support@usekontrol.com';
+            const validEmail = data.email && String(data.email).includes('@') ? data.email : firstAssignment.user?.email || 'support@usekontrol.com';
 
             const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
 

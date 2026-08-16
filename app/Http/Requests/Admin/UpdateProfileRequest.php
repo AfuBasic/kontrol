@@ -4,7 +4,6 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules\Password;
 
 class UpdateProfileRequest extends FormRequest
 {
@@ -20,7 +19,6 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'password' => ['nullable', 'string', Password::defaults(), 'confirmed'],
         ];
     }
 
@@ -31,7 +29,6 @@ class UpdateProfileRequest extends FormRequest
     {
         return [
             'name.required' => 'Please enter your name.',
-            'password.confirmed' => 'The password confirmation does not match.',
         ];
     }
 }

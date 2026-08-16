@@ -7,6 +7,7 @@ import { useCallback, useRef, useState, lazy, Suspense } from 'react';
 import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
 import EstateBoardPostPreview from '@/Components/Admin/EstateBoardPostPreview';
 import { show, update, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { useActiveContext } from '@/Hooks/useActiveContext';
 import { audienceOptions, categoryOptions, priorityOptions } from '@/Lib/estate-board-options';
 import type { EstateBoardPost, PostAudience, PostCategory, PostPriority, PostStatus } from '@/types';
 
@@ -36,6 +37,7 @@ type FormData = {
 };
 
 export default function EditPost({ post, zones = [] }: Props) {
+    const { isZoneScoped, zoneId, zoneName } = useActiveContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [previews, setPreviews] = useState<string[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -48,9 +50,12 @@ export default function EditPost({ post, zones = [] }: Props) {
         priority: post.priority || 'normal',
         status: post.status,
         audience: post.audience,
-        zone_ids: (post.targets || [])
-            .filter((target) => target.target_type === 'zone' || String(target.target_type).toLowerCase().includes('zone'))
-            .map((target) => target.target_id),
+        zone_ids:
+            isZoneScoped && zoneId
+                ? [zoneId]
+                : (post.targets || [])
+                      .filter((target) => target.target_type === 'zone' || String(target.target_type).toLowerCase().includes('zone'))
+                      .map((target) => target.target_id),
         images: [],
         remove_media_ids: [],
         _method: 'PUT',
@@ -143,9 +148,7 @@ export default function EditPost({ post, zones = [] }: Props) {
             >
                 <div>
                     <h1 className="text-2xl font-semibold text-gray-900">Edit Announcement</h1>
-                    <p className="mt-1 max-w-2xl text-gray-500">
-                        Refine your post, regenerate sections with AI, and preview before saving.
-                    </p>
+                    <p className="mt-1 max-w-2xl text-gray-500">Refine your post, regenerate sections with AI, and preview before saving.</p>
                 </div>
                 {showDeleteConfirm ? (
                     <div className="flex items-center gap-3">
@@ -252,7 +255,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                         </motion.div>
                     </div>
 
-                    <div className="order-1 space-y-6 xl:order-2 xl:sticky xl:top-6 xl:self-start">
+                    <div className="order-1 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -337,74 +340,89 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 {errors.priority && <p className="mt-1 text-sm text-red-600">{errors.priority}</p>}
                             </div>
 
-                            <div>
-                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Audience</label>
-                                <div className="space-y-2">
-                                    {audienceOptions.map((option) => (
-                                        <label
-                                            key={option.value}
-                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
-                                                data.audience === option.value
-                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
-                                                    : 'border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="audience"
-                                                value={option.value}
-                                                checked={data.audience === option.value}
-                                                onChange={() => setData('audience', option.value)}
-                                                className="sr-only"
-                                            />
-                                            <option.icon className="h-4 w-4 text-gray-500" />
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-900">{option.label}</p>
-                                                <p className="text-[11px] text-gray-500">{option.description}</p>
-                                            </div>
-                                        </label>
-                                    ))}
+                            {isZoneScoped ? (
+                                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                                    <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Posting to</p>
+                                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-gray-900">
+                                        <MapPin className="h-4 w-4 text-gray-500" />
+                                        {zoneName ?? zones[0]?.name ?? 'Your zone'}
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-gray-500">Zone-scoped accounts can only announce to their assigned zone.</p>
                                 </div>
-                                {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
-                            </div>
-
-                            {zones.length > 0 && (
-                                <div>
-                                    <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Zone targeting</label>
-                                    <p className="mb-3 text-[11px] text-gray-500">Leave empty to reach the entire estate. Select zones to notify only residents in those areas.</p>
-                                    <div className="space-y-2">
-                                        {zones.map((zone) => {
-                                            const selected = data.zone_ids.includes(zone.id);
-                                            return (
+                            ) : (
+                                <>
+                                    <div>
+                                        <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Audience</label>
+                                        <div className="space-y-2">
+                                            {audienceOptions.map((option) => (
                                                 <label
-                                                    key={zone.id}
+                                                    key={option.value}
                                                     className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
-                                                        selected
+                                                        data.audience === option.value
                                                             ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
                                                             : 'border-gray-200 hover:bg-gray-50'
                                                     }`}
                                                 >
                                                     <input
-                                                        type="checkbox"
-                                                        checked={selected}
-                                                        onChange={() => {
-                                                            setData(
-                                                                'zone_ids',
-                                                                selected
-                                                                    ? data.zone_ids.filter((id) => id !== zone.id)
-                                                                    : [...data.zone_ids, zone.id],
-                                                            );
-                                                        }}
-                                                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                                        type="radio"
+                                                        name="audience"
+                                                        value={option.value}
+                                                        checked={data.audience === option.value}
+                                                        onChange={() => setData('audience', option.value)}
+                                                        className="sr-only"
                                                     />
-                                                    <MapPin className="h-4 w-4 text-gray-500" />
-                                                    <span className="text-xs font-medium text-gray-900">{zone.name}</span>
+                                                    <option.icon className="h-4 w-4 text-gray-500" />
+                                                    <div>
+                                                        <p className="text-xs font-medium text-gray-900">{option.label}</p>
+                                                        <p className="text-[11px] text-gray-500">{option.description}</p>
+                                                    </div>
                                                 </label>
-                                            );
-                                        })}
+                                            ))}
+                                        </div>
+                                        {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
                                     </div>
-                                    {errors.zone_ids && <p className="mt-1 text-sm text-red-600">{errors.zone_ids}</p>}
-                                </div>
+
+                                    {zones.length > 0 && (
+                                        <div>
+                                            <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Zone targeting</label>
+                                            <p className="mb-3 text-[11px] text-gray-500">
+                                                Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
+                                            </p>
+                                            <div className="space-y-2">
+                                                {zones.map((zone) => {
+                                                    const selected = data.zone_ids.includes(zone.id);
+                                                    return (
+                                                        <label
+                                                            key={zone.id}
+                                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
+                                                                selected
+                                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
+                                                                    : 'border-gray-200 hover:bg-gray-50'
+                                                            }`}
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selected}
+                                                                onChange={() => {
+                                                                    setData(
+                                                                        'zone_ids',
+                                                                        selected
+                                                                            ? data.zone_ids.filter((id) => id !== zone.id)
+                                                                            : [...data.zone_ids, zone.id],
+                                                                    );
+                                                                }}
+                                                                className="rounded border-gray-300 text-primary-600 focus:ring-slate-900"
+                                                            />
+                                                            <MapPin className="h-4 w-4 text-gray-500" />
+                                                            <span className="text-xs font-medium text-gray-900">{zone.name}</span>
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                            {errors.zone_ids && <p className="mt-1 text-sm text-red-600">{errors.zone_ids}</p>}
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                             <div>
@@ -466,9 +484,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 <div className="grid grid-cols-2 gap-2">
                                     <label
                                         className={`flex cursor-pointer flex-col rounded-xl border-2 p-3 transition-all ${
-                                            data.status === 'published'
-                                                ? 'border-green-500 bg-green-50'
-                                                : 'border-gray-200 hover:bg-gray-50'
+                                            data.status === 'published' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:bg-gray-50'
                                         }`}
                                     >
                                         <input
@@ -512,7 +528,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                                    className="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                                 >
                                     {processing ? 'Saving...' : 'Save changes'}
                                 </button>

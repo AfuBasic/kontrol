@@ -59,9 +59,7 @@ function resolveHealth(
     if (isSyncing || pendingCount > 0) {
         return {
             tone: 'blue',
-            label: isSyncing
-                ? `Syncing ${pendingCount || ''}…`.replace('  ', ' ')
-                : `${pendingCount} pending`,
+            label: isSyncing ? `Syncing ${pendingCount || ''}…`.replace('  ', ' ') : `${pendingCount} pending`,
             icon: Loader2,
             spin: true,
         };

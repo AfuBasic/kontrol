@@ -94,13 +94,14 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                         'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                     },
                     body: JSON.stringify({ hash: attachmentHash }),
                 });
 
                 if (!dedupResponse.ok) {
-                    throw new Error('Deduplication check failed');
+                    throw new Error(`Deduplication check failed (${dedupResponse.status})`);
                 }
 
                 const dedupResult = await dedupResponse.json();
@@ -115,6 +116,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                        'Accept': 'application/json',
                             'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                         },
                         body: JSON.stringify({ resource_type: resourceType }),
@@ -182,9 +184,9 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
 
             {/* Back Button */}
             <div className="mb-6">
-                <Link 
-                    href="/admin/incidents" 
-                    className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-500 hover:text-slate-900 transition"
+                <Link
+                    href="/admin/incidents"
+                    className="inline-flex items-center gap-1.5 text-xs font-black tracking-wider text-slate-500 uppercase transition hover:text-slate-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Incidents
@@ -204,13 +206,15 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                     <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
                         <div className="mb-6 border-b border-slate-50 pb-4">
                             <h1 className="text-xl font-black tracking-tight text-slate-900">Create Incident Report</h1>
-                            <p className="text-xs font-semibold text-slate-400">File a new community incident report, track resolving status, and assign it to estate security guards or staff.</p>
+                            <p className="text-xs font-semibold text-slate-400">
+                                File a new community incident report, track resolving status, and assign it to estate security guards or staff.
+                            </p>
                         </div>
 
                         <div className="space-y-5">
                             {/* Title */}
                             <div>
-                                <label htmlFor="title" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                <label htmlFor="title" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                     Incident Title
                                 </label>
                                 <input
@@ -219,7 +223,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="e.g. Broken water main, Main entrance guard house intrusion"
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                    className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold transition-all placeholder:text-slate-400 focus:ring-1 focus:outline-hidden"
                                     required
                                 />
                                 {errors.title && <span className="mt-1 block text-xs font-medium text-red-600">{errors.title}</span>}
@@ -227,7 +231,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
 
                             {/* Description */}
                             <div>
-                                <label htmlFor="body" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                <label htmlFor="body" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                     Description / Context
                                 </label>
                                 <textarea
@@ -236,7 +240,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Provide full description of the operational issue, safety threat, or maintenance request..."
                                     rows={6}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                    className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold transition-all placeholder:text-slate-400 focus:ring-1 focus:outline-hidden"
                                     required
                                 />
                                 {errors.body && <span className="mt-1 block text-xs font-medium text-red-600">{errors.body}</span>}
@@ -245,14 +249,14 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 {/* Category */}
                                 <div>
-                                    <label htmlFor="category" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <label htmlFor="category" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                         Category
                                     </label>
                                     <select
                                         id="category"
                                         value={data.category}
                                         onChange={(e) => setData('category', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
                                         required
                                     >
                                         <option value="">Select Category</option>
@@ -267,14 +271,14 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
 
                                 {/* Priority */}
                                 <div>
-                                    <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                         Priority
                                     </label>
                                     <select
                                         id="priority"
                                         value={data.priority}
                                         onChange={(e) => setData('priority', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
                                         required
                                     >
                                         <option value="low">Low</option>
@@ -289,7 +293,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 {/* Location */}
                                 <div>
-                                    <label htmlFor="location" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <label htmlFor="location" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                         Property / Location
                                     </label>
                                     <input
@@ -298,45 +302,24 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                         value={data.location}
                                         onChange={(e) => setData('location', e.target.value)}
                                         placeholder="e.g. Block A, Unit 12, Main Gate"
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-semibold transition-all placeholder:text-slate-400 focus:ring-1 focus:outline-hidden"
                                     />
                                     {errors.location && <span className="mt-1 block text-xs font-medium text-red-600">{errors.location}</span>}
                                 </div>
 
-                                {/* Zone */}
-                                {zones.length > 0 && (
-                                    <div className="sm:col-span-2">
-                                        <label htmlFor="zone_id" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                            Zone (Optional)
-                                        </label>
-                                        <select
-                                            id="zone_id"
-                                            value={data.zone_id}
-                                            onChange={(e) => setData('zone_id', e.target.value)}
-                                            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
-                                        >
-                                            <option value="">Entire estate</option>
-                                            {zones.map((zone) => (
-                                                <option key={zone.id} value={zone.id}>
-                                                    {zone.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        {errors.zone_id && <span className="mt-1 block text-xs font-medium text-red-600">{errors.zone_id}</span>}
-                                        <p className="mt-1.5 text-[10px] font-semibold text-slate-400">Residents outside this zone will not see the incident.</p>
-                                    </div>
-                                )}
-
                                 {/* Assignee */}
                                 <div>
-                                    <label htmlFor="assigned_to" className="mb-1.5 block text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                    <label
+                                        htmlFor="assigned_to"
+                                        className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase"
+                                    >
                                         Assign To (Optional)
                                     </label>
                                     <select
                                         id="assigned_to"
                                         value={data.assigned_to}
                                         onChange={(e) => setData('assigned_to', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 focus:border-slate-850 focus:ring-1 focus:ring-slate-850 focus:outline-hidden transition-all"
+                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
                                     >
                                         <option value="">Unassigned</option>
                                         {admins.map((adm) => (
@@ -347,33 +330,57 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     </select>
                                     {errors.assigned_to && <span className="mt-1 block text-xs font-medium text-red-600">{errors.assigned_to}</span>}
                                 </div>
+
+                                {/* Zone */}
+                                {zones.length > 0 && (
+                                    <div className="sm:col-span-2">
+                                        <label
+                                            htmlFor="zone_id"
+                                            className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase"
+                                        >
+                                            Zone (Optional)
+                                        </label>
+                                        <select
+                                            id="zone_id"
+                                            value={data.zone_id}
+                                            onChange={(e) => setData('zone_id', e.target.value)}
+                                            className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
+                                        >
+                                            <option value="">Entire estate</option>
+                                            {zones.map((zone) => (
+                                                <option key={zone.id} value={zone.id}>
+                                                    {zone.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {errors.zone_id && <span className="mt-1 block text-xs font-medium text-red-600">{errors.zone_id}</span>}
+                                        <p className="mt-1.5 text-[10px] font-semibold text-slate-400">
+                                            Residents outside this zone will not see the incident.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
-
                     </div>
                 </div>
 
                 {/* RIGHT COLUMN: Sidebar Metadata & Uploads */}
                 <div className="space-y-6">
                     {/* Attachment Upload Card */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-4">
+                    <div className="space-y-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
                         <div>
-                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Evidence / Attachments</h3>
-                            <p className="text-[10px] font-semibold text-slate-400 mt-0.5">Attach photo or video evidence to justify the resolution priority.</p>
+                            <h3 className="text-xs font-black tracking-wider text-slate-900 uppercase">Evidence / Attachments</h3>
+                            <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                                Attach photo or video evidence to justify the resolution priority.
+                            </p>
                         </div>
-                        
+
                         <div className="flex flex-col gap-4">
-                            <input
-                                type="file"
-                                accept="image/*,video/*"
-                                ref={fileInputRef}
-                                onChange={handleFileChange}
-                                className="hidden"
-                            />
+                            <input type="file" accept="image/*,video/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                             <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center hover:border-slate-800 hover:bg-slate-50/50 transition"
+                                className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center transition hover:border-slate-800 hover:bg-slate-50/50"
                             >
                                 <Paperclip className="h-4 w-4 text-slate-400" />
                                 <span className="text-xs font-bold text-slate-500">Choose file...</span>
@@ -389,7 +396,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     <button
                                         type="button"
                                         onClick={handleRemoveAttachment}
-                                        className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white hover:bg-slate-950 transition"
+                                        className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white transition hover:bg-slate-950"
                                     >
                                         ✕
                                     </button>
@@ -399,19 +406,21 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                     </div>
 
                     {/* Visibility Settings Card */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50 space-y-3">
-                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-900">Privacy & Visibility</h3>
+                    <div className="space-y-3 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
+                        <h3 className="text-xs font-black tracking-wider text-slate-900 uppercase">Privacy & Visibility</h3>
                         <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
                             <div className="flex items-start justify-between gap-3">
                                 <div>
                                     <label className="block text-xs font-bold text-slate-900">Internal Only</label>
-                                    <span className="text-[10px] font-semibold text-slate-400 mt-1 block leading-normal">Keep this report hidden from residents, making it visible only to estate administrators and security staff.</span>
+                                    <span className="mt-1 block text-[10px] leading-normal font-semibold text-slate-400">
+                                        Keep this report hidden from residents, making it visible only to estate administrators and security staff.
+                                    </span>
                                 </div>
                                 <input
                                     type="checkbox"
                                     checked={data.is_private}
                                     onChange={(e) => setData('is_private', e.target.checked)}
-                                    className="h-4.5 w-4.5 rounded-sm border-slate-350 text-slate-950 focus:ring-slate-950 mt-0.5"
+                                    className="border-slate-350 mt-0.5 h-4.5 w-4.5 rounded-sm text-slate-950 focus:ring-slate-950"
                                 />
                             </div>
                         </div>
@@ -419,18 +428,18 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
 
                     {/* Operational Guidelines Card */}
                     <div className="rounded-2xl border border-indigo-100 bg-indigo-50/20 p-5 shadow-xs">
-                        <h3 className="text-xs font-black uppercase tracking-wider text-indigo-900">Operational Guidelines</h3>
-                        <ul className="mt-3 space-y-2 text-[10.5px] font-semibold text-slate-655 leading-relaxed">
+                        <h3 className="text-xs font-black tracking-wider text-indigo-900 uppercase">Operational Guidelines</h3>
+                        <ul className="text-slate-655 mt-3 space-y-2 text-[10.5px] leading-relaxed font-semibold">
                             <li className="flex items-start gap-1.5">
-                                <span className="text-indigo-600 mt-0.5">•</span>
+                                <span className="mt-0.5 text-indigo-600">•</span>
                                 <span>High and Critical priority issues automatically trigger SLA tracking timers (24 hours standard).</span>
                             </li>
                             <li className="flex items-start gap-1.5">
-                                <span className="text-indigo-600 mt-0.5">•</span>
+                                <span className="mt-0.5 text-indigo-600">•</span>
                                 <span>Internal Only incidents are completely hidden from the resident-facing home screen feed.</span>
                             </li>
                             <li className="flex items-start gap-1.5">
-                                <span className="text-indigo-600 mt-0.5">•</span>
+                                <span className="mt-0.5 text-indigo-600">•</span>
                                 <span>Assigned staff will receive automatic mobile notifications to report on-site.</span>
                             </li>
                         </ul>
@@ -438,17 +447,17 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                 </div>
 
                 {/* BOTTOM ACTIONS BAR */}
-                <div className="lg:col-span-3 mt-6 flex justify-end gap-3 border-t border-slate-200/60 pt-5 w-full">
+                <div className="mt-6 flex w-full justify-end gap-3 border-t border-slate-200/60 pt-5 lg:col-span-3">
                     <Link
                         href="/admin/incidents"
-                        className="rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black uppercase tracking-wider text-slate-655 hover:bg-slate-205 transition"
+                        className="text-slate-655 hover:bg-slate-205 rounded-xl bg-slate-100 px-5 py-2.5 text-xs font-black tracking-wider uppercase transition"
                     >
                         Cancel
                     </Link>
                     <button
                         type="submit"
                         disabled={processing || uploadingMedia}
-                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800 disabled:opacity-40 transition shadow-xs"
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-xs transition hover:bg-slate-800 disabled:opacity-40"
                     >
                         {processing || uploadingMedia ? (
                             <>

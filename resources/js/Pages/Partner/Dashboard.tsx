@@ -1,12 +1,4 @@
-import {
-    ArrowRightIcon,
-    BanknotesIcon,
-    BuildingOffice2Icon,
-    ChartBarIcon,
-    ClockIcon,
-    PlusIcon,
-    SparklesIcon,
-} from '@heroicons/react/24/outline';
+import { ArrowRightIcon, BanknotesIcon, BuildingOffice2Icon, ChartBarIcon, ClockIcon, PlusIcon, SparklesIcon } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { motion, useMotionValue, useMotionValueEvent, useSpring } from 'framer-motion';
 import { useEffect, useState } from 'react';
@@ -221,7 +213,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 className="absolute inset-0 opacity-[0.03]"
                                 style={{
                                     backgroundImage:
-                                        'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.85\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")',
+                                        "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
                                 }}
                             />
                         </div>
@@ -241,14 +233,12 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 </div>
 
                                 <div className="mt-7 sm:mt-8">
-                                    <p className="text-[10px] font-semibold tracking-[0.18em] text-white/40 uppercase">
-                                        Lifetime earnings
-                                    </p>
+                                    <p className="text-[10px] font-semibold tracking-[0.18em] text-white/40 uppercase">Lifetime earnings</p>
                                     <motion.p
                                         initial={{ opacity: 0, scale: 0.97 }}
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: 0.12, duration: 0.5 }}
-                                        className="mt-1 text-[2.5rem] font-semibold tracking-tight tabular-nums text-white sm:text-6xl"
+                                        className="mt-1 text-[2.5rem] font-semibold tracking-tight text-white tabular-nums sm:text-6xl"
                                     >
                                         {formatAmount(stats.total_earned)}
                                     </motion.p>
@@ -290,13 +280,11 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 <div className="relative flex w-full flex-col justify-between overflow-hidden rounded-[1.5rem] border border-sky-200/15 bg-white/[0.08] p-5 shadow-2xl ring-1 ring-primary-400/10 backdrop-blur-2xl sm:rounded-[1.75rem] sm:p-6">
                                     <div className="flex items-start justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-semibold tracking-[0.16em] text-sky-200/85 uppercase">
-                                                Next settlement
-                                            </p>
+                                            <p className="text-[10px] font-semibold tracking-[0.16em] text-sky-200/85 uppercase">Next settlement</p>
                                             <div className="mt-2.5 flex items-baseline gap-2">
                                                 <AnimatedNumber
                                                     value={stats.days_until_settlement}
-                                                    className="text-5xl font-semibold tracking-tight tabular-nums text-white sm:text-[3.5rem]"
+                                                    className="text-5xl font-semibold tracking-tight text-white tabular-nums sm:text-[3.5rem]"
                                                 />
                                                 <span className="text-base font-medium text-white/45">days</span>
                                             </div>
@@ -310,9 +298,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                         <div className="mt-5 h-px bg-linear-to-r from-sky-200/25 via-white/10 to-transparent" />
                                         <p className="mt-4 text-[13px] text-white/55">
                                             Pending balance{' '}
-                                            <span className="font-semibold text-white tabular-nums">
-                                                {formatAmount(stats.pending_commissions)}
-                                            </span>
+                                            <span className="font-semibold text-white tabular-nums">{formatAmount(stats.pending_commissions)}</span>
                                         </p>
                                         <div className="mt-3.5 h-1.5 overflow-hidden rounded-full bg-white/10">
                                             <motion.div
@@ -334,14 +320,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                 {/* ── KPI row: equal height ── */}
                 <section className="grid auto-rows-fr grid-cols-2 gap-3 sm:gap-3.5 lg:grid-cols-4">
                     {kpis.map((kpi, i) => (
-                        <motion.div
-                            key={kpi.label}
-                            custom={i}
-                            variants={fadeUp}
-                            initial="hidden"
-                            animate="show"
-                            className="min-h-0"
-                        >
+                        <motion.div key={kpi.label} custom={i} variants={fadeUp} initial="hidden" animate="show" className="min-h-0">
                             <Link
                                 href={kpi.href}
                                 className={`group relative flex h-full min-h-[132px] flex-col overflow-hidden rounded-[1.25rem] bg-white/75 p-4 shadow-[0_1px_0_rgba(28,25,23,0.04),0_10px_28px_-14px_rgba(28,25,23,0.14)] ring-1 ring-stone-900/[0.04] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-20px_rgba(28,25,23,0.22)] sm:min-h-[140px] sm:rounded-[1.35rem] sm:p-5 dark:bg-white/[0.04] dark:shadow-none dark:ring-white/[0.06] dark:hover:bg-white/[0.06] ${kpi.glow}`}
@@ -359,15 +338,9 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 </div>
                                 <div className="relative mt-auto pt-4">
                                     <p className="text-[1.35rem] font-semibold tracking-tight text-stone-900 tabular-nums sm:text-[1.65rem] dark:text-white">
-                                        {'numeric' in kpi && kpi.numeric !== undefined ? (
-                                            <AnimatedNumber value={kpi.numeric} />
-                                        ) : (
-                                            kpi.display
-                                        )}
+                                        {'numeric' in kpi && kpi.numeric !== undefined ? <AnimatedNumber value={kpi.numeric} /> : kpi.display}
                                     </p>
-                                    <p className="mt-0.5 text-[11px] text-stone-400 sm:text-[12px] dark:text-slate-500">
-                                        {kpi.hint}
-                                    </p>
+                                    <p className="mt-0.5 text-[11px] text-stone-400 sm:text-[12px] dark:text-slate-500">{kpi.hint}</p>
                                 </div>
                             </Link>
                         </motion.div>
@@ -376,13 +349,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
 
                 {/* ── Mid band: actions + chart, equal height ── */}
                 <section className="grid items-stretch gap-5 lg:grid-cols-12 lg:gap-6">
-                    <motion.div
-                        custom={4}
-                        variants={fadeUp}
-                        initial="hidden"
-                        animate="show"
-                        className="flex flex-col lg:col-span-5"
-                    >
+                    <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="flex flex-col lg:col-span-5">
                         <div className="mb-3.5 flex items-end justify-between gap-3">
                             <div>
                                 <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 sm:text-base dark:text-white">
@@ -398,9 +365,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                     <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-stone-900/5 dark:bg-white/5 dark:ring-white/10">
                                         <SparklesIcon className="h-5 w-5 text-stone-400 dark:text-slate-500" />
                                     </div>
-                                    <p className="mt-3 text-[13px] font-medium text-stone-600 dark:text-slate-300">
-                                        You&apos;re all caught up
-                                    </p>
+                                    <p className="mt-3 text-[13px] font-medium text-stone-600 dark:text-slate-300">You&apos;re all caught up</p>
                                     <p className="mt-1 text-[12px] text-stone-400">Nothing needs attention right now.</p>
                                 </div>
                             ) : (
@@ -416,9 +381,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                             href={action.href}
                                             className={`group relative flex h-full flex-col overflow-hidden rounded-[1.15rem] bg-linear-to-br p-4 ring-1 transition duration-300 hover:-translate-y-0.5 hover:shadow-lg sm:p-4.5 ${actionAccent(action.tone)} bg-white/85 dark:bg-white/[0.03]`}
                                         >
-                                            <p className="text-[14px] font-semibold tracking-tight text-stone-900 dark:text-white">
-                                                {action.title}
-                                            </p>
+                                            <p className="text-[14px] font-semibold tracking-tight text-stone-900 dark:text-white">{action.title}</p>
                                             <p className="mt-1 flex-1 text-[12px] leading-relaxed text-stone-500 sm:text-[13px] dark:text-slate-400">
                                                 {action.description}
                                             </p>
@@ -452,9 +415,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                     <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 sm:text-base dark:text-white">
                                         Earnings trend
                                     </h2>
-                                    <p className="mt-0.5 text-[12px] text-stone-500 dark:text-slate-400">
-                                        Settled commissions over time
-                                    </p>
+                                    <p className="mt-0.5 text-[12px] text-stone-500 dark:text-slate-400">Settled commissions over time</p>
                                 </div>
                                 <Link
                                     href="/partner/earnings"
@@ -478,7 +439,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                     />
                                 </div>
                             ) : (
-                                <div className="relative min-h-[200px] flex-1 w-full sm:min-h-[220px]">
+                                <div className="relative min-h-[200px] w-full flex-1 sm:min-h-[220px]">
                                     <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={chartData} margin={{ top: 8, right: 4, left: 0, bottom: 0 }}>
                                             <defs>
@@ -505,9 +466,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                                 width={44}
                                                 axisLine={false}
                                                 tickLine={false}
-                                                tickFormatter={(v) =>
-                                                    `₦${Number(v).toLocaleString('en-NG', { notation: 'compact' })}`
-                                                }
+                                                tickFormatter={(v) => `₦${Number(v).toLocaleString('en-NG', { notation: 'compact' })}`}
                                             />
                                             <Tooltip
                                                 formatter={(value) => [formatAmount(Number(value) * 100), 'Commission']}
@@ -542,13 +501,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
 
                 {/* ── Bottom: activity + explainer, equal height ── */}
                 <section className="grid items-stretch gap-5 lg:grid-cols-2 lg:gap-6">
-                    <motion.div
-                        custom={6}
-                        variants={fadeUp}
-                        initial="hidden"
-                        animate="show"
-                        className="flex flex-col"
-                    >
+                    <motion.div custom={6} variants={fadeUp} initial="hidden" animate="show" className="flex flex-col">
                         <div className="mb-3.5 flex items-end justify-between gap-3">
                             <div>
                                 <h2 className="text-[15px] font-semibold tracking-tight text-stone-900 sm:text-base dark:text-white">
@@ -589,9 +542,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                             className="relative flex flex-1 gap-3.5 pb-5 last:pb-0"
                                         >
                                             <div className="relative flex flex-col items-center">
-                                                <span
-                                                    className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${statusDot(item.status)}`}
-                                                />
+                                                <span className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${statusDot(item.status)}`} />
                                                 {i < recentActivity.length - 1 && (
                                                     <span className="mt-1 w-px flex-1 bg-linear-to-b from-stone-200 to-transparent dark:from-slate-700" />
                                                 )}
@@ -605,9 +556,7 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                                     <span className="text-stone-300 dark:text-slate-600"> · </span>
                                                     {item.status_label}
                                                 </p>
-                                                <p className="mt-1 text-[11px] text-stone-400 dark:text-slate-500">
-                                                    {item.at_human}
-                                                </p>
+                                                <p className="mt-1 text-[11px] text-stone-400 dark:text-slate-500">{item.at_human}</p>
                                             </div>
                                         </motion.li>
                                     ))}
@@ -630,15 +579,10 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
                                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/15">
                                     <SparklesIcon className="h-5 w-5 text-indigo-200" />
                                 </div>
-                                <h2 className="mt-4 text-[15px] font-semibold tracking-tight text-white sm:text-base">
-                                    How commissions work
-                                </h2>
+                                <h2 className="mt-4 text-[15px] font-semibold tracking-tight text-white sm:text-base">How commissions work</h2>
                                 <p className="mt-2 text-[12px] leading-relaxed text-white/50 sm:text-[13px]">
                                     Earn on resident payments from estates you referred for{' '}
-                                    {stats.commission_length
-                                        ? `${stats.commission_length} months`
-                                        : 'the lifetime of the estate'}{' '}
-                                    after activation.
+                                    {stats.commission_length ? `${stats.commission_length} months` : 'the lifetime of the estate'} after activation.
                                 </p>
                                 <ol className="mt-5 flex-1 space-y-2.5">
                                     {[

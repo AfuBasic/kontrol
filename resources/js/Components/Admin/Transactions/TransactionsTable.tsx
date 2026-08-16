@@ -82,8 +82,11 @@ function RowActions({
         <div className="relative inline-block text-left">
             <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setOpen(!open);
+                }}
+                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
             >
                 <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -129,14 +132,14 @@ function RowActions({
 
 export default function TransactionsTable({ transactions, onSelect, permissions }: Props) {
     return (
-        <div className="rounded-2xl border border-slate-200 bg-white shadow-2xs overflow-hidden">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
             <div className="border-b border-slate-100 px-5 py-3">
-                <p className="text-sm font-semibold text-slate-900 font-black">All Transactions</p>
-                <p className="text-xs text-slate-400 font-bold">{transactions.total.toLocaleString()} records</p>
+                <p className="text-sm font-black font-semibold text-slate-900">All Transactions</p>
+                <p className="text-xs font-bold text-slate-400">{transactions.total.toLocaleString()} records</p>
             </div>
 
             {transactions.data.length === 0 ? (
-                <div className="p-8 text-center text-xs text-slate-400 font-bold">No ledger transactions found</div>
+                <div className="p-8 text-center text-xs font-bold text-slate-400">No ledger transactions found</div>
             ) : (
                 <>
                     <div className="overflow-x-auto">
@@ -144,7 +147,9 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                             <thead>
                                 <tr className="border-b border-slate-100 text-left text-[10px] font-black tracking-wide text-slate-400 uppercase">
                                     {['Transaction', 'Resident', 'Collection', 'Amount', 'Method', 'Status', 'Reference', 'Date', ''].map((h) => (
-                                        <th key={h} className="px-4 py-3">{h}</th>
+                                        <th key={h} className="px-4 py-3">
+                                            {h}
+                                        </th>
                                     ))}
                                 </tr>
                             </thead>
@@ -154,21 +159,31 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         <td className="px-4 py-3">
                                             <p className="text-xs font-bold text-slate-900">{tx.type_label}</p>
                                         </td>
-                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.resident?.name || '-'}</td>
-                                        <td className="px-4 py-3 text-xs text-slate-600 font-semibold">{tx.collection?.name || '-'}</td>
-                                        <td className="px-4 py-3 text-xs font-black text-slate-950">{formatCurrency(tx.amount, tx.currency || 'NGN')}</td>
-                                        <td className="px-4 py-3 text-xs text-slate-500 font-semibold">{tx.payment_method_label || tx.provider || '-'}</td>
+                                        <td className="px-4 py-3 text-xs font-semibold text-slate-600">{tx.resident?.name || '-'}</td>
+                                        <td className="px-4 py-3 text-xs font-semibold text-slate-600">{tx.collection?.name || '-'}</td>
+                                        <td className="px-4 py-3 text-xs font-black text-slate-950">
+                                            {formatCurrency(tx.amount, tx.currency || 'NGN')}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs font-semibold text-slate-500">
+                                            {tx.payment_method_label || tx.provider || '-'}
+                                        </td>
                                         <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                                tx.status === 'success' || tx.status === 'successful' || tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
-                                                tx.status === 'partial' ? 'bg-blue-50 text-blue-700' :
-                                                tx.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
-                                            }`}>
+                                            <span
+                                                className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-wider uppercase ${
+                                                    tx.status === 'success' || tx.status === 'successful' || tx.status === 'completed'
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : tx.status === 'partial'
+                                                          ? 'bg-blue-50 text-blue-700'
+                                                          : tx.status === 'pending'
+                                                            ? 'bg-amber-50 text-amber-700'
+                                                            : 'bg-rose-50 text-rose-700'
+                                                }`}
+                                            >
                                                 {tx.status_label || tx.status}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 font-mono text-[10px] text-slate-450 font-semibold">{tx.reference_number}</td>
-                                        <td className="px-4 py-3 text-xs text-slate-500 font-semibold">
+                                        <td className="text-slate-450 px-4 py-3 font-mono text-[10px] font-semibold">{tx.reference_number}</td>
+                                        <td className="px-4 py-3 text-xs font-semibold text-slate-500">
                                             {tx.created_at ? format(parseISO(tx.created_at), 'MMM d, h:mm a') : '-'}
                                         </td>
                                         <td className="px-4 py-3">
@@ -182,20 +197,32 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
 
                     {transactions.last_page > 1 && (
                         <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3">
-                            <p className="text-xs text-slate-400">Page {transactions.current_page} of {transactions.last_page}</p>
+                            <p className="text-xs text-slate-400">
+                                Page {transactions.current_page} of {transactions.last_page}
+                            </p>
                             <div className="flex gap-1">
                                 {transactions.links.map((link, i) => {
                                     if (!link.url) return null;
                                     if (link.label.includes('Previous')) {
                                         return (
-                                            <button key={i} type="button" onClick={() => router.get(link.url!, {}, { preserveState: true })} className="rounded-md border border-slate-200 p-1.5">
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => router.get(link.url!, {}, { preserveState: true })}
+                                                className="rounded-md border border-slate-200 p-1.5"
+                                            >
                                                 <ChevronLeft className="h-4 w-4" />
                                             </button>
                                         );
                                     }
                                     if (link.label.includes('Next')) {
                                         return (
-                                            <button key={i} type="button" onClick={() => router.get(link.url!, {}, { preserveState: true })} className="rounded-md border border-slate-200 p-1.5">
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => router.get(link.url!, {}, { preserveState: true })}
+                                                className="rounded-md border border-slate-200 p-1.5"
+                                            >
                                                 <ChevronRight className="h-4 w-4" />
                                             </button>
                                         );

@@ -44,7 +44,7 @@ class DeleteResidentAction
                 ->delete();
 
             // 4. Cancel/clean up resident subscriptions for this estate
-            $resident->residentSubscriptions()->where('estate_id', $estate->id)->delete();
+            $resident->residentSubscription()->where('estate_id', $estate->id)->delete();
 
             // 5. Check if user still has other active roles/assignments in this estate (e.g. security, property_owner, admin)
             $remainingAssignments = AdministrativeAssignment::where('user_id', $resident->id)

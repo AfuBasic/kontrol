@@ -40,7 +40,14 @@ const getLocalISOString = (date: Date) => {
 };
 
 const CreateAccessCode = () => {
-    const { durationOptions, durationConstraints, estate_plan, isSubscriptionActive, accessCodesEnabled = true, requireVehicleInfo = false } = usePage<
+    const {
+        durationOptions,
+        durationConstraints,
+        estate_plan,
+        isSubscriptionActive,
+        accessCodesEnabled = true,
+        requireVehicleInfo = false,
+    } = usePage<
         SharedData & {
             durationOptions: { minutes: number; label: string }[];
             durationConstraints: { min: number; max: number };

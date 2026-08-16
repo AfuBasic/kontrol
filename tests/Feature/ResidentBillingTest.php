@@ -328,11 +328,14 @@ test('collection notifications and emails reflect property owner and house name 
 
     $resident = User::factory()->create(['name' => 'Alice Resident']);
     $resident->assignRole($residentRole);
-    $estate->users()->attach($resident->id, ['status' => 'accepted', 'property_owner_id' => $owner->id, 'property_id' => $property->id]);
+    $estate->users()->attach($resident->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
 
     UserProfile::create([
         'user_id' => $resident->id,
+        'property_id' => $property->id,
     ]);
+
+    $resident = $resident->fresh();
 
     $collection = Collection::create([
         'estate_id' => $estate->id,

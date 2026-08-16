@@ -245,7 +245,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         applyFilters({ sort: 'newest', tab: 'all', category: '' });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="flex-1 rounded-2xl border border-slate-200 py-3 text-xs font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50"
+                    className="flex-1 rounded-2xl border border-slate-200 py-3 text-xs font-black tracking-wider text-slate-600 uppercase hover:bg-slate-50"
                 >
                     Reset
                 </button>
@@ -255,7 +255,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         applyFilters({ sort, tab, category });
                         setIsFilterSheetOpen(false);
                     }}
-                    className="flex-1 rounded-2xl bg-slate-900 py-3 text-xs font-black uppercase tracking-wider text-white hover:bg-slate-800"
+                    className="flex-1 rounded-2xl bg-slate-900 py-3 text-xs font-black tracking-wider text-white uppercase hover:bg-slate-800"
                 >
                     Apply Filters
                 </button>
@@ -272,12 +272,14 @@ export default function Index({ incidents, filters, categories }: Props) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-xl font-black tracking-tight text-slate-900">Incidents</h1>
-                        <p className="text-[10.5px] font-semibold text-slate-400 mt-0.5">Report on-site issues and monitor active resolution progress.</p>
+                        <p className="mt-0.5 text-[10.5px] font-semibold text-slate-400">
+                            Report on-site issues and monitor active resolution progress.
+                        </p>
                     </div>
 
                     <Link
                         href="/security/incidents/create"
-                        className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-slate-900 px-4 text-xs font-black tracking-wide text-white uppercase shadow-sm active:scale-95 transition"
+                        className="inline-flex h-11 items-center gap-1.5 rounded-2xl bg-slate-900 px-4 text-xs font-black tracking-wide text-white uppercase shadow-sm transition active:scale-95"
                     >
                         <Plus className="h-4.5 w-4.5" strokeWidth={3} />
                         Report
@@ -293,15 +295,15 @@ export default function Index({ incidents, filters, categories }: Props) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Search incidents..."
-                            className="w-full rounded-2xl border border-slate-200 py-3.5 pr-4 pl-11 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden transition-all bg-white"
+                            className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pr-4 pl-11 text-xs font-semibold transition-all placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800 focus:outline-hidden"
                         />
                     </form>
                     <button
                         onClick={() => setIsFilterSheetOpen(true)}
                         className={`flex h-12 w-12 items-center justify-center rounded-2xl border transition-all ${
                             category || tab !== 'all' || sort !== 'newest'
-                                ? 'bg-slate-900 text-white border-slate-900'
-                                : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                                ? 'border-slate-900 bg-slate-900 text-white'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                         }`}
                     >
                         <Filter className="h-4.5 w-4.5" />
@@ -311,10 +313,12 @@ export default function Index({ incidents, filters, categories }: Props) {
                 {/* Incident List */}
                 <div className="space-y-3">
                     {incidents.data.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/50 py-12 px-4 text-center">
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/50 px-4 py-12 text-center">
                             <AlertTriangle className="h-9 w-9 text-slate-400" />
                             <h3 className="mt-3 text-xs font-bold text-slate-700">No incident reports found</h3>
-                            <p className="mt-1 text-[10px] font-semibold text-slate-400 max-w-[240px]">There are no incident records matching your search or filters at the moment.</p>
+                            <p className="mt-1 max-w-[240px] text-[10px] font-semibold text-slate-400">
+                                There are no incident records matching your search or filters at the moment.
+                            </p>
                         </div>
                     ) : (
                         incidents.data.map((incident) => {
@@ -328,21 +332,21 @@ export default function Index({ incidents, filters, categories }: Props) {
                                     className="group block rounded-2xl border border-slate-200/60 bg-white p-4 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300"
                                 >
                                     <div className="flex items-start justify-between gap-3">
-                                        <div className="flex flex-col gap-1 min-w-0">
+                                        <div className="flex min-w-0 flex-col gap-1">
                                             {/* Category & Status badges */}
                                             <div className="flex flex-wrap items-center gap-1.5">
-                                                <span className="inline-flex items-center gap-1 rounded bg-slate-50 border border-slate-200 px-1.5 py-0.5 text-[8px] font-black uppercase text-slate-500">
+                                                <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase">
                                                     {getCategoryIcon(incident.category as IncidentCategory)}
                                                     {categoryLabel}
                                                 </span>
                                                 <span
-                                                    className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8px] font-black uppercase text-slate-500 ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
+                                                    className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
                                                 >
                                                     {statusStyle.icon}
                                                     {statusStyle.label}
                                                 </span>
                                                 {incident.is_private && (
-                                                    <span className="inline-flex items-center gap-0.5 rounded bg-rose-50 border border-rose-200/50 px-1.5 py-0.5 text-[8px] font-black uppercase text-rose-700">
+                                                    <span className="inline-flex items-center gap-0.5 rounded border border-rose-200/50 bg-rose-50 px-1.5 py-0.5 text-[8px] font-black text-rose-700 uppercase">
                                                         <Lock className="h-2 w-2" />
                                                         Internal
                                                     </span>
@@ -350,12 +354,12 @@ export default function Index({ incidents, filters, categories }: Props) {
                                             </div>
 
                                             {/* Title */}
-                                            <h3 className="mt-1.5 text-xs font-bold leading-snug text-slate-900 group-hover:text-slate-950 transition">
+                                            <h3 className="mt-1.5 text-xs leading-snug font-bold text-slate-900 transition group-hover:text-slate-950">
                                                 {incident.title}
                                             </h3>
 
                                             {/* Body snippet */}
-                                            <p className="text-[10px] font-semibold text-slate-400 line-clamp-2 mt-0.5 leading-normal">
+                                            <p className="mt-0.5 line-clamp-2 text-[10px] leading-normal font-semibold text-slate-400">
                                                 {incident.body}
                                             </p>
 
@@ -363,7 +367,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                                             <div className="mt-3 flex flex-wrap items-center gap-3 text-[9px] font-bold text-slate-400">
                                                 {incident.location && (
                                                     <span className="flex items-center gap-0.5">
-                                                        <MapPin className="h-3 w-3 text-slate-350" />
+                                                        <MapPin className="text-slate-350 h-3 w-3" />
                                                         {incident.location}
                                                     </span>
                                                 )}
@@ -371,9 +375,9 @@ export default function Index({ incidents, filters, categories }: Props) {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col items-end gap-2.5 shrink-0 self-center">
+                                        <div className="flex shrink-0 flex-col items-end gap-2.5 self-center">
                                             {/* Actions */}
-                                            <span className="rounded-full bg-slate-50 p-2 text-slate-400 group-hover:bg-slate-100 group-hover:text-slate-800 transition">
+                                            <span className="rounded-full bg-slate-50 p-2 text-slate-400 transition group-hover:bg-slate-100 group-hover:text-slate-800">
                                                 <ArrowRight className="h-3.5 w-3.5" />
                                             </span>
                                         </div>
@@ -394,7 +398,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                 <Modal isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} maxWidth="md">
                     <div className="p-6">
                         <div className="mb-4 flex items-center justify-between">
-                            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900">Filter Incidents</h3>
+                            <h3 className="text-sm font-black tracking-wider text-slate-900 uppercase">Filter Incidents</h3>
                             <button onClick={() => setIsFilterSheetOpen(false)} className="text-slate-400 hover:text-slate-600">
                                 ✕
                             </button>

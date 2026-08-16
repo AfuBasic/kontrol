@@ -11,6 +11,7 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\URL;
+use App\Actions\Auth\GenerateMagicLoginUrlAction;
 
 class AdminInvitationMail extends Mailable implements ShouldQueue
 {
@@ -22,16 +23,16 @@ class AdminInvitationMail extends Mailable implements ShouldQueue
         public User $user,
         public Estate $estate,
     ) {
-        // Generate signed URL on app domain that expires in 72 hours
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';
 
         URL::forceRootUrl("{$scheme}://{$appDomain}");
 
-        $this->invitationUrl = URL::temporarySignedRoute(
-            'invitation.accept',
-            now()->addHours(72),
-            ['token' => $user->id]
+        // Generate a 72-hour magic login link to let them access their account
+        $this->invitationUrl = app(GenerateMagicLoginUrlAction::class)->execute(
+            user: $user,
+            destination: route('admin.dashboard', [], false),
+            ttlMinutes: 72 * 60
         );
 
         URL::forceRootUrl(null);
@@ -40,7 +41,7 @@ class AdminInvitationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "You've been invited to join {$this->estate->name} as an Administrator",
+            subject: "You've been added to {$this->estate->name} as an Administrator",
         );
     }
 

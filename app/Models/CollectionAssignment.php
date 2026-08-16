@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\CollectionAssignmentScope;
 use App\Services\Compliance\Contracts\ViolatableInterface;
 use App\Traits\GeneratesUlid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CollectionAssignment extends Model implements ViolatableInterface
 {
     use GeneratesUlid, HasFactory;
+
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new CollectionAssignmentScope);
+    }
 
     protected $fillable = [
         'collection_id',
@@ -26,6 +32,14 @@ class CollectionAssignment extends Model implements ViolatableInterface
         'grace_until',
         'paid_at',
         'external_reference',
+        'reminder_count',
+    ];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'reminder_count' => 0,
     ];
 
     protected function casts(): array
@@ -36,7 +50,27 @@ class CollectionAssignment extends Model implements ViolatableInterface
             'paid_at' => 'datetime',
             'amount_due' => 'integer',
             'amount_paid' => 'integer',
+            'reminder_count' => 'integer',
         ];
+    }
+
+    /**
+     * Resolve the assignment without waiting on request context.
+     * The caller still authorizes access after binding.
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        $query = static::withoutGlobalScopes();
+
+        if ($field) {
+            return $query->where($field, $value)->firstOrFail();
+        }
+
+        if (is_string($value) && strlen($value) === 26) {
+            return $query->where('ulid', $value)->firstOrFail();
+        }
+
+        return $query->whereKey($value)->firstOrFail();
     }
 
     public function collection(): BelongsTo

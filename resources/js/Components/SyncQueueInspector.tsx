@@ -1,11 +1,4 @@
-import {
-    AlertTriangle,
-    CheckCircle2,
-    Clock,
-    Loader2,
-    RefreshCw,
-    Trash2,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, Loader2, RefreshCw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import MobileSheet from '@/Components/MobileSheet';
@@ -80,9 +73,7 @@ function OperationRow({
                         <Clock className="mr-1 inline h-3 w-3" />
                         {formatTime(op.createdAt)}
                     </p>
-                    {op.lastError && (
-                        <p className="mt-2 text-[12px] leading-snug text-amber-700 dark:text-amber-400">{op.lastError}</p>
-                    )}
+                    {op.lastError && <p className="mt-2 text-[12px] leading-snug text-amber-700 dark:text-amber-400">{op.lastError}</p>}
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
                     {isFailed && (
@@ -157,9 +148,7 @@ export default function SyncQueueInspector({ isOpen, onClose }: Props) {
         <MobileSheet isOpen={isOpen} onClose={onClose} title="Sync queue">
             <div className="space-y-5 px-2 pb-4">
                 <div className="flex flex-wrap items-center gap-2 text-[12px] text-slate-500">
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium dark:bg-white/5">
-                        {pendingCount} pending
-                    </span>
+                    <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium dark:bg-white/5">{pendingCount} pending</span>
                     {(failedCount > 0 || conflictCount > 0) && (
                         <span className="rounded-full bg-amber-50 px-2.5 py-1 font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                             {failedCount + conflictCount} failed
@@ -202,30 +191,16 @@ export default function SyncQueueInspector({ isOpen, onClose }: Props) {
                                     Needs attention
                                 </div>
                                 {failed.map((op) => (
-                                    <OperationRow
-                                        key={op.id}
-                                        op={op}
-                                        onRetry={handleRetry}
-                                        onDiscard={handleDiscard}
-                                        busyId={busyId}
-                                    />
+                                    <OperationRow key={op.id} op={op} onRetry={handleRetry} onDiscard={handleDiscard} busyId={busyId} />
                                 ))}
                             </section>
                         )}
 
                         {pending.length > 0 && (
                             <section className="space-y-2">
-                                <div className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">
-                                    Pending
-                                </div>
+                                <div className="text-[12px] font-semibold tracking-wide text-slate-500 uppercase">Pending</div>
                                 {pending.map((op) => (
-                                    <OperationRow
-                                        key={op.id}
-                                        op={op}
-                                        onRetry={handleRetry}
-                                        onDiscard={handleDiscard}
-                                        busyId={busyId}
-                                    />
+                                    <OperationRow key={op.id} op={op} onRetry={handleRetry} onDiscard={handleDiscard} busyId={busyId} />
                                 ))}
                             </section>
                         )}

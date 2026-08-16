@@ -19,6 +19,7 @@ class StoreEstateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'admin_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:estates,email', 'unique:users,email'],
             'address' => ['nullable', 'string', 'max:500'],
             'plan_id' => ['required', 'exists:plans,id'],

@@ -12,8 +12,8 @@ export default function PinnedSection({ pinnedPosts }: Props) {
 
     return (
         <div className="space-y-3">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-700">
-                <Pin className="h-4 w-4 text-amber-600 shrink-0" />
+            <div className="flex items-center gap-2 text-xs font-bold tracking-wider text-amber-700 uppercase">
+                <Pin className="h-4 w-4 shrink-0 text-amber-600" />
                 <span>Pinned Announcements ({pinnedPosts.length})</span>
             </div>
 

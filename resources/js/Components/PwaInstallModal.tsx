@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Download, X, CheckCircle2, ChevronRight, Compass, Sparkles, ArrowLeft, Loader2 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
@@ -58,6 +59,9 @@ export default function PwaInstallModal() {
     useEffect(() => {
         if (typeof window === 'undefined') return;
 
+        // Do not show PWA install prompt if already running in a native Capacitor app
+        if (Capacitor.isNativePlatform()) return;
+
         const os = getOperatingSystem();
 
         // STRICTLY ANDROID ONLY per user directive
@@ -117,7 +121,7 @@ export default function PwaInstallModal() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 100, scale: 0.96 }}
                             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                            className="relative w-full max-w-lg rounded-t-[36px] border border-slate-800 bg-slate-900/95 p-6 shadow-2xl shadow-indigo-950/50 backdrop-blur-2xl sm:rounded-[36px] sm:p-8 text-white font-sans overflow-hidden"
+                            className="relative w-full max-w-lg overflow-hidden rounded-t-[36px] border border-slate-800 bg-slate-900/95 p-6 font-sans text-white shadow-2xl shadow-indigo-950/50 backdrop-blur-2xl sm:rounded-[36px] sm:p-8"
                         >
                             {/* Ambient Glow */}
                             <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-indigo-500/20 blur-[70px]" />
@@ -133,15 +137,15 @@ export default function PwaInstallModal() {
 
                             {/* App Icon & Header */}
                             <div className="flex items-start gap-4">
-                                <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-500/20 to-indigo-600/05 p-3 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
-                                    <img src="/assets/images/app-icon.png" alt="Kontrol Icon" className="h-full w-full object-contain rounded-xl" />
-                                    <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow">
+                                <div className="to-indigo-600/05 relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-indigo-500/30 bg-gradient-to-b from-indigo-500/20 p-3 shadow-xl shadow-indigo-500/10 backdrop-blur-sm">
+                                    <img src="/assets/images/app-icon.png" alt="Kontrol Icon" className="h-full w-full rounded-xl object-contain" />
+                                    <div className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-white shadow">
                                         <Sparkles className="h-3 w-3" />
                                     </div>
                                 </div>
 
-                                <div className="pr-6 pt-0.5">
-                                    <span className="inline-block text-[11px] font-extrabold uppercase tracking-widest text-indigo-400">
+                                <div className="pt-0.5 pr-6">
+                                    <span className="inline-block text-[11px] font-extrabold tracking-widest text-indigo-400 uppercase">
                                         Android PWA Experience
                                     </span>
                                     <h3 className="text-xl font-black tracking-tight text-white sm:text-2xl">Install Kontrol on your phone</h3>
@@ -225,7 +229,7 @@ export default function PwaInstallModal() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 120, scale: 0.95 }}
                             transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                            className="relative w-full max-w-lg rounded-t-[36px] border border-slate-800 bg-slate-900/98 p-6 shadow-2xl shadow-indigo-950/60 backdrop-blur-2xl sm:rounded-[36px] sm:p-8 text-white font-sans overflow-hidden max-h-[90vh] flex flex-col"
+                            className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[36px] border border-slate-800 bg-slate-900/98 p-6 font-sans text-white shadow-2xl shadow-indigo-950/60 backdrop-blur-2xl sm:rounded-[36px] sm:p-8"
                         >
                             {/* Ambient Glow */}
                             <div className="pointer-events-none absolute -top-28 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full bg-indigo-500/25 blur-[70px]" />
@@ -256,37 +260,38 @@ export default function PwaInstallModal() {
                             {/* Steps Content */}
                             <div className="mt-5 space-y-3.5 overflow-y-auto pr-1">
                                 <div className="flex items-start gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600/20 font-black text-indigo-400 border border-indigo-500/30">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-600/20 font-black text-indigo-400">
                                         1
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-white">Open Browser Menu</h4>
-                                        <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-300">
                                             Tap the <strong>Menu (⋮ or ≡)</strong> button at the top right or bottom of your browser window.
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600/20 font-black text-indigo-400 border border-indigo-500/30">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-600/20 font-black text-indigo-400">
                                         2
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-white">Select Install App</h4>
-                                        <p className="mt-1 text-xs text-slate-300 leading-relaxed">
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-300">
                                             Look for <strong>Add to Home screen</strong> or <strong>Install app</strong> in the dropdown menu.
                                         </p>
                                     </div>
                                 </div>
 
                                 <div className="flex items-start gap-4 rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600/20 font-black text-indigo-400 border border-indigo-500/30">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-indigo-500/30 bg-indigo-600/20 font-black text-indigo-400">
                                         3
                                     </div>
                                     <div>
                                         <h4 className="text-sm font-bold text-white">Confirm & Enjoy</h4>
-                                        <p className="mt-1 text-xs text-slate-300 leading-relaxed">
-                                            Tap <strong>Install</strong> when prompted. Kontrol will instantly appear on your home screen like a native app.
+                                        <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                                            Tap <strong>Install</strong> when prompted. Kontrol will instantly appear on your home screen like a
+                                            native app.
                                         </p>
                                     </div>
                                 </div>

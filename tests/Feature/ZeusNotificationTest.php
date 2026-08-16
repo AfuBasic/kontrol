@@ -32,7 +32,7 @@ it('creates a zeus notification when a partner submits an estate application', f
             'state' => 'Lagos',
             'lga' => 'Eti-Osa',
         ])
-        ->assertRedirect(route('partner.partner-requests.index'));
+        ->assertRedirect(route('partner.partner-requests.index', ['tab' => 'referrals']));
 
     $notification = ZeusNotification::query()->latest('id')->first();
 

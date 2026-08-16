@@ -30,8 +30,11 @@ class StoreAdministrativeAssignmentRequest extends FormRequest
                     ->where('estate_id', $estateId)
                     ->where('status', 'accepted'),
             ],
-            'role_id' => [
+            'role_ids' => [
                 'required',
+                'array',
+            ],
+            'role_ids.*' => [
                 'integer',
                 Rule::exists('roles', 'id')->where('estate_id', $estateId),
             ],

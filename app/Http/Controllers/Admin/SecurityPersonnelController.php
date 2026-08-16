@@ -6,9 +6,10 @@ use App\Actions\Admin\BulkDeleteSecurityAction;
 use App\Actions\Admin\BulkInviteSecurityAction;
 use App\Actions\Admin\CreateSecurityAction;
 use App\Actions\Admin\DeleteSecurityAction;
-use App\Actions\Admin\ResetSecurityPasswordAction;
+use App\Actions\Admin\ResendSecurityInvitationAction;
 use App\Actions\Admin\SuspendSecurityAction;
 use App\Actions\Admin\UpdateSecurityAction;
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreSecurityRequest;
 use App\Models\User;
@@ -104,11 +105,17 @@ class SecurityPersonnelController extends Controller
     public function create(): Response
     {
         $this->authorize('security.create');
+        $context = app(ContextManager::class)->current();
         $estate = $this->estateContext->getEstate();
         $inviteLinks = $estate->securityInviteLinks()->with('zone')->get();
 
+        $zones = $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId());
+        if ($context && $context->isZoneScoped()) {
+            $zones = $zones->where('id', $context->zoneId);
+        }
+
         return Inertia::render('Admin/Security/Create', [
-            'zones' => $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId()),
+            'zones' => $zones,
             'inviteLinks' => $inviteLinks->map(fn ($link) => [
                 'id' => $link->id,
                 'token' => $link->token,
@@ -146,6 +153,8 @@ class SecurityPersonnelController extends Controller
     public function edit(User $security): Response
     {
         $this->authorize('security.edit');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($security), 403, 'Unauthorized zone scope.');
         $security->load('profile');
 
         return Inertia::render('Admin/Security/Edit', [
@@ -167,6 +176,9 @@ class SecurityPersonnelController extends Controller
     public function update(Request $request, User $security, UpdateSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.edit');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($security), 403, 'Unauthorized zone scope.');
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -194,6 +206,8 @@ class SecurityPersonnelController extends Controller
     public function destroy(User $security, DeleteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.delete');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($security), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($security, $estate);
@@ -209,6 +223,8 @@ class SecurityPersonnelController extends Controller
     public function suspend(User $security, SuspendSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.suspend');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($security), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($security, $estate);
@@ -221,26 +237,39 @@ class SecurityPersonnelController extends Controller
     }
 
     /**
-     * Reset the password and resend invitation for the specified security personnel.
+     * Resend invitation for the specified security personnel.
      */
-    public function resetPassword(User $security, ResetSecurityPasswordAction $action): RedirectResponse
+    public function resendInvitation(User $security, ResendSecurityInvitationAction $action): RedirectResponse
     {
-        $this->authorize('security.ResetPassword');
+        $this->authorize('security.reset-password');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($security), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($security, $estate);
 
-        return back()->with('success', 'Security personnel password reset and invitation resent.');
+        return back()->with('success', 'Security personnel invitation resent.');
     }
 
     public function bulkDelete(Request $request, BulkDeleteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.delete');
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array', 'min:1'],
             'ids.*' => ['required', 'integer'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected security personnel are outside your authorized zone.');
+        }
 
         $estate = $this->estateContext->getEstate();
         $deletedCount = $action->execute($validated['ids'], $estate);
@@ -256,15 +285,30 @@ class SecurityPersonnelController extends Controller
     public function bulkInvite(Request $request, BulkInviteSecurityAction $action): RedirectResponse
     {
         $this->authorize('security.create');
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
-            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
+            'zone_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id),
+                function ($attribute, $value, $fail) use ($context) {
+                    if ($context && $context->isZoneScoped() && $value !== $context->zoneId) {
+                        $fail('You are only authorized to invite security personnel to your active zone.');
+                    }
+                },
+            ],
         ]);
 
+        $zoneId = $validated['zone_id'] ?? null;
+        if ($context && $context->isZoneScoped()) {
+            $zoneId = $context->zoneId;
+        }
+
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
+        $result = $action->execute($validated['emails'], $estate, $zoneId);
 
         $message = "Successfully invited {$result['invited']} security personnel.";
         if ($result['skipped'] > 0) {

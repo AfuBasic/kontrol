@@ -32,10 +32,18 @@ beforeEach(function () {
 
 it('allows only authorized admins to change partner assignment', function () {
     setPermissionsTeamId($this->estate->id);
+    
+    // Test authorized admin
+    $this->actingAs($this->authorizedAdmin);
     app(ContextManager::class)->resolve();
 
-    expect(Gate::forUser($this->authorizedAdmin)->allows('update', $this->estate))->toBeTrue()
-        ->and(Gate::forUser($this->unauthorizedAdmin)->allows('update', $this->estate))->toBeFalse();
+    expect(Gate::forUser($this->authorizedAdmin)->allows('update', $this->estate))->toBeTrue();
+
+    // Test unauthorized admin
+    $this->actingAs($this->unauthorizedAdmin);
+    app(ContextManager::class)->resolve();
+    
+    expect(Gate::forUser($this->unauthorizedAdmin)->allows('update', $this->estate))->toBeFalse();
 });
 
 it('creates an audit log entry when partner assignment changes via zeus action', function () {

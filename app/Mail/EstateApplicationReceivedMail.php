@@ -39,9 +39,8 @@ class EstateApplicationReceivedMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.public.application-received',
             with: [
-                'applicantName' => explode('@', $this->application->email)[0],
+                'applicantName' => $this->application->contact_name ?: explode('@', $this->application->email)[0],
                 'estateName' => $this->application->estate_name,
-                'statusUrl' => config('app.url'),
             ],
         );
     }

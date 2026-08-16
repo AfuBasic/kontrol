@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resident\PropertyOwner;
 
 use App\Actions\Admin\ResendResidentInvitationAction;
+use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
 use App\Events\Admin\ResidentCreated;
 use App\Http\Controllers\Controller;
@@ -242,6 +243,17 @@ class ResidentController extends Controller
         // Ensure this resident is managed by the Property Owner
         abort_if($resident->profile?->property_owner_id !== $user->id, 403);
 
+        // Ensure the resident is not already accepted in the estate
+        $status = $resident->estates()
+            ->where('estates.id', $estate->id)
+            ->first()
+            ?->pivot
+            ?->status;
+
+        if ($status === 'accepted') {
+            return back()->with('error', 'Cannot resend invitation. This resident has already accepted.');
+        }
+
         $action->execute($resident, $estate);
 
         return back()->with('success', 'Invitation resent successfully.');
@@ -329,7 +341,14 @@ class ResidentController extends Controller
                 'password' => null,
             ]);
 
-            $estate->users()->attach($resident->id, ['status' => 'pending']);
+            $estate->users()->attach($resident->id, [
+                'status' => 'pending',
+                'created_via' => 'property_owner_invite',
+                'initiated_by' => $user->id,
+                'initiated_at' => now(),
+                'last_invited_by' => $user->id,
+                'last_invited_at' => now(),
+            ]);
 
             $role = Role::where('name', 'resident')
                 ->where('guard_name', 'web')
@@ -338,6 +357,28 @@ class ResidentController extends Controller
 
             app(ContextManager::class)->setSystemContext($estate->id);
             $resident->assignRole($role);
+
+            $property = null;
+            if (! empty($validated['property_id'])) {
+                $property = Property::find($validated['property_id']);
+            }
+
+            // Create or update Invitation in the invitations table
+            $invitation = app(CreateInvitationAction::class)->execute(
+                email: $validated['email'],
+                estate: $estate,
+                relationshipType: 'resident',
+                role: null,
+                zoneId: $property?->zone_id,
+                scopeType: 'estate',
+                createdBy: $user
+            );
+
+            if ($invitation) {
+                $resident->estates()->updateExistingPivot($estate->id, [
+                    'invitation_id' => $invitation->id,
+                ]);
+            }
 
             UserProfile::create([
                 'user_id' => $resident->id,
@@ -383,7 +424,7 @@ class ResidentController extends Controller
         if ($link) {
             $link->update([
                 'max_usages' => $validated['max_usages'] ?? null,
-                'requires_approval' => $validated['requires_approval'] ?? true,
+                'requires_approval' => true,
                 'expires_at' => $validated['expires_at'] ?? null,
             ]);
         } else {
@@ -395,7 +436,7 @@ class ResidentController extends Controller
                 'is_active' => true,
                 'usage_count' => 0,
                 'max_usages' => $validated['max_usages'] ?? null,
-                'requires_approval' => $validated['requires_approval'] ?? true,
+                'requires_approval' => true,
                 'expires_at' => $validated['expires_at'] ?? null,
             ]);
         }

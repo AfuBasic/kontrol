@@ -39,7 +39,8 @@ export default function UnsupportedPlatform({ userRole }: Props) {
 
                     <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Mobile Device Required</h1>
                     <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                        Operational roles (<span className="font-semibold text-slate-200 capitalize">{userRole.replace('_', ' ')}</span>) are optimized specifically for mobile devices and cannot access Kontrol from a desktop browser.
+                        Operational roles (<span className="font-semibold text-slate-200 capitalize">{userRole.replace('_', ' ')}</span>) are
+                        optimized specifically for mobile devices and cannot access Kontrol from a desktop browser.
                     </p>
 
                     <div className="mt-6 flex w-full flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 p-4 text-xs text-slate-300">
@@ -67,7 +68,7 @@ export default function UnsupportedPlatform({ userRole }: Props) {
             </main>
 
             <footer className="relative z-10 py-6 text-center text-xs text-slate-500">
-                <div className="flex items-center justify-center gap-1.5 mb-2 text-slate-400">
+                <div className="mb-2 flex items-center justify-center gap-1.5 text-slate-400">
                     <Shield className="h-3.5 w-3.5 text-indigo-400" />
                     <span>Role-Aware Access Security</span>
                 </div>

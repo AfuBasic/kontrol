@@ -104,7 +104,7 @@ describe('AccessCode::effective_visit_at', function () {
             ->toBe($expiresAt->toDateString());
     });
 
-    it('does NOT use expires_at for long_lived passes — falls back to created_at', function () {
+    it('does NOT use expires_at for long_lived passes - falls back to created_at', function () {
         Carbon::setTestNow('2026-07-20 09:00:00');
 
         $code = makeCode([
@@ -342,7 +342,7 @@ describe('AccessCodeService::getHistoryTimeline', function () {
 // ── Controller: Inertia prop shape ────────────────────────────────────────────
 
 describe('GET /resident/visitors (timeline)', function () {
-    it('exposes upcomingTimeline and historyTimeline — not activeCodes or historyCodes', function () {
+    it('exposes upcomingTimeline and historyTimeline - not activeCodes or historyCodes', function () {
         makeCode([
             'estate_id' => $this->estate->id,
             'user_id' => $this->resident->id,

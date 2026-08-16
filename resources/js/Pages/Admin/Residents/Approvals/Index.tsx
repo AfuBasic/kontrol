@@ -6,6 +6,7 @@ import {
     index as approvalIndex,
     approve as approvalApprove,
     reject as approvalReject,
+    approveAll as approvalApproveAll,
 } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
 import { index as residentsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
@@ -53,6 +54,8 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         residentUlid: null,
         residentName: '',
     });
+    const [isApproveAllModalOpen, setIsApproveAllModalOpen] = useState(false);
+    const [isApprovingAll, setIsApprovingAll] = useState(false);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -112,6 +115,19 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         );
     };
 
+    const confirmApproveAll = () => {
+        setIsApprovingAll(true);
+        setIsApproveAllModalOpen(false);
+
+        router.post(
+            approvalApproveAll.url(),
+            {},
+            {
+                onFinish: () => setIsApprovingAll(false),
+            },
+        );
+    };
+
     return (
         <>
             <Head title="Pending Residents" />
@@ -128,6 +144,18 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                     <p className="text-slate-505 mt-2 text-sm leading-relaxed font-medium">
                         Review and approve residents who signed up via the invite link.
                     </p>
+                </div>
+                <div className="ml-auto flex items-center">
+                    {residents.total > 0 && (
+                        <button
+                            onClick={() => setIsApproveAllModalOpen(true)}
+                            disabled={isApprovingAll}
+                            className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+                        >
+                            {isApprovingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                            Approve All Pending
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -209,7 +237,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             <button
                                                 onClick={() => handleApprove(resident)}
                                                 disabled={processingId === (resident.ulid ?? String(resident.id))}
-                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-primary-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-slate-950 py-3.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -303,7 +331,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                         <button
                                                             onClick={() => handleApprove(resident)}
                                                             disabled={processingId === (resident.ulid ?? String(resident.id))}
-                                                            className="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50"
+                                                            className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
                                                         >
                                                             {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -357,7 +385,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             href={link.url || '#'}
                                             className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${
                                                 link.active
-                                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                                                    ? 'bg-slate-950 text-white shadow-lg shadow-blue-500/20'
                                                     : link.url
                                                       ? 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50'
                                                       : 'cursor-not-allowed text-slate-400 opacity-30'
@@ -402,6 +430,17 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                 confirmLabel={modalConfig.type === 'approve' ? 'Approve' : 'Reject'}
                 type={modalConfig.type === 'approve' ? 'info' : 'danger'}
                 isLoading={processingId !== null}
+            />
+
+            <ConfirmationModal
+                isOpen={isApproveAllModalOpen}
+                onClose={() => setIsApproveAllModalOpen(false)}
+                onConfirm={confirmApproveAll}
+                title="Approve All Pending Residents"
+                message={`Are you sure you want to approve all ${residents.total} pending residents? They will all be granted access to the estate portal immediately.`}
+                confirmLabel="Approve All"
+                type="info"
+                isLoading={isApprovingAll}
             />
         </>
     );

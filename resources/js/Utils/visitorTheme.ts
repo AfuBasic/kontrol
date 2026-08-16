@@ -8,10 +8,7 @@ export type VisitorStatus = 'expected' | 'checked_in' | 'completed' | 'expired';
 /**
  * Shared Status Configuration using Kontrol Theme Design Tokens
  */
-export const STATUS_CONFIG: Record<
-    VisitorStatus,
-    { label: string; bgClass: string; textClass: string; borderClass: string; dotClass: string }
-> = {
+export const STATUS_CONFIG: Record<VisitorStatus, { label: string; bgClass: string; textClass: string; borderClass: string; dotClass: string }> = {
     expected: {
         label: 'Expected',
         bgClass: 'bg-primary-50',
@@ -45,10 +42,7 @@ export const STATUS_CONFIG: Record<
 /**
  * Category Icon & Theme Color Mapping
  */
-export const CATEGORY_CONFIG: Record<
-    VisitorCategory,
-    { icon: ElementType; bgClass: string; textClass: string }
-> = {
+export const CATEGORY_CONFIG: Record<VisitorCategory, { icon: ElementType; bgClass: string; textClass: string }> = {
     guest: { icon: User, bgClass: 'bg-primary-50', textClass: 'text-primary-600' },
     family: { icon: Heart, bgClass: 'bg-rose-50', textClass: 'text-rose-600' },
     delivery: { icon: Truck, bgClass: 'bg-amber-50', textClass: 'text-amber-600' },
@@ -62,7 +56,13 @@ export const CATEGORY_CONFIG: Record<
 /**
  * Derive normalized status from raw access code properties
  */
-export function normalizeStatus(code: { status: string; used_at?: string | null; revoking_at?: string | null; expires_at?: string | null; access_logs_count?: number }): VisitorStatus {
+export function normalizeStatus(code: {
+    status: string;
+    used_at?: string | null;
+    revoking_at?: string | null;
+    expires_at?: string | null;
+    access_logs_count?: number;
+}): VisitorStatus {
     const rawStatus = code.status?.toLowerCase();
     const hasAccessLogs = (code.access_logs_count ?? 0) > 0 || !!code.used_at;
 
@@ -91,7 +91,15 @@ export function deriveCategory(purpose?: string | null, type?: string | null): V
     const p = purpose.toLowerCase();
     if (p.includes('family') || p.includes('parent') || p.includes('relative')) return 'family';
     if (p.includes('delivery') || p.includes('courier') || p.includes('food') || p.includes('rider') || p.includes('package')) return 'delivery';
-    if (p.includes('maintenance') || p.includes('electrician') || p.includes('plumber') || p.includes('ac') || p.includes('repair') || p.includes('technician')) return 'maintenance';
+    if (
+        p.includes('maintenance') ||
+        p.includes('electrician') ||
+        p.includes('plumber') ||
+        p.includes('ac') ||
+        p.includes('repair') ||
+        p.includes('technician')
+    )
+        return 'maintenance';
     if (p.includes('medical') || p.includes('doctor') || p.includes('health') || p.includes('checkup')) return 'medical';
     if (p.includes('domestic') || p.includes('cleaner') || p.includes('nanny') || p.includes('maid')) return 'domestic';
 

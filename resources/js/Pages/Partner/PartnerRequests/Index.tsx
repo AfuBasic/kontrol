@@ -290,7 +290,9 @@ function EstateCommandSearch({
                                                     {estate.location || estate.reference} · {estate.chairman_name || '-'}
                                                 </p>
                                             </div>
-                                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}>
+                                            <span
+                                                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}
+                                            >
                                                 {estate.status_label}
                                             </span>
                                         </button>
@@ -307,15 +309,7 @@ function EstateCommandSearch({
 
 /* ─── Referral timeline drawer ─── */
 
-function ReferralTimelineDrawer({
-    referral,
-    onClose,
-    onDeleted,
-}: {
-    referral: Referral;
-    onClose: () => void;
-    onDeleted?: () => void;
-}) {
+function ReferralTimelineDrawer({ referral, onClose, onDeleted }: { referral: Referral; onClose: () => void; onDeleted?: () => void }) {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const canDelete = referral.status === 'rejected';
@@ -339,7 +333,13 @@ function ReferralTimelineDrawer({
 
     return (
         <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-stone-950/50 backdrop-blur-sm" onClick={onClose} />
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-stone-950/50 backdrop-blur-sm"
+                onClick={onClose}
+            />
             <motion.aside
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
@@ -387,14 +387,10 @@ function ReferralTimelineDrawer({
                                 >
                                     <div className="flex w-4 shrink-0 flex-col items-center">
                                         <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-primary-500 ring-4 ring-primary-500/15" />
-                                        {!isLast ? (
-                                            <span className="mt-1 w-px flex-1 min-h-[1.5rem] bg-stone-200 dark:bg-white/15" />
-                                        ) : null}
+                                        {!isLast ? <span className="mt-1 min-h-[1.5rem] w-px flex-1 bg-stone-200 dark:bg-white/15" /> : null}
                                     </div>
                                     <div className={`min-w-0 ${isLast ? 'pb-0' : 'pb-7'}`}>
-                                        <p className="text-[14px] font-semibold leading-snug text-stone-900 dark:text-white">
-                                            {event.description}
-                                        </p>
+                                        <p className="text-[14px] leading-snug font-semibold text-stone-900 dark:text-white">{event.description}</p>
                                         <p className="mt-1 text-[12px] text-stone-400">
                                             {formatDate(event.created_at)}
                                             {event.creator_name ? ` · ${event.creator_name}` : ''}
@@ -417,7 +413,11 @@ function ReferralTimelineDrawer({
                             Remove rejected referral
                         </button>
                     ) : null}
-                    <button type="button" onClick={onClose} className="w-full rounded-xl bg-stone-900 py-2.5 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="w-full rounded-xl bg-stone-900 py-2.5 text-[13px] font-semibold text-white dark:bg-white dark:text-stone-900"
+                    >
                         Close
                     </button>
                 </div>
@@ -461,8 +461,7 @@ export default function PartnerRequestsIndex({
     statusOptions = [],
 }: Props) {
     const page = usePage();
-    const sharedCommission = (page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } })
-        .partnerContext;
+    const sharedCommission = (page.props as { partnerContext?: { commission_rate: string | null; commission_type: string | null } }).partnerContext;
     const commissionInfo = commission ?? {
         rate: sharedCommission?.commission_rate ?? null,
         type: sharedCommission?.commission_type ?? null,
@@ -572,9 +571,7 @@ export default function PartnerRequestsIndex({
                                 {commissionInfo.rate ? (
                                     <p className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-[12px] text-white/60">
                                         Your rate{' '}
-                                        <span className="font-semibold text-white">
-                                            {formatCommission(commissionInfo.rate, commissionInfo.type)}
-                                        </span>
+                                        <span className="font-semibold text-white">{formatCommission(commissionInfo.rate, commissionInfo.type)}</span>
                                     </p>
                                 ) : null}
                                 <Link
@@ -602,9 +599,7 @@ export default function PartnerRequestsIndex({
                                     aria-selected={tab === item.key}
                                     onClick={() => switchTab(item.key)}
                                     className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold transition ${
-                                        tab === item.key
-                                            ? 'bg-white text-stone-900 shadow-sm'
-                                            : 'text-white/55 hover:text-white'
+                                        tab === item.key ? 'bg-white text-stone-900 shadow-sm' : 'text-white/55 hover:text-white'
                                     }`}
                                 >
                                     {item.label}
@@ -634,7 +629,7 @@ export default function PartnerRequestsIndex({
                                     className="min-w-[9.5rem] shrink-0 rounded-2xl bg-white px-4 py-3 shadow-[0_1px_0_rgba(28,25,23,0.04),0_12px_28px_-22px_rgba(28,25,23,0.18)] ring-1 ring-stone-900/[0.04] dark:bg-white/[0.04] dark:ring-white/[0.07]"
                                 >
                                     <p className="text-[10px] font-medium tracking-wide text-stone-400 uppercase">{kpi.label}</p>
-                                    <p className="mt-1 text-[15px] font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
+                                    <p className="mt-1 text-[15px] font-semibold tracking-tight text-stone-900 tabular-nums dark:text-white">
                                         {kpi.value}
                                     </p>
                                 </motion.div>
@@ -744,7 +739,9 @@ export default function PartnerRequestsIndex({
                                                     <h3 className="truncate text-[1.35rem] font-semibold tracking-tight text-stone-900 dark:text-white">
                                                         {estate.name}
                                                     </h3>
-                                                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}>
+                                                    <span
+                                                        className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${statusTone(estate.portfolio_status)}`}
+                                                    >
                                                         {estate.status_label}
                                                     </span>
                                                 </div>
@@ -817,7 +814,7 @@ export default function PartnerRequestsIndex({
                                                         <cell.icon className="h-3.5 w-3.5" />
                                                         <p className="text-[10px] font-medium tracking-wide uppercase">{cell.label}</p>
                                                     </div>
-                                                    <p className="mt-1.5 text-[15px] font-semibold tabular-nums tracking-tight text-stone-900 dark:text-white">
+                                                    <p className="mt-1.5 text-[15px] font-semibold tracking-tight text-stone-900 tabular-nums dark:text-white">
                                                         {cell.value}
                                                     </p>
                                                 </div>
@@ -827,7 +824,7 @@ export default function PartnerRequestsIndex({
                                         <div className="relative mt-5">
                                             <div className="mb-1.5 flex items-center justify-between text-[11px] text-stone-400">
                                                 <span>Progress</span>
-                                                <span className="font-semibold tabular-nums text-stone-600 dark:text-slate-300">
+                                                <span className="font-semibold text-stone-600 tabular-nums dark:text-slate-300">
                                                     {estate.progress}%
                                                 </span>
                                             </div>
@@ -873,15 +870,13 @@ export default function PartnerRequestsIndex({
                 ) : (
                     /* ─── Referrals workflow ─── */
                     <div className="space-y-6">
-                        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] dark:bg-white/[0.03] dark:ring-white/[0.06] sm:p-6">
+                        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm ring-1 ring-stone-900/[0.04] sm:p-6 dark:bg-white/[0.03] dark:ring-white/[0.06]">
                             <div className="flex flex-wrap items-center gap-2">
                                 {REFERRAL_FLOW.map((step, i) => (
                                     <div key={step.key} className="flex items-center gap-2">
                                         <div className="rounded-full bg-stone-100 px-3 py-1.5 text-[12px] font-semibold text-stone-700 dark:bg-white/10 dark:text-slate-200">
                                             {step.label}
-                                            <span className="ml-1.5 tabular-nums text-stone-400">
-                                                {(referralsByStage[step.key] ?? []).length}
-                                            </span>
+                                            <span className="ml-1.5 text-stone-400 tabular-nums">{(referralsByStage[step.key] ?? []).length}</span>
                                         </div>
                                         {i < REFERRAL_FLOW.length - 1 ? (
                                             <ArrowRightIcon className="hidden h-3.5 w-3.5 text-stone-300 sm:block" />
@@ -919,14 +914,16 @@ export default function PartnerRequestsIndex({
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: Math.min(i * 0.03, 0.2) }}
                                         onClick={() => setSelectedReferral(referral)}
-                                        className="group flex w-full flex-col gap-3 rounded-[1.25rem] bg-white p-5 text-left shadow-[0_1px_0_rgba(28,25,23,0.04),0_16px_32px_-24px_rgba(28,25,23,0.18)] ring-1 ring-stone-900/[0.04] transition hover:-translate-y-0.5 hover:shadow-lg dark:bg-white/[0.035] dark:ring-white/[0.06] sm:flex-row sm:items-center sm:justify-between"
+                                        className="group flex w-full flex-col gap-3 rounded-[1.25rem] bg-white p-5 text-left shadow-[0_1px_0_rgba(28,25,23,0.04),0_16px_32px_-24px_rgba(28,25,23,0.18)] ring-1 ring-stone-900/[0.04] transition hover:-translate-y-0.5 hover:shadow-lg sm:flex-row sm:items-center sm:justify-between dark:bg-white/[0.035] dark:ring-white/[0.06]"
                                     >
                                         <div className="min-w-0">
                                             <div className="flex flex-wrap items-center gap-2">
                                                 <h3 className="text-[16px] font-semibold tracking-tight text-stone-900 dark:text-white">
                                                     {referral.estate_name}
                                                 </h3>
-                                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(referral.stage)}`}>
+                                                <span
+                                                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${statusTone(referral.stage)}`}
+                                                >
                                                     {referral.stage_label}
                                                 </span>
                                             </div>
@@ -949,9 +946,7 @@ export default function PartnerRequestsIndex({
                                         </div>
                                         <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
                                             {referral.assigned_manager?.name ? (
-                                                <p className="text-[11px] text-stone-400">
-                                                    Reviewer · {referral.assigned_manager.name}
-                                                </p>
+                                                <p className="text-[11px] text-stone-400">Reviewer · {referral.assigned_manager.name}</p>
                                             ) : (
                                                 <p className="text-[11px] text-stone-400">Reviewer · Unassigned</p>
                                             )}

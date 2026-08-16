@@ -68,18 +68,8 @@ export default function EmptyState({
                 </div>
             </div>
 
-            <h3
-                className={`font-semibold tracking-tight text-stone-900 dark:text-white ${
-                    isSm ? 'text-[14px]' : 'text-[15px]'
-                }`}
-            >
-                {title}
-            </h3>
-            <p
-                className={`mt-1.5 max-w-sm leading-relaxed text-stone-500 dark:text-slate-400 ${
-                    isSm ? 'text-[12px]' : 'text-[13px]'
-                }`}
-            >
+            <h3 className={`font-semibold tracking-tight text-stone-900 dark:text-white ${isSm ? 'text-[14px]' : 'text-[15px]'}`}>{title}</h3>
+            <p className={`mt-1.5 max-w-sm leading-relaxed text-stone-500 dark:text-slate-400 ${isSm ? 'text-[12px]' : 'text-[13px]'}`}>
                 {description}
             </p>
 

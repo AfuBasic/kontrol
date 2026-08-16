@@ -84,7 +84,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         // Estate management
         Route::resource('estates', EstateController::class)->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
         Route::post('/estates/{estate}/toggle-status', [EstateController::class, 'toggleStatus'])->name('estates.toggle-status');
-        Route::post('/estates/{estate}/reset-password', [EstateController::class, 'resetPassword'])->name('estates.reset-password');
+        Route::post('/estates/{estate}/resend-invitation', [EstateController::class, 'resendInvitation'])->name('estates.resend-invitation');
         Route::patch('/estates/{estate}/partner-assignment', [EstateController::class, 'updatePartnerAssignment'])->name('estates.partner-assignment.update');
 
         // Zeus notifications inbox

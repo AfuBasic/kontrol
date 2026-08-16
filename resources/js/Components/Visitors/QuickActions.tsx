@@ -20,7 +20,7 @@ export default function QuickActions({ recentVisitors, onInvite, onInviteAgain, 
     return (
         <div className="space-y-3 py-2">
             <div className="flex items-center justify-between">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Quick Actions</h3>
+                <h3 className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Quick Actions</h3>
             </div>
 
             {/* Main Action Buttons */}
@@ -47,8 +47,8 @@ export default function QuickActions({ recentVisitors, onInvite, onInviteAgain, 
             {/* 1-Tap Invite Again Chips (Horizontal Scroll with Avatar) */}
             {recentVisitors.length > 0 && (
                 <div className="space-y-1.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Invite Again</p>
-                    <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Invite Again</p>
+                    <div className="scrollbar-none flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
                         {recentVisitors.map((visitor) => {
                             const category = deriveCategory(visitor.purpose, visitor.type);
                             return (

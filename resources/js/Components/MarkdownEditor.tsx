@@ -3,20 +3,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Typography from '@tiptap/extension-typography';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import {
-    Bold,
-    Code,
-    Heading1,
-    Heading2,
-    Italic,
-    Link as LinkIcon,
-    List,
-    ListOrdered,
-    Quote,
-    Redo,
-    Strikethrough,
-    Undo,
-} from 'lucide-react';
+import { Bold, Code, Heading1, Heading2, Italic, Link as LinkIcon, List, ListOrdered, Quote, Redo, Strikethrough, Undo } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 type MarkdownEditorProps = {
@@ -56,14 +43,7 @@ function ToolbarDivider() {
     return <div className="mx-1 h-6 w-px bg-gray-200" />;
 }
 
-export default function MarkdownEditor({
-    id,
-    value,
-    onChange,
-    placeholder = 'Write something...',
-    error,
-    className = '',
-}: MarkdownEditorProps) {
+export default function MarkdownEditor({ id, value, onChange, placeholder = 'Write something...', error, className = '' }: MarkdownEditorProps) {
     const [linkUrl, setLinkUrl] = useState('');
     const [showLinkInput, setShowLinkInput] = useState(false);
 

@@ -1,5 +1,19 @@
 import { Deferred, Head } from '@inertiajs/react';
-import { Download, FileText, Plus, Activity, Table, Shield, AlertTriangle, AlertCircle, RefreshCcw, Landmark, Clock, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import {
+    Download,
+    FileText,
+    Plus,
+    Activity,
+    Table,
+    Shield,
+    AlertTriangle,
+    AlertCircle,
+    RefreshCcw,
+    Landmark,
+    Clock,
+    ArrowUpRight,
+    ArrowDownLeft,
+} from 'lucide-react';
 import { type ReactNode, useState, useMemo } from 'react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -156,10 +170,11 @@ export default function TransactionsIndex({
     // Derived Summary Phrases
     const moneyInToday = todaySummary?.money_in_today ?? 0;
     const refundsTodayCount = todaySummary?.money_out_today ? 1 : 0; // Simple approximation for phrase
-    const successPaymentsCount = activity?.filter(a => {
-        const occurredToday = a.occurred_at && new Date(a.occurred_at).toDateString() === new Date().toDateString();
-        return occurredToday && a.status === 'success';
-    }).length ?? 0;
+    const successPaymentsCount =
+        activity?.filter((a) => {
+            const occurredToday = a.occurred_at && new Date(a.occurred_at).toDateString() === new Date().toDateString();
+            return occurredToday && a.status === 'success';
+        }).length ?? 0;
     const failedTodayCount = todaySummary?.failed_today ?? 0;
 
     const summaryPhrase = useMemo(() => {
@@ -206,7 +221,7 @@ export default function TransactionsIndex({
                                     </span>
                                 </div>
                                 <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">Transactions</h1>
-                                <p className="mt-1.5 text-xs text-white/50 max-w-xl leading-relaxed">{summaryPhrase}</p>
+                                <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-white/50">{summaryPhrase}</p>
                             </div>
 
                             {/* CTAs */}
@@ -237,10 +252,7 @@ export default function TransactionsIndex({
 
                 {/* ─── Main Workspace Shell ─── */}
                 {showEmpty ? (
-                    <LedgerEmptyState
-                        canRecordOffline={permissions.record_offline}
-                        onRecordOffline={() => setOfflineModalOpen(true)}
-                    />
+                    <LedgerEmptyState canRecordOffline={permissions.record_offline} onRecordOffline={() => setOfflineModalOpen(true)} />
                 ) : (
                     <div className="space-y-6">
                         {/* Search & Collapse Filter Box */}
@@ -249,13 +261,13 @@ export default function TransactionsIndex({
                         </div>
 
                         {/* Premium Navigation Tabs */}
-                        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-2">
-                            <div className="flex items-center gap-1 bg-slate-100/75 p-1 rounded-xl w-full sm:w-fit overflow-x-auto whitespace-nowrap scrollbar-none">
+                        <div className="flex flex-col gap-4 border-b border-slate-100 pb-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="scrollbar-none flex w-full items-center gap-1 overflow-x-auto rounded-xl bg-slate-100/75 p-1 whitespace-nowrap sm:w-fit">
                                 <button
                                     onClick={() => setActiveTab('activity')}
                                     className={cn(
-                                        "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
-                                        activeTab === 'activity' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                                        'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
+                                        activeTab === 'activity' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
                                     )}
                                 >
                                     <Activity className="h-3.5 w-3.5" /> Activity
@@ -263,8 +275,8 @@ export default function TransactionsIndex({
                                 <button
                                     onClick={() => setActiveTab('ledger')}
                                     className={cn(
-                                        "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
-                                        activeTab === 'ledger' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                                        'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
+                                        activeTab === 'ledger' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
                                     )}
                                 >
                                     <Table className="h-3.5 w-3.5" /> Ledger
@@ -273,8 +285,8 @@ export default function TransactionsIndex({
                                     <button
                                         onClick={() => setActiveTab('reports')}
                                         className={cn(
-                                            "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
-                                            activeTab === 'reports' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                                            'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
+                                            activeTab === 'reports' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
                                         )}
                                     >
                                         <FileText className="h-3.5 w-3.5" /> Reports
@@ -284,8 +296,8 @@ export default function TransactionsIndex({
                                     <button
                                         onClick={() => setActiveTab('audit')}
                                         className={cn(
-                                            "flex items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all shrink-0",
-                                            activeTab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                                            'flex shrink-0 items-center gap-1.5 rounded-lg px-4.5 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all',
+                                            activeTab === 'audit' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800',
                                         )}
                                     >
                                         <Shield className="h-3.5 w-3.5" /> Audit Log
@@ -302,7 +314,7 @@ export default function TransactionsIndex({
                                         <Activity className="h-4 w-4 text-slate-400" />
                                         <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Live Activity Feed</h3>
                                     </div>
-                                    <span className="text-[10px] font-bold text-slate-350 uppercase">Timeline Events</span>
+                                    <span className="text-slate-350 text-[10px] font-bold uppercase">Timeline Events</span>
                                 </div>
                                 <Deferred data="activity" fallback={<ActivityFeed loading />}>
                                     <ActivityFeed entries={activity as never} onSelect={openTransaction} />
@@ -311,7 +323,7 @@ export default function TransactionsIndex({
                         )}
 
                         {activeTab === 'ledger' && (
-                            <div className="rounded-3xl border border-slate-100 bg-white overflow-hidden shadow-xs">
+                            <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-xs">
                                 <TransactionsTable
                                     transactions={transactions}
                                     onSelect={(tx) => openTransaction(tx.ulid)}
@@ -327,46 +339,55 @@ export default function TransactionsIndex({
                         )}
 
                         {activeTab === 'audit' && permissions.audit && (
-                            <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm overflow-hidden">
+                            <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
                                 <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
                                     <Shield className="h-4.5 w-4.5 text-slate-400" />
                                     <h3 className="text-xs font-black tracking-widest text-slate-400 uppercase">Traceability Audit Trail</h3>
                                 </div>
-                                <Deferred data="audits" fallback={<div className="space-y-3"><div className="h-10 bg-slate-50 animate-pulse rounded-xl" /></div>}>
+                                <Deferred
+                                    data="audits"
+                                    fallback={
+                                        <div className="space-y-3">
+                                            <div className="h-10 animate-pulse rounded-xl bg-slate-50" />
+                                        </div>
+                                    }
+                                >
                                     {audits && audits.data.length > 0 ? (
                                         <div className="divide-y divide-slate-100">
                                             {audits.data.map((audit) => (
-                                                <div key={audit.id} className="py-3.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-xs">
+                                                <div
+                                                    key={audit.id}
+                                                    className="flex flex-col gap-2 py-3.5 text-xs sm:flex-row sm:items-center sm:justify-between"
+                                                >
                                                     <div>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="font-extrabold text-slate-800 uppercase text-[10px] tracking-wider bg-slate-100 px-1.5 py-0.5 rounded">
+                                                            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-extrabold tracking-wider text-slate-800 uppercase">
                                                                 {audit.action}
                                                             </span>
                                                             {audit.reference_number && (
                                                                 <button
                                                                     onClick={() => audit.transaction_ulid && openTransaction(audit.transaction_ulid)}
-                                                                    className="font-mono text-slate-500 hover:text-blue-600 transition font-bold"
+                                                                    className="font-mono font-bold text-slate-500 transition hover:text-blue-600"
                                                                 >
                                                                     {audit.reference_number}
                                                                 </button>
                                                             )}
                                                         </div>
-                                                        {audit.reason && (
-                                                            <p className="text-slate-500 font-semibold mt-1">"{audit.reason}"</p>
-                                                        )}
-                                                        <p className="text-[10px] text-slate-400 font-semibold mt-0.5">
-                                                            Authorized by {audit.user_name} • {audit.created_at ? format(parseISO(audit.created_at), 'PPpp') : ''}
+                                                        {audit.reason && <p className="mt-1 font-semibold text-slate-500">"{audit.reason}"</p>}
+                                                        <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                                                            Authorized by {audit.user_name} •{' '}
+                                                            {audit.created_at ? format(parseISO(audit.created_at), 'PPpp') : ''}
                                                         </p>
                                                     </div>
-                                                    <div className="text-[10px] text-slate-400 text-right sm:self-start font-semibold">
+                                                    <div className="text-right text-[10px] font-semibold text-slate-400 sm:self-start">
                                                         <p className="font-mono">{audit.ip_address}</p>
-                                                        <p className="truncate max-w-[200px] text-slate-350">{audit.user_agent}</p>
+                                                        <p className="text-slate-350 max-w-[200px] truncate">{audit.user_agent}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-center text-xs text-slate-400 font-semibold py-6">No audits recorded yet</p>
+                                        <p className="py-6 text-center text-xs font-semibold text-slate-400">No audits recorded yet</p>
                                     )}
                                 </Deferred>
                             </div>
@@ -375,11 +396,7 @@ export default function TransactionsIndex({
                 )}
             </div>
 
-            <RecordOfflinePaymentModal
-                isOpen={offlineModalOpen}
-                onClose={() => setOfflineModalOpen(false)}
-                assignments={recordableAssignments}
-            />
+            <RecordOfflinePaymentModal isOpen={offlineModalOpen} onClose={() => setOfflineModalOpen(false)} assignments={recordableAssignments} />
 
             <TransactionDrawer
                 transactionUlid={selectedUlid}

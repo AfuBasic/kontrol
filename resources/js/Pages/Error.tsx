@@ -97,27 +97,15 @@ export default function Error({ status }: Props) {
 
                 {/* Actions */}
                 <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                    {status === 419 || status === 500 ? (
-                        <button
-                            onClick={() => window.location.reload()}
-                            className={`group flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] sm:w-auto ${
-                                hasLayout ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-white text-slate-950 hover:bg-slate-100'
-                            }`}
-                        >
-                            <RefreshCcw className="h-4.5 w-4.5 transition-transform duration-500 group-hover:rotate-180" />
-                            Refresh Page
-                        </button>
-                    ) : (
-                        <Link
-                            href="/"
-                            className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] sm:w-auto ${
-                                hasLayout ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-white text-slate-950 hover:bg-slate-100'
-                            }`}
-                        >
-                            <Home className="h-4.5 w-4.5" />
-                            Back Home
-                        </Link>
-                    )}
+                    <Link
+                        href="/"
+                        className={`flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] sm:w-auto ${
+                            hasLayout ? 'bg-slate-900 text-white hover:bg-slate-800' : 'bg-white text-slate-950 hover:bg-slate-100'
+                        }`}
+                    >
+                        <Home className="h-4.5 w-4.5" />
+                        Back Home
+                    </Link>
 
                     <button
                         onClick={() => window.history.back()}

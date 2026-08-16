@@ -43,8 +43,13 @@ trait HasHashid
     {
         $id = static::decodeHashid($hashid);
 
+        $query = static::query();
+        if (in_array(\App\Traits\ZoneScoped::class, class_uses_recursive(static::class))) {
+            $query->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class);
+        }
+
         /** @var static|null $model */
-        $model = $id ? static::find($id) : null;
+        $model = $id ? $query->find($id) : null;
 
         return $model;
     }
@@ -88,7 +93,11 @@ trait HasHashid
     public function resolveRouteBinding($value, $field = null)
     {
         if ($field && $field !== 'hashid') {
-            return parent::resolveRouteBinding($value, $field);
+            $query = $this->resolveRouteBindingQuery($this->where($field, $value), $value);
+            if (in_array(\App\Traits\ZoneScoped::class, class_uses_recursive(static::class))) {
+                $query->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class);
+            }
+            return $query->first();
         }
 
         return static::findByHashid($value);

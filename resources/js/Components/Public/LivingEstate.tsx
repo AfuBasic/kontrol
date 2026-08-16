@@ -33,8 +33,8 @@ export default function LivingEstate({ scrollProgress, isActiveState = false }: 
         let x = 0;
         let y = 0;
         let scale = 0.95;
-        let rotateX = 60;
-        let rotateZ = -45;
+        const rotateX = 60;
+        const rotateZ = -45;
 
         if (scrollProgress <= 0.15) {
             // Initial Hero State

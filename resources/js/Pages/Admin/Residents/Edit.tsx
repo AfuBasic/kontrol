@@ -14,15 +14,17 @@ type Resident = {
     email_verified_at: string | null;
     property_owner_id: number | null;
     property_id: number | null;
+    zone_id?: number | null;
     is_estate_creator: boolean;
 };
 
 type Props = {
     resident: Resident;
     propertyOwners?: { id: number; name: string }[];
+    zones?: { id: number; name: string }[];
 };
 
-export default function EditResident({ resident, propertyOwners = [] }: Props) {
+export default function EditResident({ resident, propertyOwners = [], zones = [] }: Props) {
     const isVerified = !!resident.email_verified_at;
 
     const { data, setData, put, processing, errors } = useForm({
@@ -33,6 +35,7 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
         address: resident.address || '',
         property_owner_id: resident.property_owner_id || '',
         property_id: resident.property_id || '',
+        zone_id: resident.zone_id ? String(resident.zone_id) : '',
     });
 
     function handleSubmit(e: React.FormEvent) {
@@ -87,9 +90,9 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                             disabled={resident.is_estate_creator}
                         />
                         <p className="mt-1 text-xs text-gray-500">
-                            {resident.is_estate_creator 
-                                ? "This is the primary email used to create the estate and cannot be changed." 
-                                : "If you change the email address, the resident will be required to verify their new email via an invitation link."}
+                            {resident.is_estate_creator
+                                ? 'This is the primary email used to create the estate and cannot be changed.'
+                                : 'If you change the email address, the resident will be required to verify their new email via an invitation link.'}
                         </p>
                         {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                     </div>
@@ -183,15 +186,40 @@ export default function EditResident({ resident, propertyOwners = [] }: Props) {
                         </select>
                         {errors.property_owner_id && <p className="mt-1 text-sm text-red-600">{errors.property_owner_id}</p>}
                     </div>
+
+                    {zones.length > 0 && (
+                        <div>
+                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700">
+                                Zone
+                            </label>
+                            <p className="mt-0.5 text-xs text-gray-500">Assign this resident to a zone, or leave them estate-wide.</p>
+                            <select
+                                id="zone_id"
+                                value={data.zone_id}
+                                onChange={(e) => setData('zone_id', e.target.value)}
+                                className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none"
+                            >
+                                <option value="">Entire Estate</option>
+                                {zones.map((zone) => (
+                                    <option key={zone.id} value={zone.id}>
+                                        {zone.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-10 flex items-center justify-between border-t border-gray-100 pt-6">
                     {resident.is_estate_creator ? (
-                        <div className="text-sm font-semibold text-gray-400">
-                            The estate creator cannot be removed.
-                        </div>
+                        <div className="text-sm font-semibold text-gray-400">The estate creator cannot be removed.</div>
                     ) : (
-                        <button type="button" onClick={handleDelete} className="text-sm font-semibold text-red-500 transition-colors hover:text-red-600">
+                        <button
+                            type="button"
+                            onClick={handleDelete}
+                            className="text-sm font-semibold text-red-500 transition-colors hover:text-red-600"
+                        >
                             Remove Resident
                         </button>
                     )}

@@ -26,7 +26,8 @@ import { CardSkeleton, FeedItemSkeleton, StatCardSkeleton } from '@/Components/S
 import { ErrorState, OfflineState } from '@/Components/States';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 
-import ActionCenter, { AttentionItem } from '@/Components/Admin/Dashboard/ActionCenter';
+import type { AttentionItem } from '@/Components/Admin/Dashboard/ActionCenter';
+import ActionCenter from '@/Components/Admin/Dashboard/ActionCenter';
 
 type EstateHealth = {
     name: string;
@@ -96,7 +97,7 @@ type PostItem = {
 };
 
 type Props = {
-    estateShell?: { name: string; address: string | null };
+    estateShell?: { name: string; address: string | null; onboarding_completed?: boolean };
     estateHealth?: EstateHealth | null;
     operationalSnapshot?: OperationalSnapshot | null;
     needsAttention?: AttentionItem[] | null;
@@ -146,6 +147,28 @@ export default function Dashboard({
             <Head title="Command Center" />
 
             <div className="w-full space-y-6 pb-24">
+                {/* ONBOARDING BANNER */}
+                {estateShell?.onboarding_completed === false && (
+                    <div className="flex flex-col gap-4 rounded-2xl border border-indigo-200 bg-indigo-50 p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                <ShieldCheck className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-indigo-900">Complete your estate setup</h3>
+                                <p className="mt-1 text-xs text-indigo-700">You have a few more steps to fully set up {estateShell.name}.</p>
+                            </div>
+                        </div>
+                        <Link
+                            href="/admin/setup"
+                            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700"
+                        >
+                            Continue Setup
+                            <ChevronRight className="h-4 w-4" />
+                        </Link>
+                    </div>
+                )}
+
                 {/* SECTION 1 - ESTATE HEALTH (shell eager, details deferred) */}
                 <SectionErrorBoundary name="estate-health">
                     <Deferred
@@ -311,7 +334,7 @@ export default function Dashboard({
                 <section className="space-y-2.5">
                     <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Quick Actions</h3>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
-                        <div className="space-y-2.5 rounded-2xl border border-slate-150/60 bg-white p-4">
+                        <div className="border-slate-150/60 space-y-2.5 rounded-2xl border bg-white p-4">
                             <span className="block text-[9px] font-bold tracking-widest text-slate-400 uppercase">People</span>
                             <div className="flex flex-col gap-2">
                                 <Link
@@ -331,7 +354,7 @@ export default function Dashboard({
                             </div>
                         </div>
 
-                        <div className="space-y-2.5 rounded-2xl border border-slate-150/60 bg-white p-4">
+                        <div className="border-slate-150/60 space-y-2.5 rounded-2xl border bg-white p-4">
                             <span className="block text-[9px] font-bold tracking-widest text-slate-400 uppercase">Operations</span>
                             <div className="flex flex-col gap-2">
                                 <Link
@@ -351,7 +374,7 @@ export default function Dashboard({
                             </div>
                         </div>
 
-                        <div className="space-y-2.5 rounded-2xl border border-slate-150/60 bg-white p-4">
+                        <div className="border-slate-150/60 space-y-2.5 rounded-2xl border bg-white p-4">
                             <span className="block text-[9px] font-bold tracking-widest text-slate-400 uppercase">Finance</span>
                             <div className="flex flex-col gap-2">
                                 <Link
@@ -364,7 +387,7 @@ export default function Dashboard({
                             </div>
                         </div>
 
-                        <div className="space-y-2.5 rounded-2xl border border-slate-150/60 bg-white p-4">
+                        <div className="border-slate-150/60 space-y-2.5 rounded-2xl border bg-white p-4">
                             <span className="block text-[9px] font-bold tracking-widest text-slate-400 uppercase">Administration</span>
                             <div className="flex flex-col gap-2">
                                 <Link
@@ -399,7 +422,7 @@ function EstateHealthHero({ health }: { health: EstateHealth }) {
                     <div>
                         <span className="text-[10px] font-bold tracking-widest text-indigo-300 uppercase">Operational Command</span>
                         <h1 className="mt-0.5 text-xl font-bold tracking-tight">{health.name}</h1>
-                        {health.address && <p className="text-xs font-medium text-indigo-150/70">{health.address}</p>}
+                        {health.address && <p className="text-indigo-150/70 text-xs font-medium">{health.address}</p>}
                     </div>
                     <div className="shrink-0">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold backdrop-blur-md">
@@ -423,8 +446,6 @@ function EstateHealthHero({ health }: { health: EstateHealth }) {
         </motion.div>
     );
 }
-
-
 
 function OperationalSnapshotSection({ snapshot }: { snapshot: OperationalSnapshot }) {
     const cards = [

@@ -37,9 +37,7 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
     }, [logs, checkoutEnabled]);
 
     const showGateWhenVaries = useMemo(() => {
-        const gates = new Set(
-            logs.map((log) => log.gate).filter((g): g is string => Boolean(g) && g !== 'Main Gate')
-        );
+        const gates = new Set(logs.map((log) => log.gate).filter((g): g is string => Boolean(g) && g !== 'Main Gate'));
         return gates.size > 1;
     }, [logs]);
 
@@ -69,12 +67,7 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
     return (
         <div className="space-y-0">
             {groups.map((group, groupIndex) => (
-                <DayChapter
-                    key={group.label}
-                    label={group.label}
-                    eventCount={group.events.length}
-                    isFirst={groupIndex === 0}
-                >
+                <DayChapter key={group.label} label={group.label} eventCount={group.events.length} isFirst={groupIndex === 0}>
                     <ol className="relative ml-0.5 border-l border-gray-200">
                         {group.events.map((event, index) => {
                             const previous = index > 0 ? group.events[index - 1] : null;
@@ -100,27 +93,11 @@ export default function ActivityTimeline({ logs, filters, checkoutEnabled, onSel
 }
 
 /** Level 1 - Day as chapter. Dominant type; never confusable with an event. */
-function DayChapter({
-    label,
-    eventCount,
-    isFirst,
-    children,
-}: {
-    label: string;
-    eventCount: number;
-    isFirst: boolean;
-    children: ReactNode;
-}) {
+function DayChapter({ label, eventCount, isFirst, children }: { label: string; eventCount: number; isFirst: boolean; children: ReactNode }) {
     return (
-        <section
-            className={isFirst ? '' : 'mt-7 border-t border-gray-200 pt-6 sm:mt-8 sm:pt-7'}
-            aria-labelledby={`day-${slugify(label)}`}
-        >
+        <section className={isFirst ? '' : 'mt-7 border-t border-gray-200 pt-6 sm:mt-8 sm:pt-7'} aria-labelledby={`day-${slugify(label)}`}>
             <header className="mb-3 flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
-                <h3
-                    id={`day-${slugify(label)}`}
-                    className="text-lg font-semibold tracking-tight text-gray-950 sm:text-xl"
-                >
+                <h3 id={`day-${slugify(label)}`} className="text-lg font-semibold tracking-tight text-gray-950 sm:text-xl">
                     {label}
                 </h3>
                 <span className="mb-0.5 rounded-md bg-gray-100 px-2 py-0.5 text-[10px] font-bold tracking-wide text-gray-500 uppercase tabular-nums">
@@ -153,8 +130,7 @@ function TimelineEvent({
     const hostChanged = !previous || previous.record.host.name !== record.host.name;
     const gateChanged = !previous || previous.record.gate !== record.gate;
     const showHost = hostChanged;
-    const showGate =
-        showGateWhenVaries && gateChanged && record.gate && record.gate !== 'Main Gate';
+    const showGate = showGateWhenVaries && gateChanged && record.gate && record.gate !== 'Main Gate';
 
     const kind = resolveActivityKind(type, record, checkoutEnabled);
     const config = ACTIVITY_KINDS[kind];
@@ -167,9 +143,7 @@ function TimelineEvent({
                 className={`absolute top-[13px] left-0 z-10 h-2 w-2 -translate-x-1/2 rounded-full border-2 bg-white ring-2 ring-white transition-transform duration-150 ease-out group-hover/event:scale-125 ${config.nodeClass}`}
                 aria-hidden
             >
-                <span
-                    className={`absolute inset-0.5 rounded-full ${config.nodeDotClass} opacity-90`}
-                />
+                <span className={`absolute inset-0.5 rounded-full ${config.nodeDotClass} opacity-90`} />
             </span>
 
             <div className="pl-3.5 sm:pl-4">
@@ -179,15 +153,13 @@ function TimelineEvent({
                     aria-expanded={expanded}
                     aria-controls={panelId}
                     className={`flex w-full cursor-pointer gap-2.5 rounded-lg py-1.5 pr-1.5 pl-0.5 text-left transition-[background-color,box-shadow] duration-150 ease-out active:scale-[0.995] sm:gap-3 ${
-                        expanded
-                            ? 'bg-gray-50 shadow-[inset_0_0_0_1px_var(--color-gray-200)]'
-                            : 'hover:bg-gray-50/90'
+                        expanded ? 'bg-gray-50 shadow-[inset_0_0_0_1px_var(--color-gray-200)]' : 'hover:bg-gray-50/90'
                     }`}
                 >
                     {/* Level 2 - time */}
                     <time
                         dateTime={event.occurredAt}
-                        className={`${TIME_COL} pt-0.5 text-right text-[11px] font-semibold tabular-nums tracking-tight text-gray-400 sm:text-xs`}
+                        className={`${TIME_COL} pt-0.5 text-right text-[11px] font-semibold tracking-tight text-gray-400 tabular-nums sm:text-xs`}
                     >
                         {timeLabel}
                     </time>
@@ -200,28 +172,18 @@ function TimelineEvent({
                     {/* Level 3 - structured activity object */}
                     <div className="min-w-0 flex-1">
                         {/* Activity type first - scannable before the name */}
-                        <p
-                            className={`text-[10px] font-bold tracking-wider uppercase ${config.textClass}`}
-                        >
-                            {config.label}
-                        </p>
-                        <p className="mt-0.5 truncate text-sm font-semibold leading-snug text-gray-900">
-                            {record.visitor.name}
-                        </p>
+                        <p className={`text-[10px] font-bold tracking-wider uppercase ${config.textClass}`}>{config.label}</p>
+                        <p className="mt-0.5 truncate text-sm leading-snug font-semibold text-gray-900">{record.visitor.name}</p>
 
                         {/* Supporting details - muted metadata layer */}
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[11px] font-medium text-gray-500">
                             {type === 'check_in' && showHost ? (
                                 <span className="truncate">
                                     Visiting {record.host.name}
-                                    {record.host.unit ? (
-                                        <span className="text-gray-400"> · {record.host.unit}</span>
-                                    ) : null}
+                                    {record.host.unit ? <span className="text-gray-400"> · {record.host.unit}</span> : null}
                                 </span>
                             ) : null}
-                            {type === 'check_out' && showHost ? (
-                                <span className="truncate text-gray-400">Host: {record.host.name}</span>
-                            ) : null}
+                            {type === 'check_out' && showHost ? <span className="truncate text-gray-400">Host: {record.host.name}</span> : null}
                             {showGate ? (
                                 <>
                                     {(showHost || type === 'check_out') && (
@@ -237,9 +199,7 @@ function TimelineEvent({
                                     <span className="text-gray-300" aria-hidden>
                                         ·
                                     </span>
-                                    <span className="font-mono text-[10px] text-gray-400">
-                                        {record.vehicle.plate}
-                                    </span>
+                                    <span className="font-mono text-[10px] text-gray-400">{record.vehicle.plate}</span>
                                 </>
                             ) : null}
                         </div>
@@ -271,51 +231,29 @@ function TimelineEvent({
                                 {/* Key-value audit grid */}
                                 <dl className="grid grid-cols-2 gap-x-3 gap-y-2.5 text-[11px] sm:grid-cols-3">
                                     <AuditField label="Host" value={record.host.name} />
-                                    {record.host.unit ? (
-                                        <AuditField label="Unit" value={record.host.unit} />
-                                    ) : null}
-                                    {record.purpose ? (
-                                        <AuditField label="Purpose" value={record.purpose} />
-                                    ) : null}
-                                    {record.gate && record.gate !== 'Main Gate' ? (
-                                        <AuditField label="Gate" value={record.gate} />
-                                    ) : null}
+                                    {record.host.unit ? <AuditField label="Unit" value={record.host.unit} /> : null}
+                                    {record.purpose ? <AuditField label="Purpose" value={record.purpose} /> : null}
+                                    {record.gate && record.gate !== 'Main Gate' ? <AuditField label="Gate" value={record.gate} /> : null}
                                     <AuditField
                                         label={type === 'check_out' ? 'Check-out officer' : 'Officer'}
-                                        value={
-                                            type === 'check_out'
-                                                ? (record.checkout_verifier_name ?? record.verifier_name)
-                                                : record.verifier_name
-                                        }
+                                        value={type === 'check_out' ? (record.checkout_verifier_name ?? record.verifier_name) : record.verifier_name}
                                     />
                                     {record.duration_minutes != null ? (
-                                        <AuditField
-                                            label="Duration"
-                                            value={formatStayDuration(record.duration_minutes)}
-                                        />
+                                        <AuditField label="Duration" value={formatStayDuration(record.duration_minutes)} />
                                     ) : null}
-                                    {record.code ? (
-                                        <AuditField label="Pass code" value={`#${record.code}`} mono />
-                                    ) : null}
+                                    {record.code ? <AuditField label="Pass code" value={`#${record.code}`} mono /> : null}
                                     {record.vehicle ? (
                                         <AuditField
                                             label="Vehicle"
                                             value={`${record.vehicle.make} ${record.vehicle.model}${record.vehicle.plate ? ` · ${record.vehicle.plate}` : ''}`}
                                         />
                                     ) : null}
-                                    {record.visitor.phone ? (
-                                        <AuditField label="Phone" value={record.visitor.phone} />
-                                    ) : null}
+                                    {record.visitor.phone ? <AuditField label="Phone" value={record.visitor.phone} /> : null}
                                 </dl>
 
                                 <div className="border-t border-gray-100 pt-3">
-                                    <p className="mb-2 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                                        Chain of custody
-                                    </p>
-                                    <RecordDetailChain
-                                        record={record}
-                                        checkoutEnabled={checkoutEnabled}
-                                    />
+                                    <p className="mb-2 text-[10px] font-bold tracking-wider text-gray-400 uppercase">Chain of custody</p>
+                                    <RecordDetailChain record={record} checkoutEnabled={checkoutEnabled} />
                                 </div>
 
                                 <div className="flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
@@ -344,27 +282,18 @@ function TimelineEvent({
     );
 }
 
-function AuditField({
-    label,
-    value,
-    mono = false,
-}: {
-    label: string;
-    value: string;
-    mono?: boolean;
-}) {
+function AuditField({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
     return (
         <div className="min-w-0">
             <dt className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">{label}</dt>
-            <dd
-                className={`mt-0.5 truncate font-semibold text-gray-800 ${mono ? 'font-mono text-[10px]' : ''}`}
-            >
-                {value}
-            </dd>
+            <dd className={`mt-0.5 truncate font-semibold text-gray-800 ${mono ? 'font-mono text-[10px]' : ''}`}>{value}</dd>
         </div>
     );
 }
 
 function slugify(value: string): string {
-    return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    return value
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
 }

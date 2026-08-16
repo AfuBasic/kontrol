@@ -21,6 +21,7 @@ test('creating estate via zeus generates valid invitation record and working inv
     $action = app(CreateEstateAction::class);
     $estate = $action->execute([
         'name' => 'Royal Palm Estate',
+        'admin_name' => 'Ada Okafor',
         'email' => 'admin@royalpalm.com',
         'address' => '123 Royal Palm Way',
     ]);
@@ -30,6 +31,7 @@ test('creating estate via zeus generates valid invitation record and working inv
     // Verify User created
     $user = User::where('email', 'admin@royalpalm.com')->first();
     expect($user)->not->toBeNull();
+    expect($user->name)->toBe('Ada Okafor');
 
     // Verify Invitation record created
     $invitation = Invitation::withoutGlobalScope(ZoneScope::class)

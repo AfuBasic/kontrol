@@ -59,7 +59,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         if ($this->accessCode->type === 'event') {
             $eventName = $this->accessCode->visitor_name;
             $guestLimit = $this->accessCode->guest_limit;
-            $arrivedCount = $this->accessCode->accessLogs()->count();
+            $arrivedCount = $this->accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count();
 
             if ($eventName) {
                 if ($guestLimit) {
@@ -164,7 +164,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         if ($this->accessCode->type === 'event') {
             $eventName = $this->accessCode->visitor_name;
             $guestLimit = $this->accessCode->guest_limit;
-            $arrivedCount = $this->accessCode->accessLogs()->count();
+            $arrivedCount = $this->accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count();
 
             if ($eventName) {
                 if ($guestLimit) {

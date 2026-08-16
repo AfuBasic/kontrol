@@ -101,11 +101,7 @@ function clearDraft() {
 /** Illustrative ARPU: annual plan ≈ ₦4,000 / house / month. */
 const EST_MONTHLY_DUES_NAIRA = 4_000;
 
-function estimateAnnualCommission(
-    houses: number,
-    rate: string | null | undefined,
-    type: string | null | undefined,
-): number | null {
+function estimateAnnualCommission(houses: number, rate: string | null | undefined, type: string | null | undefined): number | null {
     if (!houses || houses < 1) {
         return null;
     }
@@ -243,11 +239,7 @@ function isStepSatisfied(stepIndex: number, data: FormData): boolean {
     }
 
     if (stepIndex === 2) {
-        return (
-            data.chairman_name.trim().length > 0 &&
-            data.chairman_phone.trim().length > 0 &&
-            data.chairman_email.trim().length > 0
-        );
+        return data.chairman_name.trim().length > 0 && data.chairman_phone.trim().length > 0 && data.chairman_email.trim().length > 0;
     }
 
     // Location (1) and Review (3) have no hard requirements of their own.
@@ -275,15 +267,7 @@ function firstIncompleteStep(data: FormData, upTo = STEPS.length - 1): number {
     return upTo;
 }
 
-function StepRail({
-    step,
-    data,
-    onJump,
-}: {
-    step: number;
-    data: FormData;
-    onJump: (index: number) => void;
-}) {
+function StepRail({ step, data, onJump }: { step: number; data: FormData; onJump: (index: number) => void }) {
     return (
         <nav aria-label="Submission progress" className="hidden lg:block">
             <ol className="space-y-1">
@@ -518,8 +502,7 @@ export default function PartnerEstate({ partner }: Props) {
     const showPhoneError = (touched.chairman_phone || attemptedContinue) && !data.chairman_phone.trim();
     const showEmailError = (touched.chairman_email || attemptedContinue) && !data.chairman_email.trim();
 
-    const saveLabel =
-        saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Auto-saved just now' : 'Draft ready';
+    const saveLabel = saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? 'Auto-saved just now' : 'Draft ready';
 
     return (
         <PartnerLayout>
@@ -530,12 +513,8 @@ export default function PartnerEstate({ partner }: Props) {
                     {/* Progress */}
                     <aside className="lg:sticky lg:top-24 lg:self-start">
                         <div className="mb-5 hidden lg:block">
-                            <p className="text-[11px] font-medium tracking-wide text-stone-400 dark:text-slate-500">
-                                Submit estate
-                            </p>
-                            <h1 className="mt-1 text-lg font-semibold tracking-tight text-stone-900 dark:text-white">
-                                New referral
-                            </h1>
+                            <p className="text-[11px] font-medium tracking-wide text-stone-400 dark:text-slate-500">Submit estate</p>
+                            <h1 className="mt-1 text-lg font-semibold tracking-tight text-stone-900 dark:text-white">New referral</h1>
                         </div>
                         <StepRail step={step} data={data} onJump={jumpToStep} />
                     </aside>
@@ -544,9 +523,7 @@ export default function PartnerEstate({ partner }: Props) {
                     <div className="min-w-0">
                         <div className="mb-6 lg:hidden">
                             <p className="text-[11px] font-medium tracking-wide text-stone-400">Submit estate</p>
-                            <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">
-                                {current.title}
-                            </h1>
+                            <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-stone-900 dark:text-white">{current.title}</h1>
                         </div>
 
                         <MobileProgress step={step} />
@@ -565,9 +542,7 @@ export default function PartnerEstate({ partner }: Props) {
                                         <h2 className="text-[1.65rem] font-semibold tracking-tight text-stone-900 dark:text-white">
                                             {current.title}
                                         </h2>
-                                        <p className="mt-1.5 text-[14px] text-stone-500 dark:text-slate-400">
-                                            {current.guidance}
-                                        </p>
+                                        <p className="mt-1.5 text-[14px] text-stone-500 dark:text-slate-400">{current.guidance}</p>
                                     </header>
 
                                     <div className="space-y-5">
@@ -578,10 +553,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     label="Estate name"
                                                     required
                                                     help="Use the official name residents know."
-                                                    error={
-                                                        errors.estate_name ||
-                                                        (showEstateNameError ? 'Estate name is required.' : undefined)
-                                                    }
+                                                    error={errors.estate_name || (showEstateNameError ? 'Estate name is required.' : undefined)}
                                                 >
                                                     <input
                                                         id="estate_name"
@@ -695,15 +667,12 @@ export default function PartnerEstate({ partner }: Props) {
                                                                 <p className="text-[11px] font-medium tracking-wide text-stone-400 uppercase">
                                                                     Est. annual commission
                                                                 </p>
-                                                                <p className="mt-0.5 text-xl font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                                <p className="mt-0.5 text-xl font-semibold text-stone-900 tabular-nums dark:text-white">
                                                                     ~{formatAmount(estimate)}
                                                                 </p>
                                                             </div>
                                                             <p className="text-right text-[11px] text-stone-400">
-                                                                {formatCommission(
-                                                                    partner?.commission_rate ?? null,
-                                                                    partner?.commission_type ?? null,
-                                                                )}
+                                                                {formatCommission(partner?.commission_rate ?? null, partner?.commission_type ?? null)}
                                                                 <br />
                                                                 Illustrative
                                                             </p>
@@ -720,10 +689,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     label="Full name"
                                                     required
                                                     help="Estate lead, secretary, or property manager."
-                                                    error={
-                                                        errors.chairman_name ||
-                                                        (showNameError ? 'Name is required.' : undefined)
-                                                    }
+                                                    error={errors.chairman_name || (showNameError ? 'Name is required.' : undefined)}
                                                 >
                                                     <input
                                                         id="chairman_name"
@@ -744,10 +710,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                         id="chairman_phone"
                                                         label="Phone"
                                                         required
-                                                        error={
-                                                            errors.chairman_phone ||
-                                                            (showPhoneError ? 'Phone is required.' : undefined)
-                                                        }
+                                                        error={errors.chairman_phone || (showPhoneError ? 'Phone is required.' : undefined)}
                                                     >
                                                         <input
                                                             id="chairman_phone"
@@ -766,10 +729,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                         id="chairman_email"
                                                         label="Email"
                                                         required
-                                                        error={
-                                                            errors.chairman_email ||
-                                                            (showEmailError ? 'Email is required.' : undefined)
-                                                        }
+                                                        error={errors.chairman_email || (showEmailError ? 'Email is required.' : undefined)}
                                                     >
                                                         <input
                                                             id="chairman_email"
@@ -837,10 +797,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                         </div>
                                                         <dl className="px-4 pb-3 sm:px-5">
                                                             {section.rows.map((row) => (
-                                                                <div
-                                                                    key={row.label}
-                                                                    className="flex items-baseline justify-between gap-4 py-1.5"
-                                                                >
+                                                                <div key={row.label} className="flex items-baseline justify-between gap-4 py-1.5">
                                                                     <dt className="text-[12px] text-stone-400">{row.label}</dt>
                                                                     <dd className="text-right text-[14px] font-medium text-stone-900 dark:text-white">
                                                                         {row.value}
@@ -855,7 +812,7 @@ export default function PartnerEstate({ partner }: Props) {
                                                     <div className="border-t border-stone-100 px-4 py-3.5 sm:px-5 dark:border-white/[0.06]">
                                                         <div className="flex items-baseline justify-between gap-3">
                                                             <p className="text-[12px] text-stone-500">Est. annual commission</p>
-                                                            <p className="text-[15px] font-semibold tabular-nums text-stone-900 dark:text-white">
+                                                            <p className="text-[15px] font-semibold text-stone-900 tabular-nums dark:text-white">
                                                                 ~{formatAmount(estimate)}
                                                             </p>
                                                         </div>
@@ -882,16 +839,8 @@ export default function PartnerEstate({ partner }: Props) {
                                     <span className="hidden text-[12px] text-stone-400 sm:inline dark:text-slate-500">
                                         Step {step + 1} of {STEPS.length}
                                         <span className="mx-1.5 text-stone-300 dark:text-slate-600">·</span>
-                                        <span
-                                            className={
-                                                saveStatus === 'saved'
-                                                    ? 'text-emerald-600 dark:text-emerald-400'
-                                                    : ''
-                                            }
-                                        >
-                                            {saveStatus === 'saved' && (
-                                                <CheckCircleIcon className="mr-1 inline h-3 w-3 -translate-y-px" />
-                                            )}
+                                        <span className={saveStatus === 'saved' ? 'text-emerald-600 dark:text-emerald-400' : ''}>
+                                            {saveStatus === 'saved' && <CheckCircleIcon className="mr-1 inline h-3 w-3 -translate-y-px" />}
                                             {saveLabel}
                                         </span>
                                     </span>
@@ -917,7 +866,7 @@ export default function PartnerEstate({ partner }: Props) {
                                             e.preventDefault();
                                             submitEstate();
                                         }}
-                                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm shadow-primary-600/20 transition hover:bg-primary-500 disabled:opacity-60 active:scale-[0.98]"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-[13px] font-semibold text-white shadow-sm shadow-primary-600/20 transition hover:bg-primary-500 active:scale-[0.98] disabled:opacity-60"
                                     >
                                         {processing ? (
                                             <>

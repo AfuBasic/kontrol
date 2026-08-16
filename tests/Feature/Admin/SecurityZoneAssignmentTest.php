@@ -232,4 +232,3 @@ it('sends an invitation email when adding security role to an existing resident'
         'status' => 'pending',
     ]);
 });
-

@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\AssignmentScope;
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostCategory;
 use App\Enums\EstateBoardPostPriority;
 use App\Enums\EstateBoardPostStatus;
+use App\Events\EstateBoard\NewPostBroadcast;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
 use App\Models\EstateSubscription;
@@ -13,6 +16,7 @@ use App\Models\Zone;
 use App\Services\Admin\EstateBoardService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
@@ -99,4 +103,116 @@ it('hides zone-targeted broadcasts from residents outside the zone', function ()
 
     expect($visibleToA)->toContain($post->id)
         ->and($visibleToB)->not->toContain($post->id);
+});
+
+it('broadcasts to correct targeted zone channels on dispatch', function () {
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => test()->estate->id,
+        'applies_to' => 'custom',
+        'audience' => EstateBoardPostAudience::Residents,
+    ]);
+
+    $post->targets()->create([
+        'target_type' => 'zone',
+        'target_id' => test()->zoneA->id,
+    ]);
+
+    $event = new NewPostBroadcast($post);
+    $channels = $event->broadcastOn();
+
+    expect($channels)->toHaveCount(1)
+        ->and($channels[0]->name)->toBe('private-estates.'.test()->estate->id.'.zones.'.test()->zoneA->id.'.residents');
+});
+
+function zoneScopedAdmin(): AdministrativeAssignment
+{
+    $adminRole = Role::where('name', 'admin')->first();
+
+    return AdministrativeAssignment::create([
+        'user_id' => test()->admin->id,
+        'estate_id' => test()->estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => test()->zoneA->id,
+        'is_active' => true,
+    ]);
+}
+
+it('forces zone-scoped admins to post only to their zone', function () {
+    $assignment = zoneScopedAdmin();
+
+    test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->post(route('admin.estate-board.store'), [
+            'title' => 'Zone A Update',
+            'body' => 'This announcement should stay inside Zone A even if no zone is selected.',
+            'category' => EstateBoardPostCategory::General->value,
+            'priority' => EstateBoardPostPriority::Normal->value,
+            'status' => EstateBoardPostStatus::Published->value,
+            'audience' => EstateBoardPostAudience::All->value,
+            'zone_ids' => [],
+        ])
+        ->assertRedirect(route('admin.estate-board.manage'));
+
+    $post = EstateBoardPost::query()->where('title', 'Zone A Update')->first();
+
+    expect($post)->not->toBeNull()
+        ->and($post->applies_to)->toBe('custom');
+
+    test()->assertDatabaseHas('estate_board_post_targets', [
+        'estate_board_post_id' => $post->id,
+        'target_type' => 'zone',
+        'target_id' => test()->zoneA->id,
+    ]);
+
+    test()->assertDatabaseMissing('estate_board_post_targets', [
+        'estate_board_post_id' => $post->id,
+        'target_type' => 'zone',
+        'target_id' => test()->zoneB->id,
+    ]);
+});
+
+it('ignores another zone when a zone-scoped admin tries to target it', function () {
+    $assignment = zoneScopedAdmin();
+
+    test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->post(route('admin.estate-board.store'), [
+            'title' => 'Attempted Zone B Post',
+            'body' => 'A zone-scoped admin should not be able to announce to a different zone.',
+            'category' => EstateBoardPostCategory::General->value,
+            'priority' => EstateBoardPostPriority::Normal->value,
+            'status' => EstateBoardPostStatus::Published->value,
+            'audience' => EstateBoardPostAudience::All->value,
+            'zone_ids' => [test()->zoneB->id],
+        ])
+        ->assertRedirect(route('admin.estate-board.manage'));
+
+    $post = EstateBoardPost::query()->where('title', 'Attempted Zone B Post')->first();
+
+    test()->assertDatabaseHas('estate_board_post_targets', [
+        'estate_board_post_id' => $post->id,
+        'target_type' => 'zone',
+        'target_id' => test()->zoneA->id,
+    ]);
+
+    test()->assertDatabaseMissing('estate_board_post_targets', [
+        'estate_board_post_id' => $post->id,
+        'target_type' => 'zone',
+        'target_id' => test()->zoneB->id,
+    ]);
+});
+
+it('only offers the assigned zone to zone-scoped admins on the create page', function () {
+    $assignment = zoneScopedAdmin();
+
+    test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->get(route('admin.estate-board.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/EstateBoard/Create')
+            ->has('zones', 1)
+            ->where('zones.0.id', test()->zoneA->id)
+        );
 });

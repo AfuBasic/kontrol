@@ -48,6 +48,7 @@ class CreateSecurityAction
                     'status' => 'pending',
                     'relationship_type' => 'security',
                     'zone_id' => $zone?->id,
+                    'created_via' => 'admin_invite',
                 ]);
             } else {
                 DB::table('estate_users_membership')
@@ -55,6 +56,7 @@ class CreateSecurityAction
                     ->update([
                         'relationship_type' => 'security',
                         'zone_id' => $zone?->id,
+                        'created_via' => 'admin_invite',
                     ]);
             }
 

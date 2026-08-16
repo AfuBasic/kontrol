@@ -13,14 +13,7 @@ interface Props {
 /**
  * Distinct empty state - no records exist (not an error).
  */
-export default function EmptyState({
-    icon: Icon = Inbox,
-    title = 'Nothing here yet',
-    message,
-    description,
-    action,
-    className = '',
-}: Props) {
+export default function EmptyState({ icon: Icon = Inbox, title = 'Nothing here yet', message, description, action, className = '' }: Props) {
     const body = description ?? message ?? 'When data is available, it will show up here.';
 
     return (

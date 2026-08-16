@@ -27,33 +27,25 @@ export default function NextVisitorHero({ nextCode }: Props) {
             className="group relative overflow-hidden rounded-xl border border-primary-700 bg-primary-900 p-3.5 text-white shadow-md"
         >
             {/* Ambient Kontrol Blue Glow Accent */}
-            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary-500/20 blur-xl" />
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary-500/20 blur-xl" />
 
             <div className="relative z-10 flex items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
                     {/* Visitor Category Avatar */}
                     <VisitorAvatar category={category} name={visitorName} size="md" />
 
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-primary-300">
-                                {label}
-                            </span>
-                            <span className="text-[10px] text-primary-400 font-medium">•</span>
-                            <span className="text-[10px] text-primary-200 font-semibold">
+                            <span className="text-[10px] font-bold tracking-wider text-primary-300 uppercase">{label}</span>
+                            <span className="text-[10px] font-medium text-primary-400">•</span>
+                            <span className="text-[10px] font-semibold text-primary-200">
                                 {dateFormatted} {timeStr !== 'Anytime' ? `at ${timeStr}` : ''}
                             </span>
                         </div>
 
                         <div className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5">
-                            <h2 className="text-sm font-bold tracking-tight text-white">
-                                {visitorName}
-                            </h2>
-                            {nextCode.purpose && (
-                                <span className="text-[11px] text-primary-300 font-normal">
-                                    · {nextCode.purpose}
-                                </span>
-                            )}
+                            <h2 className="text-sm font-bold tracking-tight text-white">{visitorName}</h2>
+                            {nextCode.purpose && <span className="text-[11px] font-normal text-primary-300">· {nextCode.purpose}</span>}
                         </div>
                     </div>
                 </div>

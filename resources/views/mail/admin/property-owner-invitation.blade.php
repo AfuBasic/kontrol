@@ -1,18 +1,13 @@
 @extends('mail.layout')
 
 @section('content')
-    @if($isPasswordReset ?? false)
-        <div class="badge" style="background-color: #fff1f2; color: #9f1239;">Security</div>
-        <h1>Reset your password</h1>
-    @else
-        <div class="badge" style="background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">Property Owner</div>
-        <h1>Property Owner invitation</h1>
-    @endif
+    <div class="badge" style="background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">Property Owner</div>
+    <h1>{{ ($isResend ?? false) ? 'Your invitation was resent' : 'Property Owner invitation' }}</h1>
     
     <p>Hello <span class="bold">{{ $userName }}</span>,</p>
     
-    @if($isPasswordReset ?? false)
-        <p>A password reset was requested for your property owner account at <span class="bold">{{ $estateName }}</span>. Click the button below to secure your access.</p>
+    @if($isResend ?? false)
+        <p>Your invitation to join <span class="bold">{{ $estateName }}</span> as a Property Owner has been resent. Click the button below to accept it.</p>
     @else
         <p>You've been invited to join <span class="bold">{{ $estateName }}</span> as a Property Owner. To begin delegating resident administration and accessing your dashboard, please accept your invitation.</p>
     @endif
@@ -31,10 +26,10 @@
     </div>
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #0284c7; box-shadow: 0 4px 14px 0 rgba(2, 132, 199, 0.3);">{{ ($isPasswordReset ?? false) ? 'Login to your account' : 'Accept Invitation' }}</a>
+        <a href="{{ $invitationUrl }}" class="button shadow" style="background-color: #0284c7; box-shadow: 0 4px 14px 0 rgba(2, 132, 199, 0.3);">Accept Invitation</a>
     </div>
     
-    @if(!($isPasswordReset ?? false))
+    @if(!($isResend ?? false))
         <div style="margin-top: 32px; padding: 20px; border-radius: 12px; border: 1px solid #bae6fd; background-color: #f0f9ff;">
             <p style="margin: 0; font-size: 14px; color: #0369a1;">
                 <strong>Dashboard Access</strong><br>

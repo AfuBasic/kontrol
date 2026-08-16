@@ -12,13 +12,15 @@ interface PropertyOwner {
     unit_number: string | null;
     address: string | null;
     email_verified_at: string | null;
+    zone_id?: number | null;
 }
 
 interface Props {
     propertyOwner: PropertyOwner;
+    zones?: { id: number; name: string }[];
 }
 
-export default function Edit({ propertyOwner }: Props) {
+export default function Edit({ propertyOwner, zones = [] }: Props) {
     const isVerified = !!propertyOwner.email_verified_at;
 
     const { data, setData, put, processing, errors } = useForm({
@@ -27,6 +29,7 @@ export default function Edit({ propertyOwner }: Props) {
         phone: propertyOwner.phone || '',
         unit_number: propertyOwner.unit_number || '',
         address: propertyOwner.address || '',
+        zone_id: propertyOwner.zone_id ? String(propertyOwner.zone_id) : '',
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -155,6 +158,29 @@ export default function Edit({ propertyOwner }: Props) {
                             {errors.address && <p className="mt-1 text-sm text-red-600">{errors.address}</p>}
                         </div>
                     </div>
+
+                    {zones.length > 0 && (
+                        <div>
+                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700">
+                                Zone
+                            </label>
+                            <p className="mt-0.5 text-xs text-gray-500">Assign this property owner to a zone, or leave them estate-wide.</p>
+                            <select
+                                id="zone_id"
+                                value={data.zone_id}
+                                onChange={(e) => setData('zone_id', e.target.value)}
+                                className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-blue-50 focus:outline-none"
+                            >
+                                <option value="">Entire Estate</option>
+                                {zones.map((zone) => (
+                                    <option key={zone.id} value={zone.id}>
+                                        {zone.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-10 flex items-center justify-end gap-4 border-t border-gray-100 pt-6">

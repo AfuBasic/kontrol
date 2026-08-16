@@ -1,8 +1,8 @@
 import { Menu, Transition } from '@headlessui/react';
-import { EllipsisVerticalIcon, PencilSquareIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { EllipsisVerticalIcon, PencilSquareIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { Fragment, useState } from 'react';
-import { destroy, edit } from '@/actions/App/Http/Controllers/Admin/UserController';
+import { destroy, edit, resetPassword } from '@/actions/App/Http/Controllers/Admin/UserController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
 import { usePermission } from '@/Hooks/usePermission';
@@ -12,9 +12,11 @@ type User = {
     id: number;
     name: string;
     email: string;
+    status: 'pending' | 'accepted' | 'unknown';
 };
 
 import type { SharedData } from '@/types';
+import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 
 export default function UserActions({ user }: { user: User }) {
     const { auth } = usePage<SharedData>().props;
@@ -29,10 +31,72 @@ export default function UserActions({ user }: { user: User }) {
         });
     };
 
+    const handleResendInvitation = () => {
+        router.post(resetPassword.url({ user: user.ulid }), {}, {
+            preserveScroll: true,
+            onSuccess: () => setIsSheetOpen(false),
+        });
+    };
+
     const isSelf = user.id === auth.user?.id;
 
     const ActionItems = ({ isMobile = false }) => (
         <div className={isMobile ? 'flex flex-col gap-3' : 'p-1'}>
+            {/* View Profile */}
+            <div className={isMobile ? '' : 'contents p-1'}>
+                {isMobile ? (
+                    <Link
+                        href={`/admin/residents/${user.id}`}
+                        className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
+                    >
+                        <EyeIcon className="h-6 w-6 text-slate-400" />
+                        View Profile
+                    </Link>
+                ) : (
+                    <Menu.Item>
+                        {({ active }) => (
+                            <Link
+                                href={`/admin/residents/${user.id}`}
+                                className={`${
+                                    active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
+                                } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                            >
+                                <EyeIcon className="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
+                                View Profile
+                            </Link>
+                        )}
+                    </Menu.Item>
+                )}
+            </div>
+
+            {can('users.edit') && user.status !== 'accepted' && (
+                <div className={isMobile ? '' : 'contents p-1'}>
+                    {isMobile ? (
+                        <button
+                            onClick={handleResendInvitation}
+                            className="flex w-full items-center gap-3 rounded-2xl bg-slate-50 p-4 font-black text-slate-900 shadow-sm active:scale-95"
+                        >
+                            <PaperAirplaneIcon className="h-6 w-6 text-slate-400" />
+                            Resend Invitation
+                        </button>
+                    ) : (
+                        <Menu.Item>
+                            {({ active }) => (
+                                <button
+                                    onClick={handleResendInvitation}
+                                    className={`${
+                                        active ? 'bg-gray-50 text-gray-900' : 'text-gray-700'
+                                    } group flex w-full items-center rounded-md px-2 py-2 text-sm`}
+                                >
+                                    <PaperAirplaneIcon className="mr-2 h-4 w-4 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />
+                                    Resend Invitation
+                                </button>
+                            )}
+                        </Menu.Item>
+                    )}
+                </div>
+            )}
+
             {can('users.edit') && (
                 <div className={isMobile ? '' : 'contents p-1'}>
                     {isMobile ? (
@@ -107,7 +171,7 @@ export default function UserActions({ user }: { user: User }) {
                 </button>
 
                 <Menu as="div" className="relative hidden md:inline-block">
-                    <Menu.Button className="flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:outline-none">
+                    <Menu.Button className="flex items-center rounded-full p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none">
                         <span className="sr-only">Open options</span>
                         <EllipsisVerticalIcon className="h-5 w-5" aria-hidden="true" />
                     </Menu.Button>

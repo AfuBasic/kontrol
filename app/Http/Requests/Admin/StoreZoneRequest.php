@@ -10,7 +10,7 @@ class StoreZoneRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() && $this->user()->contextHasRole('admin');
+        return $this->user() && ($this->user()->contextHasRole('admin') || $this->user()->hasPermissionTo('zones.create'));
     }
 
     public function rules(): array
@@ -23,8 +23,7 @@ class StoreZoneRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('zones', 'name')
-                    ->where('estate_id', $estateId)
-                    ->whereNull('deleted_at'),
+                    ->where('estate_id', $estateId),
             ],
             'description' => ['nullable', 'string', 'max:1000'],
             'is_active' => ['nullable', 'boolean'],

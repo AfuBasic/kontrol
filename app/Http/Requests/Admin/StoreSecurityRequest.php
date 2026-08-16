@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Auth\ContextManager;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -67,6 +68,12 @@ class StoreSecurityRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('zones', 'id')->where('estate_id', $estateId),
+                function ($attribute, $value, $fail) {
+                    $context = app(ContextManager::class)->current();
+                    if ($context && $context->isZoneScoped() && $value !== $context->zoneId) {
+                        $fail('You are only authorized to assign security personnel to your active zone.');
+                    }
+                },
             ],
         ];
     }

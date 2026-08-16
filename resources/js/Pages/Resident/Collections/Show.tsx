@@ -2,16 +2,7 @@ import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import { Head, Link, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import {
-    Wallet,
-    ChevronLeft,
-    ChevronDown,
-    ShieldCheck,
-    ExternalLink,
-    CheckCircle2,
-    Circle,
-    Sparkles,
-} from 'lucide-react';
+import { Wallet, ChevronLeft, ChevronDown, ShieldCheck, ExternalLink, CheckCircle2, Circle, Sparkles } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Resident/CollectionController';
 import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
@@ -137,8 +128,7 @@ function buildFallbackJourney(assignment: Assignment): Journey {
     const originalAmount = Number(assignment.amount_due) || 0;
     const totalPaid = Number(assignment.amount_paid) || 0;
     const remainingBalance = Math.max(0, originalAmount - totalPaid);
-    const percentagePaid =
-        originalAmount > 0 ? Math.round(Math.min(100, (totalPaid / originalAmount) * 100) * 10) / 10 : totalPaid > 0 ? 100 : 0;
+    const percentagePaid = originalAmount > 0 ? Math.round(Math.min(100, (totalPaid / originalAmount) * 100) * 10) / 10 : totalPaid > 0 ? 100 : 0;
 
     const payments = [...(assignment.payments ?? [])].sort((a, b) => {
         const aTime = a.paid_at ? new Date(a.paid_at).getTime() : 0;
@@ -184,12 +174,7 @@ function buildFallbackJourney(assignment: Assignment): Journey {
                   : 'Outstanding';
 
     const formattedRemaining = formatCurrency(remainingBalance);
-    const ctaLabel =
-        remainingBalance <= 0
-            ? null
-            : totalPaid > 0
-              ? `Pay Remaining ${formattedRemaining}`
-              : `Pay ${formattedRemaining}`;
+    const ctaLabel = remainingBalance <= 0 ? null : totalPaid > 0 ? `Pay Remaining ${formattedRemaining}` : `Pay ${formattedRemaining}`;
 
     return {
         status_label: statusLabel,
@@ -308,9 +293,7 @@ function PaymentActivityCard({ payment, defaultOpen = false }: { payment: Paymen
                 </div>
                 <div className="text-right">
                     <p className="text-lg font-black tracking-tight text-slate-900">{formatCurrency(payment.amount)}</p>
-                    <p className="mt-0.5 text-[11px] font-medium text-slate-400">
-                        Remaining {formatCurrency(payment.remaining_balance_after)}
-                    </p>
+                    <p className="mt-0.5 text-[11px] font-medium text-slate-400">Remaining {formatCurrency(payment.remaining_balance_after)}</p>
                 </div>
             </div>
 
@@ -335,9 +318,7 @@ function PaymentActivityCard({ payment, defaultOpen = false }: { payment: Paymen
                         <div className="mt-3 space-y-2 border-t border-slate-100 pt-3 text-sm">
                             <div className="flex items-center justify-between">
                                 <span className="text-slate-400">Gateway</span>
-                                <span className="font-semibold capitalize text-slate-700">
-                                    {(payment.provider || 'paystack').replace('_', ' ')}
-                                </span>
+                                <span className="font-semibold text-slate-700 capitalize">{(payment.provider || 'paystack').replace('_', ' ')}</span>
                             </div>
                             <div className="flex items-center justify-between gap-4">
                                 <span className="shrink-0 text-slate-400">Reference</span>
@@ -409,10 +390,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
         });
     }, [journey.completion_date, assignment.paid_at]);
 
-    const activityNewestFirst = useMemo(
-        () => [...journey.payment_activity].sort((a, b) => b.sequence - a.sequence),
-        [journey.payment_activity],
-    );
+    const activityNewestFirst = useMemo(() => [...journey.payment_activity].sort((a, b) => b.sequence - a.sequence), [journey.payment_activity]);
 
     // Bottom padding clears the floating resident dock (bottom-6 + pill + FAB)
     return (
@@ -450,9 +428,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                 </div>
 
                 <div className="space-y-3">
-                    <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900 sm:text-4xl">
-                        {assignment.collection.name}
-                    </h1>
+                    <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900 sm:text-4xl">{assignment.collection.name}</h1>
                     <p className="max-w-xl text-base leading-relaxed font-medium text-slate-500">
                         {assignment.collection.description ||
                             (assignment.billing_source === 'property_owner'
@@ -477,9 +453,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-black tracking-tight text-emerald-950">Fully Settled</h2>
-                                    <p className="mt-1 text-sm font-medium text-emerald-700/80">
-                                        This bill has been completely paid.
-                                    </p>
+                                    <p className="mt-1 text-sm font-medium text-emerald-700/80">This bill has been completely paid.</p>
                                 </div>
                             </div>
                             <div className="grid w-full grid-cols-3 gap-3 sm:w-auto sm:min-w-[280px]">
@@ -559,11 +533,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                     ].map((row) => (
                         <div key={row.label} className="flex items-center justify-between py-3.5">
                             <span className="text-sm font-medium text-slate-500">{row.label}</span>
-                            <span
-                                className={`text-sm font-bold ${
-                                    row.positive && row.value > 0 ? 'text-emerald-600' : 'text-slate-800'
-                                }`}
-                            >
+                            <span className={`text-sm font-bold ${row.positive && row.value > 0 ? 'text-emerald-600' : 'text-slate-800'}`}>
                                 {row.positive && row.value > 0 ? '−' : ''}
                                 {formatCurrency(row.value)}
                             </span>
@@ -581,8 +551,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
             {/* Due date & cycle - compressed */}
             <section className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-sm text-slate-500">
                 <span>
-                    <span className="font-medium text-slate-400">Due Date</span>{' '}
-                    <span className="font-bold text-slate-800">{dueDateLabel}</span>
+                    <span className="font-medium text-slate-400">Due Date</span> <span className="font-bold text-slate-800">{dueDateLabel}</span>
                 </span>
                 <span className="text-slate-300">·</span>
                 <span>
@@ -630,9 +599,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
 
                             return (
                                 <div key={item.id} className="relative flex gap-4 pb-8 last:pb-0">
-                                    {!isLast && (
-                                        <div className="absolute top-5 left-[9px] h-[calc(100%-8px)] w-px bg-slate-200" />
-                                    )}
+                                    {!isLast && <div className="absolute top-5 left-[9px] h-[calc(100%-8px)] w-px bg-slate-200" />}
                                     <div className="relative z-10 mt-1 shrink-0">
                                         {isCurrent ? (
                                             <Circle className="h-5 w-5 fill-white text-amber-400" strokeWidth={2.5} />
@@ -644,9 +611,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                                         <div className="flex flex-wrap items-baseline justify-between gap-2">
                                             <div>
                                                 <p className="text-sm font-black text-slate-900">{item.label}</p>
-                                                {item.description && (
-                                                    <p className="mt-0.5 text-xs font-medium text-slate-400">{item.description}</p>
-                                                )}
+                                                {item.description && <p className="mt-0.5 text-xs font-medium text-slate-400">{item.description}</p>}
                                             </div>
                                             {item.occurred_at_label && (
                                                 <p className="text-xs font-semibold text-slate-400">{item.occurred_at_label}</p>
@@ -701,9 +666,7 @@ export default function CollectionShow({ assignment, journey: journeyProp }: Pro
                     </button>
                     <div className="flex items-center justify-center gap-2 text-center">
                         <ShieldCheck className="h-3.5 w-3.5 text-slate-400" />
-                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                            Secure bank transfer via Paystack
-                        </p>
+                        <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Secure bank transfer via Paystack</p>
                     </div>
                 </section>
             )}

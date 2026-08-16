@@ -1,10 +1,4 @@
-import {
-    ArrowDownRight,
-    ArrowUpRight,
-    Car,
-    ShieldCheck,
-    type LucideIcon,
-} from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Car, ShieldCheck, type LucideIcon } from 'lucide-react';
 import type { ActivityEventType, VisitorRecord } from './types';
 
 /**
@@ -70,11 +64,7 @@ export const ACTIVITY_KINDS: Record<ActivityKind, ActivityKindConfig> = {
  * Resolve display kind from event type + record context.
  * Future kinds (denied, expired, extended) can plug in here when data exists.
  */
-export function resolveActivityKind(
-    eventType: ActivityEventType,
-    record: VisitorRecord,
-    checkoutEnabled: boolean
-): ActivityKind {
+export function resolveActivityKind(eventType: ActivityEventType, record: VisitorRecord, checkoutEnabled: boolean): ActivityKind {
     if (eventType === 'check_out') {
         return 'checked_out';
     }

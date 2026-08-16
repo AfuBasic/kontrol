@@ -65,12 +65,42 @@ class ResidentApprovalController extends Controller
 
         $user->estates()->updateExistingPivot($estate->id, [
             'status' => 'accepted',
+            'accepted_at' => now(),
         ]);
 
         // Send ResidentApproved notification
         $user->notify(new ResidentApproved($estate));
 
         return back()->with('success', "{$user->name} has been approved as a resident.");
+    }
+
+    /**
+     * Approve all pending residents for the estate.
+     */
+    public function approveAll(Request $request): RedirectResponse
+    {
+        $this->authorize('residents.edit');
+        $estate = $this->estateContext->getEstate();
+
+        // Get all pending users for this estate
+        $pendingUsers = User::whereHas('estates', function ($q) use ($estate) {
+            $q->where('estates.id', $estate->id)
+              ->where('estate_users_membership.status', 'pending');
+        })->get();
+
+        if ($pendingUsers->isEmpty()) {
+            return back()->with('info', 'No pending residents to approve.');
+        }
+
+        foreach ($pendingUsers as $user) {
+            $user->estates()->updateExistingPivot($estate->id, [
+                'status' => 'accepted',
+                'accepted_at' => now(),
+            ]);
+            $user->notify(new ResidentApproved($estate));
+        }
+
+        return back()->with('success', "{$pendingUsers->count()} pending residents have been approved.");
     }
 
     /**

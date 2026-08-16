@@ -66,7 +66,7 @@ class HandleInertiaRequests extends Middleware
                 $estate = Estate::find($currentContext->estateId);
                 $user->loadMissing('profile');
 
-                $assignment = AdministrativeAssignment::with('role.permissions')->find($currentContext->assignmentId);
+                $assignment = AdministrativeAssignment::with(['role.permissions', 'zone'])->find($currentContext->assignmentId);
 
                 if ($assignment && $assignment->role) {
                     $permissions = $assignment->role->permissions->map(fn ($p) => ['name' => $p->name])->values()->all();

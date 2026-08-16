@@ -88,7 +88,7 @@ class HouseholdMemberController extends Controller
     /**
      * Send or resend an invitation email to a household member.
      */
-    public function resetPassword(Request $request, HouseholdMember $householdMember): RedirectResponse
+    public function resendInvitation(Request $request, HouseholdMember $householdMember): RedirectResponse
     {
         $user = $request->user();
         $estate = app(EstateContextService::class)->getEstate();
@@ -125,7 +125,6 @@ class HouseholdMemberController extends Controller
                 user: $householdMember->member,
                 estate: $estate,
                 primaryResident: $user,
-                passwordReset: false,
                 invitation: $invitation,
             )
         );

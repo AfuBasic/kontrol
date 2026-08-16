@@ -24,7 +24,6 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
         public User $user,
         public Estate $estate,
         public User $primaryResident,
-        public bool $passwordReset = false,
         public ?Invitation $invitation = null,
     ) {
         $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
@@ -50,9 +49,7 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
 
     public function envelope(): Envelope
     {
-        $subject = $this->passwordReset
-            ? "Password reset for {$this->estate->name}"
-            : "You've been invited to join {$this->estate->name}";
+        $subject = "You've been invited to join {$this->estate->name}";
 
         return new Envelope(subject: $subject);
     }
@@ -66,7 +63,6 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
                 'userName' => $this->user->name,
                 'primaryResidentName' => $this->primaryResident->name,
                 'invitationUrl' => $this->invitationUrl,
-                'passwordReset' => $this->passwordReset,
             ],
         );
     }

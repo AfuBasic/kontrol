@@ -17,7 +17,7 @@ class SecurityCreated implements ShouldBroadcast
     public function __construct(
         public User $user,
         public Estate $estate,
-        public bool $isPasswordReset = false,
+        public bool $isResend = false,
     ) {}
 
     public function broadcastOn(): array
@@ -30,10 +30,10 @@ class SecurityCreated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'message' => $this->isPasswordReset
-                ? "Password reset initiated for {$this->user->name}"
+            'message' => $this->isResend
+                ? "Invitation resent for {$this->user->name}"
                 : "New security personnel invited: {$this->user->name}",
-            'type' => $this->isPasswordReset ? 'info' : 'success',
+            'type' => $this->isResend ? 'info' : 'success',
             'user' => [
                 'id' => $this->user->id,
                 'name' => $this->user->name,

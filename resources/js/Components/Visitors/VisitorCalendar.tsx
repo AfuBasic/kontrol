@@ -13,19 +13,7 @@ import {
     isToday,
     parseISO,
 } from 'date-fns';
-import {
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    Plus,
-    Search,
-    User,
-    Copy,
-    Check,
-    X,
-    Info,
-    Calendar as CalendarIcon,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Plus, Search, User, Copy, Check, X, Info, Calendar as CalendarIcon } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
 import { getPurposeColorStyle } from '@/Utils/calendarTheme';
 
@@ -153,7 +141,7 @@ export default function VisitorCalendar({
                 const response = await fetch(`${eventsUrl}?${params.toString()}`, {
                     credentials: 'include',
                     headers: {
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         ...(xsrfToken ? { 'X-XSRF-TOKEN': xsrfToken } : {}),
                     },
@@ -239,11 +227,11 @@ export default function VisitorCalendar({
     };
 
     return (
-        <div className="relative mx-auto max-w-7xl w-full px-4 sm:px-6 lg:px-8 py-4 space-y-6 pb-24">
+        <div className="relative mx-auto w-full max-w-7xl space-y-6 px-4 py-4 pb-24 sm:px-6 lg:px-8">
             {/* Toast Notification Banner */}
             {toastMessage && (
-                <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-2xl bg-gray-900/95 px-4 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-200">
-                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                <div className="animate-in fade-in slide-in-from-top-4 fixed top-5 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-2xl bg-gray-900/95 px-4 py-2.5 text-xs font-bold text-white shadow-xl backdrop-blur-md duration-200">
+                    <Check className="h-4 w-4 shrink-0 text-emerald-400" />
                     <span>{toastMessage}</span>
                 </div>
             )}
@@ -252,7 +240,7 @@ export default function VisitorCalendar({
             <div className="flex items-center justify-between">
                 <Link
                     href={backUrl}
-                    className="inline-flex items-center gap-0.5 text-sm font-semibold text-gray-500 hover:text-gray-800 transition active:scale-95"
+                    className="inline-flex items-center gap-0.5 text-sm font-semibold text-gray-500 transition hover:text-gray-800 active:scale-95"
                 >
                     <ChevronLeft className="h-4 w-4" />
                     <span>{backLabel}</span>
@@ -262,9 +250,7 @@ export default function VisitorCalendar({
                     <button
                         onClick={() => setShowSearch(!showSearch)}
                         className={`rounded-full p-2 transition active:scale-95 ${
-                            showSearch
-                                ? 'bg-gray-800 text-white'
-                                : 'text-gray-500 hover:bg-gray-100'
+                            showSearch ? 'bg-gray-800 text-white' : 'text-gray-500 hover:bg-gray-100'
                         }`}
                     >
                         <Search className="h-4 w-4" />
@@ -272,7 +258,7 @@ export default function VisitorCalendar({
 
                     <button
                         onClick={() => router.get(createUrl)}
-                        className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-primary-600 transition active:scale-95"
+                        className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-primary-600 active:scale-95"
                     >
                         <Plus className="h-3.5 w-3.5" />
                         <span>Invite</span>
@@ -283,30 +269,26 @@ export default function VisitorCalendar({
             {/* ─── Month Title + Navigation ─── */}
             <div className="flex items-center justify-between">
                 <div className="flex items-baseline gap-2">
-                    <h1 className="text-2xl font-black tracking-tight text-gray-900">
-                        {format(currentMonth, 'MMMM')}
-                    </h1>
-                    <span className="text-sm font-medium text-gray-400">
-                        {format(currentMonth, 'yyyy')}
-                    </span>
+                    <h1 className="text-2xl font-black tracking-tight text-gray-900">{format(currentMonth, 'MMMM')}</h1>
+                    <span className="text-sm font-medium text-gray-400">{format(currentMonth, 'yyyy')}</span>
                 </div>
 
                 <div className="flex items-center gap-1">
                     <button
                         onClick={goToday}
-                        className="rounded-lg px-2 py-0.5 text-xs font-semibold text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition"
+                        className="rounded-lg px-2 py-0.5 text-xs font-semibold text-gray-500 transition hover:bg-gray-100 hover:text-gray-800"
                     >
                         Today
                     </button>
                     <button
                         onClick={() => setCurrentMonth((prev) => subMonths(prev, 1))}
-                        className="rounded-full p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition active:scale-95"
+                        className="rounded-full p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 active:scale-95"
                     >
                         <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button
                         onClick={() => setCurrentMonth((prev) => addMonths(prev, 1))}
-                        className="rounded-full p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition active:scale-95"
+                        className="rounded-full p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 active:scale-95"
                     >
                         <ChevronRight className="h-4 w-4" />
                     </button>
@@ -316,20 +298,17 @@ export default function VisitorCalendar({
             {/* ─── Search (expandable) ─── */}
             {showSearch && (
                 <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <Search className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search visitor name, code..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         autoFocus
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-9 pr-8 py-2 text-xs font-medium text-gray-900 placeholder-gray-400 focus:bg-white focus:border-gray-300 focus:ring-0 shadow-2xs"
+                        className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2 pr-8 pl-9 text-xs font-medium text-gray-900 placeholder-gray-400 shadow-2xs focus:border-gray-300 focus:bg-white focus:ring-0"
                     />
                     {searchQuery && (
-                        <button
-                            onClick={() => setSearchQuery('')}
-                            className="absolute right-2.5 top-2.5 text-gray-400 hover:text-gray-600"
-                        >
+                        <button onClick={() => setSearchQuery('')} className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600">
                             <X className="h-4 w-4" />
                         </button>
                     )}
@@ -337,12 +316,12 @@ export default function VisitorCalendar({
             )}
 
             {/* ─── Category Chips (colored when active) ─── */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar">
+            <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-0.5">
                 {PURPOSES.map((purpose) => (
                     <button
                         key={purpose}
                         onClick={() => setSelectedPurpose(purpose)}
-                        className={`rounded-full px-3 py-1 text-[11px] font-bold transition-all shrink-0 ${getCategoryChipStyle(purpose, selectedPurpose === purpose)}`}
+                        className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition-all ${getCategoryChipStyle(purpose, selectedPurpose === purpose)}`}
                     >
                         {purpose}
                     </button>
@@ -354,7 +333,7 @@ export default function VisitorCalendar({
                 <select
                     value={selectedHostId}
                     onChange={(e) => setSelectedHostId(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white py-1.5 px-3 text-xs font-semibold text-gray-700 focus:ring-0 shadow-2xs"
+                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs focus:ring-0"
                 >
                     <option value="All">All Resident Hosts</option>
                     {hosts.map((host) => (
@@ -369,20 +348,16 @@ export default function VisitorCalendar({
             <div className="flex items-center gap-4 border-b border-gray-100 pb-1.5">
                 <button
                     onClick={() => setViewMode('grid')}
-                    className={`text-xs font-bold pb-1.5 -mb-1.5 border-b-2 transition ${
-                        viewMode === 'grid'
-                            ? 'text-gray-900 border-gray-900'
-                            : 'text-gray-400 border-transparent hover:text-gray-600'
+                    className={`-mb-1.5 border-b-2 pb-1.5 text-xs font-bold transition ${
+                        viewMode === 'grid' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Month
                 </button>
                 <button
                     onClick={() => setViewMode('list')}
-                    className={`text-xs font-bold pb-1.5 -mb-1.5 border-b-2 transition ${
-                        viewMode === 'list'
-                            ? 'text-gray-900 border-gray-900'
-                            : 'text-gray-400 border-transparent hover:text-gray-600'
+                    className={`-mb-1.5 border-b-2 pb-1.5 text-xs font-bold transition ${
+                        viewMode === 'list' ? 'border-gray-900 text-gray-900' : 'border-transparent text-gray-400 hover:text-gray-600'
                     }`}
                 >
                     Agenda
@@ -393,17 +368,14 @@ export default function VisitorCalendar({
                 MONTH GRID VIEW (2-column layout on desktop)
                ═══════════════════════════════════════════════════ */}
             {viewMode === 'grid' && (
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
                     {/* Left Column: Month Grid (lg:col-span-7) */}
-                    <div className="lg:col-span-7 space-y-3">
+                    <div className="space-y-3 lg:col-span-7">
                         <div className="rounded-2xl border border-gray-100 bg-white p-3 shadow-2xs">
                             {/* Weekday Header - small, uppercase, muted */}
-                            <div className="grid grid-cols-7 mb-1 text-center">
+                            <div className="mb-1 grid grid-cols-7 text-center">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, idx) => (
-                                    <div
-                                        key={idx}
-                                        className="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-400 py-1"
-                                    >
+                                    <div key={idx} className="py-1 text-[9px] font-bold tracking-[0.12em] text-gray-400 uppercase">
                                         {day}
                                     </div>
                                 ))}
@@ -422,38 +394,33 @@ export default function VisitorCalendar({
                                         <button
                                             key={dateStr}
                                             onClick={() => setSelectedDate(day)}
-                                            className="group flex flex-col items-center py-2.5 rounded-xl transition-colors hover:bg-gray-50"
+                                            className="group flex flex-col items-center rounded-xl py-2.5 transition-colors hover:bg-gray-50"
                                         >
                                             {/* Day Number */}
                                             <div
-                                                className={`h-8 w-8 rounded-full flex items-center justify-center text-sm transition-all ${
+                                                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm transition-all ${
                                                     isSelected && !isTodayDate
-                                                        ? 'bg-gray-900 text-white font-bold'
+                                                        ? 'bg-gray-900 font-bold text-white'
                                                         : isTodayDate && isSelected
-                                                        ? 'ring-2 ring-primary-500 bg-primary-50 text-primary-700 font-black'
-                                                        : isTodayDate
-                                                        ? 'ring-2 ring-primary-500/50 text-primary-600 font-bold'
-                                                        : isCurrentMonth
-                                                        ? 'text-gray-800 font-medium'
-                                                        : 'text-gray-300 font-normal'
+                                                          ? 'bg-primary-50 font-black text-primary-700 ring-2 ring-primary-500'
+                                                          : isTodayDate
+                                                            ? 'font-bold text-primary-600 ring-2 ring-primary-500/50'
+                                                            : isCurrentMonth
+                                                              ? 'font-medium text-gray-800'
+                                                              : 'font-normal text-gray-300'
                                                 }`}
                                             >
                                                 {format(day, 'd')}
                                             </div>
 
                                             {/* Visitor Dots */}
-                                            <div className="flex items-center justify-center gap-[3px] h-2 mt-1">
+                                            <div className="mt-1 flex h-2 items-center justify-center gap-[3px]">
                                                 {dayEventsList.slice(0, 3).map((ev, i) => {
                                                     const style = getPurposeColorStyle(ev.extendedProps.purpose);
-                                                    return (
-                                                        <span
-                                                            key={i}
-                                                            className={`h-[5px] w-[5px] rounded-full ${style.dot}`}
-                                                        />
-                                                    );
+                                                    return <span key={i} className={`h-[5px] w-[5px] rounded-full ${style.dot}`} />;
                                                 })}
                                                 {dayEventsList.length > 3 && (
-                                                    <span className="text-[7px] font-black text-gray-400 leading-none">
+                                                    <span className="text-[7px] leading-none font-black text-gray-400">
                                                         +{dayEventsList.length - 3}
                                                     </span>
                                                 )}
@@ -468,7 +435,7 @@ export default function VisitorCalendar({
                         <div className="flex items-center justify-end px-1">
                             <button
                                 onClick={() => setShowLegend(!showLegend)}
-                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 hover:text-gray-600 transition"
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-400 transition hover:text-gray-600"
                             >
                                 <Info className="h-3 w-3" />
                                 {showLegend ? 'Hide legend' : 'Color legend'}
@@ -482,9 +449,7 @@ export default function VisitorCalendar({
                                     return (
                                         <div key={item.label} className="flex items-center gap-1.5">
                                             <span className={`h-2 w-2 rounded-full ${style.dot}`} />
-                                            <span className="text-[10px] font-medium text-gray-500">
-                                                {item.label}
-                                            </span>
+                                            <span className="text-[10px] font-medium text-gray-500">{item.label}</span>
                                         </div>
                                     );
                                 })}
@@ -493,34 +458,23 @@ export default function VisitorCalendar({
                     </div>
 
                     {/* Right Column: Selected Day Agenda (lg:col-span-5) */}
-                    <div className="lg:col-span-5 space-y-3">
+                    <div className="space-y-3 lg:col-span-5">
                         <div className="flex items-center justify-between px-1">
-                            <h2 className="text-sm font-bold text-gray-900">
-                                {format(selectedDate, 'EEEE, MMM d')}
-                            </h2>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                {selectedDateEvents.length}{' '}
-                                {selectedDateEvents.length === 1 ? 'visitor' : 'visitors'}
+                            <h2 className="text-sm font-bold text-gray-900">{format(selectedDate, 'EEEE, MMM d')}</h2>
+                            <span className="text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                                {selectedDateEvents.length} {selectedDateEvents.length === 1 ? 'visitor' : 'visitors'}
                             </span>
                         </div>
 
                         {selectedDateEvents.length > 0 ? (
                             <div className="space-y-2.5">
                                 {selectedDateEvents.map((ev) => (
-                                    <EventCard
-                                        key={ev.id}
-                                        event={ev}
-                                        isAdmin={isAdmin}
-                                        copiedCode={copiedCode}
-                                        onCopyCode={handleCopyCode}
-                                    />
+                                    <EventCard key={ev.id} event={ev} isAdmin={isAdmin} copiedCode={copiedCode} onCopyCode={handleCopyCode} />
                                 ))}
                             </div>
                         ) : (
-                            <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 py-10 px-4 text-center space-y-2">
-                                <p className="text-xs font-medium text-gray-400">
-                                    No visitors scheduled for {format(selectedDate, 'MMM d')}
-                                </p>
+                            <div className="space-y-2 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-10 text-center">
+                                <p className="text-xs font-medium text-gray-400">No visitors scheduled for {format(selectedDate, 'MMM d')}</p>
                                 <button
                                     onClick={() => router.get(createUrl)}
                                     className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
@@ -539,20 +493,13 @@ export default function VisitorCalendar({
                ═══════════════════════════════════════════════════ */}
             {viewMode === 'list' && (
                 <div className="space-y-2.5">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-1">
+                    <p className="px-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                         {events.length} visitor{events.length !== 1 ? 's' : ''} this month
                     </p>
                     {events.length > 0 ? (
                         <div className="space-y-2">
                             {events.map((ev) => (
-                                <EventCard
-                                    key={ev.id}
-                                    event={ev}
-                                    isAdmin={isAdmin}
-                                    copiedCode={copiedCode}
-                                    onCopyCode={handleCopyCode}
-                                    showDate
-                                />
+                                <EventCard key={ev.id} event={ev} isAdmin={isAdmin} copiedCode={copiedCode} onCopyCode={handleCopyCode} showDate />
                             ))}
                         </div>
                     ) : (
@@ -597,23 +544,21 @@ function EventCard({
                 }
             }}
             className={`group flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-3 transition ${
-                isAdmin ? '' : 'hover:border-gray-200 cursor-pointer active:scale-[0.99]'
+                isAdmin ? '' : 'cursor-pointer hover:border-gray-200 active:scale-[0.99]'
             }`}
         >
             {/* Category-colored left accent bar */}
-            <div className={`w-0.5 self-stretch rounded-full shrink-0 ${style.dot}`} />
+            <div className={`w-0.5 shrink-0 self-stretch rounded-full ${style.dot}`} />
 
-            <div className="flex-1 min-w-0 space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-bold text-gray-900 truncate">
-                        {ev.extendedProps.visitor_name}
-                    </span>
+            <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="truncate text-sm font-bold text-gray-900">{ev.extendedProps.visitor_name}</span>
                     <span className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${style.badge}`}>
                         {ev.extendedProps.purpose}
                     </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-[11px] text-gray-500 font-medium">
+                <div className="flex items-center gap-3 text-[11px] font-medium text-gray-500">
                     {isAdmin && ev.extendedProps.host_name && (
                         <span className="flex items-center gap-1">
                             <User className="h-3 w-3 text-gray-400" />
@@ -639,8 +584,8 @@ function EventCard({
             </div>
 
             {/* Code + Copy */}
-            <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                <span className="font-mono text-[10px] font-black tracking-widest text-gray-600 bg-gray-50 px-2 py-1 rounded-lg">
+            <div className="flex shrink-0 items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <span className="rounded-lg bg-gray-50 px-2 py-1 font-mono text-[10px] font-black tracking-widest text-gray-600">
                     {ev.extendedProps.code}
                 </span>
                 <button
@@ -650,14 +595,14 @@ function EventCard({
                     }}
                     className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold transition-all active:scale-90 ${
                         isCopied
-                            ? 'bg-emerald-100 text-emerald-700 border border-emerald-300 ring-2 ring-emerald-400/20 scale-105'
-                            : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 shadow-2xs'
+                            ? 'scale-105 border border-emerald-300 bg-emerald-100 text-emerald-700 ring-2 ring-emerald-400/20'
+                            : 'border border-gray-200 bg-white text-gray-600 shadow-2xs hover:bg-gray-50 hover:text-gray-900'
                     }`}
                     title="Copy code"
                 >
                     {isCopied ? (
                         <>
-                            <Check className="h-3.5 w-3.5 text-emerald-600 animate-in zoom-in-50 duration-150" />
+                            <Check className="animate-in zoom-in-50 h-3.5 w-3.5 text-emerald-600 duration-150" />
                             <span className="text-[10px] text-emerald-700">Copied!</span>
                         </>
                     ) : (

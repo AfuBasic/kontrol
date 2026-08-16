@@ -69,14 +69,7 @@ export type VisitorFilters = {
 };
 
 export function hasActiveVisitorFilters(filters: VisitorFilters): boolean {
-    return Boolean(
-        filters.search ||
-            filters.date ||
-            filters.vehicle_plate ||
-            filters.host_id ||
-            filters.status ||
-            filters.verifier_id
-    );
+    return Boolean(filters.search || filters.date || filters.vehicle_plate || filters.host_id || filters.status || filters.verifier_id);
 }
 
 /**

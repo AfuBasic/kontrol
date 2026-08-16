@@ -26,6 +26,7 @@ class ApproveEstateApplicationAction
         $estate = DB::transaction(function () use ($application) {
             $payload = [
                 'name' => $application->estate_name,
+                'admin_name' => $application->contact_name,
                 'email' => $application->email,
                 'address' => $application->address,
             ];

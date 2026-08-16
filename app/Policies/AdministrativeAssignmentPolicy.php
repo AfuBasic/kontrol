@@ -14,7 +14,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
     public function viewAny(User $user): bool
     {
         return app(ContextManager::class)->hasContext()
-            && $user->contextHasRole('admin');
+            && ($user->contextHasRole('admin') || $user->contextCan('assignments.view'));
     }
 
     /**
@@ -26,7 +26,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->contextCan('assignments.view');
     }
 
     /**
@@ -35,7 +35,7 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
     public function create(User $user): bool
     {
         return app(ContextManager::class)->hasContext()
-            && $user->contextHasRole('admin');
+            && ($user->contextHasRole('admin') || $user->contextCan('assignments.create'));
     }
 
     /**
@@ -43,17 +43,29 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
      */
     public function update(User $user, AdministrativeAssignment $assignment): bool
     {
+        if ($assignment->is_primary) {
+            return false;
+        }
+
         if (! $this->hasValidContextForEstate($assignment->estate_id)) {
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->contextCan('assignments.edit');
     }
 
     /**
      * Determine whether the user can deactivate the assignment.
      */
     public function deactivate(User $user, AdministrativeAssignment $assignment): bool
+    {
+        return $this->update($user, $assignment);
+    }
+
+    /**
+     * Determine whether the user can delete the assignment.
+     */
+    public function delete(User $user, AdministrativeAssignment $assignment): bool
     {
         return $this->update($user, $assignment);
     }

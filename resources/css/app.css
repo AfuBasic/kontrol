@@ -514,7 +514,7 @@ textarea,
     overflow: hidden;
     background: #070a0e;
     opacity: 1;
-    /* Exit handled by class toggle — smooth transition, no animation override needed */
+    /* Exit handled by class toggle - smooth transition, no animation override needed */
     transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -553,7 +553,7 @@ textarea,
     height: 190px;
     pointer-events: none;
     background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.11) 0%, rgba(99, 102, 241, 0.04) 38%, transparent 68%);
-    /* Delayed — appears after logo resolves */
+    /* Delayed - appears after logo resolves */
     animation: splash-glow 3.2s cubic-bezier(0.22, 1, 0.36, 1) 1.4s both;
     will-change: opacity, transform;
 }
@@ -625,7 +625,7 @@ textarea,
 
 /* ================================================================
    KEYFRAMES
-   All animations use cubic-bezier(0.22, 1, 0.36, 1) — smooth
+   All animations use cubic-bezier(0.22, 1, 0.36, 1) - smooth
    acceleration with luxurious deceleration. Cinematic settling.
    ================================================================ */
 

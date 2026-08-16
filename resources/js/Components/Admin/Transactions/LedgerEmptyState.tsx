@@ -12,9 +12,7 @@ export default function LedgerEmptyState({ onRecordOffline, canRecordOffline }: 
                 <Receipt className="h-8 w-8" />
             </div>
             <h3 className="text-lg font-bold text-slate-900">No financial activity yet</h3>
-            <p className="mt-2 max-w-sm text-sm text-slate-500">
-                As residents begin making payments, every financial movement will appear here.
-            </p>
+            <p className="mt-2 max-w-sm text-sm text-slate-500">As residents begin making payments, every financial movement will appear here.</p>
             {canRecordOffline && onRecordOffline && (
                 <button
                     type="button"

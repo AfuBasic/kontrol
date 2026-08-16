@@ -6,8 +6,10 @@ use App\Models\Estate;
 use App\Models\HouseholdMember;
 use App\Models\Invitation;
 use App\Models\User;
+use App\Notifications\Resident\HouseholdMemberInvitationAcceptedNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -22,7 +24,7 @@ beforeEach(function () {
 
 test('resident adding household member creates invitation and sends email with valid token link', function () {
     Mail::fake();
-    \Illuminate\Support\Facades\Notification::fake();
+    Notification::fake();
 
     $estate = Estate::factory()->create();
     $primaryResident = User::factory()->create(['name' => 'John Doe', 'email' => 'john@example.com']);
@@ -68,8 +70,8 @@ test('resident adding household member creates invitation and sends email with v
     expect($invitation->status)->toBe('accepted');
 
     // Verify notification was sent
-    \Illuminate\Support\Facades\Notification::assertSentTo(
-        [$primaryResident], \App\Notifications\Resident\HouseholdMemberInvitationAcceptedNotification::class
+    Notification::assertSentTo(
+        [$primaryResident], HouseholdMemberInvitationAcceptedNotification::class
     );
 });
 

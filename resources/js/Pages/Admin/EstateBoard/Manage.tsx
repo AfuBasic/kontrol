@@ -267,7 +267,7 @@ export default function ManagePosts({ posts }: Props) {
                     </Link>
                     <Link
                         href={create.url()}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
                     >
                         <Plus className="h-5 w-5" />
                         New Post
@@ -312,7 +312,7 @@ export default function ManagePosts({ posts }: Props) {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Search posts..."
-                            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                            className="w-full rounded-lg border border-gray-300 bg-white py-2.5 pr-4 pl-10 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                         />
                         {searchQuery && (
                             <button
@@ -336,7 +336,7 @@ export default function ManagePosts({ posts }: Props) {
                         <Filter className="h-4 w-4" />
                         Filters
                         {hasActiveFilters && (
-                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs text-white">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-950 text-xs text-white">
                                 {(statusFilter !== 'all' ? 1 : 0) + (audienceFilter !== 'all' ? 1 : 0)}
                             </span>
                         )}
@@ -357,7 +357,7 @@ export default function ManagePosts({ posts }: Props) {
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                             >
                                 <option value="all">All</option>
                                 <option value="published">Published</option>
@@ -371,7 +371,7 @@ export default function ManagePosts({ posts }: Props) {
                             <select
                                 value={audienceFilter}
                                 onChange={(e) => setAudienceFilter(e.target.value as FilterAudience)}
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                             >
                                 <option value="all">All Audiences</option>
                                 <option value="residents">Residents Only</option>
@@ -440,7 +440,7 @@ export default function ManagePosts({ posts }: Props) {
                     <p className="mt-1 max-w-sm text-sm text-gray-500">Get started by creating the first announcement for your estate community.</p>
                     <Link
                         href={create.url()}
-                        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700"
+                        className="mt-6 inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800"
                     >
                         <Plus className="h-5 w-5" />
                         Create First Post

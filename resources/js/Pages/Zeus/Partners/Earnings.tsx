@@ -1,7 +1,4 @@
-import {
-    BanknotesIcon,
-    ClockIcon,
-} from '@heroicons/react/24/outline';
+import { BanknotesIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import ZeusLayout from '@/Layouts/ZeusLayout';
@@ -102,10 +99,7 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
                                 Partners
                             </Link>
                             <span>/</span>
-                            <Link
-                                href={`/zeus/partners/${partner.id}/edit`}
-                                className="transition-colors hover:text-white"
-                            >
+                            <Link href={`/zeus/partners/${partner.id}/edit`} className="transition-colors hover:text-white">
                                 {partner.name}
                             </Link>
                             <span>/</span>
@@ -114,9 +108,7 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
                         <h1 className="text-3xl font-black tracking-tight text-[#F2F3F6]">{partner.name}</h1>
                         <p className="mt-1 text-sm text-[#9297A8]">
                             Commission Schedule:{' '}
-                            <span className="font-bold text-white">
-                                {formatCommission(partner.commission_rate, partner.commission_type)}
-                            </span>
+                            <span className="font-bold text-white">{formatCommission(partner.commission_rate, partner.commission_type)}</span>
                         </p>
                     </div>
 
@@ -136,13 +128,9 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
                 >
                     <div className="group relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
                         <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full bg-[#34D399]/5 blur-xl transition-transform duration-500 group-hover:scale-150" />
-                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">
-                            Total Paid
-                        </span>
+                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Total Paid</span>
                         <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-3xl font-black text-[#34D399]">
-                                {formatAmount(summary.total_earned)}
-                            </span>
+                            <span className="text-3xl font-black text-[#34D399]">{formatAmount(summary.total_earned)}</span>
                         </div>
                         <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#34D399]">
                             <span className="h-1.5 w-1.5 rounded-full bg-[#34D399] shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
@@ -152,13 +140,9 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
 
                     <div className="group relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
                         <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full bg-[#F5A623]/5 blur-xl transition-transform duration-500 group-hover:scale-150" />
-                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">
-                            Pending Settlement
-                        </span>
+                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Pending Settlement</span>
                         <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-3xl font-black text-[#F5A623]">
-                                {formatAmount(summary.pending_commissions)}
-                            </span>
+                            <span className="text-3xl font-black text-[#F5A623]">{formatAmount(summary.pending_commissions)}</span>
                         </div>
                         <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#F5A623]">
                             <span className="h-1.5 w-1.5 rounded-full bg-[#F5A623] shadow-[0_0_8px_rgba(245,166,35,0.6)]" />
@@ -168,13 +152,9 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
 
                     <div className="group relative overflow-hidden rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl">
                         <div className="pointer-events-none absolute top-0 right-0 h-24 w-24 rounded-full bg-[#6C5DFD]/5 blur-xl transition-transform duration-500 group-hover:scale-150" />
-                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">
-                            Next period close
-                        </span>
+                        <span className="text-xs font-bold tracking-wider text-[#9297A8] uppercase">Next period close</span>
                         <div className="mt-4 flex items-baseline gap-2">
-                            <span className="text-2xl font-black text-[#F2F3F6]">
-                                {summary.next_settlement_date}
-                            </span>
+                            <span className="text-2xl font-black text-[#F2F3F6]">{summary.next_settlement_date}</span>
                         </div>
                         <div className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[#6C5DFD]">
                             <ClockIcon className="h-3.5 w-3.5" />
@@ -200,9 +180,7 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
                         <div className="py-16 text-center">
                             <BanknotesIcon className="mx-auto mb-4 h-12 w-12 text-gray-700" />
                             <p className="font-medium text-[#9297A8]">No earnings recorded yet</p>
-                            <p className="mt-1 text-xs text-gray-500">
-                                Earnings appear after a snapshot or month-end close.
-                            </p>
+                            <p className="mt-1 text-xs text-gray-500">Earnings appear after a snapshot or month-end close.</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -218,35 +196,19 @@ export default function PartnerEarningsAdmin({ partner, earnings, summary }: Pro
                                 </thead>
                                 <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
                                     {earnings.data.map((earning) => (
-                                        <tr
-                                            key={earning.id}
-                                            className="transition-colors hover:bg-[#12141C]/50"
-                                        >
-                                            <td className="px-6 py-4 font-bold text-[#F2F3F6]">
-                                                {earning.month_label}
-                                            </td>
-                                            <td className="px-6 py-4 text-right text-[#9297A8]">
-                                                {formatAmount(earning.revenue_amount)}
-                                            </td>
-                                            <td className="px-6 py-4 text-right font-black text-[#F2F3F6]">
-                                                {formatAmount(earning.total_amount)}
-                                            </td>
+                                        <tr key={earning.id} className="transition-colors hover:bg-[#12141C]/50">
+                                            <td className="px-6 py-4 font-bold text-[#F2F3F6]">{earning.month_label}</td>
+                                            <td className="px-6 py-4 text-right text-[#9297A8]">{formatAmount(earning.revenue_amount)}</td>
+                                            <td className="px-6 py-4 text-right font-black text-[#F2F3F6]">{formatAmount(earning.total_amount)}</td>
                                             <td className="px-6 py-4 text-center">
                                                 <StatusBadge earning={earning} />
                                             </td>
                                             <td className="px-6 py-4 text-right text-xs text-[#9297A8]">
                                                 {earning.settled_at ? (
                                                     <div>
-                                                        <div>
-                                                            {new Date(earning.settled_at).toLocaleDateString(
-                                                                'en-NG',
-                                                                { dateStyle: 'medium' },
-                                                            )}
-                                                        </div>
+                                                        <div>{new Date(earning.settled_at).toLocaleDateString('en-NG', { dateStyle: 'medium' })}</div>
                                                         {earning.payment_reference_masked && (
-                                                            <div className="mt-0.5 font-mono">
-                                                                {earning.payment_reference_masked}
-                                                            </div>
+                                                            <div className="mt-0.5 font-mono">{earning.payment_reference_masked}</div>
                                                         )}
                                                     </div>
                                                 ) : (

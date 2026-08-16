@@ -13,6 +13,8 @@ use Illuminate\Validation\Rule;
 
 class StorePostRequest extends FormRequest
 {
+    use ConstrainsZoneScopedPostTargeting;
+
     public function authorize(): bool
     {
         return true;

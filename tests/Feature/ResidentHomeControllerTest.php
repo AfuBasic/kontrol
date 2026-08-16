@@ -68,3 +68,52 @@ test('resident dashboard returns unpaid collections correctly', function () {
     expect($assignment->collection->name)->toBe('Security Levy');
     expect($assignment->amount_due)->toBe(10000);
 });
+
+test('resident dashboard returns active and upcoming passes correctly', function () {
+    Role::firstOrCreate(['name' => 'resident']);
+
+    $estate = Estate::factory()->create();
+    $user = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('resident');
+    $user->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    // Create an active (current) access code
+    \App\Models\AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => '123456',
+        'type' => 'visitor',
+        'visitor_name' => 'John Doe',
+        'starts_at' => now()->subHour(),
+        'expires_at' => now()->addHour(),
+        'status' => \App\Enums\AccessCodeStatus::Active,
+        'source' => \App\Enums\AccessCodeSource::Web,
+    ]);
+
+    // Create an upcoming (future) access code
+    \App\Models\AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => '654321',
+        'type' => 'visitor',
+        'visitor_name' => 'Jane Smith',
+        'starts_at' => now()->addHours(2),
+        'expires_at' => now()->addHours(4),
+        'status' => \App\Enums\AccessCodeStatus::Scheduled,
+        'source' => \App\Enums\AccessCodeSource::Web,
+    ]);
+
+    $response = $this->actingAs($user)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.home'));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Resident/Home')
+        ->where('activePassesCount', 1)
+        ->where('upcomingPassesCount', 1)
+    );
+});
+

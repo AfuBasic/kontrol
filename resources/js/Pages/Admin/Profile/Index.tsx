@@ -1,196 +1,221 @@
-import { Head, useForm, usePage } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, CheckCircle2, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowRight, Building2, Loader2 } from 'lucide-react';
 import type { FormEvent } from 'react';
+import * as AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
+import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
+import { update } from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import AdminLayout from '@/Layouts/AdminLayout';
 
-interface Props {
+type Account = {
+    name: string;
+    email: string;
+    role_label: string;
+};
+
+type EstateContext = {
+    name: string;
+    access_label: string;
+    scope_label: string;
+    can_switch: boolean;
+    can_view_authority: boolean;
+};
+
+type Props = {
     user: {
         name: string;
         email: string;
     };
+    account: Account;
+    estate_context: EstateContext | null;
+};
+
+function initials(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+        return 'A';
+    }
+
+    if (parts.length === 1) {
+        return parts[0].slice(0, 2).toUpperCase();
+    }
+
+    return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export default function Profile({ user }: Props) {
-    const { flash } = usePage<{ flash: { success?: string } }>().props;
-
-    const { data, setData, put, processing, errors, clearErrors } = useForm({
+export default function Profile({ user, account, estate_context }: Props) {
+    const { data, setData, put, processing, errors, reset, setDefaults, isDirty } = useForm({
         name: user.name,
-        password: '',
-        password_confirmation: '',
     });
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    function handleSubmit(event: FormEvent) {
+        event.preventDefault();
 
-    function handleSubmit(e: FormEvent) {
-        e.preventDefault();
-        put('/admin/profile');
+        put(update.url(), {
+            preserveScroll: true,
+            onSuccess: () => setDefaults('name', data.name),
+        });
+    }
+
+    function handleCancel() {
+        reset();
     }
 
     return (
         <>
             <Head title="Profile" />
 
-            {/* Page Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-8"
-            >
-                <h1 className="text-2xl font-semibold text-gray-900">Admin Profile</h1>
-                <p className="mt-1 text-gray-500">Manage your personal account information.</p>
-            </motion.div>
+            <div className="max-w-5xl space-y-10">
+                <header>
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Profile</h1>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">Manage your personal information and view your estate access.</p>
+                </header>
 
-            {/* Success Message */}
-            <AnimatePresence>
-                {flash?.success && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        className="mb-6 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 shadow-sm"
-                    >
-                        <div className="flex items-center gap-2">
-                            <CheckCircle2 className="h-4 w-4" />
-                            {flash.success}
+                <section className="border-y border-slate-200 py-8">
+                    <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+                        <div
+                            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-[#0A3D91] text-lg font-semibold tracking-wide text-white shadow-sm shadow-[#0A3D91]/20"
+                            aria-hidden="true"
+                        >
+                            {initials(account.name)}
                         </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        <div className="min-w-0">
+                            <h2 className="truncate text-xl font-semibold text-slate-950">{account.name}</h2>
+                            <p className="mt-1 truncate text-sm text-slate-500">{account.email}</p>
+                            {estate_context && (
+                                <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-600">
+                                    <span className="font-medium text-slate-800">{estate_context.access_label}</span>
+                                    <span className="text-slate-300" aria-hidden="true">
+                                        ·
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5">
+                                        <Building2 className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                                        {estate_context.name}
+                                    </span>
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </section>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid gap-6 lg:grid-cols-2">
-                    {/* Personal Information */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                        className="h-full rounded-xl border border-gray-200 bg-white p-6 shadow-xs"
-                    >
-                        <div className="mb-6 flex items-center gap-2 border-b border-gray-100 pb-4">
-                            <div className="rounded-lg bg-blue-50 p-2 text-blue-600">
-                                <Eye className="h-5 w-5" />
-                            </div>
-                            <h2 className="text-lg font-medium text-gray-900">Personal Information</h2>
+                <form onSubmit={handleSubmit}>
+                    <section className="max-w-2xl">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-950">Personal information</h2>
+                            <p className="mt-1 text-sm text-slate-500">Your personal details used across Kontrol.</p>
                         </div>
 
-                        <div className="space-y-5">
-                            {/* Email (Read-only) */}
+                        <div className="mt-7 space-y-5">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email Address
-                                </label>
-                                <input
-                                    type="email"
-                                    id="email"
-                                    value={user.email}
-                                    disabled
-                                    className="mt-1 block w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-500"
-                                />
-                                <p className="mt-1 text-xs text-gray-400">Login email cannot be changed.</p>
-                            </div>
-
-                            {/* Name */}
-                            <div>
-                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                                    Full Name
+                                <label htmlFor="name" className="block text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">
+                                    Full name
                                 </label>
                                 <input
                                     type="text"
                                     id="name"
+                                    name="name"
+                                    autoComplete="name"
                                     value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 focus:outline-none"
+                                    onChange={(event) => setData('name', event.target.value)}
+                                    className="mt-2 block w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 transition outline-none focus:border-[#0A3D91] focus:ring-4 focus:ring-[#0A3D91]/10"
                                 />
-                                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                                {errors.name && (
+                                    <p className="mt-1.5 text-sm text-rose-600" role="alert">
+                                        {errors.name}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="border-t border-gray-100 pt-4">
-                                <h3 className="mb-4 text-sm font-medium text-gray-400 text-gray-900 italic">Change Password</h3>
-
-                                <div className="space-y-4">
-                                    {/* Password */}
-                                    <div>
-                                        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                            New Password
-                                        </label>
-                                        <div className="relative mt-1">
-                                            <input
-                                                type={showPassword ? 'text' : 'password'}
-                                                id="password"
-                                                value={data.password}
-                                                onChange={(e) => setData('password', e.target.value)}
-                                                placeholder="Leave blank to keep current"
-                                                className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-12 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 focus:outline-none"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
-                                            >
-                                                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                            </button>
-                                        </div>
-                                        {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-                                    </div>
-
-                                    {/* Password Confirmation */}
-                                    <div>
-                                        <label htmlFor="password_confirmation" className="block text-sm font-medium text-gray-700">
-                                            Confirm Password
-                                        </label>
-                                        <div className="relative mt-1">
-                                            <input
-                                                type={showConfirmPassword ? 'text' : 'password'}
-                                                id="password_confirmation"
-                                                value={data.password_confirmation}
-                                                onChange={(e) => setData('password_confirmation', e.target.value)}
-                                                placeholder="Confirm new password"
-                                                className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 pr-12 text-sm focus:border-blue-500 focus:ring-4 focus:ring-blue-50 focus:outline-none"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 outline-none hover:text-gray-600"
-                                            >
-                                                {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div>
+                                <label htmlFor="email" className="block text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">
+                                    Email address
+                                </label>
+                                <input
+                                    type="email"
+                                    id="email"
+                                    name="email"
+                                    value={user.email}
+                                    readOnly
+                                    aria-describedby="email-help"
+                                    autoComplete="email"
+                                    className="mt-2 block w-full rounded-lg border border-slate-100 bg-slate-50 px-4 py-2.5 text-sm text-slate-600 outline-none focus:ring-4 focus:ring-slate-200"
+                                />
+                                <p id="email-help" className="mt-1.5 text-xs text-slate-400">
+                                    Login email. Cannot be changed here.
+                                </p>
                             </div>
                         </div>
-                    </motion.div>
-                </div>
 
-                {/* Global Save Button */}
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="flex justify-end"
-                >
-                    <button
-                        type="submit"
-                        disabled={processing}
-                        className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-8 py-3.5 text-sm font-semibold text-white shadow-lg transition-all hover:bg-gray-800 hover:shadow-xl active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        {processing ? (
-                            <>
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Saving Changes...
-                            </>
-                        ) : (
-                            'Update Profile'
+                        <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                disabled={processing || !isDirty}
+                                className="inline-flex min-h-11 items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-400 disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing || !isDirty}
+                                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                            >
+                                {processing ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    'Save changes'
+                                )}
+                            </button>
+                        </div>
+                    </section>
+                </form>
+
+                <section className="border-t border-slate-200 pt-8">
+                    <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <p className="text-[11px] font-bold tracking-[0.14em] text-slate-400 uppercase">Your estate</p>
+                            {estate_context ? (
+                                <>
+                                    <h2 className="mt-2 text-lg font-semibold text-slate-950">{estate_context.name}</h2>
+                                    <p className="mt-1 text-sm text-slate-600">{estate_context.access_label}</p>
+                                    <p className="mt-1 text-sm text-slate-500">{estate_context.scope_label}</p>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="mt-2 text-lg font-semibold text-slate-950">No active estate</h2>
+                                    <p className="mt-1 text-sm text-slate-500">Select an estate to manage its operations.</p>
+                                </>
+                            )}
+                        </div>
+
+                        {estate_context && (
+                            <div className="flex flex-wrap items-center gap-x-5 gap-y-3 text-sm font-medium">
+                                {estate_context.can_view_authority && (
+                                    <Link
+                                        href={AdministrativeAssignmentController.index.url()}
+                                        className="inline-flex items-center gap-1 text-[#0A3D91] transition hover:text-[#082f70] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0A3D91]"
+                                    >
+                                        View authority
+                                        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                                    </Link>
+                                )}
+                                {estate_context.can_switch && (
+                                    <Link
+                                        href={ContextController.index.url()}
+                                        className="text-slate-600 transition hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-slate-500"
+                                    >
+                                        Switch estate
+                                    </Link>
+                                )}
+                            </div>
                         )}
-                    </button>
-                </motion.div>
-            </form>
+                    </div>
+                </section>
+            </div>
         </>
     );
 }
 
-Profile.layout = (page: any) => <AdminLayout children={page} title="Profile" />;
+Profile.layout = (page: React.ReactNode) => <AdminLayout children={page} title="Profile" />;

@@ -10,7 +10,8 @@ import {
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
 import AdminLayout from '@/Layouts/AdminLayout';
-import InviteLinksTab, { InviteLink } from '../Components/InviteLinksTab';
+import type { InviteLink } from '../Components/InviteLinksTab';
+import InviteLinksTab from '../Components/InviteLinksTab';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
@@ -369,13 +370,15 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                 {/* Zone Assignment Selection */}
                                 {zones.length > 0 && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Property Location & Scope
-                                        </label>
-                                        <p className="mt-0.5 text-xs text-gray-500">Determine whether this owner's property is part of a specific zone.</p>
+                                        <label className="block text-sm font-medium text-gray-700">Property Location & Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether this owner's property is part of a specific zone.
+                                        </p>
 
                                         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="scope_mode"
@@ -385,11 +388,15 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Property is not restricted to a specific zone.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Property is not restricted to a specific zone.
+                                                    </span>
                                                 </div>
                                             </label>
 
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="scope_mode"
@@ -399,7 +406,9 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Property belongs to a specific phase or block.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Property belongs to a specific phase or block.
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>
@@ -443,7 +452,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                                 >
                                     {processing ? 'Sending Invitation...' : 'Send Invitation'}
                                 </button>
@@ -533,13 +542,15 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                 {/* Zone Assignment for Bulk */}
                                 {zones.length > 0 && (
                                     <div className="mt-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Property Location & Scope
-                                        </label>
-                                        <p className="mt-0.5 text-xs text-gray-500">Determine whether these owners' properties are part of a specific zone.</p>
+                                        <label className="block text-sm font-medium text-gray-700">Property Location & Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether these owners' properties are part of a specific zone.
+                                        </p>
 
                                         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="bulk_scope_mode"
@@ -549,11 +560,15 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties are not restricted to a specific zone.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Properties are not restricted to a specific zone.
+                                                    </span>
                                                 </div>
                                             </label>
 
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="bulk_scope_mode"
@@ -563,7 +578,9 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties belong to a specific phase or block.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Properties belong to a specific phase or block.
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>
@@ -607,7 +624,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}
@@ -691,13 +708,15 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                 {/* Zone Assignment for Paste */}
                                 {zones.length > 0 && (
                                     <div className="mt-4">
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Property Location & Scope
-                                        </label>
-                                        <p className="mt-0.5 text-xs text-gray-500">Determine whether these owners' properties are part of a specific zone.</p>
+                                        <label className="block text-sm font-medium text-gray-700">Property Location & Scope</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine whether these owners' properties are part of a specific zone.
+                                        </p>
 
                                         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone === '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="paste_scope_mode"
@@ -707,12 +726,15 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties are not restricted to a specific zone.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Properties are not restricted to a specific zone.
+                                                    </span>
                                                 </div>
                                             </label>
 
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
-                                                >
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${selectedZone !== '' ? 'border-[#1F6FDB] bg-blue-50/20 ring-1 ring-[#1F6FDB]' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="paste_scope_mode"
@@ -722,7 +744,9 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Properties belong to a specific phase or block.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Properties belong to a specific phase or block.
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>
@@ -766,7 +790,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-xl bg-[#1F6FDB] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}

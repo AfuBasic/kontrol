@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Admin\AssignUsersToZoneAction;
 use App\Actions\Admin\BulkDeleteResidentsAction;
 use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreateResidentAction;
@@ -10,8 +11,13 @@ use App\Actions\Admin\MarkResidentAsPropertyOwnerAction;
 use App\Actions\Admin\ResendResidentInvitationAction;
 use App\Actions\Admin\SuspendResidentAction;
 use App\Actions\Admin\UpdateResidentAction;
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreResidentRequest;
+use App\Models\Activity;
+use App\Models\CollectionAssignment;
+use App\Models\EstateInviteLink;
+use App\Models\Invitation;
 use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
@@ -19,7 +25,9 @@ use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -61,7 +69,7 @@ class ResidentController extends Controller
                     'phone' => $user->profile?->phone,
                     'unit_number' => $user->profile?->unit_number,
                     'zone_id' => $membership?->zone_id,
-                    'zone_name' => $zone?->name,
+                    'zone_name' => $zone?->name ?? 'Entire Estate',
                     'property_owner_id' => $user->profile?->property_owner_id,
                     'property_owner_name' => $user->profile?->propertyOwner?->name,
                     'property_id' => $user->profile?->property_id,
@@ -124,7 +132,7 @@ class ResidentController extends Controller
         return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
             'filters' => $filters,
-            'zones' => Zone::where('estate_id', $estate->id)->get(['id', 'name']),
+            'zones' => $this->zonesForAssignment($estate->id, app(ContextManager::class)->current()),
             'stats' => [
                 'total' => $totalResidents,
                 'active' => $activeResidents,
@@ -221,6 +229,9 @@ class ResidentController extends Controller
             'zones' => Zone::query()
                 ->where('estate_id', $estate->id)
                 ->where('is_active', true)
+                ->when(app(ContextManager::class)->current()?->isZoneScoped(), function ($q) {
+                    $q->where('id', app(ContextManager::class)->current()->zoneId);
+                })
                 ->orderBy('name')
                 ->get(['id', 'name']),
         ]);
@@ -247,8 +258,11 @@ class ResidentController extends Controller
     public function edit(User $resident): Response
     {
         $this->authorize('residents.edit');
+        abort_if(! app(ContextManager::class)->current()?->canAccess($resident), 403, 'Unauthorized zone scope.');
         $resident->load(['profile.propertyOwner', 'profile.property']);
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
+        $membership = $resident->estates()->where('estates.id', $estate->id)->first()?->pivot;
 
         return Inertia::render('Admin/Residents/Edit', [
             'resident' => [
@@ -262,8 +276,10 @@ class ResidentController extends Controller
                 'address' => $resident->profile?->address,
                 'property_owner_id' => $resident->profile?->property_owner_id,
                 'property_id' => $resident->profile?->property_id,
+                'zone_id' => $membership?->zone_id,
                 'is_estate_creator' => $resident->email === $estate->email,
             ],
+            'zones' => $this->zonesForAssignment($estate->id, $context),
             'propertyOwners' => User::query()
                 ->forEstate($estate->id)
                 ->withRole('property_owner', $estate->id)
@@ -283,6 +299,10 @@ class ResidentController extends Controller
         UpdateResidentAction $action
     ): RedirectResponse {
         $this->authorize('residents.edit');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        $estate = $this->estateContext->getEstate();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -304,10 +324,21 @@ class ResidentController extends Controller
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
             'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
-            'property_id' => ['nullable', 'integer', Rule::exists('properties', 'id')],
+            'property_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('properties', 'id'),
+                function ($attribute, $value, $fail) use ($context) {
+                    if ($context && $context->isZoneScoped()) {
+                        $property = Property::withoutZoneIsolation()->find($value);
+                        if ($property && $property->zone_id !== $context->zoneId) {
+                            $fail('The selected property must belong to your authorized zone.');
+                        }
+                    }
+                },
+            ],
+            'zone_id' => $this->zoneAssignmentRules($estate->id, $context),
         ]);
-
-        $estate = $this->estateContext->getEstate();
         $action->execute($resident, $validated, $estate);
 
         return redirect()
@@ -321,6 +352,8 @@ class ResidentController extends Controller
     public function destroy(User $resident, DeleteResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.delete');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -336,6 +369,8 @@ class ResidentController extends Controller
     public function suspend(User $resident, SuspendResidentAction $action): RedirectResponse
     {
         $this->authorize('residents.suspend');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -352,7 +387,9 @@ class ResidentController extends Controller
      */
     public function markAsPropertyOwner(User $resident, MarkResidentAsPropertyOwnerAction $action): RedirectResponse
     {
-        $this->authorize('property_owners.create'); // Or residents.edit depending on preference, property_owners.create makes sense
+        $this->authorize('property_owners.create');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
 
         $action->execute($resident, $estate);
@@ -366,7 +403,13 @@ class ResidentController extends Controller
     public function resendInvitation(User $resident, ResendResidentInvitationAction $action): RedirectResponse
     {
         $this->authorize('residents.reset-password');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
         $estate = $this->estateContext->getEstate();
+
+        if ($resident->email_verified_at !== null) {
+            return back()->with('error', 'Cannot resend invitation. This resident has already accepted.');
+        }
 
         $action->execute($resident, $estate);
 
@@ -379,15 +422,30 @@ class ResidentController extends Controller
     public function bulkInvite(Request $request, BulkInviteResidentsAction $action): RedirectResponse
     {
         $this->authorize('residents.create');
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
-            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
+            'zone_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id),
+                function ($attribute, $value, $fail) use ($context) {
+                    if ($context && $context->isZoneScoped() && $value !== $context->zoneId) {
+                        $fail('You are only authorized to invite residents to your active zone.');
+                    }
+                },
+            ],
         ]);
 
+        $zoneId = $validated['zone_id'] ?? null;
+        if ($context && $context->isZoneScoped()) {
+            $zoneId = $context->zoneId;
+        }
+
         $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
+        $result = $action->execute($validated['emails'], $estate, $zoneId);
 
         $message = "Successfully invited {$result['invited']} resident(s).";
         if ($result['skipped'] > 0) {
@@ -405,6 +463,7 @@ class ResidentController extends Controller
     public function bulkDelete(Request $request, BulkDeleteResidentsAction $action): RedirectResponse
     {
         $this->authorize('residents.delete');
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required_if:all,false', 'array'],
@@ -434,6 +493,16 @@ class ResidentController extends Controller
             $ids = $query->pluck('users.id')->toArray();
         }
 
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $ids)
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected residents are outside your authorized zone.');
+        }
+
         $result = $action->execute($ids, $estate);
 
         $total = $result['deleted'] + $result['detached'];
@@ -447,10 +516,21 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.suspend');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected residents are outside your authorized zone.');
+        }
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
@@ -466,10 +546,21 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.suspend');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected residents are outside your authorized zone.');
+        }
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
@@ -485,10 +576,21 @@ class ResidentController extends Controller
     {
         $this->authorize('residents.reset-password');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate([
             'ids' => ['required', 'array'],
         ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected residents are outside your authorized zone.');
+        }
 
         $residents = User::query()->whereIn('id', $validated['ids'])->get();
         foreach ($residents as $resident) {
@@ -498,5 +600,256 @@ class ResidentController extends Controller
         }
 
         return back()->with('success', 'Invitations resent successfully.');
+    }
+
+    public function bulkAssignZone(Request $request, AssignUsersToZoneAction $action): RedirectResponse
+    {
+        $this->authorize('residents.edit');
+        $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'integer'],
+            'zone_id' => $this->zoneAssignmentRules($estate->id, $context),
+        ]);
+
+        if ($context && $context->isZoneScoped()) {
+            $unauthorized = User::whereIn('id', $validated['ids'])
+                ->whereDoesntHave('estates', function ($q) use ($context) {
+                    $q->where('estates.id', $context->estateId)
+                        ->where('estate_users_membership.zone_id', $context->zoneId);
+                })
+                ->exists();
+            abort_if($unauthorized, 403, 'One or more selected residents are outside your authorized zone.');
+        }
+
+        $zoneId = $validated['zone_id'] ?? null;
+        if ($context && $context->isZoneScoped()) {
+            $zoneId = $context->zoneId;
+        }
+
+        $updated = $action->execute($validated['ids'], $estate, $zoneId !== null ? (int) $zoneId : null);
+
+        return back()->with('success', $updated === 1
+            ? 'Resident moved to the selected zone.'
+            : "{$updated} residents moved to the selected zone.");
+    }
+
+    /**
+     * Display the specified resident's profile.
+     */
+    public function show(User $resident): Response
+    {
+        $this->authorize('residents.view');
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($resident), 403, 'Unauthorized zone scope.');
+        $estate = $this->estateContext->getEstate();
+
+        // Scope validation: Ensure resident belongs to this estate
+        $membership = $resident->estates()
+            ->where('estates.id', $estate->id)
+            ->first()
+            ?->pivot;
+
+        abort_if(! $membership, 404, 'Resident does not belong to this estate.');
+
+        // Load profile and related properties
+        $resident->load(['profile.property.zone', 'profile.propertyOwner', 'roles']);
+
+        // Count other residents at the same property
+        $residentsCount = 0;
+        $propertyId = $resident->profile?->property_id;
+        if ($propertyId) {
+            $residentsCount = User::query()
+                ->whereHas('profile', fn ($q) => $q->where('property_id', $propertyId))
+                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
+                ->count();
+        }
+
+        // Fetch collection assignments (direct & property owner's if applicable)
+        $personalAssignments = CollectionAssignment::query()
+            ->where('user_id', $resident->id)
+            ->whereHas('collection', fn ($q) => $q->where('estate_id', $estate->id))
+            ->with('collection')
+            ->get();
+
+        $totalPaid = $personalAssignments->sum('amount_paid');
+        $totalOutstanding = $personalAssignments->sum(fn ($a) => $a->amount_due - $a->amount_paid);
+
+        $recentPayments = $personalAssignments->where('amount_paid', '>', 0)
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'name' => $a->collection->name,
+                'amount' => $a->amount_paid,
+                'status' => $a->status,
+                'date' => $a->updated_at->format('d M Y, h:i A'),
+            ])
+            ->sortByDesc('date')
+            ->take(5)
+            ->values();
+
+        $poAssignments = collect();
+        $propertyOwner = $resident->profile?->propertyOwner;
+        if ($propertyOwner) {
+            $poAssignments = CollectionAssignment::query()
+                ->where('user_id', $propertyOwner->id)
+                ->whereHas('collection', fn ($q) => $q->where('estate_id', $estate->id))
+                ->with('collection')
+                ->get()
+                ->map(fn ($a) => [
+                    'id' => $a->id,
+                    'name' => $a->collection->name,
+                    'amount_due' => $a->amount_due,
+                    'amount_paid' => $a->amount_paid,
+                    'outstanding' => $a->amount_due - $a->amount_paid,
+                    'status' => $a->status,
+                ]);
+        }
+
+        // Fetch Spatie Activity log events for this resident
+        $activities = Activity::query()
+            ->where('subject_type', User::class)
+            ->where('subject_id', $resident->id)
+            ->where('estate_id', $estate->id)
+            ->with('causer')
+            ->latest()
+            ->get()
+            ->map(fn ($act) => [
+                'id' => $act->id,
+                'description' => $act->description,
+                'causer_name' => $act->causer?->name ?? 'System',
+                'created_at' => $act->created_at->format('M d, Y · h:i A'),
+            ]);
+
+        // Load specific details for the registration avenue
+        $initiatorName = null;
+        if ($membership->initiated_by) {
+            $initiatorName = User::find($membership->initiated_by)?->name;
+        }
+
+        $lastInvitedByName = null;
+        if ($membership->last_invited_by) {
+            $lastInvitedByName = User::find($membership->last_invited_by)?->name;
+        }
+
+        $inviteLinkUrl = null;
+        if ($membership->invitation_link_id) {
+            $link = EstateInviteLink::find($membership->invitation_link_id);
+            if ($link) {
+                $inviteLinkUrl = url("/join/{$link->token}");
+            }
+        }
+
+        $invitation = null;
+        if ($membership->invitation_id) {
+            $invitationModel = Invitation::withoutGlobalScopes()
+                ->find($membership->invitation_id);
+            if ($invitationModel) {
+                $invitation = [
+                    'id' => $invitationModel->id,
+                    'token' => $invitationModel->token,
+                    'created_at' => $invitationModel->created_at?->format('d M Y, h:i A'),
+                    'accepted_at' => $invitationModel->accepted_at?->format('d M Y, h:i A'),
+                ];
+            }
+        }
+
+        // Human readable registration source
+        $avenue = match ($membership->created_via) {
+            'single_form' => 'Single resident',
+            'bulk_upload' => 'Bulk upload',
+            'email_paste' => 'Email import',
+            'invite_link' => 'Invitation link',
+            'property_owner_invite' => 'Property owner',
+            'system' => 'Unknown / Legacy',
+            default => 'Unknown / Legacy',
+        };
+
+        // Determine if account is suspended / active
+        $assignment = $resident->administrativeAssignments()
+            ->where('estate_id', $estate->id)
+            ->first();
+        $isActive = $assignment ? $assignment->is_active : true;
+
+        return Inertia::render('Admin/Residents/Show', [
+            'resident' => [
+                'id' => $resident->id,
+                'ulid' => $resident->ulid,
+                'name' => $resident->name,
+                'email' => $resident->email,
+                'phone' => $resident->profile?->phone,
+                'unit_number' => $resident->profile?->unit_number,
+                'address' => $resident->profile?->address,
+                'property_id' => $resident->profile?->property_id,
+                'property_name' => $resident->profile?->property?->name,
+                'is_active' => $isActive,
+                'email_verified_at' => $resident->email_verified_at?->format('d M Y, h:i A'),
+                'is_verified' => $resident->email_verified_at !== null,
+                'has_password' => $resident->password !== null,
+                'can_resend_invitation' => $resident->email_verified_at === null,
+                'role_label' => $resident->roles->contains('name', 'property_owner')
+                    ? 'Property Owner'
+                    : ($resident->roles->contains('name', 'security')
+                        ? 'Security Personnel'
+                        : ($resident->roles->contains('name', 'admin')
+                            ? 'Administrator'
+                            : ($resident->profile?->property_owner_id ? 'Tenant' : ($resident->roles->isNotEmpty() ? Str::title(str_replace('_', ' ', $resident->roles->first()->name)) : 'Resident')))),
+            ],
+            'provenance' => [
+                'created_via' => $membership->created_via,
+                'avenue' => $avenue,
+                'initiated_by_name' => $initiatorName,
+                'initiated_at' => $membership->initiated_at?->format('d M Y, h:i A') ?? $membership->created_at?->format('d M Y, h:i A'),
+                'last_invited_by_name' => $lastInvitedByName,
+                'last_invited_at' => $membership->last_invited_at?->format('d M Y, h:i A'),
+                'accepted_at' => $membership->accepted_at?->format('d M Y, h:i A'),
+                'import_batch' => $membership->import_batch,
+                'invite_link_url' => $inviteLinkUrl,
+                'invitation' => $invitation,
+            ],
+            'residence' => [
+                'property_owner_name' => $propertyOwner?->name,
+                'property_owner_id' => $propertyOwner?->id,
+                'zone_name' => $resident->profile?->property?->zone?->name ?? 'Entire Estate',
+                'residents_count' => $residentsCount,
+            ],
+            'financials' => [
+                'total_paid' => $totalPaid,
+                'total_outstanding' => $totalOutstanding,
+                'recent_payments' => $recentPayments,
+                'property_owner_financials' => $poAssignments,
+            ],
+            'activities' => $activities,
+        ]);
+    }
+
+    /**
+     * @return array<int, mixed>
+     */
+    private function zoneAssignmentRules(int $estateId, mixed $context): array
+    {
+        return [
+            $context?->isZoneScoped() ? 'required' : 'nullable',
+            'integer',
+            Rule::exists('zones', 'id')->where('estate_id', $estateId),
+            function ($attribute, $value, $fail) use ($context) {
+                if ($context && $context->isZoneScoped() && (int) $value !== $context->zoneId) {
+                    $fail('You are only authorized to assign residents to your active zone.');
+                }
+            },
+        ];
+    }
+
+    /**
+     * @return Collection<int, Zone>
+     */
+    private function zonesForAssignment(int $estateId, mixed $context)
+    {
+        return Zone::query()
+            ->where('estate_id', $estateId)
+            ->when($context?->isZoneScoped(), fn ($q) => $q->where('id', $context->zoneId))
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 }

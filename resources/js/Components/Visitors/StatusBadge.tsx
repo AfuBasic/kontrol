@@ -9,7 +9,9 @@ type Props = {
 export default function StatusBadge({ status, codeObj, size = 'sm' }: Props) {
     const resolvedStatus: VisitorStatus = codeObj
         ? normalizeStatus(codeObj)
-        : (status && status in STATUS_CONFIG ? (status as VisitorStatus) : 'expected');
+        : status && status in STATUS_CONFIG
+          ? (status as VisitorStatus)
+          : 'expected';
 
     const config = STATUS_CONFIG[resolvedStatus];
 

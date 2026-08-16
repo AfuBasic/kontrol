@@ -25,7 +25,10 @@ export default function IosDownload({ appStoreUrl }: Props) {
         <div className="relative flex min-h-[100dvh] flex-col justify-between bg-[#020617] font-sans text-slate-100 selection:bg-indigo-500/30 selection:text-white">
             <Head>
                 <title>Kontrol for iOS - Download Official App</title>
-                <meta name="description" content="Residents and security personnel on iOS must access Kontrol via the official Apple App Store application." />
+                <meta
+                    name="description"
+                    content="Residents and security personnel on iOS must access Kontrol via the official Apple App Store application."
+                />
             </Head>
 
             {/* Ambient Background */}
@@ -71,7 +74,7 @@ export default function IosDownload({ appStoreUrl }: Props) {
                             href={appStoreUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-700 bg-slate-800 py-4 text-sm font-extrabold text-white transition-all hover:bg-slate-750 active:scale-95"
+                            className="hover:bg-slate-750 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-700 bg-slate-800 py-4 text-sm font-extrabold text-white transition-all active:scale-95"
                         >
                             <Apple className="h-5 w-5 fill-current" />
                             <span>Download on App Store</span>
@@ -81,7 +84,7 @@ export default function IosDownload({ appStoreUrl }: Props) {
             </main>
 
             <footer className="relative z-10 py-6 text-center text-xs text-slate-500">
-                <div className="flex items-center justify-center gap-1.5 mb-2 text-slate-400">
+                <div className="mb-2 flex items-center justify-center gap-1.5 text-slate-400">
                     <Shield className="h-3.5 w-3.5 text-indigo-400" />
                     <span>Secured by Kontrol Platform Architecture</span>
                 </div>

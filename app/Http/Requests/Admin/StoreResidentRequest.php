@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Auth\ContextManager;
+use App\Models\Property;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -65,8 +67,31 @@ class StoreResidentRequest extends FormRequest
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
             'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
-            'property_id' => ['nullable', 'integer', Rule::exists('properties', 'id')],
-            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', $estateId)],
+            'property_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('properties', 'id'),
+                function ($attribute, $value, $fail) {
+                    $context = app(ContextManager::class)->current();
+                    if ($context && $context->isZoneScoped()) {
+                        $property = Property::withoutZoneIsolation()->find($value);
+                        if ($property && $property->zone_id !== $context->zoneId) {
+                            $fail('The selected property must belong to your authorized zone.');
+                        }
+                    }
+                },
+            ],
+            'zone_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', $estateId),
+                function ($attribute, $value, $fail) {
+                    $context = app(ContextManager::class)->current();
+                    if ($context && $context->isZoneScoped() && $value !== $context->zoneId) {
+                        $fail('You are only authorized to assign residents to your active zone.');
+                    }
+                },
+            ],
         ];
     }
 

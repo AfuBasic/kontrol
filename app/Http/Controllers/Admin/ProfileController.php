@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateProfileRequest;
+use App\Models\AdministrativeAssignment;
+use App\Models\Estate;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,8 +23,34 @@ class ProfileController extends Controller
 
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        $context = app(ContextManager::class)->current();
+        $assignment = ($context && $context->assignmentId > 0)
+            ? AdministrativeAssignment::query()->with(['estate', 'role', 'zone'])->find($context->assignmentId)
+            : null;
+        $estate = $assignment?->estate ?? ($context ? Estate::query()->find($context->estateId) : null);
+
+        $canSwitchEstate = AdministrativeAssignment::query()
+            ->where('user_id', $user->id)
+            ->where('is_active', true)
+            ->count() > 1;
+
+        $roleLabel = $this->formatRoleLabel($assignment?->role?->name);
+
         return Inertia::render('Admin/Profile/Index', [
-            'user' => $request->user()->only(['name', 'email']),
+            'user' => $user->only(['name', 'email']),
+            'account' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'role_label' => $roleLabel,
+            ],
+            'estate_context' => $estate ? [
+                'name' => $estate->name,
+                'access_label' => $roleLabel,
+                'scope_label' => $this->formatScopeLabel($context?->isZoneScoped() ?? false, $assignment?->zone?->name),
+                'can_switch' => $canSwitchEstate,
+                'can_view_authority' => $user->contextHasRole('admin') || $user->contextCan('assignments.view'),
+            ] : null,
         ]);
     }
 
@@ -50,22 +79,36 @@ class ProfileController extends Controller
         }
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateProfileRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'password' => ['nullable', 'confirmed', Password::defaults()],
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
         $user->name = $validated['name'];
-
-        if (! empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-        }
-
         $user->save();
 
         return back()->with('success', 'Profile updated successfully.');
+    }
+
+    private function formatRoleLabel(?string $roleName): string
+    {
+        if (! filled($roleName)) {
+            return 'Administrator';
+        }
+
+        return match ($roleName) {
+            'admin' => 'Estate Administrator',
+            'property_owner' => 'Property Owner',
+            default => Str::title(str_replace('_', ' ', $roleName)),
+        };
+    }
+
+    private function formatScopeLabel(bool $isZoneScoped, ?string $zoneName): string
+    {
+        if ($isZoneScoped) {
+            return filled($zoneName) ? 'Zone · '.$zoneName : 'Zone-scoped';
+        }
+
+        return 'Estate-wide access';
     }
 }

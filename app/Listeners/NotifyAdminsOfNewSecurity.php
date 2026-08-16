@@ -12,7 +12,7 @@ class NotifyAdminsOfNewSecurity implements ShouldQueue
 {
     public function handle(SecurityCreated $event): void
     {
-        if ($event->isPasswordReset) {
+        if ($event->isResend) {
             return;
         }
 

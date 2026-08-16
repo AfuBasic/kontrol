@@ -10,7 +10,8 @@ import {
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/SecurityInviteLinkController';
 import AdminLayout from '@/Layouts/AdminLayout';
-import InviteLinksTab, { InviteLink } from '../Components/InviteLinksTab';
+import type { InviteLink } from '../Components/InviteLinksTab';
+import InviteLinksTab from '../Components/InviteLinksTab';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
@@ -289,7 +290,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                         id="name"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="Enter full name"
                                         required
                                     />
@@ -306,7 +307,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                         id="email"
                                         value={data.email}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="security@example.com"
                                         required
                                     />
@@ -324,12 +325,12 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                         id="phone"
                                         value={data.phone}
                                         onChange={(e) => setData('phone', e.target.value)}
-                                        className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="+1 (555) 000-0000"
                                     />
                                     {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
                                 </div>
-                                
+
                                 {/* Badge Number */}
                                 <div>
                                     <label htmlFor="badge_number" className="block text-sm font-medium text-gray-700">
@@ -340,7 +341,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                         id="badge_number"
                                         value={data.badge_number}
                                         onChange={(e) => setData('badge_number', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="e.g., SEC-001"
                                     />
                                     {errors.badge_number && <p className="mt-1 text-sm text-red-600">{errors.badge_number}</p>}
@@ -349,37 +350,45 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 {/* Coverage Scope Selection */}
                                 {zones.length > 0 && (
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Operational Scope & Coverage
-                                        </label>
-                                        <p className="mt-0.5 text-xs text-gray-500">Determine where this officer has administrative and access authority.</p>
+                                        <label className="block text-sm font-medium text-gray-700">Operational Scope & Coverage</label>
+                                        <p className="mt-0.5 text-xs text-gray-500">
+                                            Determine where this officer has administrative and access authority.
+                                        </p>
 
                                         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id === '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="scope_mode"
                                                     checked={data.zone_id === ''}
                                                     onChange={() => setData('zone_id', '')}
-                                                    className="mt-0.5 text-primary-600 focus:ring-primary-500"
+                                                    className="mt-0.5 text-primary-600 focus:ring-slate-900"
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Entire Estate</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Officer can operate across all gates, visitor logs, and zones.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Officer can operate across all gates, visitor logs, and zones.
+                                                    </span>
                                                 </div>
                                             </label>
 
-                                            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}>
+                                            <label
+                                                className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-all ${data.zone_id !== '' ? 'border-primary-600 bg-primary-50/20 ring-1 ring-primary-600' : 'border-gray-200 hover:bg-gray-50'}`}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="scope_mode"
                                                     checked={data.zone_id !== ''}
                                                     onChange={() => setData('zone_id', zones[0]?.id.toString() || '')}
-                                                    className="mt-0.5 text-primary-600 focus:ring-primary-500"
+                                                    className="mt-0.5 text-primary-600 focus:ring-slate-900"
                                                 />
                                                 <div>
                                                     <span className="block text-xs font-bold text-gray-900">Specific Zone</span>
-                                                    <span className="mt-0.5 block text-[11px] text-gray-500">Restrict officer's scope to a single operational phase or block.</span>
+                                                    <span className="mt-0.5 block text-[11px] text-gray-500">
+                                                        Restrict officer's scope to a single operational phase or block.
+                                                    </span>
                                                 </div>
                                             </label>
                                         </div>
@@ -398,7 +407,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                                     id="zone_id"
                                                     value={data.zone_id}
                                                     onChange={(e) => setData('zone_id', e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                                 >
                                                     {zones.map((zone) => (
                                                         <option key={zone.id} value={zone.id}>
@@ -423,7 +432,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:opacity-50"
+                                    className="rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
                                 >
                                     {processing ? 'Sending Invitation...' : 'Send Invitation'}
                                 </button>
@@ -520,7 +529,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                             id="bulk_zone_id"
                                             value={selectedZone}
                                             onChange={(e) => setSelectedZone(e.target.value)}
-                                            className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                            className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         >
                                             <option value="">None / Entire Estate</option>
                                             {zones.map((zone) => (
@@ -544,7 +553,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}
@@ -577,7 +586,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                         value={pasteText}
                                         onChange={(e) => handlePasteChange(e.target.value)}
                                         rows={6}
-                                        className="mt-3 block w-full rounded-xl border border-gray-300 px-4 py-3 font-mono text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                        className="mt-3 block w-full rounded-xl border border-gray-300 px-4 py-3 font-mono text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         placeholder="security1@example.com, security2@example.com&#10;security3@example.com"
                                     />
                                 </div>
@@ -635,7 +644,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                             id="paste_zone_id"
                                             value={selectedZone}
                                             onChange={(e) => setSelectedZone(e.target.value)}
-                                            className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
+                                            className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         >
                                             <option value="">None / Entire Estate</option>
                                             {zones.map((zone) => (
@@ -659,7 +668,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                     type="button"
                                     onClick={handleBulkSubmit}
                                     disabled={extractedEmails.length === 0}
-                                    className="rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
                                     {extractedEmails.length !== 1 ? 's' : ''}

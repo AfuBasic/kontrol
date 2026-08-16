@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
@@ -307,9 +308,15 @@ class CollectionController extends Controller
                 ];
             });
 
+        $context = app(ContextManager::class)->current();
+        $zones = $this->zoneAudience->zonesForEstate($estate->id);
+        if ($context && $context->isZoneScoped()) {
+            $zones = $zones->where('id', $context->zoneId);
+        }
+
         return Inertia::render('Admin/Collections/Create', [
             'residents' => $residents,
-            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
+            'zones' => $zones,
         ]);
     }
 
@@ -317,9 +324,9 @@ class CollectionController extends Controller
     {
         $this->ensureBankingIsSetup();
         $estate = $this->estateContext->getEstate();
-        $this->collectionService->createCollection($estate, $this->validatedCollectionPayload($request, $estate->id));
+        $collection = $this->collectionService->createCollection($estate, $this->validatedCollectionPayload($request, $estate->id));
 
-        return redirect()->route('admin.collections.index')
+        return redirect()->route('admin.collections.show', $collection->ulid)
             ->with('success', 'Collection created successfully.');
     }
 
@@ -328,62 +335,68 @@ class CollectionController extends Controller
         $this->authorizeCollection($collection);
         $collection->load(['targets', 'creator'])->loadCount('targets');
         $estate = $this->estateContext->getEstate();
-        $stats = $this->collectionService->getCollectionStats($collection);
-
         $settings = EstateSettings::forEstate($estate->id);
 
-        $query = $collection->assignments()->with('user')->latest();
+        if ($collection->status === 'draft') {
+            $stats = $this->collectionService->getDraftPreviewStats($collection);
+            $assignmentsData = $this->collectionService->previewDraftAssignments($collection, $request);
+        } else {
+            $stats = $this->collectionService->getCollectionStats($collection);
+            $query = $collection->assignments()->with('user')->latest();
 
-        if ($request->has('search')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('email', 'like', "%{$request->search}%");
-            });
-        }
-
-        if ($request->has('status') && $request->status !== 'all') {
-            $today = Carbon::today()->toDateString();
-            if ($request->status === 'paid') {
-                $query->where('status', 'paid');
-            } elseif ($request->status === 'overdue') {
-                $query->where(function ($q) use ($today) {
-                    $q->where('status', 'overdue')
-                        ->orWhere(function ($sq) use ($today) {
-                            $sq->where('status', 'partial')
-                                ->where(function ($gq) use ($today) {
-                                    $gq->where(function ($sub) use ($today) {
-                                        $sub->whereNull('grace_until')
-                                            ->where('due_date', '<', $today);
-                                    })->orWhere(function ($sub) use ($today) {
-                                        $sub->whereNotNull('grace_until')
-                                            ->where('grace_until', '<', $today);
-                                    });
-                                });
-                        });
-                });
-            } elseif ($request->status === 'pending') {
-                $query->where(function ($q) use ($today) {
-                    $q->whereIn('status', ['pending', 'grace'])
-                        ->orWhere(function ($sq) use ($today) {
-                            $sq->where('status', 'partial')
-                                ->where(function ($gq) use ($today) {
-                                    $gq->where(function ($sub) use ($today) {
-                                        $sub->whereNull('grace_until')
-                                            ->where('due_date', '>=', $today);
-                                    })->orWhere(function ($sub) use ($today) {
-                                        $sub->whereNotNull('grace_until')
-                                            ->where('grace_until', '>=', $today);
-                                    });
-                                });
-                        });
+            if ($request->has('search')) {
+                $query->whereHas('user', function ($q) use ($request) {
+                    $q->where('name', 'like', "%{$request->search}%")
+                        ->orWhere('email', 'like', "%{$request->search}%");
                 });
             }
+
+            if ($request->has('status') && $request->status !== 'all') {
+                $today = Carbon::today()->toDateString();
+                if ($request->status === 'paid') {
+                    $query->where('status', 'paid');
+                } elseif ($request->status === 'overdue') {
+                    $query->where(function ($q) use ($today) {
+                        $q->where('status', 'overdue')
+                            ->orWhere(function ($sq) use ($today) {
+                                $sq->where('status', 'partial')
+                                    ->where(function ($gq) use ($today) {
+                                        $gq->where(function ($sub) use ($today) {
+                                            $sub->whereNull('grace_until')
+                                                ->where('due_date', '<', $today);
+                                        })->orWhere(function ($sub) use ($today) {
+                                            $sub->whereNotNull('grace_until')
+                                                ->where('grace_until', '<', $today);
+                                        });
+                                    });
+                            });
+                    });
+                } elseif ($request->status === 'pending') {
+                    $query->where(function ($q) use ($today) {
+                        $q->whereIn('status', ['pending', 'grace'])
+                            ->orWhere(function ($sq) use ($today) {
+                                $sq->where('status', 'partial')
+                                    ->where(function ($gq) use ($today) {
+                                        $gq->where(function ($sub) use ($today) {
+                                            $sub->whereNull('grace_until')
+                                                ->where('due_date', '>=', $today);
+                                        })->orWhere(function ($sub) use ($today) {
+                                            $sub->whereNotNull('grace_until')
+                                                ->where('grace_until', '>=', $today);
+                                        });
+                                    });
+                            });
+                    });
+                }
+            }
+
+            $assignmentsData = $query->paginate(15)->withQueryString();
         }
 
         return Inertia::render('Admin/Collections/Show', [
             'collection' => $collection,
             'stats' => $stats,
-            'assignments' => $query->paginate(15)->withQueryString(),
+            'assignments' => $assignmentsData,
             'totalResidents' => User::forEstate($estate->id)->withRole('resident', $estate->id)->count(),
             'filters' => $request->only(['search', 'status']),
             'settlement' => [
@@ -453,10 +466,16 @@ class CollectionController extends Controller
                 ];
             });
 
+        $context = app(ContextManager::class)->current();
+        $zones = $this->zoneAudience->zonesForEstate($estate->id);
+        if ($context && $context->isZoneScoped()) {
+            $zones = $zones->where('id', $context->zoneId);
+        }
+
         return Inertia::render('Admin/Collections/Edit', [
             'collection' => $collection,
             'residents' => $residents,
-            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
+            'zones' => $zones,
         ]);
     }
 
@@ -467,7 +486,7 @@ class CollectionController extends Controller
         $this->ensureIsDraft($collection);
         $this->collectionService->updateCollection($collection, $this->validatedCollectionPayload($request, $collection->estate_id));
 
-        return redirect()->route('admin.collections.index')
+        return redirect()->route('admin.collections.show', $collection->ulid)
             ->with('success', 'Collection updated successfully.');
     }
 
@@ -502,6 +521,9 @@ class CollectionController extends Controller
 
     public function recordPayment(Request $request, CollectionAssignment $assignment): RedirectResponse
     {
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($assignment), 403, 'Unauthorized zone scope.');
+
         $remaining = $assignment->amount_due - $assignment->amount_paid;
 
         $request->validate([
@@ -541,6 +563,9 @@ class CollectionController extends Controller
         if ($collection->estate_id !== $estate->id) {
             abort(403);
         }
+
+        $context = app(ContextManager::class)->current();
+        abort_if($context && ! $context->canAccess($collection), 403, 'Unauthorized zone scope.');
     }
 
     private function ensureIsDraft(Collection $collection): void
@@ -569,7 +594,7 @@ class CollectionController extends Controller
             'applies_to' => ['required', 'string', 'in:all,target,property_owner,zone'],
             'targets' => ['required_if:applies_to,target', 'array'],
             'targets.*' => ['integer', 'exists:users,id'],
-            'zones' => ['required_if:applies_to,zone', 'array', 'min:1'],
+            'zones' => [$request->applies_to === 'zone' ? 'required' : 'nullable', 'array', $request->applies_to === 'zone' ? 'min:1' : 'nullable'],
             'zones.*' => ['integer', Rule::exists('zones', 'id')->where('estate_id', $estateId)],
         ]);
     }

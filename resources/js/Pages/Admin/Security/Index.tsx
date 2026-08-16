@@ -199,7 +199,7 @@ export default function SecurityPersonnel({
                             <ul className="space-y-2">
                                 {insights.map((insight, idx) => (
                                     <li key={idx} className="flex items-start gap-2 text-xs font-semibold text-blue-950">
-                                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-600" />
+                                        <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-950" />
                                         {insight}
                                     </li>
                                 ))}
@@ -326,9 +326,12 @@ export default function SecurityPersonnel({
                                                                     {initial}
                                                                 </div>
                                                                 <div className="min-w-0">
-                                                                    <span className="block max-w-[150px] truncate text-xs font-bold text-slate-900">
+                                                                    <Link
+                                                                        href={`/admin/residents/${person.id}`}
+                                                                        className="block max-w-[150px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                                    >
                                                                         {person.name}
-                                                                    </span>
+                                                                    </Link>
                                                                 </div>
                                                             </div>
                                                         </td>

@@ -75,8 +75,7 @@ export default function PayCollection({
     const allowsPartialPayment = allowPartialPayments && originalBill > 0 && amountToPay >= minThreshold;
     const activePaymentMode = allowsPartialPayment ? paymentMode : 'full';
     const parsedCustom = parseFloat(customAmount) || 0;
-    const effectivePaymentAmount =
-        activePaymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
+    const effectivePaymentAmount = activePaymentMode === 'partial' && parsedCustom > 0 ? Math.min(parsedCustom, amountToPay) : amountToPay;
     const remainingAfterPayment = Math.max(0, amountToPay - effectivePaymentAmount);
 
     const kontrolFee = hasSubscription ? 0 : effectivePaymentAmount * 0.005;
@@ -152,16 +151,11 @@ export default function PayCollection({
             }
 
             const subaccount =
-                data.subaccount &&
-                !String(data.subaccount).startsWith('ACCT_estate') &&
-                !String(data.subaccount).startsWith('ACCT_landlord')
+                data.subaccount && !String(data.subaccount).startsWith('ACCT_estate') && !String(data.subaccount).startsWith('ACCT_landlord')
                     ? data.subaccount
                     : null;
 
-            const validEmail =
-                data.email && String(data.email).includes('@')
-                    ? data.email
-                    : assignment.user?.email || 'support@usekontrol.com';
+            const validEmail = data.email && String(data.email).includes('@') ? data.email : assignment.user?.email || 'support@usekontrol.com';
 
             const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
 

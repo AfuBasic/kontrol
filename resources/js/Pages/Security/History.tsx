@@ -352,7 +352,9 @@ export default function History({ logs, filters, hosts }: Props) {
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between">
                                         <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Entry Gate & Time</p>
-                                        <p className="text-sm font-bold text-slate-900">{selectedLog.entry_point || selectedLog.gate || 'Main Entrance'} • {selectedLog.verified_at}</p>
+                                        <p className="text-sm font-bold text-slate-900">
+                                            {selectedLog.entry_point || selectedLog.gate || 'Main Entrance'} • {selectedLog.verified_at}
+                                        </p>
                                     </div>
                                     <div className="flex items-center justify-between">
                                         <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Validated By</p>
@@ -365,13 +367,18 @@ export default function History({ logs, filters, hosts }: Props) {
                                         <>
                                             <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                                                 <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Exit Gate & Time</p>
-                                                <p className="text-sm font-bold text-slate-900">{selectedLog.exit_point || selectedLog.entry_point || selectedLog.gate || 'Main Entrance'} • {selectedLog.checked_out_at}</p>
+                                                <p className="text-sm font-bold text-slate-900">
+                                                    {selectedLog.exit_point || selectedLog.entry_point || selectedLog.gate || 'Main Entrance'} •{' '}
+                                                    {selectedLog.checked_out_at}
+                                                </p>
                                             </div>
                                             <div className="flex items-center justify-between">
                                                 <p className="text-[11px] font-bold tracking-tight text-slate-400 uppercase">Checkout Officer</p>
                                                 <div className="flex items-center gap-2">
                                                     <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                                                    <p className="text-sm font-bold text-slate-900">{selectedLog.checkout_verifier_name || 'Security'}</p>
+                                                    <p className="text-sm font-bold text-slate-900">
+                                                        {selectedLog.checkout_verifier_name || 'Security'}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </>

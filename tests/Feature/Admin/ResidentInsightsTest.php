@@ -49,12 +49,15 @@ beforeEach(function () {
 
 function fetchResidentInsights(): array
 {
+    \Inertia\Inertia::version('test');
+
     return test()->actingAs(test()->admin)
         ->withSession(['active_context_assignment_id' => test()->adminAssignment->id])
         ->withHeaders([
             'X-Inertia' => 'true',
             'X-Inertia-Partial-Component' => 'Admin/Residents/Index',
             'X-Inertia-Partial-Data' => 'insights',
+            'X-Inertia-Version' => 'test',
         ])
         ->get(route('admin.residents.index'))
         ->assertOk()

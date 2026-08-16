@@ -6,8 +6,9 @@ import * as path from 'path';
 const isDev = process.env.NODE_ENV !== 'production' && process.env.CAPACITOR_PROD !== 'true';
 
 // Default local URL
-let devUrl = 'http://app.kontrol.test';
-let devHostname = '10.0.2.2';
+let devUrl = 'https://app.usekontrol.afuwapetunde.com';
+// hostname must match the actual URL being loaded
+let devHostname = 'app.usekontrol.afuwapetunde.com';
 
 // Dynamically read from .env to prevent committing local URLs to Git
 try {
@@ -24,9 +25,8 @@ try {
     console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
 }
 
-const isAndroid = process.argv.includes('android') || process.env.CAPACITOR_PLATFORM_NAME === 'android';
-const prodUrl = isAndroid ? 'https://app.usekontrol.afuwapetunde.com' : 'https://app.usekontrol.com';
-const prodHostname = isAndroid ? 'app.usekontrol.afuwapetunde.com' : 'app.usekontrol.com';
+const prodUrl = 'https://app.usekontrol.afuwapetunde.com';
+const prodHostname = 'app.usekontrol.afuwapetunde.com';
 
 const config: CapacitorConfig = {
     appId: 'com.kontrol.hq',
@@ -40,7 +40,7 @@ const config: CapacitorConfig = {
         // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
         hostname: isDev ? devHostname : prodHostname,
         // Allow all subdomains and the emulator IP for local development
-        allowNavigation: ['*.kontrol.test', 'kontrol.test', 'app.usekontrol.com', 'app.usekontrol.afuwapetunde.com', '10.0.2.2', devHostname],
+        allowNavigation: ['app.usekontrol.com', 'app.usekontrol.afuwapetunde.com'],
         // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
         androidScheme: isDev && !devUrl.startsWith('https') ? 'http' : 'https',
     },
@@ -74,7 +74,7 @@ const config: CapacitorConfig = {
         },
         SplashScreen: {
             launchShowDuration: 30000,
-            launchAutoHide: false, // Handled manually in app.tsx
+            launchAutoHide: true, // Handled manually in app.tsx
             backgroundColor: '#FFFFFF',
             androidScaleType: 'CENTER',
             showSpinner: false,
@@ -82,9 +82,8 @@ const config: CapacitorConfig = {
             splashImmersive: true,
         },
         Keyboard: {
-            resize: 'body', // Best for Android to prevent viewport jumping
+            resize: 'native', // 'body' collapses WebView on older Android — native lets the OS handle insets
             style: 'DARK',
-            resizeOnFullScreen: true,
         },
         StatusBar: {
             style: 'LIGHT',

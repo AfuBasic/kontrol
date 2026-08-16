@@ -28,11 +28,10 @@ class CreateEstateAction
     public function __construct(
         private InitializeTrialService $initializeTrialService,
         private PartnerAttributionService $attributionService,
-    ) {
-    }
+    ) {}
 
     /**
-     * @param  array{name: string, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
+     * @param  array{name: string, admin_name?: string|null, email: string, address?: string|null, plan_id?: int|null, charge_type?: string, free_trial_enabled?: bool, free_trial_days?: int}  $data
      */
     public function execute(array $data): Estate
     {
@@ -47,9 +46,9 @@ class CreateEstateAction
                 'status' => 'inactive',
             ]);
 
-            // 2. Create user with estate email (no password)
+            // 2. Create the primary administrator with their own name (no password)
             $user = User::create([
-                'name' => $data['name'],
+                'name' => $data['admin_name'] ?? $data['name'],
                 'email' => $data['email'],
                 'password' => null,
             ]);
@@ -142,7 +141,7 @@ class CreateEstateAction
             $this->initializeTrialService->initializeForEstate($estate);
 
             // 8. Apply partner attribution when estate has a partner
-            if (!empty($data['has_partner']) && !empty($data['partner_id'])) {
+            if (! empty($data['has_partner']) && ! empty($data['partner_id'])) {
                 $partner = Partner::findOrFail($data['partner_id']);
                 $commissionPlan = CommissionPlan::cloneFromPartner($partner);
                 $startsAt = isset($data['commission_starts_at'])

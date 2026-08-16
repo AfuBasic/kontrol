@@ -607,7 +607,7 @@ class AccessCodeService
             'active_codes' => $activeCodesCount,
             'created_today' => $createdToday,
             'visitors_today' => $visitorsToday,
-            'expected_today' => $expectedToday,
+            'total_expected' => $expectedToday,
         ];
     }
 

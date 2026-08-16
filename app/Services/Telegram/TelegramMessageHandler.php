@@ -59,9 +59,15 @@ class TelegramMessageHandler
      */
     private function handleUnlinkedUser(string $chatId, string $text, string $firstName): void
     {
-        // Check if text is OTP (6 digits)
+        $otp = null;
         if (preg_match('/^\d{6}$/', $text)) {
-            $this->attemptLinkAccount($chatId, $text);
+            $otp = $text;
+        } elseif (preg_match('/^\/start\s+(\d{6})$/', $text, $matches)) {
+            $otp = $matches[1];
+        }
+
+        if ($otp !== null) {
+            $this->attemptLinkAccount($chatId, $otp);
 
             return;
         }

@@ -49,13 +49,7 @@ async function writeCache<T>(namespace: CacheNamespace, key: string, data: T) {
  * 2. When serverData arrives, update cache
  * 3. Optionally background-reload named props
  */
-export function useStaleData<T>({
-    key,
-    serverData,
-    namespace = 'resident',
-    only,
-    revalidate = true,
-}: UseStaleDataOptions<T>): UseStaleDataResult<T> {
+export function useStaleData<T>({ key, serverData, namespace = 'resident', only, revalidate = true }: UseStaleDataOptions<T>): UseStaleDataResult<T> {
     const [cached, setCached] = useState<T | null>(null);
     const [cachedAt, setCachedAt] = useState<string | null>(null);
     const [isRevalidating, setIsRevalidating] = useState(false);

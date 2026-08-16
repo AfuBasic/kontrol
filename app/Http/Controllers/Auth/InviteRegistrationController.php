@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
@@ -24,8 +23,7 @@ class InviteRegistrationController extends Controller
 {
     public function __construct(
         protected ResidentSubscriptionService $subscriptionService
-    ) {
-    }
+    ) {}
 
     /**
      * Show the registration form for the invite link.
@@ -83,26 +81,14 @@ class InviteRegistrationController extends Controller
 
             $user->estates()->attach($inviteLink->estate_id, [
                 'status' => $status,
+                'created_via' => 'invite_link',
+                'initiated_by' => $inviteLink->user_id,
+                'initiated_at' => $inviteLink->created_at,
+                'invitation_link_id' => $inviteLink->id,
+                'accepted_at' => $status === 'accepted' ? now() : null,
             ]);
 
             app(ContextManager::class)->setSystemContext($inviteLink->estate_id);
-
-            // Assign roles scoped to this estate via AdministrativeAssignment system
-            $residentRole = Role::where('name', 'resident')
-                ->where('guard_name', 'web')
-                ->whereNull('estate_id')
-                ->firstOrFail();
-            $assignmentAction = app(CreateAdministrativeAssignmentAction::class);
-
-            $assignmentAction->execute(
-                user: $user,
-                estate: $inviteLink->estate,
-                role: $residentRole,
-                scopeType: AssignmentScope::Estate,
-                zone: null,
-                isPrimary: false
-            );
-            $user->assignRole($residentRole);
 
             if ($inviteLink->role === 'property_owner') {
                 $poRole = Role::where('name', 'property_owner')
@@ -119,6 +105,21 @@ class InviteRegistrationController extends Controller
                     isPrimary: false
                 );
                 $user->assignRole($poRole);
+            } else {
+                $residentRole = Role::where('name', 'resident')
+                    ->where('guard_name', 'web')
+                    ->whereNull('estate_id')
+                    ->firstOrFail();
+
+                $assignmentAction->execute(
+                    user: $user,
+                    estate: $inviteLink->estate,
+                    role: $residentRole,
+                    scopeType: AssignmentScope::Estate,
+                    zone: null,
+                    isPrimary: false
+                );
+                $user->assignRole($residentRole);
             }
 
             // Send verification email
@@ -135,6 +136,16 @@ class InviteRegistrationController extends Controller
 
             // Increment usage count
             $inviteLink->increment('usage_count');
+
+            activity()
+                ->performedOn($user)
+                ->causedBy($user)
+                ->withProperties([
+                    'estate_id' => $inviteLink->estate_id,
+                    'invite_link_id' => $inviteLink->id,
+                    'invite_link_creator' => $inviteLink->user_id,
+                ])
+                ->log("resident self-registered via invite link (token: {$inviteLink->token})");
 
             // Notify estate admins only if manual approval is required
             if ($inviteLink->requires_approval) {
