@@ -203,7 +203,7 @@ class CollectionService
         return User::query()
             ->whereIn('id', $userIds)
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'ulid', 'name', 'email']);
     }
 
     /**
@@ -254,6 +254,7 @@ class CollectionService
             'id' => $user->id,
             'user' => [
                 'id' => $user->id,
+                'ulid' => $user->ulid,
                 'name' => $user->name,
                 'email' => $user->email,
             ],

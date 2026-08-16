@@ -918,7 +918,16 @@ export default function ShowCollection({
                                                             {a.user.name.charAt(0).toUpperCase()}
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <p className="truncate text-sm font-bold text-slate-900">{a.user.name}</p>
+                                                            {a.user.ulid ? (
+                                                                <Link
+                                                                    href={showResident.url(a.user.ulid)}
+                                                                    className="truncate block text-sm font-bold text-slate-900 transition-colors hover:text-indigo-600"
+                                                                >
+                                                                    {a.user.name}
+                                                                </Link>
+                                                            ) : (
+                                                                <p className="truncate text-sm font-bold text-slate-900">{a.user.name}</p>
+                                                            )}
                                                             <p className="truncate text-xs text-slate-400">{a.user.email}</p>
                                                         </div>
                                                     </div>
