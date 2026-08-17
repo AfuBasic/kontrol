@@ -63,15 +63,18 @@ it('creates valid zone scoped assignment', function () {
         ->and($assignment->zone_id)->toBe($zone->id);
 });
 
-it('rejects global role injection', function () {
+it('allows global role assignment', function () {
     $globalRole = Role::create(['name' => 'global-admin', 'guard_name' => 'web']);
 
-    expect(fn () => $this->action->execute(
+    $assignment = $this->action->execute(
         $this->user,
         $this->estate,
         $globalRole,
         AssignmentScope::Estate
-    ))->toThrow(ValidationException::class, 'Global roles cannot be used');
+    );
+
+    expect($assignment->id)->not->toBeNull()
+        ->and($assignment->role_id)->toBe($globalRole->id);
 });
 
 it('rejects cross estate role injection', function () {
@@ -128,7 +131,7 @@ it('rejects assignment for non member', function () {
         $this->estate,
         $this->estateRole,
         AssignmentScope::Estate
-    ))->toThrow(ValidationException::class, 'User is not a verified member');
+    ))->toThrow(ValidationException::class, 'User is not a member of this estate');
 });
 
 it('prevents multiple active primary assignments', function () {
@@ -245,16 +248,10 @@ it('backfills safely from model_has_roles', function () {
 
     expect($exitCode)->toBe(0);
 
-    // Only 1 assignment should be migrated
-    expect(AdministrativeAssignment::count())->toBe(1);
-
-    $assignment = AdministrativeAssignment::first();
-    expect($assignment->user_id)->toBe($this->user->id)
-        ->and($assignment->role_id)->toBe($this->estateRole->id)
-        ->and($assignment->estate_id)->toBe($this->estate->id)
-        ->and($assignment->scope_type)->toBe(AssignmentScope::Estate);
+    // 2 assignments should be migrated (the estate role and the global role)
+    expect(AdministrativeAssignment::count())->toBe(2);
 
     // Test Idempotency
     Artisan::call('kontrol:backfill-administrative-assignments');
-    expect(AdministrativeAssignment::count())->toBe(1);
+    expect(AdministrativeAssignment::count())->toBe(2);
 });

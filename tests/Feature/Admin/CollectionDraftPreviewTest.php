@@ -110,6 +110,7 @@ it('previews target residents on a draft collection show page', function () {
                 ->where('id', $ada->id)
                 ->where('name', 'Ada Lovelace')
                 ->where('email', 'ada@example.com')
+                ->etc()
             )
             ->where('assignments.data.1.user.id', $grace->id)
         );

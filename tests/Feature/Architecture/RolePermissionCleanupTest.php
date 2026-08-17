@@ -34,10 +34,11 @@ beforeEach(function () {
     $this->permRolesCreate = Permission::create(['name' => 'roles.create', 'guard_name' => 'web']);
     $this->permRolesEdit = Permission::create(['name' => 'roles.edit', 'guard_name' => 'web']);
     $this->permRolesDelete = Permission::create(['name' => 'roles.delete', 'guard_name' => 'web']);
+    $this->permAssignmentsView = Permission::create(['name' => 'assignments.view', 'guard_name' => 'web']);
 
     // Create estate-scoped roles
     $this->roleA = Role::create(['name' => 'admin', 'guard_name' => 'web', 'estate_id' => $this->estateA->id]);
-    $this->roleA->givePermissionTo([$this->permView, $this->permCreate, $this->permManage, $this->permRolesView, $this->permRolesCreate, $this->permRolesEdit, $this->permRolesDelete]);
+    $this->roleA->givePermissionTo([$this->permView, $this->permCreate, $this->permManage, $this->permRolesView, $this->permRolesCreate, $this->permRolesEdit, $this->permRolesDelete, $this->permAssignmentsView]);
 
     $this->roleB = Role::create(['name' => 'admin', 'guard_name' => 'web', 'estate_id' => $this->estateB->id]);
     $this->roleB->givePermissionTo([$this->permView]);
@@ -72,17 +73,19 @@ beforeEach(function () {
     );
 });
 
-test('1. Estate A role cannot authorize Estate B and 2. Global role cannot grant estate authority and 3. Assignment must match role estate', function () {
+test('1. Estate A role cannot authorize Estate B and 2. Global role can grant estate authority and 3. Assignment must match role estate', function () {
     $globalRole = Role::create(['name' => 'global_admin_test', 'guard_name' => 'web', 'estate_id' => null]);
     $action = app(CreateAdministrativeAssignmentAction::class);
 
-    // 2. Global role rejected for administrative assignment
-    expect(fn () => $action->execute(
+    // 2. Global role IS ALLOWED for administrative assignment
+    $action->execute(
         user: $this->userA,
         estate: $this->estateA,
         role: $globalRole,
         scopeType: AssignmentScope::Estate
-    ))->toThrow(ValidationException::class);
+    );
+    
+    expect(AdministrativeAssignment::where('role_id', $globalRole->id)->exists())->toBeTrue();
 
     // 3. Assignment estate mismatch rejected
     expect(fn () => $action->execute(

@@ -9,19 +9,29 @@ use App\Services\PaystackService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+
+    Permission::firstOrCreate(['name' => 'collections.view']);
+    $adminRole->givePermissionTo('collections.view');
 
     $this->estate = Estate::factory()->create();
     $this->adminUser = User::factory()->create();
 
     setPermissionsTeamId($this->estate->id);
-    $this->adminUser->assignRole('admin');
+    
+    app(\App\Actions\Admin\CreateAdministrativeAssignmentAction::class)->execute(
+        user: $this->adminUser,
+        estate: $this->estate,
+        role: $adminRole,
+        scopeType: \App\Enums\AssignmentScope::Estate
+    );
     $this->estate->users()->attach($this->adminUser->id, ['status' => 'accepted']);
 
     $this->seed(FeatureSeeder::class);

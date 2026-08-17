@@ -14,11 +14,17 @@ use App\Models\Zone;
 use App\Services\Admin\CollectionService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 beforeEach(function () {
-    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+
+    Permission::firstOrCreate(['name' => 'collections.view']);
+    Permission::firstOrCreate(['name' => 'collections.create']);
+    Permission::firstOrCreate(['name' => 'collections.edit']);
+    $adminRole->givePermissionTo(['collections.view', 'collections.create', 'collections.edit']);
 
     $this->estate = Estate::factory()->create();
     $this->admin = User::factory()->create();
@@ -83,7 +89,7 @@ it('stores zone targets when a collection applies to specific zones', function (
             'applies_to' => 'zone',
             'zones' => [$this->zoneA->id],
         ])
-        ->assertRedirect(route('admin.collections.index'));
+        ->assertRedirect(route('admin.collections.show', Collection::query()->where('name', 'Zone A Levy')->first()->ulid));
 
     $collection = Collection::query()->where('name', 'Zone A Levy')->first();
 
@@ -130,8 +136,8 @@ it('publishes assignments only for residents in the targeted zone', function () 
 
     (new PublishCollectionJob($collection->id))->handle();
 
-    expect(CollectionAssignment::query()->where('collection_id', $collection->id)->where('user_id', $residentA->id)->exists())->toBeTrue()
-        ->and(CollectionAssignment::query()->where('collection_id', $collection->id)->where('user_id', $residentB->id)->exists())->toBeFalse();
+    expect(CollectionAssignment::withoutGlobalScopes()->where('collection_id', $collection->id)->where('user_id', $residentA->id)->exists())->toBeTrue()
+        ->and(CollectionAssignment::withoutGlobalScopes()->where('collection_id', $collection->id)->where('user_id', $residentB->id)->exists())->toBeFalse();
 });
 
 it('passes zones to the collection create page', function () {

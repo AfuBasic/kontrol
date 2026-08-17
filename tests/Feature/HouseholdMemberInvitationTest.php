@@ -95,7 +95,7 @@ test('resending household member invitation refreshes invitation and sends valid
 
     $response = $this->actingAs($primaryResident)
         ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
-        ->post(route('resident.household.reset-password', ['householdMember' => $householdMember->id]));
+        ->post(route('resident.household.resend-invitation', ['householdMember' => $householdMember->id]));
 
     $response->assertRedirect();
     $response->assertSessionHas('success');

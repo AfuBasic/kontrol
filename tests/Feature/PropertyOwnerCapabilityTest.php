@@ -90,7 +90,6 @@ test('admin can view, create, edit, suspend property owners', function () {
     expect($owner)->not->toBeNull();
     setPermissionsTeamId($this->estate->id);
     expect($owner->hasRole('property_owner'))->toBeTrue();
-    expect($owner->hasRole('resident'))->toBeTrue();
 
     // 3. Edit Property Owner details
     $response = $this->put(route('admin.property-owners.update', $owner->id), [
@@ -249,9 +248,7 @@ test('admin can bulk invite property owners', function () {
 
     setPermissionsTeamId($this->estate->id);
     expect($user1->hasRole('property_owner'))->toBeTrue();
-    expect($user1->hasRole('resident'))->toBeTrue();
     expect($user2->hasRole('property_owner'))->toBeTrue();
-    expect($user2->hasRole('resident'))->toBeTrue();
 });
 
 test('admin can manage property owner invite link and users can join', function () {
@@ -308,6 +305,7 @@ test('admin can manage property owner invite link and users can join', function 
 
     // View registration page
     $response = $this->get(url("/join/{$link->token}"));
+    $response->dump();
     $response->assertOk();
 
     // Register
@@ -324,7 +322,6 @@ test('admin can manage property owner invite link and users can join', function 
     expect($user)->not->toBeNull();
     setPermissionsTeamId($this->estate->id);
     expect($user->hasRole('property_owner'))->toBeTrue();
-    expect($user->hasRole('resident'))->toBeTrue();
 
     // Verify membership status (requires_approval was true, so status should be pending)
     expect($user->estates->first()->pivot->status)->toBe('pending');

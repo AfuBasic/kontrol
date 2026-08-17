@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
@@ -30,7 +31,8 @@ class InviteRegistrationController extends Controller
      */
     public function show(string $token): Response
     {
-        $inviteLink = EstateInviteLink::where('token', $token)
+        $inviteLink = EstateInviteLink::withoutZoneIsolation()
+            ->where('token', $token)
             ->where('is_active', true)
             ->with('estate')
             ->firstOrFail();
@@ -52,9 +54,10 @@ class InviteRegistrationController extends Controller
     /**
      * Handle the registration submission.
      */
-    public function store(Request $request, string $token)
+    public function store(Request $request, string $token, CreateAdministrativeAssignmentAction $assignmentAction)
     {
-        $inviteLink = EstateInviteLink::where('token', $token)
+        $inviteLink = EstateInviteLink::withoutZoneIsolation()
+            ->where('token', $token)
             ->where('is_active', true)
             ->with('estate')
             ->firstOrFail();
@@ -68,7 +71,7 @@ class InviteRegistrationController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
         ]);
 
-        return DB::transaction(function () use ($request, $inviteLink) {
+        return DB::transaction(function () use ($request, $inviteLink, $assignmentAction) {
             $user = User::create([
                 'name' => $request->name,
                 'email' => $request->email,

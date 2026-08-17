@@ -39,6 +39,18 @@ it('validates and updates visitor_checkout_enabled setting', function () {
             'access_code_require_confirmation' => false,
             'free_trial_enabled' => false,
             'grace_period_days' => 7,
+            'require_vehicle_information' => false,
+            'allow_residents_to_extend_visitor_passes' => false,
+            'entry_point_checkout_enforced' => false,
+            'default_incident_severity' => 'Low',
+            'require_photo_evidence_for_incidents' => false,
+            'require_resolution_notes_for_incidents' => false,
+            'allow_residents_to_report_incidents' => false,
+            'notify_admins_immediately_for_critical_incidents' => false,
+            'allow_partial_payments' => false,
+            'collection_reminder_frequency' => 'daily',
+            'collection_maximum_reminder_attempts' => 3,
+            'send_reminder_before_due_date_days' => 2,
         ]);
 
     $response->assertSessionHasNoErrors();
