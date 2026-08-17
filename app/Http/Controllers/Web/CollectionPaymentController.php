@@ -13,6 +13,7 @@ use App\Models\Scopes\CollectionAssignmentScope;
 use App\Models\Scopes\PaymentScope;
 use App\Models\User;
 use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
+use App\Notifications\Resident\CollectionPaymentSuccessfulNotification;
 use App\Services\Compliance\ComplianceEngine;
 use App\Services\PaystackService;
 use Illuminate\Http\JsonResponse;
@@ -310,6 +311,10 @@ class CollectionPaymentController extends Controller
                             $admin->notify(new CollectionPaymentReceivedNotification($assignment, $payment->amount));
                         }
                     }
+
+                    if ($payment->user) {
+                        $payment->user->notify(new CollectionPaymentSuccessfulNotification($payment, $assignment));
+                    }
                 }
             } elseif ($payment->raw_payload && isset($payment->raw_payload['assignment_ids'])) {
                 $assignmentIds = $payment->raw_payload['assignment_ids'];
@@ -318,7 +323,7 @@ class CollectionPaymentController extends Controller
                 foreach ($assignments as $assignment) {
                     $due = $assignment->amount_due - $assignment->amount_paid;
                     if ($due > 0) {
-                        Payment::create([
+                        $childPayment = Payment::create([
                             'user_id' => $payment->user_id,
                             'estate_id' => $payment->estate_id,
                             'collection_assignment_id' => $assignment->id,
@@ -354,6 +359,10 @@ class CollectionPaymentController extends Controller
                             foreach ($admins as $admin) {
                                 $admin->notify(new CollectionPaymentReceivedNotification($assignment, $due));
                             }
+                        }
+
+                        if ($childPayment->user) {
+                            $childPayment->user->notify(new CollectionPaymentSuccessfulNotification($childPayment, $assignment));
                         }
                     }
                 }
@@ -640,7 +649,7 @@ class CollectionPaymentController extends Controller
                                 if ($lockedAssignment) {
                                     $due = $lockedAssignment->amount_due - $lockedAssignment->amount_paid;
                                     if ($due > 0) {
-                                        Payment::create([
+                                        $childPayment = Payment::create([
                                             'user_id' => $lockedPayment->user_id,
                                             'estate_id' => $lockedPayment->estate_id,
                                             'collection_assignment_id' => $lockedAssignment->id,
@@ -676,6 +685,10 @@ class CollectionPaymentController extends Controller
                                             foreach ($admins as $admin) {
                                                 $admin->notify(new CollectionPaymentReceivedNotification($lockedAssignment, $due));
                                             }
+                                        }
+
+                                        if ($childPayment->user) {
+                                            $childPayment->user->notify(new CollectionPaymentSuccessfulNotification($childPayment, $lockedAssignment));
                                         }
                                     }
                                 }
