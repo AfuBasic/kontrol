@@ -177,7 +177,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                             <span className="text-xs font-medium text-slate-400">Reported on {format(new Date(incident.created_at), 'PPP')}</span>
                         </div>
 
-                        <h1 className="mb-3 text-xl leading-tight font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
+                        <h1 className="mb-3 text-xl leading-tight font-black text-slate-900 break-words [overflow-wrap:anywhere] sm:text-2xl">{incident.title}</h1>
 
                         {incident.location && (
                             <div className="mb-4 flex w-fit items-center gap-1.5 rounded-xl border border-slate-200/50 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
@@ -186,7 +186,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                             </div>
                         )}
 
-                        <p className="mb-6 text-sm leading-relaxed whitespace-pre-wrap text-slate-600">{incident.body}</p>
+                        <p className="mb-6 text-sm leading-relaxed whitespace-pre-wrap text-slate-600 break-words [overflow-wrap:anywhere]">{incident.body}</p>
 
                         {/* Media Preview / Interactive Expandable Card */}
                         {incident.attachment_url && (
@@ -313,7 +313,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <p className="text-xs leading-relaxed text-slate-600">{comment.body}</p>
+                                                <p className="text-xs leading-relaxed text-slate-600 break-words [overflow-wrap:anywhere]">{comment.body}</p>
                                                 <div className="mt-2 flex justify-end">
                                                     <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                         {formatDistanceToNow(new Date(comment.created_at), {
@@ -332,7 +332,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                                                     <div className="z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-[10px] font-bold text-slate-600">
                                                         {reply.author.name.charAt(0).toUpperCase()}
                                                     </div>
-                                                    <div className="border-slate-150 flex-1 rounded-2xl border bg-slate-50/20 p-3.5">
+                                                    <div className="border-slate-150 min-w-0 flex-1 rounded-2xl border bg-slate-50/20 p-3.5">
                                                         <div className="mb-2 flex items-center justify-between">
                                                             <span className="text-xs font-bold text-slate-800">{reply.author.name}</span>
                                                             <div className="flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function Show({ incident, comments, canClose }: Props) {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <p className="text-xs leading-relaxed text-slate-600">{reply.body}</p>
+                                                        <p className="text-xs leading-relaxed text-slate-600 break-words [overflow-wrap:anywhere]">{reply.body}</p>
                                                         <div className="mt-2 flex justify-end">
                                                             <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                                 {formatDistanceToNow(new Date(reply.created_at), {
