@@ -70,10 +70,13 @@ class CollectionPaymentSuccessfulNotification extends Notification implements Sh
             $transaction = EstateTransaction::where('idempotency_key', $idempotencyKey)->first();
 
             if ($transaction) {
-                $mappedTransaction = app(TransactionOverviewService::class)->mapTransaction($transaction);
+                $mappedTransaction = app(TransactionOverviewService::class)->formatDetail($transaction);
 
                 $pdfResult = Pdf::view('pdf.receipt')
-                    ->data(['transaction' => $mappedTransaction])
+                    ->data([
+                        'transaction' => $mappedTransaction,
+                        'estate' => $this->payment->estate,
+                    ])
                     ->render();
 
                 $mailMessage->attachData(
