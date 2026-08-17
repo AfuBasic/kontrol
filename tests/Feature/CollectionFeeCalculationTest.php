@@ -77,7 +77,7 @@ it('calculates fees exactly and charges 0.5% processing fee when resident has no
         'transaction_charge' => 2031,
     ]);
 
-    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(1000);
+    expect(Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)->where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(1000);
 });
 
 it('waives the 0.5% processing fee when resident has an active subscription', function () {
@@ -225,7 +225,7 @@ it('accepts partial payment amounts when remaining balance is at least 20% of th
         ->assertJsonPath('already_paid', false);
 
     expect($response->json('amount_kobo'))->toBeInt()->toBeGreaterThanOrEqual(100);
-    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(25000);
+    expect(Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)->where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(25000);
 });
 
 it('rejects partial payments when remaining balance is below 20% of the bill', function () {
@@ -306,7 +306,7 @@ it('still allows full payment when remaining balance is below 20% of the bill', 
     $response->assertSuccessful()
         ->assertJsonPath('base_amount', 15000);
 
-    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(15000);
+    expect(Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)->where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(15000);
 });
 
 it('normalizes legacy kobo amounts from the client into NGN when partial is allowed', function () {
@@ -347,6 +347,6 @@ it('normalizes legacy kobo amounts from the client into NGN when partial is allo
     $response->assertSuccessful()
         ->assertJsonPath('base_amount', 15000);
 
-    expect(Payment::where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(15000);
+    expect(Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)->where('collection_assignment_id', $assignment->id)->value('amount'))->toBe(15000);
     expect($response->json('amount_kobo'))->toBeInt()->toBeGreaterThanOrEqual(100);
 });

@@ -329,8 +329,8 @@ class CollectionPaymentController extends Controller
                             'raw_payload' => ['bulk_parent_reference' => $reference],
                         ]);
 
-                        $assignment->increment('amount_paid', $due); // due is already in kobo
-                        $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : ($due / 100) * 0.005;
+                        $assignment->increment('amount_paid', $due);
+                        $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $due * 0.005;
                         $assignment->increment('kontrol_fee_paid', $feeToRecord);
                         $assignment->update([
                             'status' => 'paid',
