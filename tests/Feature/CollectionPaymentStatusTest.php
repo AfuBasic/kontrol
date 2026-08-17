@@ -141,7 +141,7 @@ it('finalizes a successful paystack payment when status page is opened', functio
 
     expect($payment->fresh()->status)->toBe('success')
         ->and($assignment->fresh()->status)->toBe('paid')
-        ->and($assignment->fresh()->amount_paid)->toBe(1000000); // 10000 naira * 100 = 1000000 kobo
+        ->and($assignment->fresh()->amount_paid)->toBe(10000);
 });
 
 it('shows pending when paystack has not confirmed the transfer yet', function () {

@@ -149,7 +149,7 @@ class CollectionPaymentController extends Controller
                                 'paid_at' => now(),
                             ]);
 
-                            $lockedAssignment->increment('amount_paid', $lockedPayment->amount * 100);
+                            $lockedAssignment->increment('amount_paid', $lockedPayment->amount);
                             $feeToRecord = $this->hasActiveSubscription($lockedPayment->user_id) ? 0 : $lockedPayment->amount * 0.005;
                             $lockedAssignment->increment('kontrol_fee_paid', $feeToRecord);
                             if ($lockedAssignment->amount_paid >= $lockedAssignment->amount_due) {
@@ -277,7 +277,7 @@ class CollectionPaymentController extends Controller
                 $assignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
                     ->where('id', $payment->collection_assignment_id)->lockForUpdate()->first();
                 if ($assignment) {
-                    $assignment->increment('amount_paid', $payment->amount * 100);
+                    $assignment->increment('amount_paid', $payment->amount);
                     $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $payment->amount * 0.005;
                     $assignment->increment('kontrol_fee_paid', $feeToRecord);
                     if ($assignment->amount_paid >= $assignment->amount_due) {
