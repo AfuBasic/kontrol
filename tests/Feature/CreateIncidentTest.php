@@ -93,6 +93,7 @@ test('property owner can report an incident', function () {
 
 test('household member cannot report an incident', function () {
     $estate = Estate::factory()->create();
+    $estate->settings->update(['charge_type' => 'estate']);
     $user = User::factory()->create();
 
     setPermissionsTeamId($estate->id);
@@ -112,6 +113,7 @@ test('household member cannot report an incident', function () {
 
 test('admin cannot report an incident via resident route', function () {
     $estate = Estate::factory()->create();
+    $estate->settings->update(['charge_type' => 'estate']);
     $user = User::factory()->create();
 
     setPermissionsTeamId($estate->id);
@@ -126,5 +128,5 @@ test('admin cannot report an incident via resident route', function () {
             'category' => 'road_infrastructure',
         ]);
 
-    $response->assertRedirect();
+    $response->assertStatus(403);
 });
