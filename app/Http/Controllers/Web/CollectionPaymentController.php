@@ -244,7 +244,10 @@ class CollectionPaymentController extends Controller
         Log::info("Paystack Verification Endpoint Hit: Ref={$reference}");
         $result = DB::transaction(function () use ($reference) {
             // 1. Find the payment and lock it
-            $payment = Payment::where('reference', $reference)->lockForUpdate()->first();
+            $payment = Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)
+                ->where('reference', $reference)
+                ->lockForUpdate()
+                ->first();
 
             if (! $payment) {
                 Log::warning("Paystack Verification failed: Payment not found for Ref={$reference}");
@@ -369,7 +372,9 @@ class CollectionPaymentController extends Controller
      */
     public function status(string $reference, PaystackService $paystackService): Response
     {
-        $payment = Payment::where('reference', $reference)->firstOrFail();
+        $payment = Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)
+            ->where('reference', $reference)
+            ->firstOrFail();
         app(ContextManager::class)->setSystemContext($payment->estate_id);
 
         if ($payment->status !== 'success') {
