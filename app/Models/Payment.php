@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\CollectionAssignmentScope;
 use App\Models\Scopes\PaymentScope;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -86,6 +87,7 @@ class Payment extends Model
 
     public function assignment(): BelongsTo
     {
-        return $this->belongsTo(CollectionAssignment::class, 'collection_assignment_id');
+        return $this->belongsTo(CollectionAssignment::class, 'collection_assignment_id')
+            ->withoutGlobalScope(CollectionAssignmentScope::class);
     }
 }

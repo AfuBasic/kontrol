@@ -9,6 +9,7 @@ use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
 use App\Models\Payment;
 use App\Models\ResidentSubscription;
+use App\Models\Scopes\CollectionAssignmentScope;
 use App\Models\Scopes\PaymentScope;
 use App\Models\User;
 use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
@@ -139,7 +140,8 @@ class CollectionPaymentController extends Controller
                 if ($status === 'success') {
                     DB::transaction(function () use ($p, $assignment) {
                         $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
-                        $lockedAssignment = CollectionAssignment::where('id', $assignment->id)->lockForUpdate()->first();
+                        $lockedAssignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
+                            ->where('id', $assignment->id)->lockForUpdate()->first();
 
                         if ($lockedPayment && $lockedPayment->status !== 'success') {
                             $lockedPayment->update([
@@ -147,7 +149,7 @@ class CollectionPaymentController extends Controller
                                 'paid_at' => now(),
                             ]);
 
-                            $lockedAssignment->increment('amount_paid', $lockedPayment->amount);
+                            $lockedAssignment->increment('amount_paid', $lockedPayment->amount * 100);
                             $feeToRecord = $this->hasActiveSubscription($lockedPayment->user_id) ? 0 : $lockedPayment->amount * 0.005;
                             $lockedAssignment->increment('kontrol_fee_paid', $feeToRecord);
                             if ($lockedAssignment->amount_paid >= $lockedAssignment->amount_due) {
@@ -272,9 +274,10 @@ class CollectionPaymentController extends Controller
             ]);
 
             if ($payment->collection_assignment_id) {
-                $assignment = CollectionAssignment::where('id', $payment->collection_assignment_id)->lockForUpdate()->first();
+                $assignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
+                    ->where('id', $payment->collection_assignment_id)->lockForUpdate()->first();
                 if ($assignment) {
-                    $assignment->increment('amount_paid', $payment->amount);
+                    $assignment->increment('amount_paid', $payment->amount * 100);
                     $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $payment->amount * 0.005;
                     $assignment->increment('kontrol_fee_paid', $feeToRecord);
                     if ($assignment->amount_paid >= $assignment->amount_due) {
@@ -310,7 +313,8 @@ class CollectionPaymentController extends Controller
                 }
             } elseif ($payment->raw_payload && isset($payment->raw_payload['assignment_ids'])) {
                 $assignmentIds = $payment->raw_payload['assignment_ids'];
-                $assignments = CollectionAssignment::whereIn('id', $assignmentIds)->lockForUpdate()->get();
+                $assignments = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
+                    ->whereIn('id', $assignmentIds)->lockForUpdate()->get();
                 foreach ($assignments as $assignment) {
                     $due = $assignment->amount_due - $assignment->amount_paid;
                     if ($due > 0) {
@@ -325,8 +329,8 @@ class CollectionPaymentController extends Controller
                             'raw_payload' => ['bulk_parent_reference' => $reference],
                         ]);
 
-                        $assignment->increment('amount_paid', $due);
-                        $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : $due * 0.005;
+                        $assignment->increment('amount_paid', $due); // due is already in kobo
+                        $feeToRecord = $this->hasActiveSubscription($payment->user_id) ? 0 : ($due / 100) * 0.005;
                         $assignment->increment('kontrol_fee_paid', $feeToRecord);
                         $assignment->update([
                             'status' => 'paid',
@@ -631,7 +635,8 @@ class CollectionPaymentController extends Controller
                             ]);
 
                             foreach ($unpaidAssignments as $assignment) {
-                                $lockedAssignment = CollectionAssignment::where('id', $assignment->id)->lockForUpdate()->first();
+                                $lockedAssignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
+                                    ->where('id', $assignment->id)->lockForUpdate()->first();
                                 if ($lockedAssignment) {
                                     $due = $lockedAssignment->amount_due - $lockedAssignment->amount_paid;
                                     if ($due > 0) {
