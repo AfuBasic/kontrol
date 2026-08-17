@@ -9,6 +9,7 @@ use App\Models\CollectionAssignment;
 use App\Models\EstateSettings;
 use App\Models\Payment;
 use App\Models\ResidentSubscription;
+use App\Models\Scopes\PaymentScope;
 use App\Models\User;
 use App\Notifications\PropertyOwner\CollectionPaymentReceivedNotification;
 use App\Services\Compliance\ComplianceEngine;
@@ -244,7 +245,7 @@ class CollectionPaymentController extends Controller
         Log::info("Paystack Verification Endpoint Hit: Ref={$reference}");
         $result = DB::transaction(function () use ($reference) {
             // 1. Find the payment and lock it
-            $payment = Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)
+            $payment = Payment::withoutGlobalScope(PaymentScope::class)
                 ->where('reference', $reference)
                 ->lockForUpdate()
                 ->first();
@@ -372,7 +373,7 @@ class CollectionPaymentController extends Controller
      */
     public function status(string $reference, PaystackService $paystackService): Response
     {
-        $payment = Payment::withoutGlobalScope(\App\Models\Scopes\PaymentScope::class)
+        $payment = Payment::withoutGlobalScope(PaymentScope::class)
             ->where('reference', $reference)
             ->firstOrFail();
         app(ContextManager::class)->setSystemContext($payment->estate_id);
