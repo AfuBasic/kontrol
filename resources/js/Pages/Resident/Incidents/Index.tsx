@@ -510,12 +510,12 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                                         </div>
 
                                         {/* Post Content */}
-                                        <div className="space-y-1.5">
-                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black text-slate-900 transition-colors">
-                                                {incident.title}
-                                                <ArrowRight className="text-indigo-650 h-4 w-4 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
+                                        <div className="min-w-0 space-y-1.5 overflow-hidden">
+                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black text-slate-900 transition-colors break-words [overflow-wrap:anywhere]">
+                                                <span className="min-w-0 flex-1">{incident.title}</span>
+                                                <ArrowRight className="text-indigo-650 h-4 w-4 shrink-0 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                                             </h2>
-                                            <p className="line-clamp-3 text-xs leading-relaxed text-slate-500">{incident.body}</p>
+                                            <p className="line-clamp-3 text-xs leading-relaxed text-slate-500 break-words [overflow-wrap:anywhere]">{incident.body}</p>
                                         </div>
 
                                         {/* Large Full-Width Media Preview */}
