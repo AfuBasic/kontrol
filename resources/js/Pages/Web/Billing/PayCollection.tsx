@@ -163,7 +163,7 @@ export default function PayCollection({
                 key: paystackKey,
                 email: validEmail,
                 amount: amountKobo,
-                reference: data.reference,
+                ref: data.reference,
                 channels: ['bank_transfer'],
                 callback_url: statusUrlFor(data.reference),
                 onClose: () => {
