@@ -3,7 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, Activity, SlidersHorizontal } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 type AdminUser = {
     id: number;
     name: string;
@@ -139,12 +139,11 @@ export default function IncidentsIndex({
 
     // Bulk selection state
     const [selectedIncidents, setSelectedIncidents] = useState<string[]>([]);
+    const { confirm: confirmAction } = useAdminConfirmation();
     const [isDeleting, setIsDeleting] = useState(false);
 
     const toggleIncidentSelection = (hashid: string) => {
-        setSelectedIncidents((prev) =>
-            prev.includes(hashid) ? prev.filter((id) => id !== hashid) : [...prev, hashid]
-        );
+        setSelectedIncidents((prev) => (prev.includes(hashid) ? prev.filter((id) => id !== hashid) : [...prev, hashid]));
     };
 
     const toggleAllIncidents = () => {
@@ -156,18 +155,24 @@ export default function IncidentsIndex({
     };
 
     const handleBulkDelete = () => {
-        if (confirm(`Are you sure you want to delete ${selectedIncidents.length} selected incident(s)?`)) {
-            setIsDeleting(true);
-            router.delete(route('admin.incidents.bulk_destroy'), {
-                data: { ids: selectedIncidents },
-                onSuccess: () => {
-                    setSelectedIncidents([]);
-                    setIsDeleting(false);
-                },
-                onError: () => setIsDeleting(false),
-                preserveScroll: true
-            });
-        }
+        confirmAction({
+            title: 'Delete Incidents',
+            message: `Are you sure you want to delete ${selectedIncidents.length} selected incident(s)?`,
+            type: 'danger',
+            confirmLabel: 'Delete',
+            onConfirm: () => {
+                setIsDeleting(true);
+                router.delete(route('admin.incidents.bulk_destroy'), {
+                    data: { ids: selectedIncidents },
+                    onSuccess: () => {
+                        setSelectedIncidents([]);
+                        setIsDeleting(false);
+                    },
+                    onError: () => setIsDeleting(false),
+                    preserveScroll: true,
+                });
+            },
+        });
     };
 
     // Filter logic update
@@ -761,11 +766,11 @@ export default function IncidentsIndex({
                                                                 {slaInfo.label}
                                                             </span>
                                                             {incident.zone ? (
-                                                                <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase border border-indigo-100">
+                                                                <span className="rounded border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase">
                                                                     {incident.zone.name}
                                                                 </span>
                                                             ) : (
-                                                                <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase border border-slate-200/50">
+                                                                <span className="rounded border border-slate-200/50 bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase">
                                                                     Entire Estate
                                                                 </span>
                                                             )}
@@ -878,10 +883,10 @@ export default function IncidentsIndex({
                                 <table className="w-full table-auto border-collapse">
                                     <thead className="border-b border-slate-100 bg-slate-50/70">
                                         <tr>
-                                            <th className="px-6 py-3.5 w-10 text-left">
-                                                <input 
-                                                    type="checkbox" 
-                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                            <th className="w-10 px-6 py-3.5 text-left">
+                                                <input
+                                                    type="checkbox"
+                                                    className="cursor-pointer rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
                                                     checked={selectedIncidents.length > 0 && selectedIncidents.length === incidentsList.length}
                                                     onChange={toggleAllIncidents}
                                                 />
@@ -926,11 +931,14 @@ export default function IncidentsIndex({
                                             const categoryLabel = typeof incident.category === 'object' ? incident.category.label : incident.category;
 
                                             return (
-                                                <tr key={incident.id} className={`transition hover:bg-slate-50/40 ${selectedIncidents.includes(incident.hashid) ? 'bg-indigo-50/40' : ''}`}>
-                                                    <td className="px-6 py-3.5 w-10">
-                                                        <input 
-                                                            type="checkbox" 
-                                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                                <tr
+                                                    key={incident.id}
+                                                    className={`transition hover:bg-slate-50/40 ${selectedIncidents.includes(incident.hashid) ? 'bg-indigo-50/40' : ''}`}
+                                                >
+                                                    <td className="w-10 px-6 py-3.5">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="cursor-pointer rounded border-slate-300 text-indigo-600 focus:ring-indigo-600"
                                                             checked={selectedIncidents.includes(incident.hashid)}
                                                             onChange={() => toggleIncidentSelection(incident.hashid)}
                                                         />
@@ -1004,11 +1012,11 @@ export default function IncidentsIndex({
                                                     {/* Scope/Zone */}
                                                     <td className="px-6 py-3.5 whitespace-nowrap">
                                                         {incident.zone ? (
-                                                            <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700 uppercase border border-indigo-100">
+                                                            <span className="rounded border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black text-indigo-700 uppercase">
                                                                 {incident.zone.name}
                                                             </span>
                                                         ) : (
-                                                            <span className="rounded bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase border border-slate-200/50">
+                                                            <span className="rounded border border-slate-200/50 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
                                                                 Entire Estate
                                                             </span>
                                                         )}
@@ -1091,7 +1099,7 @@ export default function IncidentsIndex({
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 rounded-full bg-slate-900 px-6 py-3 shadow-2xl ring-1 ring-white/10"
+                        className="fixed bottom-8 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-full bg-slate-900 px-6 py-3 shadow-2xl ring-1 ring-white/10"
                     >
                         <div className="flex items-center gap-2 border-r border-slate-700 pr-4">
                             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">
@@ -1099,7 +1107,7 @@ export default function IncidentsIndex({
                             </span>
                             <span className="text-sm font-semibold text-white">selected</span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={handleBulkDelete}
