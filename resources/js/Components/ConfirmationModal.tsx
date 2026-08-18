@@ -97,7 +97,7 @@ export default function ConfirmationModal({
                                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                             >
-                                <Dialog.Panel className="relative transform overflow-hidden rounded-[2.5rem] bg-white p-8 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-10 border border-slate-100">
+                                <Dialog.Panel className="relative transform overflow-hidden rounded-[2.5rem] border border-slate-100 bg-white p-8 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-10">
                                     <div className="absolute top-6 right-6">
                                         <button
                                             type="button"
@@ -124,7 +124,7 @@ export default function ConfirmationModal({
                                                 {title}
                                             </Dialog.Title>
                                             <div className="mt-3">
-                                                <p className="text-sm font-semibold leading-relaxed text-slate-400">{message}</p>
+                                                <p className="text-sm leading-relaxed font-semibold text-slate-400">{message}</p>
                                                 {children && <div className="mt-4">{children}</div>}
                                             </div>
                                         </div>
@@ -133,7 +133,7 @@ export default function ConfirmationModal({
                                         <button
                                             type="button"
                                             disabled={isLoading}
-                                            className={`inline-flex w-full justify-center items-center gap-2 rounded-[1.5rem] px-8 py-4.5 text-xs font-black tracking-wider uppercase shadow-xl transition-all active:scale-95 disabled:opacity-50 sm:w-auto ${colors.confirmBtn}`}
+                                            className={`inline-flex w-full items-center justify-center gap-2 rounded-[1.5rem] px-8 py-4.5 text-xs font-black tracking-wider uppercase shadow-xl transition-all active:scale-95 disabled:opacity-50 sm:w-auto ${colors.confirmBtn}`}
                                             onClick={onConfirm}
                                         >
                                             {isLoading && <Loader2 className="h-4.5 w-4.5 animate-spin" />}
