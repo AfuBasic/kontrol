@@ -384,7 +384,9 @@ export default function EditPost({ post, zones = [] }: Props) {
 
                                     {zones.length > 0 && (
                                         <div>
-                                            <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Zone targeting</label>
+                                            <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
+                                                Zone targeting
+                                            </label>
                                             <p className="mb-3 text-[11px] text-gray-500">
                                                 Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
                                             </p>
