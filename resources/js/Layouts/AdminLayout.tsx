@@ -87,11 +87,9 @@ const primaryNav: NavItem[] = baseNav;
 
 const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
     return (
-        <div className="space-y-1 mb-6">
+        <div className="mb-6 space-y-1">
             {!isCollapsed && group !== 'Main' && (
-                <div className="mt-4 mb-2 px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase">
-                    {group}
-                </div>
+                <div className="mt-4 mb-2 px-3 text-[10px] font-bold tracking-wider text-white/40 uppercase">{group}</div>
             )}
 
             <div className="space-y-1">
@@ -117,9 +115,7 @@ const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
                             prefetch="click"
                             title={isCollapsed ? item.name : undefined}
                             className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium transition-all ${
-                                isCurrentPath(item.href)
-                                    ? 'bg-white/20 text-white shadow-sm'
-                                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                                isCurrentPath(item.href) ? 'bg-white/20 text-white shadow-sm' : 'text-white/70 hover:bg-white/10 hover:text-white'
                             }`}
                         >
                             {isCurrentPath(item.href) && (
@@ -201,8 +197,12 @@ export default function AdminLayout({ children, title }: Props) {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 // Don't trigger if user is actively typing in an input, textarea, or select
                 const activeElement = document.activeElement as HTMLElement;
-                const isInputFocused = activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA' || activeElement?.tagName === 'SELECT' || activeElement?.isContentEditable;
-                
+                const isInputFocused =
+                    activeElement?.tagName === 'INPUT' ||
+                    activeElement?.tagName === 'TEXTAREA' ||
+                    activeElement?.tagName === 'SELECT' ||
+                    activeElement?.isContentEditable;
+
                 if (!isInputFocused) {
                     e.preventDefault();
                     setCommandPaletteOpen(true);
@@ -574,11 +574,11 @@ export default function AdminLayout({ children, title }: Props) {
                         </div>
                     </main>
 
-                    <CommandPalette 
-                        isOpen={commandPaletteOpen} 
-                        setIsOpen={setCommandPaletteOpen} 
-                        canAccess={canAccess} 
-                        billingEnabled={billing_enabled || false} 
+                    <CommandPalette
+                        isOpen={commandPaletteOpen}
+                        setIsOpen={setCommandPaletteOpen}
+                        canAccess={canAccess}
+                        billingEnabled={billing_enabled || false}
                     />
 
                     <MobileBottomNav url={url} unreadNotifications={unreadCount} />
@@ -688,7 +688,7 @@ export default function AdminLayout({ children, title }: Props) {
                     initial={false}
                     animate={{ marginLeft: sidebarWidth }}
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="min-h-screen flex-1 flex flex-col"
+                    className="flex min-h-screen flex-1 flex-col"
                 >
                     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-xl lg:px-8">
                         <div className="flex items-center gap-4">
@@ -714,7 +714,7 @@ export default function AdminLayout({ children, title }: Props) {
                             {/* Mobile Search Trigger */}
                             <button
                                 onClick={() => setCommandPaletteOpen(true)}
-                                className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 md:hidden"
+                                className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 focus:outline-none md:hidden"
                             >
                                 <span className="sr-only">Search Kontrol</span>
                                 <Search className="h-5 w-5" />
@@ -724,7 +724,7 @@ export default function AdminLayout({ children, title }: Props) {
                             <div className="relative">
                                 <button
                                     onClick={() => setNotificationOpen(!notificationOpen)}
-                                    className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2"
+                                    className="relative flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 focus:outline-none"
                                 >
                                     <span className="sr-only">View notifications</span>
                                     <BellIcon className="h-5 w-5" />
@@ -813,15 +813,15 @@ export default function AdminLayout({ children, title }: Props) {
                             <div className="relative">
                                 <button
                                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="flex items-center gap-2 rounded-full p-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2"
+                                    className="flex items-center gap-2 rounded-full p-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 focus:outline-none"
                                 >
                                     <span className="sr-only">Open user menu</span>
                                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A3D91] text-xs font-semibold text-white ring-2 ring-white">
                                         {auth.user?.name?.charAt(0).toUpperCase()}
                                     </div>
-                                    <span className="hidden lg:block max-w-[120px] truncate">{auth.user?.name}</span>
+                                    <span className="hidden max-w-[120px] truncate lg:block">{auth.user?.name}</span>
                                     <ChevronDownIcon
-                                        className={`hidden lg:block h-4 w-4 shrink-0 text-slate-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                                        className={`hidden h-4 w-4 shrink-0 text-slate-400 transition-transform lg:block ${userMenuOpen ? 'rotate-180' : ''}`}
                                     />
                                 </button>
                                 <AnimatePresence>
