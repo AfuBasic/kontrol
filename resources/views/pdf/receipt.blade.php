@@ -30,6 +30,24 @@
             border-radius: 12px;
             padding: 30px;
             background: #ffffff;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-35deg);
+            font-size: 48px;
+            font-weight: 900;
+            color: rgba(226, 232, 240, 0.3);
+            text-transform: uppercase;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: -1;
+            user-select: none;
         }
 
         .header {
@@ -156,6 +174,8 @@
         $pb = $transaction['payment_breakdown'] ?? null;
     @endphp
     <div class="receipt-container">
+        <div class="watermark">{{ $estate->name }}</div>
+        
         <div class="header">
             <div class="estate-name">{{ $estate->name }}</div>
             <div class="title">Transaction Receipt</div>
