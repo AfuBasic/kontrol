@@ -84,12 +84,12 @@ function PostCard({ post, index: idx }: { post: EstateBoardPost; index: number }
 
                     {/* Post Content */}
                     {post.title && (
-                        <h2 className="mb-2 text-xl leading-tight font-black tracking-tight text-slate-900 transition-colors group-hover:text-indigo-600 break-words [overflow-wrap:anywhere]">
+                        <h2 className="mb-2 text-xl leading-tight font-black tracking-tight [overflow-wrap:anywhere] break-words text-slate-900 transition-colors group-hover:text-indigo-600">
                             {post.title}
                         </h2>
                     )}
 
-                    <p className="line-clamp-3 text-[15px] leading-relaxed text-slate-600 break-words [overflow-wrap:anywhere]">{bodyPreview}</p>
+                    <p className="line-clamp-3 text-[15px] leading-relaxed [overflow-wrap:anywhere] break-words text-slate-600">{bodyPreview}</p>
 
                     {/* Media Preview */}
                     {hasMedia && (
