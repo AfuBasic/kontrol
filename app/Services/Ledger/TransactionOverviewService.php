@@ -364,7 +364,9 @@ class TransactionOverviewService
 
     private function baseQuery(Estate $estate): Builder
     {
-        return EstateTransaction::query()->where('estate_id', $estate->id);
+        return EstateTransaction::query()
+            ->where('estate_id', $estate->id)
+            ->whereNot('type', TransactionType::SubscriptionPayment);
     }
 
     /**
