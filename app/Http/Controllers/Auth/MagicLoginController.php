@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Actions\Auth\ActivateContext;
 use App\Events\ForceLogout;
 use App\Http\Controllers\Controller;
 use App\Models\MagicLoginToken;
 use Illuminate\Http\RedirectResponse;
-use App\Actions\Auth\ActivateContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -52,11 +52,11 @@ class MagicLoginController extends Controller
 
         // 5. Activate context and determine destination
         $defaultDestination = app(ActivateContext::class)->execute($magicToken->user);
-        
+
         // If a specific destination was requested in the token, we use it only if the context was activated.
         // However, if they need to select a context, we MUST send them to context.select
         $destination = $magicToken->destination_url ?: $defaultDestination;
-        
+
         if ($defaultDestination === route('context.select')) {
             $destination = $defaultDestination;
         }
