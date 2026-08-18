@@ -6,6 +6,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Models\Scopes\CollectionAssignmentScope;
 use App\Traits\GeneratesUlid;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -119,7 +120,8 @@ class EstateTransaction extends Model
 
     public function assignment(): BelongsTo
     {
-        return $this->belongsTo(CollectionAssignment::class, 'collection_assignment_id');
+        return $this->belongsTo(CollectionAssignment::class, 'collection_assignment_id')
+            ->withoutGlobalScope(CollectionAssignmentScope::class);
     }
 
     public function invoice(): BelongsTo
