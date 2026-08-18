@@ -371,4 +371,27 @@ class IncidentController extends Controller
         return redirect()->route('admin.incidents.index')
             ->with('success', 'Incident deleted successfully.');
     }
+
+    /**
+     * Remove multiple incidents from storage.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['required', 'string'],
+        ]);
+
+        $incidents = Incident::whereIn('hashid', $validated['ids'])->get();
+        $deletedCount = 0;
+
+        foreach ($incidents as $incident) {
+            $this->authorize('delete', $incident);
+            $incident->delete();
+            $deletedCount++;
+        }
+
+        return redirect()->back()
+            ->with('success', "{$deletedCount} incident(s) deleted successfully.");
+    }
 }

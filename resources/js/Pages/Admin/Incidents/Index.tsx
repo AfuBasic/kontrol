@@ -137,6 +137,39 @@ export default function IncidentsIndex({
     // Get flat incidents list
     const incidentsList = Array.isArray(rawIncidents) ? rawIncidents : rawIncidents.data || [];
 
+    // Bulk selection state
+    const [selectedIncidents, setSelectedIncidents] = useState<string[]>([]);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const toggleIncidentSelection = (hashid: string) => {
+        setSelectedIncidents((prev) =>
+            prev.includes(hashid) ? prev.filter((id) => id !== hashid) : [...prev, hashid]
+        );
+    };
+
+    const toggleAllIncidents = () => {
+        if (selectedIncidents.length === incidentsList.length) {
+            setSelectedIncidents([]);
+        } else {
+            setSelectedIncidents(incidentsList.map((i) => i.hashid));
+        }
+    };
+
+    const handleBulkDelete = () => {
+        if (confirm(`Are you sure you want to delete ${selectedIncidents.length} selected incident(s)?`)) {
+            setIsDeleting(true);
+            router.delete(route('admin.incidents.bulk_destroy'), {
+                data: { ids: selectedIncidents },
+                onSuccess: () => {
+                    setSelectedIncidents([]);
+                    setIsDeleting(false);
+                },
+                onError: () => setIsDeleting(false),
+                preserveScroll: true
+            });
+        }
+    };
+
     // Filter logic update
     const applyFilters = (newParams: Record<string, string | undefined>) => {
         const params: Record<string, string | undefined> = {
@@ -845,6 +878,14 @@ export default function IncidentsIndex({
                                 <table className="w-full table-auto border-collapse">
                                     <thead className="border-b border-slate-100 bg-slate-50/70">
                                         <tr>
+                                            <th className="px-6 py-3.5 w-10 text-left">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                                    checked={selectedIncidents.length > 0 && selectedIncidents.length === incidentsList.length}
+                                                    onChange={toggleAllIncidents}
+                                                />
+                                            </th>
                                             <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                                 Incident
                                             </th>
@@ -885,7 +926,15 @@ export default function IncidentsIndex({
                                             const categoryLabel = typeof incident.category === 'object' ? incident.category.label : incident.category;
 
                                             return (
-                                                <tr key={incident.id} className="transition hover:bg-slate-50/40">
+                                                <tr key={incident.id} className={`transition hover:bg-slate-50/40 ${selectedIncidents.includes(incident.hashid) ? 'bg-indigo-50/40' : ''}`}>
+                                                    <td className="px-6 py-3.5 w-10">
+                                                        <input 
+                                                            type="checkbox" 
+                                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-600 cursor-pointer"
+                                                            checked={selectedIncidents.includes(incident.hashid)}
+                                                            onChange={() => toggleIncidentSelection(incident.hashid)}
+                                                        />
+                                                    </td>
                                                     {/* Incident title */}
                                                     <td className="px-6 py-3.5">
                                                         <Link
@@ -1034,6 +1083,42 @@ export default function IncidentsIndex({
                     </div>
                 )}
             </div>
-        </>
+
+            {/* Floating Bulk Actions Bar */}
+            <AnimatePresence>
+                {selectedIncidents.length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 rounded-full bg-slate-900 px-6 py-3 shadow-2xl ring-1 ring-white/10"
+                    >
+                        <div className="flex items-center gap-2 border-r border-slate-700 pr-4">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-bold text-indigo-300">
+                                {selectedIncidents.length}
+                            </span>
+                            <span className="text-sm font-semibold text-white">selected</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isDeleting}
+                                className="flex items-center gap-1.5 rounded-full bg-rose-500/10 px-4 py-1.5 text-sm font-bold text-rose-400 transition hover:bg-rose-500/20 disabled:opacity-50"
+                            >
+                                <X className="h-4 w-4" />
+                                {isDeleting ? 'Deleting...' : 'Delete Selected'}
+                            </button>
+                            <button
+                                onClick={() => setSelectedIncidents([])}
+                                className="rounded-full px-3 py-1.5 text-xs font-semibold text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </AdminLayout>
     );
 }

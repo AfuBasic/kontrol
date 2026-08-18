@@ -276,6 +276,7 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
         Route::post('/check-deduplication', [IncidentController::class, 'checkDeduplication'])->name('check-deduplication');
         Route::post('/signed-upload', [IncidentController::class, 'signedUploadParams'])->name('signed-upload');
         Route::post('/', [IncidentController::class, 'store'])->name('store');
+        Route::delete('/bulk', [IncidentController::class, 'bulkDestroy'])->name('bulk_destroy');
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
         Route::put('/{incident}/status', [IncidentStatusController::class, 'update'])->name('status.update');
