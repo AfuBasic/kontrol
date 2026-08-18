@@ -47,7 +47,10 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
     return (
         <div className="mx-auto max-w-2xl px-4 py-8 lg:px-8">
             <div className="mb-8">
-                <Link href={cancelUrl} className="mb-4 inline-flex items-center text-[11px] font-black tracking-wider text-slate-500 uppercase hover:text-slate-900 transition-colors">
+                <Link
+                    href={cancelUrl}
+                    className="mb-4 inline-flex items-center text-[11px] font-black tracking-wider text-slate-500 uppercase transition-colors hover:text-slate-900"
+                >
                     <ArrowLeftIcon className="mr-1 h-3.5 w-3.5" strokeWidth={2.5} />
                     Back to Estate Team
                 </Link>
@@ -64,7 +67,11 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                 <div className="flex items-start gap-3">
                                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100">
                                         <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                            />
                                         </svg>
                                     </div>
                                     <div>
@@ -83,7 +90,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                         <div className="mb-8">
                             <h2 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Person</h2>
                             <p className="mt-1 text-sm font-bold text-slate-900">Who are you inviting?</p>
-                            
+
                             <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
                                 <div>
                                     <label htmlFor="name" className="mb-1.5 block text-[11px] font-bold text-slate-700">
@@ -112,7 +119,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                         value={data.email}
                                         disabled={method === 'put'}
                                         onChange={(e) => setData('email', e.target.value)}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3.5 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 focus:outline-hidden disabled:opacity-60 disabled:cursor-not-allowed"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3.5 text-xs font-semibold text-slate-900 placeholder-slate-400 transition-all focus:border-slate-800 focus:bg-white focus:ring-1 focus:ring-slate-800 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-60"
                                         placeholder="e.g. jane@example.com"
                                         required
                                         autoComplete="email"
@@ -124,13 +131,13 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
 
                         {/* SECTION: RESPONSIBILITY */}
                         {roles && roles.length > 0 && (
-                            <div className="pt-6 border-t border-slate-100">
+                            <div className="border-t border-slate-100 pt-6">
                                 <h2 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Responsibility</h2>
                                 <p className="mt-1 text-sm font-bold text-slate-900">What will they be responsible for?</p>
                                 <p className="mt-1 text-xs font-semibold text-slate-500">
                                     They will be granted estate-wide access for this responsibility. You can adjust this later in Staff & Authority.
                                 </p>
-                                
+
                                 <div className="mt-5 w-full">
                                     <SearchableSelect
                                         options={roles.map((r) => ({
@@ -147,14 +154,17 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                         )}
                     </div>
 
-                    <div className="flex items-center justify-end gap-3 rounded-b-2xl bg-slate-50/50 px-8 py-5 border-t border-slate-100">
-                        <Link href={cancelUrl} className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900">
+                    <div className="flex items-center justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-slate-50/50 px-8 py-5">
+                        <Link
+                            href={cancelUrl}
+                            className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                        >
                             Cancel
                         </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-hidden active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-hidden active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {processing ? (
                                 <span className="flex items-center gap-2">
