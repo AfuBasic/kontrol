@@ -178,7 +178,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
             {
                 emails: extractedEmails,
                 zone_id: selectedZone || null,
-                source: activeTab === 'bulk' ? 'bulk_upload' : 'email_paste'
+                source: activeTab === 'bulk' ? 'bulk_upload' : 'email_paste',
             },
             {
                 onSuccess: () => {
