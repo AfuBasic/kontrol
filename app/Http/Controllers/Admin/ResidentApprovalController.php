@@ -85,7 +85,7 @@ class ResidentApprovalController extends Controller
         // Get all pending users for this estate
         $pendingUsers = User::whereHas('estates', function ($q) use ($estate) {
             $q->where('estates.id', $estate->id)
-              ->where('estate_users_membership.status', 'pending');
+                ->where('estate_users_membership.status', 'pending');
         })->get();
 
         if ($pendingUsers->isEmpty()) {
