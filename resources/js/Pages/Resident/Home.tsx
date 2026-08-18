@@ -185,9 +185,9 @@ export default function Home({
     if (auth?.user?.unread_notifications_count && auth.user.unread_notifications_count > 0) {
         attentionItems.push({
             type: 'notifications',
-            title: 'Unread Announcements',
-            desc: `There are ${auth.user.unread_notifications_count} unread notifications/announcements`,
-            href: '/resident/notifications',
+            title: 'Unread Notifications',
+            desc: `You have ${auth.user.unread_notifications_count} unread notification${auth.user.unread_notifications_count > 1 ? 's' : ''}`,
+            href: '/resident/activity?tab=notifications',
             color: 'border-blue-100 bg-blue-50/20 text-blue-700',
         });
     }
