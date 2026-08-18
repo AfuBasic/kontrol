@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $created_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
+ * @property CarbonImmutable|null $next_processing_date
  * @property-read \Illuminate\Database\Eloquent\Collection<int, CollectionAssignment> $assignments
  * @property-read int|null $assignments_count
  * @property-read User $creator
@@ -76,6 +77,7 @@ class Collection extends Model
         'status',
         'created_by',
         'include_creator',
+        'next_processing_date',
     ];
 
     protected function casts(): array
@@ -88,6 +90,7 @@ class Collection extends Model
             'due_day' => 'integer',
             'grace_days' => 'integer',
             'include_creator' => 'boolean',
+            'next_processing_date' => 'date',
         ];
     }
 
