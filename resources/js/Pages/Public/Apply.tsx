@@ -944,7 +944,8 @@ export default function Apply() {
                                 </div>
                                 <h2 className="mb-6 text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">Application Received!</h2>
                                 <p className="mb-10 text-xl leading-relaxed text-slate-600 dark:text-slate-400">
-                                    Your application to bring Kontrol to <strong className="text-slate-900 dark:text-white">{data.estateName}</strong> has been received. We'll review it and reach out to you at{' '}
+                                    Your application to bring Kontrol to <strong className="text-slate-900 dark:text-white">{data.estateName}</strong>{' '}
+                                    has been received. We'll review it and reach out to you at{' '}
                                     <strong className="text-slate-900 dark:text-white">{data.contactEmail}</strong>.
                                 </p>
                                 <Link
