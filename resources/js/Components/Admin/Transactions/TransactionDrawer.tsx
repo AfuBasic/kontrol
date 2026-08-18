@@ -200,7 +200,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                                             <span className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Linked Levy</span>
                                         </div>
                                         <p className="text-sm font-extrabold text-slate-800">
-                                            {transaction.collection?.name || 'Manual system ledger entry'}
+                                            {transaction.collection?.name || transaction.description || transaction.type_label || 'System ledger entry'}
                                         </p>
                                         {transaction.assignment && (
                                             <p className="mt-1.5 text-xs leading-relaxed font-medium text-slate-500">
