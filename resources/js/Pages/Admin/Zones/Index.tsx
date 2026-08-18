@@ -224,9 +224,7 @@ export default function ZonesIndex({ zones }: Props) {
                                                 >
                                                     <Users className="h-4 w-4 text-slate-400" />
                                                     <div className="min-w-0">
-                                                        <p className="text-xs leading-none font-black text-slate-900">
-                                                            {zone.residents_count ?? 0}
-                                                        </p>
+                                                        <p className="text-xs leading-none font-black text-slate-900">{zone.residents_count ?? 0}</p>
                                                         <p className="mt-0.5 truncate text-[10px] font-semibold tracking-wider text-slate-500 uppercase">
                                                             Residents
                                                         </p>
