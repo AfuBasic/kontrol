@@ -283,9 +283,8 @@
             </div>
         @endif
 
-        <div class="footer" style="margin-top: 30px; text-align: center; font-size: 10px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <span>Powered by</span>
-            <img src="{{ file_get_contents(public_path('assets/kontrol-base64.txt')) }}" alt="Kontrol" style="height: 12px; filter: grayscale(100%) opacity(50%); display: block; margin-top: -1px;">
+        <div class="footer" style="margin-top: 30px; text-align: center; font-size: 10px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px;">
+            Powered by Kontrol
         </div>
     </div>
 </body>
