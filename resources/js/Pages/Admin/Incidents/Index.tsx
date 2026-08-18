@@ -1119,6 +1119,6 @@ export default function IncidentsIndex({
                     </motion.div>
                 )}
             </AnimatePresence>
-        </AdminLayout>
+        </>
     );
 }
