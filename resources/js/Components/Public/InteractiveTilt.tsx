@@ -35,7 +35,7 @@ export default function InteractiveTilt({ children, className = '', maxRotation 
 
     const glareBackground = useTransform(
         [glareX, glareY],
-        ([gx, gy]) => `radial-gradient(circle 250px at ${gx} ${gy}, rgba(255,255,255,0.12), transparent 80%)`
+        ([gx, gy]) => `radial-gradient(circle 250px at ${gx} ${gy}, rgba(255,255,255,0.12), transparent 80%)`,
     );
 
     const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
