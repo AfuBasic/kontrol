@@ -2,6 +2,7 @@
 
 namespace App\Mail\Admin;
 
+use App\Actions\Auth\GenerateMagicLoginUrlAction;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
@@ -11,7 +12,6 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\URL;
-use App\Actions\Auth\GenerateMagicLoginUrlAction;
 
 class AdminInvitationMail extends Mailable implements ShouldQueue
 {
