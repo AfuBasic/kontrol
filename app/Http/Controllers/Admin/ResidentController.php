@@ -653,11 +653,11 @@ class ResidentController extends Controller
 
         // Load profile and related properties
         $resident->load([
-            'profile.property.zone', 
-            'profile.propertyOwner', 
+            'profile.property.zone',
+            'profile.propertyOwner',
             'roles',
-            'householdMembers' => fn($q) => $q->where('estate_id', $estate->id)->with('member.profile'),
-            'householdOf' => fn($q) => $q->where('estate_id', $estate->id)->with('primaryResident.profile'),
+            'householdMembers' => fn ($q) => $q->where('estate_id', $estate->id)->with('member.profile'),
+            'householdOf' => fn ($q) => $q->where('estate_id', $estate->id)->with('primaryResident.profile'),
         ]);
 
         // Count other residents at the same property
