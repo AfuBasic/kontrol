@@ -58,9 +58,7 @@ export default function UsersIndex({ users, filters }: Props) {
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-slate-900">Estate Team</h1>
-                    <p className="text-xs font-semibold text-slate-500">
-                        Manage the people who belong to your estate team.
-                    </p>
+                    <p className="text-xs font-semibold text-slate-500">Manage the people who belong to your estate team.</p>
                 </div>
                 {can('users.create') && (
                     <div className="flex items-center gap-2">
@@ -82,8 +80,9 @@ export default function UsersIndex({ users, filters }: Props) {
                         <Users className="h-8 w-8" strokeWidth={1.5} />
                     </div>
                     <h3 className="text-base font-black text-slate-900">Build your estate team</h3>
-                    <p className="mt-2 max-w-sm text-xs font-semibold text-slate-500 leading-relaxed">
-                        Add the people who help run your estate. Once they're added, you can give them specific responsibilities and define where those responsibilities apply.
+                    <p className="mt-2 max-w-sm text-xs leading-relaxed font-semibold text-slate-500">
+                        Add the people who help run your estate. Once they're added, you can give them specific responsibilities and define where
+                        those responsibilities apply.
                     </p>
                     {can('users.create') && (
                         <Link
