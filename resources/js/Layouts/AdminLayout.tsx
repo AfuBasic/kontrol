@@ -284,6 +284,15 @@ export default function AdminLayout({ children, title }: Props) {
                 setShowToast(true);
                 router.reload({ only: ['auth'] });
             });
+
+            channel.listen('.collection.published', (e: any) => {
+                const message = e.message || `Collection '${e.title}' published successfully.`;
+                setToastMessage(message);
+                setToastType('success');
+                setToastUrl(e.collection_ulid ? `/admin/collections/${e.collection_ulid}` : null);
+                setShowToast(true);
+                router.reload();
+            });
         }
 
         return () => {
