@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -16,10 +17,10 @@ return new class extends Migration
         });
 
         // Initialize next_processing_date for existing recurring collections
-        \Illuminate\Support\Facades\DB::table('collections')
+        DB::table('collections')
             ->where('billing_type', 'recurring')
             ->where('status', 'active')
-            ->update(['next_processing_date' => \Illuminate\Support\Facades\DB::raw('start_date')]);
+            ->update(['next_processing_date' => DB::raw('start_date')]);
     }
 
     /**
