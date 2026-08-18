@@ -454,10 +454,10 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                                         <div className="flex items-start justify-between gap-2">
                                             <div className="min-w-0">
                                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                                    <span className="hover:text-indigo-650 text-sm leading-tight font-black text-slate-900 transition-colors">
+                                                    <span className="truncate max-w-full hover:text-indigo-650 text-sm leading-tight font-black text-slate-900 transition-colors">
                                                         {incident.reporter.name}
                                                     </span>
-                                                    <span className="truncate text-xs font-medium text-slate-400">
+                                                    <span className="truncate max-w-full text-xs font-medium text-slate-400">
                                                         @{incident.reporter.name.toLowerCase().replace(/[^a-z0-9]/g, '')}
                                                     </span>
                                                     <span className="xs:inline hidden text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
@@ -511,11 +511,11 @@ export default function Index({ incidents, filters, categories, allowResidentRep
 
                                         {/* Post Content */}
                                         <div className="min-w-0 space-y-1.5 overflow-hidden">
-                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black [overflow-wrap:anywhere] break-words text-slate-900 transition-colors">
+                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black break-all text-slate-900 transition-colors">
                                                 <span className="min-w-0 flex-1">{incident.title}</span>
                                                 <ArrowRight className="text-indigo-650 h-4 w-4 shrink-0 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                                             </h2>
-                                            <p className="line-clamp-3 text-xs leading-relaxed [overflow-wrap:anywhere] break-words text-slate-500">
+                                            <p className="line-clamp-3 text-xs leading-relaxed break-all text-slate-500">
                                                 {incident.body}
                                             </p>
                                         </div>
