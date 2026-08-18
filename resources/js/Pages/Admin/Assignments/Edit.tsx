@@ -42,7 +42,10 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
 
     const handleRoleToggle = (roleId: string) => {
         if (data.role_ids.includes(roleId)) {
-            setData('role_ids', data.role_ids.filter((id) => id !== roleId));
+            setData(
+                'role_ids',
+                data.role_ids.filter((id) => id !== roleId),
+            );
         } else {
             setData('role_ids', [...data.role_ids, roleId]);
         }
