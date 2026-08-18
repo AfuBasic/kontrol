@@ -182,14 +182,30 @@ class CollectionController extends Controller
                         ->where('name', 'property_owner')
                         ->where('model_has_roles.estate_id', $estateId));
 
-                $todayPayments = Payment::where('status', 'success')
+                $todayPayments = Payment::withoutGlobalScopes()
+                    ->where('status', 'success')
+                    ->where('estate_id', $estateId)
                     ->whereDate('paid_at', Carbon::today())
-                    ->whereHas('assignment.collection', $estateScope)
+                    ->whereHas('assignment', function ($q) use ($estateScope) {
+                        $q->withoutGlobalScopes()
+                            ->whereHas('collection', function ($q2) use ($estateScope) {
+                                $q2->withoutGlobalScopes();
+                                $estateScope($q2);
+                            });
+                    })
                     ->get();
 
-                $weekPayments = Payment::where('status', 'success')
+                $weekPayments = Payment::withoutGlobalScopes()
+                    ->where('status', 'success')
+                    ->where('estate_id', $estateId)
                     ->where('paid_at', '>=', Carbon::now()->subDays(6)->startOfDay())
-                    ->whereHas('assignment.collection', $estateScope)
+                    ->whereHas('assignment', function ($q) use ($estateScope) {
+                        $q->withoutGlobalScopes()
+                            ->whereHas('collection', function ($q2) use ($estateScope) {
+                                $q2->withoutGlobalScopes();
+                                $estateScope($q2);
+                            });
+                    })
                     ->get();
 
                 return [
@@ -210,9 +226,21 @@ class CollectionController extends Controller
                         ->where('name', 'property_owner')
                         ->where('model_has_roles.estate_id', $estateId));
 
-                return Payment::with(['user', 'assignment.collection'])
+                return Payment::withoutGlobalScopes()
+                    ->with(['user', 'assignment' => function ($q) {
+                        $q->withoutGlobalScopes()->with(['collection' => function ($q2) {
+                            $q2->withoutGlobalScopes();
+                        }]);
+                    }])
                     ->where('status', 'success')
-                    ->whereHas('assignment.collection', $estateScope)
+                    ->where('estate_id', $estateId)
+                    ->whereHas('assignment', function ($q) use ($estateScope) {
+                        $q->withoutGlobalScopes()
+                            ->whereHas('collection', function ($q2) use ($estateScope) {
+                                $q2->withoutGlobalScopes();
+                                $estateScope($q2);
+                            });
+                    })
                     ->latest('paid_at')
                     ->take(10)
                     ->get()
