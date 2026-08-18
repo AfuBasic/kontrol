@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\Scopes\ZoneScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Vinkla\Hashids\Facades\Hashids;
@@ -44,8 +45,8 @@ trait HasHashid
         $id = static::decodeHashid($hashid);
 
         $query = static::query();
-        if (in_array(\App\Traits\ZoneScoped::class, class_uses_recursive(static::class))) {
-            $query->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class);
+        if (in_array(ZoneScoped::class, class_uses_recursive(static::class))) {
+            $query->withoutGlobalScope(ZoneScope::class);
         }
 
         /** @var static|null $model */
@@ -94,9 +95,10 @@ trait HasHashid
     {
         if ($field && $field !== 'hashid') {
             $query = $this->resolveRouteBindingQuery($this->where($field, $value), $value);
-            if (in_array(\App\Traits\ZoneScoped::class, class_uses_recursive(static::class))) {
-                $query->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class);
+            if (in_array(ZoneScoped::class, class_uses_recursive(static::class))) {
+                $query->withoutGlobalScope(ZoneScope::class);
             }
+
             return $query->first();
         }
 
