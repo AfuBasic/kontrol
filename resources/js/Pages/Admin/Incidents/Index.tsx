@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, Activity, SlidersHorizontal } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import { bulk_destroy } from '@/routes/admin/incidents';
 type AdminUser = {
     id: number;
     name: string;
@@ -162,7 +163,7 @@ export default function IncidentsIndex({
             confirmLabel: 'Delete',
             onConfirm: () => {
                 setIsDeleting(true);
-                router.delete(route('admin.incidents.bulk_destroy'), {
+                router.delete(bulk_destroy.url(), {
                     data: { ids: selectedIncidents },
                     onSuccess: () => {
                         setSelectedIncidents([]);
