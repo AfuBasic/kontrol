@@ -32,10 +32,14 @@ export default function UserActions({ user }: { user: User }) {
     };
 
     const handleResendInvitation = () => {
-        router.post(resetPassword.url({ user: user.ulid }), {}, {
-            preserveScroll: true,
-            onSuccess: () => setIsSheetOpen(false),
-        });
+        router.post(
+            resetPassword.url({ user: user.ulid }),
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setIsSheetOpen(false),
+            },
+        );
     };
 
     const isSelf = user.id === auth.user?.id;
