@@ -48,6 +48,7 @@ class CollectionService
                 'applies_to' => $data['applies_to'] ?? 'all',
                 'status' => 'draft',
                 'created_by' => auth()->id(),
+                'next_processing_date' => $data['billing_type'] === 'recurring' ? Carbon::parse($data['start_date']) : null,
             ]);
 
             $this->syncTargets($collection, $data);
@@ -71,6 +72,9 @@ class CollectionService
                 'grace_days' => $data['grace_days'] ?? 0,
                 'late_fee' => $data['late_fee'] ?? null,
                 'applies_to' => $data['applies_to'] ?? 'all',
+                'next_processing_date' => $data['billing_type'] === 'recurring'
+                    ? ($collection->next_processing_date ?? Carbon::parse($data['start_date']))
+                    : null,
             ]);
 
             $this->syncTargets($collection, $data);
