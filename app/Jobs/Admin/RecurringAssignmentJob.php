@@ -25,11 +25,12 @@ class RecurringAssignmentJob implements ShouldQueue
     {
         $now = Carbon::now();
 
-        // Find all active recurring collections
+        // Find all active recurring collections that are due for processing
         $collections = Collection::query()
             ->where('status', 'active')
             ->where('billing_type', 'recurring')
-            ->with('targets')
+            ->where('next_processing_date', '<=', $now->toDateString())
+            ->with(['targets', 'creator', 'estate'])
             ->get();
 
         foreach ($collections as $collection) {
@@ -39,77 +40,96 @@ class RecurringAssignmentJob implements ShouldQueue
 
     private function processCollection(Collection $collection, Carbon $now): void
     {
-        $startDate = Carbon::parse($collection->start_date);
-        $periodFormat = match ($collection->recurring_interval) {
-            'weekly' => 'Y-W',
-            'yearly' => 'Y',
-            default => 'Y-m',   // monthly
-        };
-        $currentPeriod = $now->format($periodFormat);
+        while ($collection->next_processing_date && $collection->next_processing_date->startOfDay()->lte($now->startOfDay())) {
+            $processingDate = $collection->next_processing_date->copy();
+            
+            $periodFormat = match ($collection->recurring_interval) {
+                'weekly' => 'Y-W',
+                'yearly' => 'Y',
+                default => 'Y-m',   // monthly
+            };
+            $currentPeriod = $processingDate->format($periodFormat);
 
-        // New assignments are created on the anniversary of start_date each period,
-        // NOT on due_day. due_day is when payment is due (used for reminders/overdue logic).
-        if ($collection->recurring_interval === 'weekly') {
-            // Trigger on the same day-of-week as the start_date
-            if ($now->dayOfWeek !== $startDate->dayOfWeek) {
-                return;
+            Log::info("Generating assignments for collection: {$collection->name} for period: {$currentPeriod}");
+
+            $userIds = $this->getTargetUserIds($collection);
+
+            if ($collection->recurring_interval === 'weekly') {
+                $dueDate = $processingDate->copy()->addDays(7);
+            } else {
+                $dueDate = $processingDate->copy()->day($collection->due_day);
+                if ($dueDate->lt($processingDate)) {
+                    $dueDate->addMonthNoOverflow();
+                }
             }
+
+            $graceUntil = $collection->grace_days > 0
+                ? $dueDate->copy()->addDays($collection->grace_days)
+                : null;
+
+            $this->createAssignments($collection, $userIds, $currentPeriod, $dueDate, $graceUntil);
+
+            // Increment next_processing_date
+            if ($collection->recurring_interval === 'weekly') {
+                $collection->next_processing_date = $collection->next_processing_date->addWeek();
+            } elseif ($collection->recurring_interval === 'yearly') {
+                $collection->next_processing_date = $collection->next_processing_date->addYearNoOverflow();
+            } else {
+                $collection->next_processing_date = $collection->next_processing_date->addMonthNoOverflow();
+            }
+            
+            $collection->save();
+        }
+    }
+
+    private function createAssignments(Collection $collection, array $userIds, string $currentPeriod, Carbon $dueDate, ?Carbon $graceUntil): void
+    {
+        if (empty($userIds)) {
+            return;
         }
 
-        if ($collection->recurring_interval === 'monthly') {
-            if ($now->day !== $startDate->day) {
-                return;
-            }
-        }
-
-        if ($collection->recurring_interval === 'yearly') {
-            if ($now->month !== $startDate->month || $now->day !== $startDate->day) {
-                return;
-            }
-        }
-
-        Log::info("Generating assignments for collection: {$collection->name} for period: {$currentPeriod}");
-
-        $userIds = $this->getTargetUserIds($collection);
-
-        // due_date is due_day of the current period, not today (the start day)
-        // For weekly collections, the due_date is 7 days from today (start of the week)
-        if ($collection->recurring_interval === 'weekly') {
-            $dueDate = $now->copy()->addDays(7);
-        } else {
-            $dueDate = $now->copy()->day($collection->due_day);
-
-            // Handle edge case: if due_day is less than start day (e.g. starts on 20th, due on 5th),
-            // the due date falls in the next month
-            if ($dueDate->lt($now)) {
-                $dueDate->addMonth();
-            }
-        }
-
-        $graceUntil = $collection->grace_days > 0
-            ? $dueDate->copy()->addDays($collection->grace_days)
-            : null;
-
+        $users = User::with('profile')->whereIn('id', $userIds)->get()->keyBy('id');
+        
+        $existingAssignments = CollectionAssignment::query()
+            ->where('collection_id', $collection->id)
+            ->where('period', $currentPeriod)
+            ->whereIn('user_id', $userIds)
+            ->pluck('user_id')
+            ->toArray();
+            
+        $existingMap = array_flip($existingAssignments);
+        $now = now();
+        $insertData = [];
+        
         foreach ($userIds as $userId) {
-            $user = User::with('profile')->find($userId);
+            if (isset($existingMap[$userId])) {
+                continue;
+            }
+            
+            $user = $users->get($userId);
             $propertyId = $user?->profile?->property_id;
-
-            CollectionAssignment::query()->firstOrCreate(
-                [
-                    'collection_id' => $collection->id,
-                    'user_id' => $userId,
-                    'period' => $currentPeriod,
-                ],
-                [
-                    'estate_id' => $collection->estate_id,
-                    'property_id' => $propertyId,
-                    'amount_due' => $collection->amount,
-                    'amount_paid' => 0,
-                    'status' => 'pending',
-                    'due_date' => $dueDate->toDateString(),
-                    'grace_until' => $graceUntil?->toDateString(),
-                ]
-            );
+            
+            $insertData[] = [
+                'ulid' => (string) \Illuminate\Support\Str::ulid(),
+                'collection_id' => $collection->id,
+                'user_id' => $userId,
+                'period' => $currentPeriod,
+                'estate_id' => $collection->estate_id,
+                'property_id' => $propertyId,
+                'amount_due' => $collection->amount,
+                'amount_paid' => 0,
+                'status' => 'pending',
+                'due_date' => $dueDate->toDateString(),
+                'grace_until' => $graceUntil?->toDateString(),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+        
+        if (!empty($insertData)) {
+            foreach (array_chunk($insertData, 500) as $chunk) {
+                CollectionAssignment::insert($chunk);
+            }
         }
     }
 
