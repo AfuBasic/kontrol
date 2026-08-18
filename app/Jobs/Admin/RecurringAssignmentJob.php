@@ -29,7 +29,7 @@ class RecurringAssignmentJob implements ShouldQueue
         $collections = Collection::query()
             ->where('status', 'active')
             ->where('billing_type', 'recurring')
-            ->where('next_processing_date', '<=', $now->toDateString())
+            ->where('next_processing_date', '<=', $now->endOfDay())
             ->with(['targets', 'creator', 'estate'])
             ->get();
 
@@ -82,7 +82,7 @@ class RecurringAssignmentJob implements ShouldQueue
         }
     }
 
-    private function createAssignments(Collection $collection, array $userIds, string $currentPeriod, Carbon $dueDate, ?Carbon $graceUntil): void
+    private function createAssignments(Collection $collection, array $userIds, string $currentPeriod, \Carbon\CarbonInterface $dueDate, ?\Carbon\CarbonInterface $graceUntil): void
     {
         if (empty($userIds)) {
             return;
@@ -90,7 +90,7 @@ class RecurringAssignmentJob implements ShouldQueue
 
         $users = User::with('profile')->whereIn('id', $userIds)->get()->keyBy('id');
         
-        $existingAssignments = CollectionAssignment::query()
+        $existingAssignments = CollectionAssignment::withoutGlobalScopes()
             ->where('collection_id', $collection->id)
             ->where('period', $currentPeriod)
             ->whereIn('user_id', $userIds)
