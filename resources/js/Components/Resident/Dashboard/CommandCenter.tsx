@@ -123,9 +123,7 @@ export default function CommandCenter({ expectedToday, lastActivity, onAction, c
                             <span className="text-3xl font-black tracking-tight text-white">
                                 <CountUpNumber value={expectedToday} />
                             </span>
-                            <span className="text-xs font-bold text-indigo-300/60">
-                                {expectedToday === 1 ? 'visitor' : 'visitors'}
-                            </span>
+                            <span className="text-xs font-bold text-indigo-300/60">{expectedToday === 1 ? 'visitor' : 'visitors'}</span>
                         </div>
                     </div>
 
