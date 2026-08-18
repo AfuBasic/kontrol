@@ -13,6 +13,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use App\Events\Admin\CollectionPublished;
+use App\Notifications\Admin\CollectionPublishedNotification;
 
 class PublishCollectionJob implements ShouldQueue
 {
@@ -79,5 +81,12 @@ class PublishCollectionJob implements ShouldQueue
                 $assignment->user->notify(new NewCollectionNotification($assignment));
             }
         }
+
+        // Notify the Admin and broadcast to UI
+        if ($collection->creator) {
+            $collection->creator->notify(new CollectionPublishedNotification($collection, count($userIds)));
+        }
+
+        CollectionPublished::dispatch($collection, count($userIds));
     }
 }
