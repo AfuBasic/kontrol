@@ -104,7 +104,7 @@ class AdministrativeAssignmentController extends Controller
             ->where('estate_id', $assignment->estate_id)
             ->where('is_primary', false)
             ->pluck('role_id')
-            ->map(fn($id) => (string)$id)
+            ->map(fn ($id) => (string) $id)
             ->toArray();
 
         return Inertia::render('Admin/Assignments/Edit', [
