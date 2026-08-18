@@ -135,7 +135,7 @@ class EstateSettings extends Model
         return Cache::remember(
             "estate_settings:{$estateId}",
             now()->addMinutes(15),
-            fn() => self::firstOrCreate(['estate_id' => $estateId])->refresh()
+            fn () => self::firstOrCreate(['estate_id' => $estateId])->refresh()
         );
     }
 
@@ -165,11 +165,11 @@ class EstateSettings extends Model
             }
         }
 
-        if (!$hasOther) {
+        if (! $hasOther) {
             $configured[] = 'Other';
         }
 
-        return collect($configured)->map(fn($cat) => [
+        return collect($configured)->map(fn ($cat) => [
             'value' => $cat,
             'label' => $cat,
         ])->values()->toArray();
@@ -177,6 +177,6 @@ class EstateSettings extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn($settings) => Cache::forget("estate_settings:{$settings->estate_id}"));
+        static::saved(fn ($settings) => Cache::forget("estate_settings:{$settings->estate_id}"));
     }
 }
