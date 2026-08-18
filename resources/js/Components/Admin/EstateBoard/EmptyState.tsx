@@ -32,7 +32,7 @@ export default function EmptyState({ hasActiveFilters = false, onClearFilters, o
             ) : (
                 <button
                     onClick={onFocusComposer}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm shadow-sm transition hover:bg-slate-800 active:scale-95"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-95"
                 >
                     <Plus className="h-4 w-4" />
                     <span>Create First Announcement</span>
