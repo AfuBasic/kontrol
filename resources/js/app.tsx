@@ -17,6 +17,7 @@ import AdminLayout from './Layouts/AdminLayout';
 import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
 import SecurityLayout from './Layouts/SecurityLayout';
+import useNativeViewport from './Hooks/useNativeViewport';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -73,6 +74,8 @@ createInertiaApp({
         function AppWrapper() {
             const [isBooting, setIsBooting] = useState(Capacitor.isNativePlatform());
             const [isExiting, setIsExiting] = useState(false);
+
+            useNativeViewport();
 
             useEffect(() => {
                 // 1. Hide the native splash screen quickly after mount so the custom loader is shown
@@ -131,6 +134,13 @@ createInertiaApp({
             const appEl = document.getElementById('app');
             if (appEl) {
                 appEl.setAttribute('scroll-region', 'true');
+            }
+
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker
+                    .getRegistrations()
+                    .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister())))
+                    .catch((error) => console.warn('Native service worker cleanup skipped:', error));
             }
 
             // Set a cookie so that all browser document/page load requests include the native identifier
@@ -252,14 +262,27 @@ createInertiaApp({
             }
         });
 
+        const dynamicImportRetryKey = 'kontrol:dynamic-import-retry';
+        const retryDynamicImportOnce = (message: string) => {
+            const currentPage = window.location.href;
+
+            if (window.sessionStorage.getItem(dynamicImportRetryKey) === currentPage) {
+                console.error('Vite asset recovery failed after one reload:', message);
+                return;
+            }
+
+            window.sessionStorage.setItem(dynamicImportRetryKey, currentPage);
+            window.location.reload();
+        };
+
         // Self-healing handler for Vite dynamic import failures (stale client-side assets)
         window.addEventListener(
             'error',
             (e) => {
                 const msg = e.message || '';
                 if (msg.includes('importing a module script failed') || msg.includes('Failed to fetch dynamically imported module')) {
-                    console.warn('Vite asset load failed, forcing page reload...');
-                    window.location.reload();
+                    console.warn('Vite asset load failed, attempting one page reload...');
+                    retryDynamicImportOnce(msg);
                 }
             },
             true,
@@ -273,8 +296,8 @@ createInertiaApp({
                     reason.message?.includes('Failed to fetch dynamically imported module') ||
                     reason.message?.includes('dynamically imported module'))
             ) {
-                console.warn('Vite asset promise rejection, forcing page reload...');
-                window.location.reload();
+                console.warn('Vite asset promise rejection, attempting one page reload...');
+                retryDynamicImportOnce(reason.message);
             }
         });
     },

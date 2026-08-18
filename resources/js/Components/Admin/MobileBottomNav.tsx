@@ -43,7 +43,10 @@ export default function MobileBottomNav({ url, unreadNotifications = 0 }: Props)
     ];
 
     return (
-        <nav className="pb-safe fixed right-0 bottom-0 left-0 z-50 border-t border-slate-200/50 bg-white/95 ring-1 ring-black/5 backdrop-blur-2xl md:hidden">
+        <nav
+            data-mobile-bottom-nav
+            className="pb-safe fixed right-0 bottom-0 left-0 z-50 border-t border-slate-200/50 bg-white/95 ring-1 ring-black/5 backdrop-blur-2xl md:hidden"
+        >
             <div className="flex h-16 items-center justify-around px-2">
                 {navItems.map((item) => {
                     const active = url.startsWith(item.href.split('?')[0]) && item.href !== '#';

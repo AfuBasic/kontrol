@@ -66,7 +66,8 @@
     <meta name="theme-color" content="#020617">
 
     <script>
-        if ('serviceWorker' in navigator) {
+        const isNativeApp = navigator.userAgent.includes('KontrolApp');
+        if (!isNativeApp && 'serviceWorker' in navigator) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('/sw.js').then(function(registration) {
                     console.log('Kontrol PWA ServiceWorker registered with scope: ', registration.scope);

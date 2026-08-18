@@ -724,28 +724,33 @@ textarea,
     }
 }
 
-/* Fix Capacitor Android keyboard resizing the body (resize: 'body')
-   This ensures that Tailwind's h-screen/min-h-screen responds to the physically
-   resized body instead of staying at the original 100vh, preventing the UI from
-   overflowing into the background. */
+/* Native WebViews need one viewport owner. The visual viewport is written by
+   useNativeViewport so the shell can recover after an IME close. */
 html.capacitor-native,
 html.capacitor-native body {
-    height: 100%;
+    height: var(--app-viewport-height, 100dvh);
+    min-height: var(--app-viewport-height, 100dvh);
     overflow: hidden;
 }
 
 html.capacitor-native #app {
-    height: 100%;
+    height: var(--app-viewport-height, 100dvh);
+    min-height: var(--app-viewport-height, 100dvh);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }
 
 html.capacitor-native .min-h-screen {
-    min-height: 100% !important;
+    min-height: var(--app-viewport-height, 100dvh) !important;
 }
 
 html.capacitor-native .h-screen {
-    height: 100% !important;
+    height: var(--app-viewport-height, 100dvh) !important;
+}
+
+html.capacitor-native[data-keyboard-open='true'] [data-mobile-bottom-nav] {
+    pointer-events: none;
+    opacity: 0 !important;
 }
 
 /* Fix native iOS WebKit styling and overflow of datetime-local and date inputs */

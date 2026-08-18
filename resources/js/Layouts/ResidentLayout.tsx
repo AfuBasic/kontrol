@@ -659,7 +659,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                 {/* Bottom Navigation for normal Residents */}
                 {!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
-                    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6">
+                    <div data-mobile-bottom-nav className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6 transition-opacity duration-150">
                         <motion.nav
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -729,7 +729,10 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                 {/* Bottom Navigation for Property Owners on Mobile */}
                 {isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
-                    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6 md:hidden">
+                    <div
+                        data-mobile-bottom-nav
+                        className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6 transition-opacity duration-150 md:hidden"
+                    >
                         <motion.nav
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

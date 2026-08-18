@@ -363,6 +363,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
             {/* Bottom Navigation - slim, monochromatic, animated active indicator */}
             {!hideNav && (
                 <motion.nav
+                    data-mobile-bottom-nav
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, delay: 0.05 }}

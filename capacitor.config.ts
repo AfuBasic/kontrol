@@ -81,10 +81,7 @@ const config: CapacitorConfig = {
             splashFullScreen: true,
             splashImmersive: true,
         },
-        Keyboard: {
-            resize: 'native', // 'body' collapses WebView on older Android — native lets the OS handle insets
-            style: 'DARK',
-        },
+        // Android keyboard resizing is owned by MainActivity's adjustResize mode.
         StatusBar: {
             style: 'LIGHT',
             backgroundColor: '#FFFFFF',
