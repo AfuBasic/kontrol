@@ -88,7 +88,7 @@ export default function Create({ categories }: Props) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                     },
                     body: JSON.stringify({ hash: attachmentHash }),
@@ -110,7 +110,7 @@ export default function Create({ categories }: Props) {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                        'Accept': 'application/json',
+                            Accept: 'application/json',
                             'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
                         },
                         body: JSON.stringify({ resource_type: resourceType }),
