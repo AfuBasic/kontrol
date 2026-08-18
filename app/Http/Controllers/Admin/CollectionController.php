@@ -176,36 +176,29 @@ class CollectionController extends Controller
             // ── Deferred: Today & This Week Snapshot ──────────────────────────
             'todaySnapshot' => Inertia::defer(function () use ($estate) {
                 $estateId = $estate->id;
+                
+                $settings = EstateSettings::forEstate($estateId);
+                $tz = $settings->timezone ?? config('app.timezone');
+                
+                $startOfDay = Carbon::now($tz)->startOfDay()->utc();
+                $endOfDay = Carbon::now($tz)->endOfDay()->utc();
+                
+                $startOfWeek = Carbon::now($tz)->startOfWeek()->utc();
+                $endOfWeek = Carbon::now($tz)->endOfWeek()->utc();
 
                 $estateScope = fn ($q) => $q->where('estate_id', $estateId)
                     ->whereDoesntHave('creator.roles', fn ($sq) => $sq
                         ->where('name', 'property_owner')
                         ->where('model_has_roles.estate_id', $estateId));
 
-                $todayPayments = Payment::withoutGlobalScopes()
-                    ->where('status', 'success')
-                    ->where('estate_id', $estateId)
-                    ->whereDate('paid_at', Carbon::today())
-                    ->whereHas('assignment', function ($q) use ($estateScope) {
-                        $q->withoutGlobalScopes()
-                            ->whereHas('collection', function ($q2) use ($estateScope) {
-                                $q2->withoutGlobalScopes();
-                                $estateScope($q2);
-                            });
-                    })
+                $todayPayments = Payment::where('status', 'success')
+                    ->whereBetween('paid_at', [$startOfDay, $endOfDay])
+                    ->whereHas('assignment.collection', $estateScope)
                     ->get();
 
-                $weekPayments = Payment::withoutGlobalScopes()
-                    ->where('status', 'success')
-                    ->where('estate_id', $estateId)
-                    ->where('paid_at', '>=', Carbon::now()->subDays(6)->startOfDay())
-                    ->whereHas('assignment', function ($q) use ($estateScope) {
-                        $q->withoutGlobalScopes()
-                            ->whereHas('collection', function ($q2) use ($estateScope) {
-                                $q2->withoutGlobalScopes();
-                                $estateScope($q2);
-                            });
-                    })
+                $weekPayments = Payment::where('status', 'success')
+                    ->whereBetween('paid_at', [$startOfWeek, $endOfWeek])
+                    ->whereHas('assignment.collection', $estateScope)
                     ->get();
 
                 return [
@@ -226,21 +219,9 @@ class CollectionController extends Controller
                         ->where('name', 'property_owner')
                         ->where('model_has_roles.estate_id', $estateId));
 
-                return Payment::withoutGlobalScopes()
-                    ->with(['user', 'assignment' => function ($q) {
-                        $q->withoutGlobalScopes()->with(['collection' => function ($q2) {
-                            $q2->withoutGlobalScopes();
-                        }]);
-                    }])
+                return Payment::with(['user', 'assignment.collection'])
                     ->where('status', 'success')
-                    ->where('estate_id', $estateId)
-                    ->whereHas('assignment', function ($q) use ($estateScope) {
-                        $q->withoutGlobalScopes()
-                            ->whereHas('collection', function ($q2) use ($estateScope) {
-                                $q2->withoutGlobalScopes();
-                                $estateScope($q2);
-                            });
-                    })
+                    ->whereHas('assignment.collection', $estateScope)
                     ->latest('paid_at')
                     ->take(10)
                     ->get()
