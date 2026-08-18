@@ -177,7 +177,9 @@ export default function Show({ incident, comments, canClose }: Props) {
                             <span className="text-xs font-medium text-slate-400">Reported on {format(new Date(incident.created_at), 'PPP')}</span>
                         </div>
 
-                        <h1 className="mb-3 text-xl leading-tight font-black text-slate-900 break-words [overflow-wrap:anywhere] sm:text-2xl">{incident.title}</h1>
+                        <h1 className="mb-3 text-xl leading-tight font-black [overflow-wrap:anywhere] break-words text-slate-900 sm:text-2xl">
+                            {incident.title}
+                        </h1>
 
                         {incident.location && (
                             <div className="mb-4 flex w-fit items-center gap-1.5 rounded-xl border border-slate-200/50 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">
@@ -186,7 +188,9 @@ export default function Show({ incident, comments, canClose }: Props) {
                             </div>
                         )}
 
-                        <p className="mb-6 text-sm leading-relaxed whitespace-pre-wrap text-slate-600 break-words [overflow-wrap:anywhere]">{incident.body}</p>
+                        <p className="mb-6 text-sm leading-relaxed [overflow-wrap:anywhere] break-words whitespace-pre-wrap text-slate-600">
+                            {incident.body}
+                        </p>
 
                         {/* Media Preview / Interactive Expandable Card */}
                         {incident.attachment_url && (
@@ -313,7 +317,9 @@ export default function Show({ incident, comments, canClose }: Props) {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <p className="text-xs leading-relaxed text-slate-600 break-words [overflow-wrap:anywhere]">{comment.body}</p>
+                                                <p className="text-xs leading-relaxed [overflow-wrap:anywhere] break-words text-slate-600">
+                                                    {comment.body}
+                                                </p>
                                                 <div className="mt-2 flex justify-end">
                                                     <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                         {formatDistanceToNow(new Date(comment.created_at), {
@@ -351,7 +357,9 @@ export default function Show({ incident, comments, canClose }: Props) {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <p className="text-xs leading-relaxed text-slate-600 break-words [overflow-wrap:anywhere]">{reply.body}</p>
+                                                        <p className="text-xs leading-relaxed [overflow-wrap:anywhere] break-words text-slate-600">
+                                                            {reply.body}
+                                                        </p>
                                                         <div className="mt-2 flex justify-end">
                                                             <span className="text-[9px] font-bold tracking-wider text-slate-400 uppercase">
                                                                 {formatDistanceToNow(new Date(reply.created_at), {
