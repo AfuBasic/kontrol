@@ -57,20 +57,17 @@ class CollectionPaymentSuccessfulNotification extends Notification implements Sh
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mailMessage = (new MailMessage)
-            ->subject("Receipt for {$this->assignment->collection->name}")
-            ->view('mail.resident.collection-paid', [
-                'assignment' => $this->assignment,
-                'payment' => $this->payment,
-            ]);
+        $mappedTransaction = null;
+        $pdfResult = null;
+        $transactionModel = null;
 
         try {
             // Find the associated Ledger Transaction using idempotency_key
             $idempotencyKey = 'payment_'.$this->payment->id;
-            $transaction = EstateTransaction::where('idempotency_key', $idempotencyKey)->first();
+            $transactionModel = EstateTransaction::where('idempotency_key', $idempotencyKey)->first();
 
-            if ($transaction) {
-                $mappedTransaction = app(TransactionOverviewService::class)->formatDetail($transaction);
+            if ($transactionModel) {
+                $mappedTransaction = app(TransactionOverviewService::class)->formatDetail($transactionModel);
 
                 $pdfResult = Pdf::view('pdf.receipt')
                     ->data([
@@ -78,18 +75,28 @@ class CollectionPaymentSuccessfulNotification extends Notification implements Sh
                         'estate' => $this->payment->estate,
                     ])
                     ->render();
-
-                $mailMessage->attachData(
-                    $pdfResult->content(),
-                    "Receipt-{$transaction->reference_number}.pdf",
-                    ['mime' => 'application/pdf']
-                );
             }
         } catch (Exception $e) {
             Log::error('Failed to generate receipt PDF for collection payment notification', [
                 'payment_id' => $this->payment->id,
                 'error' => $e->getMessage(),
             ]);
+        }
+
+        $mailMessage = (new MailMessage)
+            ->subject("Receipt for {$this->assignment->collection->name}")
+            ->view('mail.resident.collection-paid', [
+                'assignment' => $this->assignment,
+                'payment' => $this->payment,
+                'transaction' => $mappedTransaction,
+            ]);
+
+        if ($pdfResult && $transactionModel) {
+            $mailMessage->attachData(
+                $pdfResult->content(),
+                "Receipt-{$transactionModel->reference_number}.pdf",
+                ['mime' => 'application/pdf']
+            );
         }
 
         return $mailMessage;
