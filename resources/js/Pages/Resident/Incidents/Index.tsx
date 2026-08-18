@@ -483,11 +483,11 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                                                         </span>
                                                     )}
                                                     {incident.zone ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-md border border-indigo-250 bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-700 uppercase">
+                                                        <span className="border-indigo-250 inline-flex items-center gap-1 rounded-md border bg-indigo-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-indigo-700 uppercase">
                                                             Scope: {incident.zone.name}
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center gap-1 rounded-md border border-slate-250 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
+                                                        <span className="border-slate-250 inline-flex items-center gap-1 rounded-md border bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase">
                                                             Scope: Entire Estate
                                                         </span>
                                                     )}
@@ -511,11 +511,13 @@ export default function Index({ incidents, filters, categories, allowResidentRep
 
                                         {/* Post Content */}
                                         <div className="min-w-0 space-y-1.5 overflow-hidden">
-                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black text-slate-900 transition-colors break-words [overflow-wrap:anywhere]">
+                                            <h2 className="group-hover:text-indigo-650 flex items-center gap-1.5 text-base font-black [overflow-wrap:anywhere] break-words text-slate-900 transition-colors">
                                                 <span className="min-w-0 flex-1">{incident.title}</span>
                                                 <ArrowRight className="text-indigo-650 h-4 w-4 shrink-0 -translate-x-2 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100" />
                                             </h2>
-                                            <p className="line-clamp-3 text-xs leading-relaxed text-slate-500 break-words [overflow-wrap:anywhere]">{incident.body}</p>
+                                            <p className="line-clamp-3 text-xs leading-relaxed [overflow-wrap:anywhere] break-words text-slate-500">
+                                                {incident.body}
+                                            </p>
                                         </div>
 
                                         {/* Large Full-Width Media Preview */}
