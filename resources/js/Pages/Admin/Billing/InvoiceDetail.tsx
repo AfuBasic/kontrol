@@ -466,9 +466,7 @@ export default function InvoiceDetailPage({ invoice }: Props) {
                                             onClick={handlePayment}
                                             disabled={payLoading}
                                             className={`group relative h-14 w-full rounded-2xl text-xs font-black tracking-widest text-white uppercase shadow-lg transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${
-                                                isOverdue
-                                                    ? 'bg-red-600 shadow-red-100 hover:bg-red-700'
-                                                    : 'bg-slate-950 shadow-sm hover:bg-slate-800'
+                                                isOverdue ? 'bg-red-600 shadow-red-100 hover:bg-red-700' : 'bg-slate-950 shadow-sm hover:bg-slate-800'
                                             }`}
                                         >
                                             <span className="flex items-center justify-center gap-3">
