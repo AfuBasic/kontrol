@@ -326,3 +326,34 @@ it('returns transaction detail as json for drawer requests', function () {
         ->assertJsonPath('transaction.ulid', $transaction->ulid)
         ->assertJsonPath('transaction.reference_number', $transaction->reference_number);
 });
+
+it('excludes subscription transactions from the admin ledger', function () {
+    $ledger = app(LedgerService::class);
+
+    $collectionPayment = $ledger->record([
+        'idempotency_key' => 'sub_exclude_collection',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'type' => TransactionType::CollectionPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 100000,
+        'status' => TransactionStatus::Success,
+    ]);
+
+    $subscriptionPayment = $ledger->record([
+        'idempotency_key' => 'sub_exclude_subscription',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'type' => TransactionType::SubscriptionPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 500000,
+        'status' => TransactionStatus::Success,
+    ]);
+
+    $overview = app(TransactionOverviewService::class);
+    $results = $overview->query($this->estate)->get();
+
+    expect($results)->toHaveCount(1)
+        ->and($results->first()->id)->toBe($collectionPayment->id)
+        ->and($results->pluck('type')->contains(TransactionType::SubscriptionPayment))->toBeFalse();
+});
