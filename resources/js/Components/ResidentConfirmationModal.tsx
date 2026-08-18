@@ -1,7 +1,21 @@
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { AlertTriangle, Info, Loader2 } from 'lucide-react';
-import { Fragment } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import ConfirmationSheet from './ConfirmationSheet';
+
+function useIsMobile() {
+    const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+
+    useEffect(() => {
+        const mq = window.matchMedia('(max-width: 767px)');
+        const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        setIsMobile(mq.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    return isMobile;
+}
 
 type ModalType = 'danger' | 'warning' | 'info';
 
@@ -28,6 +42,8 @@ export default function ResidentConfirmationModal({
     type = 'danger',
     isLoading = false,
 }: Props) {
+    const isMobile = useIsMobile();
+
     const colors = {
         danger: {
             icon: 'bg-rose-50 text-rose-600 ring-rose-100',
@@ -45,7 +61,7 @@ export default function ResidentConfirmationModal({
 
     return (
         <>
-            <Transition show={isOpen} as={Fragment}>
+            <Transition show={isOpen && !isMobile} as={Fragment}>
                 <Dialog onClose={onClose} className="relative z-[200] hidden md:block">
                     <TransitionChild
                         as={Fragment}
@@ -101,7 +117,7 @@ export default function ResidentConfirmationModal({
             </Transition>
 
             <ConfirmationSheet
-                isOpen={isOpen}
+                isOpen={isOpen && isMobile}
                 onClose={onClose}
                 onConfirm={onConfirm}
                 title={title}
