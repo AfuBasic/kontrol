@@ -188,26 +188,20 @@
                 <td class="label">Description</td>
                 <td class="value">{{ $transaction['description'] ?? 'System Entry' }}</td>
             </tr>
-            <tr>
-                <td class="label">Payment Type</td>
-                <td class="value">{{ $transaction['type_label'] ?? 'Payment' }}</td>
-            </tr>
+
             <tr>
                 <td class="label">Payment Method</td>
                 <td class="value">{{ $transaction['payment_method_label'] ?? 'N/A' }}</td>
             </tr>
             <tr>
                 <td class="label">Provider</td>
-                <td class="value">{{ $transaction['provider'] ?? 'N/A' }}</td>
+                <td class="value">{{ $transaction['provider'] && $transaction['provider'] !== 'N/A' ? $transaction['provider'] : 'Paystack' }}</td>
             </tr>
             <tr>
                 <td class="label">Gateway Reference</td>
                 <td class="value">{{ $transaction['gateway_reference'] ?? 'N/A' }}</td>
             </tr>
-            <tr>
-                <td class="label">Receipt Number</td>
-                <td class="value">{{ $transaction['receipt_number'] ?? 'N/A' }}</td>
-            </tr>
+
             <tr>
                 <td class="label">Date Cleared</td>
                 <td class="value">
@@ -269,7 +263,7 @@
             </div>
         @endif
 
-        <div class="footer">
+        <div class="footer" style="margin-top: 30px; text-align: center; font-size: 10px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1px;">
             Powered by Kontrol
         </div>
     </div>
