@@ -324,7 +324,9 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
 
                                     {zones.length > 0 && (
                                         <div>
-                                            <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Zone targeting</label>
+                                            <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
+                                                Zone targeting
+                                            </label>
                                             <p className="mb-3 text-[11px] text-gray-500">
                                                 Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
                                             </p>
@@ -346,7 +348,9 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                                                 onChange={() => {
                                                                     setData(
                                                                         'zone_ids',
-                                                                        selected ? data.zone_ids.filter((id) => id !== zone.id) : [...data.zone_ids, zone.id],
+                                                                        selected
+                                                                            ? data.zone_ids.filter((id) => id !== zone.id)
+                                                                            : [...data.zone_ids, zone.id],
                                                                     );
                                                                 }}
                                                                 className="rounded border-gray-300 text-primary-600 focus:ring-slate-900"
