@@ -40,13 +40,15 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
                 if (stored) {
                     const parsedUrls: string[] = JSON.parse(stored);
                     // Hydrate URLs back into NavItems
-                    const hydrated = parsedUrls.map(url => {
-                        return accessibleNav.find(n => n.href === url) || accessibleActions.find(a => a.href === url);
-                    }).filter(Boolean) as NavItem[];
+                    const hydrated = parsedUrls
+                        .map((url) => {
+                            return accessibleNav.find((n) => n.href === url) || accessibleActions.find((a) => a.href === url);
+                        })
+                        .filter(Boolean) as NavItem[];
                     setRecentDestinations(hydrated);
                 }
             } catch (e) {
-                console.error("Could not load recent destinations", e);
+                console.error('Could not load recent destinations', e);
             }
         }
     }, [isOpen, accessibleNav, accessibleActions]);
@@ -55,7 +57,7 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
         try {
             const stored = sessionStorage.getItem(RECENT_STORAGE_KEY);
             let urls: string[] = stored ? JSON.parse(stored) : [];
-            urls = [item.href, ...urls.filter(url => url !== item.href)].slice(0, 5);
+            urls = [item.href, ...urls.filter((url) => url !== item.href)].slice(0, 5);
             sessionStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(urls));
         } catch (e) {
             // ignore
@@ -65,21 +67,22 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
     const matchQuery = (item: NavItem, searchQuery: string) => {
         const terms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
         if (terms.length === 0) return true;
-        
-        return terms.every(term => {
-            return item.name.toLowerCase().includes(term) ||
-                   (item.description && item.description.toLowerCase().includes(term)) ||
-                   (item.keywords && item.keywords.some(k => k.toLowerCase().includes(term)));
+
+        return terms.every((term) => {
+            return (
+                item.name.toLowerCase().includes(term) ||
+                (item.description && item.description.toLowerCase().includes(term)) ||
+                (item.keywords && item.keywords.some((k) => k.toLowerCase().includes(term)))
+            );
         });
     };
 
-    const filteredNav = query === '' 
-        ? accessibleNav 
-        : accessibleNav.filter((item) => matchQuery(item, query));
+    const filteredNav = query === '' ? accessibleNav : accessibleNav.filter((item) => matchQuery(item, query));
 
-    const filteredActions = query === '' 
-        ? [] // Don't show all actions when query is empty to avoid clutter
-        : accessibleActions.filter((item) => matchQuery(item, query));
+    const filteredActions =
+        query === ''
+            ? [] // Don't show all actions when query is empty to avoid clutter
+            : accessibleActions.filter((item) => matchQuery(item, query));
 
     const handleSelect = (item: NavItem | null) => {
         if (!item) return;
@@ -123,49 +126,60 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
                                                 aria-hidden="true"
                                             />
                                             <Combobox.Input
-                                                className="h-12 w-full border-0 bg-transparent pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:ring-0 sm:text-sm"
+                                                className="h-12 w-full border-0 bg-transparent pr-4 pl-11 text-slate-900 placeholder:text-slate-400 focus:ring-0 sm:text-sm"
                                                 placeholder="Search Kontrol... (⌘K)"
                                                 onChange={(event) => setQuery(event.target.value)}
                                             />
                                         </div>
 
-                                        {(filteredNav.length > 0 || filteredActions.length > 0 || (query === '' && recentDestinations.length > 0)) && (
+                                        {(filteredNav.length > 0 ||
+                                            filteredActions.length > 0 ||
+                                            (query === '' && recentDestinations.length > 0)) && (
                                             <Combobox.Options static className="max-h-80 scroll-py-2 overflow-y-auto text-sm text-slate-800">
                                                 {query === '' && recentDestinations.length > 0 && (
-                                                    <div className="px-4 py-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
-                                                        Recent
-                                                    </div>
+                                                    <div className="px-4 py-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Recent</div>
                                                 )}
-                                                {query === '' && recentDestinations.map((item) => (
-                                                    <Combobox.Option
-                                                        key={`recent-${item.href}`}
-                                                        value={item}
-                                                        className={({ active }) =>
-                                                            classNames(
-                                                                'flex cursor-default select-none items-center gap-3 px-4 py-3',
-                                                                active && 'bg-[#F0F5FF] text-[#0A3D91]'
-                                                            )
-                                                        }
-                                                    >
-                                                        {({ active }) => (
-                                                            <>
-                                                                <item.icon className={classNames('h-5 w-5 flex-none', active ? 'text-[#0A3D91]' : 'text-slate-400')} />
-                                                                <div className="flex-auto truncate">
-                                                                    <div className="font-medium">{item.name}</div>
-                                                                    {item.description && (
-                                                                        <div className={classNames("text-xs truncate mt-0.5", active ? "text-[#0A3D91]/70" : "text-slate-500")}>
-                                                                            {item.description}
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </Combobox.Option>
-                                                ))}
+                                                {query === '' &&
+                                                    recentDestinations.map((item) => (
+                                                        <Combobox.Option
+                                                            key={`recent-${item.href}`}
+                                                            value={item}
+                                                            className={({ active }) =>
+                                                                classNames(
+                                                                    'flex cursor-default items-center gap-3 px-4 py-3 select-none',
+                                                                    active && 'bg-[#F0F5FF] text-[#0A3D91]',
+                                                                )
+                                                            }
+                                                        >
+                                                            {({ active }) => (
+                                                                <>
+                                                                    <item.icon
+                                                                        className={classNames(
+                                                                            'h-5 w-5 flex-none',
+                                                                            active ? 'text-[#0A3D91]' : 'text-slate-400',
+                                                                        )}
+                                                                    />
+                                                                    <div className="flex-auto truncate">
+                                                                        <div className="font-medium">{item.name}</div>
+                                                                        {item.description && (
+                                                                            <div
+                                                                                className={classNames(
+                                                                                    'mt-0.5 truncate text-xs',
+                                                                                    active ? 'text-[#0A3D91]/70' : 'text-slate-500',
+                                                                                )}
+                                                                            >
+                                                                                {item.description}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </Combobox.Option>
+                                                    ))}
 
                                                 {filteredNav.length > 0 && (
                                                     <>
-                                                        <div className="px-4 py-2 text-xs font-bold tracking-wider text-slate-400 uppercase border-t border-slate-100">
+                                                        <div className="border-t border-slate-100 px-4 py-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
                                                             Navigation
                                                         </div>
                                                         {filteredNav.map((item) => (
@@ -174,18 +188,28 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
                                                                 value={item}
                                                                 className={({ active }) =>
                                                                     classNames(
-                                                                        'flex cursor-default select-none items-center gap-3 px-4 py-3',
-                                                                        active && 'bg-[#F0F5FF] text-[#0A3D91]'
+                                                                        'flex cursor-default items-center gap-3 px-4 py-3 select-none',
+                                                                        active && 'bg-[#F0F5FF] text-[#0A3D91]',
                                                                     )
                                                                 }
                                                             >
                                                                 {({ active }) => (
                                                                     <>
-                                                                        <item.icon className={classNames('h-5 w-5 flex-none', active ? 'text-[#0A3D91]' : 'text-slate-400')} />
+                                                                        <item.icon
+                                                                            className={classNames(
+                                                                                'h-5 w-5 flex-none',
+                                                                                active ? 'text-[#0A3D91]' : 'text-slate-400',
+                                                                            )}
+                                                                        />
                                                                         <div className="flex-auto truncate">
                                                                             <div className="font-medium">{item.name}</div>
                                                                             {item.description && (
-                                                                                <div className={classNames("text-xs truncate mt-0.5", active ? "text-[#0A3D91]/70" : "text-slate-500")}>
+                                                                                <div
+                                                                                    className={classNames(
+                                                                                        'mt-0.5 truncate text-xs',
+                                                                                        active ? 'text-[#0A3D91]/70' : 'text-slate-500',
+                                                                                    )}
+                                                                                >
                                                                                     {item.description}
                                                                                 </div>
                                                                             )}
@@ -199,7 +223,7 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
 
                                                 {filteredActions.length > 0 && (
                                                     <>
-                                                        <div className="px-4 py-2 text-xs font-bold tracking-wider text-slate-400 uppercase border-t border-slate-100">
+                                                        <div className="border-t border-slate-100 px-4 py-2 text-xs font-bold tracking-wider text-slate-400 uppercase">
                                                             Actions
                                                         </div>
                                                         {filteredActions.map((item) => (
@@ -208,18 +232,28 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
                                                                 value={item}
                                                                 className={({ active }) =>
                                                                     classNames(
-                                                                        'flex cursor-default select-none items-center gap-3 px-4 py-3',
-                                                                        active && 'bg-[#F0F5FF] text-[#0A3D91]'
+                                                                        'flex cursor-default items-center gap-3 px-4 py-3 select-none',
+                                                                        active && 'bg-[#F0F5FF] text-[#0A3D91]',
                                                                     )
                                                                 }
                                                             >
                                                                 {({ active }) => (
                                                                     <>
-                                                                        <item.icon className={classNames('h-5 w-5 flex-none', active ? 'text-[#0A3D91]' : 'text-slate-400')} />
+                                                                        <item.icon
+                                                                            className={classNames(
+                                                                                'h-5 w-5 flex-none',
+                                                                                active ? 'text-[#0A3D91]' : 'text-slate-400',
+                                                                            )}
+                                                                        />
                                                                         <div className="flex-auto truncate">
                                                                             <div className="font-medium">{item.name}</div>
                                                                             {item.description && (
-                                                                                <div className={classNames("text-xs truncate mt-0.5", active ? "text-[#0A3D91]/70" : "text-slate-500")}>
+                                                                                <div
+                                                                                    className={classNames(
+                                                                                        'mt-0.5 truncate text-xs',
+                                                                                        active ? 'text-[#0A3D91]/70' : 'text-slate-500',
+                                                                                    )}
+                                                                                >
                                                                                     {item.description}
                                                                                 </div>
                                                                             )}
