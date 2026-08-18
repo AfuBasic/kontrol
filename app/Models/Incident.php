@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Casts\IncidentCategoryCast;
-use App\Enums\IncidentCategory;
 use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
