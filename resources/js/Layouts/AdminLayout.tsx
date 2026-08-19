@@ -53,6 +53,7 @@ import * as EstateBoardController from '@/actions/App/Http/Controllers/Admin/Est
 import * as IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
 import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
+import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import * as RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
@@ -841,6 +842,14 @@ export default function AdminLayout({ children, title }: Props) {
                                                 >
                                                     <UserCircleIcon className="h-4 w-4 text-slate-400" />
                                                     Profile
+                                                </Link>
+                                                <Link
+                                                    href={TrustedDeviceController.index.url()}
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
+                                                >
+                                                    <ShieldCheckIcon className="h-4 w-4 text-slate-400" />
+                                                    Trusted devices
                                                 </Link>
                                                 {isAdmin && hasActivityLogs && (
                                                     <Link

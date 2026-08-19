@@ -2,6 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowRight, Building2, Loader2, Shield, User, LayoutDashboard, Key, Mail, Building, MapPin, BadgeCheck } from 'lucide-react';
 import type { FormEvent } from 'react';
 import { motion } from 'framer-motion';
+import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { update } from '@/actions/App/Http/Controllers/Admin/ProfileController';
@@ -261,6 +262,20 @@ export default function Profile({ user, account, estate_context }: Props) {
                                 )}
                             </div>
 
+                            <div className="space-y-2 border-t border-slate-100 bg-slate-50/50 p-6">
+                                <Link
+                                    href={TrustedDeviceController.index.url()}
+                                    className="group flex w-full items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 hover:ring-indigo-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-700 transition-colors group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                                            <Shield className="h-4 w-4" />
+                                        </div>
+                                        <div className="text-sm font-bold text-slate-900">Trusted devices</div>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-indigo-600" />
+                                </Link>
+                            </div>
                             {estate_context && (
                                 <div className="space-y-2 border-t border-slate-100 bg-slate-50/50 p-6">
                                     {estate_context.can_view_authority && (

@@ -3,6 +3,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
 
@@ -100,6 +101,12 @@ export default function ProfilePage({ user, estateName }: Props) {
 
             {/* Action rows */}
             <section className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+                <ActionRow
+                    icon={<ShieldCheck className="h-4 w-4" strokeWidth={2.2} />}
+                    label="Trusted devices"
+                    sub="See and remove devices that can sign in"
+                    onClick={() => router.visit(TrustedDeviceController.index.url())}
+                />
                 <ActionRow
                     icon={<Pencil className="h-4 w-4" strokeWidth={2.2} />}
                     label="Edit profile"

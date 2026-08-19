@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, CheckCircle2, ShieldAlert } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
+import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
@@ -192,6 +193,15 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                                 description="Update your name and address"
                                 onClick={() => setActiveSheet('profile')}
                             />
+                            <div className="mx-6 h-px bg-slate-50" />
+                            <Link href={TrustedDeviceController.index.url()} className="block">
+                                <SettingsRow
+                                    icon={<Shield className="h-5 w-5" />}
+                                    label="Trusted devices"
+                                    description="See and remove devices that can sign in"
+                                    onClick={() => {}}
+                                />
+                            </Link>
 
                             {hasHousehold && !isHouseholdMember && (
                                 <>
