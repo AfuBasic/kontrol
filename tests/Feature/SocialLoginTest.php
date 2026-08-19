@@ -1,6 +1,6 @@
 <?php
 
-use App\Actions\Auth\CheckTrustedDevice;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use Laravel\Socialite\Facades\Socialite;
@@ -31,7 +31,7 @@ test('google login with existing user triggers authentication or trusted device 
     $user->estates()->attach($estate->id, ['status' => 'accepted']);
     $user->assignRole('resident');
 
-    \App\Models\AdministrativeAssignment::create([
+    AdministrativeAssignment::create([
         'user_id' => $user->id,
         'estate_id' => $estate->id,
         'role_id' => Role::where('name', 'resident')->first()->id,
@@ -44,10 +44,6 @@ test('google login with existing user triggers authentication or trusted device 
     $abstractUser->shouldReceive('getId')->andReturn('google-987654');
 
     Socialite::shouldReceive('driver->user')->andReturn($abstractUser);
-
-    $mockCheckTrustedDevice = Mockery::mock(CheckTrustedDevice::class);
-    $mockCheckTrustedDevice->shouldReceive('execute')->andReturn(true);
-    $this->app->instance(CheckTrustedDevice::class, $mockCheckTrustedDevice);
 
     $response = $this->get('/auth/google/callback');
 

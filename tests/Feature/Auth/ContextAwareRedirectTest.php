@@ -204,7 +204,24 @@ test('Test 7 - Stale context is handled gracefully', function () {
 });
 
 test('Test 8 - Magic login controller routes fallback to context.select', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
+    $this->estateB->users()->attach($user->id, ['status' => 'accepted']);
+    AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $this->estateA->id,
+        'role_id' => $this->adminRoleA->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+    AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $this->estateB->id,
+        'role_id' => $this->residentRoleB->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
     $magicToken = MagicLoginToken::create([
         'user_id' => $user->id,
         'token' => 'test-magic-token-123',
