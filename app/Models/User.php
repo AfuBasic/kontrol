@@ -62,6 +62,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read int|null $roles_count
  * @property-read Collection<int, SosEvent> $sosEvents
  * @property-read int|null $sos_events_count
+ * @property-read Collection<int, DeviceAuthorizationRequest> $deviceAuthorizationRequests
+ * @property-read int|null $device_authorization_requests_count
+ * @property-read Collection<int, SecurityEvent> $securityEvents
+ * @property-read int|null $security_events_count
  * @property-read Collection<int, TrustedDevice> $trustedDevices
  * @property-read int|null $trusted_devices_count
  *
@@ -168,6 +172,27 @@ class User extends Authenticatable implements MustVerifyEmail
     public function trustedDevices(): HasMany
     {
         return $this->hasMany(TrustedDevice::class);
+    }
+
+    /**
+     * @return HasMany<DeviceAuthorizationRequest, $this>
+     */
+    public function deviceAuthorizationRequests(): HasMany
+    {
+        return $this->hasMany(DeviceAuthorizationRequest::class);
+    }
+
+    /**
+     * @return HasMany<SecurityEvent, $this>
+     */
+    public function securityEvents(): HasMany
+    {
+        return $this->hasMany(SecurityEvent::class);
+    }
+
+    public function hasActiveTrustedDevice(): bool
+    {
+        return $this->trustedDevices()->active()->exists();
     }
 
     /**

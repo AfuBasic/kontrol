@@ -5,6 +5,7 @@ use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
 use App\Jobs\Compliance\EvaluateViolationsJob;
 use App\Jobs\GenerateMonthlyPartnerEarningsJob;
+use App\Models\DeviceAuthorizationRequest;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -14,6 +15,10 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('kontrol:check-resident-subscriptions')->daily();
+
+Schedule::command('model:prune', [
+    '--model' => [DeviceAuthorizationRequest::class],
+])->daily();
 
 // Billing scheduled commands (Legacy Estate Bulk Billing - Currently Disabled)
 // Schedule::command('kontrol:generate-scheduled-invoices')->dailyAt('00:01');
