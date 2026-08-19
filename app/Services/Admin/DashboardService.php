@@ -20,7 +20,6 @@ use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 
 class DashboardService
@@ -158,9 +157,10 @@ class DashboardService
             ->whereNotNull('email_verified_at')
             ->count();
 
-        $residentsAwaitingApproval = DB::table('estate_users_membership')
-            ->where('estate_id', $estateId)
-            ->where('status', 'pending')
+        $residentsAwaitingApproval = User::query()
+            ->forEstate($estateId)
+            ->topLevelResident($estateId)
+            ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.status', 'pending'))
             ->count();
 
         $securityTotal = User::query()
