@@ -8,6 +8,7 @@ use App\Models\SecurityEvent;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class SuspiciousActivityService
@@ -31,6 +32,45 @@ class SuspiciousActivityService
         return [
             'count' => $count,
             'items' => $events->map(fn (SecurityEvent $event): array => $this->listItem($event))->all(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function actionCenterItem(): ?array
+    {
+        $summary = $this->dashboardSummary(4);
+
+        if ($summary['count'] === 0) {
+            return null;
+        }
+
+        $hasHigh = collect($summary['items'])->contains(
+            fn (array $item): bool => ($item['severity'] ?? '') === SecurityEventSeverity::High->value
+        );
+
+        $count = $summary['count'];
+
+        return [
+            'id' => 'suspicious_activity',
+            'type' => 'suspicious_activity',
+            'title' => 'Suspicious Activity',
+            'desc' => $count === 1
+                ? '1 security event involving an estate member requires attention.'
+                : "{$count} security events involving estate members require attention.",
+            'count' => $count,
+            'severity' => $hasHigh ? 'critical' : 'warning',
+            'actionLabel' => 'Review Activity',
+            'actionUrl' => route('admin.suspicious-activity.index', ['attention' => 'attention']),
+            'previews' => collect($summary['items'])->map(fn (array $item): array => [
+                'id' => $item['id'],
+                'title' => $item['type_label'],
+                'subtitle' => $item['person_name'] ?? 'Unknown member',
+                'context' => $item['detected_at']
+                    ? Carbon::parse($item['detected_at'])->diffForHumans()
+                    : 'Recently',
+            ])->all(),
         ];
     }
 

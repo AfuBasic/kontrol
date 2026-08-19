@@ -25,7 +25,8 @@ use Spatie\Activitylog\Models\Activity;
 class DashboardService
 {
     public function __construct(
-        protected EstateContextService $estateContext
+        protected EstateContextService $estateContext,
+        protected SuspiciousActivityService $suspiciousActivity,
     ) {}
 
     /**
@@ -266,6 +267,11 @@ class DashboardService
 
         // 5. Build Action Center Items
         $needsAttention = [];
+
+        $suspiciousActivityItem = $this->suspiciousActivity->actionCenterItem();
+        if ($suspiciousActivityItem !== null) {
+            $needsAttention[] = $suspiciousActivityItem;
+        }
 
         if ($residentsAwaitingApproval > 0) {
             $pendingResidents = User::query()

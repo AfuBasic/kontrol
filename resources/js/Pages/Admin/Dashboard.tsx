@@ -1,5 +1,4 @@
 import { Deferred, Head, Link } from '@inertiajs/react';
-import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import {
     Users,
@@ -22,7 +21,6 @@ import * as CollectionController from '@/actions/App/Http/Controllers/Admin/Coll
 import { create as createPost } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import * as SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import * as SuspiciousActivityController from '@/actions/App/Http/Controllers/Admin/SuspiciousActivityController';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { CardSkeleton, FeedItemSkeleton, StatCardSkeleton } from '@/Components/Skeletons';
 import { ErrorState, OfflineState } from '@/Components/States';
@@ -98,16 +96,6 @@ type PostItem = {
     published_at: string;
 };
 
-type SecuritySummary = {
-    count: number;
-    items: Array<{
-        id: string;
-        type_label: string;
-        person_name: string | null;
-        detected_at: string | null;
-    }>;
-};
-
 type Props = {
     estateShell?: { name: string; address: string | null; onboarding_completed?: boolean };
     estateHealth?: EstateHealth | null;
@@ -117,7 +105,6 @@ type Props = {
     securityOperations?: SecurityOperations | null;
     recentActivity?: ActivityItem[] | null;
     recentPosts?: PostItem[] | null;
-    securitySummary?: SecuritySummary | null;
 };
 
 function getSeverityStyles(severity: 'info' | 'warning' | 'danger') {
@@ -151,7 +138,6 @@ export default function Dashboard({
     securityOperations,
     recentActivity,
     recentPosts,
-    securitySummary,
 }: Props) {
     const { quality, isOnline } = useNetworkQuality();
     const skipHeavyFinance = quality === 'poor' || quality === 'offline' || !isOnline;
@@ -209,54 +195,6 @@ export default function Dashboard({
                         ) : (
                             <ErrorState title="Could not load estate health" only={['estateHealth']} />
                         )}
-                    </Deferred>
-                </SectionErrorBoundary>
-
-                <SectionErrorBoundary name="security-summary">
-                    <Deferred
-                        data="securitySummary"
-                        fallback={
-                            <section className="space-y-2.5">
-                                <h3 className="px-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Security</h3>
-                                <CardSkeleton />
-                            </section>
-                        }
-                    >
-                        <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-2xs">
-                            <div className="flex items-center justify-between gap-3">
-                                <div>
-                                    <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Security</h3>
-                                    <p className="mt-1 text-sm font-medium text-slate-600">
-                                        {(securitySummary?.count ?? 0) > 0
-                                            ? `${securitySummary?.count} ${securitySummary?.count === 1 ? 'event requires' : 'events require'} attention`
-                                            : 'No security events requiring attention.'}
-                                    </p>
-                                </div>
-                                <Link
-                                    href={SuspiciousActivityController.index.url()}
-                                    className="text-xs font-semibold text-indigo-700 hover:text-indigo-900"
-                                >
-                                    View suspicious activity
-                                </Link>
-                            </div>
-                            {(securitySummary?.items.length ?? 0) > 0 && (
-                                <ul className="mt-4 space-y-3">
-                                    {securitySummary?.items.map((item) => (
-                                        <li key={item.id} className="flex items-start justify-between gap-3 text-sm">
-                                            <div>
-                                                <p className="font-semibold text-slate-900">{item.type_label}</p>
-                                                <p className="text-xs text-slate-500">{item.person_name}</p>
-                                            </div>
-                                            <span className="shrink-0 text-xs text-slate-400">
-                                                {item.detected_at
-                                                    ? formatDistanceToNow(new Date(item.detected_at), { addSuffix: true })
-                                                    : ''}
-                                            </span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </section>
                     </Deferred>
                 </SectionErrorBoundary>
 

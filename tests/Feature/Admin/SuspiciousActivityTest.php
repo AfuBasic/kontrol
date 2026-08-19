@@ -9,6 +9,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\SecurityEvent;
 use App\Models\User;
+use App\Services\Admin\DashboardService;
 use App\Services\Admin\SuspiciousActivityService;
 use Spatie\Permission\Models\Role;
 
@@ -182,4 +183,29 @@ test('dashboard widget counts events that require attention', function () {
 
     expect($result['count'])->toBe(2);
     expect($result['items'])->toHaveCount(2);
+});
+
+test('action center includes suspicious activity that requires attention', function () {
+    [$estate, $admin, $assignment] = estateAdmin();
+    $resident = residentIn($estate, 'John Adeyemi');
+    SecurityEvent::factory()->create([
+        'user_id' => $resident->id,
+        'status' => SecurityEventStatus::Pending,
+        'severity' => SecurityEventSeverity::Elevated,
+        'type' => SecurityEventType::NewDeviceAttempt,
+    ]);
+    SecurityEvent::factory()->resolved()->create(['user_id' => $resident->id]);
+
+    $this->actingAs($admin)->withSession(['active_context_assignment_id' => $assignment->id]);
+    app(ContextManager::class)->activate($assignment);
+
+    $item = app(SuspiciousActivityService::class)->actionCenterItem();
+    $attention = app(DashboardService::class)->getDetailedDashboardStats()['needsAttention'];
+
+    expect($item)->not->toBeNull()
+        ->and($item['id'])->toBe('suspicious_activity')
+        ->and($item['count'])->toBe(1)
+        ->and($item['severity'])->toBe('warning')
+        ->and($item['previews'][0]['subtitle'])->toBe('John Adeyemi')
+        ->and(collect($attention)->firstWhere('id', 'suspicious_activity'))->not->toBeNull();
 });

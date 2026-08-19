@@ -75,7 +75,7 @@ export default function ActionCenter({ items }: Props) {
                     <div>
                         <h4 className="text-xs font-bold text-slate-900">Executive Briefing: Normal Operations</h4>
                         <p className="mt-0.5 text-[11px] font-medium text-slate-500">
-                            No operational alerts or pending memberships require administrator action today.
+                            No operational alerts, security events, or pending memberships require administrator action today.
                         </p>
                     </div>
                 </div>
@@ -97,7 +97,7 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
     const previewList = item.previews ? item.previews.slice(0, 4) : [];
     const remainingCount = (item.count ?? item.previews?.length ?? 0) - previewList.length;
 
-    const severityConfig = getSeverityConfig(item.severity);
+    const severityConfig = getSeverityConfig(item.severity, item.type);
     const SeverityIcon = severityConfig.icon;
 
     return (
@@ -187,7 +187,22 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
     );
 }
 
-function getSeverityConfig(severity: AttentionItem['severity']) {
+function getSeverityConfig(severity: AttentionItem['severity'], type?: string) {
+    if (type === 'suspicious_activity') {
+        const isHigh = severity === 'critical' || severity === 'danger';
+
+        return {
+            label: isHigh ? 'High' : 'Elevated',
+            icon: ShieldAlert,
+            iconBg: isHigh ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700',
+            iconColor: isHigh ? 'text-rose-700' : 'text-amber-700',
+            pillClass: isHigh
+                ? 'bg-rose-100 text-rose-800 border border-rose-200/60'
+                : 'bg-amber-100 text-amber-800 border border-amber-200/60',
+            cardBorder: isHigh ? 'border-rose-200/80 hover:border-rose-300' : 'border-amber-200/80 hover:border-amber-300',
+        };
+    }
+
     switch (severity) {
         case 'critical':
         case 'danger':

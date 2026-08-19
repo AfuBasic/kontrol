@@ -1,10 +1,13 @@
 <?php
 
 use App\Enums\AssignmentScope;
+use App\Enums\SecurityEventSeverity;
+use App\Enums\SecurityEventStatus;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
+use App\Models\SecurityEvent;
 use App\Models\User;
 use App\Services\Admin\DashboardService;
 use Database\Seeders\FeatureSeeder;
@@ -60,4 +63,27 @@ it('loads detailed dashboard stats when pending residents exist', function () {
         ->toHaveKeys(['estateHealth', 'operationalSnapshot', 'financialOverview', 'securityOperations', 'needsAttention'])
         ->and($stats['estateHealth']['name'])->toBe($this->estate->name)
         ->and($stats['needsAttention'])->not->toBeEmpty();
+});
+
+it('includes suspicious activity in the action center when events require attention', function () {
+    $resident = User::factory()->create();
+    setPermissionsTeamId($this->estate->id);
+    $resident->assignRole('resident');
+    $this->estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    SecurityEvent::factory()->create([
+        'user_id' => $resident->id,
+        'status' => SecurityEventStatus::Pending,
+        'severity' => SecurityEventSeverity::High,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id]);
+
+    $stats = app(DashboardService::class)->getDetailedDashboardStats();
+    $item = collect($stats['needsAttention'])->firstWhere('id', 'suspicious_activity');
+
+    expect($item)->not->toBeNull()
+        ->and($item['count'])->toBe(1)
+        ->and($item['severity'])->toBe('critical');
 });
