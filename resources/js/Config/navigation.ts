@@ -7,6 +7,7 @@ import {
     BanknotesIcon,
     Squares2X2Icon,
     ShieldCheckIcon,
+    ShieldExclamationIcon,
     UsersIcon,
     UserGroupIcon,
     Cog6ToothIcon,
@@ -25,6 +26,7 @@ import * as ResidentController from '@/actions/App/Http/Controllers/Admin/Reside
 import * as RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
 import * as SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import * as SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
+import * as SuspiciousActivityController from '@/actions/App/Http/Controllers/Admin/SuspiciousActivityController';
 import * as UserController from '@/actions/App/Http/Controllers/Admin/UserController';
 import * as VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 
@@ -117,6 +119,14 @@ export const baseNav: NavItem[] = [
         group: 'Operations',
         description: 'View visitor logs and passes',
         keywords: ['guests', 'logs', 'create visitor', 'add visitor', 'new pass', 'invite guest'],
+    },
+    {
+        name: 'Suspicious Activity',
+        href: SuspiciousActivityController.index.url(),
+        icon: ShieldExclamationIcon,
+        group: 'Operations',
+        description: 'Review security-relevant sign-in events',
+        keywords: ['security', 'devices', 'login', 'alerts', 'suspicious'],
     },
 
     // Finance Group

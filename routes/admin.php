@@ -28,6 +28,7 @@ use App\Http\Controllers\Admin\SecurityPersonnelController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SettlementController;
 use App\Http\Controllers\Admin\SetupController;
+use App\Http\Controllers\Admin\SuspiciousActivityController;
 use App\Http\Controllers\Admin\TransactionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VisitorLogController;
@@ -193,6 +194,10 @@ Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(functio
 
         // Activity Log
         Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')->middleware('feature:activity-logs');
+
+        Route::get('/suspicious-activity', [SuspiciousActivityController::class, 'index'])->name('suspicious-activity.index');
+        Route::get('/suspicious-activity/{event}', [SuspiciousActivityController::class, 'show'])->name('suspicious-activity.show');
+        Route::post('/suspicious-activity/{event}/review', [SuspiciousActivityController::class, 'review'])->name('suspicious-activity.review');
     });
 
     // Profile (own profile)

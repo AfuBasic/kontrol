@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Services\Admin\DashboardService;
+use App\Services\Admin\SuspiciousActivityService;
 use App\Services\EstateContextService;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -14,6 +15,7 @@ class DashboardController extends Controller
     public function __construct(
         protected DashboardService $dashboardService,
         protected EstateContextService $estateContext,
+        protected SuspiciousActivityService $suspiciousActivity,
     ) {}
 
     public function __invoke(): Response
@@ -51,6 +53,9 @@ class DashboardController extends Controller
             'recentPosts' => Inertia::defer(fn () => $this->safe(
                 fn () => $this->dashboardService->getRecentPosts(3)
             ) ?? collect()),
+            'securitySummary' => Inertia::defer(fn () => $this->safe(
+                fn () => $this->suspiciousActivity->dashboardSummary()
+            ) ?? ['count' => 0, 'items' => []]),
         ]);
     }
 
