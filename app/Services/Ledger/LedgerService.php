@@ -306,7 +306,13 @@ class LedgerService
             $status = TransactionStatus::from($status);
         }
 
+        $type = $context['type'] ?? $transaction->type;
+        if (! $type instanceof TransactionType) {
+            $type = TransactionType::from($type);
+        }
+
         $transaction->update([
+            'type' => $type,
             'status' => $status,
             'amount' => (int) ($context['amount'] ?? $transaction->amount),
             'gateway_reference' => $context['gateway_reference'] ?? $transaction->gateway_reference,
