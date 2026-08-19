@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Account\TrustedDeviceController;
 use App\Http\Controllers\Auth\ContextController;
+use App\Http\Controllers\Auth\DeviceAuthorizationController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\InvitationAcceptanceController;
 use App\Http\Controllers\Auth\InviteRegistrationController;
@@ -25,7 +27,7 @@ use Illuminate\Support\Facades\Route;
 */
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'store']);
+    Route::post('/login', [LoginController::class, 'store'])->middleware('throttle:login');
 
     // Google OAuth
     Route::get('/auth/google', [SocialLoginController::class, 'redirectToGoogle'])->name('auth.google');
@@ -41,6 +43,14 @@ Route::middleware('guest')->group(function (): void {
         ->middleware('throttle:3,1')
         ->name('login.otp.resend');
 
+    Route::get('/login/device', [DeviceAuthorizationController::class, 'show'])->name('login.device.show');
+    Route::get('/login/device/status', [DeviceAuthorizationController::class, 'status'])->name('login.device.status');
+    Route::post('/login/device/continue', [DeviceAuthorizationController::class, 'continue'])->name('login.device.continue');
+    Route::post('/login/device/resend', [DeviceAuthorizationController::class, 'resend'])
+        ->middleware('throttle:device-authorization-resend')
+        ->name('login.device.resend');
+    Route::post('/login/device/abort', [DeviceAuthorizationController::class, 'abort'])->name('login.device.abort');
+
     // Invite Link Registration
     Route::get('/join/{token}', [InviteRegistrationController::class, 'show'])->name('invite.join');
     Route::post('/join/{token}', [InviteRegistrationController::class, 'store'])->name('invite.join.store');
@@ -51,6 +61,13 @@ Route::middleware('guest')->group(function (): void {
 Route::get('/auth/magic-login/{token}', [MagicLoginController::class, 'show'])
     ->middleware('signed')
     ->name('auth.magic-login');
+
+Route::get('/device-authorization/{authorization}/approve', [DeviceAuthorizationController::class, 'approve'])
+    ->middleware('signed')
+    ->name('device-authorization.approve');
+Route::get('/device-authorization/{authorization}/deny', [DeviceAuthorizationController::class, 'deny'])
+    ->middleware('signed')
+    ->name('device-authorization.deny');
 
 // Public Invitation Acceptance Routes
 Route::get('/invitations/{token}', [InvitationAcceptanceController::class, 'show'])->name('invitations.show');
@@ -66,6 +83,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/context/select', [ContextController::class, 'index'])->name('context.select');
     Route::post('/context/switch', [ContextController::class, 'switch'])->name('context.switch');
+
+    Route::get('/account/devices', [TrustedDeviceController::class, 'index'])->name('account.devices.index');
+    Route::delete('/account/devices/{device}', [TrustedDeviceController::class, 'destroy'])->name('account.devices.destroy');
 });
 
 /*

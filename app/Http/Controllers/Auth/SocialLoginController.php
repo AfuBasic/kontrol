@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Actions\Auth\ActivateContext;
 use App\Actions\Auth\AuthenticateUser;
-use App\Actions\Auth\CheckTrustedDevice;
-use App\Actions\Auth\GenerateLoginOtp;
-use App\Events\ForceLogout;
+use App\Actions\Auth\EstablishDeviceTrust;
 use App\Models\User;
 use Exception;
 use Google\Client as GoogleClient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
@@ -32,8 +28,7 @@ class SocialLoginController
      */
     public function handleGoogleCallback(
         Request $request,
-        CheckTrustedDevice $checkTrustedDevice,
-        GenerateLoginOtp $generateOtp,
+        EstablishDeviceTrust $establishDeviceTrust,
         AuthenticateUser $authenticateUser,
     ): RedirectResponse {
         try {
@@ -42,7 +37,7 @@ class SocialLoginController
             return redirect()->route('login')->with('error', 'Google authentication failed.');
         }
 
-        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp, $authenticateUser);
+        return $this->authenticateSocialUser($googleUser, $request, $establishDeviceTrust, $authenticateUser);
     }
 
     /**
@@ -50,8 +45,7 @@ class SocialLoginController
      */
     public function handleGoogleMobileToken(
         Request $request,
-        CheckTrustedDevice $checkTrustedDevice,
-        GenerateLoginOtp $generateOtp,
+        EstablishDeviceTrust $establishDeviceTrust,
         AuthenticateUser $authenticateUser,
     ): RedirectResponse {
         $request->validate(['token' => 'required|string']);
@@ -93,7 +87,7 @@ class SocialLoginController
             return redirect()->route('login')->with('error', 'Google token verification failed: '.$e->getMessage());
         }
 
-        return $this->authenticateSocialUser($googleUser, $request, $checkTrustedDevice, $generateOtp, $authenticateUser);
+        return $this->authenticateSocialUser($googleUser, $request, $establishDeviceTrust, $authenticateUser);
     }
 
     /**
@@ -102,8 +96,7 @@ class SocialLoginController
     private function authenticateSocialUser(
         $googleUser,
         Request $request,
-        CheckTrustedDevice $checkTrustedDevice,
-        GenerateLoginOtp $generateOtp,
+        EstablishDeviceTrust $establishDeviceTrust,
         AuthenticateUser $authenticateUser,
     ): RedirectResponse {
         $user = User::where('email', $googleUser->getEmail())->first();
@@ -129,34 +122,6 @@ class SocialLoginController
             return redirect()->route('login')->with('error', $message);
         }
 
-        if (! $checkTrustedDevice->execute($user, $request)) {
-            $request->session()->put([
-                'otp_user_id' => $user->id,
-                'otp_via_social' => true,
-            ]);
-
-            $generateOtp->execute($user, $request);
-
-            return redirect()->route('login.otp.show');
-        }
-
-        Auth::login($user, true);
-
-        $request->session()->regenerate();
-        ForceLogout::dispatchSafely($user->id);
-        $this->storePasswordHashInSession($user);
-
-        $action = app(ActivateContext::class);
-        $redirectUrl = $action->execute($user);
-
-        return redirect()->intended($redirectUrl);
-    }
-
-    /**
-     * Store the user's password hash in the session to support AuthenticateSession middleware.
-     */
-    private function storePasswordHashInSession(User $user): void
-    {
-        session(['password_hash_web' => $user->getAuthPassword()]);
+        return $establishDeviceTrust->execute($user, $request, remember: true);
     }
 }

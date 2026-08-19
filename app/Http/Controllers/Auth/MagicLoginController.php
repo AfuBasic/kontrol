@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Actions\Auth\ActivateContext;
-use App\Events\ForceLogout;
+use App\Actions\Auth\EstablishDeviceTrust;
 use App\Http\Controllers\Controller;
 use App\Models\MagicLoginToken;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class MagicLoginController extends Controller
@@ -31,12 +29,6 @@ class MagicLoginController extends Controller
         // 2. Mark as used immediately to prevent replay attacks
         $magicToken->markAsUsed();
 
-        // 3. Log the user in
-        Auth::login($magicToken->user);
-
-        // 3.5 Accept any pending estate memberships
-        // This ensures that newly invited admins can access the admin dashboard
-        // without being blocked by authorization checks that require an active membership.
         DB::table('estate_users_membership')
             ->where('user_id', $magicToken->user->id)
             ->where('status', 'pending')
@@ -46,22 +38,11 @@ class MagicLoginController extends Controller
             $magicToken->user->markEmailAsVerified();
         }
 
-        // 4. Regenerate session for security
-        $request->session()->regenerate();
-        ForceLogout::dispatchSafely($magicToken->user->id);
-
-        // 5. Activate context and determine destination
-        $defaultDestination = app(ActivateContext::class)->execute($magicToken->user);
-
-        // If a specific destination was requested in the token, we use it only if the context was activated.
-        // However, if they need to select a context, we MUST send them to context.select
-        $destination = $magicToken->destination_url ?: $defaultDestination;
-
-        if ($defaultDestination === route('context.select')) {
-            $destination = $defaultDestination;
+        if ($magicToken->destination_url) {
+            $request->session()->put('url.intended', $magicToken->destination_url);
         }
 
-        return redirect()->to($destination)
+        return app(EstablishDeviceTrust::class)->execute($magicToken->user, $request)
             ->with('success', 'Successfully logged in via magic link.');
     }
 }

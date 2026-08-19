@@ -114,6 +114,17 @@ class AppServiceProvider extends ServiceProvider
 
     protected function configureRateLimiting(): void
     {
+        RateLimiter::for('login', function ($request) {
+            $email = mb_strtolower((string) $request->input('email', ''));
+
+            return Limit::perMinute(8)->by($email.'|'.$request->ip());
+        });
+
+        RateLimiter::for('device-authorization-resend', function ($request) {
+            return Limit::perHour((int) config('device-trust.resend_per_hour'))
+                ->by((string) $request->session()->get('device_authorization_id', $request->ip()));
+        });
+
         RateLimiter::for('estate-board-posts', function ($request) {
             return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
         });

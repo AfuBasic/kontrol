@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Actions\Auth\ActivateContext;
 use App\Actions\Auth\AuthenticateUser;
+use App\Actions\Auth\EstablishDeviceTrust;
 use App\Actions\Auth\GenerateLoginOtp;
 use App\Actions\Auth\VerifyLoginOtp;
-use App\Events\ForceLogout;
+use App\Actions\Security\RecordSecurityEvent;
+use App\Enums\SecurityEventSeverity;
+use App\Enums\SecurityEventStatus;
+use App\Enums\SecurityEventType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\VerifyLoginOtpRequest;
 use App\Models\User;
+use App\Support\DeviceMetadata;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,7 +52,9 @@ class LoginOtpController extends Controller
     public function verify(
         VerifyLoginOtpRequest $request,
         VerifyLoginOtp $verifyOtp,
-        AuthenticateUser $authenticateUser
+        AuthenticateUser $authenticateUser,
+        EstablishDeviceTrust $establishDeviceTrust,
+        RecordSecurityEvent $recordSecurityEvent,
     ): RedirectResponse {
         $userId = $request->session()->get('otp_user_id');
 
@@ -65,29 +71,18 @@ class LoginOtpController extends Controller
         }
 
         if (! $verifyOtp->execute($user, $request->validated('code'), $request)) {
+            $this->recordFailedAttempt($user, $request, $recordSecurityEvent);
+
             return back()->withErrors(['code' => 'The verification code is invalid or has expired.']);
         }
 
-        // Re-check suspension / activation in case status changed after OTP was issued.
         $authenticateUser->ensureCanLogin($user->fresh() ?? $user);
 
-        $remember = $request->session()->get('otp_remember', false);
-        $viaSocial = $request->session()->get('otp_via_social', false);
+        $remember = (bool) $request->session()->get('otp_remember', false);
 
         $request->session()->forget(['otp_user_id', 'otp_remember', 'otp_via_social']);
 
-        Auth::login($user, $remember);
-        $request->session()->regenerate();
-
-        ForceLogout::dispatchSafely($user->id);
-
-        $this->storePasswordHashInSession($user);
-
-        $authenticateUser->logActivity($user);
-
-        $action = app(ActivateContext::class);
-
-        return redirect()->intended($action->execute($user));
+        return $establishDeviceTrust->execute($user, $request, $remember);
     }
 
     /**
@@ -126,11 +121,25 @@ class LoginOtpController extends Controller
         return $masked.'@'.$domain;
     }
 
-    /**
-     * Store password hash in session for AuthenticateSession middleware (social login).
-     */
-    private function storePasswordHashInSession(User $user): void
+    private function recordFailedAttempt(User $user, Request $request, RecordSecurityEvent $recordSecurityEvent): void
     {
-        session(['password_hash_web' => $user->getAuthPassword()]);
+        $key = 'login-otp-failures:'.$user->id;
+        $window = (int) config('device-trust.failed_attempt_window_minutes') * 60;
+        $threshold = (int) config('device-trust.failed_attempt_threshold');
+
+        RateLimiter::hit($key, $window);
+
+        if (RateLimiter::attempts($key) !== $threshold) {
+            return;
+        }
+
+        $recordSecurityEvent->open(
+            user: $user,
+            type: SecurityEventType::RepeatedFailedAuthentication,
+            severity: SecurityEventSeverity::Elevated,
+            status: SecurityEventStatus::Blocked,
+            label: 'Repeated sign-in failures were detected.',
+            metadata: DeviceMetadata::fromRequest($request),
+        );
     }
 }

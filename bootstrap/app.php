@@ -141,6 +141,12 @@ return Application::configure(basePath: dirname(__DIR__))
             if (str_starts_with($request->path(), 'invitation')) {
                 return redirect()->route('invitation.invalid');
             }
+
+            if (str_starts_with($request->path(), 'device-authorization')) {
+                return Inertia::render('Auth/DeviceLinkInvalid', [
+                    'reason' => 'expired',
+                ])->toResponse($request)->setStatusCode(403);
+            }
         });
 
         $exceptions->render(function (Throwable $e, Request $request) {

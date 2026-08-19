@@ -2,43 +2,48 @@
 
 namespace App\Actions\Auth;
 
-use App\Auth\ContextManager;
+use App\Models\TrustedDevice;
 use App\Models\User;
+use App\Services\Security\DeviceTrustCookie;
 use Illuminate\Http\Request;
 
 class CheckTrustedDevice
 {
+    public function __construct(private DeviceTrustCookie $deviceTrustCookie) {}
+
     /**
-     * Check if the current device is trusted for the given user.
-     * Returns true (skip OTP) for non-resident roles.
+     * Resolve an active trusted device for the presented credential.
      */
-    public function execute(User $user, Request $request): bool
+    public function execute(User $user, Request $request): ?TrustedDevice
     {
-        // Set team context so Spatie Permission can resolve estate-scoped role assignments
-        $estate = $user->estates()->wherePivot('status', 'accepted')->first();
-        if ($estate) {
-            app(ContextManager::class)->setSystemContext($estate->id);
-        }
+        $plainTextToken = $this->deviceTrustCookie->read($request);
 
-        if (! $user->hasRole('resident') && ! $user->hasRole('household_member')) {
-            return true;
+        if ($plainTextToken === null) {
+            return null;
         }
-
-        $userAgentHash = hash('sha256', $request->userAgent() ?? '');
 
         $device = $user->trustedDevices()
-            ->where('user_agent_hash', $userAgentHash)
+            ->where('token_hash', $this->deviceTrustCookie->hash($plainTextToken))
             ->first();
 
-        if ($device) {
-            $device->update([
-                'last_used_at' => now(),
-                'ip_address' => $request->ip(),
-            ]);
-
-            return true;
+        if ($device === null || ! $device->isActive()) {
+            return null;
         }
 
-        return false;
+        return $device;
+    }
+
+    public function findRevoked(User $user, Request $request): ?TrustedDevice
+    {
+        $plainTextToken = $this->deviceTrustCookie->read($request);
+
+        if ($plainTextToken === null) {
+            return null;
+        }
+
+        return $user->trustedDevices()
+            ->where('token_hash', $this->deviceTrustCookie->hash($plainTextToken))
+            ->whereNotNull('revoked_at')
+            ->first();
     }
 }
