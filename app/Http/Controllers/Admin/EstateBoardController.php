@@ -119,15 +119,17 @@ class EstateBoardController extends Controller
 
         $targetsCount = 0;
         if ($postData->applies_to === 'all') {
-            // Need to estimate total users for this post
+            // Need to estimate total users for this post.
+            // We use whereNull('suspended_at') instead of active() so that residents
+            // who haven't yet verified their email are still counted as "delivered".
             if ($postData->property_owner_id) {
                 $targetsCount = User::query()
                     ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.property_owner_id', $postData->property_owner_id))
                     ->forEstate($estateId)
-                    ->active()
+                    ->whereNull('suspended_at')
                     ->count();
             } else {
-                $query = User::forEstate($estateId)->active();
+                $query = User::forEstate($estateId)->whereNull('suspended_at');
                 if ($postData->audience === EstateBoardPostAudience::Residents) {
                     $query->role('resident');
                 } elseif ($postData->audience === EstateBoardPostAudience::Security) {
@@ -142,7 +144,7 @@ class EstateBoardController extends Controller
                 } else {
                     $propertyUsersCount = User::query()
                         ->whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
-                        ->active()
+                        ->whereNull('suspended_at')
                         ->count();
                     $targetsCount += $propertyUsersCount;
                 }
