@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\Resident;
 
+use App\Models\HouseholdMember;
+use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreHouseholdMemberRequest extends FormRequest
 {
@@ -18,9 +19,37 @@ class StoreHouseholdMemberRequest extends FormRequest
      */
     public function rules(): array
     {
+        $primaryResidentId = $this->user()?->id;
+
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'email' => [
+                'required',
+                'email:rfc,dns',
+                'max:255',
+                function (string $attribute, mixed $value, \Closure $fail) use ($primaryResidentId): void {
+                    $email = strtolower(trim($value));
+
+                    /** Check if email already belongs to one of this resident's household members. */
+                    $existingMember = User::where('email', $email)->first();
+                    if ($existingMember) {
+                        $alreadyInHousehold = HouseholdMember::where('primary_resident_id', $primaryResidentId)
+                            ->where('household_member_id', $existingMember->id)
+                            ->exists();
+
+                        if ($alreadyInHousehold) {
+                            $fail('This person is already a member of your household.');
+
+                            return;
+                        }
+                    }
+
+                    /** Prevent adding yourself as a household member. */
+                    if ($existingMember && $existingMember->id === $primaryResidentId) {
+                        $fail('You cannot add yourself as a household member.');
+                    }
+                },
+            ],
         ];
     }
 
@@ -30,7 +59,8 @@ class StoreHouseholdMemberRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.unique' => 'A user with this email already exists.',
+            'email.required' => 'Please provide an email address.',
+            'email.email' => 'Please enter a valid email address.',
         ];
     }
 }
