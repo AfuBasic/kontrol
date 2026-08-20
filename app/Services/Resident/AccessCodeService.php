@@ -75,8 +75,10 @@ class AccessCodeService
         $guestLimit = $data['guest_limit'] ?? null;
         $status = AccessCodeStatus::Active;
 
+        $tz = config('app.timezone', 'Africa/Lagos');
+
         if (! empty($data['starts_at'])) {
-            $startsAt = Carbon::parse($data['starts_at']);
+            $startsAt = Carbon::parse($data['starts_at'])->setTimezone($tz);
             if ($startsAt->isFuture()) {
                 $status = AccessCodeStatus::Scheduled;
             }
@@ -87,7 +89,7 @@ class AccessCodeService
         $max = $settings->access_code_max_lifespan_minutes ?: 1440;
 
         if (! empty($data['expires_at'])) {
-            $expiresAt = Carbon::parse($data['expires_at']);
+            $expiresAt = Carbon::parse($data['expires_at'])->setTimezone($tz);
             $baseStart = $startsAt ?? now();
             $duration = $baseStart->diffInMinutes($expiresAt);
             if ($duration < $min) {
