@@ -8,13 +8,14 @@ import type { SharedData } from '@/types';
 export function useExternalBilling() {
     const { app_url: appUrl } = usePage<SharedData>().props;
 
-    const openExternalBilling = async (couponCode?: string) => {
+    const openExternalBilling = async (couponCode?: string | React.MouseEvent | any) => {
         const isNative = Capacitor.isNativePlatform();
-        const queryParams = couponCode ? { params: { coupon: couponCode } } : {};
+        const validCoupon = typeof couponCode === 'string' && couponCode !== '[object Object]' && couponCode.trim() !== '' ? couponCode.trim() : undefined;
+        const queryParams = validCoupon ? { params: { coupon: validCoupon } } : {};
 
         // 1. Native Mobile Platform (iOS/Android)
         if (isNative) {
-            let url = `${appUrl}/resident/billing${couponCode ? `?coupon=${encodeURIComponent(couponCode)}` : ''}`;
+            let url = `${appUrl}/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
             try {
                 const response = await axios.get(ResidentBillingController.generateMagicUrl.url(), queryParams);
                 url = response.data.magic_url || url;
@@ -49,12 +50,12 @@ export function useExternalBilling() {
             if (data.magic_url && newWindow) {
                 newWindow.location.href = data.magic_url;
             } else if (newWindow) {
-                newWindow.location.href = `${appUrl}/resident/billing${couponCode ? `?coupon=${encodeURIComponent(couponCode)}` : ''}`;
+                newWindow.location.href = `${appUrl}/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
             }
         } catch (e) {
             console.error('Failed to generate magic URL for web:', e);
             if (newWindow) {
-                newWindow.location.href = `${appUrl}/resident/billing${couponCode ? `?coupon=${encodeURIComponent(couponCode)}` : ''}`;
+                newWindow.location.href = `${appUrl}/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
             }
         }
     };
