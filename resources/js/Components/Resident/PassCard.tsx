@@ -21,6 +21,12 @@ export interface PassData {
     host_name?: string;
     notes?: string | null;
     created_at?: string;
+    /** Server-formatted arrival time in app timezone (e.g. "9:00 PM") */
+    arrival_time?: string | null;
+    /** Server-formatted arrival date in app timezone (e.g. "2026-08-20") */
+    arrival_date?: string | null;
+    /** Server-formatted expiry time in app timezone (e.g. "11:00 PM") */
+    expires_time?: string | null;
 }
 
 interface Props {
@@ -37,36 +43,44 @@ export default function PassCard({ pass, qrUrl }: Props) {
     const displayName = resolveVisitorName(pass.visitor_name, pass.type, pass.purpose);
 
     // Format single combined validity range
+    // Prefer server-provided arrival_time / expires_time (already in correct timezone)
+    // to avoid browser timezone conversion issues (e.g. UTC vs Africa/Lagos offset)
     const formatValidityRange = () => {
         if (pass.type === 'long_lived') {
             if (!pass.expires_at) return 'Long-term access · Unlimited';
             return `Long-term access · Until ${formatRelativeDate(pass.expires_at)}`;
         }
 
-        const startDate = pass.starts_at ? new Date(pass.starts_at) : pass.created_at ? new Date(pass.created_at) : null;
-        const endDate = pass.expires_at ? new Date(pass.expires_at) : null;
+        const startTimeStr = pass.arrival_time
+            ?? (pass.starts_at
+                ? new Date(pass.starts_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
+                : null);
 
-        if (!startDate && !endDate) return 'Unlimited validity';
+        const endTimeStr = pass.expires_time
+            ?? (pass.expires_at
+                ? new Date(pass.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
+                : null);
 
-        const startTimeStr = startDate
-            ? startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
-            : null;
+        const dateFormatted = pass.arrival_date
+            ? formatRelativeDate(pass.arrival_date)
+            : formatRelativeDate(pass.starts_at || pass.expires_at || pass.created_at);
 
-        const endTimeStr = endDate ? endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() : null;
+        if (!startTimeStr && !endTimeStr) return dateFormatted || 'Unlimited validity';
 
-        const dateFormatted = formatRelativeDate(startDate || endDate);
+        // Normalize case for server-provided times (e.g. "9:00 PM" → "9:00 pm")
+        const normalizeTime = (t: string) => t.toLowerCase();
 
         if (startTimeStr && endTimeStr) {
-            return `${startTimeStr} – ${endTimeStr} (${dateFormatted})`;
+            return `${normalizeTime(startTimeStr)} – ${normalizeTime(endTimeStr)} (${dateFormatted})`;
         }
         if (endTimeStr) {
-            return `Until ${endTimeStr} (${dateFormatted})`;
+            return `Until ${normalizeTime(endTimeStr)} (${dateFormatted})`;
         }
         if (startTimeStr) {
-            return `From ${startTimeStr} (${dateFormatted})`;
+            return `From ${normalizeTime(startTimeStr)} (${dateFormatted})`;
         }
 
-        return dateFormatted;
+        return dateFormatted || 'Unlimited validity';
     };
 
     const isEvent = pass.type === 'event';

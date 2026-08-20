@@ -136,6 +136,9 @@ class AccessCodeController extends Controller
             'arrival_time' => $code->starts_at !== null
                 ? $effectiveVisitAt->timezone(config('app.timezone', 'Africa/Lagos'))->format('g:i A')                   // "10:00 AM"
                 : null,                                                  // null = "Anytime"
+            'expires_time' => $code->expires_at !== null
+                ? $code->expires_at->timezone(config('app.timezone', 'Africa/Lagos'))->format('g:i A')
+                : null,
         ];
 
         if ($withCompletion) {
@@ -221,6 +224,9 @@ class AccessCodeController extends Controller
 
         $userCode->load(['estate', 'user:id,name']);
 
+        $tz = config('app.timezone', 'Africa/Lagos');
+        $effectiveVisitAt = $userCode->effective_visit_at;
+
         return Inertia::render('Resident/Visitors/Success', [
             'accessCode' => [
                 'id' => $userCode->id,
@@ -242,6 +248,13 @@ class AccessCodeController extends Controller
                 'host_name' => $userCode->user->name,
                 'notes' => $userCode->notes,
                 'resident_address' => $this->resolveResidentAddress(),
+                'arrival_date' => $effectiveVisitAt->timezone($tz)->toDateString(),
+                'arrival_time' => $userCode->starts_at !== null
+                    ? $effectiveVisitAt->timezone($tz)->format('g:i A')
+                    : null,
+                'expires_time' => $userCode->expires_at !== null
+                    ? $userCode->expires_at->timezone($tz)->format('g:i A')
+                    : null,
             ],
         ]);
     }
@@ -259,6 +272,9 @@ class AccessCodeController extends Controller
 
         $dateFilter = $request->input('date');
         $usageLogs = $this->accessCodeService->getUsageHistory($userCode, $dateFilter);
+
+        $tz = config('app.timezone', 'Africa/Lagos');
+        $effectiveVisitAt = $userCode->effective_visit_at;
 
         return Inertia::render('Resident/Visitors/Show', [
             'accessCode' => [
@@ -284,6 +300,13 @@ class AccessCodeController extends Controller
                 'notes' => $userCode->notes,
                 'uses_count' => $userCode->accessLogs()->count(),
                 'resident_address' => $this->resolveResidentAddress(),
+                'arrival_date' => $effectiveVisitAt->timezone($tz)->toDateString(),
+                'arrival_time' => $userCode->starts_at !== null
+                    ? $effectiveVisitAt->timezone($tz)->format('g:i A')
+                    : null,
+                'expires_time' => $userCode->expires_at !== null
+                    ? $userCode->expires_at->timezone($tz)->format('g:i A')
+                    : null,
             ],
             'usageLogs' => [
                 'data' => collect($usageLogs->items())->map(fn ($log) => [
