@@ -237,11 +237,12 @@ export default function Show({ incident, comments, canClose }: Props) {
 
                                 <button
                                     onClick={handleUpvote}
-                                    disabled={isReporter}
+                                    disabled={isReporter || incident.status === 'closed'}
+                                    title={incident.status === 'closed' ? 'Upvoting is disabled on closed incidents' : isReporter ? 'You cannot upvote your own incident' : undefined}
                                     className={`flex min-h-[38px] items-center gap-2 rounded-xl px-4 py-2 text-xs font-black tracking-wider uppercase transition-all ${
                                         incident.is_upvoted
                                             ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
-                                            : isReporter
+                                            : isReporter || incident.status === 'closed'
                                               ? 'cursor-not-allowed border border-slate-200 bg-slate-50 text-slate-400'
                                               : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50 hover:text-slate-700 active:scale-95'
                                     }`}
