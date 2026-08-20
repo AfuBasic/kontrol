@@ -1,29 +1,23 @@
 import { Deferred, Head, Link, usePage, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
     Megaphone,
     ChevronRight,
     Wallet,
     Users,
     AlertCircle,
-    Bell,
-    Plus,
     CheckCircle2,
     Clock,
-    Calendar,
-    ArrowRight,
     Activity,
     PlusCircle,
     XCircle,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, } from 'react';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import { FeedItemSkeleton } from '@/Components/Skeletons';
 import { OfflineState } from '@/Components/States';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import { useStaleData } from '@/Hooks/useStaleData';
-import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 import type { EstateBoardPost } from '@/types';
 import type { AccessCode, ActivityItem, HomeStats } from '@/types/access-code';
