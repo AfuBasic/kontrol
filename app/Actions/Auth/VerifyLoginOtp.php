@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Hash;
 class VerifyLoginOtp
 {
     /**
-     * Verify the OTP code. Identity only — device trust is a separate control.
+     * Verify the OTP code. Identity only - device trust is a separate control.
      */
     public function execute(User $user, string $code, Request $request): bool
     {
