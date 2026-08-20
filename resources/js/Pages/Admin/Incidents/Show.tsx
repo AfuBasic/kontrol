@@ -1,95 +1,35 @@
+import React, { useState } from 'react';
 import { Deferred, Head, Link, router, useForm } from '@inertiajs/react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { AnimatePresence, motion } from 'framer-motion';
 import {
-    
+    Activity,
+    AlertCircle,
     ArrowLeft,
+    CheckCircle2,
     Clock,
+    Flame,
     Lock,
     MapPin,
-    MessageSquare,
-    Send,
+    Megaphone,
+    Paperclip,
+    Shield,
+    Sliders,
     Trash2,
+    User,
+    UserCheck,
     X,
     ZoomIn,
-    Tag,
-    CornerDownRight,
 } from 'lucide-react';
-import React, { useState } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
-
+import IncidentStatusBadge from '@/Components/Incidents/IncidentStatusBadge';
+import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
+import IncidentTimeline from '@/Components/Incidents/IncidentTimeline';
+import OfficialUpdates from '@/Components/Incidents/OfficialUpdates';
+import IncidentDiscussion from '@/Components/Incidents/IncidentDiscussion';
+import type { Incident, IncidentComment, IncidentStatus, PaginatedData } from '@/types';
 
 type AdminUser = {
     id: number;
     name: string;
-};
-
-type CommentAuthor = {
-    name: string;
-    email: string;
-};
-
-type IncidentComment = {
-    id: number;
-    body: string;
-    created_at: string;
-    author: CommentAuthor;
-    replies?: IncidentComment[];
-};
-
-type Incident = {
-    id: number;
-    ulid: string;
-    hashid: string;
-    title: string;
-    body: string;
-    category:
-        | {
-              value: string;
-              label: string;
-          }
-        | string;
-    priority:
-        | {
-              value: string;
-              label: string;
-          }
-        | string;
-    status:
-        | {
-              value: string;
-              label: string;
-          }
-        | string;
-    location: string | null;
-    is_private: boolean;
-    created_at: string;
-    updated_at: string;
-    acknowledged_at: string | null;
-    resolving_at: string | null;
-    solved_at: string | null;
-    closed_at: string | null;
-    upvotes_count: number;
-    comments_count: number;
-    attachment_url: string | null;
-    attachment_type: string | null;
-    reporter: {
-        id: number;
-        name: string;
-        email: string;
-    };
-    reporter_role: string;
-    source: string;
-    assignee: {
-        id: number;
-        name: string;
-    } | null;
-    activities?: Array<{
-        id: number;
-        description: string;
-        created_at: string;
-        causer?: { name: string } | null;
-    }>;
 };
 
 type ActivityEvent = {
@@ -99,431 +39,371 @@ type ActivityEvent = {
     causer: { name: string } | null;
 };
 
-type Props = {
+interface Props {
     incident: Incident;
-    comments?: {
-        data: IncidentComment[];
-    } | null;
+    official_comments?: IncidentComment[];
+    discussion_comments?: PaginatedData<IncidentComment>;
+    comments?: PaginatedData<IncidentComment>;
     admins: AdminUser[];
     statuses: Array<{ value: string; label: string }>;
     categories: Array<{ value: string; label: string }>;
-    activities?: ActivityEvent[] | null;
-};
+    activities?: ActivityEvent[];
+}
 
-export default function IncidentShow({ incident, comments, admins, statuses, categories, activities }: Props) {
+export default function Show({
+    incident,
+    official_comments = [],
+    discussion_comments,
+    comments,
+    admins,
+    statuses,
+    categories,
+    activities = [],
+}: Props) {
     const { confirm } = useAdminConfirmation();
-    const commentList = comments?.data ?? [];
-    const activityList = activities ?? [];
-    const [commentText, setCommentText] = useState('');
-    const [replyToId, setReplyToId] = useState<number | null>(null);
-    const [submittingComment, setSubmittingComment] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [officialBody, setOfficialBody] = useState('');
+    const [submittingOfficial, setSubmittingOfficial] = useState(false);
+    const [submittingDiscussion, setSubmittingDiscussion] = useState(false);
 
-    // Form state for status & assignment & priority & category
-    const { data, setData, put: _put, processing: _processing } = useForm({
-        status: typeof incident.status === 'object' ? incident.status.value : incident.status,
+    // Form for quick admin status/assignee/priority updates
+    const { data, setData, patch, processing, errors } = useForm({
+        status: incident.status,
         assigned_to: incident.assignee?.id || '',
-        priority: typeof incident.priority === 'object' ? incident.priority.value : incident.priority,
-        category: typeof incident.category === 'object' ? incident.category.value : incident.category,
+        priority: incident.priority || 'medium',
+        category: typeof incident.category === 'object' ? (incident.category as any).value : incident.category,
         is_private: incident.is_private,
+        notes: '',
     });
 
-    const handleUpdateField = (key: string, value: any) => {
-        setData(key as any, value);
-        router.put(
-            `/admin/incidents/${incident.hashid}/status`,
-            {
-                ...data,
-                [key]: value,
-            },
-            {
-                preserveScroll: true,
-            },
-        );
+    const isClosed = incident.status === 'closed';
+
+    const discussionData = discussion_comments || comments || {
+        data: [],
+        current_page: 1,
+        last_page: 1,
+        per_page: 30,
+        total: 0,
+        first_page_url: '',
+        last_page_url: '',
+        next_page_url: null,
+        prev_page_url: null,
+        path: '',
+        from: null,
+        to: null,
+        links: [],
     };
 
-    const handleCommentSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!commentText.trim()) return;
-
-        setSubmittingComment(true);
-        router.post(
-            `/admin/incidents/${incident.hashid}/comments`,
-            {
-                body: commentText,
-                parent_id: replyToId,
-            },
-            {
-                preserveScroll: true,
-                onSuccess: () => {
-                    setCommentText('');
-                    setReplyToId(null);
-                },
-                onFinish: () => {
-                    setSubmittingComment(false);
-                },
-            },
-        );
-    };
-
-    const handleDeleteComment = (commentId: number) => {
+    const handleStatusTransition = (nextStatus: IncidentStatus) => {
         confirm({
-            title: 'Delete comment',
-            message: 'Are you sure you want to delete this comment?',
-            confirmLabel: 'Delete comment',
-            onConfirm: () =>
-                router.delete(`/admin/incidents/comments/${commentId}`, {
-                    preserveScroll: true,
-                }),
+            title: `Advance status to ${nextStatus.toUpperCase()}?`,
+            message: `Are you sure you want to transition this incident to ${nextStatus}? Relevant estate parties will be notified.`,
+            confirmLabel: 'Update Status',
+            onConfirm: () => {
+                router.patch(
+                    `/admin/incidents/${incident.hashid}/status`,
+                    { status: nextStatus },
+                    { preserveScroll: true }
+                );
+            },
         });
     };
 
-    const handleDeleteIncident = () => {
+    const handleSaveSidebarSettings = (e: React.FormEvent) => {
+        e.preventDefault();
+        patch(`/admin/incidents/${incident.hashid}/status`, {
+            preserveScroll: true,
+        });
+    };
+
+    const handlePostOfficialUpdate = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!officialBody.trim() || submittingOfficial) return;
+
+        setSubmittingOfficial(true);
+        router.post(
+            `/admin/incidents/${incident.hashid}/comments`,
+            { body: officialBody.trim() },
+            {
+                preserveScroll: true,
+                onSuccess: () => setOfficialBody(''),
+                onFinish: () => setSubmittingOfficial(false),
+            }
+        );
+    };
+
+    const handleDiscussionComment = (body: string, parentId?: number | null) => {
+        setSubmittingDiscussion(true);
+        router.post(
+            `/admin/incidents/${incident.hashid}/comments`,
+            {
+                body,
+                parent_id: parentId || undefined,
+            },
+            {
+                preserveScroll: true,
+                onFinish: () => setSubmittingDiscussion(false),
+            }
+        );
+    };
+
+    const handleDelete = () => {
         confirm({
-            title: 'Delete incident report',
-            message: 'Are you sure you want to delete this incident report permanently? This action cannot be undone.',
-            confirmLabel: 'Delete report',
+            title: 'Permanently Delete Incident?',
+            message: 'This incident case file and all comments will be removed from the system. This cannot be undone.',
+            confirmLabel: 'Delete Case',
             onConfirm: () => router.delete(`/admin/incidents/${incident.hashid}`),
         });
     };
 
-    // SLA helper calculations
-    const getSlaStatus = () => {
-        const created = new Date(incident.created_at).getTime();
-        const resolved = incident.solved_at
-            ? new Date(incident.solved_at).getTime()
-            : incident.closed_at
-              ? new Date(incident.closed_at).getTime()
-              : null;
-
-        const nowTime = new Date().getTime();
-        const durationLimit = 24 * 60 * 60 * 1000; // 24 hours in ms
-        const warningLimit = 16 * 60 * 60 * 1000; // 16 hours in ms
-
-        if (resolved) {
-            const timeTaken = resolved - created;
-            const breached = timeTaken > durationLimit;
-            return {
-                label: breached ? 'SLA Breached' : 'SLA Met',
-                style: breached ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
-                indicator: breached ? '🔴' : '🟢',
-                breached,
-            };
-        }
-
-        const elapsed = nowTime - created;
-        if (elapsed > durationLimit) {
-            return {
-                label: 'SLA Breached',
-                style: 'bg-rose-50 text-rose-700 border-rose-250 animate-pulse',
-                indicator: '🔴',
-                breached: true,
-            };
-        } else if (elapsed > warningLimit) {
-            return {
-                label: 'SLA Warning',
-                style: 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse',
-                indicator: '🟠',
-                breached: false,
-            };
-        } else {
-            const remainingHours = Math.round((durationLimit - elapsed) / (1000 * 60 * 60));
-            return {
-                label: `${remainingHours}h remaining`,
-                style: 'bg-slate-50 text-slate-700 border-slate-200',
-                indicator: '🟢',
-                breached: false,
-            };
+    const formatDate = (isoString: string) => {
+        try {
+            const d = new Date(isoString);
+            return d.toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        } catch {
+            return isoString;
         }
     };
-
-    // Priority Styling
-    const _getPriorityStyles = (val: string) => {
-        switch (val) {
-            case 'critical':
-                return 'bg-rose-50 text-rose-700 border-rose-200/50';
-            case 'high':
-                return 'bg-orange-50 text-orange-700 border-orange-200/50';
-            case 'medium':
-                return 'bg-blue-50 text-blue-700 border-blue-200/50';
-            default:
-                return 'bg-slate-50 text-slate-700 border-slate-200';
-        }
-    };
-
-    const _statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
-    const _priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
-    const categoryVal = typeof incident.category === 'object' ? incident.category.value : incident.category;
-
-    const slaInfo = getSlaStatus();
 
     return (
-        <>
-            <Head title={`Incident Workspace: ${incident.title}`} />
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+            <Head title={`Admin Case File - ${incident.title}`} />
 
-            {/* Back bar */}
-            <div className="mb-6 flex items-center justify-between">
+            {/* Back Navigation & Case Management Header */}
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <Link
                     href="/admin/incidents"
-                    className="inline-flex items-center gap-1 text-xs font-black tracking-wider text-slate-500 uppercase transition hover:text-slate-900"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors"
                 >
-                    <ArrowLeft className="h-4 w-4" />
-                    Back to Incident Workspace
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back to Incident Board</span>
                 </Link>
 
-                <button
-                    onClick={handleDeleteIncident}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50/50 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700"
-                >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Report
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Case</span>
+                    </button>
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                {/* LEFT COLUMN: Main Issue Body, Media, Activity Log & Comments */}
-                <div className="space-y-6 lg:col-span-2">
-                    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
-                        {/* Header Details */}
-                        <div className="mb-4 flex flex-wrap items-center gap-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">
-                            <span className="inline-flex items-center gap-1 text-slate-500">
-                                <Tag className="h-3.5 w-3.5" />
-                                {categoryVal.replace('_', ' ')}
-                            </span>
-                            <span>•</span>
-                            <span>Reported {format(new Date(incident.created_at), 'PPP')}</span>
-                            {incident.is_private && (
-                                <>
-                                    <span>•</span>
-                                    <span className="inline-flex items-center gap-1 text-rose-600">
-                                        <Lock className="h-3 w-3" /> Private
+            {/* Main Console Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                {/* Left 8 Cols: Incident Case Narrative & Comments */}
+                <div className="lg:col-span-8 space-y-6">
+                    {/* Primary Case File Card */}
+                    <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                        {/* Status and Action Ribbon */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <div className="flex items-center gap-2.5">
+                                <IncidentCategoryLabel
+                                    category={incident.category}
+                                    size="sm"
+                                    showBadge
+                                />
+                                {incident.reference_code && (
+                                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                                        {incident.reference_code}
                                     </span>
-                                </>
-                            )}
+                                )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <IncidentStatusBadge status={incident.status} size="md" />
+                            </div>
                         </div>
 
                         {/* Title */}
-                        <h1 className="text-xl leading-snug font-black text-slate-900 sm:text-2xl">{incident.title}</h1>
+                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-snug">
+                            {incident.title}
+                        </h1>
 
-                        {/* Location */}
-                        {incident.location && (
-                            <div className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-slate-500">
-                                <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                <span>{incident.location}</span>
-                            </div>
-                        )}
-
-                        {/* Body / Description */}
-                        <div className="text-slate-655 mt-5 border-t border-slate-50 pt-5 text-sm leading-relaxed whitespace-pre-wrap">
+                        {/* Description */}
+                        <div className="mt-4 text-sm sm:text-base font-normal leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line">
                             {incident.body}
                         </div>
 
-                        {/* Image/Video attachments */}
+                        {/* Photo / Media Attachment */}
                         {incident.attachment_url && (
-                            <div className="mt-6 border-t border-slate-50 pt-5">
-                                <h3 className="mb-3 text-[10px] font-black tracking-wider text-slate-400 uppercase">Evidence / Attachments</h3>
-                                <div className="group relative max-w-lg overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-1.5 shadow-xs">
-                                    {incident.attachment_type === 'image' ? (
-                                        <img
-                                            src={incident.attachment_url}
-                                            alt="Incident attachment"
-                                            className="max-h-80 w-full cursor-pointer rounded-lg object-cover"
-                                            onClick={() => setIsLightboxOpen(true)}
-                                        />
-                                    ) : (
-                                        <video src={incident.attachment_url} controls className="max-h-80 w-full rounded-lg object-contain" />
-                                    )}
-
-                                    {incident.attachment_type === 'image' && (
-                                        <button
-                                            onClick={() => setIsLightboxOpen(true)}
-                                            className="absolute right-4 bottom-4 flex items-center gap-1 rounded-xl bg-slate-950/80 px-3 py-1.5 text-xs font-bold text-white shadow-lg backdrop-blur-xs transition hover:bg-slate-900"
-                                        >
-                                            <ZoomIn className="h-3.5 w-3.5" />
-                                            Enlarge
-                                        </button>
-                                    )}
+                            <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
+                                    <Paperclip className="w-3.5 h-3.5" />
+                                    Attached Evidence
+                                </h4>
+                                <div
+                                    onClick={() => setIsLightboxOpen(true)}
+                                    className="group relative inline-block max-w-sm cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xs transition-all hover:border-indigo-300 dark:border-slate-800 dark:bg-slate-950"
+                                >
+                                    <img
+                                        src={incident.attachment_url}
+                                        alt="Evidence Preview"
+                                        className="h-48 w-full object-cover transition-transform group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-slate-900/30 opacity-0 transition-opacity group-hover:opacity-100 flex items-center justify-center gap-2 text-white text-xs font-bold">
+                                        <ZoomIn className="w-4 h-4" /> Expand Image
+                                    </div>
                                 </div>
                             </div>
                         )}
-                    </div>
 
-                    {/* COMMENTS / OPERATIONAL THREAD */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-5 flex items-center gap-2 border-b border-slate-50 pb-3 text-xs font-black tracking-wider text-slate-900 uppercase">
-                            <MessageSquare className="h-4.5 w-4.5 text-slate-400" />
-                            Operational Log & Discussion ({commentList.length})
-                        </h3>
-
-                        {/* Comments feed */}
-                        <Deferred data="comments" fallback={<div className="mb-4 h-24 animate-pulse rounded-xl bg-slate-50" />}>
-                            <div className="space-y-4">
-                                {commentList.map((comment) => (
-                                    <div key={comment.id} className="rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-50 text-xs font-black text-indigo-700">
-                                                    {comment.author.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div>
-                                                    <span className="text-xs font-bold text-slate-900">{comment.author.name}</span>
-                                                    <span className="ml-2 text-[10px] font-bold text-slate-400">
-                                                        {formatDistanceToNow(new Date(comment.created_at))} ago
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleDeleteComment(comment.id)}
-                                                className="text-slate-350 transition hover:text-red-600"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        </div>
-                                        <p className="text-slate-655 mt-2.5 text-xs leading-relaxed font-semibold">{comment.body}</p>
-
-                                        {/* Replies */}
-                                        {comment.replies &&
-                                            comment.replies.map((reply) => (
-                                                <div
-                                                    key={reply.id}
-                                                    className="mt-3.5 ml-6 flex items-start gap-2.5 border-l border-slate-200 py-1 pl-4"
-                                                >
-                                                    <CornerDownRight className="mt-1 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                                    <div className="flex-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs font-bold text-slate-800">{reply.author.name}</span>
-                                                            <span className="text-[9px] font-bold text-slate-400">
-                                                                {formatDistanceToNow(new Date(reply.created_at))} ago
-                                                            </span>
-                                                        </div>
-                                                        <p className="mt-1 text-xs font-medium text-slate-600">{reply.body}</p>
-                                                    </div>
-                                                </div>
-                                            ))}
-
-                                        {/* Inline reply trigger */}
-                                        <div className="mt-3 flex justify-end">
-                                            <button
-                                                onClick={() => setReplyToId(comment.id)}
-                                                className="text-[10px] font-black tracking-wider text-indigo-600 uppercase hover:text-indigo-800"
-                                            >
-                                                Reply
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                        {/* Metadata Footer */}
+                        <div className="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400 flex flex-wrap items-center justify-between gap-4">
+                            <div className="flex flex-wrap items-center gap-4">
+                                {incident.location && (
+                                    <span className="inline-flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium">
+                                        <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                                        {incident.location}
+                                    </span>
+                                )}
+                                <span className="inline-flex items-center gap-1.5">
+                                    <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                    Reported {formatDate(incident.created_at)}
+                                </span>
+                                <span className="inline-flex items-center gap-1.5">
+                                    <User className="w-3.5 h-3.5 text-slate-400" />
+                                    Reported by {incident.reporter?.name}
+                                </span>
                             </div>
-                        </Deferred>
-
-                        {/* Add Comment form */}
-                        <form onSubmit={handleCommentSubmit} className="mt-6 border-t border-slate-100 pt-5">
-                            {replyToId && (
-                                <div className="mb-3 flex items-center justify-between rounded-lg bg-indigo-50/50 px-3 py-1.5 text-xs font-bold text-indigo-700">
-                                    <span>Replying to comment thread</span>
-                                    <button onClick={() => setReplyToId(null)} className="text-indigo-900 hover:text-indigo-700">
-                                        <X className="h-3.5 w-3.5" />
-                                    </button>
-                                </div>
-                            )}
-
-                            <textarea
-                                value={commentText}
-                                onChange={(e) => setCommentText(e.target.value)}
-                                placeholder="Add update notes, comments, or resolution summaries..."
-                                rows={3}
-                                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-hidden"
-                            />
-
-                            <div className="mt-3 flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={submittingComment || !commentText.trim()}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black tracking-wide text-white uppercase transition hover:bg-slate-800 disabled:opacity-40"
-                                >
-                                    <Send className="h-3 w-3" />
-                                    Post Update
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    {/* ACTIVITY TIMELINE */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-5 flex items-center gap-2 border-b border-slate-50 pb-3 text-xs font-black tracking-wider text-slate-900 uppercase">
-                            <Clock className="h-4.5 w-4.5 text-slate-400" />
-                            Activity Timeline ({activityList.length})
-                        </h3>
-
-                        <Deferred data="activities" fallback={<div className="h-20 animate-pulse rounded-xl bg-slate-50" />}>
-                            {activityList.length === 0 ? (
-                                <p className="py-4 text-center text-[11px] font-semibold text-slate-400">No activity recorded yet.</p>
-                            ) : (
-                                <ol className="relative space-y-4 border-l border-slate-100 pl-5">
-                                    {activityList.map((event) => (
-                                        <li key={event.id} className="relative">
-                                            <span className="absolute top-0.5 -left-[22px] flex h-4 w-4 items-center justify-center rounded-full bg-slate-100 ring-4 ring-white">
-                                                <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
-                                            </span>
-                                            <p className="text-[11px] leading-snug font-semibold text-slate-700">{event.description}</p>
-                                            <div className="mt-0.5 flex items-center gap-2 text-[10px] font-bold text-slate-400">
-                                                {event.causer && <span>{event.causer.name}</span>}
-                                                {event.causer && <span>·</span>}
-                                                <span>{event.created_at}</span>
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ol>
-                            )}
-                        </Deferred>
-                    </div>
-                </div>
-
-                {/* RIGHT COLUMN: Attributes Panel & SLA Status */}
-                <div className="space-y-6">
-                    {/* SLA Status Card */}
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="mb-3 text-[10px] font-black tracking-wider text-slate-400 uppercase">SLA Resolution Target</h3>
-                        <div className={`flex flex-col gap-2 rounded-xl border p-4 ${slaInfo.style}`}>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm">{slaInfo.indicator}</span>
-                                <span className="text-xs font-black tracking-wider uppercase">{slaInfo.label}</span>
-                            </div>
-                            <p className="text-[10px] font-semibold text-slate-500">
-                                Estate standard SLA guarantees critical/high reports are resolved or verified within 24 hours.
-                            </p>
                         </div>
                     </div>
 
-                    {/* Meta Parameters Form */}
-                    <div className="space-y-4.5 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="border-b border-slate-50 pb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">
-                            Operational Attributes
-                        </h3>
+                    {/* Admin Actionable Lifecycle Stepper */}
+                    {!isClosed && (
+                        <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5 dark:border-indigo-950 dark:bg-slate-900">
+                            <h3 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200 mb-3">
+                                Advance Case Lifecycle Stage
+                            </h3>
+                            <div className="flex flex-wrap items-center gap-2.5">
+                                {incident.status === 'pending' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleStatusTransition('acknowledged')}
+                                        className="rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 active:scale-95 transition-all"
+                                    >
+                                        Acknowledge Incident
+                                    </button>
+                                )}
+                                {(incident.status === 'pending' || incident.status === 'acknowledged') && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleStatusTransition('resolving')}
+                                        className="rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 active:scale-95 transition-all"
+                                    >
+                                        Begin Resolution
+                                    </button>
+                                )}
+                                {incident.status === 'resolving' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleStatusTransition('solved')}
+                                        className="rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 active:scale-95 transition-all"
+                                    >
+                                        Mark as Solved
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
-                        {/* Status update */}
+                    {/* Official Broadcast Posting Box */}
+                    {!isClosed && (
+                        <div className="rounded-2xl border-2 border-indigo-200 bg-white p-5 dark:border-indigo-900/60 dark:bg-slate-900">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Megaphone className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                                <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                                    Publish Official Estate Update
+                                </h3>
+                            </div>
+                            <form onSubmit={handlePostOfficialUpdate} className="space-y-3">
+                                <textarea
+                                    value={officialBody}
+                                    onChange={(e) => setOfficialBody(e.target.value)}
+                                    placeholder="Publish official notice or dispatch information (marked as official estate communication)..."
+                                    rows={3}
+                                    disabled={submittingOfficial}
+                                    className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+                                />
+                                <div className="flex justify-end">
+                                    <button
+                                        type="submit"
+                                        disabled={!officialBody.trim() || submittingOfficial}
+                                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        <Megaphone className="w-3.5 h-3.5" />
+                                        <span>
+                                            {submittingOfficial ? 'Publishing...' : 'Broadcast to Residents'}
+                                        </span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    {/* Official Updates List */}
+                    <OfficialUpdates updates={official_comments} />
+
+                    {/* Resident Discussion Thread */}
+                    <Deferred data="comments" fallback={<div className="h-32 animate-pulse bg-slate-100 rounded-2xl dark:bg-slate-800" />}>
+                        <IncidentDiscussion
+                            comments={discussionData}
+                            canComment={!isClosed}
+                            onSubmitComment={handleDiscussionComment}
+                            submitting={submittingDiscussion}
+                        />
+                    </Deferred>
+                </div>
+
+                {/* Right 4 Cols: Operations Sidebar Controls & Lifecycle */}
+                <div className="lg:col-span-4 space-y-6">
+                    {/* Management Controls Card */}
+                    <form
+                        onSubmit={handleSaveSidebarSettings}
+                        className="rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-4"
+                    >
+                        <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+                            <Sliders className="w-4 h-4 text-slate-400" />
+                            <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                                Case Settings
+                            </h3>
+                        </div>
+
+                        {/* Status Select */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Status</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                Status
+                            </label>
                             <select
                                 value={data.status}
-                                onChange={(e) => handleUpdateField('status', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                onChange={(e) => setData('status', e.target.value as IncidentStatus)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                             >
-                                {statuses.map((s) => (
-                                    <option key={s.value} value={s.value}>
-                                        {s.label}
+                                {statuses.map((st) => (
+                                    <option key={st.value} value={st.value}>
+                                        {st.label}
                                     </option>
                                 ))}
-                                <option value="closed">Closed (Done)</option>
                             </select>
                         </div>
 
-                        {/* Priority update */}
+                        {/* Priority Select */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Priority</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                Priority
+                            </label>
                             <select
                                 value={data.priority}
-                                onChange={(e) => handleUpdateField('priority', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                onChange={(e) => setData('priority', e.target.value as any)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                             >
                                 <option value="low">Low</option>
                                 <option value="medium">Medium</option>
@@ -532,13 +412,15 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                             </select>
                         </div>
 
-                        {/* Assignee update */}
+                        {/* Assignee Select */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Assigned To</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                Assigned Admin / Handler
+                            </label>
                             <select
                                 value={data.assigned_to}
-                                onChange={(e) => handleUpdateField('assigned_to', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                onChange={(e) => setData('assigned_to', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                             >
                                 <option value="">Unassigned</option>
                                 {admins.map((adm) => (
@@ -549,88 +431,67 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
                             </select>
                         </div>
 
-                        {/* Category update */}
+                        {/* Category Select */}
                         <div>
-                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Category</label>
+                            <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                                Category
+                            </label>
                             <select
                                 value={data.category}
-                                onChange={(e) => handleUpdateField('category', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                                onChange={(e) => setData('category', e.target.value)}
+                                className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-2.5 text-xs font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                             >
-                                {categories.map((c) => (
-                                    <option key={c.value} value={c.value}>
-                                        {c.label}
+                                {categories.map((cat) => (
+                                    <option key={cat.value} value={cat.value}>
+                                        {cat.label}
                                     </option>
                                 ))}
                             </select>
                         </div>
 
-                        {/* Visibility (is_private) update */}
-                        <div>
-                            <label className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">Visibility</label>
-                            <select
-                                value={data.is_private ? 'true' : 'false'}
-                                onChange={(e) => handleUpdateField('is_private', e.target.value === 'true')}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50/50 px-3 py-2 text-xs font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
+                        <div className="pt-2">
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 active:scale-95 transition-all dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
                             >
-                                <option value="true">Internal (Private)</option>
-                                <option value="false">Public (Visible to Estate)</option>
-                            </select>
+                                {processing ? 'Updating...' : 'Save Settings'}
+                            </button>
                         </div>
-                    </div>
+                    </form>
 
-                    {/* Reporter details */}
-                    <div className="space-y-3.5 rounded-2xl border border-slate-100 bg-white p-5 shadow-xs ring-1 ring-slate-100/50">
-                        <h3 className="border-b border-slate-50 pb-2 text-[10px] font-black tracking-wider text-slate-400 uppercase">
-                            Reporter Details
-                        </h3>
-                        <div className="flex items-center gap-3 border-b border-slate-50 pb-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-xs font-bold text-slate-500">
-                                {incident.reporter.name.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                                <span className="block truncate text-xs font-bold text-slate-900">{incident.reporter.name}</span>
-                                <span className="block truncate text-[10px] font-bold text-slate-400">{incident.reporter.email}</span>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 text-[10px]">
-                            <div>
-                                <span className="block font-black text-slate-400 uppercase">Reporter Type</span>
-                                <span className="text-xs font-bold text-slate-700">{incident.reporter_role}</span>
-                            </div>
-                            <div>
-                                <span className="block font-black text-slate-400 uppercase">Incident Source</span>
-                                <span className="mt-0.5 inline-block rounded border border-slate-200/60 bg-slate-50 px-1.5 py-0.5 text-[9px] font-black text-slate-500 uppercase">
-                                    {incident.source.replace('_', ' ')}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+                    {/* Timeline Sidebar with Activity History */}
+                    <Deferred data="activities" fallback={<div className="h-40 animate-pulse bg-slate-100 rounded-2xl dark:bg-slate-800" />}>
+                        <IncidentTimeline incident={incident} activities={activities} />
+                    </Deferred>
                 </div>
             </div>
 
-            {/* LIGHTBOX FOR IMAGES */}
-            <AnimatePresence>
-                {isLightboxOpen && incident.attachment_url && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={() => setIsLightboxOpen(false)}>
+            {/* Fullscreen Lightbox */}
+            {isLightboxOpen && incident.attachment_url && (
+                <div
+                    onClick={() => setIsLightboxOpen(false)}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
+                >
+                    <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-2xl bg-black"
+                    >
                         <button
+                            type="button"
                             onClick={() => setIsLightboxOpen(false)}
-                            className="bg-slate-850 absolute top-6 right-6 rounded-full p-2.5 text-white transition hover:bg-slate-700"
+                            className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900/80 text-white hover:bg-slate-800"
                         >
-                            <X className="h-5 w-5" />
+                            <X className="w-5 h-5" />
                         </button>
-                        <motion.img
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                        <img
                             src={incident.attachment_url}
-                            alt="Attachment fullscreen preview"
-                            className="max-h-[85vh] max-w-[90vw] rounded-xl object-contain shadow-2xl"
+                            alt="Incident Evidence"
+                            className="max-h-[85vh] w-auto object-contain"
                         />
                     </div>
-                )}
-            </AnimatePresence>
-        </>
+                </div>
+            )}
+        </div>
     );
 }
