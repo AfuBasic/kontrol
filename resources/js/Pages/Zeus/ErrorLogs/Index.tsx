@@ -376,9 +376,15 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                                                     <span>{log.occurrences_count}x</span>
                                                 </span>
 
-                                                {/* Timestamp */}
-                                                <span className="text-[11px] text-slate-500">
-                                                    last_seen: {log.last_seen_human}
+                                                {/* Timestamp with Clock */}
+                                                <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                                                    <Clock className="h-3 w-3 text-slate-500" />
+                                                    <span>
+                                                        {log.last_seen_at
+                                                            ? `${new Date(log.last_seen_at).toLocaleDateString([], { month: 'short', day: 'numeric' })} ${new Date(log.last_seen_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
+                                                            : log.last_seen_human}
+                                                    </span>
+                                                    <span className="text-slate-600">({log.last_seen_human})</span>
                                                 </span>
                                             </div>
 
