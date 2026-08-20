@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronRight } from 'lucide-react';
 import VisitorAvatar from '@/Components/Visitors/VisitorAvatar';
 import type { AccessCode } from '@/types/access-code';
-import { deriveCategory, formatRelativeDate } from '@/Utils/visitorTheme';
+import { deriveCategory, formatRelativeDate, resolveVisitorName } from '@/Utils/visitorTheme';
 
 type Props = {
     nextCode?: AccessCode | null;
@@ -14,7 +14,7 @@ export default function NextVisitorHero({ nextCode }: Props) {
         return null;
     }
 
-    const visitorName = nextCode.visitor_name || 'Guest';
+    const visitorName = resolveVisitorName(nextCode.visitor_name, nextCode.type, nextCode.purpose);
     const category = deriveCategory(nextCode.purpose, nextCode.type);
     const dateFormatted = formatRelativeDate(nextCode.starts_at || (nextCode as any).effective_visit_at || (nextCode as any).arrival_date);
     const timeStr = (nextCode as any).arrival_time ? (nextCode as any).arrival_time : 'Anytime';
