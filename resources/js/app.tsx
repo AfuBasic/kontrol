@@ -18,6 +18,9 @@ import AnimatedLayout from './Layouts/AnimatedLayout';
 import ResidentLayout from './Layouts/ResidentLayout';
 import SecurityLayout from './Layouts/SecurityLayout';
 import useNativeViewport from './Hooks/useNativeViewport';
+import { initErrorReporter } from './Utils/errorReporter';
+
+initErrorReporter();
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
