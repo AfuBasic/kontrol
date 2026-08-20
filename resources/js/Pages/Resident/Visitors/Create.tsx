@@ -705,6 +705,12 @@ const CreateAccessCode = () => {
                                         <User className="pointer-events-none absolute top-[18px] left-5 z-10 h-5 w-5 text-slate-400" />
                                         <input
                                             type="text"
+                                            id="visitor-name-input"
+                                            name="visitor_name"
+                                            autoComplete={isEvent ? 'off' : 'name'}
+                                            autoCorrect="on"
+                                            autoCapitalize="words"
+                                            spellCheck={false}
                                             placeholder={isEvent ? 'Event Name (e.g. Birthday Party)' : "Visitor's Full Name"}
                                             value={form.data.visitor_name}
                                             onChange={(e) => form.setData('visitor_name', e.target.value)}
@@ -720,8 +726,10 @@ const CreateAccessCode = () => {
                                             <Phone className="pointer-events-none absolute top-[18px] left-5 z-10 h-5 w-5 text-slate-400" />
                                             <input
                                                 type="tel"
-                                                inputMode="numeric"
-                                                pattern="[0-9]*"
+                                                id="visitor-phone-input"
+                                                name="visitor_phone"
+                                                autoComplete="tel"
+                                                inputMode="tel"
                                                 placeholder="Phone Number (Optional)"
                                                 value={form.data.visitor_phone}
                                                 onChange={(e) => form.setData('visitor_phone', e.target.value)}
@@ -735,6 +743,8 @@ const CreateAccessCode = () => {
                                             <Users className="pointer-events-none absolute top-[18px] left-5 z-10 h-5 w-5 text-slate-400" />
                                             <input
                                                 type="number"
+                                                id="event-guest-limit"
+                                                name="guest_limit"
                                                 inputMode="numeric"
                                                 pattern="[0-9]*"
                                                 placeholder="Maximum Guests (Optional)"
