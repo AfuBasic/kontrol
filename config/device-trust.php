@@ -44,7 +44,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | A security event is recorded only after this many failed OTP attempts
-    | in the window — not on every typo.
+    | in the window - not on every typo.
     |
     */
 
