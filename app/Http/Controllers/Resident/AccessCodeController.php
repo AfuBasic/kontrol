@@ -198,7 +198,7 @@ class AccessCodeController extends Controller
             'expires_at' => ['nullable', 'date'],
             'schedule_type' => ['nullable', 'string', 'in:one_time,recurring'],
             'schedule_data' => ['nullable', 'array'],
-            'guest_limit' => ['nullable', 'integer', 'min:1'],
+            'guest_limit' => ['nullable', 'integer', 'min:1', 'max:10000'],
         ]);
 
         $accessCode = $this->accessCodeService->createCode($validated);
