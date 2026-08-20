@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import {
     Send,
@@ -18,8 +18,10 @@ import {
     Megaphone,
     Clock,
 } from 'lucide-react';
+import { marked } from 'marked';
 import { store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import { useActiveContext } from '@/Hooks/useActiveContext';
+import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
 import type { PostAudience, PostCategory, PostPriority } from '@/types';
 
 type Props = {
@@ -51,6 +53,7 @@ const PRIORITIES: { value: PostPriority; label: string; badge: string; icon: Rea
 export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = [] }: Props) {
     const { isZoneScoped, zoneId, zoneName } = useActiveContext();
     const [isExpanded, setIsExpanded] = useState(false);
+    const [showAiAssistant, setShowAiAssistant] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -71,10 +74,25 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
 
     const handleCancel = () => {
         setIsExpanded(false);
+        setShowAiAssistant(false);
         reset();
         setFiles([]);
         clearErrors();
     };
+
+    const handleAiDraft = useCallback(
+        (result: { body: string; suggestedTitle?: string | null }) => {
+            setIsExpanded(true);
+            const html = marked.parse(result.body) as string;
+            setData((prev) => ({
+                ...prev,
+                body: html,
+                title: result.suggestedTitle && !prev.title.trim() ? result.suggestedTitle : prev.title,
+            }));
+            setShowAiAssistant(false);
+        },
+        [setData],
+    );
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -99,6 +117,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
             preserveScroll: true,
             onSuccess: () => {
                 setIsExpanded(false);
+                setShowAiAssistant(false);
                 reset();
                 setFiles([]);
                 if (onSuccess) onSuccess();
@@ -114,13 +133,54 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                     <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
                     <span className="font-bold text-slate-900">Post an Announcement</span>
                 </div>
-                {lastBroadcastNote && (
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>Last posted: {lastBroadcastNote}</span>
-                    </div>
-                )}
+                <div className="flex items-center gap-3">
+                    {lastBroadcastNote && (
+                        <div className="hidden items-center gap-1.5 text-[11px] text-slate-400 sm:flex">
+                            <Clock className="h-3.5 w-3.5" />
+                            <span>Last posted: {lastBroadcastNote}</span>
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsExpanded(true);
+                            setShowAiAssistant((prev) => !prev);
+                        }}
+                        className={`inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-bold transition-all active:scale-95 ${
+                            showAiAssistant
+                                ? 'border-violet-300 bg-violet-100 text-violet-800 shadow-2xs'
+                                : 'border-violet-200/80 bg-violet-50 text-violet-700 hover:border-violet-300 hover:bg-violet-100'
+                        }`}
+                        title="Draft announcement with AI"
+                    >
+                        <Sparkles className="h-3.5 w-3.5 text-violet-600" />
+                        <span>AI Assistant</span>
+                    </button>
+                </div>
             </div>
+
+            {/* Expandable AI Writing Assistant panel */}
+            {showAiAssistant && (
+                <div className="mb-4">
+                    <EstateBoardAiAssistant
+                        context={{
+                            title: data.title,
+                            category: data.category,
+                            priority: data.priority,
+                            audience: data.audience,
+                        }}
+                        onDraft={handleAiDraft}
+                        onTemplateSelect={({ category, priority }) => {
+                            setData((prev) => ({
+                                ...prev,
+                                category,
+                                priority,
+                            }));
+                        }}
+                        disabled={processing}
+                    />
+                </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Title (visible when expanded or typing) */}
@@ -128,9 +188,12 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                     <div>
                         <input
                             type="text"
+                            id="announcement-title"
+                            name="title"
                             value={data.title}
                             onChange={(e) => setData('title', e.target.value)}
                             placeholder="Announcement title..."
+                            autoComplete="off"
                             className="w-full border-none bg-transparent p-0 text-base font-bold text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden"
                         />
                         {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title}</p>}
@@ -140,10 +203,12 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                 {/* Body input / Trigger box */}
                 <div>
                     <textarea
+                        id="announcement-body"
+                        name="body"
                         value={data.body}
                         onFocus={handleExpand}
                         onChange={(e) => setData('body', e.target.value)}
-                        placeholder="Share an announcement with your estate..."
+                        placeholder="Share an announcement with your estate... (or click AI Assistant above)"
                         rows={isExpanded ? 3 : 2}
                         className="w-full resize-none border-none bg-transparent p-0 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden"
                     />
