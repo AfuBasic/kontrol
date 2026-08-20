@@ -7,7 +7,6 @@ import {
     PencilSquareIcon,
     PlusIcon,
     TrashIcon,
-    UsersIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
