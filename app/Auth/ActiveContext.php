@@ -81,7 +81,7 @@ class ActiveContext
             return false;
         }
 
-        // 4. Collection — zone targeting via pivot table
+        // 4. Collection - zone targeting via pivot table
         if ($model instanceof Collection) {
             if (! $this->isZoneScoped()) {
                 return true;
