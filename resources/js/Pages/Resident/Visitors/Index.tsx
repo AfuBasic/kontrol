@@ -138,8 +138,9 @@ export default function Visitors({ upcomingTimeline, historyTimeline, recentVisi
         });
     };
 
-    // Filter today's vs future upcoming visits
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Filter today's vs future upcoming visits based on local calendar date
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     const todayVisits = upcomingTimeline.filter((v: any) => v.arrival_date === todayStr);
     const futureUpcomingVisits = upcomingTimeline.filter((v: any) => v.arrival_date !== todayStr);
 
