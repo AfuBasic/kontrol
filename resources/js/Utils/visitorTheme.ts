@@ -132,3 +132,28 @@ export function formatRelativeDate(dateInput: string | Date | null | undefined):
 
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
+
+/**
+ * Robust visitor name resolution with smart fallbacks
+ */
+export function resolveVisitorName(visitorName?: string | null, type?: string | null, purpose?: string | null): string {
+    if (visitorName && visitorName.trim()) {
+        return visitorName.trim();
+    }
+
+    if (type === 'event') {
+        return 'Event Guests';
+    }
+
+    if (purpose && purpose.trim()) {
+        const p = purpose.trim();
+        return p.charAt(0).toUpperCase() + p.slice(1);
+    }
+
+    if (type === 'long_lived') {
+        return 'Regular Visitor';
+    }
+
+    return 'Guest Visitor';
+}
+
