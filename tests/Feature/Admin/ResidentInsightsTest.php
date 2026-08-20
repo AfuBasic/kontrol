@@ -8,6 +8,7 @@ use App\Models\Plan;
 use App\Models\User;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
+use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -49,7 +50,7 @@ beforeEach(function () {
 
 function fetchResidentInsights(): array
 {
-    \Inertia\Inertia::version('test');
+    Inertia::version('test');
 
     return test()->actingAs(test()->admin)
         ->withSession(['active_context_assignment_id' => test()->adminAssignment->id])
