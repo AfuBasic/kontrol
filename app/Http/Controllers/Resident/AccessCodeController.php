@@ -132,9 +132,9 @@ class AccessCodeController extends Controller
             // effective_visit_at: the single source of truth for when this visit
             // is scheduled. Derived from starts_at → expires_at → created_at.
             'effective_visit_at' => $effectiveVisitAt->toISOString(),
-            'arrival_date' => $effectiveVisitAt->toDateString(),        // "2026-07-23"
+            'arrival_date' => $effectiveVisitAt->timezone(config('app.timezone', 'Africa/Lagos'))->toDateString(),        // "2026-07-23"
             'arrival_time' => $code->starts_at !== null
-                ? $effectiveVisitAt->format('g:i A')                   // "10:00 AM"
+                ? $effectiveVisitAt->timezone(config('app.timezone', 'Africa/Lagos'))->format('g:i A')                   // "10:00 AM"
                 : null,                                                  // null = "Anytime"
         ];
 
@@ -142,8 +142,8 @@ class AccessCodeController extends Controller
             $completionAt = $code->completion_at;
 
             $base['completion_at'] = $completionAt?->toISOString();
-            $base['completion_date'] = $completionAt?->toDateString();
-            $base['completion_time'] = $completionAt?->format('g:i A');
+            $base['completion_date'] = $completionAt?->timezone(config('app.timezone', 'Africa/Lagos'))->toDateString();
+            $base['completion_time'] = $completionAt?->timezone(config('app.timezone', 'Africa/Lagos'))->format('g:i A');
         }
 
         return $base;
