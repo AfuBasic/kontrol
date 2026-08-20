@@ -1,9 +1,9 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import {
-    AlertCircle,
+    
     ArrowLeft,
     CheckCircle2,
     Clock,
@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import React, { useState } from 'react';
 
-import Modal from '@/Components/Modal';
+
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { Incident, IncidentComment, IncidentStatus, PaginatedData, SharedData } from '@/types';
 

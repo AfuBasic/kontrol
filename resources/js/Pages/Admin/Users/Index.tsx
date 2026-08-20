@@ -1,6 +1,6 @@
 import { MagnifyingGlassIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+
 import { useState, useEffect } from 'react';
 import { index } from '@/actions/App/Http/Controllers/Admin/UserController';
 import { useDebounce } from '@/Hooks/useDebounce';
@@ -36,7 +36,7 @@ type Props = {
 
 export default function UsersIndex({ users, filters }: Props) {
     const { can } = usePermission();
-    const hasUsers = users.total > 0;
+    const _hasUsers: _hasUsers = users.total > 0;
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
 

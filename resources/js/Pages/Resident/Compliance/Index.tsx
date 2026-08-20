@@ -48,7 +48,7 @@ interface Violation {
 interface Props {
     violations: Violation[];
     activeRestrictions: Restriction[];
-    totalOutstanding: number;
+    _totalOutstanding: number;
     isCompliant: boolean;
 }
 

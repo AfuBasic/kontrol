@@ -5,7 +5,6 @@ import {
     XMarkIcon,
     CheckIcon,
     MagnifyingGlassIcon,
-    CalendarIcon,
     CheckCircleIcon,
     ArrowRightIcon,
     ClockIcon,

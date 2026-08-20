@@ -1,11 +1,11 @@
 import { Head } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Building2, User, Sparkles, AlertCircle } from 'lucide-react';
+import { Wallet, ShieldCheck, CheckCircle2, Loader2, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 /** Partial payments are only offered when remaining balance is at least this share of the original bill. */
-const MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;
+const _MIN_REMAINING_RATIO_FOR_PARTIAL: _MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;
 
 type Collection = {
     name: string;
@@ -56,7 +56,7 @@ declare global {
 export default function PayCollection({
     assignment,
     paystackKey,
-    feeBreakdown,
+
     hasSubscription,
     allowPartialPayments = true,
     minPartialAmount = 0,

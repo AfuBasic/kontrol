@@ -7,60 +7,41 @@ import {
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
     ChevronDownIcon,
-    Cog6ToothIcon,
     CreditCardIcon,
     ShieldCheckIcon,
-    Squares2X2Icon,
     UserCircleIcon,
-    UserGroupIcon,
-    UsersIcon,
     XMarkIcon,
     BuildingOfficeIcon,
     ClipboardDocumentListIcon,
-    CurrencyDollarIcon,
-    MegaphoneIcon,
-    BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    Bell,
+    
     Search,
-    LayoutDashboard,
-    Building,
-    Users,
-    Home,
-    ClipboardList,
-    Wallet,
-    Ticket,
-    Mail,
-    Settings,
-    Menu,
-    X,
-    ArrowLeftRight,
 } from 'lucide-react';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
 import * as ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
-import * as AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
+
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
-import * as CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
-import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
+
+
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
-import * as EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import * as IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
+
+
 import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
-import * as PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
-import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import * as RoleController from '@/actions/App/Http/Controllers/Admin/RoleController';
-import * as SecurityPersonnelController from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
-import * as SettingsController from '@/actions/App/Http/Controllers/Admin/SettingsController';
-import * as UserController from '@/actions/App/Http/Controllers/Admin/UserController';
-import * as VisitorLogController from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
+
+
+
+
+
+
+
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
@@ -81,7 +62,7 @@ const MobileBottomNav = lazy(() => import('@/Components/Admin/MobileBottomNav'))
 
 interface Props {
     children: ReactNode;
-    title?: string;
+    _title?: string;
 }
 
 const primaryNav: NavItem[] = baseNav;

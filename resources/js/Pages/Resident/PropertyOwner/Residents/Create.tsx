@@ -36,7 +36,7 @@ interface Props {
 export default function CreateResident({ inviteLink, properties = [] }: Props) {
     const { confirm } = useResidentConfirmation();
     const [activeTab, setActiveTab] = useState<TabType>('invite_link');
-    const { auth } = usePage<SharedData>().props;
+    const { auth: _auth } = usePage<SharedData>().props;
     const [isCopied, setIsCopied] = useState(false);
     const [isEditingSettings, setIsEditingSettings] = useState(false);
     const [showQrCode, setShowQrCode] = useState(false);

@@ -8,16 +8,9 @@ import {
     AlertTriangle,
     ArrowRight,
     BarChart3,
-    Bell,
     Building2,
     CheckCircle,
-    ChevronLeft,
-    ChevronRight,
-    Clock,
-    CreditCard,
-    Download,
     DollarSign,
-    Edit2,
     Info,
     Layers,
     Search,
@@ -33,7 +26,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { twMerge } from 'tailwind-merge';
-import { create, edit, index, publish, show } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { create, index, publish, show } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { index as analyticsIndex } from '@/actions/App/Http/Controllers/Admin/CollectionAnalyticsController';
 import BankingSetupModal from '@/Components/BankingSetupModal';
 import ConfirmationModal from '@/Components/ConfirmationModal';

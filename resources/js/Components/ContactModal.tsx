@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Mail, Phone, ExternalLink, ArrowRight, Sparkles, X } from 'lucide-react';
+
+import { Mail, Phone, ExternalLink, Sparkles, X } from 'lucide-react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 
 type Contact = {

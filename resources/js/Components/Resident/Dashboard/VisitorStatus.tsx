@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function VisitorStatus({ activeCodes }: Props) {
-    const inside = activeCodes.filter((c) => c.status === 'used');
+    const inside = activeCodes.filter((c) => c._status === 'used');
     const upcoming = activeCodes.filter((c) => c.status === 'active');
 
     if (activeCodes.length === 0) {

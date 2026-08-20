@@ -1,21 +1,15 @@
 import React, { useState } from 'react';
 import { Link } from '@inertiajs/react';
 import {
-    AlertCircle,
+    
     AlertOctagon,
     AlertTriangle,
     ArrowRight,
-    Building2,
     CheckCircle2,
     ChevronDown,
     ChevronUp,
-    Clock,
-    FileText,
     Info,
     ShieldAlert,
-    UserCheck,
-    UserPlus,
-    Users,
 } from 'lucide-react';
 
 export type AttentionPreviewItem = {

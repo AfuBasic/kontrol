@@ -1,4 +1,4 @@
-export default function usePathFromUrl(href: string): string {
+export function getPathFromUrl(href: string): string {
     // Handle protocol-relative URLs like //app.kontrol.test/admin/residents
     if (href.startsWith('//')) {
         const pathStart = href.indexOf('/', 2);
@@ -14,3 +14,5 @@ export default function usePathFromUrl(href: string): string {
     }
     return href;
 }
+
+export default getPathFromUrl;

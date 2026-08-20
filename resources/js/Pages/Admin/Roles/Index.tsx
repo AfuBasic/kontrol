@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 import { destroy, index } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { usePermission } from '@/Hooks/usePermission';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type Permission = {
     id: number;

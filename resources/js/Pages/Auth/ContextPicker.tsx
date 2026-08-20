@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Building, Shield, Home, Briefcase, ArrowRight, Loader2, LogOut } from 'lucide-react';
 import { type FormEventHandler, useEffect, useState } from 'react';
 import clsx from 'clsx';

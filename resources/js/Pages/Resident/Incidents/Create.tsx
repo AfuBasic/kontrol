@@ -3,7 +3,7 @@ import { AlertCircle, ArrowLeft, Paperclip, Send, WifiOff } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
-import ResidentLayout from '@/Layouts/ResidentLayout';
+
 import { ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 import { SyncStatus } from '@/Resilience/SyncStatus';
@@ -20,7 +20,7 @@ async function getFileHash(file: File): Promise<string> {
             const hashBuffer = await window.crypto.subtle.digest('SHA-256', arrayBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-        } catch (e) {
+        } catch (_e) {
             // Fall back to metadata hash
         }
     }

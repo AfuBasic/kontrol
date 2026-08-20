@@ -1,7 +1,7 @@
 import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+
 import { Percent, Coins, Phone, Mail, User } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 

@@ -235,7 +235,7 @@ export default function RiskCenterIndex({ riskList, activityStream }: Props) {
                         <div className="flex-1 overflow-y-auto p-8 pt-4">
                             {activityStream.length > 0 ? (
                                 <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:h-full before:w-0.5 before:-translate-x-px before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent md:before:mx-auto md:before:translate-x-0 dark:before:via-slate-800">
-                                    {activityStream.map((activity, idx) => (
+                                    {activityStream.map((activity, _idx) => (
                                         <div key={activity.id} className="relative flex items-start gap-6">
                                             <div className="relative z-10 mt-1 flex shrink-0 items-center justify-center">
                                                 <div

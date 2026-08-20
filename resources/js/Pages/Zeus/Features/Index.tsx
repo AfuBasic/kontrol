@@ -1,4 +1,4 @@
-import { SparklesIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import {  MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState, useMemo } from 'react';
@@ -25,7 +25,7 @@ interface Feature {
 interface Props {
     features: Record<string, Feature[]>;
     plans: Plan[];
-    groups: string[];
+    groups: _groups: string[];
 }
 
 export default function FeaturesIndex({ features, plans, groups }: Props) {
@@ -151,7 +151,7 @@ export default function FeaturesIndex({ features, plans, groups }: Props) {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-slate-50">
-                                                {filteredFeatures[group]?.map((feature, idx) => (
+                                                {filteredFeatures[group]?.map((feature, _idx) => (
                                                     <tr key={feature.id} className="bg-white transition-colors hover:bg-slate-50/50">
                                                         <td className="sticky left-0 z-10 bg-inherit px-6 py-5">
                                                             <div>

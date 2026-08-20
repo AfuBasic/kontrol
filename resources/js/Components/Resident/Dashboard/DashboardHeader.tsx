@@ -1,12 +1,12 @@
-import { Link } from '@inertiajs/react';
+
 import { motion } from 'framer-motion';
-import { Bell, Search } from 'lucide-react';
-import ActivityController from '@/actions/App/Http/Controllers/Resident/ActivityController';
+import {  Search } from 'lucide-react';
+
 
 interface Props {
     userName: string;
     estateName: string;
-    unreadCount: number;
+    _unreadCount: number;
     isHouseholdMember?: boolean;
     parentResidentName?: string | null;
 }

@@ -65,7 +65,7 @@ type Props = {
     } | null;
 };
 
-const formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
+const _formatCurrency: _formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
 
 const formatDate = (iso?: string) => {
     if (!iso) return '-';
@@ -352,7 +352,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                 setCouponError(lastError);
                 setAppliedCoupons({});
             }
-        } catch (err) {
+        } catch (_err) {
             setCouponError('An error occurred. Please try again.');
             setAppliedCoupons({});
         } finally {

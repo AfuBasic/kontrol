@@ -55,6 +55,16 @@ export default [
         files: ['**/*.{ts,tsx}'],
         rules: {
             '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'error',
+                {
+                    argsIgnorePattern: '^_',
+                    varsIgnorePattern: '^_',
+                    caughtErrorsIgnorePattern: '^_',
+                    destructuredArrayIgnorePattern: '^_',
+                    ignoreRestSiblings: true,
+                },
+            ],
             '@typescript-eslint/consistent-type-imports': [
                 'error',
                 {
@@ -65,7 +75,7 @@ export default [
         },
     },
     {
-        ignores: ['vendor', 'node_modules', 'public', 'bootstrap/ssr', 'tailwind.config.js', 'vite.config.ts'],
+        ignores: ['vendor/**', 'node_modules/**', 'public/**', 'storage/**', 'bootstrap/ssr/**', 'tailwind.config.js', 'vite.config.ts', '.agents/**'],
     },
     prettier, // Turn off all rules that might conflict with Prettier
 ];

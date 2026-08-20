@@ -5,7 +5,7 @@ import { Edit, Eye, Filter, Globe, Image as ImageIcon, MessageCircle, Plus, Sear
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { create, edit, index, show, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, PostStatus } from '@/types';
 
 type Props = {

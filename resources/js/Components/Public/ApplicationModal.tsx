@@ -23,7 +23,7 @@ function FloatingShape({ className, delay = 0 }: { className: string; delay?: nu
     );
 }
 
-export default function ApplicationModal({ isOpen, onClose, selectedPlanId, selectedPlanName, selectedPlanInterval }: Props) {
+export default function ApplicationModal({ isOpen, onClose, selectedPlanId: _selectedPlanId, selectedPlanName: _selectedPlanName, selectedPlanInterval: _selectedPlanInterval }: Props) {
     const [submitted, setSubmitted] = useState(false);
     const [estateName, setEstateName] = useState('');
 

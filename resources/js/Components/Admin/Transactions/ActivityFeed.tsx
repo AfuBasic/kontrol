@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertCircle, ArrowDownLeft, ArrowUpRight, BadgePercent, PenLine, RefreshCcw, CornerDownRight, Clock, FileText, Gift } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, PenLine, RefreshCcw, CornerDownRight, FileText, Gift } from 'lucide-react';
 import { useState } from 'react';
 
 interface ActivityEntry {

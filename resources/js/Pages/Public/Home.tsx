@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ShieldCheck, Zap, MessageSquare, CheckCircle2, Apple } from 'lucide-react';
+import { ShieldCheck, Zap, MessageSquare, Apple } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';

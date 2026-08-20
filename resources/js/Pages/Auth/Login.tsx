@@ -3,13 +3,8 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, useMotionValue, animate as animateX } from 'framer-motion';
 import {
-    Eye,
-    EyeOff,
+
     Sparkles,
-    Key,
-    Wallet,
-    ChevronRight,
-    AlertTriangle,
     Check,
     QrCode,
     Smartphone,
@@ -19,8 +14,6 @@ import {
     MessageSquare,
     ArrowRight,
     Shield,
-    Activity,
-    Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 

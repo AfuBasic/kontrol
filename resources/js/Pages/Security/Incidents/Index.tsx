@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
+
 import {
     AlertTriangle,
     CheckCircle2,
@@ -8,10 +8,8 @@ import {
     Eye,
     Lock,
     MapPin,
-    MessageSquare,
     Plus,
     Search,
-    ThumbsUp,
     Wrench,
     Zap,
     Filter,
@@ -21,7 +19,7 @@ import React, { useState, useEffect } from 'react';
 
 import MobileSheet from '@/Components/MobileSheet';
 import Modal from '@/Components/Modal';
-import SecurityLayout from '@/Layouts/SecurityLayout';
+
 import type { Incident, IncidentCategory, IncidentStatus, PaginatedData, SharedData } from '@/types';
 
 type Props = {
@@ -102,7 +100,7 @@ const getCategoryIcon = (category: IncidentCategory) => {
 
 export default function Index({ incidents, filters, categories }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const authUser = auth?.user;
+    const _authUser: _authUser = auth?.user;
 
     const [search, setSearch] = useState(typeof filters?.search === 'string' ? filters.search : '');
     const [category, setCategory] = useState(typeof filters?.category === 'string' ? filters.category : '');

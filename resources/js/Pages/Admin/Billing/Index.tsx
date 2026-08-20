@@ -2,7 +2,6 @@ import { Dialog, Transition } from '@headlessui/react';
 import {
     UsersIcon,
     ShieldCheckIcon,
-    ArrowUpCircleIcon,
     ClockIcon,
     XMarkIcon,
     CheckBadgeIcon,

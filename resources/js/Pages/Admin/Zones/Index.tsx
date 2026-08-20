@@ -1,7 +1,7 @@
 import { ArchiveBoxIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertTriangle, Building2, Loader2, Shield, Users } from 'lucide-react';
+import { AlertTriangle, Building2, Loader2, Users } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import ZoneEmptyState from '@/Components/Admin/Zones/ZoneEmptyState';

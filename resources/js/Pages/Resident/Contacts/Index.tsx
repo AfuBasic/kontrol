@@ -10,7 +10,7 @@ type Contact = {
 
 type Props = {
     contacts: Contact[];
-    estateName: string;
+    estateName: _estateName: string;
 };
 
 type GroupedContacts = {

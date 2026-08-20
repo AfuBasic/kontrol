@@ -1,7 +1,7 @@
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { X, ShieldCheck, CreditCard, RefreshCcw, Download, User, ArrowDownLeft, Loader2 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { useEffect, useState } from 'react';
 

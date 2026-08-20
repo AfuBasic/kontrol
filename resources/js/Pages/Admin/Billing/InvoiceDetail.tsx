@@ -2,7 +2,6 @@ import {
     ArrowLeftIcon,
     CheckCircleIcon,
     ClockIcon,
-    ExclamationCircleIcon,
     CreditCardIcon,
     UsersIcon,
     CalendarIcon,
@@ -15,12 +14,12 @@ import {
     XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import { AnimatePresence, motion } from 'framer-motion';
+import {  motion } from 'framer-motion';
 import React, { useState } from 'react';
 import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 import Spinner from '@/Components/Spinner';
 import Toast from '@/Components/Toast';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type PaymentTransaction = {
     id: number;
@@ -86,7 +85,7 @@ const BackgroundAura = () => (
 const MiniStamp = ({ status }: { status: string }) => {
     const isPaid = status === 'paid';
     const isOverdue = status === 'overdue';
-    const isPending = status === 'pending';
+    const _isPending: _isPending = status === 'pending';
 
     return (
         <motion.div
@@ -178,7 +177,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }: StatCard
 export default function InvoiceDetailPage({ invoice }: Props) {
     const isPaid = invoice.status === 'paid';
     const isOverdue = invoice.status === 'overdue';
-    const isPending = invoice.status === 'pending';
+    const _isPending: _isPending = invoice.status === 'pending';
     const overdueDays = Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / 86400000);
 
     // Calculate email cooldown

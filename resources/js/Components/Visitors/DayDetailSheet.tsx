@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar as CalendarIcon, Clock, Plus, X, User, CheckCircle2, ShieldAlert } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Plus, X, User } from 'lucide-react';
 import { getPurposeColorStyle } from '@/Utils/calendarTheme';
 
 export type CalendarEventItem = {

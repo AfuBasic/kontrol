@@ -6,7 +6,6 @@ import {
     Loader2,
     Check,
     Users,
-    Percent,
     ShieldCheck,
     UserMinus,
     Send,
@@ -18,17 +17,16 @@ import {
     X,
     LinkIcon,
     Home,
-    Building,
     Eye,
     MapPin,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { index as approvalsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentApprovalController';
+
 import { bulkDelete, index, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type Resident = {
     id: number;
@@ -413,196 +411,10 @@ export default function Residents({
                     data={['insights', 'incompleteResidents']}
                     fallback={<div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />}
                 >
-                    {(() => {
-                        const [isCollapsed, setIsCollapsed] = useState(false);
-                        const [showDrawer, setShowDrawer] = useState(false);
-                        const [drawerSearch, setDrawerSearch] = useState('');
-
-                        const filteredIncomplete = (incompleteResidents || []).filter((r) =>
-                            r.name.toLowerCase().includes(drawerSearch.toLowerCase()),
-                        );
-
-                        const hasIncomplete = incompleteResidents && incompleteResidents.length > 0;
-                        const otherInsights = insights.filter((insight) => !insight.includes('require profile completion'));
-                        const hasInsights = otherInsights.length > 0 || hasIncomplete;
-
-                        if (!hasInsights) return null;
-
-                        return (
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <AlertCircle className="h-4.5 w-4.5 text-indigo-600" />
-                                        <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Attention Required</h3>
-                                    </div>
-                                    <button
-                                        onClick={() => setIsCollapsed(!isCollapsed)}
-                                        className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
-                                    >
-                                        <motion.span animate={{ rotate: isCollapsed ? 180 : 0 }} className="block">
-                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                                            </svg>
-                                        </motion.span>
-                                    </button>
-                                </div>
-
-                                <AnimatePresence initial={false}>
-                                    {!isCollapsed ? (
-                                        <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="overflow-hidden"
-                                        >
-                                            <div className="mt-3.5 space-y-3">
-                                                {otherInsights.map((insight, idx) => (
-                                                    <div key={idx} className="flex items-start gap-2.5 text-xs font-semibold text-slate-600">
-                                                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
-                                                        <span>{insight}</span>
-                                                    </div>
-                                                ))}
-
-                                                {hasIncomplete && (
-                                                    <div className="rounded-xl bg-slate-50/70 p-3 ring-1 ring-slate-100/30">
-                                                        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-                                                            <div>
-                                                                <p className="text-xs font-bold text-slate-800">
-                                                                    {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''}{' '}
-                                                                    require profile completion
-                                                                </p>
-                                                                <div className="mt-1.5 flex items-center gap-1.5">
-                                                                    <div className="flex -space-x-1.5 overflow-hidden">
-                                                                        {incompleteResidents.slice(0, 3).map((r, i) => (
-                                                                            <div
-                                                                                key={r.id}
-                                                                                className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] font-black text-slate-700 ring-2 ring-white"
-                                                                            >
-                                                                                {r.name.charAt(0).toUpperCase()}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                    <span className="text-[10px] font-bold text-slate-400">
-                                                                        {incompleteResidents
-                                                                            .slice(0, 3)
-                                                                            .map((r) => r.name)
-                                                                            .join(', ')}
-                                                                        {incompleteResidents.length > 3 && ` +${incompleteResidents.length - 3} more`}
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <button
-                                                                onClick={() => setShowDrawer(true)}
-                                                                className="self-start rounded-lg bg-indigo-50 px-3 py-1.5 text-[11px] font-black tracking-wide text-indigo-700 uppercase hover:bg-indigo-100 sm:self-center"
-                                                            >
-                                                                Review Residents &rarr;
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    ) : (
-                                        <div className="mt-1 text-[11px] font-semibold text-slate-400">
-                                            {hasIncomplete
-                                                ? `${incompleteResidents.length} profile completion items pending`
-                                                : 'Operational alerts collapsed'}
-                                        </div>
-                                    )}
-                                </AnimatePresence>
-
-                                {/* SIDE DRAWER / BOTTOM SHEET */}
-                                <AnimatePresence>
-                                    {showDrawer && (
-                                        <>
-                                            {/* Backdrop */}
-                                            <motion.div
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                onClick={() => setShowDrawer(false)}
-                                                className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs"
-                                            />
-
-                                            {/* Drawer Container */}
-                                            <motion.div
-                                                initial={{ x: '100%' }}
-                                                animate={{ x: 0 }}
-                                                exit={{ x: '100%' }}
-                                                transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-                                                className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
-                                            >
-                                                {/* Header */}
-                                                <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-                                                    <div>
-                                                        <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">
-                                                            Profile Completion Needed
-                                                        </h3>
-                                                        <p className="mt-0.5 text-[10px] font-bold text-slate-400">
-                                                            {incompleteResidents.length} Residents
-                                                        </p>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => setShowDrawer(false)}
-                                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
-                                                    >
-                                                        <X className="h-5 w-5" />
-                                                    </button>
-                                                </div>
-
-                                                {/* Search bar inside drawer */}
-                                                <div className="border-b border-slate-100 p-4">
-                                                    <div className="relative">
-                                                        <MagnifyingGlassIcon className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-slate-400" />
-                                                        <input
-                                                            type="text"
-                                                            value={drawerSearch}
-                                                            onChange={(e) => setDrawerSearch(e.target.value)}
-                                                            placeholder="Search incomplete residents..."
-                                                            className="w-full rounded-xl border border-slate-200 py-2 pr-3 pl-9.5 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                {/* Incomplete resident list */}
-                                                <div className="flex-1 divide-y divide-slate-50 overflow-y-auto p-4">
-                                                    {filteredIncomplete.length > 0 ? (
-                                                        filteredIncomplete.map((r) => (
-                                                            <div key={r.id} className="flex items-center justify-between py-3">
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
-                                                                        {r.name.charAt(0).toUpperCase()}
-                                                                    </div>
-                                                                    <div>
-                                                                        <p className="text-xs font-bold text-slate-800">{r.name}</p>
-                                                                        <span className="mt-0.5 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-100">
-                                                                            Profile Incomplete
-                                                                        </span>
-                                                                    </div>
-                                                                </div>
-                                                                <Link
-                                                                    href={`/admin/residents/${r.id}/edit`}
-                                                                    className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] font-black tracking-wider text-slate-700 uppercase hover:bg-slate-100"
-                                                                >
-                                                                    Edit Profile
-                                                                </Link>
-                                                            </div>
-                                                        ))
-                                                    ) : (
-                                                        <div className="flex flex-col items-center justify-center py-12 text-center">
-                                                            <p className="text-xs font-semibold text-slate-400">
-                                                                No matching residents requiring attention.
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        );
-                    })()}
+                    <ResidentInsightsPanel
+                        insights={insights}
+                        incompleteResidents={incompleteResidents}
+                    />
                 </Deferred>
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
@@ -1297,5 +1109,203 @@ export default function Residents({
                 )}
             </AnimatePresence>
         </>
+    );
+}
+
+function ResidentInsightsPanel({
+    insights = [],
+    incompleteResidents = [],
+}: {
+    insights?: string[] | null;
+    incompleteResidents?: { id: number; name: string }[] | null;
+}) {
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [showDrawer, setShowDrawer] = useState(false);
+    const [drawerSearch, setDrawerSearch] = useState('');
+
+    const filteredIncomplete = (incompleteResidents || []).filter((r) =>
+        r.name.toLowerCase().includes(drawerSearch.toLowerCase()),
+    );
+
+    const hasIncomplete = incompleteResidents && incompleteResidents.length > 0;
+    const otherInsights = (insights || []).filter((insight) => !insight.includes('require profile completion'));
+    const hasInsights = otherInsights.length > 0 || hasIncomplete;
+
+    if (!hasInsights) return null;
+
+    return (
+        <div className="rounded-2xl border border-slate-100 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/50">
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4.5 w-4.5 text-indigo-600" />
+                    <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Attention Required</h3>
+                </div>
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                >
+                    <motion.span animate={{ rotate: isCollapsed ? 180 : 0 }} className="block">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                        </svg>
+                    </motion.span>
+                </button>
+            </div>
+
+            <AnimatePresence initial={false}>
+                {!isCollapsed ? (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                    >
+                        <div className="mt-3.5 space-y-3">
+                            {otherInsights.map((insight, idx) => (
+                                <div key={idx} className="flex items-start gap-2.5 text-xs font-semibold text-slate-600">
+                                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                                    <span>{insight}</span>
+                                </div>
+                            ))}
+
+                            {hasIncomplete && (
+                                <div className="rounded-xl bg-slate-50/70 p-3 ring-1 ring-slate-100/30">
+                                    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-xs font-bold text-slate-800">
+                                                {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''}{' '}
+                                                require profile completion
+                                            </p>
+                                            <div className="mt-1.5 flex items-center gap-1.5">
+                                                <div className="flex -space-x-1.5 overflow-hidden">
+                                                    {incompleteResidents.slice(0, 3).map((r) => (
+                                                        <div
+                                                            key={r.id}
+                                                            className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] font-black text-slate-700 ring-2 ring-white"
+                                                        >
+                                                            {r.name.charAt(0).toUpperCase()}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <span className="text-[10px] font-bold text-slate-400">
+                                                    {incompleteResidents
+                                                        .slice(0, 3)
+                                                        .map((r) => r.name)
+                                                        .join(', ')}
+                                                    {incompleteResidents.length > 3 &&
+                                                        ` +${incompleteResidents.length - 3} more`}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setShowDrawer(true)}
+                                            className="self-start rounded-lg bg-indigo-50 px-3 py-1.5 text-[11px] font-black tracking-wide text-indigo-700 uppercase hover:bg-indigo-100 sm:self-center"
+                                        >
+                                            Review Residents &rarr;
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                ) : (
+                    <div className="mt-1 text-[11px] font-semibold text-slate-400">
+                        {hasIncomplete
+                            ? `${incompleteResidents.length} profile completion items pending`
+                            : 'Operational alerts collapsed'}
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* SIDE DRAWER / BOTTOM SHEET */}
+            <AnimatePresence>
+                {showDrawer && (
+                    <>
+                        {/* Backdrop */}
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowDrawer(false)}
+                            className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs"
+                        />
+
+                        {/* Drawer Container */}
+                        <motion.div
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
+                            className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                                <div>
+                                    <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">
+                                        Profile Completion Needed
+                                    </h3>
+                                    <p className="mt-0.5 text-[10px] font-bold text-slate-400">
+                                        {incompleteResidents.length} Residents
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setShowDrawer(false)}
+                                    className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            {/* Search bar inside drawer */}
+                            <div className="border-b border-slate-100 p-4">
+                                <div className="relative">
+                                    <MagnifyingGlassIcon className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        value={drawerSearch}
+                                        onChange={(e) => setDrawerSearch(e.target.value)}
+                                        placeholder="Search incomplete residents..."
+                                        className="w-full rounded-xl border border-slate-200 py-2 pr-3 pl-9.5 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Incomplete resident list */}
+                            <div className="flex-1 divide-y divide-slate-50 overflow-y-auto p-4">
+                                {filteredIncomplete.length > 0 ? (
+                                    filteredIncomplete.map((r) => (
+                                        <div key={r.id} className="flex items-center justify-between py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
+                                                    {r.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-slate-800">{r.name}</p>
+                                                    <span className="mt-0.5 inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-100">
+                                                        Profile Incomplete
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <Link
+                                                href={`/admin/residents/${r.id}/edit`}
+                                                className="rounded-lg bg-slate-50 px-2.5 py-1.5 text-[10px] font-black tracking-wider text-slate-700 uppercase hover:bg-slate-100"
+                                            >
+                                                Edit Profile
+                                            </Link>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <p className="text-xs font-semibold text-slate-400">
+                                            No matching residents requiring attention.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+        </div>
     );
 }

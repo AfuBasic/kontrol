@@ -1,8 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Calendar, Clock, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown, MapPin } from 'lucide-react';
+import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown, MapPin } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import { index, show, update } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import {  show, update } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import MoneyInput from '@/Components/MoneyInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 

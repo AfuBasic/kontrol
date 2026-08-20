@@ -45,7 +45,7 @@ const CreateAccessCode = () => {
         durationConstraints,
         estate_plan,
         isSubscriptionActive,
-        accessCodesEnabled = true,
+        accessCodesEnabled: _accessCodesEnabled = true,
         requireVehicleInfo = false,
     } = usePage<
         SharedData & {

@@ -1,6 +1,6 @@
-import { Link } from '@inertiajs/react';
+
 import { motion } from 'framer-motion';
-import { Plus, Users, Clock, ArrowRight, Activity } from 'lucide-react';
+import { Plus, Users, Activity } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 interface Props {

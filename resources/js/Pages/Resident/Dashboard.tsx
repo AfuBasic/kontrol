@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import ResidentLayout from '@/Layouts/ResidentLayout';
+
 
 export default function Dashboard() {
     return (

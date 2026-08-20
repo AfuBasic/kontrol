@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
 interface PolicyAction {
     id: number;
@@ -35,7 +35,7 @@ interface Props {
 }
 
 export default function PolicyConfig({ policies }: Props) {
-    const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(policies[0] || null);
+    const [selectedPolicy, _setSelectedPolicy] = useState<Policy | null>(policies[0] || null);
 
     if (!selectedPolicy) {
         return (

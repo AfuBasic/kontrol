@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Copy, Check, Calendar, Ticket, ChevronDown, ChevronUp, HelpCircle, X } from 'lucide-react';

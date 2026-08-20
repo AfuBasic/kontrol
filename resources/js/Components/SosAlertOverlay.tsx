@@ -76,7 +76,7 @@ class WebAudioSiren {
                     high = !high;
                 }
             }, 500);
-        } catch (e) {}
+        } catch (_e) {}
         return Promise.resolve();
     }
 
@@ -86,7 +86,7 @@ class WebAudioSiren {
         if (this.osc) {
             try {
                 this.osc.stop();
-            } catch (e) {}
+            } catch (_e) {}
             this.osc.disconnect();
             this.osc = null;
         }

@@ -26,7 +26,7 @@ export default function Create({ residents, properties }: Props) {
     const [selectedTargets, setSelectedTargets] = useState<TargetItem[]>([]);
     const [search, setSearch] = useState('');
 
-    const allItems: TargetItem[] = useMemo(
+    const _allItems: TargetItem[] = useMemo(
         () => [
             ...residents.map((r) => ({ type: 'user' as const, id: r.id, name: r.name })),
             ...properties.map((p) => ({ type: 'property' as const, id: p.id, name: p.name })),

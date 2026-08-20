@@ -62,7 +62,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
         features: [] as number[],
     });
 
-    const [selectedColor, setSelectedColor] = useState('blue');
+    const [_selectedColor, setSelectedColor] = useState('blue');
     const [featureSearch, setFeatureSearch] = useState('');
 
     // Pre-fill form when copying a plan

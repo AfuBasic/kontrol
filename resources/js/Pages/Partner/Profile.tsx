@@ -5,7 +5,6 @@ import {
     ClockIcon,
     ExclamationCircleIcon,
     GlobeAltIcon,
-    ShieldCheckIcon,
     UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions, Transition } from '@headlessui/react';

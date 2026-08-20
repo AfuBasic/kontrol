@@ -26,7 +26,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
     const [selectedDuration, setSelectedDuration] = useState<number>(durationOptions[0]?.minutes || 120);
     const [successBanner, setSuccessBanner] = useState<string | null>(null);
 
-    const { post, processing } = useForm({
+    const { post: _post, processing } = useForm({
         duration_minutes: selectedDuration,
     });
 

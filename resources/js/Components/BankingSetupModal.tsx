@@ -40,7 +40,7 @@ interface Props {
 export default function BankingSetupModal({ isOpen, onClose, banks, currentSettings = emptySettings }: Props) {
     const settings = currentSettings ?? emptySettings;
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors: _errors, reset: _reset } = useForm({
         bank_name: settings.bank_name || '',
         bank_code: settings.bank_code || '',
         account_number: settings.account_number || '',
@@ -189,7 +189,7 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                                 filteredBanks.map((bank) => (
                                                                     <ComboboxOption
                                                                         key={bank.code}
-                                                                        className={({ active }) =>
+                                                                        className={({ _active }) =>
                                                                             cn(
                                                                                 'relative cursor-default py-3 pr-4 pl-12 transition-colors select-none',
                                                                                 active ? 'bg-emerald-50 text-emerald-700' : 'text-slate-900',

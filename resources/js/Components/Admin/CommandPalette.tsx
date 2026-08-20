@@ -59,7 +59,7 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
             let urls: string[] = stored ? JSON.parse(stored) : [];
             urls = [item.href, ...urls.filter((url) => url !== item.href)].slice(0, 5);
             sessionStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(urls));
-        } catch (e) {
+        } catch (_e) {
             // ignore
         }
     };
@@ -118,7 +118,7 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
                     >
                         <Dialog.Panel className="mx-auto max-w-2xl transform divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 transition-all">
                             <Combobox onChange={(item: NavItem) => handleSelect(item)}>
-                                {({ activeOption }) => (
+                                {({ activeOption: _activeOption }) => (
                                     <>
                                         <div className="relative">
                                             <MagnifyingGlassIcon

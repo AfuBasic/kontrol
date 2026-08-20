@@ -134,7 +134,7 @@ export default function PartnerSupport({ support }: Props) {
                             </p>
                         ) : (
                             <ul>
-                                {filteredFaq.map((item, i) => {
+                                {filteredFaq.map((item, _i) => {
                                     const open = openQuestion === item.question;
 
                                     return (

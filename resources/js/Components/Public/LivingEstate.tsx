@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Home as HomeIcon, Landmark, Star, Bell, ShieldAlert, Award, Activity } from 'lucide-react';
+import { Shield, Landmark, Activity } from 'lucide-react';
 
 interface Props {
     scrollProgress: number; // 0 (Hero) to 1 (Bottom feature)

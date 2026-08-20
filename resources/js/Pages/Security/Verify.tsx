@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import { ArrowLeft, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
+import {  ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
@@ -112,7 +112,7 @@ function cameraErrorMessage(err: unknown): string {
 }
 
 export default function SecurityVerify() {
-    const { flash, accessCodesEnabled = true, visitorCheckoutEnabled = true, requireVehicleInformation = false } = usePage<PageProps>().props;
+    const { flash, accessCodesEnabled = true, visitorCheckoutEnabled: _visitorCheckoutEnabled = true, requireVehicleInformation: _requireVehicleInformation = false } = usePage<PageProps>().props;
     const { quality, isOnline, isServerReachable } = useNetworkQuality();
     const { pendingCount, isSyncing, syncNow } = useSyncStatus();
     const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));

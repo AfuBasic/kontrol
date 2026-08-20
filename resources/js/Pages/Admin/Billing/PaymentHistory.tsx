@@ -2,8 +2,8 @@ import { CheckCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/r
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
-import PaymentHistoryController from '@/actions/App/Http/Controllers/Admin/PaymentHistoryController';
-import AdminLayout from '@/Layouts/AdminLayout';
+
+
 
 type Payment = {
     id: number;

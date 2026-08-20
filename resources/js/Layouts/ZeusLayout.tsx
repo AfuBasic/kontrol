@@ -29,7 +29,7 @@ import AnimatedLayout from '@/Layouts/AnimatedLayout';
 
 interface Props {
     children: ReactNode;
-    backUrl?: string;
+    _backUrl?: string;
 }
 
 type NavItem = {

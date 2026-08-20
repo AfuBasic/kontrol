@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { AlertCircle, ArrowLeft, Home, RefreshCcw } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Home } from 'lucide-react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import ResidentLayout from '@/Layouts/ResidentLayout';

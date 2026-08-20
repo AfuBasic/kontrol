@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
-import { useState } from 'react';
+
 
 export default function Login2FA() {
     const { data, setData, post, processing, errors } = useForm({

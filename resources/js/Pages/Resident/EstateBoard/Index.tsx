@@ -1,11 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import { ChevronRight, Globe, Image as ImageIcon, MessageCircle, Shield, Users, Home } from 'lucide-react';
+import { ChevronRight, Globe, MessageCircle, Shield, Users, Home } from 'lucide-react';
 import { useCallback, useEffect, useRef } from 'react';
 
 import { index, show } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
-import ResidentLayout from '@/Layouts/ResidentLayout';
+
 import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, SharedData } from '@/types';
 
 type Props = {

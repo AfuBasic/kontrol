@@ -10,7 +10,7 @@ import {
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import { index as residentsIndex, create as residentsCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 // Wayfinder actions are used for routing
 

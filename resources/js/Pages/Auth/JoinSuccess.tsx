@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Clock, Mail, ShieldCheck, Rocket } from 'lucide-react';
+import { CheckCircle2, Clock, Mail, ShieldCheck } from 'lucide-react';
 
 interface Props {
     estate: string;

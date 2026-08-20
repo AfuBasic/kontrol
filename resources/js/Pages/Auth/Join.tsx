@@ -1,7 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Building2, Mail, User as UserIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 interface Props {
     token: string;

@@ -2,7 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
-import SecurityLayout from '@/Layouts/SecurityLayout';
+
 
 type Props = {
     categories: Array<{ value: string; label: string }>;
@@ -15,7 +15,7 @@ async function getFileHash(file: File): Promise<string> {
             const hashBuffer = await window.crypto.subtle.digest('SHA-256', arrayBuffer);
             const hashArray = Array.from(new Uint8Array(hashBuffer));
             return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-        } catch (e) {
+        } catch (_e) {
             // Fall back to metadata hash
         }
     }

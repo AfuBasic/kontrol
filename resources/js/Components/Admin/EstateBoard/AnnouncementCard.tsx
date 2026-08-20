@@ -9,16 +9,12 @@ import {
     Users,
     Shield,
     Pin,
-    AlertTriangle,
     AlertOctagon,
     MoreVertical,
     FileText,
     Download,
-    Image as ImageIcon,
     Edit3,
     Trash2,
-    Share2,
-    Calendar,
 } from 'lucide-react';
 import { show, destroy, edit } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
@@ -41,7 +37,7 @@ function getAudienceConfig(audience: PostAudience) {
     }
 }
 
-function stripHtml(html: string): string {
+function _stripHtml(html: string): string {
     if (!html) return '';
     return html
         .replace(/<[^>]*>/g, ' ')

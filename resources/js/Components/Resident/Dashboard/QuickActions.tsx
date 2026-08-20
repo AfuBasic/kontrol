@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { UserPlus, History, Shield, HelpCircle, ArrowRight, Megaphone } from 'lucide-react';
-import AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
-import HouseholdMemberController from '@/actions/App/Http/Controllers/Resident/HouseholdMemberController';
+import { UserPlus, History, Megaphone } from 'lucide-react';
+
+
 
 const actions = [
     {

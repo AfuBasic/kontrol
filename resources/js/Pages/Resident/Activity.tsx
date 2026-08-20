@@ -8,11 +8,9 @@ import {
     User,
     Zap,
     Shield,
-    Key,
     LogIn,
     ChevronRight,
     Activity as ActivityIcon,
-    Megaphone,
     CheckCircle,
     Trash2,
     Search,
@@ -131,7 +129,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
     const groupedActivities = groupActivitiesByDate(activities?.data || []);
     const dateLabels = Object.keys(groupedActivities);
 
-    const renderActivityList = () =>
+    const _renderActivityList: _renderActivityList = () =>
         dateLabels.map((dateLabel) => (
             <div key={dateLabel}>
                 <div className="mb-5 flex items-center gap-4">
@@ -178,7 +176,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
     const debouncedSearch = useDebounce(search, 500);
 
     const { url } = usePage();
-    const [isNavigating, setIsNavigating] = useState(false);
+    const [_isNavigating, setIsNavigating] = useState(false);
 
     useEffect(() => {
         const removeStartListener = router.on('start', (event) => {

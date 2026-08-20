@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronDown, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { ChevronDown, CheckCircle2, XCircle } from 'lucide-react';
 import StatusBadge from '@/Components/Visitors/StatusBadge';
 import VisitorAvatar from '@/Components/Visitors/VisitorAvatar';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';

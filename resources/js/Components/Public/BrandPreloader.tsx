@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Table, MessageSquare, ShieldCheck, Bell, CreditCard } from 'lucide-react';
+import { FileText, ShieldCheck } from 'lucide-react';
 
 interface Props {
     onComplete: () => void;

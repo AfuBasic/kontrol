@@ -1,9 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { Megaphone, Search, Filter, X, Settings, Pin, CalendarDays, Globe, Users, Shield } from 'lucide-react';
+import {  Search, X, Settings, Pin } from 'lucide-react';
 
 import { index as boardIndex, manage } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
-import type { CursorPaginatedPosts, EstateBoardPost, PostAudience, PostCategory } from '@/types';
+import type { CursorPaginatedPosts, PostCategory } from '@/types';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 import QuickComposer from '@/Components/Admin/EstateBoard/QuickComposer';

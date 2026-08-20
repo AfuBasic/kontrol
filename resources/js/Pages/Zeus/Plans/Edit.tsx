@@ -64,7 +64,7 @@ export default function EditPlan({ plan, features }: Props) {
         features: plan.features,
     });
 
-    const [selectedColor, setSelectedColor] = useState(plan.color);
+    const [_selectedColor, setSelectedColor] = useState(plan.color);
     const [featureSearch, setFeatureSearch] = useState('');
 
     // Filter features based on search

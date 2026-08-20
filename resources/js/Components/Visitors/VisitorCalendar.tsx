@@ -93,7 +93,7 @@ export default function VisitorCalendar({
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [events, setEvents] = useState<VisitorCalendarEvent[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
+    const [_loading, setLoading] = useState<boolean>(false);
 
     // Filters
     const [selectedPurpose, setSelectedPurpose] = useState<string>(initialFilters?.purpose || 'All');

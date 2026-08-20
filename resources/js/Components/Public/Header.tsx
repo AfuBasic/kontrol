@@ -1,7 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sun, Moon } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import { Menu, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import ThemeToggleIcon from '@/Components/Public/ThemeToggleIcon';
 
 interface HeaderProps {

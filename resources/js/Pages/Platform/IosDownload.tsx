@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Smartphone, Apple, Shield, ArrowLeft } from 'lucide-react';
+import { Smartphone, Apple, Shield } from 'lucide-react';
 import React from 'react';
 
 interface Props {

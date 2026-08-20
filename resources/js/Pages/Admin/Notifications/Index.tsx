@@ -9,7 +9,7 @@ import {
     clearAll as clearAllAction,
 } from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 import type { SharedData } from '@/types';
 
 interface NotificationData {

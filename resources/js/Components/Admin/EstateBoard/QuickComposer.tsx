@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { useForm, router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import {
     Send,
     Paperclip,
@@ -44,7 +44,7 @@ const AUDIENCES: { value: PostAudience; label: string; icon: React.ElementType }
     { value: 'security', label: 'Security Only', icon: Shield },
 ];
 
-const PRIORITIES: { value: PostPriority; label: string; badge: string; icon: React.ElementType }[] = [
+const _PRIORITIES: { value: PostPriority; label: string; badge: string; icon: React.ElementType }[] = [
     { value: 'normal', label: 'Normal', badge: 'bg-slate-100 text-slate-700', icon: Megaphone },
     { value: 'important', label: 'Important', badge: 'bg-amber-100 text-amber-700', icon: AlertTriangle },
     { value: 'critical', label: 'Critical', badge: 'bg-rose-100 text-rose-700', icon: AlertOctagon },

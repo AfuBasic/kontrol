@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X,
-    ChevronRight,
     QrCode,
     Check,
     Bell,
@@ -11,10 +10,9 @@ import {
     ShieldAlert,
     Sparkles,
     Home,
-    Send,
     MessageSquare,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 interface WelcomeSlideshowProps {
     estateName: string;

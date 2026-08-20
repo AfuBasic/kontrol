@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, Activity, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, SlidersHorizontal } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { bulk_destroy } from '@/routes/admin/incidents';
@@ -117,7 +117,7 @@ export default function IncidentsIndex({
     statuses,
     stats,
     admins,
-    recentActivity,
+
 }: Props) {
     const filters = initialFilters && !Array.isArray(initialFilters) ? initialFilters : {};
     const viewMode = filters.view || 'board';
@@ -249,7 +249,7 @@ export default function IncidentsIndex({
     };
 
     // Inline status transitions
-    const handleStatusTransition = (incidentHash: string, nextStatus: string) => {
+    const _handleStatusTransition: _handleStatusTransition = (incidentHash: string, nextStatus: string) => {
         router.put(
             `/admin/incidents/${incidentHash}/status`,
             {

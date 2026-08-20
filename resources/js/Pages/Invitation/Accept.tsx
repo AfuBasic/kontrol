@@ -17,7 +17,7 @@ interface Props {
         relationship_type?: string | null;
         zone_name?: string | null;
     };
-    isPasswordReset?: boolean;
+    _isPasswordReset?: boolean;
     flash?: {
         success?: string;
         error?: string;

@@ -1,7 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Calendar,
+    
     Clock,
     Users,
     CheckCircle,
@@ -21,7 +21,7 @@ import {
     Edit2,
     X,
 } from 'lucide-react';
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { index, publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
@@ -324,10 +324,10 @@ export default function ShowCollection({
     collection,
     stats,
     assignments,
-    totalResidents,
+
     filters,
     settlement,
-    hasBanking,
+
     canDelete,
     recentPayments,
     dailyTrend,

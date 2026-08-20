@@ -76,7 +76,7 @@ export default function AIEnhanceTextarea({
                 setEnhanceError(data.message || 'Enhancement failed');
                 setOriginalContent(null);
             }
-        } catch (err) {
+        } catch (_err) {
             setEnhanceError('Failed to connect. Please try again.');
             setOriginalContent(null);
         } finally {

@@ -1,32 +1,23 @@
-import { Deferred, Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Deferred, Head, Link, router, useForm } from '@inertiajs/react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    AlertCircle,
+    
     ArrowLeft,
-    CheckCircle2,
     Clock,
-    Download,
-    Eye,
     Lock,
     MapPin,
     MessageSquare,
     Send,
-    ThumbsUp,
     Trash2,
-    Wrench,
     X,
     ZoomIn,
-    User,
-    UserPlus,
     Tag,
-    AlertTriangle,
-    Shield,
     CornerDownRight,
 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
-import Modal from '@/Components/Modal';
+
 
 type AdminUser = {
     id: number;
@@ -129,7 +120,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
     // Form state for status & assignment & priority & category
-    const { data, setData, put, processing } = useForm({
+    const { data, setData, put: _put, processing: _processing } = useForm({
         status: typeof incident.status === 'object' ? incident.status.value : incident.status,
         assigned_to: incident.assignee?.id || '',
         priority: typeof incident.priority === 'object' ? incident.priority.value : incident.priority,
@@ -247,7 +238,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
     };
 
     // Priority Styling
-    const getPriorityStyles = (val: string) => {
+    const _getPriorityStyles: _getPriorityStyles = (val: string) => {
         switch (val) {
             case 'critical':
                 return 'bg-rose-50 text-rose-700 border-rose-200/50';
@@ -260,8 +251,8 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
         }
     };
 
-    const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
-    const priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
+    const _statusVal: _statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
+    const _priorityVal: _priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
     const categoryVal = typeof incident.category === 'object' ? incident.category.value : incident.category;
 
     const slaInfo = getSlaStatus();

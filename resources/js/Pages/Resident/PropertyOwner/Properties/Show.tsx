@@ -91,7 +91,7 @@ interface Props {
     residents: Resident[];
     outstandingCollections: {
         data: OutstandingCollection[];
-        next_page_url: string | null;
+        next_page_url: _url: string | null;
         total: number;
     };
     outstandingBalance: number;
@@ -124,7 +124,7 @@ export default function Show({
     outstandingBalance,
     totalCollected,
     metrics,
-    payments,
+
     announcements,
     activities,
     eligibleResidents,

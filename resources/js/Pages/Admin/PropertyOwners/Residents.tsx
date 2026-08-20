@@ -7,7 +7,7 @@ import { create as createResident } from '@/actions/App/Http/Controllers/Admin/R
 import Modal from '@/Components/Modal';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { TableRowSkeleton } from '@/Components/Skeletons';
-import { EmptyState } from '@/Components/States';
+
 import AdminLayout from '@/Layouts/AdminLayout';
 
 interface Resident {

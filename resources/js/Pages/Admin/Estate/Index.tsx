@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 export default function EstateBoard() {
     return (

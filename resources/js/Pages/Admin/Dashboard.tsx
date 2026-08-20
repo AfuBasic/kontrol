@@ -6,7 +6,6 @@ import {
     Megaphone,
     Wallet,
     AlertTriangle,
-    CheckCircle2,
     ChevronRight,
     Activity,
     Settings,
@@ -107,7 +106,7 @@ type Props = {
     recentPosts?: PostItem[] | null;
 };
 
-function getSeverityStyles(severity: 'info' | 'warning' | 'danger') {
+function _getSeverityStyles(severity: 'info' | 'warning' | 'danger') {
     switch (severity) {
         case 'danger':
             return 'bg-rose-50/50 border-rose-100 text-rose-800 hover:bg-rose-50';

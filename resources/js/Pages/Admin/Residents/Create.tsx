@@ -1,14 +1,14 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, Copy, FileSpreadsheet, Link as LinkIcon, Mail, Power, RefreshCw, Share2, Upload, User, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { CheckCircle, FileSpreadsheet, Link as LinkIcon, Mail, Upload, User, X } from 'lucide-react';
+import { useCallback, useState } from 'react';
 import {
     store as inviteLinkStore,
     regenerate as inviteLinkRegenerate,
     toggle as inviteLinkToggle,
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
-import { bulkInvite, index, store, create as residentCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import { bulkInvite, index, store } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import type { InviteLink } from '../Components/InviteLinksTab';
 import InviteLinksTab from '../Components/InviteLinksTab';
 

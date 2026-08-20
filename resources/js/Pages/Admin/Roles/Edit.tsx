@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { index, update } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useState, useMemo } from 'react';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type Permission = {
     id: number;
@@ -108,11 +108,11 @@ export default function EditRole({ role, permissions }: Props) {
         }
     }
 
-    function isModuleFullySelected(module: string): boolean {
+    function _isModuleFullySelected(module: string): boolean {
         return groupedPermissions[module].every((p) => data.permissions.includes(p.id));
     }
 
-    function isModulePartiallySelected(module: string): boolean {
+    function _isModulePartiallySelected(module: string): boolean {
         const modulePermissions = groupedPermissions[module];
         const selectedCount = modulePermissions.filter((p) => data.permissions.includes(p.id)).length;
         return selectedCount > 0 && selectedCount < modulePermissions.length;

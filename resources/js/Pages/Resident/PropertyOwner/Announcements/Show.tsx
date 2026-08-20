@@ -1,5 +1,5 @@
 import {
-    MegaphoneIcon,
+    
     ArrowLeftIcon,
     TrashIcon,
     UserGroupIcon,

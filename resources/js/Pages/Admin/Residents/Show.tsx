@@ -2,7 +2,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
     Calendar,
-    CheckCircle2,
     Clock,
     DollarSign,
     ExternalLink,
@@ -12,15 +11,13 @@ import {
     Mail,
     Phone,
     Shield,
-    ShieldAlert,
     User,
     UserCheck,
     UserMinus,
     Users,
-    Eye,
 } from 'lucide-react';
 import React, { useState } from 'react';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type ResidentProp = {
     id: number;

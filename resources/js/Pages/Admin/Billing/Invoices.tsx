@@ -1,9 +1,9 @@
 import { ChevronLeftIcon, ChevronRightIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type Invoice = {
     ulid: string;

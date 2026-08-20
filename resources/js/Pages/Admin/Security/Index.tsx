@@ -9,7 +9,7 @@ import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { TableRowSkeleton } from '@/Components/Skeletons';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
-import AdminLayout from '@/Layouts/AdminLayout';
+
 
 type SecurityPerson = {
     ulid: string;

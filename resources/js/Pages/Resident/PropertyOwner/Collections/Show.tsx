@@ -1,11 +1,8 @@
 import {
-    WalletIcon,
+    
     ArrowLeftIcon,
     CalendarIcon,
-    PlusIcon,
     CheckCircleIcon,
-    ChevronRightIcon,
-    ClockIcon,
     XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
