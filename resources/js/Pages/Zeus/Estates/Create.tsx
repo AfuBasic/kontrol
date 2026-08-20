@@ -465,7 +465,7 @@ export default function CreateEstate({ plans, partners }: Props) {
                             </Link>
                             <button
                                 type="submit"
-                                disabled={processing || !data.name || !data.email || !data.plan_id}
+                                disabled={processing}
                                 className="rounded-lg bg-blue-600 px-8 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/20 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:bg-blue-500 dark:hover:bg-blue-600"
                             >
                                 {processing ? 'Creating estate...' : 'Create estate'}
