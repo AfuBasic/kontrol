@@ -8,6 +8,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
 use App\Http\Middleware\ValidateEstateContext;
+use App\Models\SystemErrorLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -135,6 +136,34 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $exceptions->render(function (TokenMismatchException $e, Request $request) {
             return back()->with('error', 'Your session expired. Please try again.');
+        });
+
+        $exceptions->reportable(function (Throwable $e) {
+            // Ignore noise: standard auth, validation, CSRF, and 4xx client errors
+            if ($e instanceof AuthenticationException
+                || $e instanceof ValidationException
+                || $e instanceof TokenMismatchException
+                || ($e instanceof HttpExceptionInterface && $e->getStatusCode() < 500)) {
+                return;
+            }
+
+            try {
+                $request = request();
+                $user = $request?->user();
+                $context = [
+                    'url' => $request?->fullUrl(),
+                    'method' => $request?->method(),
+                    'ip' => $request?->ip(),
+                    'user_agent' => $request?->userAgent(),
+                    'user_id' => $user?->id,
+                    'user_email' => $user?->email,
+                    'estate_id' => $user?->current_estate_id ?? session('estate_id') ?? null,
+                ];
+
+                SystemErrorLog::record($e, 'backend', $context);
+            } catch (Throwable) {
+                // Silently bypass to avoid breaking the core exception flow
+            }
         });
 
         $exceptions->render(function (InvalidSignatureException $e, Request $request) {
