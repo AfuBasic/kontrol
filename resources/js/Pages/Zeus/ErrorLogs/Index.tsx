@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import {
     Terminal,
     Search,
@@ -8,16 +7,11 @@ import {
     EyeOff,
     RotateCcw,
     AlertCircle,
-    Activity,
     Server,
     Globe,
     Flame,
     Clock,
-    ChevronRight,
     ArrowUpRight,
-    SlidersHorizontal,
-    Code2,
-    Layers,
     Cpu,
 } from 'lucide-react';
 import { useState } from 'react';
