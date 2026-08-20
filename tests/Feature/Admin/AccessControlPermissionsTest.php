@@ -1,21 +1,20 @@
 <?php
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
+use App\Enums\AssignmentScope;
 use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
 use App\Models\User;
-use App\Models\Zone;
+use App\Services\PaystackService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
-use Database\Seeders\PermissionSeeder;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
-use App\Services\PaystackService;
-use App\Actions\Admin\CreateAdministrativeAssignmentAction;
-use App\Enums\AssignmentScope;
 
 uses(RefreshDatabase::class);
 
@@ -25,7 +24,7 @@ beforeEach(function () {
     $this->estate = Estate::factory()->create();
 
     // Seed roles and permissions
-    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+    $this->seed(RolesAndPermissionsSeeder::class);
     $this->seed(FeatureSeeder::class);
     $this->seed(PlanSeeder::class);
 
@@ -72,7 +71,7 @@ beforeEach(function () {
 
     // Create authoritative assignments for both users
     $createAction = app(CreateAdministrativeAssignmentAction::class);
-    
+
     $this->adminAssignment = $createAction->execute(
         user: $this->adminUser,
         estate: $this->estate,
