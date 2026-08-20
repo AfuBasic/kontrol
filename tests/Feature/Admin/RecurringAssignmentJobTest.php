@@ -40,7 +40,7 @@ it('processes recurring collection when next_processing_date is today or past', 
 
     $assignments = CollectionAssignment::withoutGlobalScopes()->where('collection_id', $collection->id)->get();
     expect($assignments)->toHaveCount(1);
-    
+
     $assignment = $assignments->first();
     expect($assignment->user_id)->toBe($user->id)
         ->and($assignment->period)->toBe('2024-03')
@@ -69,7 +69,7 @@ it('does not process recurring collection when next_processing_date is in the fu
         'due_day' => 5,
         'applies_to' => 'target',
     ]);
-    
+
     $collection->targets()->create([
         'target_type' => User::class,
         'target_id' => $user->id,
@@ -100,7 +100,7 @@ it('catches up by generating multiple assignments if next_processing_date is far
         'due_day' => 5,
         'applies_to' => 'target',
     ]);
-    
+
     $collection->targets()->create([
         'target_type' => User::class,
         'target_id' => $user->id,
@@ -109,16 +109,16 @@ it('catches up by generating multiple assignments if next_processing_date is far
     RecurringAssignmentJob::dispatch();
 
     $assignments = CollectionAssignment::withoutGlobalScopes()->where('collection_id', $collection->id)->orderBy('period')->get();
-    
+
     // Should generate for March, April, and May (since May 1st <= May 1st)
     expect($assignments)->toHaveCount(3);
-    
+
     expect($assignments[0]->period)->toBe('2024-03')
         ->and($assignments[0]->due_date->toDateString())->toBe('2024-03-05');
-        
+
     expect($assignments[1]->period)->toBe('2024-04')
         ->and($assignments[1]->due_date->toDateString())->toBe('2024-04-05');
-        
+
     expect($assignments[2]->period)->toBe('2024-05')
         ->and($assignments[2]->due_date->toDateString())->toBe('2024-05-05');
 
