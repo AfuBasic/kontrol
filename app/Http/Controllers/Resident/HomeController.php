@@ -10,6 +10,7 @@ use App\Models\Incident;
 use App\Services\Admin\EstateBoardService;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
+use Carbon\CarbonImmutable;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -41,7 +42,7 @@ class HomeController extends Controller
             // For long_lived passes: if already used today, it is not currently pending arrival today
             if ($code->type === 'long_lived') {
                 $usedToday = $code->relationLoaded('accessLogs')
-                    ? $code->accessLogs->contains(fn ($log) => $log->verified_at && \Carbon\CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->toDateString() === $todayDate)
+                    ? $code->accessLogs->contains(fn ($log) => $log->verified_at && CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->toDateString() === $todayDate)
                     : $code->accessLogs()->whereDate('verified_at', $todayDate)->exists();
 
                 return ! $usedToday;
@@ -70,7 +71,7 @@ class HomeController extends Controller
             // If long_lived pass used today, it lines up as upcoming for tomorrow
             if ($code->type === 'long_lived' && ! $isFuture) {
                 $usedToday = $code->relationLoaded('accessLogs')
-                    ? $code->accessLogs->contains(fn ($log) => $log->verified_at && \Carbon\CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->toDateString() === $todayDate)
+                    ? $code->accessLogs->contains(fn ($log) => $log->verified_at && CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->toDateString() === $todayDate)
                     : $code->accessLogs()->whereDate('verified_at', $todayDate)->exists();
 
                 return $usedToday;
