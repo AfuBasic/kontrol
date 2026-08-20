@@ -17,6 +17,7 @@ import {
     BanknotesIcon,
     TicketIcon,
     ScaleIcon,
+    BugAntIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -52,6 +53,7 @@ const baseNavItems: NavItem[] = [
     { name: 'Collections', href: '/zeus/collections', icon: BanknotesIcon },
     { name: 'Transactions', href: '/zeus/transactions', icon: CurrencyDollarIcon },
     { name: 'Risk Center', href: '/zeus/risk-center', icon: ShieldExclamationIcon },
+    { name: 'Error Logs', href: '/zeus/error-logs', icon: BugAntIcon },
     { name: 'Settings', href: '/zeus/settings', icon: Cog6ToothIcon },
 ];
 
