@@ -72,7 +72,7 @@ export default function ApplicationShow({ application }: Props) {
         body: '',
     });
 
-    const { patch: patchStatus, processing: processingStatus } = useForm({
+    const { processing: processingStatus } = useForm({
         status: '',
     });
 
