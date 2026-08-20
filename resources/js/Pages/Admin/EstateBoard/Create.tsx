@@ -170,6 +170,11 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                 <input
                                     type="text"
                                     id="title"
+                                    name="title"
+                                    autoComplete="off"
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="Give your announcement a clear title..."
