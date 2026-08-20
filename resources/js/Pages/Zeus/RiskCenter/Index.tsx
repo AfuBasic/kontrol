@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, AlertTriangle, Activity, Users, Building2, Clock, CreditCard, ArrowRight } from 'lucide-react';
+import { ShieldAlert, AlertTriangle, Activity, Users, Building2, Clock, CreditCard } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 interface RiskFactor {
