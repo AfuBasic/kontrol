@@ -32,7 +32,7 @@ beforeEach(function () {
 
 it('allows only authorized admins to change partner assignment', function () {
     setPermissionsTeamId($this->estate->id);
-    
+
     // Test authorized admin
     $this->actingAs($this->authorizedAdmin);
     app(ContextManager::class)->resolve();
@@ -42,7 +42,7 @@ it('allows only authorized admins to change partner assignment', function () {
     // Test unauthorized admin
     $this->actingAs($this->unauthorizedAdmin);
     app(ContextManager::class)->resolve();
-    
+
     expect(Gate::forUser($this->unauthorizedAdmin)->allows('update', $this->estate))->toBeFalse();
 });
 
