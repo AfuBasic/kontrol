@@ -2,7 +2,6 @@
 
 use App\Events\Admin\CollectionPublished;
 use App\Jobs\Admin\PublishCollectionJob;
-use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
 use App\Models\EstateSettings;
