@@ -222,7 +222,9 @@ class IncidentController extends Controller
 
         return Inertia::render('Admin/Incidents/Show', [
             'incident' => $loadedIncident,
-            'comments' => Inertia::defer(fn () => $this->incidentService->getComments($incident->id)),
+            'official_comments' => $this->incidentService->getOfficialComments($incident->id),
+            'discussion_comments' => Inertia::defer(fn () => $this->incidentService->getDiscussionComments($incident->id)),
+            'comments' => Inertia::defer(fn () => $this->incidentService->getDiscussionComments($incident->id)),
             'admins' => $admins,
             'statuses' => $statuses,
             'categories' => $categories,
