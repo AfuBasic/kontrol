@@ -15,8 +15,7 @@ class AdministrativeAssignmentService
 {
     public function __construct(
         protected EstateContextService $estateContext
-    ) {
-    }
+    ) {}
 
     /**
      * Paginated assignments for the authoritative current estate context.
@@ -45,9 +44,9 @@ class AdministrativeAssignmentService
                     });
                 });
             })
-            ->when(($filters['status'] ?? null) === 'active', fn($q) => $q->where('is_active', true))
-            ->when(($filters['status'] ?? null) === 'inactive', fn($q) => $q->where('is_active', false))
-            ->when($filters['scope_type'] ?? null, fn($q, $scope) => $q->where('scope_type', $scope))
+            ->when(($filters['status'] ?? null) === 'active', fn ($q) => $q->where('is_active', true))
+            ->when(($filters['status'] ?? null) === 'inactive', fn ($q) => $q->where('is_active', false))
+            ->when($filters['scope_type'] ?? null, fn ($q, $scope) => $q->where('scope_type', $scope))
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
