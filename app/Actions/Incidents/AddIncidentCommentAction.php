@@ -23,7 +23,7 @@ class AddIncidentCommentAction
             $user = Auth::user();
 
             app(ContextManager::class)->setSystemContext($incident->estate_id);
-            $isOfficial = $user->hasRole('admin');
+            $isOfficial = $user->contextHasRole(['admin', 'security']);
 
             $comment = IncidentComment::create([
                 'incident_id' => $incident->id,
