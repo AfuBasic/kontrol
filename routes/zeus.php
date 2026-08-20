@@ -5,6 +5,7 @@ use App\Http\Controllers\Zeus\AuthController;
 use App\Http\Controllers\Zeus\CollectionOversightController;
 use App\Http\Controllers\Zeus\CouponController;
 use App\Http\Controllers\Zeus\DashboardController;
+use App\Http\Controllers\Zeus\ErrorLogController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
 use App\Http\Controllers\Zeus\MoneyFlowController;
@@ -106,5 +107,15 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])
             ->withTrashed()
             ->name('applications.destroy');
+
+        // Error Logs
+        Route::get('/error-logs', [ErrorLogController::class, 'index'])->name('error-logs.index');
+        Route::get('/error-logs/{errorLog}', [ErrorLogController::class, 'show'])->name('error-logs.show');
+        Route::patch('/error-logs/{errorLog}/resolve', [ErrorLogController::class, 'resolve'])->name('error-logs.resolve');
+        Route::patch('/error-logs/{errorLog}/ignore', [ErrorLogController::class, 'ignore'])->name('error-logs.ignore');
+        Route::patch('/error-logs/{errorLog}/reopen', [ErrorLogController::class, 'reopen'])->name('error-logs.reopen');
+        Route::delete('/error-logs/{errorLog}', [ErrorLogController::class, 'destroy'])->name('error-logs.destroy');
+        Route::post('/error-logs/clear-all', [ErrorLogController::class, 'clearAll'])->name('error-logs.clear-all');
+        Route::post('/error-logs/clear-resolved', [ErrorLogController::class, 'clearResolved'])->name('error-logs.clear-resolved');
     });
 });
