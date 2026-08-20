@@ -3,9 +3,10 @@
 use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
+use App\Models\Compliance\CompliancePolicy;
+use App\Models\Compliance\Violation;
 use App\Models\Estate;
 use App\Models\User;
-use App\Models\Compliance\Violation;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -22,7 +23,7 @@ it('raises compliance violations according to the scheduled intervals', function
     $admin->assignRole('admin');
 
     // Create active compliance policy for the estate
-    $policy = \App\Models\Compliance\CompliancePolicy::create([
+    $policy = CompliancePolicy::create([
         'estate_id' => $estate->id,
         'name' => 'Default Collection Policy',
         'violation_type' => 'collection_overdue',
@@ -118,7 +119,7 @@ it('raises compliance violations according to the scheduled intervals', function
 
     // With ComplianceEngine, all these unpaid assignments should have violations raised
     // The previous day-based logic was replaced by policy-driven evaluation
-    
+
     expect(Violation::where('violatable_id', $assignment1->id)->exists())->toBeTrue()
         ->and(Violation::where('violatable_id', $assignment2->id)->exists())->toBeTrue()
         ->and(Violation::where('violatable_id', $assignment3->id)->exists())->toBeTrue()
