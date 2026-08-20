@@ -12,19 +12,26 @@ export type IncidentCategory =
     | 'internet_cable'
     | 'other';
 
+export type IncidentPriority = 'low' | 'medium' | 'high' | 'critical';
+export type IncidentSource = 'resident_report' | 'security_report' | 'estate_management' | 'system_generated' | 'inspection';
+
 export type Incident = {
     id: number;
     ulid: string;
     hashid: string;
+    reference_code?: string;
     title: string;
     body: string;
     category: IncidentCategory;
+    priority?: IncidentPriority;
+    source?: IncidentSource;
     status: IncidentStatus;
     reporter: {
         id: number;
         name: string;
         email: string;
     };
+    reporter_role_label?: string;
     assignee?: {
         id: number;
         name: string;
