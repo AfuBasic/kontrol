@@ -2,7 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Area, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis, PieChart, Pie, Cell } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-import { Banknote, TrendingUp, Award, ArrowUpRight, Activity, Home, User, AlertTriangle, ShieldAlert, CreditCard, ShieldX } from 'lucide-react';
+import { Banknote, TrendingUp, Award, ArrowUpRight, Activity, Home, User, AlertTriangle, CreditCard, ShieldX } from 'lucide-react';
 
 interface ForecastData {
     month: string;
