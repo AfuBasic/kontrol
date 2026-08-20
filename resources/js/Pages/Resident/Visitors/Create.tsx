@@ -301,7 +301,7 @@ const CreateAccessCode = () => {
                         <h1 className="text-[17px] font-bold tracking-tight text-slate-900">
                             {step === 'type' && 'Pass Type'}
                             {step === 'schedule' && 'Scheduling'}
-                            {step === 'details' && 'Visitor Details'}
+                            {step === 'details' && (isEvent ? 'Event Details' : 'Visitor Details')}
                             {step === 'review' && 'Review Pass'}
                         </h1>
                         <div className="w-10" /> {/* Spacer for centering */}
@@ -692,8 +692,12 @@ const CreateAccessCode = () => {
                                 className="space-y-6 pt-4"
                             >
                                 <div className="mb-8">
-                                    <h2 className="text-3xl font-black tracking-tight text-slate-900">Visitor Details</h2>
-                                    <p className="mt-2 text-[15px] leading-relaxed font-medium text-slate-500">Who is arriving at the gate?</p>
+                                    <h2 className="text-3xl font-black tracking-tight text-slate-900">
+                                        {isEvent ? 'Event Details' : 'Visitor Details'}
+                                    </h2>
+                                    <p className="mt-2 text-[15px] leading-relaxed font-medium text-slate-500">
+                                        {isEvent ? 'What are the details of your event?' : 'Who is arriving at the gate?'}
+                                    </p>
                                 </div>
 
                                 <div className="space-y-5 rounded-[32px] bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] ring-1 ring-slate-100">
