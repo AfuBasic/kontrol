@@ -84,7 +84,7 @@ test('1. Estate A role cannot authorize Estate B and 2. Global role can grant es
         role: $globalRole,
         scopeType: AssignmentScope::Estate
     );
-    
+
     expect(AdministrativeAssignment::where('role_id', $globalRole->id)->exists())->toBeTrue();
 
     // 3. Assignment estate mismatch rejected
