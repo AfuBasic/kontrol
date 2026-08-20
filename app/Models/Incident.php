@@ -54,7 +54,21 @@ class Incident extends Model
         'is_private',
     ];
 
-    protected $appends = ['hashid', 'reporter_role'];
+    protected $appends = [
+        'reporter_role_label',
+        'reference_code',
+    ];
+
+    /**
+     * Get a human-readable incident reference code.
+     */
+    public function getReferenceCodeAttribute(): string
+    {
+        $year = $this->created_at ? $this->created_at->format('Y') : date('Y');
+        $idPad = str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
+
+        return "INC-{$year}-{$idPad}";
+    }
 
     /**
      * Get the hashid connection name for this model.

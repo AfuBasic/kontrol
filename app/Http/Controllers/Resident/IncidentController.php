@@ -100,14 +100,17 @@ class IncidentController extends Controller
 
         $estateId = $this->estateContext->getEstateId();
         $loadedIncident = $this->incidentService->getIncident($incident->id, $estateId);
-        $comments = $this->incidentService->getComments($incident->id);
+        $officialComments = $this->incidentService->getOfficialComments($incident->id);
+        $discussionComments = $this->incidentService->getDiscussionComments($incident->id);
 
         $user = auth()->user();
         $canClose = $loadedIncident->reporter_id === $user->id && $loadedIncident->status->value === 'solved';
 
         return Inertia::render('Resident/Incidents/Show', [
             'incident' => $loadedIncident,
-            'comments' => $comments,
+            'official_comments' => $officialComments,
+            'discussion_comments' => $discussionComments,
+            'comments' => $discussionComments, // backwards compatibility
             'canClose' => $canClose,
         ]);
     }

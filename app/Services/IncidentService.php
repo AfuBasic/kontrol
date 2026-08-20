@@ -6,7 +6,9 @@ use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\User;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class IncidentService
@@ -160,7 +162,36 @@ class IncidentService
     }
 
     /**
-     * Get top-level comments for an incident with their replies.
+     * Get all official comments (administrative & security advisories) for an incident.
+     *
+     * @return Collection<int, IncidentComment>
+     */
+    public function getOfficialComments(int $incidentId): Collection
+    {
+        return IncidentComment::query()
+            ->where('incident_id', $incidentId)
+            ->where('is_official', true)
+            ->with(['author', 'replies.author'])
+            ->orderBy('created_at', 'asc')
+            ->get();
+    }
+
+    /**
+     * Get community discussion comments (non-official) for an incident.
+     */
+    public function getDiscussionComments(int $incidentId): LengthAwarePaginator
+    {
+        return IncidentComment::query()
+            ->where('incident_id', $incidentId)
+            ->where('is_official', false)
+            ->topLevel()
+            ->with(['author', 'replies.author'])
+            ->orderBy('created_at', 'asc')
+            ->paginate(30);
+    }
+
+    /**
+     * Get top-level comments for an incident with their replies (legacy combined).
      */
     public function getComments(int $incidentId): LengthAwarePaginator
     {
