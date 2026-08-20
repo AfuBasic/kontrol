@@ -25,11 +25,14 @@ class CompleteAuthenticatedLogin
         bool $remember = false,
         ?TrustedDevice $device = null,
         ?string $plainTextToken = null,
+        bool $forceLogout = true,
     ): RedirectResponse {
         Auth::login($user, $remember);
         $request->session()->regenerate();
 
-        ForceLogout::dispatchSafely($user->id);
+        if ($forceLogout) {
+            ForceLogout::dispatchSafely($user->id);
+        }
 
         $request->session()->put('password_hash_web', $user->getAuthPassword());
 
