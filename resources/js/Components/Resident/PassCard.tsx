@@ -4,7 +4,7 @@ import { ChevronDown, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import StatusBadge from '@/Components/Visitors/StatusBadge';
 import VisitorAvatar from '@/Components/Visitors/VisitorAvatar';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
-import { deriveCategory, formatRelativeDate, normalizeStatus } from '@/Utils/visitorTheme';
+import { deriveCategory, formatRelativeDate, normalizeStatus, resolveVisitorName } from '@/Utils/visitorTheme';
 
 export interface PassData {
     id: number;
