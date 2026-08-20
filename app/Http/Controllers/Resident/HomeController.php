@@ -27,11 +27,27 @@ class HomeController extends Controller
         $isHouseholdMember = $user->isHouseholdMember();
 
         $activeCodesCollection = $this->accessCodeService->getActiveCodes();
-        $activePassesCount = $activeCodesCollection->filter(function ($code) {
+        $tz = config('app.timezone', 'Africa/Lagos');
+        $todayDate = now($tz)->toDateString();
+
+        $activePassesCount = $activeCodesCollection->filter(function ($code) use ($tz, $todayDate) {
             $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
             $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
 
-            return ! $isFuture && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
+            if ($isFuture || $isExpired || $code->status->value === 'revoked' || $code->status->value === 'used') {
+                return false;
+            }
+
+            // For long_lived passes: if already used today, it is not currently pending arrival today
+            if ($code->type === 'long_lived') {
+                $usedToday = $code->relationLoaded('accessLogs')
+                    ? $code->accessLogs->contains(fn ($log) => $log->verified_at && \Carbon\CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->toDateString() === $todayDate)
+                    : $code->accessLogs()->whereDate('verified_at', $todayDate)->exists();
+
+                return ! $usedToday;
+            }
+
+            return true;
         })->count();
 
         $upcomingTodayCount = $activeCodesCollection->filter(function ($code) {
@@ -42,12 +58,25 @@ class HomeController extends Controller
             return $isFuture && $isToday && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
         })->count();
 
-        $upcomingFutureCount = $activeCodesCollection->filter(function ($code) {
+        $upcomingFutureCount = $activeCodesCollection->filter(function ($code) use ($tz, $todayDate) {
             $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
             $isToday = $code->starts_at ? $code->starts_at->isToday() : false;
             $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
 
-            return $isFuture && ! $isToday && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
+            if ($isExpired || $code->status->value === 'revoked' || $code->status->value === 'used') {
+                return false;
+            }
+
+            // If long_lived pass used today, it lines up as upcoming for tomorrow
+            if ($code->type === 'long_lived' && ! $isFuture) {
+                $usedToday = $code->relationLoaded('accessLogs')
+                    ? $code->accessLogs->contains(fn ($log) => $log->verified_at && \Carbon\CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->toDateString() === $todayDate)
+                    : $code->accessLogs()->whereDate('verified_at', $todayDate)->exists();
+
+                return $usedToday;
+            }
+
+            return $isFuture && ! $isToday;
         })->count();
 
         $openIncidentsCount = Incident::query()

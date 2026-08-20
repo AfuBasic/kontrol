@@ -351,6 +351,29 @@ class AccessCode extends Model
      */
     public function getEffectiveVisitAtAttribute(): CarbonImmutable
     {
+        // For long_lived passes: if used today, project next expected visit to tomorrow
+        if ($this->type === 'long_lived' && $this->isActive()) {
+            $tz = config('app.timezone', 'Africa/Lagos');
+            $today = CarbonImmutable::now($tz)->startOfDay();
+
+            // Check if there is an access log for today
+            $usedToday = $this->relationLoaded('accessLogs')
+                ? $this->accessLogs->contains(fn ($log) => $log->verified_at && CarbonImmutable::instance($log->verified_at)->setTimezone($tz)->isSameDay($today))
+                : $this->accessLogs()->whereDate('verified_at', $today->toDateString())->exists();
+
+            if ($usedToday) {
+                // Already used today; next expected arrival is tomorrow
+                return $today->addDay();
+            }
+
+            // If not used today: if starts_at is in the future, return starts_at; otherwise it is expected today
+            if ($this->starts_at !== null && $this->starts_at->greaterThan($today->endOfDay())) {
+                return $this->starts_at;
+            }
+
+            return $today;
+        }
+
         if ($this->starts_at !== null) {
             return $this->starts_at;
         }
