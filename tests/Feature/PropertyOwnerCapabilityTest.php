@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\EstateBoardPostStatus;
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
@@ -110,9 +111,9 @@ test('admin can view, create, edit, suspend property owners', function () {
     $response->assertRedirect();
 
     $owner->refresh();
-    $assignment = \App\Models\AdministrativeAssignment::where('user_id', $owner->id)
+    $assignment = AdministrativeAssignment::where('user_id', $owner->id)
         ->where('estate_id', $this->estate->id)
-        ->where('role_id', \Spatie\Permission\Models\Role::where('name', 'property_owner')->first()->id)
+        ->where('role_id', Role::where('name', 'property_owner')->first()->id)
         ->first();
     expect($assignment->is_active)->toBeFalse();
 
@@ -136,10 +137,10 @@ test('property owner dashboard, residents, properties, collections, and announce
     $owner->assignRole('resident');
     $owner->assignRole('property_owner');
     $owner->estates()->attach($this->estate->id, ['status' => 'accepted']);
-    \App\Models\AdministrativeAssignment::create([
+    AdministrativeAssignment::create([
         'user_id' => $owner->id,
         'estate_id' => $this->estate->id,
-        'role_id' => \Spatie\Permission\Models\Role::where('name', 'property_owner')->first()->id,
+        'role_id' => Role::where('name', 'property_owner')->first()->id,
         'is_active' => true,
     ]);
 
