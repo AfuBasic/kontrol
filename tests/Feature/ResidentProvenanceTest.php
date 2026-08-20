@@ -94,7 +94,7 @@ test('bulk invite resident stores bulk_upload created_via and import batch name'
         ->first();
 
     expect($membership->created_via)->toBe('bulk_upload');
-    expect($membership->import_batch)->toStartWith('Residents — ');
+    expect($membership->import_batch)->toStartWith('Residents - ');
     expect((int) $membership->initiated_by)->toBe($this->adminUser->id);
 });
 
