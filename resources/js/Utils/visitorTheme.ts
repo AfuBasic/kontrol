@@ -113,12 +113,36 @@ export function deriveCategory(purpose?: string | null, type?: string | null): V
 export function formatRelativeDate(dateInput: string | Date | null | undefined): string {
     if (!dateInput) return '';
 
-    const date = new Date(dateInput);
-    if (isNaN(date.getTime())) return String(dateInput);
+    let targetYear: number;
+    let targetMonth: number;
+    let targetDay: number;
+    let weekdayStr = '';
+    let monthStr = '';
+    let dayNum = 0;
+
+    if (typeof dateInput === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateInput.trim())) {
+        const [y, m, d] = dateInput.trim().split('-').map(Number);
+        targetYear = y;
+        targetMonth = m - 1;
+        targetDay = d;
+        const localDate = new Date(targetYear, targetMonth, targetDay);
+        weekdayStr = localDate.toLocaleDateString('en-US', { weekday: 'short' });
+        monthStr = localDate.toLocaleDateString('en-US', { month: 'short' });
+        dayNum = targetDay;
+    } else {
+        const date = new Date(dateInput);
+        if (isNaN(date.getTime())) return String(dateInput);
+        targetYear = date.getFullYear();
+        targetMonth = date.getMonth();
+        targetDay = date.getDate();
+        weekdayStr = date.toLocaleDateString('en-US', { weekday: 'short' });
+        monthStr = date.toLocaleDateString('en-US', { month: 'short' });
+        dayNum = targetDay;
+    }
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const target = new Date(targetYear, targetMonth, targetDay);
 
     const diffDays = Math.round((target.getTime() - today.getTime()) / (1000 * 3600 * 24));
 
@@ -127,10 +151,10 @@ export function formatRelativeDate(dateInput: string | Date | null | undefined):
     if (diffDays === -1) return 'Yesterday';
 
     if (Math.abs(diffDays) <= 14) {
-        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        return `${weekdayStr}, ${monthStr} ${dayNum}`;
     }
 
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${monthStr} ${dayNum}`;
 }
 
 /**
