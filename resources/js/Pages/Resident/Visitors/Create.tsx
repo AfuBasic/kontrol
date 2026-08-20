@@ -746,12 +746,25 @@ const CreateAccessCode = () => {
                                                 id="event-guest-limit"
                                                 name="guest_limit"
                                                 inputMode="numeric"
+                                                min={1}
+                                                max={10000}
                                                 pattern="[0-9]*"
-                                                placeholder="Maximum Guests (Optional)"
+                                                placeholder="Maximum Guests (Optional, max 10,000)"
                                                 value={form.data.guest_limit}
-                                                onChange={(e) => form.setData('guest_limit', e.target.value ? Number(e.target.value) : '')}
+                                                onChange={(e) => {
+                                                    const rawVal = e.target.value;
+                                                    if (!rawVal) {
+                                                        form.setData('guest_limit', '');
+                                                        return;
+                                                    }
+                                                    const num = Math.min(10000, Math.max(1, Number(rawVal)));
+                                                    form.setData('guest_limit', num);
+                                                }}
                                                 className="w-full rounded-2xl bg-slate-50 py-4.5 pr-6 pl-14 font-bold text-slate-900 ring-1 ring-slate-200 transition-all outline-none placeholder:font-medium placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900"
                                             />
+                                            {form.errors.guest_limit && (
+                                                <p className="mt-1.5 text-[13px] font-bold text-rose-500">{form.errors.guest_limit}</p>
+                                            )}
                                         </div>
                                     )}
 
