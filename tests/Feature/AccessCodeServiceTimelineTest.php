@@ -117,10 +117,12 @@ describe('AccessCode::effective_visit_at', function () {
             'code' => 'TST004',
         ]);
 
-        Carbon::setTestNow();
-
+        // Assert while time is still frozen — effective_visit_at for active
+        // long_lived passes uses now() to determine "today".
         expect($code->effective_visit_at->toDateString())
             ->toBe('2026-07-20');
+
+        Carbon::setTestNow();
     });
 });
 
