@@ -4,6 +4,7 @@ use App\Actions\Telegram\GenerateTelegramOtpAction;
 use App\Models\Estate;
 use App\Models\TelegramLinkToken;
 use App\Models\User;
+use App\Services\Telegram\TelegramBotService;
 use App\Services\Telegram\TelegramMessageHandler;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -30,7 +31,7 @@ test('it can link a telegram account using raw otp', function () {
     expect($token)->not->toBeNull();
 
     // Mock Telegram bot service
-    $this->mock(\App\Services\Telegram\TelegramBotService::class, function ($mock) {
+    $this->mock(TelegramBotService::class, function ($mock) {
         $mock->shouldReceive('sendMessage')->once()->andReturn(true);
     });
 
@@ -66,7 +67,7 @@ test('it can link a telegram account using start parameter', function () {
     $token = $result['token'];
 
     // Mock Telegram bot service
-    $this->mock(\App\Services\Telegram\TelegramBotService::class, function ($mock) {
+    $this->mock(TelegramBotService::class, function ($mock) {
         $mock->shouldReceive('sendMessage')->once()->andReturn(true);
     });
 
@@ -74,7 +75,7 @@ test('it can link a telegram account using start parameter', function () {
     $handler = app(TelegramMessageHandler::class);
     $handler->handle([
         'chat' => ['id' => 123456789],
-        'text' => '/start ' . $token,
+        'text' => '/start '.$token,
         'from' => ['first_name' => 'TestUser'],
     ]);
 
