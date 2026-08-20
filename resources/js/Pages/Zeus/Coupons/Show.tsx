@@ -1,5 +1,4 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
 import { useState } from 'react';
 import {
     Ticket,
@@ -9,17 +8,12 @@ import {
     Globe,
     Calendar,
     ArrowLeft,
-    CheckCircle2,
     Clock,
     Infinity as InfinityIcon,
-    DollarSign,
     Activity,
     AlertCircle,
-    UserCheck,
     Coins,
     BarChart3,
-    Eye,
-    X,
 } from 'lucide-react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import ZeusLayout from '@/Layouts/ZeusLayout';
