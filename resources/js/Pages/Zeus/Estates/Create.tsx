@@ -1,4 +1,4 @@
-import { CheckIcon, ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { store } from '@/actions/App/Http/Controllers/Zeus/EstateController';
