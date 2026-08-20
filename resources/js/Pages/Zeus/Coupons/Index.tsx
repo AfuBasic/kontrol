@@ -13,14 +13,7 @@ import {
     Search,
     SlidersHorizontal,
     TrendingUp,
-    Percent,
-    Coins,
     CheckCircle,
-    Clock,
-    AlertCircle,
-    ArrowUpRight,
-    Play,
-    Pause,
     BarChart3,
     Sparkles,
     Eye,
@@ -76,7 +69,6 @@ interface Props {
 export default function CouponsIndex({ coupons, stats, filters }: Props) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
-    const [isDeleting, setIsDeleting] = useState(false);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState(filters.q || '');
