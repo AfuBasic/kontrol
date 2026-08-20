@@ -49,7 +49,9 @@ type Props = SharedData & {
     unpaidDues?: UnpaidDue[] | null;
     openIncidentsCount: number;
     activePassesCount: number;
-    upcomingPassesCount: number;
+    upcomingTodayCount?: number;
+    upcomingFutureCount?: number;
+    upcomingPassesCount?: number;
     unpaidDuesCount?: number | null;
     totalUnpaidDuesAmount?: number | null;
 };
@@ -64,7 +66,8 @@ export default function Home({
     unpaidDues,
     openIncidentsCount = 0,
     activePassesCount = 0,
-    upcomingPassesCount = 0,
+    upcomingTodayCount = 0,
+    upcomingFutureCount = 0,
     unpaidDuesCount,
     totalUnpaidDuesAmount,
 }: Props) {
@@ -79,9 +82,10 @@ export default function Home({
             estateName,
             openIncidentsCount,
             activePassesCount,
-            upcomingPassesCount,
+            upcomingTodayCount,
+            upcomingFutureCount,
         }),
-        [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount],
+        [stats, estateName, openIncidentsCount, activePassesCount, upcomingTodayCount, upcomingFutureCount],
     );
 
     const {
@@ -92,14 +96,15 @@ export default function Home({
         key: 'resident-home',
         serverData: shellSnapshot,
         namespace: 'resident',
-        only: ['stats', 'activePassesCount', 'upcomingPassesCount', 'openIncidentsCount'],
+        only: ['stats', 'activePassesCount', 'upcomingTodayCount', 'upcomingFutureCount', 'openIncidentsCount'],
         revalidate: isOnline && quality !== 'offline',
     });
 
     const displayStats = staleShell?.stats ?? stats;
     const displayEstateName = staleShell?.estateName ?? estateName;
     const displayActivePasses = staleShell?.activePassesCount ?? activePassesCount;
-    const displayUpcomingPasses = staleShell?.upcomingPassesCount ?? upcomingPassesCount;
+    const displayUpcomingToday = staleShell?.upcomingTodayCount ?? upcomingTodayCount;
+    const displayUpcomingFuture = staleShell?.upcomingFutureCount ?? upcomingFutureCount;
     const displayOpenIncidents = staleShell?.openIncidentsCount ?? openIncidentsCount;
     const codes = activeCodes ?? [];
     const activity = recentActivity ?? [];
@@ -107,12 +112,6 @@ export default function Home({
     const dues = unpaidDues ?? [];
     const duesCount = unpaidDuesCount ?? 0;
     const duesAmount = totalUnpaidDuesAmount ?? 0;
-
-    const { estate_plan } = usePage<SharedData & { estate_plan: { features: string[] } | null }>().props;
-    const hasAccessCodeGen = estate_plan?.features?.includes('access-code-generation') ?? true;
-    const hasLiveFeed = estate_plan?.features?.includes('real-time-visit-feed') ?? true;
-    const hasEstateBoard = estate_plan?.features?.includes('interactive-notice-board') ?? true;
-    const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
 
     // Greeting helper
     const getGreeting = () => {
@@ -132,6 +131,9 @@ export default function Home({
 
     const attentionItems: any[] = [];
 
+    const { estate_plan } = usePage<SharedData & { estate_plan: { features: string[] } | null }>().props;
+    const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
+
     if (hasPaymentCollection && duesCount > 0) {
         attentionItems.push({
             type: 'dues',
@@ -142,20 +144,34 @@ export default function Home({
         });
     }
 
-    const totalExpectedToday = displayActivePasses + displayUpcomingPasses;
-    if (totalExpectedToday > 0) {
+    const totalExpectedToday = displayActivePasses + displayUpcomingToday;
+    if (totalExpectedToday > 0 || displayUpcomingFuture > 0) {
         let desc = '';
-        if (displayActivePasses > 0 && displayUpcomingPasses > 0) {
-            desc = `${displayActivePasses} active and ${displayUpcomingPasses} upcoming visitor pass${totalExpectedToday > 1 ? 'es' : ''} expected today`;
-        } else if (displayActivePasses > 0) {
-            desc = `${displayActivePasses} visitor pass${displayActivePasses > 1 ? 'es' : ''} currently active and ready for check-in`;
-        } else {
-            desc = `${displayUpcomingPasses} visitor pass${displayUpcomingPasses > 1 ? 'es' : ''} scheduled for later today`;
+        let title = 'Visitors Expected Today';
+
+        if (displayActivePasses > 0 && displayUpcomingToday > 0) {
+            desc = `${displayActivePasses} active and ${displayUpcomingToday} upcoming visitor pass${totalExpectedToday > 1 ? 'es' : ''} expected today`;
+            if (displayUpcomingFuture > 0) {
+                desc += ` (${displayUpcomingFuture} scheduled for upcoming days)`;
+            }
+        } else if (displayActivePasses > 0 && displayUpcomingToday === 0) {
+            desc = `${displayActivePasses} visitor pass${displayActivePasses > 1 ? 'es' : ''} currently active today`;
+            if (displayUpcomingFuture > 0) {
+                desc += ` · ${displayUpcomingFuture} scheduled for upcoming days`;
+            }
+        } else if (displayUpcomingToday > 0) {
+            desc = `${displayUpcomingToday} visitor pass${displayUpcomingToday > 1 ? 'es' : ''} scheduled for later today`;
+            if (displayUpcomingFuture > 0) {
+                desc += ` · ${displayUpcomingFuture} scheduled for upcoming days`;
+            }
+        } else if (displayUpcomingFuture > 0) {
+            title = 'Upcoming Visitor Passes';
+            desc = `${displayUpcomingFuture} visitor pass${displayUpcomingFuture > 1 ? 'es' : ''} scheduled for upcoming days`;
         }
 
         attentionItems.push({
             type: 'visitors',
-            title: 'Visitors Expected Today',
+            title,
             desc,
             href: '/resident/visitors',
             color: 'border-indigo-100 bg-indigo-50/20 text-indigo-700',

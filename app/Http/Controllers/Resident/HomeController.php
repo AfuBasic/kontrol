@@ -34,11 +34,20 @@ class HomeController extends Controller
             return ! $isFuture && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
         })->count();
 
-        $upcomingPassesCount = $activeCodesCollection->filter(function ($code) {
+        $upcomingTodayCount = $activeCodesCollection->filter(function ($code) {
             $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
+            $isToday = $code->starts_at ? $code->starts_at->isToday() : false;
             $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
 
-            return $isFuture && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
+            return $isFuture && $isToday && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
+        })->count();
+
+        $upcomingFutureCount = $activeCodesCollection->filter(function ($code) {
+            $isFuture = $code->starts_at ? $code->starts_at->isFuture() : false;
+            $isToday = $code->starts_at ? $code->starts_at->isToday() : false;
+            $isExpired = $code->expires_at ? $code->expires_at->isPast() : false;
+
+            return $isFuture && ! $isToday && ! $isExpired && $code->status->value !== 'revoked' && $code->status->value !== 'used';
         })->count();
 
         $openIncidentsCount = Incident::query()
@@ -60,7 +69,8 @@ class HomeController extends Controller
             'estateName' => $estate->name,
             'openIncidentsCount' => $openIncidentsCount,
             'activePassesCount' => $activePassesCount,
-            'upcomingPassesCount' => $upcomingPassesCount,
+            'upcomingTodayCount' => $upcomingTodayCount,
+            'upcomingFutureCount' => $upcomingFutureCount,
 
             // Deferred - heavier secondary sections
             'activeCodes' => Inertia::defer(fn () => $activeCodesCollection->map(fn ($code) => [
