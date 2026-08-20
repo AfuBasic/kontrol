@@ -2,9 +2,11 @@
 
 namespace App\Jobs\Admin;
 
+use App\Events\Admin\CollectionPublished;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\User;
+use App\Notifications\Admin\CollectionPublishedNotification;
 use App\Notifications\Resident\NewCollectionNotification;
 use App\Services\Admin\CollectionService;
 use Carbon\Carbon;
@@ -13,8 +15,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Events\Admin\CollectionPublished;
-use App\Notifications\Admin\CollectionPublishedNotification;
 
 class PublishCollectionJob implements ShouldQueue
 {

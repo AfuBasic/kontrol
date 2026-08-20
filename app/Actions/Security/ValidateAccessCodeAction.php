@@ -6,6 +6,7 @@ use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
+use App\Models\Scopes\ZoneScope;
 
 class ValidateAccessCodeAction
 {
@@ -92,7 +93,7 @@ class ValidateAccessCodeAction
         }
 
         if ($accessCode->status === AccessCodeStatus::Used) {
-            if ($accessCode->type === 'event' && $accessCode->guest_limit !== null && $accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count() >= $accessCode->guest_limit) {
+            if ($accessCode->type === 'event' && $accessCode->guest_limit !== null && $accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count() >= $accessCode->guest_limit) {
                 return $this->denied('Event pass guest limit reached', 'limit_reached', $accessCode);
             }
 
@@ -125,7 +126,7 @@ class ValidateAccessCodeAction
         }
 
         if ($accessCode->type === 'event' && $accessCode->guest_limit !== null) {
-            if ($accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count() >= $accessCode->guest_limit) {
+            if ($accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count() >= $accessCode->guest_limit) {
                 return $this->denied('Event pass guest limit reached', 'limit_reached', $accessCode);
             }
         }
@@ -149,7 +150,7 @@ class ValidateAccessCodeAction
             'code_type' => $accessCode->type,
             'has_vehicle' => (bool) $accessCode->has_vehicle,
             'guest_limit' => $accessCode->guest_limit,
-            'uses_count' => $accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count(),
+            'uses_count' => $accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count(),
             'starts_at' => $accessCode->starts_at?->toIso8601String(),
         ];
     }
@@ -169,7 +170,7 @@ class ValidateAccessCodeAction
             'code_type' => $accessCode?->type,
             'has_vehicle' => (bool) $accessCode?->has_vehicle,
             'guest_limit' => $accessCode?->guest_limit,
-            'uses_count' => $accessCode ? $accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count() : 0,
+            'uses_count' => $accessCode ? $accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count() : 0,
             'starts_at' => $accessCode?->starts_at?->toIso8601String(),
         ];
     }

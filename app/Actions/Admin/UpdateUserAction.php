@@ -2,11 +2,13 @@
 
 namespace App\Actions\Admin;
 
-use App\Auth\ContextManager;
+use App\Enums\AssignmentScope;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 class UpdateUserAction
 {
@@ -22,27 +24,27 @@ class UpdateUserAction
             ]);
 
             if (isset($data['role'])) {
-                $roleModel = \Spatie\Permission\Models\Role::where('name', $data['role'])
+                $roleModel = Role::where('name', $data['role'])
                     ->where(function ($query) use ($estate) {
                         $query->whereNull('estate_id')->orWhere('estate_id', $estate->id);
                     })
                     ->firstOrFail();
 
                 // Find active administrative assignment for this user in this estate
-                $assignment = \App\Models\AdministrativeAssignment::where('user_id', $user->id)
+                $assignment = AdministrativeAssignment::where('user_id', $user->id)
                     ->where('estate_id', $estate->id)
                     ->first();
 
                 if ($assignment) {
-                    app(\App\Actions\Admin\UpdateAdministrativeAssignmentAction::class)->execute($assignment, [
+                    app(UpdateAdministrativeAssignmentAction::class)->execute($assignment, [
                         'role_id' => $roleModel->id,
                     ]);
                 } else {
-                    app(\App\Actions\Admin\CreateAdministrativeAssignmentAction::class)->execute(
+                    app(CreateAdministrativeAssignmentAction::class)->execute(
                         user: $user,
                         estate: $estate,
                         role: $roleModel,
-                        scopeType: \App\Enums\AssignmentScope::Estate,
+                        scopeType: AssignmentScope::Estate,
                         zone: null,
                         isPrimary: false,
                         isActive: true

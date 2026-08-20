@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Channels\TelegramChannel;
 use App\Models\AccessCode;
+use App\Models\Scopes\ZoneScope;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -59,7 +60,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         if ($this->accessCode->type === 'event') {
             $eventName = $this->accessCode->visitor_name;
             $guestLimit = $this->accessCode->guest_limit;
-            $arrivedCount = $this->accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count();
+            $arrivedCount = $this->accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count();
 
             if ($eventName) {
                 if ($guestLimit) {
@@ -164,7 +165,7 @@ class VisitorArrivedNotification extends Notification implements ShouldQueue
         if ($this->accessCode->type === 'event') {
             $eventName = $this->accessCode->visitor_name;
             $guestLimit = $this->accessCode->guest_limit;
-            $arrivedCount = $this->accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count();
+            $arrivedCount = $this->accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count();
 
             if ($eventName) {
                 if ($guestLimit) {

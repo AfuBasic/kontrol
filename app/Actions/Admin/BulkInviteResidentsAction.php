@@ -27,7 +27,7 @@ class BulkInviteResidentsAction
         $createResidentAction = app(CreateResidentAction::class);
         $user = Auth::user();
 
-        $importBatch = $source === 'bulk_upload' ? 'Residents — ' . now()->format('F Y') : null;
+        $importBatch = $source === 'bulk_upload' ? 'Residents — '.now()->format('F Y') : null;
 
         // 2. Iterate and create invitations
         foreach ($uniqueEmails as $email) {

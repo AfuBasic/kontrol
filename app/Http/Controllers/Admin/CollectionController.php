@@ -176,13 +176,13 @@ class CollectionController extends Controller
             // ── Deferred: Today & This Week Snapshot ──────────────────────────
             'todaySnapshot' => Inertia::defer(function () use ($estate) {
                 $estateId = $estate->id;
-                
+
                 $settings = EstateSettings::forEstate($estateId);
                 $tz = $settings->timezone ?? config('app.timezone');
-                
+
                 $startOfDay = Carbon::now($tz)->startOfDay()->utc();
                 $endOfDay = Carbon::now($tz)->endOfDay()->utc();
-                
+
                 $startOfWeek = Carbon::now($tz)->startOfWeek()->utc();
                 $endOfWeek = Carbon::now($tz)->endOfWeek()->utc();
 

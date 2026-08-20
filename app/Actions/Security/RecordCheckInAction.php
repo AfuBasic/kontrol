@@ -7,6 +7,7 @@ use App\Events\Resident\VisitorArrivedBroadcast;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use App\Notifications\VisitorArrivedNotification;
 use App\Services\Security\CheckpointClaimService;
@@ -80,7 +81,7 @@ class RecordCheckInAction
 
             $isEventFull = false;
             if ($accessCode->type === 'event' && $accessCode->guest_limit !== null) {
-                $currentCount = $accessCode->accessLogs()->withoutGlobalScope(\App\Models\Scopes\ZoneScope::class)->count();
+                $currentCount = $accessCode->accessLogs()->withoutGlobalScope(ZoneScope::class)->count();
                 if ($currentCount + 1 >= $accessCode->guest_limit) {
                     $isEventFull = true;
                 }

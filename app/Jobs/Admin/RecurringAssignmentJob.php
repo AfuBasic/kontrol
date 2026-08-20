@@ -10,12 +10,14 @@ use App\Models\User;
 use App\Models\Zone;
 use App\Services\ZoneAudienceResolver;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class RecurringAssignmentJob implements ShouldQueue
 {
@@ -42,7 +44,7 @@ class RecurringAssignmentJob implements ShouldQueue
     {
         while ($collection->next_processing_date && $collection->next_processing_date->startOfDay()->lte($now->startOfDay())) {
             $processingDate = $collection->next_processing_date->copy();
-            
+
             $periodFormat = match ($collection->recurring_interval) {
                 'weekly' => 'Y-W',
                 'yearly' => 'Y',
@@ -77,40 +79,40 @@ class RecurringAssignmentJob implements ShouldQueue
             } else {
                 $collection->next_processing_date = $collection->next_processing_date->addMonthNoOverflow();
             }
-            
+
             $collection->save();
         }
     }
 
-    private function createAssignments(Collection $collection, array $userIds, string $currentPeriod, \Carbon\CarbonInterface $dueDate, ?\Carbon\CarbonInterface $graceUntil): void
+    private function createAssignments(Collection $collection, array $userIds, string $currentPeriod, CarbonInterface $dueDate, ?CarbonInterface $graceUntil): void
     {
         if (empty($userIds)) {
             return;
         }
 
         $users = User::with('profile')->whereIn('id', $userIds)->get()->keyBy('id');
-        
+
         $existingAssignments = CollectionAssignment::withoutGlobalScopes()
             ->where('collection_id', $collection->id)
             ->where('period', $currentPeriod)
             ->whereIn('user_id', $userIds)
             ->pluck('user_id')
             ->toArray();
-            
+
         $existingMap = array_flip($existingAssignments);
         $now = now();
         $insertData = [];
-        
+
         foreach ($userIds as $userId) {
             if (isset($existingMap[$userId])) {
                 continue;
             }
-            
+
             $user = $users->get($userId);
             $propertyId = $user?->profile?->property_id;
-            
+
             $insertData[] = [
-                'ulid' => (string) \Illuminate\Support\Str::ulid(),
+                'ulid' => (string) Str::ulid(),
                 'collection_id' => $collection->id,
                 'user_id' => $userId,
                 'period' => $currentPeriod,
@@ -125,8 +127,8 @@ class RecurringAssignmentJob implements ShouldQueue
                 'updated_at' => $now,
             ];
         }
-        
-        if (!empty($insertData)) {
+
+        if (! empty($insertData)) {
             foreach (array_chunk($insertData, 500) as $chunk) {
                 CollectionAssignment::insert($chunk);
             }

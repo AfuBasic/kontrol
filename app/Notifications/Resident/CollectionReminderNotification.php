@@ -5,6 +5,7 @@ namespace App\Notifications\Resident;
 use App\Auth\ContextManager;
 use App\Channels\TelegramChannel;
 use App\Models\CollectionAssignment;
+use App\Models\Property;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -61,7 +62,7 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
         app(ContextManager::class)->setSystemContext($this->assignment->estate_id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
         $propertyName = $notifiable->profile?->property_id
-            ? \App\Models\Property::withoutZoneIsolation()->find($notifiable->profile->property_id)?->name
+            ? Property::withoutZoneIsolation()->find($notifiable->profile->property_id)?->name
             : null;
 
         return (new MailMessage)
@@ -81,7 +82,7 @@ class CollectionReminderNotification extends Notification implements ShouldQueue
         app(ContextManager::class)->setSystemContext($this->assignment->estate_id);
         $isPropertyOwner = $creator && $creator->hasRole('property_owner');
         $propertyName = $notifiable->profile?->property_id
-            ? \App\Models\Property::withoutZoneIsolation()->find($notifiable->profile->property_id)?->name
+            ? Property::withoutZoneIsolation()->find($notifiable->profile->property_id)?->name
             : null;
         $houseInfo = $propertyName ? "for your house ({$propertyName})" : 'for your house';
 
