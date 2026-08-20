@@ -50,7 +50,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
     const hasPaymentCollection = useFeature('payment-collection');
     const userRoles = auth.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
-    const parentResidentName = auth.user?.resident_subscription?.parent_resident_name;
+    const parentResidentName = auth.user?.household_parent_name;
     const [activeSheet, setActiveSheet] = useState<'profile' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
 

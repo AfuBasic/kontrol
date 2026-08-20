@@ -1,8 +1,15 @@
 <?php
 
+use App\Enums\AccessCodeSource;
+use App\Enums\AccessCodeStatus;
+use App\Enums\AssignmentScope;
+use App\Models\AccessCode;
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
+use App\Models\HouseholdMember;
+use App\Models\ResidentSubscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
@@ -70,6 +77,8 @@ test('resident dashboard returns unpaid collections correctly', function () {
 });
 
 test('resident dashboard returns active and upcoming passes correctly', function () {
+    $this->travelTo(now()->startOfDay()->addHours(9));
+
     Role::firstOrCreate(['name' => 'resident']);
 
     $estate = Estate::factory()->create();
@@ -80,7 +89,7 @@ test('resident dashboard returns active and upcoming passes correctly', function
     $user->estates()->attach($estate->id, ['status' => 'accepted']);
 
     // Create an active (current) access code
-    \App\Models\AccessCode::create([
+    AccessCode::create([
         'estate_id' => $estate->id,
         'user_id' => $user->id,
         'code' => '123456',
@@ -88,12 +97,12 @@ test('resident dashboard returns active and upcoming passes correctly', function
         'visitor_name' => 'John Doe',
         'starts_at' => now()->subHour(),
         'expires_at' => now()->addHour(),
-        'status' => \App\Enums\AccessCodeStatus::Active,
-        'source' => \App\Enums\AccessCodeSource::Web,
+        'status' => AccessCodeStatus::Active,
+        'source' => AccessCodeSource::Web,
     ]);
 
     // Create an upcoming (future) access code
-    \App\Models\AccessCode::create([
+    AccessCode::create([
         'estate_id' => $estate->id,
         'user_id' => $user->id,
         'code' => '654321',
@@ -101,8 +110,8 @@ test('resident dashboard returns active and upcoming passes correctly', function
         'visitor_name' => 'Jane Smith',
         'starts_at' => now()->addHours(2),
         'expires_at' => now()->addHours(4),
-        'status' => \App\Enums\AccessCodeStatus::Scheduled,
-        'source' => \App\Enums\AccessCodeSource::Web,
+        'status' => AccessCodeStatus::Scheduled,
+        'source' => AccessCodeSource::Web,
     ]);
 
     $response = $this->actingAs($user)
@@ -117,3 +126,89 @@ test('resident dashboard returns active and upcoming passes correctly', function
     );
 });
 
+test('billing payer contexts receive subscription badge data', function (string $roleName) {
+    $payerRole = Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
+
+    $estate = Estate::factory()->create();
+    $payer = User::factory()->create();
+
+    $payer->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    setPermissionsTeamId($estate->id);
+    $payer->assignRole($payerRole);
+
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $payer->id,
+        'estate_id' => $estate->id,
+        'role_id' => $payerRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    ResidentSubscription::create([
+        'user_id' => $payer->id,
+        'estate_id' => $estate->id,
+        'status' => 'past_due',
+    ]);
+
+    $this->actingAs($payer)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.home'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/Home')
+            ->where('auth.user.resident_subscription.status', 'past_due')
+            ->where('auth.user.resident_subscription.can_manage_billing', true)
+        );
+})->with(['resident', 'property_owner']);
+
+test('household members do not receive subscription badge data', function () {
+    $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    $householdRole = Role::firstOrCreate(['name' => 'household_member', 'guard_name' => 'web']);
+
+    $estate = Estate::factory()->create();
+    $primaryResident = User::factory()->create(['name' => 'Primary Resident']);
+    $householdMember = User::factory()->create();
+
+    $primaryResident->estates()->attach($estate->id, ['status' => 'accepted']);
+    $householdMember->estates()->attach($estate->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'household_member',
+    ]);
+
+    setPermissionsTeamId($estate->id);
+    $primaryResident->assignRole($residentRole);
+    $householdMember->assignRole($householdRole);
+
+    HouseholdMember::create([
+        'estate_id' => $estate->id,
+        'primary_resident_id' => $primaryResident->id,
+        'household_member_id' => $householdMember->id,
+    ]);
+
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $householdMember->id,
+        'estate_id' => $estate->id,
+        'role_id' => $householdRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    ResidentSubscription::create([
+        'user_id' => $primaryResident->id,
+        'estate_id' => $estate->id,
+        'status' => 'past_due',
+    ]);
+
+    $this->actingAs($householdMember)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.home'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/Home')
+            ->where('auth.user.resident_subscription', null)
+            ->where('auth.user.household_parent_name', 'Primary Resident')
+        );
+});

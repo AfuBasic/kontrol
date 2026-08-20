@@ -33,7 +33,7 @@ class BillingController extends Controller
     public function index(): Response|RedirectResponse
     {
         $user = auth()->user();
-        abort_if($user->isHouseholdMember(), 403, 'Household members do not have access to billing.');
+        abort_if(! $user->contextHasRole(['resident', 'property_owner']), 403, 'Only residents and property owners can manage billing.');
 
         $estate = $this->estateContext->getEstate();
 

@@ -153,6 +153,9 @@ class HandleInertiaRequests extends Middleware
                     'current_estate_ulid' => $estate?->ulid,
                     'estate_name' => $estate?->name,
                     'property_owner_id' => $estate ? $user->getPropertyOwnerForEstate($estate)?->id : null,
+                    'household_parent_name' => ($estate && $user->isHouseholdMember())
+                        ? $user->householdOf()->where('estate_id', $estate->id)->first()?->primaryResident?->name
+                        : null,
                     'unread_notifications_count' => $user->unreadNotifications()->count(),
                     'has_active_coupons' => $estate ? (function () use ($user, $estate) {
                         return Coupon::query()
@@ -167,12 +170,11 @@ class HandleInertiaRequests extends Middleware
                         'created_at_human' => $n->created_at->diffForHumans(),
                     ])->values()->all(),
                     'resident_subscription' => ($estate) ? (function () use ($user, $estate) {
-                        $subject = $user;
-                        $parentName = null;
-                        if ($user->isHouseholdMember() && $user->householdOf) {
-                            $subject = $user->householdOf->primaryResident;
-                            $parentName = $subject->name;
+                        if (! $user->contextHasRole(['resident', 'property_owner'])) {
+                            return null;
                         }
+
+                        $subject = $user;
 
                         $sub = $subject->residentSubscription()->where('estate_id', $estate->id)->first();
                         if (! $sub) {
@@ -188,8 +190,7 @@ class HandleInertiaRequests extends Middleware
                                 'is_grace_period' => $sub->isGracePeriod(),
                                 'plan_name' => $estate->subscriptionRecord->plan->name ?? 'Standard',
                                 'billing_interval' => $estate->subscriptionRecord->billing_interval ?? 'monthly',
-                                'is_household_member' => $user->isHouseholdMember(),
-                                'parent_resident_name' => $parentName,
+                                'can_manage_billing' => true,
                             ]
                         );
                     })() : null,

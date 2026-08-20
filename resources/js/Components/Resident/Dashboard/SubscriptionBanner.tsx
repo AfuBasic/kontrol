@@ -10,11 +10,11 @@ interface SubscriptionBannerProps {
 export default function SubscriptionBanner({ subscription }: SubscriptionBannerProps) {
     const { openExternalBilling } = useExternalBilling();
 
-    if (!subscription || subscription.is_household_member) {
+    if (!subscription || !subscription.can_manage_billing) {
         return null;
     }
 
-    const { status, trial_ends_at, is_active, is_grace_period, is_household_member } = subscription;
+    const { status, trial_ends_at, is_active, is_grace_period } = subscription;
 
     // 1. ACCOUNT INACTIVE / EXPIRED / OVERDUE
     if (status === 'past_due') {
@@ -23,7 +23,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Overdue"
                     description="Grace period active"
-                    cta={!is_household_member ? 'Settle now' : undefined}
+                    cta="Settle now"
                     onCtaClick={openExternalBilling}
                     variant="grace"
                 />
@@ -35,7 +35,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Account inactive"
                     description="Access limited"
-                    cta={!is_household_member ? 'Settle now' : undefined}
+                    cta="Settle now"
                     onCtaClick={openExternalBilling}
                     variant="inactive"
                 />
@@ -60,7 +60,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Trial expired"
                     description="Access limited"
-                    cta={!is_household_member ? 'Settle now' : undefined}
+                    cta="Settle now"
                     onCtaClick={openExternalBilling}
                     variant="inactive"
                 />
@@ -72,7 +72,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
                 <Banner
                     title="Trial period"
                     description="Ends today"
-                    cta={!is_household_member ? 'Settle now' : undefined}
+                    cta="Settle now"
                     onCtaClick={openExternalBilling}
                     variant="grace"
                 />
@@ -81,7 +81,7 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
 
         // Less than or equal to 3 days: show 'Settle now'
         // More than 3 days: do not show CTA
-        const showCta = !is_household_member && daysLeft <= 3;
+        const showCta = daysLeft <= 3;
 
         return (
             <Banner

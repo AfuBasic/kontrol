@@ -65,7 +65,7 @@ export default function Home({
 }: Props) {
     const userRoles = auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
-    const parentResidentName = auth?.user?.resident_subscription?.parent_resident_name;
+    const parentResidentName = auth?.user?.household_parent_name;
     const { quality, isOnline } = useNetworkQuality();
 
     const shellSnapshot = useMemo(

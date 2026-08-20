@@ -99,6 +99,7 @@ class HomeController extends Controller
             'estateName' => $estate->name,
             'openIncidentsCount' => $openIncidentsCount,
             'activePassesCount' => $activePassesCount,
+            'upcomingPassesCount' => $upcomingTodayCount,
             'upcomingTodayCount' => $upcomingTodayCount,
             'upcomingFutureCount' => $upcomingFutureCount,
 

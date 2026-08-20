@@ -649,7 +649,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                               }`
                     }`}
                 >
-                    {auth?.user?.resident_subscription && !hideHeader && component !== 'Resident/Billing/Index' && (
+                    {auth?.user?.resident_subscription?.can_manage_billing && !hideHeader && component !== 'Resident/Billing/Index' && (
                         <div className="mb-3 px-3">
                             <SubscriptionBanner subscription={auth.user.resident_subscription} />
                         </div>
