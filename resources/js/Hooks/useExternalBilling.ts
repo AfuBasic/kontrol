@@ -1,6 +1,6 @@
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
-import { usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import * as ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 import type { SharedData } from '@/types';
@@ -14,6 +14,7 @@ export function useExternalBilling() {
         const queryParams = validCoupon ? { params: { coupon: validCoupon } } : {};
 
         // 1. Native Mobile Platform (iOS/Android)
+        // Uses external browser + one-time magic URL to comply with App Store rules
         if (isNative) {
             let url = `${appUrl}/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
             try {
@@ -24,40 +25,19 @@ export function useExternalBilling() {
             }
 
             try {
-                // Browser.open handles opening outside the app correctly
                 await Browser.open({ url });
             } catch (e: any) {
-                // If Browser plugin is not implemented (native build missing), fallback to window.open
                 console.warn('Capacitor Browser plugin not implemented/unimplemented:', e);
-                // Use _system to attempt to force external browser in many native environments
                 window.open(url, '_system');
             }
             return;
         }
 
         // 2. Web Platform
-        const newWindow = window.open('about:blank', '_blank');
-        if (newWindow) {
-            newWindow.document.write(
-                '<p style="font-family: sans-serif; text-align: center; margin-top: 50px; color: #64748b;">Opening secure billing portal...</p>',
-            );
-        }
-
-        try {
-            const response = await axios.get(ResidentBillingController.generateMagicUrl.url(), queryParams);
-            const data = response.data;
-
-            if (data.magic_url && newWindow) {
-                newWindow.location.href = data.magic_url;
-            } else if (newWindow) {
-                newWindow.location.href = `${appUrl}/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
-            }
-        } catch (e) {
-            console.error('Failed to generate magic URL for web:', e);
-            if (newWindow) {
-                newWindow.location.href = `${appUrl}/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
-            }
-        }
+        // On web, user is already authenticated with an active session & estate context.
+        // Navigate directly in-app using Inertia.
+        const targetUrl = `/resident/billing${validCoupon ? `?coupon=${encodeURIComponent(validCoupon)}` : ''}`;
+        router.visit(targetUrl);
     };
 
     return { openExternalBilling };
