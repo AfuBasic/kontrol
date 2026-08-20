@@ -72,7 +72,7 @@ export default function TrustedDevices({ devices }: Props) {
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Your devices</h1>
                     <p className="max-w-2xl text-sm leading-relaxed text-slate-500">
                         These devices can sign in without extra authorization. Removing a device does not change your passwordless sign-in
-                        method — it only requires that device to be approved again.
+                        method - it only requires that device to be approved again.
                     </p>
                 </header>
 
