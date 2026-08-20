@@ -26,7 +26,7 @@ beforeEach(function () {
     $this->adminRoleB = Role::create(['name' => 'admin', 'guard_name' => 'web', 'estate_id' => $this->estateB->id]);
     $this->residentRoleA = Role::create(['name' => 'resident', 'guard_name' => 'web', 'estate_id' => $this->estateA->id]);
     $this->residentRoleB = Role::create(['name' => 'resident', 'guard_name' => 'web', 'estate_id' => $this->estateB->id]);
-    
+
     Role::create(['name' => 'admin', 'guard_name' => 'web', 'estate_id' => null]);
     Role::create(['name' => 'resident', 'guard_name' => 'web', 'estate_id' => null]);
 
