@@ -22,7 +22,7 @@ import { initErrorReporter } from './Utils/errorReporter';
 
 initErrorReporter();
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Kontrol';
 
 const ResidentLayoutWrapper = (page: React.ReactNode) => (
     <ResidentLayout>

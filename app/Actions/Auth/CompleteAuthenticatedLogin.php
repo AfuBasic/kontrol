@@ -48,7 +48,7 @@ class CompleteAuthenticatedLogin
 
         $this->authenticateUser->logActivity($user);
 
-        $redirect = redirect()->intended($this->activateContext->execute($user));
+        $redirect = redirect()->to($this->destinationAfterLogin($user, $request));
 
         if ($plainTextToken) {
             $redirect->cookie($this->deviceTrustCookie->make($plainTextToken));
@@ -60,5 +60,30 @@ class CompleteAuthenticatedLogin
     public function cookie(string $plainTextToken): SymfonyCookie
     {
         return $this->deviceTrustCookie->make($plainTextToken);
+    }
+
+    /**
+     * Prefer an explicit destination only when an estate context is already active.
+     * Multi-context users must pick a workspace first; billing and other gated
+     * pages 403 without one.
+     */
+    private function destinationAfterLogin(User $user, Request $request): string
+    {
+        $defaultDestination = $this->activateContext->execute($user);
+        $intended = $request->session()->pull('url.intended');
+
+        if ($defaultDestination === route('context.select')) {
+            if (is_string($intended) && $intended !== '') {
+                $request->session()->put('url.intended', $intended);
+            }
+
+            return $defaultDestination;
+        }
+
+        if ($defaultDestination === url('/')) {
+            return $defaultDestination;
+        }
+
+        return is_string($intended) && $intended !== '' ? $intended : $defaultDestination;
     }
 }
