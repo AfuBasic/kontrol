@@ -1,16 +1,15 @@
 <?php
 
+use App\Actions\Admin\CreateResidentAction;
 use App\Models\Estate;
+use App\Models\EstateInviteLink;
 use App\Models\User;
 use App\Models\UserProfile;
-use App\Models\EstateInviteLink;
-use App\Enums\AssignmentScope;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
-use App\Actions\Admin\CreateResidentAction;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 
