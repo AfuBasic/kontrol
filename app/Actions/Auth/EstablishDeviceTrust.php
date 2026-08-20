@@ -23,8 +23,13 @@ class EstablishDeviceTrust
         private RecordSecurityEvent $recordSecurityEvent,
     ) {}
 
-    public function execute(User $user, Request $request, bool $remember = false): RedirectResponse
-    {
+    public function execute(
+        User $user,
+        Request $request,
+        bool $remember = false,
+        bool $trustExplicitly = false,
+        bool $forceLogout = true,
+    ): RedirectResponse {
         $metadata = DeviceMetadata::fromRequest($request);
         $trusted = $this->checkTrustedDevice->execute($user, $request);
 
@@ -37,6 +42,7 @@ class EstablishDeviceTrust
                 $remember,
                 $trusted,
                 $plainTextToken,
+                $forceLogout,
             );
         }
 
@@ -54,8 +60,8 @@ class EstablishDeviceTrust
             return redirect()->route('login.device.show');
         }
 
-        if (! $user->hasActiveTrustedDevice()) {
-            return $this->bootstrap($user, $request, $metadata, $remember);
+        if ($trustExplicitly || ! $user->hasActiveTrustedDevice()) {
+            return $this->bootstrap($user, $request, $metadata, $remember, $forceLogout);
         }
 
         $this->startDeviceAuthorization->execute($user, $request, $metadata, $remember);
@@ -63,8 +69,13 @@ class EstablishDeviceTrust
         return redirect()->route('login.device.show');
     }
 
-    private function bootstrap(User $user, Request $request, DeviceMetadata $metadata, bool $remember): RedirectResponse
-    {
+    private function bootstrap(
+        User $user,
+        Request $request,
+        DeviceMetadata $metadata,
+        bool $remember,
+        bool $forceLogout = true,
+    ): RedirectResponse {
         $plainTextToken = $this->deviceTrustCookie->generatePlainTextToken();
         $now = now();
 
@@ -100,6 +111,7 @@ class EstablishDeviceTrust
             $remember,
             $device,
             $plainTextToken,
+            $forceLogout,
         );
     }
 }
