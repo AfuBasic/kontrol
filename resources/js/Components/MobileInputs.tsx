@@ -20,6 +20,9 @@ export function MobileInput({ label, icon: Icon, error, className = '', ...props
                     </div>
                 )}
                 <input
+                    autoCorrect="on"
+                    autoCapitalize="sentences"
+                    spellCheck={true}
                     {...props}
                     className={`h-14 w-full rounded-[1.25rem] border-2 border-slate-100 bg-slate-50 text-sm font-bold text-slate-900 transition-all duration-200 outline-none placeholder:font-medium placeholder:text-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 ${Icon ? 'pl-12' : 'pl-5'} pr-5 ${error ? 'border-red-200 bg-red-50/30' : ''} ${className} `}
                 />
