@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\IncidentStatus;
 use App\Models\Estate;
 use App\Models\Incident;
 use App\Models\User;
@@ -84,6 +85,34 @@ test('resident cannot upvote their own incident', function () {
     ]);
 
     $response = $this->actingAs($reporter)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->post(route('resident.incidents.upvote', $incident->hashid));
+
+    $response->assertStatus(403);
+});
+
+test('resident cannot upvote a closed incident', function () {
+    $estate = Estate::factory()->create();
+    $reporter = User::factory()->create();
+    $voter = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $reporter->assignRole('resident');
+    $reporter->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $voter->assignRole('resident');
+    $voter->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $incident = Incident::create([
+        'estate_id' => $estate->id,
+        'reporter_id' => $reporter->id,
+        'title' => 'Resolved noise issue',
+        'body' => 'Resolved noise issue description.',
+        'category' => 'noise_disturbance',
+        'status' => IncidentStatus::Closed,
+    ]);
+
+    $response = $this->actingAs($voter)
         ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
         ->post(route('resident.incidents.upvote', $incident->hashid));
 
