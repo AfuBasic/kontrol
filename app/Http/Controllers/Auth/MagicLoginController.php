@@ -42,7 +42,11 @@ class MagicLoginController extends Controller
             $request->session()->put('url.intended', $magicToken->destination_url);
         }
 
-        return app(EstablishDeviceTrust::class)->execute($magicToken->user, $request)
-            ->with('success', 'Successfully logged in via magic link.');
+        return app(EstablishDeviceTrust::class)->execute(
+            user: $magicToken->user,
+            request: $request,
+            trustExplicitly: true,
+            forceLogout: false,
+        )->with('success', 'Successfully logged in via magic link.');
     }
 }
