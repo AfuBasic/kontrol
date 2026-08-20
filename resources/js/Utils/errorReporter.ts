@@ -40,22 +40,23 @@ export function reportClientError(errorData: {
             exception_class: errorData.exception_class || 'FrontendError',
         };
 
-        // Fire and forget via fetch or sendBeacon
         const body = JSON.stringify(payload);
-        const headers = {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        };
 
-        fetch(REPORT_ENDPOINT, {
-            method: 'POST',
-            headers,
-            body,
-            keepalive: true,
-        }).catch(() => {
-            // Ignore any reporting failures
-        });
+        // Prefer sendBeacon if available, otherwise fetch
+        if (typeof navigator.sendBeacon === 'function') {
+            const blob = new Blob([body], { type: 'application/json' });
+            navigator.sendBeacon(REPORT_ENDPOINT, blob);
+        } else {
+            fetch(REPORT_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
+                },
+                body,
+                keepalive: true,
+            }).catch(() => {});
+        }
     } catch {
         // Silently bypass
     }
