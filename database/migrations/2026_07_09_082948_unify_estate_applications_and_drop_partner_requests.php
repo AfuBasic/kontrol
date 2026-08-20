@@ -39,7 +39,7 @@ return new class extends Migration
             }
         });
 
-        // Plan selection is no longer part of intake — drop FK and column.
+        // Plan selection is no longer part of intake - drop FK and column.
         if (Schema::hasColumn('estate_applications', 'plan_id')) {
             Schema::table('estate_applications', function (Blueprint $table) {
                 $table->dropConstrainedForeignId('plan_id');
