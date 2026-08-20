@@ -2,7 +2,7 @@ import { ChevronLeftIcon, EnvelopeIcon, LinkIcon, UserGroupIcon, UserPlusIcon } 
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Percent, Coins, ShieldCheck, Phone, Mail, User } from 'lucide-react';
+import { Percent, Coins, Phone, Mail, User } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
