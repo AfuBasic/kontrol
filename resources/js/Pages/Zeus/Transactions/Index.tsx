@@ -3,21 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search,
     Filter,
-    Calendar,
     Building2,
     ChevronLeft,
     ChevronRight,
     X,
     Eye,
     CheckCircle2,
-    Clock,
     CreditCard,
     DollarSign,
     TrendingUp,
     Activity,
     ChevronDown,
     RotateCcw,
-    AlertTriangle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
