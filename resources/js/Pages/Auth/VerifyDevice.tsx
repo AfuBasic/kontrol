@@ -27,7 +27,7 @@ export default function VerifyDevice({ email, status, displayName }: Props) {
 
     useEffect(() => {
         if (status === 'approved' && !processing) {
-            post(DeviceAuthorizationController.continue.url());
+            post(DeviceAuthorizationController.continueMethod.url());
         }
     }, [status, processing, post]);
 
