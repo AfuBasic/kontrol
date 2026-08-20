@@ -2,7 +2,7 @@ import { ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
-import { Percent, Coins, Calendar, ShieldCheck, Phone, Mail, User } from 'lucide-react';
+import { Percent, Coins, Phone, Mail, User } from 'lucide-react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
 export default function CreatePartner() {
@@ -15,8 +15,6 @@ export default function CreatePartner() {
         commission_length: '' as string | number,
         status: 'pending',
     });
-
-    const [touchedMode, setTouchedMode] = useState(false);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
