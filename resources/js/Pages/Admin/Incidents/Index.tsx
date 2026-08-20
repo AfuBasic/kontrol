@@ -756,16 +756,18 @@ export default function IncidentsIndex({
                                                         key={incident.id}
                                                         className="group relative rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300 hover:shadow-sm"
                                                     >
-                                                        {/* Priority, SLA & Zone */}
-                                                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                                                            <span
-                                                                className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
-                                                            >
-                                                                {priorityInfo.text}
-                                                            </span>
-                                                            <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
-                                                                {slaInfo.label}
-                                                            </span>
+                                                        {/* Category, Reference & Zone */}
+                                                        <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <span
+                                                                    className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
+                                                                >
+                                                                    {priorityInfo.text}
+                                                                </span>
+                                                                <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
+                                                                    {slaInfo.label}
+                                                                </span>
+                                                            </div>
                                                             {incident.zone ? (
                                                                 <span className="rounded border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase">
                                                                     {incident.zone.name}
