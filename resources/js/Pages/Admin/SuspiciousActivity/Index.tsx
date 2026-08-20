@@ -186,9 +186,9 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
                                                 </span>
                                             </td>
                                             <td className="px-5 py-4 text-slate-600">{event.status_label}</td>
-                                            <td className="px-5 py-4 text-slate-600">{event.device ?? '—'}</td>
+                                            <td className="px-5 py-4 text-slate-600">{event.device ?? '-'}</td>
                                             <td className="px-5 py-4 text-slate-500">
-                                                {event.detected_at ? formatDistanceToNow(new Date(event.detected_at), { addSuffix: true }) : '—'}
+                                                {event.detected_at ? formatDistanceToNow(new Date(event.detected_at), { addSuffix: true }) : '-'}
                                             </td>
                                         </tr>
                                     ))}
