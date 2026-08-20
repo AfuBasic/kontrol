@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\Admin\CreateAdministrativeAssignmentAction;
+use App\Enums\AssignmentScope;
 use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\EstateSubscription;
@@ -25,12 +27,12 @@ beforeEach(function () {
     $this->adminUser = User::factory()->create();
 
     setPermissionsTeamId($this->estate->id);
-    
-    app(\App\Actions\Admin\CreateAdministrativeAssignmentAction::class)->execute(
+
+    app(CreateAdministrativeAssignmentAction::class)->execute(
         user: $this->adminUser,
         estate: $this->estate,
         role: $adminRole,
-        scopeType: \App\Enums\AssignmentScope::Estate
+        scopeType: AssignmentScope::Estate
     );
     $this->estate->users()->attach($this->adminUser->id, ['status' => 'accepted']);
 
