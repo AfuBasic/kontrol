@@ -52,6 +52,10 @@ class IncidentPolicy extends BaseContextPolicy
      */
     public function comment(User $user, Incident $incident): bool
     {
+        if ($incident->status === IncidentStatus::Closed) {
+            return false;
+        }
+
         if (! $this->hasValidContextForEstate($incident->estate_id, $incident->zone_id)) {
             return false;
         }
@@ -68,6 +72,10 @@ class IncidentPolicy extends BaseContextPolicy
      */
     public function upvote(User $user, Incident $incident): bool
     {
+        if ($incident->status === IncidentStatus::Closed) {
+            return false;
+        }
+
         if ($incident->is_private) {
             return false;
         }
