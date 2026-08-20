@@ -199,11 +199,15 @@ export default function ErrorLogsShow({ error }: Props) {
                         <dl className="mt-4 space-y-3 divide-y divide-slate-100 text-xs">
                             <div className="flex justify-between pt-2">
                                 <dt className="font-medium text-slate-500">First Seen</dt>
-                                <dd className="font-bold text-slate-900">{error.first_seen_at ? new Date(error.first_seen_at).toLocaleString() : 'N/A'}</dd>
+                                <dd className="font-bold text-slate-900">
+                                    {error.first_seen_at ? new Date(error.first_seen_at).toLocaleString() : 'N/A'}
+                                </dd>
                             </div>
                             <div className="flex justify-between pt-3">
                                 <dt className="font-medium text-slate-500">Last Seen</dt>
-                                <dd className="font-bold text-slate-900">{error.last_seen_at ? new Date(error.last_seen_at).toLocaleString() : 'N/A'}</dd>
+                                <dd className="font-bold text-slate-900">
+                                    {error.last_seen_at ? new Date(error.last_seen_at).toLocaleString() : 'N/A'}
+                                </dd>
                             </div>
                             <div className="flex justify-between pt-3">
                                 <dt className="font-medium text-slate-500">Occurrences</dt>
@@ -211,8 +215,8 @@ export default function ErrorLogsShow({ error }: Props) {
                             </div>
                             <div className="flex justify-between pt-3">
                                 <dt className="font-medium text-slate-500">Fingerprint</dt>
-                                <dd className="truncate max-w-[160px] font-mono text-slate-600" title={error.fingerprint}>
-                                    {error.fingerprint}
+                                <dd className="truncate max-w-[160px] font-mono text-slate-600" title={error.fingerprint || ''}>
+                                    {error.fingerprint || 'N/A'}
                                 </dd>
                             </div>
                         </dl>
@@ -227,30 +231,30 @@ export default function ErrorLogsShow({ error }: Props) {
                         <dl className="mt-4 grid grid-cols-1 gap-x-4 gap-y-3 text-xs sm:grid-cols-2">
                             <div>
                                 <dt className="font-medium text-slate-500">URL</dt>
-                                <dd className="mt-0.5 truncate font-mono font-bold text-slate-900" title={error.context?.url || 'N/A'}>
-                                    {error.context?.url || 'N/A'}
+                                <dd className="mt-0.5 truncate font-mono font-bold text-slate-900" title={String(error.context?.url || 'N/A')}>
+                                    {String(error.context?.url || 'N/A')}
                                 </dd>
                             </div>
                             <div>
                                 <dt className="font-medium text-slate-500">HTTP Method</dt>
-                                <dd className="mt-0.5 font-mono font-bold text-slate-900">{error.context?.method || 'N/A'}</dd>
+                                <dd className="mt-0.5 font-mono font-bold text-slate-900">{String(error.context?.method || 'N/A')}</dd>
                             </div>
                             <div>
                                 <dt className="font-medium text-slate-500">IP Address</dt>
-                                <dd className="mt-0.5 font-mono font-bold text-slate-900">{error.context?.ip || 'N/A'}</dd>
+                                <dd className="mt-0.5 font-mono font-bold text-slate-900">{String(error.context?.ip || 'N/A')}</dd>
                             </div>
                             <div>
                                 <dt className="font-medium text-slate-500">User Email</dt>
-                                <dd className="mt-0.5 font-bold text-slate-900">{error.context?.user_email || 'Guest / Unauthenticated'}</dd>
+                                <dd className="mt-0.5 font-bold text-slate-900">{String(error.context?.user_email || 'Guest / Unauthenticated')}</dd>
                             </div>
                             <div>
                                 <dt className="font-medium text-slate-500">Estate ID</dt>
-                                <dd className="mt-0.5 font-bold text-slate-900">{error.context?.estate_id || 'None'}</dd>
+                                <dd className="mt-0.5 font-bold text-slate-900">{String(error.context?.estate_id || 'None')}</dd>
                             </div>
                             <div>
                                 <dt className="font-medium text-slate-500">User Agent</dt>
-                                <dd className="mt-0.5 truncate font-mono text-slate-600" title={error.context?.user_agent || 'N/A'}>
-                                    {error.context?.user_agent || 'N/A'}
+                                <dd className="mt-0.5 truncate font-mono text-slate-600" title={String(error.context?.user_agent || 'N/A')}>
+                                    {String(error.context?.user_agent || 'N/A')}
                                 </dd>
                             </div>
                         </dl>

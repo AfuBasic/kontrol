@@ -182,8 +182,8 @@ export default function RevenueIndex({ financialKPIs, forecastData, revenueBreak
                             </div>
                         </div>
 
-                        <div className="w-full">
-                            <ResponsiveContainer width="100%" height={350}>
+                        <div className="w-full min-h-[350px]">
+                            <ResponsiveContainer width="100%" height={350} minWidth={100} minHeight={350}>
                                 <ComposedChart data={forecastData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
@@ -247,8 +247,8 @@ export default function RevenueIndex({ financialKPIs, forecastData, revenueBreak
                         <h2 className="mb-1 text-base font-semibold text-slate-900 dark:text-white">Active MRR by Plan</h2>
                         <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">Total: {formatExactCurrency(totalActiveMRR)}</p>
 
-                        <div className="flex items-center justify-center">
-                            <ResponsiveContainer width="100%" height={220}>
+                        <div className="flex items-center justify-center min-h-[220px]">
+                            <ResponsiveContainer width="100%" height={220} minWidth={100} minHeight={220}>
                                 <PieChart>
                                     <Pie
                                         data={revenueBreakdown}
