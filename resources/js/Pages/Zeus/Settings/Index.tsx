@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Shield, ShieldAlert, ShieldCheck, Key, Copy, Check, QrCode } from 'lucide-react';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
