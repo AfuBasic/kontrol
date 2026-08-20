@@ -537,11 +537,12 @@ export default function Index({ incidents, filters, categories, allowResidentRep
                                                 {/* Upvote Icon button */}
                                                 <button
                                                     onClick={(e) => handleUpvote(e, incident)}
-                                                    disabled={isMyReport}
+                                                    disabled={isMyReport || incident.status === 'closed'}
+                                                    title={incident.status === 'closed' ? 'Upvoting is disabled on closed incidents' : undefined}
                                                     className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
                                                         incident.is_upvoted
                                                             ? 'bg-indigo-50 font-black text-indigo-600'
-                                                            : isMyReport
+                                                            : isMyReport || incident.status === 'closed'
                                                               ? 'cursor-not-allowed text-slate-300'
                                                               : 'text-slate-400 hover:bg-slate-50 hover:text-indigo-600'
                                                     }`}
