@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, CartesianGrid, Legend } from 'recharts';
 import { AlertCircle, ArrowUpRight, ArrowDownRight, ShieldCheck, Activity, CreditCard, TrendingUp, TrendingDown, Users, Clock } from 'lucide-react';
