@@ -10,6 +10,7 @@ use App\Notifications\Incidents\IncidentStatusUpdatedNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use InvalidArgumentException;
 
 class CloseIncidentAction
 {
@@ -19,11 +20,11 @@ class CloseIncidentAction
             $user = Auth::user();
 
             if ($incident->reporter_id !== $user->id) {
-                throw new \InvalidArgumentException('Only the reporter can close this incident.');
+                throw new InvalidArgumentException('Only the reporter can close this incident.');
             }
 
             if ($incident->status !== IncidentStatus::Solved) {
-                throw new \InvalidArgumentException('Only solved incidents can be closed.');
+                throw new InvalidArgumentException('Only solved incidents can be closed.');
             }
 
             $incident->status = IncidentStatus::Closed;
