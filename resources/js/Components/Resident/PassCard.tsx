@@ -34,6 +34,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
     const resolvedStatus = normalizeStatus(pass);
     const category = deriveCategory(pass.purpose, pass.type);
     const isPassActiveOrScheduled = resolvedStatus === 'expected' || resolvedStatus === 'checked_in';
+    const displayName = resolveVisitorName(pass.visitor_name, pass.type, pass.purpose);
 
     // Format single combined validity range
     const formatValidityRange = () => {
@@ -89,10 +90,10 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 className={`flex items-center justify-between border-b px-5 py-4 ${isEvent ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/60'}`}
             >
                 <div className="flex min-w-0 items-center gap-3">
-                    <VisitorAvatar category={category} name={pass.visitor_name} size="md" />
+                    <VisitorAvatar category={category} name={displayName} size="md" />
                     <div className="min-w-0 text-left">
                         <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-900'}`}>
-                            {pass.visitor_name || 'Guest Visitor'}
+                            {displayName}
                         </h2>
                         {pass.purpose && <p className="truncate text-xs font-medium text-slate-400">{pass.purpose}</p>}
                     </div>
