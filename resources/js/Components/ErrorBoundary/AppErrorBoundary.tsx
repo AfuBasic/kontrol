@@ -1,5 +1,6 @@
 import type { ErrorInfo, ReactNode } from 'react';
 import React, { Component } from 'react';
+import { reportClientError } from '@/Utils/errorReporter';
 import CrashScreen from './CrashScreen';
 
 interface Props {
@@ -27,8 +28,15 @@ class AppErrorBoundary extends Component<Props, State> {
     }
 
     componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        // You can log the error to an external service here (e.g., Sentry)
         console.error('React Error Boundary caught an error:', error, errorInfo);
+
+        // Immediately report to Zeus Error Logs
+        reportClientError({
+            message: error.message || 'React Render Crash',
+            stack: (error.stack || '') + '\n\nComponent Stack:\n' + (errorInfo.componentStack || ''),
+            file: window.location.pathname,
+            exception_class: error.name || 'ReactErrorBoundaryError',
+        });
     }
 
     componentDidMount() {

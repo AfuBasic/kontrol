@@ -127,6 +127,7 @@ export default function Home({
 
     const { estate_plan } = usePage<SharedData & { estate_plan: { features: string[] } | null }>().props;
     const hasPaymentCollection = estate_plan?.features?.includes('payment-collection') ?? true;
+    const hasAccessCodeGen = estate_plan?.features?.includes('access-codes') ?? true;
 
     if (hasPaymentCollection && duesCount > 0) {
         attentionItems.push({

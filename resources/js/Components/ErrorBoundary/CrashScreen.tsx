@@ -10,9 +10,15 @@ interface Props {
 export default function CrashScreen({ error, resetError }: Props) {
     const [showDetails, setShowDetails] = useState(true);
     const [copied, setCopied] = useState(false);
-    const isDev = import.meta.env.DEV;
-    // Show technical details and stack traces only in development.
-    const showTechnicalDetails = error != null && isDev;
+    const isProd =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'usekontrol.com' ||
+            window.location.hostname === 'app.usekontrol.com' ||
+            window.location.hostname === 'www.usekontrol.com' ||
+            import.meta.env.VITE_APP_ENV === 'production');
+
+    // Show technical details and stack traces everywhere except strict production
+    const showTechnicalDetails = error != null && !isProd;
 
     const handleReload = () => {
         window.location.reload();

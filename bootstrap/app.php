@@ -120,6 +120,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
             'webhooks/paystack',
+            'api/*',
+            'api/v1/client-errors',
         ]);
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
