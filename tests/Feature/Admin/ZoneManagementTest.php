@@ -145,4 +145,3 @@ test('admin cannot create a zone with a name that is already taken by a soft del
 
     $response->assertSessionHasErrors(['name']);
 });
-
