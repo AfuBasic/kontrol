@@ -22,6 +22,7 @@ beforeEach(function () {
 
     $this->adminRoleA = Role::create(['name' => 'admin', 'guard_name' => 'web', 'estate_id' => $this->estateA->id]);
     $this->residentRoleB = Role::create(['name' => 'resident', 'guard_name' => 'web', 'estate_id' => $this->estateB->id]);
+    $this->householdRoleB = Role::create(['name' => 'household_member', 'guard_name' => 'web', 'estate_id' => $this->estateB->id]);
     $this->securityRoleA = Role::create(['name' => 'security', 'guard_name' => 'web', 'estate_id' => $this->estateA->id]);
 });
 
@@ -233,4 +234,63 @@ test('Test 8 - Magic login controller routes fallback to context.select', functi
     $response = $this->get($url);
 
     $response->assertRedirect(route('context.select'));
+});
+
+test('magic login keeps resident billing intended destination when active context can access it', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->estateB->users()->attach($user->id, ['status' => 'accepted']);
+
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $this->estateB->id,
+        'role_id' => $this->residentRoleB->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    setPermissionsTeamId($this->estateB->id);
+    $user->assignRole($this->residentRoleB);
+
+    MagicLoginToken::create([
+        'user_id' => $user->id,
+        'token' => 'resident-billing-token',
+        'expires_at' => now()->addMinutes(15),
+        'destination_url' => '/resident/billing',
+    ]);
+
+    $response = $this->get(URL::signedRoute('auth.magic-login', ['token' => 'resident-billing-token']));
+
+    $response->assertRedirect('/resident/billing');
+    expect(session('active_context_assignment_id'))->toBe($assignment->id);
+});
+
+test('magic login ignores resident billing intended destination when active context cannot access it', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->estateB->users()->attach($user->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'household_member',
+    ]);
+
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $this->estateB->id,
+        'role_id' => $this->householdRoleB->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    setPermissionsTeamId($this->estateB->id);
+    $user->assignRole($this->householdRoleB);
+
+    MagicLoginToken::create([
+        'user_id' => $user->id,
+        'token' => 'household-billing-token',
+        'expires_at' => now()->addMinutes(15),
+        'destination_url' => '/resident/billing',
+    ]);
+
+    $response = $this->get(URL::signedRoute('auth.magic-login', ['token' => 'household-billing-token']));
+
+    $response->assertRedirect(route('resident.home'));
+    expect(session('active_context_assignment_id'))->toBe($assignment->id);
 });

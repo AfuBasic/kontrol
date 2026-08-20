@@ -6,6 +6,7 @@ use App\Events\ForceLogout;
 use App\Models\TrustedDevice;
 use App\Models\User;
 use App\Services\Security\DeviceTrustCookie;
+use App\Support\IntendedDestinationGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,6 +18,7 @@ class CompleteAuthenticatedLogin
         private ActivateContext $activateContext,
         private AuthenticateUser $authenticateUser,
         private DeviceTrustCookie $deviceTrustCookie,
+        private IntendedDestinationGuard $intendedDestinationGuard,
     ) {}
 
     public function execute(
@@ -84,6 +86,10 @@ class CompleteAuthenticatedLogin
             return $defaultDestination;
         }
 
-        return is_string($intended) && $intended !== '' ? $intended : $defaultDestination;
+        if (is_string($intended) && $intended !== '' && $this->intendedDestinationGuard->allows($user, $intended)) {
+            return $intended;
+        }
+
+        return $defaultDestination;
     }
 }

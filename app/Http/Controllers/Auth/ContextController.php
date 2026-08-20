@@ -7,6 +7,8 @@ use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\AdministrativeAssignment;
 use App\Models\EstateMembership;
+use App\Models\User;
+use App\Support\IntendedDestinationGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -51,7 +53,7 @@ class ContextController extends Controller
             $redirectUrl = $activateContext->execute($user, $assignments->first());
 
             if ($redirectUrl) {
-                return redirect()->intended($redirectUrl);
+                return $this->redirectAfterActivation($request, $user, $redirectUrl);
             }
 
             return Inertia::render('Auth/AccessDenied', [
@@ -99,7 +101,17 @@ class ContextController extends Controller
             abort(403, 'Context activation failed or assignment invalid.');
         }
 
-        // Return to the intended dashboard of the new context
-        return redirect()->intended($redirectUrl);
+        return $this->redirectAfterActivation($request, $user, $redirectUrl);
+    }
+
+    private function redirectAfterActivation(Request $request, User $user, string $fallbackUrl): RedirectResponse
+    {
+        $intended = $request->session()->pull('url.intended');
+
+        if (app(IntendedDestinationGuard::class)->allows($user, $intended)) {
+            return redirect()->to($intended);
+        }
+
+        return redirect()->to($fallbackUrl);
     }
 }
