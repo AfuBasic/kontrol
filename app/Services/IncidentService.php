@@ -6,7 +6,6 @@ use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\User;
-use App\Services\ZoneAudienceResolver;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
