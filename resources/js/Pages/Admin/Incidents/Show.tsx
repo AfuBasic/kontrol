@@ -238,7 +238,7 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
     };
 
     // Priority Styling
-    const _getPriorityStyles: _getPriorityStyles = (val: string) => {
+    const _getPriorityStyles = (val: string) => {
         switch (val) {
             case 'critical':
                 return 'bg-rose-50 text-rose-700 border-rose-200/50';
@@ -251,8 +251,8 @@ export default function IncidentShow({ incident, comments, admins, statuses, cat
         }
     };
 
-    const _statusVal: _statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
-    const _priorityVal: _priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
+    const _statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
+    const _priorityVal = typeof incident.priority === 'object' ? incident.priority.value : incident.priority;
     const categoryVal = typeof incident.category === 'object' ? incident.category.value : incident.category;
 
     const slaInfo = getSlaStatus();

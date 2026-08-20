@@ -93,7 +93,7 @@ const getStatusStyles = (status: IncidentStatus) => {
     }
 };
 
-const _getCategoryIcon: _getCategoryIcon = (category: IncidentCategory) => {
+const _getCategoryIcon = (category: IncidentCategory) => {
     switch (category) {
         case 'electricity':
             return <Zap className="h-3.5 w-3.5" />;

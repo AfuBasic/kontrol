@@ -27,7 +27,7 @@ type Props = {
 
 export default function EditResident({ resident, propertyOwners = [], zones = [] }: Props) {
     const { confirm } = useAdminConfirmation();
-    const _isVerified: _isVerified = !!resident.email_verified_at;
+    const _isVerified = !!resident.email_verified_at;
 
     const { data, setData, put, processing, errors } = useForm({
         name: resident.name,

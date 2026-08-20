@@ -100,7 +100,7 @@ const getCategoryIcon = (category: IncidentCategory) => {
 
 export default function Index({ incidents, filters, categories }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const _authUser: _authUser = auth?.user;
+    const _authUser = auth?.user;
 
     const [search, setSearch] = useState(typeof filters?.search === 'string' ? filters.search : '');
     const [category, setCategory] = useState(typeof filters?.category === 'string' ? filters.category : '');

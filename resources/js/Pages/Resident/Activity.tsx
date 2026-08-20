@@ -129,7 +129,7 @@ export default function Activity({ activities, notifications = [], unreadCount =
     const groupedActivities = groupActivitiesByDate(activities?.data || []);
     const dateLabels = Object.keys(groupedActivities);
 
-    const _renderActivityList: _renderActivityList = () =>
+    const _renderActivityList = () =>
         dateLabels.map((dateLabel) => (
             <div key={dateLabel}>
                 <div className="mb-5 flex items-center gap-4">

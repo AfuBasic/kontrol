@@ -85,7 +85,7 @@ const BackgroundAura = () => (
 const MiniStamp = ({ status }: { status: string }) => {
     const isPaid = status === 'paid';
     const isOverdue = status === 'overdue';
-    const _isPending: _isPending = status === 'pending';
+    const _isPending = status === 'pending';
 
     return (
         <motion.div
@@ -177,7 +177,7 @@ const StatCard = ({ title, value, subValue, icon: Icon, color, delay }: StatCard
 export default function InvoiceDetailPage({ invoice }: Props) {
     const isPaid = invoice.status === 'paid';
     const isOverdue = invoice.status === 'overdue';
-    const _isPending: _isPending = invoice.status === 'pending';
+    const _isPending = invoice.status === 'pending';
     const overdueDays = Math.floor((Date.now() - new Date(invoice.due_date).getTime()) / 86400000);
 
     // Calculate email cooldown

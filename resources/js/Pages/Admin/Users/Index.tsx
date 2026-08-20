@@ -36,7 +36,7 @@ type Props = {
 
 export default function UsersIndex({ users, filters }: Props) {
     const { can } = usePermission();
-    const _hasUsers: _hasUsers = users.total > 0;
+    const _hasUsers = users.total > 0;
     const [search, setSearch] = useState(filters.search || '');
     const debouncedSearch = useDebounce(search, 300);
 

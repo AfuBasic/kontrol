@@ -99,7 +99,7 @@ export default function Home({
     const codes = activeCodes ?? [];
     const activity = recentActivity ?? [];
     const announcements = latestAnnouncements ?? [];
-    const _dues: _dues = unpaidDues ?? [];
+    const _dues = unpaidDues ?? [];
     const duesCount = unpaidDuesCount ?? 0;
     const duesAmount = totalUnpaidDuesAmount ?? 0;
 

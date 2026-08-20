@@ -25,7 +25,7 @@ interface Feature {
 interface Props {
     features: Record<string, Feature[]>;
     plans: Plan[];
-    groups: _groups: string[];
+    groups: string[];
 }
 
 export default function FeaturesIndex({ features, plans, groups }: Props) {

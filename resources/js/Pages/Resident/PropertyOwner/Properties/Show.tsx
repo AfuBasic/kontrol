@@ -91,7 +91,7 @@ interface Props {
     residents: Resident[];
     outstandingCollections: {
         data: OutstandingCollection[];
-        next_page_url: _url: string | null;
+        next_page_url: string | null;
         total: number;
     };
     outstandingBalance: number;
@@ -131,7 +131,7 @@ export default function Show({
     filters,
 }: Props) {
     const { confirm } = useResidentConfirmation();
-    const { url } = usePage();
+    const { url: _url } = usePage();
     const [activeTab, setActiveTab] = useState<Tab>(() => {
         // Only force collections tab if query params are explicitly set in the URL
         if (typeof window !== 'undefined') {

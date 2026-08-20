@@ -65,7 +65,7 @@ type Props = {
     } | null;
 };
 
-const _formatCurrency: _formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
+const _formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
 
 const formatDate = (iso?: string) => {
     if (!iso) return '-';

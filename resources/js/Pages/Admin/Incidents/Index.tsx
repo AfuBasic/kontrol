@@ -249,7 +249,7 @@ export default function IncidentsIndex({
     };
 
     // Inline status transitions
-    const _handleStatusTransition: _handleStatusTransition = (incidentHash: string, nextStatus: string) => {
+    const _handleStatusTransition = (incidentHash: string, nextStatus: string) => {
         router.put(
             `/admin/incidents/${incidentHash}/status`,
             {

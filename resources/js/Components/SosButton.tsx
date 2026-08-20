@@ -23,7 +23,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
     const [isSent, setIsSent] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
-    const [autoCloseSeconds, setAutoCloseSeconds]_autoCloseSeconds = useState(10);
+    const [_autoCloseSeconds, _setAutoCloseSeconds] = useState(10);
 
     const holdTimerRef = useRef<number | null>(null);
     const countdownTimerRef = useRef<number | null>(null);

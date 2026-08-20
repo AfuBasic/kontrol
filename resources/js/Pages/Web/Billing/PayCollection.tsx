@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import * as CollectionPaymentController from '@/actions/App/Http/Controllers/Web/CollectionPaymentController';
 
 /** Partial payments are only offered when remaining balance is at least this share of the original bill. */
-const _MIN_REMAINING_RATIO_FOR_PARTIAL: _MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;
+const _MIN_REMAINING_RATIO_FOR_PARTIAL = 0.2;
 
 type Collection = {
     name: string;

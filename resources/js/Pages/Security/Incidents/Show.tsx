@@ -94,7 +94,7 @@ export default function Show({ incident, comments }: Props) {
         });
     };
 
-    const _statusStyle: _statusStyle = getStatusStyles(incident.status);
+    const _statusStyle = getStatusStyles(incident.status);
     const categoryLabel = typeof incident.category === 'object' ? incident.category.label : incident.category;
 
     return (

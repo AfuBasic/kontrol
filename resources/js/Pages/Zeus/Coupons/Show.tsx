@@ -113,7 +113,7 @@ export default function CouponShow({ coupon, logs, stats }: Props) {
     };
 
     const statusStyle = getStatusStyle(coupon.status);
-    const _usagePercent: _usagePercent = coupon.usage_limit ? Math.min(100, Math.round((stats.total_redemptions / coupon.usage_limit) * 100)) : 0;
+    const _usagePercent = coupon.usage_limit ? Math.min(100, Math.round((stats.total_redemptions / coupon.usage_limit) * 100)) : 0;
 
     return (
         <ZeusLayout>
