@@ -327,6 +327,10 @@ class AccessCodeController extends Controller
             abort(404);
         }
 
+        if ($userCode->type === 'long_lived') {
+            return back()->withErrors(['access_code' => 'Long-term passes cannot be extended.']);
+        }
+
         $validated = $request->validate([
             'duration_minutes' => ['required', 'integer', 'min:15'],
         ]);

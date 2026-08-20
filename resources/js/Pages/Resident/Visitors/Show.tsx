@@ -214,8 +214,8 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                                 </button>
                             </div>
 
-                            {/* Repositioned Prominent Extend Pass Action Button */}
-                            {allowExtendPasses && (
+                            {/* Repositioned Prominent Extend Pass Action Button (Not available for Long-Term passes) */}
+                            {allowExtendPasses && accessCode.type !== 'long_lived' && (
                                 <button
                                     onClick={() => setIsExtendModalOpen(true)}
                                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary-100 bg-primary-50 py-2.5 text-xs font-bold text-primary-700 transition-all hover:bg-primary-100 active:scale-98"
@@ -238,7 +238,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                 </div>
 
                 {/* Extend Pass Confirmation Modal */}
-                {isExtendModalOpen && allowExtendPasses && (
+                {isExtendModalOpen && allowExtendPasses && accessCode.type !== 'long_lived' && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
                         <div className="animate-in fade-in zoom-in w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl duration-150">
                             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
