@@ -155,7 +155,6 @@ class EstateController extends Controller
     public function create(): Response
     {
         return Inertia::render('Zeus/Estates/Create', [
-            'plans' => Plan::with('features')->get(),
             'partners' => Partner::active()->orderBy('name')->get(['id', 'name', 'commission_rate']),
         ]);
     }
