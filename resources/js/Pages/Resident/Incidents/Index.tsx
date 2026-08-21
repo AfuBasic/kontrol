@@ -35,13 +35,13 @@ interface Props {
 }
 
 export default function Index({
-    incidents,
-    filters,
-    categories,
+    incidents = { data: [], links: [], total: 0 } as unknown as PaginatedData<Incident>,
+    filters = {},
+    categories = [],
     allowResidentReporting = true,
 }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const { operations } = useSyncStatus();
+    const { operations = [] } = useSyncStatus();
 
     const [search, setSearch] = useState(filters?.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters?.category || '');
@@ -136,7 +136,7 @@ export default function Index({
                                 Incidents
                             </h1>
                             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-black text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                                {incidents.total || 0}
+                                {incidents?.total || 0}
                             </span>
                         </div>
                         <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
