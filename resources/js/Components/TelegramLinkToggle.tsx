@@ -118,11 +118,39 @@ export default function TelegramLinkToggle({ linked, botUsername, className = ''
     const copyToClipboard = async () => {
         if (!otpData?.otp) return;
 
-        try {
-            await navigator.clipboard.writeText(otpData.otp);
+        setError(null);
+        let success = false;
+
+        if (navigator.clipboard && window.isSecureContext) {
+            try {
+                await navigator.clipboard.writeText(otpData.otp);
+                success = true;
+            } catch {
+                success = false;
+            }
+        }
+
+        if (!success) {
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = otpData.otp;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                success = document.execCommand('copy');
+                document.body.removeChild(textArea);
+            } catch {
+                success = false;
+            }
+        }
+
+        if (success) {
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
-        } catch {
+        } else {
             setError('Failed to copy to clipboard');
         }
     };
