@@ -65,7 +65,7 @@ export default function VisitorStatus({ activeCodes }: Props) {
     );
 }
 
-function VisitorCard({ code, status }: { code: AccessCode; status: string }) {
+function VisitorCard({ code, status: _status }: { code: AccessCode; status: string }) {
     return (
         <motion.div whileTap={{ scale: 0.98 }}>
             <Link
