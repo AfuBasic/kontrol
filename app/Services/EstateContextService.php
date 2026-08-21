@@ -3,12 +3,27 @@
 namespace App\Services;
 
 use App\Auth\ContextManager;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class EstateContextService
 {
+    /**
+     * Get the current active administrative assignment.
+     */
+    public function getAssignment(): ?AdministrativeAssignment
+    {
+        $context = app(ContextManager::class)->current();
+
+        if (! $context || ! $context->assignmentId) {
+            return null;
+        }
+
+        return AdministrativeAssignment::find($context->assignmentId);
+    }
+
     /**
      * Get the current active estate from the authenticated user.
      */
