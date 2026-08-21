@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Filter,
     Plus,
     RefreshCw,
     Search,
@@ -130,16 +129,13 @@ export default function Index({
         (currentSort && currentSort !== 'newest')
     );
 
-    // Count how many non-default filter dimensions are active
+    // Count how many non-default filter dimensions are active (e.g. category, custom sort)
     const activeFilterCount = [
-        Boolean(search),
         Boolean(selectedCategory),
-        Boolean(currentTab && currentTab !== 'all'),
         Boolean(currentSort && currentSort !== 'newest'),
     ].filter(Boolean).length;
 
-    // Total incidents in estate (unfiltered). If totalIncidentsCount is provided from backend, use it.
-    // Otherwise fallback to incidents.total if no filters are active, or default to checking list.
+    // Total incidents in estate (unfiltered).
     const estateTotalCount = typeof totalIncidentsCount === 'number'
         ? totalIncidentsCount
         : (!hasActiveFilters ? (incidents?.total ?? 0) : null);
@@ -181,38 +177,47 @@ export default function Index({
             </div>
 
             {/* Category Options */}
-            <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Category Filters
-                </label>
-                <div className="mt-2 grid max-h-48 grid-cols-1 gap-2 overflow-y-auto pr-1">
-                    <button
-                        type="button"
-                        onClick={() => setSelectedCategory('')}
-                        className={`min-h-[44px] rounded-2xl px-4 py-2 text-left text-xs font-bold border transition-all ${
-                            !selectedCategory
-                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
-                        }`}
-                    >
-                        All Categories
-                    </button>
-                    {categories.map((c) => (
+            {categories.length > 0 && (
+                <div>
+                    <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
+                        Category
+                    </label>
+                    <div className="mt-2 grid max-h-56 grid-cols-1 gap-2 overflow-y-auto pr-1">
                         <button
-                            key={c.value}
                             type="button"
-                            onClick={() => setSelectedCategory(c.value)}
-                            className={`min-h-[44px] truncate rounded-2xl px-4 py-2 text-left text-xs font-bold border transition-all ${
-                                selectedCategory === c.value
+                            onClick={() => setSelectedCategory('')}
+                            className={`min-h-[44px] rounded-2xl px-4 py-2.5 text-left text-xs font-bold border transition-all ${
+                                !selectedCategory
                                     ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
                                     : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
                             }`}
                         >
-                            {c.label}
+                            All Categories
                         </button>
-                    ))}
+                        {categories.map((c) => {
+                            const isSelected = selectedCategory === c.value;
+                            return (
+                                <button
+                                    key={c.value}
+                                    type="button"
+                                    onClick={() => setSelectedCategory(c.value)}
+                                    className={`min-h-[44px] flex items-center justify-between rounded-2xl px-4 py-2.5 text-left text-xs font-bold border transition-all ${
+                                        isSelected
+                                            ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
+                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                                    }`}
+                                >
+                                    <IncidentCategoryLabel
+                                        category={c.value}
+                                        size="sm"
+                                        className={isSelected ? '!text-white' : ''}
+                                    />
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Sort Options */}
             <div>
@@ -276,9 +281,9 @@ export default function Index({
         <>
             <Head title="Incidents & Maintenance - Kontrol" />
 
-            <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 space-y-6">
+            <div className="mx-auto max-w-3xl px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-5">
                 {/* 1. RESTORED INCIDENT BOARD HERO (Dark Navy Surface + Purple CTA) */}
-                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-7 text-white shadow-xl shadow-slate-900/10 dark:shadow-black/40">
+                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-5 sm:px-6 py-6 sm:py-7 text-white shadow-xl shadow-slate-900/10 dark:shadow-black/40">
                     {/* Ambient Glow Accents */}
                     <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
                     <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-indigo-500/15 blur-3xl" />
@@ -316,7 +321,7 @@ export default function Index({
                         ) : (
                             <div className="shrink-0">
                                 <span className="inline-flex items-center rounded-xl bg-slate-800/80 px-3.5 py-2 text-xs font-bold text-slate-400 ring-1 ring-slate-700/60">
-                                    Reporting Disabled by Estate Policy
+                                    Reporting Disabled by Policy
                                 </span>
                             </div>
                         )}
@@ -358,9 +363,9 @@ export default function Index({
                 ) : (
                     /* 3. STATES B & C: SEARCH, CONTROLS, AND FEED */
                     <div className="space-y-4">
-                        {/* Search Bar + Filter Trigger & Status Tabs */}
+                        {/* Streamlined Primary Controls: Search + Filter Sheet & Status Tabs */}
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            {/* Search & Filter Sheet Button */}
+                            {/* Search & Filter Sheet Trigger */}
                             <div className="flex flex-1 items-center gap-2">
                                 <form onSubmit={handleSearchSubmit} className="relative flex-1">
                                     <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -427,57 +432,60 @@ export default function Index({
                             </div>
                         </div>
 
-                        {/* Category Filter Pills (Horizontal Scroll) */}
-                        {categories.length > 0 && (
-                            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                                <button
-                                    type="button"
-                                    onClick={() => handleCategoryClick('')}
-                                    className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                                        !selectedCategory
-                                            ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
-                                    }`}
-                                >
-                                    All Categories
-                                </button>
-                                {categories.map((cat) => {
-                                    const isSelected = selectedCategory === cat.value;
-                                    return (
-                                        <button
-                                            key={cat.value}
-                                            type="button"
-                                            onClick={() => handleCategoryClick(cat.value)}
-                                            className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
-                                                isSelected
-                                                    ? 'bg-purple-600 border-purple-600 text-white shadow-xs'
-                                                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
-                                            }`}
-                                        >
-                                            <IncidentCategoryLabel
-                                                category={cat.value}
-                                                size="xs"
-                                                className={isSelected ? '!text-white' : ''}
-                                            />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Active Filter Recovery Bar */}
+                        {/* Subtle Active Filter Chips (Removable) */}
                         {hasActiveFilters && (
-                            <div className="flex items-center justify-between rounded-2xl bg-purple-50/60 px-4 py-2.5 text-xs text-purple-900 border border-purple-100 dark:bg-purple-950/30 dark:border-purple-900/40 dark:text-purple-300">
-                                <div className="flex items-center gap-2">
-                                    <Filter className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                                    <span>Filtered view active ({incidents.total || 0} matching)</span>
-                                </div>
+                            <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                                {selectedCategory && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-800 dark:text-purple-300">
+                                        <span>Category: {selectedCategory}</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCategoryClick('')}
+                                            className="hover:text-purple-900 dark:hover:text-white"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                )}
+
+                                {currentSort !== 'newest' && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-800 dark:text-purple-300">
+                                        <span>Sort: Popular</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCurrentSort('newest');
+                                                applyFilters({ sort: undefined });
+                                            }}
+                                            className="hover:text-purple-900 dark:hover:text-white"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                )}
+
+                                {search && (
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+                                        <span>"{search}"</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setSearch('');
+                                                applyFilters({ search: undefined });
+                                            }}
+                                            className="hover:text-slate-900 dark:hover:text-white"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                )}
+
                                 <button
                                     type="button"
                                     onClick={clearAllFilters}
-                                    className="font-bold text-purple-700 hover:underline dark:text-purple-300"
+                                    className="text-xs font-bold text-slate-400 hover:text-purple-600 transition-colors dark:hover:text-purple-400 ml-1"
                                 >
-                                    Reset filters
+                                    Clear all
                                 </button>
                             </div>
                         )}
@@ -505,8 +513,8 @@ export default function Index({
                                 </div>
                             </div>
                         ) : (
-                            /* STATE C: POPULATED STATE (Incident Feed Cards) */
-                            <div className="space-y-3.5">
+                            /* STATE C: POPULATED STATE (Newsfeed Incident Cards) */
+                            <div className="space-y-4">
                                 {incidentList.map((incident) => (
                                     <IncidentCard
                                         key={incident.id}
