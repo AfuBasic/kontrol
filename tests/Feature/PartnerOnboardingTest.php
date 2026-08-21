@@ -206,3 +206,68 @@ test('zeus admin cannot resend invitation emails to a member more than 3 times i
         ->post(route('zeus.partners.members.resend-invite', [$partner, $user]))
         ->assertStatus(429);
 });
+
+test('partner member can view the partner activation page via signed url', function () {
+    $partner = Partner::create([
+        'name' => 'Omega Partners',
+        'commission_type' => 'percentage',
+        'commission_rate' => 10,
+        'status' => 'pending',
+    ]);
+
+    $user = User::create([
+        'name' => 'Omega Contact',
+        'email' => 'contact@omega.com',
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
+    ]);
+
+    setPermissionsTeamId(0);
+    $user->assignRole('affiliate');
+
+    $signedUrl = URL::temporarySignedRoute(
+        'invitation.accept',
+        now()->addHours(72),
+        ['token' => $user->id]
+    );
+
+    $response = $this->get($signedUrl);
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Invitation/PartnerActivation')
+        ->where('partner_name', 'Omega Partners')
+        ->where('user.email', 'contact@omega.com')
+    );
+});
+
+test('partner member can accept the invitation to activate account and partner', function () {
+    $partner = Partner::create([
+        'name' => 'Omega Partners',
+        'commission_type' => 'percentage',
+        'commission_rate' => 10,
+        'status' => 'pending',
+    ]);
+
+    $user = User::create([
+        'name' => 'Omega Contact',
+        'email' => 'contact@omega.com',
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
+    ]);
+
+    setPermissionsTeamId(0);
+    $user->assignRole('affiliate');
+
+    $signedUrl = URL::temporarySignedRoute(
+        'invitation.store',
+        now()->addHours(72),
+        ['token' => $user->id]
+    );
+
+    $response = $this->post($signedUrl);
+
+    $response->assertRedirect(route('partner.dashboard'));
+    expect($partner->fresh()->status)->toBe('active');
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+    $this->assertAuthenticatedAs($user);
+});
