@@ -38,6 +38,10 @@ class MagicLoginController extends Controller
             $magicToken->user->markEmailAsVerified();
         }
 
+        if ($magicToken->assignment_id) {
+            $request->session()->put('active_context_assignment_id', $magicToken->assignment_id);
+        }
+
         if ($magicToken->destination_url) {
             $request->session()->put('url.intended', $magicToken->destination_url);
         }
