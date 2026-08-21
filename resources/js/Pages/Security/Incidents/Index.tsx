@@ -225,12 +225,14 @@ export default function Index({ incidents, filters, categories }: Props) {
                                     : 'No security incidents have been logged yet.'
                             }
                             action={
-                                !hasActiveFilters
-                                    ? {
-                                          label: 'Log an Incident',
-                                          href: '/security/incidents/create',
-                                      }
-                                    : undefined
+                                !hasActiveFilters ? (
+                                    <Link
+                                        href="/security/incidents/create"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700"
+                                    >
+                                        Log an Incident
+                                    </Link>
+                                ) : undefined
                             }
                         />
                     </div>

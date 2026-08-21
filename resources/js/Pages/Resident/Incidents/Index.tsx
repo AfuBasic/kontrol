@@ -281,12 +281,14 @@ export default function Index({
                                     : 'Your estate feed is currently quiet with no open maintenance or safety reports.'
                             }
                             action={
-                                allowResidentReporting && !hasActiveFilters
-                                    ? {
-                                          label: 'Report an Incident',
-                                          href: '/resident/incidents/create',
-                                      }
-                                    : undefined
+                                allowResidentReporting && !hasActiveFilters ? (
+                                    <Link
+                                        href="/resident/incidents/create"
+                                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700"
+                                    >
+                                        Report an Incident
+                                    </Link>
+                                ) : undefined
                             }
                         />
                     </div>
