@@ -5,8 +5,6 @@ import {
     Clock,
     Flame,
     Lock,
-    Shield,
-    UserCheck,
 } from 'lucide-react';
 import type { Incident, IncidentStatus } from '@/types/incidents';
 
