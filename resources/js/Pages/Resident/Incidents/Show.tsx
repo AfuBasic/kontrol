@@ -71,37 +71,35 @@ export default function Show({
         );
     };
 
-    const handleClose = async () => {
+    const handleClose = () => {
         if (!canClose) return;
 
-        const confirmed = await confirm({
+        confirm({
             title: 'Close this Incident?',
             message:
                 'Are you satisfied that this issue has been fully resolved? Closing it will archive this case.',
-            confirmText: 'Yes, Close Incident',
-            cancelText: 'Keep Open',
-            type: 'default',
+            confirmLabel: 'Yes, Close Incident',
+            cancelLabel: 'Keep Open',
+            type: 'info',
+            onConfirm: () => {
+                router.post(`/resident/incidents/${incident.hashid}/close`, {}, { preserveScroll: true });
+            },
         });
-
-        if (confirmed) {
-            router.post(`/resident/incidents/${incident.hashid}/close`, {}, { preserveScroll: true });
-        }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (!isReporter || incident.status !== 'pending') return;
 
-        const confirmed = await confirm({
+        confirm({
             title: 'Delete Incident Report?',
             message: 'This report will be permanently removed. This action cannot be undone.',
-            confirmText: 'Delete Report',
-            cancelText: 'Cancel',
+            confirmLabel: 'Delete Report',
+            cancelLabel: 'Cancel',
             type: 'danger',
+            onConfirm: () => {
+                router.delete(`/resident/incidents/${incident.hashid}`);
+            },
         });
-
-        if (confirmed) {
-            router.delete(`/resident/incidents/${incident.hashid}`);
-        }
     };
 
     const handleSubmitComment = (body: string, parentId?: number | null) => {

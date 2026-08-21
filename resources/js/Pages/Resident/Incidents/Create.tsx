@@ -129,17 +129,18 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                     is_private: data.is_private,
                 };
 
-                await ResidentStore.addPendingIncident({
+                await ResidentStore.putPendingIncident({
                     id: tempId,
-                    type: 'incident',
-                    data: offlinePayload,
+                    payload: offlinePayload,
                     status: SyncStatus.Pending,
                     createdAt: new Date().toISOString(),
+                    title: data.title,
+                    category: data.category,
                 });
 
                 await SyncEngine.enqueue({
                     type: 'CREATE_INCIDENT',
-                    url: '/resident/incidents',
+                    endpoint: '/resident/incidents',
                     method: 'POST',
                     payload: offlinePayload,
                 });
