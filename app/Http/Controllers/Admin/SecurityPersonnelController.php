@@ -81,7 +81,7 @@ class SecurityPersonnelController extends Controller
                         'created_at' => $user->created_at->format('M d, Y'),
                     ];
                 })),
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'stats' => [
                 'total' => $totalSecurity,
                 'active' => $activeSecurity,
