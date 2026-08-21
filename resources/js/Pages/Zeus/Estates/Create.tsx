@@ -1,29 +1,7 @@
-import { CheckIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { store } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 import ZeusLayout from '@/Layouts/ZeusLayout';
-
-type Feature = {
-    id: number;
-    name: string;
-    description: string | null;
-    pivot: {
-        is_enabled: boolean;
-        limit: number | null;
-    };
-};
-
-type Plan = {
-    id: number;
-    name: string;
-    price: number;
-    billing_interval: string;
-    description: string | null;
-    badge: string | null;
-    color: string | null;
-    features: Feature[];
-};
 
 type Partner = {
     id: number;
@@ -32,17 +10,15 @@ type Partner = {
 };
 
 type Props = {
-    plans: Plan[];
     partners: Partner[];
 };
 
-export default function CreateEstate({ plans, partners }: Props) {
+export default function CreateEstate({ partners }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         admin_name: '',
         email: '',
         address: '',
-        plan_id: plans.length > 0 ? plans[0].id : '',
         charge_type: 'residents',
         free_trial_enabled: true,
         free_trial_days: 30 as number | '',
@@ -53,8 +29,6 @@ export default function CreateEstate({ plans, partners }: Props) {
         commission_starts_at: '',
         commission_ends_at: '',
     });
-
-    const selectedPlan = plans.find((p) => p.id === data.plan_id);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -176,75 +150,11 @@ export default function CreateEstate({ plans, partners }: Props) {
                         </div>
                     </motion.div>
 
-                    {/* Subscription */}
-                    <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.15 }}>
-                        <div className="mb-4">
-                            <h3 className="text-base font-semibold text-slate-900 dark:text-white">Subscription</h3>
-                            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Choose the billing plan for this estate.</p>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                            {plans.map((plan) => {
-                                const isSelected = data.plan_id === plan.id;
-                                return (
-                                    <button
-                                        key={plan.id}
-                                        type="button"
-                                        onClick={() => setData('plan_id', plan.id)}
-                                        className={`group relative flex flex-col rounded-xl border p-5 text-left transition-all ${
-                                            isSelected
-                                                ? 'border-blue-600 bg-blue-50/50 ring-1 ring-blue-600 dark:border-blue-500 dark:bg-blue-500/10 dark:ring-blue-500'
-                                                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50 dark:border-white/10 dark:bg-[#0f1423] dark:hover:border-white/20 dark:hover:bg-slate-800/50'
-                                        }`}
-                                    >
-                                        <div className="mb-2 flex w-full items-center justify-between">
-                                            <span
-                                                className={`text-sm font-semibold capitalize ${
-                                                    isSelected ? 'text-blue-900 dark:text-blue-400' : 'text-slate-900 dark:text-slate-300'
-                                                }`}
-                                            >
-                                                {plan.billing_interval}
-                                            </span>
-                                            {isSelected && (
-                                                <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white dark:bg-blue-500">
-                                                    <CheckIcon className="h-3 w-3" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            <span
-                                                className={`text-lg font-bold ${
-                                                    isSelected ? 'text-blue-900 dark:text-blue-400' : 'text-slate-900 dark:text-white'
-                                                }`}
-                                            >
-                                                ₦{(plan.price / 100).toLocaleString()}
-                                            </span>
-                                            <span className="text-xs text-slate-500 dark:text-slate-400">
-                                                /{' '}
-                                                {plan.billing_interval === 'monthly'
-                                                    ? 'month'
-                                                    : plan.billing_interval === 'quarterly'
-                                                      ? 'quarter'
-                                                      : plan.billing_interval === 'semi-annually'
-                                                        ? '6 months'
-                                                        : 'year'}
-                                            </span>
-                                        </div>
-
-                                        <div className="mt-4 flex items-center gap-1 border-t border-slate-100 pt-3 text-xs font-medium text-slate-400 transition-colors group-hover:text-blue-600 dark:border-white/10 dark:group-hover:text-blue-400">
-                                            View plan details <ChevronRightIcon className="h-3 w-3" />
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        {errors.plan_id && <p className="mt-2 text-xs font-medium text-red-500 dark:text-red-400">{errors.plan_id}</p>}
-                    </motion.div>
-
                     {/* Additional Settings */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.35, delay: 0.2 }}
+                        transition={{ duration: 0.35, delay: 0.15 }}
                         className="rounded-xl border border-slate-200/50 bg-white/50 shadow-sm backdrop-blur-xl dark:border-white/[0.04] dark:bg-[#0f1423]"
                     >
                         <div className="px-6 py-4">
@@ -430,7 +340,7 @@ export default function CreateEstate({ plans, partners }: Props) {
                         <div className="mb-6 rounded-xl border border-slate-200/50 bg-slate-50/50 p-6 dark:border-white/[0.04] dark:bg-[#0f1423]">
                             <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">Review</h3>
 
-                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">Estate</div>
                                     <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.name || '-'}</div>
@@ -441,17 +351,6 @@ export default function CreateEstate({ plans, partners }: Props) {
                                         Administrator
                                     </div>
                                     <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{data.email || '-'}</div>
-                                </div>
-                                <div>
-                                    <div className="text-xs font-medium tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                                        Subscription
-                                    </div>
-                                    <div className="mt-2 text-sm font-semibold text-slate-900 dark:text-white">{selectedPlan?.name || '-'}</div>
-                                    <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                        {selectedPlan
-                                            ? `₦${(selectedPlan.price / 100).toLocaleString()} / ${selectedPlan.billing_interval === 'monthly' ? 'month' : selectedPlan.billing_interval === 'quarterly' ? 'quarter' : selectedPlan.billing_interval === 'semi-annually' ? '6 months' : 'year'}`
-                                            : '-'}
-                                    </div>
                                 </div>
                             </div>
                         </div>
