@@ -1,10 +1,7 @@
 import React from 'react';
 import {
-    CheckCircle,
-    Info,
     Megaphone,
     Shield,
-    Sparkles,
 } from 'lucide-react';
 import type { IncidentComment } from '@/types/incidents';
 
