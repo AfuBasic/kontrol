@@ -19,6 +19,7 @@ use App\Services\Billing\InitializeTrialService;
 use App\Services\Commission\PartnerAttributionService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\PermissionSeeder;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
@@ -173,7 +174,7 @@ class CreateEstateAction
             // 9. Dispatch event for side effects (invitation email)
             event(new EstateCreated($estate, $user));
 
-            \Illuminate\Support\Facades\Cache::forget("estate_features:{$estate->id}");
+            Cache::forget("estate_features:{$estate->id}");
             $estate->clearMemoizedFeatures();
 
             return $estate;
