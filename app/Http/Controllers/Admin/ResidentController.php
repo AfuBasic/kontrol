@@ -131,7 +131,7 @@ class ResidentController extends Controller
 
         return Inertia::render('Admin/Residents/Index', [
             'residents' => $residents,
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'zones' => $this->zonesForAssignment($estate->id, app(ContextManager::class)->current()),
             'stats' => [
                 'total' => $totalResidents,
