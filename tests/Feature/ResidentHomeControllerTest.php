@@ -101,7 +101,7 @@ test('resident dashboard returns active and upcoming passes correctly', function
         'source' => AccessCodeSource::Web,
     ]);
 
-    // Create an upcoming (future) access code
+    // Create an upcoming (future) access code scheduled for later TODAY
     AccessCode::create([
         'estate_id' => $estate->id,
         'user_id' => $user->id,
@@ -110,6 +110,19 @@ test('resident dashboard returns active and upcoming passes correctly', function
         'visitor_name' => 'Jane Smith',
         'starts_at' => now()->addHours(2),
         'expires_at' => now()->addHours(4),
+        'status' => AccessCodeStatus::Scheduled,
+        'source' => AccessCodeSource::Web,
+    ]);
+
+    // Create a pass scheduled for TOMORROW (must NOT be counted in expected today)
+    AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => '999888',
+        'type' => 'visitor',
+        'visitor_name' => 'Tomorrow Visitor',
+        'starts_at' => now()->addDays(1)->setHour(10),
+        'expires_at' => now()->addDays(1)->setHour(14),
         'status' => AccessCodeStatus::Scheduled,
         'source' => AccessCodeSource::Web,
     ]);
@@ -123,6 +136,7 @@ test('resident dashboard returns active and upcoming passes correctly', function
         ->component('Resident/Home')
         ->where('activePassesCount', 1)
         ->where('upcomingPassesCount', 1)
+        ->where('stats.total_expected', 2)
     );
 });
 
