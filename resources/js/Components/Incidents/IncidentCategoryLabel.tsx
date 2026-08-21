@@ -1,14 +1,14 @@
 import React from 'react';
+import type {
+    LucideIcon,
+} from 'lucide-react';
 import {
-    Activity,
-    AlertTriangle,
     Building2,
     Car,
     Droplet,
     Globe,
     HelpCircle,
     Lightbulb,
-    LucideIcon,
     ShieldAlert,
     Trash2,
     Volume2,
