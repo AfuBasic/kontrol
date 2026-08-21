@@ -105,6 +105,16 @@ export const DEFAULT_THEME: CategoryTheme = {
     badgeBg: 'bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300',
 };
 
+export const CATEGORY_CONFIG: Record<string, CategoryTheme & { label: string }> = new Proxy(
+    {},
+    {
+        get: (_target, prop: string) => {
+            const { label, theme } = resolveCategoryDetails(prop);
+            return { ...theme, label };
+        },
+    }
+);
+
 export function resolveCategoryDetails(category: any): { label: string; theme: CategoryTheme } {
     if (!category) {
         return { label: 'General / Other', theme: KNOWN_CATEGORY_THEMES.other };
