@@ -116,7 +116,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
                 onSuccess: async () => {
                     setIsSending(false);
                     setIsSent(true);
-                    setAutoCloseSeconds(10);
+                    _setAutoCloseSeconds(10);
                     // Strong haptic pattern for SOS trigger success
                     try {
                         await Haptics.notification({ type: NotificationType.Success });
