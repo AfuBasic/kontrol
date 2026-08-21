@@ -8,12 +8,9 @@ import {
     CheckCircle2,
     Eye,
     EyeOff,
-    HelpCircle,
     MapPin,
-    Paperclip,
     Send,
     Trash2,
-    WifiOff,
 } from 'lucide-react';
 import { CATEGORY_CONFIG, normalizeCategoryKey } from '@/Components/Incidents/IncidentCategoryLabel';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
@@ -21,7 +18,6 @@ import ResidentLayout from '@/Layouts/ResidentLayout';
 import { ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 import { SyncStatus } from '@/Resilience/SyncStatus';
-import type { IncidentCategory } from '@/types/incidents';
 
 interface Props {
     categories: Array<{ value: string; label: string }>;
