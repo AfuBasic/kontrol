@@ -6,6 +6,7 @@ use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\IncidentComment;
 use App\Models\User;
+use App\Services\ZoneAudienceResolver;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -200,5 +201,38 @@ class IncidentService
             ->with(['author', 'replies.author'])
             ->orderBy('created_at', 'asc')
             ->paginate(30);
+    }
+
+    /**
+     * Get total unfiltered count of incidents accessible to current user for an estate.
+     */
+    public function getTotalCount(int $estateId): int
+    {
+        $user = Auth::user();
+        $userId = Auth::id();
+        $isAdmin = $user && $user->contextHasRole('admin');
+
+        $query = Incident::query()->forEstate($estateId);
+
+        if (! $isAdmin) {
+            $query->where(function ($q) use ($userId) {
+                $q->where('is_private', false)
+                    ->orWhere('reporter_id', $userId);
+            });
+
+            if ($user) {
+                $userZoneIds = app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId);
+                $query->where(function ($q) use ($userZoneIds, $userId) {
+                    $q->whereNull('zone_id')
+                        ->orWhere('reporter_id', $userId);
+
+                    if ($userZoneIds !== []) {
+                        $q->orWhereIn('zone_id', $userZoneIds);
+                    }
+                });
+            }
+        }
+
+        return $query->count();
     }
 }
