@@ -23,6 +23,14 @@ export type UserProfile = {
     unit_number?: string | null;
 };
 
+export type AvailableContext = {
+    id: number;
+    estate_name: string;
+    role_name: string;
+    scope_type?: string | null;
+    zone_name?: string | null;
+};
+
 export type UserContext = {
     id: number;
     estate_id: number;
@@ -35,6 +43,7 @@ export type UserContext = {
 
 export type User = {
     id: number;
+    ulid?: string;
     name: string;
     email: string;
     avatar?: string;
@@ -42,9 +51,12 @@ export type User = {
     permissions?: Permission[];
     roles?: string[];
     context?: UserContext | null;
+    available_contexts?: AvailableContext[];
     created_at: string;
     updated_at: string;
     current_estate_id?: number;
+    current_estate_ulid?: string | null;
+    estate_name?: string | null;
     property_owner_id?: number | null;
     household_parent_name?: string | null;
     notifications?: {
