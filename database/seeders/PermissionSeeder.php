@@ -107,7 +107,7 @@ class PermissionSeeder extends Seeder
         $skipped = 0;
 
         foreach (self::PERMISSIONS as $module => $permissions) {
-            $this->command->info("Seeding {$module} permissions...");
+            $this->command?->info("Seeding {$module} permissions...");
 
             foreach ($permissions as $name => $description) {
                 $permission = Permission::firstOrCreate(
@@ -117,10 +117,10 @@ class PermissionSeeder extends Seeder
 
                 if ($permission->wasRecentlyCreated) {
                     $created++;
-                    $this->command->line("  + Created: {$name}");
+                    $this->command?->line("  + Created: {$name}");
                 } else {
                     $skipped++;
-                    $this->command->line("  - Skipped: {$name} (already exists)");
+                    $this->command?->line("  - Skipped: {$name} (already exists)");
                 }
             }
         }
@@ -129,8 +129,8 @@ class PermissionSeeder extends Seeder
         $allSeededNames = self::getAllPermissionNames();
         Permission::whereNotIn('name', $allSeededNames)->delete();
 
-        $this->command->newLine();
-        $this->command->info("Permissions seeded: {$created} created, {$skipped} skipped.");
+        $this->command?->newLine();
+        $this->command?->info("Permissions seeded: {$created} created, {$skipped} skipped.");
     }
 
     /**
