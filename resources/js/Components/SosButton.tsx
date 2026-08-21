@@ -27,7 +27,6 @@ export default function SosButton({ variant = 'floating' }: Props) {
 
     const holdTimerRef = useRef<number | null>(null);
     const countdownTimerRef = useRef<number | null>(null);
-    const autoCloseTimerRef = useRef<number | null>(null);
     const holdStartTimeRef = useRef<number>(0);
 
     const HOLD_DURATION = 1500; // 1.5 seconds
@@ -46,7 +45,9 @@ export default function SosButton({ variant = 'floating' }: Props) {
         try {
             await Haptics.selectionStart();
             await Haptics.impact({ style: ImpactStyle.Heavy });
-        } catch (e) {}
+        } catch (_e) {
+            // Haptics unavailable on web
+        }
 
         holdTimerRef.current = window.setInterval(() => {
             const elapsed = Date.now() - holdStartTimeRef.current;
@@ -75,7 +76,9 @@ export default function SosButton({ variant = 'floating' }: Props) {
         // Native Success Haptic
         try {
             await Haptics.notification({ type: NotificationType.Success });
-        } catch (e) {}
+        } catch (_e) {
+            // Haptics unavailable on web
+        }
 
         countdownTimerRef.current = window.setInterval(() => {
             setCountdown((prev) => {
@@ -96,7 +99,9 @@ export default function SosButton({ variant = 'floating' }: Props) {
         setHoldProgress(0);
         try {
             await Haptics.impact({ style: ImpactStyle.Light });
-        } catch (e) {}
+        } catch (_e) {
+            // Haptics unavailable on web
+        }
     };
 
     const sendSos = async () => {
@@ -117,28 +122,18 @@ export default function SosButton({ variant = 'floating' }: Props) {
                         await Haptics.notification({ type: NotificationType.Success });
                         setTimeout(() => Haptics.vibrate(), 200);
                         setTimeout(() => Haptics.vibrate(), 600);
-                    } catch (e) {}
-
-                    // Start auto-close countdown
-                    /* Disabling auto-close for UI inspection as requested
-                    autoCloseTimerRef.current = window.setInterval(() => {
-                        setAutoCloseSeconds((prev) => {
-                            if (prev <= 1) {
-                                if (autoCloseTimerRef.current) clearInterval(autoCloseTimerRef.current);
-                                setIsSent(false);
-                                return 0;
-                            }
-                            return prev - 1;
-                        });
-                    }, 1000);
-                    */
+                    } catch (_e) {
+                        // Haptics unavailable on web
+                    }
                 },
                 onError: (errors) => {
                     setIsSending(false);
                     setError(errors.error || 'Failed to send SOS');
                     try {
                         Haptics.notification({ type: NotificationType.Error });
-                    } catch (e) {}
+                    } catch (_e) {
+                        // Haptics unavailable on web
+                    }
                     setTimeout(() => setError(null), 5000);
                 },
             },
