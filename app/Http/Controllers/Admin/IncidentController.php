@@ -164,7 +164,7 @@ class IncidentController extends Controller
 
         return Inertia::render('Admin/Incidents/Index', [
             'incidents' => $incidents,
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'categories' => $categories,
             'statuses' => $statuses,
             'stats' => [
