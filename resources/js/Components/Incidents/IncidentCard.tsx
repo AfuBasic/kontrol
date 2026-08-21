@@ -6,7 +6,6 @@ import {
     MapPin,
     MessageSquare,
     Paperclip,
-    Shield,
     ThumbsUp,
     User,
 } from 'lucide-react';
