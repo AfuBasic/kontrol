@@ -60,7 +60,7 @@ export default function Show({
     const [submittingDiscussion, setSubmittingDiscussion] = useState(false);
 
     // Form for quick admin status/assignee/priority updates
-    const { data, setData, patch, processing, errors } = useForm({
+    const { data, setData, patch, processing, errors: _errors } = useForm({
         status: incident.status,
         assigned_to: incident.assignee?.id || '',
         priority: incident.priority || 'medium',
