@@ -62,6 +62,10 @@ class CreateEstateAction
 
             // Sync all permissions to the new estate-specific admin role
             $allPermissions = PermissionSeeder::getAllPermissionNames();
+            $existingCount = Permission::whereIn('name', $allPermissions)->where('guard_name', 'web')->count();
+            if ($existingCount < count($allPermissions)) {
+                (new PermissionSeeder)->run();
+            }
             $adminRole->syncPermissions($allPermissions);
 
             $user->assignRole($adminRole);
