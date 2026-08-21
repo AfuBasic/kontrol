@@ -52,7 +52,7 @@ class VisitorLogController extends Controller
 
         return Inertia::render('Admin/Visitors/Index', [
             'logs' => Inertia::scroll(fn () => $this->paginatedLogs($estate->id, $filters)),
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'hosts' => Inertia::defer(fn () => $this->hostsForFilters($estate)),
             'securityOfficers' => Inertia::defer(fn () => $this->securityOfficersForFilters($estate)),
             'checkoutEnabled' => $checkoutEnabled,
