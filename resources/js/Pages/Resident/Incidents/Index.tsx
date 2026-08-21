@@ -1,17 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
-    AlertTriangle,
-    Filter,
     Plus,
     RefreshCw,
     Search,
     ShieldAlert,
-    SlidersHorizontal,
-    Sparkles,
     X,
 } from 'lucide-react';
-import MobileSheet from '@/Components/MobileSheet';
 import EmptyState from '@/Components/States/EmptyState';
 import IncidentCard from '@/Components/Incidents/IncidentCard';
 import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
@@ -19,7 +14,7 @@ import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import { type PendingIncident, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
 import { SyncStatus } from '@/Resilience/SyncStatus';
-import type { Incident, PaginatedData, SharedData } from '@/types';
+import type { Incident, PaginatedData } from '@/types';
 
 interface Props {
     incidents: PaginatedData<Incident>;
@@ -40,14 +35,12 @@ export default function Index({
     categories = [],
     allowResidentReporting = true,
 }: Props) {
-    const { auth } = usePage<SharedData>().props;
     const { operations = [] } = useSyncStatus();
 
     const [search, setSearch] = useState(filters?.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters?.category || '');
     const [currentTab, setCurrentTab] = useState(filters?.tab || 'all');
     const [currentSort, setCurrentSort] = useState(filters?.sort || 'newest');
-    const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
     const [pendingIncidents, setPendingIncidents] = useState<PendingIncident[]>([]);
 
     const refreshPending = useCallback(async () => {
