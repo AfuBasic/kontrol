@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $user_id
+ * @property int|null $assignment_id
  * @property string $token
  * @property string|null $destination_url
  * @property CarbonImmutable $expires_at
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read User $user
+ * @property-read AdministrativeAssignment|null $assignment
  *
  * @method static Builder<static>|MagicLoginToken newModelQuery()
  * @method static Builder<static>|MagicLoginToken newQuery()
@@ -40,6 +42,7 @@ class MagicLoginToken extends Model
 
     protected $fillable = [
         'user_id',
+        'assignment_id',
         'token',
         'destination_url',
         'expires_at',
@@ -63,6 +66,14 @@ class MagicLoginToken extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsTo<AdministrativeAssignment, $this>
+     */
+    public function assignment(): BelongsTo
+    {
+        return $this->belongsTo(AdministrativeAssignment::class);
     }
 
     /**
