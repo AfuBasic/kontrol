@@ -644,7 +644,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                   isPropertyOwner ? 'max-w-4xl px-3 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
                               } ${
                                   !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform())
-                                      ? 'pt-[calc(3.75rem+env(safe-area-inset-top,0px))]'
+                                      ? 'pt-[calc(4.75rem+env(safe-area-inset-top,0px))]'
                                       : 'py-4'
                               }`
                     }`}
