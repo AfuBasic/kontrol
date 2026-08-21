@@ -6,7 +6,6 @@ use App\Casts\IncidentCategoryCast;
 use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
-use App\Models\AdministrativeAssignment;
 use App\Traits\GeneratesUlid;
 use App\Traits\HasHashid;
 use App\Traits\ZoneScoped;
