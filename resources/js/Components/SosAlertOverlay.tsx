@@ -76,7 +76,9 @@ class WebAudioSiren {
                     high = !high;
                 }
             }, 500);
-        } catch (_e) {}
+        } catch (_e) {
+            // Ignore audio oscillator error on unsupported browsers
+        }
         return Promise.resolve();
     }
 
@@ -86,7 +88,9 @@ class WebAudioSiren {
         if (this.osc) {
             try {
                 this.osc.stop();
-            } catch (_e) {}
+            } catch (_e) {
+                // Ignore stop error if already stopped
+            }
             this.osc.disconnect();
             this.osc = null;
         }
