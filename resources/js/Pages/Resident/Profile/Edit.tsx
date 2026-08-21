@@ -352,6 +352,16 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                     {errors.name && <p className="mt-2 text-xs font-bold text-rose-500">{errors.name}</p>}
                 </div>
 
+                <div>
+                    <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Email Address</label>
+                    <input
+                        type="email"
+                        value={user?.email ?? ''}
+                        readOnly
+                        className="w-full rounded-[20px] border border-slate-100 bg-slate-100/80 px-5 py-4 text-base font-bold text-slate-500 shadow-sm cursor-not-allowed select-none focus:outline-none"
+                    />
+                </div>
+
                 {!isHouseholdMember && (
                     <>
                         <div>
