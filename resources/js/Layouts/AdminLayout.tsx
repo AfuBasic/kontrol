@@ -50,7 +50,7 @@ import CommandPalette from '@/Components/Admin/CommandPalette';
 import { baseNav, secondaryNav, type NavItem } from '@/Config/navigation';
 import { useFeature } from '@/Hooks/useFeature';
 import { useForceLogout } from '@/Hooks/useForceLogout';
-import usePathFromUrl from '@/Hooks/usePathFromUrl';
+import { getPathFromUrl } from '@/Hooks/usePathFromUrl';
 import { useSidebarState } from '@/Hooks/useSidebarState';
 import type { SharedData } from '@/types';
 
@@ -118,7 +118,7 @@ const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
     );
 };
 
-export default function AdminLayout({ children, title }: Props) {
+export default function AdminLayout({ children, _title }: Props) {
     const page = usePage<
         SharedData & {
             flash: { success?: string; error?: string };
@@ -472,8 +472,8 @@ export default function AdminLayout({ children, title }: Props) {
     }
 
     function isCurrentPath(href: string) {
-        const path = usePathFromUrl(href);
-        const dashboardPath = usePathFromUrl(DashboardController.url());
+        const path = getPathFromUrl(href);
+        const dashboardPath = getPathFromUrl(DashboardController.url());
         if (path === dashboardPath) {
             return url === path || url === path + '/';
         }
