@@ -33,12 +33,6 @@ interface Props {
     };
 }
 
-const statusColors: Record<string, string> = {
-    active: 'bg-green-100 text-green-800',
-    inactive: 'bg-gray-100 text-gray-800',
-    suspended: 'bg-red-100 text-red-800',
-};
-
 export default function AffiliatesIndex({ affiliates, filters }: Props) {
     const { confirm } = useAdminConfirmation();
     const [search, setSearch] = useState(filters.search);
