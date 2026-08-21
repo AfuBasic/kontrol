@@ -42,12 +42,14 @@ class IncidentController extends Controller
 
         $settings = EstateSettings::forEstate($estateId);
         $categories = EstateSettings::resolveCategoriesForEstate($estateId);
+        $totalIncidentsCount = $this->incidentService->getTotalCount($estateId);
 
         return Inertia::render('Resident/Incidents/Index', [
             'incidents' => $incidents,
             'filters' => (object) $filters,
             'categories' => $categories,
             'allowResidentReporting' => (bool) $settings->allow_residents_to_report_incidents,
+            'totalIncidentsCount' => $totalIncidentsCount,
         ]);
     }
 
