@@ -197,7 +197,7 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                                         }
                                                                         value={bank}
                                                                     >
-                                                                        {({ selected, active }) => (
+                                                                        {({ selected, active: _active }) => (
                                                                             <>
                                                                                 <span
                                                                                     className={cn(
