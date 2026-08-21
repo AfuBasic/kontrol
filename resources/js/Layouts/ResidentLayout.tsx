@@ -130,7 +130,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
             // Show toast
             setToastMessage(notification.message || 'New notification received');
-            setToastType(notification.type || 'info');
+            setToastType((notification.type as 'success' | 'error' | 'info') || 'info');
             setShowToast(true);
 
             // Reload auth data to keep state in sync
@@ -139,7 +139,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
         // Listen for real-time incident broadcasts scoped to user's context/estate/zone
         const estateId = auth.user.current_estate_id;
-        const activeContext = auth.user.active_context;
+        const activeContext = auth.user.context;
         const zoneId = activeContext?.zone_id;
 
         const channelsToListen: string[] = [];
@@ -169,7 +169,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                 window.Echo.leave(name);
             });
         };
-    }, [auth?.user?.id, auth?.user?.current_estate_id, auth?.user?.active_context?.zone_id]);
+    }, [auth?.user?.id, auth?.user?.current_estate_id, auth?.user?.context?.zone_id]);
 
     const handleNotificationClick = (notification: Notification) => {
         setSelectedNotification(notification);
