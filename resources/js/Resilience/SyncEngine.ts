@@ -474,8 +474,11 @@ class SyncEngineImpl {
     private async loadOperations(): Promise<QueuedOperation[]> {
         try {
             const ops = await getAll<QueuedOperation>(queueConfig, QUEUE_STORE);
+            if (!Array.isArray(ops)) {
+                return [];
+            }
 
-            return ops.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt));
+            return [...ops].sort((a, b) => Date.parse(a?.createdAt || '0') - Date.parse(b?.createdAt || '0'));
         } catch {
             return [];
         }
