@@ -568,7 +568,9 @@ class AccessCodeService
         $user = Auth::user();
         $estate = $this->estateContext->getEstate();
 
-        $today = Carbon::today();
+        $tz = config('app.timezone', 'Africa/Lagos');
+        $today = Carbon::today($tz);
+        $endOfToday = Carbon::now($tz)->endOfDay();
 
         $userIds = $user->getHouseholdUserIds();
 
@@ -595,11 +597,19 @@ class AccessCodeService
             })
             ->count();
 
-        // Expected Today = Active codes that HAVE NOT arrived today
+        // Expected Today = Active codes or codes scheduled for today that HAVE NOT arrived today (excluding future scheduled days)
         $expectedToday = AccessCode::query()
             ->forEstate($estate->id)
             ->whereIn('user_id', $userIds)
-            ->active()
+            ->whereIn('status', [AccessCodeStatus::Active, AccessCodeStatus::Scheduled])
+            ->where(function ($q) use ($endOfToday) {
+                $q->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', $endOfToday);
+            })
+            ->where(function ($q) {
+                $q->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
             ->whereDoesntHave('accessLogs', function ($q) use ($today) {
                 $q->whereDate('verified_at', $today);
             })
@@ -610,6 +620,7 @@ class AccessCodeService
             'created_today' => $createdToday,
             'visitors_today' => $visitorsToday,
             'total_expected' => $expectedToday,
+            'expected_today' => $expectedToday,
         ];
     }
 
