@@ -156,7 +156,7 @@ export default function TransactionsIndex({
     const handleExport = () => {
         if (!canExport) return;
         const params = new URLSearchParams(filters as Record<string, string>);
-        window.location.href = `${TransactionController.export.url()}?${params.toString()}`;
+        window.location.href = `${TransactionController.exportMethod.url()}?${params.toString()}`;
     };
 
     const showEmpty = !hasTransactions && transactions.data.length === 0;
