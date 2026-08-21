@@ -18,7 +18,6 @@ import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel'
 import IncidentTimeline from '@/Components/Incidents/IncidentTimeline';
 import OfficialUpdates from '@/Components/Incidents/OfficialUpdates';
 import IncidentDiscussion from '@/Components/Incidents/IncidentDiscussion';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { Incident, IncidentComment, PaginatedData, SharedData } from '@/types';
 
 interface Props {
@@ -133,7 +132,7 @@ export default function Show({
     };
 
     return (
-        <ResidentLayout>
+        <>
             <Head title={`${incident.title} - Incident #${incident.reference_code || incident.hashid}`} />
 
             <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
@@ -313,6 +312,6 @@ export default function Show({
                     </div>
                 </div>
             )}
-        </ResidentLayout>
+        </>
     );
 }
