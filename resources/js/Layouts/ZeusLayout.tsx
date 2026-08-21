@@ -57,7 +57,7 @@ const baseNavItems: NavItem[] = [
     { name: 'Settings', href: '/zeus/settings', icon: Cog6ToothIcon },
 ];
 
-export default function ZeusLayout({ children, backUrl }: Props) {
+export default function ZeusLayout({ children, _backUrl }: Props) {
     const { flash, zeusUnreadNotificationsCount } = usePage<{
         flash: { success?: string; error?: string };
         zeusUnreadNotificationsCount?: number;
