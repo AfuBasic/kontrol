@@ -6,6 +6,7 @@ use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
+use Exception;
 
 class ActivateContext
 {
@@ -17,17 +18,23 @@ class ActivateContext
     public function execute(User $user, ?AdministrativeAssignment $assignment = null): string
     {
         if ($assignment === null) {
-            $assignments = $this->contextManager->getValidAssignments($user);
-
-            if ($assignments->count() === 0) {
-                return url('/');
+            $activeAssignmentId = session('active_context_assignment_id');
+            if ($activeAssignmentId) {
+                $assignment = $this->contextManager->getValidAssignments($user)->firstWhere('id', $activeAssignmentId);
             }
 
-            if ($assignments->count() === 1) {
-                $assignment = $assignments->first();
-                // continue to activation
-            } else {
-                return route('context.select');
+            if ($assignment === null) {
+                $assignments = $this->contextManager->getValidAssignments($user);
+
+                if ($assignments->count() === 0) {
+                    return url('/');
+                }
+
+                if ($assignments->count() === 1) {
+                    $assignment = $assignments->first();
+                } else {
+                    return route('context.select');
+                }
             }
         }
 
@@ -40,7 +47,7 @@ class ActivateContext
         // Use the context manager to validate and activate the assignment
         try {
             $this->contextManager->activate($assignment);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return url('/');
         }
 
