@@ -102,6 +102,7 @@ class HomeController extends Controller
             'upcomingPassesCount' => $upcomingTodayCount,
             'upcomingTodayCount' => $upcomingTodayCount,
             'upcomingFutureCount' => $upcomingFutureCount,
+            'totalScheduledCount' => $activePassesCount + $upcomingTodayCount + $upcomingFutureCount,
 
             // Deferred - heavier secondary sections
             'activeCodes' => Inertia::defer(fn () => $activeCodesCollection->map(fn ($code) => [
