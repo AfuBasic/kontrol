@@ -332,4 +332,3 @@ test('multi-context user opening magic login for resident billing bypasses conte
     $response->assertRedirect('/resident/billing');
     expect(session('active_context_assignment_id'))->toBe($residentAssignment->id);
 });
-
