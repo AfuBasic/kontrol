@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { CATEGORY_CONFIG, normalizeCategoryKey } from '@/Components/Incidents/IncidentCategoryLabel';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import { ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 import { SyncStatus } from '@/Resilience/SyncStatus';
@@ -257,7 +256,7 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
     const selectedCategoryConfig = CATEGORY_CONFIG[selectedCategoryKey];
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Report an Incident - Kontrol" />
 
             <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 sm:py-8 space-y-6">
@@ -537,6 +536,6 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                     </form>
                 )}
             </div>
-        </ResidentLayout>
+        </>
     );
 }
