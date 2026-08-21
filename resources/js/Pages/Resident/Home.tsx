@@ -222,7 +222,7 @@ export default function Home({
 
                 {/* HERO COMMAND CENTER */}
                 <CommandCenter
-                    expectedToday={(displayStats as any)?.expectedToday ?? (displayStats as any)?.total_expected ?? 0}
+                    expectedToday={totalExpectedToday}
                     lastActivity={activity[0]?.message}
                     onAction={() => router.visit('/resident/visitors/create')}
                     canGenerate={hasAccessCodeGen}
