@@ -163,18 +163,32 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                 const file = data.attachment;
                 const fileHash = await getFileHash(file);
 
-                const dedupRes = await fetch(
-                    `/resident/incidents/check-deduplication?hash=${encodeURIComponent(fileHash)}`
-                );
+                const dedupRes = await fetch('/resident/incidents/check-deduplication', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN':
+                            (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
+                                ?.content || '',
+                    },
+                    body: JSON.stringify({ hash: fileHash }),
+                });
+
+                if (!dedupRes.ok) {
+                    throw new Error(`Deduplication check failed (${dedupRes.status})`);
+                }
+
                 const dedupData = await dedupRes.json();
 
-                let secureUrl = dedupData.attachment_url;
+                let secureUrl = dedupData.url || dedupData.attachment_url;
 
                 if (!dedupData.exists) {
                     const signatureRes = await fetch('/resident/incidents/signed-upload', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
+                            Accept: 'application/json',
                             'X-CSRF-TOKEN':
                                 (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)
                                     ?.content || '',
