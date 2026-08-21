@@ -45,6 +45,7 @@ type Props = SharedData & {
     openIncidentsCount: number;
     activePassesCount: number;
     upcomingPassesCount: number;
+    totalScheduledCount?: number;
     unpaidDuesCount?: number | null;
     totalUnpaidDuesAmount?: number | null;
 };
@@ -60,6 +61,7 @@ export default function Home({
     openIncidentsCount = 0,
     activePassesCount = 0,
     upcomingPassesCount = 0,
+    totalScheduledCount,
     unpaidDuesCount,
     totalUnpaidDuesAmount,
 }: Props) {
@@ -75,8 +77,9 @@ export default function Home({
             openIncidentsCount,
             activePassesCount,
             upcomingPassesCount,
+            totalScheduledCount: totalScheduledCount ?? (activePassesCount + upcomingPassesCount),
         }),
-        [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount],
+        [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount, totalScheduledCount],
     );
 
     const {
@@ -87,7 +90,7 @@ export default function Home({
         key: 'resident-home',
         serverData: shellSnapshot,
         namespace: 'resident',
-        only: ['stats', 'activePassesCount', 'upcomingPassesCount', 'openIncidentsCount'],
+        only: ['stats', 'activePassesCount', 'upcomingPassesCount', 'totalScheduledCount', 'openIncidentsCount'],
         revalidate: isOnline && quality !== 'offline',
     });
 
@@ -95,6 +98,7 @@ export default function Home({
     const displayEstateName = staleShell?.estateName ?? estateName;
     const displayActivePasses = staleShell?.activePassesCount ?? activePassesCount;
     const displayUpcomingPasses = staleShell?.upcomingPassesCount ?? upcomingPassesCount;
+    const displayTotalScheduled = staleShell?.totalScheduledCount ?? totalScheduledCount ?? (displayActivePasses + displayUpcomingPasses);
     const displayOpenIncidents = staleShell?.openIncidentsCount ?? openIncidentsCount;
     const codes = activeCodes ?? [];
     const activity = recentActivity ?? [];
@@ -222,6 +226,7 @@ export default function Home({
 
                 {/* HERO COMMAND CENTER */}
                 <CommandCenter
+                    totalScheduled={displayTotalScheduled}
                     expectedToday={totalExpectedToday}
                     lastActivity={activity[0]?.message}
                     onAction={() => router.visit('/resident/visitors/create')}
