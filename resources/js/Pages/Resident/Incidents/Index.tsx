@@ -11,7 +11,6 @@ import EmptyState from '@/Components/States/EmptyState';
 import IncidentCard from '@/Components/Incidents/IncidentCard';
 import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
-import ResidentLayout from '@/Layouts/ResidentLayout';
 import { type PendingIncident, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
 import { SyncStatus } from '@/Resilience/SyncStatus';
 import type { Incident, PaginatedData } from '@/types';
@@ -31,16 +30,20 @@ interface Props {
 
 export default function Index({
     incidents = { data: [], links: [], total: 0 } as unknown as PaginatedData<Incident>,
-    filters = {},
+    filters: rawFilters = {},
     categories = [],
     allowResidentReporting = true,
 }: Props) {
+    // PHP's request()->only() returns [] (array) when no keys match, which JSON-encodes
+    // to a JS array. Guard against this so filters.sort doesn't resolve to Array.prototype.sort.
+    const filters = Array.isArray(rawFilters) ? {} : (rawFilters ?? {});
+
     const { operations = [] } = useSyncStatus();
 
-    const [search, setSearch] = useState(filters?.search || '');
-    const [selectedCategory, setSelectedCategory] = useState(filters?.category || '');
-    const [currentTab, setCurrentTab] = useState(filters?.tab || 'all');
-    const [currentSort, setCurrentSort] = useState(filters?.sort || 'newest');
+    const [search, setSearch] = useState(filters.search || '');
+    const [selectedCategory, setSelectedCategory] = useState(filters.category || '');
+    const [currentTab, setCurrentTab] = useState(filters.tab || 'all');
+    const [currentSort, setCurrentSort] = useState(filters.sort || 'newest');
     const [pendingIncidents, setPendingIncidents] = useState<PendingIncident[]>([]);
 
     const refreshPending = useCallback(async () => {
@@ -117,7 +120,7 @@ export default function Index({
     const hasActiveFilters = Boolean(search || selectedCategory || (currentTab && currentTab !== 'all') || (currentSort && currentSort !== 'newest'));
 
     return (
-        <ResidentLayout>
+        <>
             <Head title="Incidents & Maintenance - Kontrol" />
 
             <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 space-y-6">
@@ -334,6 +337,6 @@ export default function Index({
                     </div>
                 )}
             </div>
-        </ResidentLayout>
+        </>
     );
 }
