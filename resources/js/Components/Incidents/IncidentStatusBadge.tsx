@@ -1,11 +1,12 @@
 import React from 'react';
+import type {
+    LucideIcon} from 'lucide-react';
 import {
     AlertCircle,
     CheckCircle2,
     Clock,
     Flame,
-    Lock,
-    LucideIcon,
+    Lock
 } from 'lucide-react';
 import type { IncidentStatus } from '@/types/incidents';
 
