@@ -51,7 +51,7 @@ class ResidentApprovalController extends Controller
 
         return Inertia::render('Admin/Residents/Approvals/Index', [
             'residents' => $residents,
-            'filters' => $filters,
+            'filters' => (object) $filters,
         ]);
     }
 
