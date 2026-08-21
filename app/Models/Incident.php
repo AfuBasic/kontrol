@@ -6,6 +6,7 @@ use App\Casts\IncidentCategoryCast;
 use App\Enums\IncidentPriority;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
+use App\Models\AdministrativeAssignment;
 use App\Traits\GeneratesUlid;
 use App\Traits\HasHashid;
 use App\Traits\ZoneScoped;
@@ -55,6 +56,8 @@ class Incident extends Model
     ];
 
     protected $appends = [
+        'hashid',
+        'reporter_role',
         'reporter_role_label',
         'reference_code',
     ];
@@ -174,6 +177,11 @@ class Incident extends Model
         }
 
         return class_basename($reporter);
+    }
+
+    public function getReporterRoleLabelAttribute(): string
+    {
+        return $this->getReporterRoleAttribute();
     }
 
     public function isReporter(User $user): bool
