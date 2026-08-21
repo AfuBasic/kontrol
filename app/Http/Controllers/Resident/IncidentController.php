@@ -45,7 +45,7 @@ class IncidentController extends Controller
 
         return Inertia::render('Resident/Incidents/Index', [
             'incidents' => $incidents,
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'categories' => $categories,
             'allowResidentReporting' => (bool) $settings->allow_residents_to_report_incidents,
         ]);
