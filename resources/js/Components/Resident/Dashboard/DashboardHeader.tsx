@@ -1,7 +1,5 @@
 
 import { motion } from 'framer-motion';
-import {  Search } from 'lucide-react';
-
 
 interface Props {
     userName: string;
@@ -11,7 +9,7 @@ interface Props {
     parentResidentName?: string | null;
 }
 
-export default function DashboardHeader({ userName, estateName, unreadCount, isHouseholdMember, parentResidentName }: Props) {
+export default function DashboardHeader({ userName, estateName, _unreadCount, isHouseholdMember, parentResidentName }: Props) {
     const firstName = userName.split(' ')[0];
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
