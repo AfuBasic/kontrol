@@ -3,7 +3,6 @@ import {
     CornerDownRight,
     MessageSquare,
     Send,
-    UserCircle,
 } from 'lucide-react';
 import type { IncidentComment, PaginatedData } from '@/types/incidents';
 
