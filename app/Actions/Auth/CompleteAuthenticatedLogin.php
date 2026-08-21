@@ -76,6 +76,13 @@ class CompleteAuthenticatedLogin
 
         if ($defaultDestination === route('context.select')) {
             if (is_string($intended) && $intended !== '') {
+                $matchedAssignment = $this->intendedDestinationGuard->matchAssignment($user, $intended);
+                if ($matchedAssignment) {
+                    $this->activateContext->execute($user, $matchedAssignment);
+
+                    return $intended;
+                }
+
                 $request->session()->put('url.intended', $intended);
             }
 
