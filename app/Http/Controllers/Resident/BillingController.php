@@ -6,6 +6,7 @@ use App\Actions\Auth\GenerateMagicLoginUrlAction;
 use App\Actions\Billing\InitializeCardSetupAction;
 use App\Actions\Billing\PaymentInitializationException;
 use App\Actions\Billing\ProcessResidentPaymentAction;
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Invoice;
@@ -197,11 +198,16 @@ class BillingController extends Controller
     public function generateMagicUrl(Request $request, GenerateMagicLoginUrlAction $action): JsonResponse
     {
         $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
         $params = [];
         if ($request->has('coupon')) {
             $params['coupon'] = $request->coupon;
         }
-        $url = $action->execute($user, route('resident.billing.index', $params, false));
+
+        $assignment = $this->estateContext->getAssignment()
+            ?? app(ContextManager::class)->getValidAssignments($user)->firstWhere('estate_id', $estate->id);
+
+        $url = $action->execute($user, route('resident.billing.index', $params, false), $assignment);
 
         return response()->json([
             'status' => 'success',
