@@ -183,7 +183,7 @@ class PropertyOwnerController extends Controller
 
         return Inertia::render('Admin/PropertyOwners/Index', [
             'propertyOwners' => $propertyOwners,
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'stats' => [
                 'total' => $totalOwners,
                 'active' => $activeOwners,
