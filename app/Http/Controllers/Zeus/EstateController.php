@@ -17,7 +17,6 @@ use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\Partner;
 use App\Models\PaymentTransaction;
-use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\Zeus\EstateHealthService;
 use Illuminate\Http\RedirectResponse;
