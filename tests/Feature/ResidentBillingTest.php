@@ -393,3 +393,25 @@ test('collection notifications and emails reflect property owner and house name 
     $reminderMail = $reminder->toMail($resident);
     expect($reminderMail->subject)->toBe('House Bill Reminder: Utility Bill');
 });
+
+test('a resident can generate a magic billing login url', function () {
+    $residentRole = Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $resident->assignRole($residentRole);
+    $estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    $response = $this->actingAs($resident)
+        ->getJson(route('resident.billing.magic-url'));
+
+    $response->assertOk()
+        ->assertJsonStructure([
+            'status',
+            'magic_url',
+        ]);
+
+    expect($response->json('status'))->toBe('success');
+    expect($response->json('magic_url'))->toContain('/auth/magic-login/');
+});
