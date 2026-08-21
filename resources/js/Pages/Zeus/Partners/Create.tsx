@@ -155,10 +155,7 @@ export default function CreatePartner() {
                                             <button
                                                 key={opt.id}
                                                 type="button"
-                                                onClick={() => {
-                                                    setData('commission_type', opt.id as any);
-                                                    setTouchedMode(true);
-                                                }}
+                                                onClick={() => setData('commission_type', opt.id as any)}
                                                 className={`flex items-start gap-4 rounded-2xl border p-4 text-left transition-all ${
                                                     isSelected
                                                         ? 'border-[#6C5DFD] bg-[#6C5DFD]/5 shadow-lg'
