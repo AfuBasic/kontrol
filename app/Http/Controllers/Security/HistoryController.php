@@ -99,7 +99,7 @@ class HistoryController extends Controller
         return Inertia::render('Security/History', [
             // Use Inertia v2 scroll() for robust infinite scrolling
             'logs' => Inertia::scroll(fn () => $logs),
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'hosts' => $hosts,
         ]);
     }
