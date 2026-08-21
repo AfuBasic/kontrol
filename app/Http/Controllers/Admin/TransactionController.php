@@ -121,7 +121,7 @@ class TransactionController extends Controller
             'hasTransactions' => $this->overviewService->hasTransactions($estate),
             'recordableAssignments' => $recordableAssignments,
             'transactions' => $transactions,
-            'filters' => $filters,
+            'filters' => (object) $filters,
             'filterOptions' => [
                 'residents' => $residents,
                 'collections' => $collections,
