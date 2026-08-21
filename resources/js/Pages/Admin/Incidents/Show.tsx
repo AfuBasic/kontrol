@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import { Deferred, Head, Link, router, useForm } from '@inertiajs/react';
 import {
-    Activity,
-    AlertCircle,
     ArrowLeft,
-    CheckCircle2,
     Clock,
-    Flame,
-    Lock,
     MapPin,
     Megaphone,
     Paperclip,
-    Shield,
     Sliders,
     Trash2,
     User,
-    UserCheck,
     X,
     ZoomIn,
 } from 'lucide-react';
