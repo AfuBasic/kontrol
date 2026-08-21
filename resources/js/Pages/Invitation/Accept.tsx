@@ -26,7 +26,7 @@ interface Props {
     errors?: Record<string, string>;
 }
 
-export default function AcceptInvitation({ acceptUrl, user, invitation, isPasswordReset, flash, errors }: Props) {
+export default function AcceptInvitation({ acceptUrl, user, invitation, _isPasswordReset, flash, errors }: Props) {
     const { post, processing } = useForm();
 
     const name = user?.name || invitation?.email || 'there';
