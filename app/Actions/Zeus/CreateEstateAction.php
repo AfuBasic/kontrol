@@ -173,6 +173,9 @@ class CreateEstateAction
             // 9. Dispatch event for side effects (invitation email)
             event(new EstateCreated($estate, $user));
 
+            \Illuminate\Support\Facades\Cache::forget("estate_features:{$estate->id}");
+            $estate->clearMemoizedFeatures();
+
             return $estate;
         });
     }
