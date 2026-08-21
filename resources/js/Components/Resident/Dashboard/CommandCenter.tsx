@@ -1,9 +1,9 @@
-
 import { motion } from 'framer-motion';
 import { Plus, Users, Activity } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 
 interface Props {
+    totalScheduled?: number;
     expectedToday: number;
     lastActivity?: string;
     onAction?: () => void;
@@ -38,8 +38,15 @@ function CountUpNumber({ value }: { value: number }) {
     return <>{count}</>;
 }
 
-export default function CommandCenter({ expectedToday, lastActivity, onAction, canGenerate = true }: Props) {
-    const hasData = expectedToday > 0;
+export default function CommandCenter({
+    totalScheduled,
+    expectedToday,
+    lastActivity,
+    onAction,
+    canGenerate = true,
+}: Props) {
+    const displayScheduled = typeof totalScheduled === 'number' ? totalScheduled : expectedToday;
+    const hasData = displayScheduled > 0;
 
     return (
         <motion.div
@@ -94,7 +101,7 @@ export default function CommandCenter({ expectedToday, lastActivity, onAction, c
                                 </motion.span>
                             ) : (
                                 <>
-                                    {expectedToday} {expectedToday === 1 ? 'visitor' : 'visitors'} <span className="text-white/40">scheduled</span>
+                                    {displayScheduled} {displayScheduled === 1 ? 'visitor' : 'visitors'} <span className="text-white/40">scheduled</span>
                                 </>
                             )}
                         </h2>
