@@ -294,3 +294,42 @@ test('magic login ignores resident billing intended destination when active cont
     $response->assertRedirect(route('resident.home'));
     expect(session('active_context_assignment_id'))->toBe($assignment->id);
 });
+
+test('multi-context user opening magic login for resident billing bypasses context selection and activates resident assignment', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $this->estateA->users()->attach($user->id, ['status' => 'accepted']);
+
+    $securityAssignment = AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $this->estateA->id,
+        'role_id' => $this->securityRoleA->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    $residentRoleA = Role::create(['name' => 'resident', 'guard_name' => 'web', 'estate_id' => $this->estateA->id]);
+    $residentAssignment = AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $this->estateA->id,
+        'role_id' => $residentRoleA->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    setPermissionsTeamId($this->estateA->id);
+    $user->assignRole($residentRoleA);
+
+    MagicLoginToken::create([
+        'user_id' => $user->id,
+        'assignment_id' => $residentAssignment->id,
+        'token' => 'multi-context-billing-token',
+        'expires_at' => now()->addMinutes(15),
+        'destination_url' => '/resident/billing',
+    ]);
+
+    $response = $this->get(URL::signedRoute('auth.magic-login', ['token' => 'multi-context-billing-token']));
+
+    $response->assertRedirect('/resident/billing');
+    expect(session('active_context_assignment_id'))->toBe($residentAssignment->id);
+});
+
