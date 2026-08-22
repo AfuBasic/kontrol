@@ -527,7 +527,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                         </div>
                     </header>
 
-                    <main className="flex-1 pb-20 lg:pb-8">
+                    <main className="flex-1 pb-[calc(7rem+var(--safe-area-inset-bottom))] lg:pb-8">
                         <motion.div
                             key={currentPath}
                             initial={{ opacity: 0, y: 6 }}

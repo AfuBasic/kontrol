@@ -24,6 +24,91 @@ html.dark body {
     color-scheme: dark;
 }
 
+/* Partner mobile floating navigation */
+:root {
+    --partner-nav-glass-surface: rgba(255, 255, 255, 0.82);
+    --partner-nav-glass-fallback: rgba(255, 255, 255, 0.96);
+    --partner-nav-glass-border: rgba(15, 23, 42, 0.1);
+    --partner-nav-glass-highlight: rgba(255, 255, 255, 0.78);
+    --partner-nav-glass-shadow: 0 24px 54px -28px rgba(15, 23, 42, 0.42), 0 10px 24px -20px rgba(15, 23, 42, 0.34);
+    --partner-nav-icon-muted: #738097;
+    --partner-nav-label-muted: #647086;
+    --partner-nav-active-surface: rgba(219, 234, 254, 0.78);
+    --partner-nav-active-border: rgba(31, 111, 219, 0.16);
+    --partner-nav-active-icon: #1f6fdb;
+    --partner-nav-active-label: #082f6e;
+    --partner-nav-active-indicator: rgba(31, 111, 219, 0.84);
+    --partner-nav-active-glow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 24px -18px rgba(31, 111, 219, 0.45);
+    --partner-nav-submit-surface: linear-gradient(135deg, #0a3d91 0%, #1f6fdb 100%);
+    --partner-nav-submit-foreground: #ffffff;
+    --partner-nav-submit-ring: rgba(255, 255, 255, 0.88);
+    --partner-nav-submit-shadow: 0 16px 30px -16px rgba(10, 61, 145, 0.62), 0 6px 16px -12px rgba(15, 23, 42, 0.55);
+    --partner-nav-submit-well: rgba(219, 234, 254, 0.5);
+    --partner-nav-focus-ring: rgba(31, 111, 219, 0.48);
+}
+
+html.dark {
+    --partner-nav-glass-surface: rgba(8, 14, 28, 0.78);
+    --partner-nav-glass-fallback: rgba(8, 14, 28, 0.94);
+    --partner-nav-glass-border: rgba(255, 255, 255, 0.1);
+    --partner-nav-glass-highlight: rgba(255, 255, 255, 0.08);
+    --partner-nav-glass-shadow: 0 24px 56px -28px rgba(0, 0, 0, 0.74), 0 8px 24px -18px rgba(15, 23, 42, 0.88);
+    --partner-nav-icon-muted: #71809c;
+    --partner-nav-label-muted: #7f8da8;
+    --partner-nav-active-surface: rgba(31, 111, 219, 0.18);
+    --partner-nav-active-border: rgba(96, 165, 250, 0.18);
+    --partner-nav-active-icon: #73b7ff;
+    --partner-nav-active-label: #dceafe;
+    --partner-nav-active-indicator: rgba(96, 165, 250, 0.88);
+    --partner-nav-active-glow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 30px -20px rgba(59, 130, 246, 0.55);
+    --partner-nav-submit-surface: linear-gradient(135deg, #f8fafc 0%, #dbeafe 100%);
+    --partner-nav-submit-foreground: #041230;
+    --partner-nav-submit-ring: rgba(8, 14, 28, 0.72);
+    --partner-nav-submit-shadow: 0 18px 34px -20px rgba(96, 165, 250, 0.42), 0 8px 18px -12px rgba(0, 0, 0, 0.8);
+    --partner-nav-submit-well: rgba(96, 165, 250, 0.1);
+    --partner-nav-focus-ring: rgba(147, 197, 253, 0.56);
+}
+
+.partner-mobile-nav-dock {
+    position: relative;
+    display: flex;
+    min-height: 5.05rem;
+    align-items: center;
+    gap: 0.125rem;
+    overflow: visible;
+    border: 1px solid var(--partner-nav-glass-border);
+    border-radius: 1.65rem;
+    background: var(--partner-nav-glass-surface);
+    box-shadow: var(--partner-nav-glass-shadow);
+    -webkit-backdrop-filter: blur(26px) saturate(1.28);
+    backdrop-filter: blur(26px) saturate(1.28);
+}
+
+.partner-mobile-nav-dock::before {
+    content: '';
+    position: absolute;
+    inset: 1px 1px auto;
+    height: 48%;
+    border-radius: 1.55rem 1.55rem 1.15rem 1.15rem;
+    background: linear-gradient(to bottom, var(--partner-nav-glass-highlight), transparent);
+    pointer-events: none;
+}
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .partner-mobile-nav-dock {
+        background: var(--partner-nav-glass-fallback);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .partner-mobile-nav-dock *,
+    .partner-mobile-nav-dock *::before,
+    .partner-mobile-nav-dock *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+}
+
 /* Hide scrollbars globally */
 *::-webkit-scrollbar {
     display: none !important;
