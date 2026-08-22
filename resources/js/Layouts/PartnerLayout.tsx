@@ -424,7 +424,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 animate={{ x: 0 }}
                                 exit={{ x: '-100%' }}
                                 transition={{ type: 'spring', damping: 30, stiffness: 340 }}
-                                className="fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#0b0f15] shadow-2xl lg:hidden"
+                                className="pt-safe pb-safe fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#0b0f15] shadow-2xl lg:hidden"
                                 aria-label="Partner menu"
                             >
                                 <div className="flex h-[52px] items-center justify-between px-4">
@@ -456,7 +456,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                     style={{ marginLeft: sidebarWidth }}
                 >
                     <header className="sticky top-0 z-30">
-                        <div className="relative border-b border-stone-900/[0.04] bg-white/60 backdrop-blur-2xl dark:border-white/[0.05] dark:bg-slate-950/55">
+                        <div className="pt-safe relative border-b border-stone-900/[0.04] bg-white/60 backdrop-blur-2xl dark:border-white/[0.05] dark:bg-slate-950/55">
                             <div
                                 className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-stone-300/45 to-transparent dark:via-white/10"
                                 aria-hidden
