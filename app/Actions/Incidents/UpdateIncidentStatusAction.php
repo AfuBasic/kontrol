@@ -27,7 +27,9 @@ class UpdateIncidentStatusAction
 
                 if ($newStatus !== $incident->status) {
                     if ($incident->status === IncidentStatus::Closed) {
-                        throw new \InvalidArgumentException('This incident is closed and cannot be updated.');
+                        throw ValidationException::withMessages([
+                            'status' => ['This incident is closed and cannot be updated.'],
+                        ]);
                     }
 
                     $incident->status = $newStatus;

@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\AssignmentScope;
 use App\Enums\IncidentStatus;
+use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Incident;
 use App\Models\User;
@@ -22,6 +24,14 @@ test('admin can transition incident through statuses', function () {
     setPermissionsTeamId($estate->id);
     $admin->assignRole('admin');
     $admin->estates()->attach($estate->id, ['status' => 'accepted']);
+    $adminRole = Role::where('name', 'admin')->first();
+    AdministrativeAssignment::create([
+        'user_id' => $admin->id,
+        'estate_id' => $estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
 
     $reporter->assignRole('resident');
     $reporter->estates()->attach($estate->id, ['status' => 'accepted']);
@@ -92,6 +102,34 @@ test('admin cannot mark incident as closed', function () {
         ]);
 
     $response->assertStatus(302); // fails validation since "closed" is not in UpdateIncidentStatusRequest's status validation list
+});
+
+test('admin receives validation error when updating an already closed incident', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    $reporter = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $admin->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $reporter->assignRole('resident');
+    $reporter->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $incident = Incident::create([
+        'estate_id' => $estate->id,
+        'reporter_id' => $reporter->id,
+        'title' => 'Already closed report',
+        'body' => 'This incident was already closed and should reject further admin lifecycle updates.',
+        'category' => 'security',
+        'status' => IncidentStatus::Closed,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.incidents.status.update', $incident->hashid), [
+            'status' => 'pending',
+        ])
+        ->assertSessionHasErrors(['status']);
 });
 
 test('reporter can close a solved incident', function () {

@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Incidents;
 
+use App\Models\Incident;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreIncidentCommentRequest extends FormRequest
 {
@@ -17,12 +19,21 @@ class StoreIncidentCommentRequest extends FormRequest
      */
     public function rules(): array
     {
+        $incident = $this->route('incident');
+        $incidentId = $incident instanceof Incident ? $incident->id : null;
+
         $rules = [
             'body' => ['required', 'string', 'min:2', 'max:2000'],
         ];
 
         if ($this->user()?->contextHasRole('admin')) {
-            $rules['parent_id'] = ['nullable', 'integer', 'exists:incident_comments,id'];
+            $rules['parent_id'] = [
+                'nullable',
+                'integer',
+                Rule::exists('incident_comments', 'id')
+                    ->where('incident_id', $incidentId)
+                    ->whereNull('parent_id'),
+            ];
         } else {
             $rules['parent_id'] = ['prohibited'];
         }

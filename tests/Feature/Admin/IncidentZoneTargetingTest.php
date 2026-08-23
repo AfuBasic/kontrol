@@ -10,12 +10,14 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateSubscription;
 use App\Models\Incident;
+use App\Models\IncidentComment;
 use App\Models\Plan;
 use App\Models\User;
 use App\Models\Zone;
 use App\Services\IncidentService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
+use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -65,7 +67,7 @@ it('lets an admin assign a new incident to a zone', function () {
         ->post(route('admin.incidents.store'), [
             'title' => 'Broken street light in Zone A',
             'body' => 'The street light near the Zone A playground has been out for three days.',
-            'category' => IncidentCategory::Lighting->value,
+            'category' => 'Theft',
             'priority' => IncidentPriority::Medium->value,
             'zone_id' => $this->zoneA->id,
         ])
@@ -139,4 +141,183 @@ it('hides zone-assigned incidents from residents outside that zone', function ()
 
     expect($idsA)->toContain($incident->id)
         ->and($idsB)->not->toContain($incident->id);
+});
+
+function zoneScopedAdminAssignment(): AdministrativeAssignment
+{
+    $adminRole = Role::where('name', 'admin')->first();
+
+    return AdministrativeAssignment::create([
+        'user_id' => test()->admin->id,
+        'estate_id' => test()->estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => test()->zoneA->id,
+        'is_active' => true,
+    ]);
+}
+
+it('forces zone-scoped admins to file incidents in their active zone', function () {
+    $assignment = zoneScopedAdminAssignment();
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->post(route('admin.incidents.store'), [
+            'title' => 'Zone scoped report',
+            'body' => 'This report attempts to target another zone but should be constrained to the active zone.',
+            'category' => 'Theft',
+            'priority' => IncidentPriority::High->value,
+            'zone_id' => $this->zoneB->id,
+        ])
+        ->assertRedirect();
+
+    $this->assertDatabaseHas('incidents', [
+        'title' => 'Zone scoped report',
+        'estate_id' => $this->estate->id,
+        'zone_id' => $this->zoneA->id,
+    ]);
+
+    $this->assertDatabaseMissing('incidents', [
+        'title' => 'Zone scoped report',
+        'estate_id' => $this->estate->id,
+        'zone_id' => $this->zoneB->id,
+    ]);
+});
+
+it('only offers the active zone to zone-scoped admins on the create form', function () {
+    $assignment = zoneScopedAdminAssignment();
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->get(route('admin.incidents.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Incidents/Create')
+            ->has('zones', 1)
+            ->where('zones.0.id', $this->zoneA->id)
+        );
+});
+
+it('hides other-zone incidents from zone-scoped admins on the incident board', function () {
+    $assignment = zoneScopedAdminAssignment();
+
+    $zoneAIncident = Incident::withoutZoneIsolation()->create([
+        'estate_id' => $this->estate->id,
+        'zone_id' => $this->zoneA->id,
+        'reporter_id' => $this->admin->id,
+        'reporter_type' => User::class,
+        'source' => IncidentSource::EstateManagement,
+        'title' => 'Zone A visible incident',
+        'body' => 'This should be visible to the Zone A admin.',
+        'category' => IncidentCategory::Security,
+        'priority' => IncidentPriority::High,
+        'status' => IncidentStatus::Pending,
+        'is_private' => false,
+    ]);
+
+    $zoneBIncident = Incident::withoutZoneIsolation()->create([
+        'estate_id' => $this->estate->id,
+        'zone_id' => $this->zoneB->id,
+        'reporter_id' => $this->admin->id,
+        'reporter_type' => User::class,
+        'source' => IncidentSource::EstateManagement,
+        'title' => 'Zone B hidden incident',
+        'body' => 'This should be hidden from the Zone A admin.',
+        'category' => IncidentCategory::Security,
+        'priority' => IncidentPriority::High,
+        'status' => IncidentStatus::Pending,
+        'is_private' => false,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->get(route('admin.incidents.index', ['view' => 'board']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Incidents/Index')
+            ->where('incidents', function ($incidents) use ($zoneAIncident, $zoneBIncident): bool {
+                $visibleIncidentIds = collect($incidents)->pluck('id');
+
+                return $visibleIncidentIds->contains($zoneAIncident->id)
+                    && ! $visibleIncidentIds->contains($zoneBIncident->id);
+            })
+        );
+});
+
+it('rejects invalid categories and assignees outside the incident zone', function () {
+    $otherAdmin = User::factory()->create();
+    setPermissionsTeamId($this->estate->id);
+    $otherAdmin->assignRole('admin');
+    $this->estate->users()->attach($otherAdmin->id, ['status' => 'accepted']);
+
+    $adminRole = Role::where('name', 'admin')->first();
+    AdministrativeAssignment::create([
+        'user_id' => $otherAdmin->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => $this->zoneB->id,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->post(route('admin.incidents.store'), [
+            'title' => 'Invalid category report',
+            'body' => 'This report should fail because the category and assignee are not valid for this context.',
+            'category' => 'not_a_real_category',
+            'priority' => IncidentPriority::Medium->value,
+            'zone_id' => $this->zoneA->id,
+            'assigned_to' => $otherAdmin->id,
+        ])
+        ->assertSessionHasErrors(['category', 'assigned_to']);
+});
+
+it('rejects comment replies whose parent belongs to another incident', function () {
+    $incident = Incident::withoutZoneIsolation()->create([
+        'estate_id' => $this->estate->id,
+        'reporter_id' => $this->admin->id,
+        'reporter_type' => User::class,
+        'source' => IncidentSource::EstateManagement,
+        'title' => 'Primary incident',
+        'body' => 'The incident that should receive the comment.',
+        'category' => IncidentCategory::Security,
+        'priority' => IncidentPriority::Medium,
+        'status' => IncidentStatus::Pending,
+        'is_private' => false,
+    ]);
+
+    $otherIncident = Incident::withoutZoneIsolation()->create([
+        'estate_id' => $this->estate->id,
+        'reporter_id' => $this->admin->id,
+        'reporter_type' => User::class,
+        'source' => IncidentSource::EstateManagement,
+        'title' => 'Other incident',
+        'body' => 'The incident that owns the parent comment.',
+        'category' => IncidentCategory::Security,
+        'priority' => IncidentPriority::Medium,
+        'status' => IncidentStatus::Pending,
+        'is_private' => false,
+    ]);
+
+    $otherParent = IncidentComment::create([
+        'incident_id' => $otherIncident->id,
+        'user_id' => $this->admin->id,
+        'body' => 'Parent on another incident.',
+        'is_official' => false,
+        'parent_id' => null,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->post(route('admin.incidents.comments.store', $incident->hashid), [
+            'body' => 'This reply should not attach across incidents.',
+            'parent_id' => $otherParent->id,
+        ])
+        ->assertSessionHasErrors(['parent_id']);
+
+    $this->assertDatabaseMissing('incident_comments', [
+        'incident_id' => $incident->id,
+        'parent_id' => $otherParent->id,
+    ]);
 });

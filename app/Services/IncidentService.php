@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Auth\ContextManager;
 use App\Enums\IncidentStatus;
 use App\Models\Incident;
 use App\Models\IncidentComment;
@@ -22,6 +23,8 @@ class IncidentService
         $user = Auth::user();
         $userId = Auth::id();
         $isAdmin = $user && $user->contextHasRole('admin');
+        $context = app(ContextManager::class)->current();
+        $activeZoneId = $context?->isZoneScoped() ? $context->zoneId : null;
 
         $query = Incident::query()
             ->forEstate($estateId)
@@ -29,6 +32,13 @@ class IncidentService
             ->withExists(['upvotes as is_upvoted' => function ($q) use ($userId) {
                 $q->where('user_id', $userId);
             }]);
+
+        if ($isAdmin && $activeZoneId) {
+            $query->where(function ($zoneScope) use ($activeZoneId): void {
+                $zoneScope->whereNull('zone_id')
+                    ->orWhere('zone_id', $activeZoneId);
+            });
+        }
 
         if (! $isAdmin) {
             $query->where(function ($q) use ($userId) {
@@ -210,8 +220,17 @@ class IncidentService
         $user = Auth::user();
         $userId = Auth::id();
         $isAdmin = $user && $user->contextHasRole('admin');
+        $context = app(ContextManager::class)->current();
+        $activeZoneId = $context?->isZoneScoped() ? $context->zoneId : null;
 
         $query = Incident::query()->forEstate($estateId);
+
+        if ($isAdmin && $activeZoneId) {
+            $query->where(function ($zoneScope) use ($activeZoneId): void {
+                $zoneScope->whereNull('zone_id')
+                    ->orWhere('zone_id', $activeZoneId);
+            });
+        }
 
         if (! $isAdmin) {
             $query->where(function ($q) use ($userId) {

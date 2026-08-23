@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\Incidents\CreateIncidentAction;
+use App\Auth\ContextManager;
 use App\Enums\IncidentCategory;
 use App\Enums\IncidentSource;
 use App\Enums\IncidentStatus;
@@ -12,12 +13,15 @@ use App\Models\AdministrativeAssignment;
 use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\EstateContextService;
 use App\Services\IncidentService;
 use App\Services\ZoneAudienceResolver;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -51,15 +55,15 @@ class IncidentController extends Controller
         ])->toArray();
 
         // 1. Calculate operational health stats
-        $openIncidents = Incident::query()->forEstate($estateId)->where('status', IncidentStatus::Pending)->count();
-        $inProgress = Incident::query()->forEstate($estateId)->where('status', IncidentStatus::Resolving)->count();
-        $waitingReview = Incident::query()->forEstate($estateId)->where('status', IncidentStatus::Solved)->count();
-        $resolvedThisMonth = Incident::query()->forEstate($estateId)
+        $openIncidents = (clone $this->incidentQueryForActiveContext($estateId))->where('status', IncidentStatus::Pending)->count();
+        $inProgress = (clone $this->incidentQueryForActiveContext($estateId))->where('status', IncidentStatus::Resolving)->count();
+        $waitingReview = (clone $this->incidentQueryForActiveContext($estateId))->where('status', IncidentStatus::Solved)->count();
+        $resolvedThisMonth = (clone $this->incidentQueryForActiveContext($estateId))
             ->whereIn('status', [IncidentStatus::Solved, IncidentStatus::Closed])
             ->where('updated_at', '>=', now()->startOfMonth())
             ->count();
 
-        $resolved = Incident::query()->forEstate($estateId)
+        $resolved = (clone $this->incidentQueryForActiveContext($estateId))
             ->whereIn('status', [IncidentStatus::Solved, IncidentStatus::Closed])
             ->whereNotNull('solved_at')
             ->get();
@@ -69,17 +73,17 @@ class IncidentController extends Controller
         $slaCompliance = $resolved->count() > 0 ? (int) round(($withinSla / $resolved->count()) * 100) : 100;
 
         // 2. Generate operational insights
-        $unassignedCount = Incident::query()->forEstate($estateId)
+        $unassignedCount = (clone $this->incidentQueryForActiveContext($estateId))
             ->whereIn('status', [IncidentStatus::Pending, IncidentStatus::Acknowledged, IncidentStatus::Resolving])
             ->whereNull('assigned_to')
             ->count();
 
-        $exceededSlaCount = Incident::query()->forEstate($estateId)
+        $exceededSlaCount = (clone $this->incidentQueryForActiveContext($estateId))
             ->whereNotIn('status', [IncidentStatus::Solved, IncidentStatus::Closed])
             ->where('created_at', '<', now()->subHours(24))
             ->count();
 
-        $securityIncidentsThisMonth = Incident::query()->forEstate($estateId)
+        $securityIncidentsThisMonth = (clone $this->incidentQueryForActiveContext($estateId))
             ->where('category', IncidentCategory::Security)
             ->where('created_at', '>=', now()->startOfMonth())
             ->count();
@@ -99,10 +103,10 @@ class IncidentController extends Controller
         }
 
         // 3. Incident Source breakdown analytics
-        $totalIncidents = Incident::query()->forEstate($estateId)->count();
+        $totalIncidents = (clone $this->incidentQueryForActiveContext($estateId))->count();
         $sourceBreakdown = [];
         if ($totalIncidents > 0) {
-            $sources = Incident::query()->forEstate($estateId)
+            $sources = (clone $this->incidentQueryForActiveContext($estateId))
                 ->select('source', DB::raw('count(*) as count'))
                 ->groupBy('source')
                 ->get();
@@ -122,21 +126,7 @@ class IncidentController extends Controller
         }
 
         // 4. Fetch active admins for assignments
-        $adminIds = AdministrativeAssignment::where('estate_id', $estateId)
-            ->where('is_active', true)
-            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-            ->pluck('user_id')
-            ->toArray();
-
-        $admins = User::whereIn('id', $adminIds)
-            ->active()
-            ->get()
-            ->map(fn ($u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-            ])
-            ->values()
-            ->toArray();
+        $admins = $this->adminOptionsForActiveContext($estateId)->toArray();
 
         // 5. Fetch recent activity timeline
         $recentActivity = Activity::query()
@@ -193,21 +183,7 @@ class IncidentController extends Controller
         $loadedIncident = $this->incidentService->getIncident($incident->id, $estateId);
 
         // Fetch active admins in this estate for assignments
-        $adminIds = AdministrativeAssignment::where('estate_id', $estateId)
-            ->where('is_active', true)
-            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-            ->pluck('user_id')
-            ->toArray();
-
-        $admins = User::whereIn('id', $adminIds)
-            ->active()
-            ->get()
-            ->map(fn ($u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-            ])
-            ->values()
-            ->toArray();
+        $admins = $this->adminOptionsForActiveContext($estateId, $incident->zone_id)->toArray();
 
         $statuses = collect(IncidentStatus::cases())
             ->filter(fn ($s) => $s !== IncidentStatus::Closed) // admins cannot close directly
@@ -253,26 +229,13 @@ class IncidentController extends Controller
 
         $categories = EstateSettings::resolveCategoriesForEstate($estate->id);
 
-        $adminIds = AdministrativeAssignment::where('estate_id', $estate->id)
-            ->where('is_active', true)
-            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
-            ->pluck('user_id')
-            ->toArray();
-
-        $admins = User::whereIn('id', $adminIds)
-            ->active()
-            ->get()
-            ->map(fn ($u) => [
-                'id' => $u->id,
-                'name' => $u->name,
-            ])
-            ->values()
-            ->toArray();
+        $zones = $this->zonesForIncidentForms($estate->id);
+        $admins = $this->adminOptionsForActiveContext($estate->id)->toArray();
 
         return Inertia::render('Admin/Incidents/Create', [
             'categories' => $categories,
             'admins' => $admins,
-            'zones' => $this->zoneAudience->zonesForEstate($estate->id),
+            'zones' => $zones,
         ]);
     }
 
@@ -395,5 +358,78 @@ class IncidentController extends Controller
 
         return redirect()->back()
             ->with('success', "{$deletedCount} incident(s) deleted successfully.");
+    }
+
+    /**
+     * @return Builder<Incident>
+     */
+    private function incidentQueryForActiveContext(int $estateId): Builder
+    {
+        $query = Incident::query()->forEstate($estateId);
+        $context = app(ContextManager::class)->current();
+
+        if ($context?->isZoneScoped()) {
+            $query->where(function ($zoneScope) use ($context): void {
+                $zoneScope->whereNull('zone_id')
+                    ->orWhere('zone_id', $context->zoneId);
+            });
+        }
+
+        return $query;
+    }
+
+    /**
+     * @return Collection<int, array{id: int, name: string}>
+     */
+    private function adminOptionsForActiveContext(int $estateId, ?int $zoneId = null): Collection
+    {
+        $context = app(ContextManager::class)->current();
+        $targetZoneId = $context?->isZoneScoped() ? $context->zoneId : $zoneId;
+
+        $adminIds = AdministrativeAssignment::query()
+            ->where('estate_id', $estateId)
+            ->where('is_active', true)
+            ->whereHas('role', fn ($q) => $q->where('name', 'admin'))
+            ->when($context?->isZoneScoped() || $targetZoneId !== null, function ($query) use ($targetZoneId): void {
+                $query->where(function ($estateScope): void {
+                    $estateScope->where('scope_type', 'estate')
+                        ->whereNull('zone_id');
+                });
+
+                if ($targetZoneId !== null) {
+                    $query->orWhere(function ($zoneScope) use ($targetZoneId): void {
+                        $zoneScope->where('scope_type', 'zone')
+                            ->where('zone_id', $targetZoneId);
+                    });
+                }
+            })
+            ->pluck('user_id')
+            ->unique()
+            ->values();
+
+        return User::whereIn('id', $adminIds)
+            ->active()
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+            ])
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Zone>
+     */
+    private function zonesForIncidentForms(int $estateId): Collection
+    {
+        $zones = $this->zoneAudience->zonesForEstate($estateId);
+        $context = app(ContextManager::class)->current();
+
+        if ($context?->isZoneScoped()) {
+            return $zones->where('id', $context->zoneId)->values();
+        }
+
+        return $zones;
     }
 }

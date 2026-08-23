@@ -2,6 +2,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
+import { useActiveContext } from '@/Hooks/useActiveContext';
+
 type Props = {
     categories: Array<{ value: string; label: string }>;
     admins: Array<{ id: number; name: string }>;
@@ -23,6 +25,7 @@ async function getFileHash(file: File): Promise<string> {
 }
 
 export default function AdminIncidentCreate({ categories, admins, zones = [] }: Props) {
+    const { isZoneScoped, zoneId, zoneName } = useActiveContext();
     const { errors: pageErrors } = usePage().props;
     const { data, setData, processing, errors: formErrors, setError, clearErrors } = useForm<{
         title: string;
@@ -42,7 +45,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
         attachment: null,
         location: '',
         assigned_to: '',
-        zone_id: '',
+        zone_id: isZoneScoped && zoneId ? String(zoneId) : '',
         is_private: false,
     });
 
@@ -359,24 +362,32 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                             htmlFor="zone_id"
                                             className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase"
                                         >
-                                            Zone (Optional)
+                                            {isZoneScoped ? 'Zone' : 'Zone (Optional)'}
                                         </label>
-                                        <select
-                                            id="zone_id"
-                                            value={data.zone_id}
-                                            onChange={(e) => setData('zone_id', e.target.value)}
-                                            className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
-                                        >
-                                            <option value="">Entire estate</option>
-                                            {zones.map((zone) => (
-                                                <option key={zone.id} value={zone.id}>
-                                                    {zone.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        {isZoneScoped ? (
+                                            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-bold text-slate-700">
+                                                {zoneName ?? zones[0]?.name ?? 'Your zone'}
+                                            </div>
+                                        ) : (
+                                            <select
+                                                id="zone_id"
+                                                value={data.zone_id}
+                                                onChange={(e) => setData('zone_id', e.target.value)}
+                                                className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
+                                            >
+                                                <option value="">Entire estate</option>
+                                                {zones.map((zone) => (
+                                                    <option key={zone.id} value={zone.id}>
+                                                        {zone.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
                                         {errors.zone_id && <span className="mt-1 block text-xs font-medium text-red-600">{errors.zone_id}</span>}
                                         <p className="mt-1.5 text-[10px] font-semibold text-slate-400">
-                                            Residents outside this zone will not see the incident.
+                                            {isZoneScoped
+                                                ? 'This incident will be filed under your active zone.'
+                                                : 'Residents outside this zone will not see the incident.'}
                                         </p>
                                     </div>
                                 )}
