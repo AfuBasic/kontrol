@@ -7,6 +7,7 @@ use App\Models\Estate;
 use App\Models\EstateInviteLink;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
+use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
 use Database\Seeders\FeatureSeeder;
@@ -193,6 +194,58 @@ it('updates a resident zone from the edit page', function () {
         ->assertRedirect(route('admin.residents.index'));
 
     expect($resident->estates()->where('estates.id', $this->estate->id)->first()?->pivot?->zone_id)->toBe($this->zone->id);
+});
+
+it('only offers in-zone property owners on resident edit for zone-scoped admins', function () {
+    $otherZone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'South Gate',
+    ]);
+    $resident = createEstateResident(['zone_id' => $this->zone->id]);
+    $inZoneOwner = createEstatePropertyOwner(['zone_id' => $this->zone->id]);
+    $otherZoneOwner = createEstatePropertyOwner(['zone_id' => $otherZone->id]);
+
+    asZoneAdmin($this->zone)
+        ->get(route('admin.residents.edit', $resident))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Residents/Edit')
+            ->where('propertyOwners', function ($owners) use ($inZoneOwner, $otherZoneOwner): bool {
+                $ownerIds = collect($owners)->pluck('id');
+
+                return $ownerIds->contains($inZoneOwner->id)
+                    && ! $ownerIds->contains($otherZoneOwner->id);
+            })
+        );
+});
+
+it('rejects out-of-zone resident property owner and property updates', function () {
+    $otherZone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'South Gate',
+    ]);
+    $resident = createEstateResident(['zone_id' => $this->zone->id]);
+    $otherZoneOwner = createEstatePropertyOwner(['zone_id' => $otherZone->id]);
+
+    $otherZoneProperty = Property::withoutZoneIsolation()->create([
+        'estate_id' => $this->estate->id,
+        'zone_id' => $otherZone->id,
+        'property_owner_id' => $otherZoneOwner->id,
+        'name' => 'South Gate Villa',
+    ]);
+
+    asZoneAdmin($this->zone)
+        ->put(route('admin.residents.update', $resident), [
+            'name' => $resident->name,
+            'email' => $resident->email,
+            'phone' => '',
+            'unit_number' => '',
+            'address' => '',
+            'property_owner_id' => $otherZoneOwner->id,
+            'property_id' => $otherZoneProperty->id,
+            'zone_id' => $this->zone->id,
+        ])
+        ->assertSessionHasErrors(['property_owner_id', 'property_id']);
 });
 
 it('includes a zone field on the property owner edit page when zones exist', function () {

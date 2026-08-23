@@ -220,13 +220,7 @@ class ResidentController extends Controller
                 'zone_id' => $link->zone_id,
                 'zone_name' => $link->zone?->name ?? 'Entire Estate',
             ])->toArray(),
-            'propertyOwners' => User::query()
-                ->forEstate($estate->id)
-                ->withRole('property_owner', $estate->id)
-                ->active()
-                ->orderBy('name')
-                ->get(['users.id', 'users.name'])
-                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
+            'propertyOwners' => $this->propertyOwnersForDelegation($estate->id, $context),
             'zones' => Zone::query()
                 ->where('estate_id', $estate->id)
                 ->where('is_active', true)
@@ -281,13 +275,7 @@ class ResidentController extends Controller
                 'is_estate_creator' => $resident->email === $estate->email,
             ],
             'zones' => $this->zonesForAssignment($estate->id, $context),
-            'propertyOwners' => User::query()
-                ->forEstate($estate->id)
-                ->withRole('property_owner', $estate->id)
-                ->active()
-                ->orderBy('name')
-                ->get(['users.id', 'users.name'])
-                ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name]),
+            'propertyOwners' => $this->propertyOwnersForDelegation($estate->id, $context),
         ]);
     }
 
@@ -324,19 +312,21 @@ class ResidentController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
-            'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'property_owner_id' => [
+                'nullable',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($estate, $context): void {
+                    if (! $this->propertyOwnerCanBeAssigned((int) $value, $estate->id, $context)) {
+                        $fail('The selected property owner must belong to your estate and authorized zone.');
+                    }
+                },
+            ],
             'property_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('properties', 'id'),
-                function ($attribute, $value, $fail) use ($context) {
-                    if ($context && $context->isZoneScoped()) {
-                        $property = Property::withoutZoneIsolation()->find($value);
-                        if ($property && $property->zone_id !== $context->zoneId) {
-                            $fail('The selected property must belong to your authorized zone.');
-                        }
-                    }
-                },
+                Rule::exists('properties', 'id')
+                    ->where('estate_id', $estate->id)
+                    ->when($context?->isZoneScoped(), fn ($rule) => $rule->where('zone_id', $context->zoneId)),
             ],
             'zone_id' => $this->zoneAssignmentRules($estate->id, $context),
         ]);
@@ -881,5 +871,36 @@ class ResidentController extends Controller
             ->when($context?->isZoneScoped(), fn ($q) => $q->where('id', $context->zoneId))
             ->orderBy('name')
             ->get(['id', 'name']);
+    }
+
+    /**
+     * @return Collection<int, array{id: int, name: string}>
+     */
+    private function propertyOwnersForDelegation(int $estateId, mixed $context): Collection
+    {
+        return User::query()
+            ->forEstate($estateId)
+            ->withRole('property_owner', $estateId)
+            ->active()
+            ->when($context?->isZoneScoped(), fn ($query) => $query->whereHas('estates', fn ($estateQuery) => $estateQuery
+                ->where('estates.id', $estateId)
+                ->where('estate_users_membership.zone_id', $context->zoneId)))
+            ->orderBy('name')
+            ->get(['users.id', 'users.name'])
+            ->map(fn ($u) => ['id' => $u->id, 'name' => $u->name])
+            ->values();
+    }
+
+    private function propertyOwnerCanBeAssigned(int $propertyOwnerId, int $estateId, mixed $context): bool
+    {
+        return User::query()
+            ->whereKey($propertyOwnerId)
+            ->forEstate($estateId)
+            ->withRole('property_owner', $estateId)
+            ->active()
+            ->when($context?->isZoneScoped(), fn ($query) => $query->whereHas('estates', fn ($estateQuery) => $estateQuery
+                ->where('estates.id', $estateId)
+                ->where('estate_users_membership.zone_id', $context->zoneId)))
+            ->exists();
     }
 }
