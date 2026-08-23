@@ -60,7 +60,7 @@ export default function ApplicationForm({ onSuccess }: Props) {
     };
 
     return (
-        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-5">
+        <motion.form variants={formVariants} initial="hidden" animate="visible" onSubmit={handleSubmit} className="space-y-5" noValidate>
             <motion.div variants={itemVariants}>
                 <label htmlFor="estate_name" className={labelClasses}>
                     <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-slate-900 text-white">
