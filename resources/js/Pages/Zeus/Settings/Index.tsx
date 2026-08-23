@@ -87,7 +87,7 @@ export default function SettingsIndex({ isEnabled, qrCodeUrl, secret }: Props) {
                 >
                     {!isEnabled ? (
                         /* Enable 2FA Form Step-by-Step */
-                        <form onSubmit={handleToggle2FA} className="space-y-6">
+                        <form onSubmit={handleToggle2FA} className="space-y-6" noValidate>
                             <div className="space-y-6">
                                 <h3 className="border-b border-[rgba(255,255,255,0.06)] pb-2 text-xs font-bold tracking-wider text-[#9297A8] uppercase">
                                     Set Up Authenticator
@@ -169,7 +169,7 @@ export default function SettingsIndex({ isEnabled, qrCodeUrl, secret }: Props) {
                         </form>
                     ) : (
                         /* Disable 2FA Form */
-                        <form onSubmit={handleToggle2FA} className="space-y-6">
+                        <form onSubmit={handleToggle2FA} className="space-y-6" noValidate>
                             <div className="space-y-4">
                                 <h3 className="mb-2 border-b border-rose-500/20 pb-2 text-xs font-bold tracking-wider text-rose-500 uppercase">
                                     Disable Two-Factor Authentication
