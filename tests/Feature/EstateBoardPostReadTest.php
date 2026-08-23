@@ -120,7 +120,7 @@ it('shows read metrics to admins on the post detail page', function () {
         );
 });
 
-it('includes read counts on the admin manage page', function () {
+it('redirects the admin manage page to the unified estate board index', function () {
     EstateBoardPostRead::create([
         'estate_board_post_id' => $this->post->id,
         'user_id' => $this->resident->id,
@@ -128,10 +128,5 @@ it('includes read counts on the admin manage page', function () {
 
     $this->actingAs($this->adminUser)
         ->get(route('admin.estate-board.manage'))
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Admin/EstateBoard/Manage')
-            ->has('posts.data', 1)
-            ->where('posts.data.0.reads_count', 1)
-        );
+        ->assertRedirect(route('admin.estate-board.index'));
 });

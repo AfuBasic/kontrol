@@ -74,7 +74,7 @@ class EstateBoardController extends Controller
     {
         $this->authorize('create', EstateBoardPost::class);
 
-        return redirect()->route('estate-board.index');
+        return redirect()->route('admin.estate-board.index');
     }
 
     /**
