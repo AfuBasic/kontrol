@@ -2,7 +2,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown, MapPin } from 'lucide-react';
 import { useState, useMemo } from 'react';
-import {  show, update } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { show, update } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import MoneyInput from '@/Components/MoneyInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 
@@ -119,7 +119,7 @@ export default function EditCollection({ collection, residents, zones = [] }: Pr
                     <p className="mt-1 text-slate-500">Update the parameters for this estate due or levy.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                     {/* Basic Information */}
                     <div className="rounded-[2.5rem] border border-slate-200 bg-white p-10 shadow-sm ring-1 ring-slate-100">
                         <div className="mb-8 flex items-center gap-4">
