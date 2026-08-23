@@ -43,7 +43,7 @@ type VisitorCalendarProps = {
     backLabel?: string;
     isAdmin?: boolean;
     hosts?: { id: number; name: string }[];
-    createUrl?: string;
+    createUrl?: string | null;
     initialFilters?: {
         purpose?: string;
         status?: string;
@@ -256,13 +256,15 @@ export default function VisitorCalendar({
                         <Search className="h-4 w-4" />
                     </button>
 
-                    <button
-                        onClick={() => router.get(createUrl)}
-                        className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-primary-600 active:scale-95"
-                    >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Invite</span>
-                    </button>
+                    {createUrl && (
+                        <button
+                            onClick={() => router.get(createUrl)}
+                            className="inline-flex items-center gap-1 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-primary-600 active:scale-95"
+                        >
+                            <Plus className="h-3.5 w-3.5" />
+                            <span>Invite</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -475,13 +477,15 @@ export default function VisitorCalendar({
                         ) : (
                             <div className="space-y-2 rounded-2xl border border-dashed border-gray-200 bg-gray-50/50 px-4 py-10 text-center">
                                 <p className="text-xs font-medium text-gray-400">No visitors scheduled for {format(selectedDate, 'MMM d')}</p>
-                                <button
-                                    onClick={() => router.get(createUrl)}
-                                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
-                                >
-                                    <Plus className="h-3 w-3" />
-                                    <span>Schedule a visitor</span>
-                                </button>
+                                {createUrl && (
+                                    <button
+                                        onClick={() => router.get(createUrl)}
+                                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        <span>Schedule a visitor</span>
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>

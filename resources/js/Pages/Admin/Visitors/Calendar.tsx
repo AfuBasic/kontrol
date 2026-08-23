@@ -25,7 +25,7 @@ export default function AdminVisitorCalendar({ hosts = [], initialFilters }: Pro
                     backLabel="Visitors"
                     isAdmin={true}
                     hosts={hosts}
-                    createUrl="/admin/visitors/create"
+                    createUrl={null}
                     initialFilters={initialFilters}
                 />
             </div>
