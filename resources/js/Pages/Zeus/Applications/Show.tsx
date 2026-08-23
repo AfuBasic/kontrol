@@ -360,7 +360,7 @@ export default function ApplicationShow({ application }: Props) {
                             <ChatBubbleLeftIcon className="h-4 w-4" /> Internal Notes
                         </h3>
 
-                        <form onSubmit={handleAddNote} className="mb-8">
+                        <form onSubmit={handleAddNote} className="mb-8" noValidate>
                             <div className="relative overflow-hidden rounded-xl bg-slate-50 ring-1 ring-slate-200/60 ring-inset focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-inset dark:bg-slate-800/40 dark:ring-slate-700/50 dark:focus-within:ring-primary-500">
                                 <textarea
                                     value={noteData.body}
