@@ -381,7 +381,7 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
 
                     {/* Middle Form Panel (6.5 cols) */}
                     <div className="space-y-8 lg:col-span-6">
-                        <form onSubmit={handleSubmit} className="space-y-8">
+                        <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                             {/* SECTION 1: BLUEPRINT */}
                             <motion.section
                                 id="blueprint"
