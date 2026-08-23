@@ -103,6 +103,7 @@ export default function Profile({ user, account, estate_context }: Props) {
                         <form
                             onSubmit={handleSubmit}
                             className="flex h-full flex-col overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-xs"
+                            noValidate
                         >
                             <div className="border-b border-slate-100 bg-slate-50/50 p-6 px-8">
                                 <div className="flex items-center gap-3">
