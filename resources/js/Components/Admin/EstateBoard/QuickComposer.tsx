@@ -182,7 +182,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 {/* Title (visible when expanded or typing) */}
                 {isExpanded && (
                     <div>
