@@ -311,7 +311,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
                             <span className="text-xs font-semibold">?</span>
                         </div>
                         <div className="flex-1">
-                            <form onSubmit={handleSubmitComment} className="relative">
+                            <form onSubmit={handleSubmitComment} className="relative" noValidate>
                                 <textarea
                                     value={data.body}
                                     onChange={(e) => setData('body', e.target.value)}
