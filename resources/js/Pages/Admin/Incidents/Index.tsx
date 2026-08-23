@@ -562,7 +562,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
 
                 {/* DYNAMIC SEARCH & COMPACT FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
-                    <form onSubmit={handleSearchSubmit} className="flex flex-col gap-3.5">
+                    <form onSubmit={handleSearchSubmit} className="flex flex-col gap-3.5" noValidate>
                         <div className="flex flex-col gap-3 sm:flex-row">
                             {/* Search bar */}
                             <div className="relative flex-1">
