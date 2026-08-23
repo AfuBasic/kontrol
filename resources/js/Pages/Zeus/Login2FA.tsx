@@ -2,7 +2,6 @@ import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
-
 export default function Login2FA() {
     const { data, setData, post, processing, errors } = useForm({
         code: '',
@@ -40,7 +39,7 @@ export default function Login2FA() {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                     <div className="space-y-2">
                         <label className="block text-center text-xs font-semibold tracking-wider text-[#9297A8] uppercase">Verification Code</label>
                         <input
