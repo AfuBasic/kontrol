@@ -2,7 +2,7 @@ import { Head, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsQR from 'jsqr';
-import {  ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
+import { CheckCircle2, ShieldCheck, ShieldX, Clock, Car, Loader2, QrCode, CameraOff, WifiOff, Play, Pause, LogOut } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as VerifyController from '@/actions/App/Http/Controllers/Security/VerifyController';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
@@ -32,6 +32,7 @@ type ValidationResult = {
     action?: string | null;
     checked_in_at?: string | null;
     checked_out_at?: string | null;
+    entry_point?: string | null;
     exit_point?: string | null;
     duration_minutes?: number | null;
     /** True when validated from the local offline cache, not the server. */
@@ -571,7 +572,7 @@ export default function SecurityVerify() {
         <>
             <Head title="Verify Access · Security" />
 
-            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-8 pb-6 sm:px-8">
+            <main className={`mx-auto flex w-full max-w-xl flex-1 flex-col ${result ? '-mx-4 -mt-4 sm:mx-0 sm:mt-0' : 'px-4 pt-8 pb-6 sm:px-8'}`}>
                 {/* Offline & Sync Status Banner */}
                 <AnimatePresence>
                     {!isOnline && (
@@ -808,25 +809,23 @@ type ResultPanelProps = {
     onCheckout: () => void;
     onReset: () => void;
 };
+
 function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps) {
     const valid = result.valid;
-    const expiry = formatExpiry(result.expires_at);
-    const [countdown, setCountdown] = useState(5);
-    const [isPaused, setIsPaused] = useState(false);
     const isCheckoutPending = result.action === 'checkout_pending';
+    const isOfflineAdmission = Boolean(result.offline && valid);
     const isAutoReturnActive = valid && !isCheckoutPending && result.status !== 'scheduled' && !result.has_vehicle;
 
-    // Stable ref to avoid timer resetting on state changes
+    const [countdown, setCountdown] = useState(5);
+    const [isPaused, setIsPaused] = useState(false);
+
     const onResetRef = useRef(onReset);
     useEffect(() => {
         onResetRef.current = onReset;
     });
 
     useEffect(() => {
-        if (!isAutoReturnActive || isPaused) {
-            return;
-        }
-
+        if (!isAutoReturnActive || isPaused) return;
         const timer = setInterval(() => {
             setCountdown((prev) => {
                 if (prev <= 1) {
@@ -837,309 +836,337 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                 return prev - 1;
             });
         }, 1000);
-
         return () => clearInterval(timer);
     }, [isAutoReturnActive, isPaused]);
 
-    // Offline state display
+    // ── Offline not-found: dedicated early render ──
     if (result.status === 'offline_not_found') {
         return (
             <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-1 flex-col"
             >
-                <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 shadow-inner ring-1 ring-amber-500/20">
-                    <WifiOff className="h-10 w-10" />
-                    <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
-                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75"></span>
-                        <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-amber-500"></span>
-                    </span>
+                <div className="bg-amber-500 px-5 pt-7 pb-5 text-white sm:px-4">
+                    <div className="mb-3 flex items-center gap-2">
+                        <WifiOff className="h-5 w-5 opacity-90" />
+                        <span className="text-xs font-black tracking-[0.2em] uppercase opacity-90">Offline Warning</span>
+                    </div>
+                    <h2 className="text-3xl font-black tracking-tight">Unverified</h2>
+                    <p className="mt-1 text-sm font-semibold opacity-85">Code not in local cache</p>
                 </div>
-
-                <p className="text-[11px] font-black tracking-[0.2em] text-amber-600 uppercase">Offline Warning</p>
-                <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Pass Code Not Found</h2>
-                <p className="mt-3 max-w-xs rounded-xl border border-amber-100/50 bg-amber-50/50 px-4 py-2.5 text-xs leading-relaxed font-semibold text-amber-700">
-                    This terminal is currently offline and this code was not found in the local cache. Please check internet connection or bypass.
-                </p>
-
-                <div className="mt-8 w-full max-w-xs space-y-3">
+                <div className="flex-1 bg-white px-5 py-5 sm:px-4">
+                    <p className="text-sm font-semibold leading-relaxed text-slate-600">
+                        This terminal is offline and this code was not found in the encrypted local cache. Check your
+                        internet connection or use a security bypass.
+                    </p>
+                </div>
+                <div className="space-y-3 border-t border-slate-100 bg-white px-5 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:px-4">
                     <button
                         onClick={() => onAdmit({ bypass: 'true' })}
-                        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-slate-900 py-4.5 text-sm font-black text-white shadow-xl shadow-slate-900/10 transition-all active:scale-[0.98]"
+                        className="w-full rounded-2xl bg-slate-900 py-4 text-sm font-black text-white shadow-lg shadow-slate-900/10 transition-all active:scale-[0.98]"
                     >
                         Admit via Security Bypass
                     </button>
                     <button
                         onClick={onReset}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-[0.98]"
+                        className="w-full rounded-2xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-[0.98]"
                     >
-                        Try another code
+                        Try Another Code
                     </button>
                 </div>
             </motion.div>
         );
     }
 
-    const isOfflineAdmission = Boolean(result.offline && valid);
-
-    // Status UI Configuration
-    let statusLabel = 'Access Approved';
-    let statusBg = 'bg-emerald-50 text-emerald-700 border-emerald-100/80';
-    let ringColor = 'ring-emerald-500/10 border-emerald-100/80';
-    let icon = <ShieldCheck className="h-4.5 w-4.5 text-emerald-600" strokeWidth={2.5} />;
-
+    // ── UI state derivation (ordered so named statuses fire before catch-all !valid) ──
+    let uiState: string;
     if (result.status === 'checked_out_success') {
-        statusLabel = 'Check-Out Complete';
-        statusBg = 'bg-blue-50 text-blue-700 border-blue-100/80';
-        ringColor = 'ring-blue-500/10 border-blue-100/80';
-        icon = <CheckCircle2 className="h-4.5 w-4.5 text-blue-600" strokeWidth={2.5} />;
-    } else if (!valid) {
-        statusLabel =
-            result.status === 'checkout_mismatch'
-                ? 'Gate Mismatch'
-                : result.status === 'expired'
-                  ? 'Pass Expired'
-                  : result.status === 'revoked'
-                    ? 'Pass Revoked'
-                    : 'Access Denied';
-        statusBg = 'bg-rose-50 text-rose-700 border-rose-100/80';
-        ringColor = 'ring-rose-500/10 border-rose-100/80';
-        icon = <ShieldX className="h-4.5 w-4.5 text-rose-600" strokeWidth={2.5} />;
+        uiState = 'CHECKOUT_SUCCESS';
     } else if (isCheckoutPending) {
-        statusLabel = 'Check-Out Pending';
-        statusBg = 'bg-blue-50 text-blue-700 border-blue-100/80';
-        ringColor = 'ring-blue-500/10 border-blue-100/80';
-        icon = <LogOut className="h-4.5 w-4.5 text-blue-600" strokeWidth={2.5} />;
+        uiState = 'CHECKOUT_PENDING';
     } else if (result.status === 'scheduled') {
-        statusLabel = 'Scheduled Pass';
-        statusBg = 'bg-amber-50 text-amber-700 border-amber-100/80';
-        ringColor = 'ring-amber-500/10 border-amber-100/80';
-        icon = <Clock className="h-4.5 w-4.5 text-amber-600" strokeWidth={2.5} />;
+        uiState = 'NOT_YET_VALID';
+    } else if (result.status === 'outside_schedule') {
+        uiState = 'OUTSIDE_SCHEDULE';
+    } else if (!valid) {
+        uiState =
+            result.status === 'expired'
+                ? 'EXPIRED'
+                : result.status === 'revoked'
+                  ? 'REVOKED'
+                  : result.status === 'already_used'
+                    ? 'ALREADY_USED'
+                    : result.status === 'limit_reached'
+                      ? 'LIMIT_REACHED'
+                      : result.status === 'not_found'
+                        ? 'NOT_FOUND'
+                        : result.status === 'checkout_mismatch'
+                          ? 'CHECKOUT_MISMATCH'
+                          : 'DENIED';
     } else if (isOfflineAdmission) {
-        statusLabel = 'Access Approved';
-        statusBg = 'bg-amber-50 text-amber-800 border-amber-100/80';
-        ringColor = 'ring-amber-500/15 border-amber-200/80';
-        icon = <ShieldCheck className="h-4.5 w-4.5 text-amber-600" strokeWidth={2.5} />;
+        uiState = 'ADMITTED_OFFLINE';
+    } else {
+        uiState = 'ADMITTED_ONLINE';
     }
 
-    // Context tags computation
+    // ── Header colour, label, icon ──
+    let headerBg = 'bg-emerald-500';
+    let headerLabel = '✓ Admitted';
+    let HeaderIcon = ShieldCheck;
+
+    if (uiState === 'ADMITTED_OFFLINE') {
+        headerBg = 'bg-amber-500';
+        headerLabel = '✓ Admitted (Offline)';
+        HeaderIcon = ShieldCheck;
+    } else if (uiState === 'CHECKOUT_PENDING') {
+        headerBg = 'bg-blue-600';
+        headerLabel = 'Visitor Inside';
+        HeaderIcon = LogOut;
+    } else if (uiState === 'CHECKOUT_SUCCESS') {
+        headerBg = 'bg-blue-500';
+        headerLabel = 'Checked Out';
+        HeaderIcon = CheckCircle2;
+    } else if (uiState === 'NOT_YET_VALID') {
+        headerBg = 'bg-amber-500';
+        headerLabel = 'Not Yet Valid';
+        HeaderIcon = Clock;
+    } else if (uiState === 'OUTSIDE_SCHEDULE') {
+        headerBg = 'bg-amber-500';
+        headerLabel = 'Outside Hours';
+        HeaderIcon = Clock;
+    } else if (uiState === 'EXPIRED') {
+        headerBg = 'bg-rose-500';
+        headerLabel = 'Pass Expired';
+        HeaderIcon = Clock;
+    } else if (uiState === 'REVOKED') {
+        headerBg = 'bg-rose-600';
+        headerLabel = 'Pass Revoked';
+        HeaderIcon = ShieldX;
+    } else if (uiState === 'ALREADY_USED') {
+        headerBg = 'bg-rose-500';
+        headerLabel = 'Already Used';
+        HeaderIcon = ShieldX;
+    } else if (uiState === 'LIMIT_REACHED') {
+        headerBg = 'bg-rose-500';
+        headerLabel = 'Capacity Full';
+        HeaderIcon = ShieldX;
+    } else if (uiState === 'NOT_FOUND') {
+        headerBg = 'bg-slate-700';
+        headerLabel = 'Not Found';
+        HeaderIcon = ShieldX;
+    } else if (uiState === 'CHECKOUT_MISMATCH') {
+        headerBg = 'bg-rose-600';
+        headerLabel = 'Gate Mismatch';
+        HeaderIcon = ShieldX;
+    } else if (uiState === 'DENIED') {
+        headerBg = 'bg-rose-500';
+        headerLabel = 'Access Denied';
+        HeaderIcon = ShieldX;
+    }
+
+    // ── Info rows ──
+    const infoRows: { label: string; value: string }[] = [];
+
+    if (result.host_name) {
+        infoRows.push({ label: 'Visiting', value: result.host_name });
+    }
+    if (result.purpose) {
+        infoRows.push({
+            label: result.code_type === 'long_lived' ? 'Role' : 'Purpose',
+            value: result.purpose,
+        });
+    }
+    if (result.code_type) {
+        infoRows.push({ label: 'Pass', value: getPassTypeLabel(result.code_type) });
+    }
+
+    if (uiState === 'NOT_YET_VALID' && result.starts_at) {
+        infoRows.push({ label: 'Available From', value: formatDateTime(result.starts_at) ?? 'Unknown' });
+    } else if (isCheckoutPending) {
+        if (result.checked_in_at) {
+            infoRows.push({ label: 'Checked In', value: formatDateTime(result.checked_in_at) ?? 'Unknown' });
+        }
+        if (result.entry_point) {
+            infoRows.push({ label: 'Entry Gate', value: result.entry_point });
+        }
+    } else if (uiState === 'CHECKOUT_SUCCESS') {
+        if (result.checked_out_at) {
+            infoRows.push({ label: 'Checked Out', value: formatDateTime(result.checked_out_at) ?? 'Unknown' });
+        }
+        if (result.duration_minutes !== undefined && result.duration_minutes !== null) {
+            const d = result.duration_minutes;
+            infoRows.push({
+                label: 'Visit Duration',
+                value: d < 60 ? `${d} min${d !== 1 ? 's' : ''}` : `${Math.floor(d / 60)}h ${d % 60}m`,
+            });
+        }
+    } else if (uiState === 'EXPIRED' && result.expires_at) {
+        infoRows.push({ label: 'Expired On', value: formatDateTime(result.expires_at) ?? 'Unknown' });
+    } else if (valid && result.expires_at) {
+        infoRows.push({ label: 'Valid Until', value: formatDateTime(result.expires_at) ?? 'Unknown' });
+    } else if (valid && !result.expires_at) {
+        infoRows.push({ label: 'Validity', value: 'No expiry' });
+    }
+
+    // ── Context tags (fixed Expires Soon — guards against "2h 30m".includes('m') false-positive) ──
+    const expiry = formatExpiry(result.expires_at);
     const contextTags: string[] = [];
-    if (result.code_type === 'event') {
-        contextTags.push('Event Guest');
-    }
-    if (result.code_type === 'long_lived') {
-        contextTags.push('Long-Term Pass');
-    }
+
+    if (result.code_type === 'event') contextTags.push('Event Guest');
+    if (result.code_type === 'long_lived') contextTags.push('Long-Term Pass');
     if (valid && !isCheckoutPending) {
         if (result.uses_count === 0 || result.uses_count === 1) {
             contextTags.push('First Entry Today');
         } else if (result.uses_count && result.uses_count > 1) {
-            contextTags.push(`Returning Visitor (${result.uses_count} entries)`);
+            contextTags.push(`${result.uses_count}× Entry`);
         }
     }
-    if (result.has_vehicle) {
-        contextTags.push('Vehicle Entry');
-    }
-    if (expiry && expiry !== 'Expired' && expiry.includes('m') && parseInt(expiry) < 30) {
+    if (result.has_vehicle) contextTags.push('Vehicle Entry');
+    if (expiry && expiry !== 'Expired' && !expiry.includes('h') && parseInt(expiry) < 30) {
         contextTags.push('Expires Soon');
     }
+    if (isOfflineAdmission) contextTags.push('Offline Verified');
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col bg-[#f8fafc]">
-            {/* Terminal Header Info */}
-            <div className="px-6 pt-5 pb-1 text-center">
-                <span className="text-[10px] font-black tracking-[0.25em] text-slate-400 uppercase">Kontrol Terminal • Access Verification</span>
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+            className="flex flex-1 flex-col"
+        >
+            {/* ── VERDICT HEADER ── */}
+            <div className={`${headerBg} px-5 pt-7 pb-5 text-white sm:px-4`}>
+                <div className="mb-3 flex items-center gap-2">
+                    <HeaderIcon className="h-5 w-5 opacity-90" strokeWidth={2.5} />
+                    <span className="text-xs font-black tracking-[0.2em] uppercase opacity-90">{headerLabel}</span>
+                    {isOfflineAdmission && (
+                        <span className="ml-auto flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-black tracking-wider uppercase">
+                            <WifiOff className="h-2.5 w-2.5" />
+                            Offline
+                        </span>
+                    )}
+                </div>
+                <h2 className="text-3xl font-black tracking-tight leading-tight break-words">
+                    {result.visitor_name || (result.code_type === 'event' ? 'Event Pass' : 'Guest Visitor')}
+                </h2>
             </div>
 
-            <div className="flex flex-1 flex-col items-center justify-center px-4 py-3">
-                {/* Boarding Pass / Identity Verification Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    transition={{ type: 'spring', damping: 26, stiffness: 210 }}
-                    className={`w-full max-w-md overflow-hidden rounded-[30px] border bg-white px-5.5 py-6.5 shadow-[0_20px_45px_rgba(0,0,0,0.025)] ring-4 ${ringColor}`}
-                >
-                    {/* Check-Out Complete Notification Banner */}
-                    {result.status === 'checked_out_success' && (
-                        <div className="mb-4 flex items-center gap-3 rounded-2xl border border-blue-200 bg-blue-50 p-4 text-xs leading-relaxed font-bold text-blue-900 shadow-xs">
-                            <CheckCircle2 className="h-5 w-5 shrink-0 text-blue-600" />
-                            <div>
-                                <p className="text-sm font-black">Visitor Checked Out Successfully</p>
-                                <p className="mt-0.5 text-[11px] font-medium text-blue-700">
-                                    Exit Gate: <span className="font-bold">{result.exit_point || 'Main Gate'}</span> • Duration:{' '}
-                                    <span className="font-bold">{result.duration_minutes ?? 0} mins</span>
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Error / Gate Mismatch Notification Alert Banner */}
-                    {/* Error / Gate Mismatch Notification Alert Banner */}
-                    {(!valid || result.status === 'checkout_mismatch') && result.message && (
-                        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs leading-relaxed font-bold text-rose-900 shadow-xs">
-                            <ShieldX className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
-                            <span>{result.message}</span>
-                        </div>
-                    )}
-                    {/* Status badge and Type header */}
-                    <div className="flex items-center justify-between gap-4">
-                        <span
-                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black tracking-wide ${statusBg}`}
-                        >
-                            {icon}
-                            {statusLabel}
-                        </span>
-
-                        <div className="flex items-center gap-2">
-                            {isOfflineAdmission && (
-                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-[10px] font-black tracking-wider text-amber-800 uppercase">
-                                    <WifiOff className="h-3 w-3" />
-                                    Offline mode
-                                </span>
-                            )}
-                            {result.code_type && (
-                                <span className="rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px] font-black tracking-wider text-slate-500 uppercase">
-                                    {getPassTypeLabel(result.code_type)}
-                                </span>
-                            )}
-                        </div>
+            {/* ── INFO BODY ── */}
+            <div className="flex-1 overflow-y-auto bg-white">
+                {/* Error / mismatch message — shown once here, not duplicated in info rows */}
+                {result.message && !valid && (
+                    <div className="mx-5 mt-4 flex items-start gap-2.5 rounded-xl border border-rose-100 bg-rose-50 px-3.5 py-3 sm:mx-4">
+                        <ShieldX className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                        <p className="text-xs font-semibold leading-relaxed text-rose-800">{result.message}</p>
                     </div>
+                )}
 
-                    {isOfflineAdmission && (
-                        <p className="mt-3 rounded-xl border border-amber-100 bg-amber-50/80 px-3 py-2 text-[11px] leading-relaxed font-semibold text-amber-800">
-                            This admission was recorded locally and will sync when connectivity is restored.
+                {/* Offline sync notice */}
+                {isOfflineAdmission && (
+                    <div className="mx-5 mt-4 rounded-xl border border-amber-100 bg-amber-50 px-3.5 py-2.5 sm:mx-4">
+                        <p className="text-xs font-semibold leading-relaxed text-amber-800">
+                            Admission recorded locally · will sync when connectivity is restored
                         </p>
-                    )}
-
-                    {/* Visitor Hero Info */}
-                    <div className="mt-8 space-y-1">
-                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                            {result.code_type === 'event' ? 'Event Name' : 'Visitor Full Name'}
-                        </span>
-                        <h2 className="text-4xl leading-none font-black tracking-tight break-words text-slate-900 md:text-5xl">
-                            {result.visitor_name || (result.code_type === 'event' ? 'Unnamed Event' : 'Guest Visitor')}
-                        </h2>
                     </div>
+                )}
 
-                    {/* Ticket notch cut divider */}
-                    <div className="my-6 border-t border-dashed border-slate-200" />
-
-                    {/* Host Info */}
-                    <div className="space-y-1">
-                        <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Host Resident</span>
-                        <p className="text-2xl leading-snug font-black break-words text-slate-800">{result.host_name || 'Not Specified'}</p>
-                    </div>
-
-                    {/* Section details */}
-                    <div className="my-6 border-t border-slate-100" />
-
-                    <div className="space-y-4">
-                        {/* Purpose */}
-                        {result.purpose && (
-                            <div className="flex items-center justify-between gap-4">
-                                <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    {result.code_type === 'long_lived' ? 'Role' : 'Purpose'}
+                {/* Info rows */}
+                {infoRows.length > 0 && (
+                    <div className="mx-5 mt-4 divide-y divide-slate-50 sm:mx-4">
+                        {infoRows.map(({ label, value }) => (
+                            <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
+                                <span className="shrink-0 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                    {label}
                                 </span>
-                                <span className="text-right text-sm font-bold text-slate-800">{result.purpose}</span>
+                                <span className="min-w-0 break-words text-right text-sm font-bold text-slate-800">
+                                    {value}
+                                </span>
                             </div>
-                        )}
+                        ))}
+                    </div>
+                )}
 
-                        {/* Validity period */}
-                        <div className="flex items-center justify-between gap-4">
-                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Validity</span>
-                            <span className="text-right text-sm font-bold text-slate-800">
-                                {isCheckoutPending
-                                    ? 'Exit Completed'
-                                    : !valid
-                                      ? result.message || 'Access Denied'
-                                      : result.status === 'scheduled' && result.starts_at
-                                        ? `From ${formatDateTime(result.starts_at)}`
-                                        : expiry
-                                          ? `Expires: ${expiry}`
-                                          : 'Never Expires'}
+                {/* Event capacity meter */}
+                {result.code_type === 'event' && (
+                    <div className="mx-5 mt-4 space-y-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 sm:mx-4">
+                        <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                Guest Attendance
+                            </span>
+                            <span className="text-xs font-black text-slate-700">
+                                {result.uses_count ?? 0} / {result.guest_limit ?? '∞'}
                             </span>
                         </div>
-
-                        {/* Context intelligence tags inside the card */}
-                        {contextTags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 border-t border-slate-50 pt-4">
-                                {contextTags.map((tag, idx) => (
-                                    <span
-                                        key={idx}
-                                        className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase"
-                                    >
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Event capacity meter */}
-                        {result.code_type === 'event' && (
-                            <div className="mt-2 space-y-2 border-t border-slate-100 pt-4">
-                                <div className="flex items-center justify-between text-[10px] font-black tracking-widest text-slate-400 uppercase">
-                                    <span>Guest Attendance</span>
-                                    <span className="text-xs font-black text-slate-800">
-                                        {result.uses_count ?? 0} / {result.guest_limit ?? '∞'} Admitted
-                                    </span>
-                                </div>
-                                {result.guest_limit && (
-                                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-                                        <div
-                                            className="h-full bg-slate-900 transition-all duration-700 ease-out"
-                                            style={{ width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%` }}
-                                        />
-                                    </div>
-                                )}
+                        {result.guest_limit && (
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                <div
+                                    className="h-full bg-slate-700 transition-all duration-700 ease-out"
+                                    style={{
+                                        width: `${Math.min(100, ((result.uses_count ?? 0) / result.guest_limit) * 100)}%`,
+                                    }}
+                                />
                             </div>
                         )}
                     </div>
-                </motion.div>
+                )}
+
+                {/* Context tags */}
+                {contextTags.length > 0 && (
+                    <div className="mx-5 mt-3 flex flex-wrap gap-1.5 pb-4 sm:mx-4">
+                        {contextTags.map((tag) => (
+                            <span
+                                key={tag}
+                                className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-slate-500 uppercase"
+                            >
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            {/* Sticky Action Footer */}
-            <div className="bg-[#f8fafc] px-6 pt-4 pb-[calc(env(safe-area-inset-bottom,24px)+24px)]">
-                {/* Vehicle Form details */}
+            {/* ── STICKY FOOTER ── */}
+            <div className="border-t border-slate-100 bg-white px-5 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+20px)] sm:px-4">
+                {/* Vehicle form for valid admissions requiring vehicle data */}
                 {valid && !isCheckoutPending && result.has_vehicle && (
-                    <div className="mx-auto mb-6 w-full max-w-md">
+                    <div className="mb-4">
                         <VehicleForm show={result.has_vehicle} onSubmit={(data) => onAdmit(data)} />
                     </div>
                 )}
 
-                {/* Confirm checkout buttons */}
+                {/* Checkout pending: confirm or cancel */}
                 {valid && isCheckoutPending && (
-                    <div className="mx-auto w-full max-w-md space-y-3">
+                    <div className="space-y-3">
                         <button
                             type="button"
                             onClick={() => onCheckout()}
-                            className="w-full rounded-2xl bg-blue-600 py-4.5 text-base font-black text-white shadow-xl shadow-blue-500/10 transition-all hover:bg-blue-700 active:scale-[0.98]"
+                            className="w-full rounded-2xl bg-blue-600 py-4 text-base font-black text-white shadow-lg shadow-blue-500/10 transition-all hover:bg-blue-700 active:scale-[0.98]"
                         >
-                            Confirm Check-out Complete
+                            Confirm Check-Out
                         </button>
                         <button
                             type="button"
                             onClick={onReset}
                             className="w-full rounded-2xl bg-slate-100 py-3 text-sm font-black text-slate-500 transition-all active:scale-[0.98]"
                         >
-                            Cancel Check-out
+                            Cancel
                         </button>
                     </div>
                 )}
 
-                {/* Auto return progress indicator / Reset fallback */}
+                {/* Reset / auto-return (no vehicle form, not checkout-pending) */}
                 {!result.has_vehicle && (!valid || !isCheckoutPending) && (
-                    <div className="mx-auto flex w-full max-w-md flex-col items-center justify-center gap-4">
+                    <div>
                         {isAutoReturnActive ? (
-                            <div className="flex w-full flex-col items-center gap-4">
-                                {/* Elegant pill timer */}
-                                <div className="border-slate-150 flex items-center gap-3 rounded-full border bg-white px-5 py-3 shadow-xs">
+                            <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2.5 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5">
                                     <div className="relative flex h-5 w-5 items-center justify-center">
-                                        <svg className="-rotate-90 transform" width="20" height="20">
+                                        <svg className="-rotate-90" width="20" height="20">
                                             <circle
-                                                className="text-slate-100"
                                                 strokeWidth="2.5"
-                                                stroke="currentColor"
+                                                stroke="#e2e8f0"
                                                 fill="transparent"
                                                 r="8"
                                                 cx="10"
@@ -1147,12 +1174,12 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                             />
                                             {!isPaused && (
                                                 <circle
-                                                    className="text-slate-800 transition-all duration-1000 ease-linear"
+                                                    className="transition-all duration-1000 ease-linear"
                                                     strokeWidth="2.5"
                                                     strokeDasharray="50.2"
                                                     strokeDashoffset={50.2 - (countdown / 5) * 50.2}
                                                     strokeLinecap="round"
-                                                    stroke="currentColor"
+                                                    stroke="#0f172a"
                                                     fill="transparent"
                                                     r="8"
                                                     cx="10"
@@ -1163,32 +1190,29 @@ function ResultPanel({ result, onAdmit, onCheckout, onReset }: ResultPanelProps)
                                         <span className="absolute text-[8px] font-black text-slate-800">{countdown}</span>
                                     </div>
                                     <span className="text-xs font-bold text-slate-600">
-                                        {isPaused ? 'Auto-return paused' : 'Returning to scanner...'}
+                                        {isPaused ? 'Paused' : 'Returning…'}
                                     </span>
                                     <button
                                         type="button"
                                         onClick={() => setIsPaused(!isPaused)}
-                                        className="rounded-lg p-1 text-slate-500 transition-colors hover:bg-slate-100"
+                                        className="rounded-md p-0.5 text-slate-400 transition-colors hover:text-slate-700"
                                     >
                                         {isPaused ? <Play className="h-3 w-3 fill-slate-500" /> : <Pause className="h-3 w-3" />}
                                     </button>
                                 </div>
-
-                                {/* Clean minimal fallback text trigger */}
                                 <button
                                     type="button"
                                     onClick={onReset}
-                                    className="py-2 text-[11px] font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-600"
+                                    className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-black text-white shadow-md shadow-slate-900/10 transition-all active:scale-[0.98]"
                                 >
-                                    Verify Another Pass Immediately
+                                    Next
                                 </button>
                             </div>
                         ) : (
-                            /* Primary return button when auto-return is not running */
                             <button
                                 type="button"
                                 onClick={onReset}
-                                className="w-full rounded-2xl bg-slate-900 py-4.5 text-base font-black text-white shadow-xl shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98]"
+                                className="w-full rounded-2xl bg-slate-900 py-4 text-base font-black text-white shadow-lg shadow-slate-900/10 transition-all hover:bg-slate-800 active:scale-[0.98]"
                             >
                                 Verify Another Pass
                             </button>
@@ -1210,50 +1234,48 @@ function VehicleForm({ show, onSubmit }: { show: boolean; onSubmit: (data: Recor
     if (!show) return null;
 
     return (
-        <div className="space-y-4 pt-1">
-            <div className="rounded-2xl border border-dashed border-indigo-200 bg-indigo-50/30 p-3.5">
-                <div className="flex items-center gap-2.5 text-indigo-600">
-                    <Car className="h-4.5 w-4.5" />
-                    <p className="text-[10px] font-black tracking-wider uppercase">Log Entry Vehicle Details</p>
-                </div>
+        <div className="space-y-3">
+            <div className="flex items-center gap-2">
+                <Car className="h-4 w-4 text-slate-400" />
+                <p className="text-[10px] font-black tracking-wider text-slate-400 uppercase">Log Vehicle Details</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2.5">
                 <input
                     type="text"
-                    placeholder="Make (e.g. Toyota) (Optional)"
+                    placeholder="Make (e.g. Toyota)"
                     value={data.vehicle_make}
                     onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                 />
                 <input
                     type="text"
-                    placeholder="Model (e.g. Camry) (Optional)"
+                    placeholder="Model (e.g. Camry)"
                     value={data.vehicle_model}
                     onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                    className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
                 />
             </div>
             <input
                 type="text"
-                placeholder="License Plate Number (Optional)"
+                placeholder="License Plate Number"
                 value={data.vehicle_plate_number}
                 onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
-                className="h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-xs font-bold text-slate-900 outline-hidden transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-bold text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/5"
             />
 
             <div className="flex gap-2">
                 <button
                     type="button"
                     onClick={() => onSubmit({})}
-                    className="flex-1 rounded-xl bg-slate-100 py-3.5 text-sm font-black text-slate-600 transition-all active:scale-[0.98]"
+                    className="flex-1 rounded-xl bg-slate-100 py-3 text-sm font-black text-slate-600 transition-all active:scale-[0.98]"
                 >
                     Skip
                 </button>
                 <button
                     type="button"
                     onClick={() => onSubmit(data)}
-                    className="flex-[2] rounded-xl bg-slate-900 py-3.5 text-sm font-black text-white shadow-lg shadow-slate-950/10 transition-all active:scale-[0.98]"
+                    className="flex-[2] rounded-xl bg-slate-900 py-3 text-sm font-black text-white shadow-md shadow-slate-950/10 transition-all active:scale-[0.98]"
                 >
                     Confirm & Admit
                 </button>
