@@ -120,7 +120,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                 <p className="mt-1 max-w-2xl text-gray-500">Start with a short brief or template, generate a draft, refine it, then publish.</p>
             </motion.div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
                     <div className="order-2 space-y-6 xl:order-1">
                         <motion.div
