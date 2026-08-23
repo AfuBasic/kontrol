@@ -94,6 +94,8 @@ class UserController extends Controller
         $this->authorize('users.edit');
 
         $estateId = $this->estateContext->getEstateId();
+        $this->ensureUserBelongsToEstate($user, $estateId);
+
         $roles = $this->roleService->getManageableRoles();
 
         // Load roles for the user in the context of this estate
@@ -119,6 +121,13 @@ class UserController extends Controller
     {
         $this->authorize('users.edit');
 
+        $estate = $this->estateContext->getEstate();
+        $this->ensureUserBelongsToEstate($user, $estate->id);
+
+        $roleNames = $this->roleService->getManageableRoles()
+            ->pluck('name')
+            ->all();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => [
@@ -128,10 +137,11 @@ class UserController extends Controller
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-            'role' => 'required|string|exists:roles,name',
+            'role' => ['required', 'string', Rule::in($roleNames)],
+        ], [
+            'role.in' => 'Select a valid estate responsibility.',
         ]);
 
-        $estate = $this->estateContext->getEstate();
         $action->execute($user, $validated, $estate);
 
         return back()->with('success', 'Admin updated successfully.');
@@ -145,6 +155,7 @@ class UserController extends Controller
         $this->authorize('users.delete');
 
         $estate = $this->estateContext->getEstate();
+        $this->ensureUserBelongsToEstate($user, $estate->id);
 
         // Prevent deleting yourself
         if ($user->id === Auth::id()) {
@@ -165,9 +176,18 @@ class UserController extends Controller
         $this->authorize('users.edit');
 
         $estate = $this->estateContext->getEstate();
+        $this->ensureUserBelongsToEstate($user, $estate->id);
 
         $action->execute($user, $estate);
 
         return back()->with('success', 'Invitation resent successfully.');
+    }
+
+    private function ensureUserBelongsToEstate(User $user, int $estateId): void
+    {
+        abort_unless(
+            $user->estates()->where('estates.id', $estateId)->exists(),
+            404
+        );
     }
 }
