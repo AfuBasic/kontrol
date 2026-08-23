@@ -200,7 +200,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 lg:grid-cols-3" noValidate>
                 {/* LEFT TWO COLUMNS: Form Fields */}
                 <div className="space-y-6 lg:col-span-2">
                     <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xs ring-1 ring-slate-100/50">
