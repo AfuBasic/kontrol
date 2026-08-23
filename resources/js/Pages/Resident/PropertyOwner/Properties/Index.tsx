@@ -183,7 +183,7 @@ export default function Index({ properties }: Props) {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateSubmit} className="mt-6 space-y-4">
+                            <form onSubmit={handleCreateSubmit} className="mt-6 space-y-4" noValidate>
                                 <div>
                                     <label htmlFor="create-name" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                         Property Name
@@ -248,7 +248,7 @@ export default function Index({ properties }: Props) {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleEditSubmit} className="mt-6 space-y-4">
+                            <form onSubmit={handleEditSubmit} className="mt-6 space-y-4" noValidate>
                                 <div>
                                     <label htmlFor="edit-name" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                         Property Name
