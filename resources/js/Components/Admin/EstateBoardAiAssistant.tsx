@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Megaphone } from 'lucide-react';
 import { CalendarDays, PartyPopper, Shield, Sparkles, Wrench } from 'lucide-react';
@@ -69,10 +70,6 @@ const templates: Template[] = [
     },
 ];
 
-function getCsrfToken(): string {
-    return document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
-}
-
 export default function EstateBoardAiAssistant({ context, onDraft, onTemplateSelect, disabled = false }: Props) {
     const [brief, setBrief] = useState('');
     const [isGenerating, setIsGenerating] = useState(false);
@@ -90,26 +87,17 @@ export default function EstateBoardAiAssistant({ context, onDraft, onTemplateSel
         setError(null);
 
         try {
-            const response = await fetch(ContentEnhanceController.url(), {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                },
-                body: JSON.stringify({
-                    mode: 'draft',
-                    brief: brief.trim(),
-                    title: context.title || null,
-                    category: context.category,
-                    priority: context.priority,
-                    audience: context.audience,
-                    type: 'estate_board',
-                }),
+            const response = await axios.post(ContentEnhanceController.url(), {
+                mode: 'draft',
+                brief: brief.trim(),
+                title: context.title || null,
+                category: context.category,
+                priority: context.priority,
+                audience: context.audience,
+                type: 'estate_board',
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success && data.enhanced) {
                 onDraft({
@@ -119,8 +107,9 @@ export default function EstateBoardAiAssistant({ context, onDraft, onTemplateSel
             } else {
                 setError(data.message || 'Failed to generate draft. Please try again.');
             }
-        } catch {
-            setError('Failed to connect. Please try again.');
+        } catch (err: any) {
+            const message = err?.response?.data?.message || 'Failed to connect. Please try again.';
+            setError(message);
         } finally {
             setIsGenerating(false);
         }
