@@ -15,14 +15,19 @@ type Props = {
     users: OptionUser[];
     roles: OptionRole[];
     zones: OptionZone[];
+    context?: {
+        is_zone_scoped?: boolean;
+    };
 };
 
-export default function CreateAssignment({ users, roles, zones }: Props) {
+export default function CreateAssignment({ users, roles, zones, context }: Props) {
+    const isZoneScoped = context?.is_zone_scoped ?? false;
+
     const { data, setData, post, processing, errors } = useForm({
         user_id: '',
         role_ids: [] as string[],
-        scope_type: 'estate',
-        zone_id: '',
+        scope_type: isZoneScoped ? 'zone' : 'estate',
+        zone_id: isZoneScoped ? zones[0]?.id.toString() || '' : '',
         is_active: true as boolean,
     });
 
@@ -186,35 +191,39 @@ export default function CreateAssignment({ users, roles, zones }: Props) {
                                     </div>
                                     <div className="max-w-2xl">
                                         <div className="grid gap-4 sm:grid-cols-2">
-                                            <label
-                                                className={`relative flex cursor-pointer gap-4 rounded-xl border p-4 transition-all ${
-                                                    data.scope_type === 'estate'
-                                                        ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
-                                                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="scope_type"
-                                                    value="estate"
-                                                    checked={data.scope_type === 'estate'}
-                                                    onChange={() => setData({ ...data, scope_type: 'estate', zone_id: '' })}
-                                                    className="sr-only"
-                                                />
-                                                <div
-                                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                                                        data.scope_type === 'estate' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'
+                                            {!isZoneScoped && (
+                                                <label
+                                                    className={`relative flex cursor-pointer gap-4 rounded-xl border p-4 transition-all ${
+                                                        data.scope_type === 'estate'
+                                                            ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
+                                                            : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
                                                     }`}
                                                 >
-                                                    <Globe className="h-5 w-5" />
-                                                </div>
-                                                <div className="flex flex-col justify-center">
-                                                    <span className="text-sm font-black text-slate-900">Entire estate</span>
-                                                    <span className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                                                        Authority applies across the estate
-                                                    </span>
-                                                </div>
-                                            </label>
+                                                    <input
+                                                        type="radio"
+                                                        name="scope_type"
+                                                        value="estate"
+                                                        checked={data.scope_type === 'estate'}
+                                                        onChange={() => setData({ ...data, scope_type: 'estate', zone_id: '' })}
+                                                        className="sr-only"
+                                                    />
+                                                    <div
+                                                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                                                            data.scope_type === 'estate'
+                                                                ? 'bg-slate-800 text-white'
+                                                                : 'bg-slate-100 text-slate-500'
+                                                        }`}
+                                                    >
+                                                        <Globe className="h-5 w-5" />
+                                                    </div>
+                                                    <div className="flex flex-col justify-center">
+                                                        <span className="text-sm font-black text-slate-900">Entire estate</span>
+                                                        <span className="mt-0.5 text-[11px] font-semibold text-slate-500">
+                                                            Authority applies across the estate
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            )}
 
                                             <label
                                                 className={`relative flex cursor-pointer gap-4 rounded-xl border p-4 transition-all ${
@@ -228,7 +237,7 @@ export default function CreateAssignment({ users, roles, zones }: Props) {
                                                     name="scope_type"
                                                     value="zone"
                                                     checked={data.scope_type === 'zone'}
-                                                    onChange={() => setData({ ...data, scope_type: 'zone' })}
+                                                    onChange={() => setData({ ...data, scope_type: 'zone', zone_id: data.zone_id || zones[0]?.id.toString() || '' })}
                                                     className="sr-only"
                                                 />
                                                 <div

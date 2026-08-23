@@ -101,6 +101,29 @@ function actingAsAdminWithContext(): mixed
         ->withSession(['active_context_assignment_id' => test()->adminAssignment->id]);
 }
 
+function actingAsZoneAdminWithContext(): mixed
+{
+    $assignment = AdministrativeAssignment::query()
+        ->where('user_id', test()->admin->id)
+        ->where('estate_id', test()->estate->id)
+        ->where('role_id', test()->adminRole->id)
+        ->where('zone_id_coalesced', test()->zoneA->id)
+        ->first();
+
+    if (! $assignment) {
+        $assignment = app(CreateAdministrativeAssignmentAction::class)->execute(
+            user: test()->admin,
+            estate: test()->estate,
+            role: test()->adminRole,
+            scopeType: AssignmentScope::Zone,
+            zone: test()->zoneA,
+        );
+    }
+
+    return test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id]);
+}
+
 it('creates an estate-scoped assignment for a member', function () {
     $assignment = $this->createAction->execute(
         user: $this->member,
@@ -272,6 +295,114 @@ it('lets estate admins create assignments via HTTP', function () {
         'scope_type' => 'estate',
         'is_active' => true,
     ]);
+});
+
+it('limits assignment create options to the active zone for zone scoped admins', function () {
+    $zoneMember = User::factory()->create(['name' => 'Zone Member']);
+    EstateMembership::create([
+        'user_id' => $zoneMember->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'accepted',
+        'zone_id' => $this->zoneA->id,
+    ]);
+
+    $otherZoneMember = User::factory()->create(['name' => 'Other Zone Member']);
+    EstateMembership::create([
+        'user_id' => $otherZoneMember->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'accepted',
+        'zone_id' => $this->zoneB->id,
+    ]);
+
+    actingAsZoneAdminWithContext()
+        ->get(route('admin.assignments.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Assignments/Create')
+            ->where('context.is_zone_scoped', true)
+            ->has('zones', 1)
+            ->where('zones.0.id', $this->zoneA->id)
+            ->has('users', 1)
+            ->where('users.0.id', $zoneMember->id)
+        );
+});
+
+it('rejects estate and outside zone assignment submissions from zone scoped admins', function () {
+    actingAsZoneAdminWithContext()
+        ->from(route('admin.assignments.create'))
+        ->post(route('admin.assignments.store'), [
+            'user_id' => $this->member->id,
+            'role_ids' => [$this->staffRole->id],
+            'scope_type' => 'estate',
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.assignments.create'))
+        ->assertSessionHasErrors('scope_type');
+
+    actingAsZoneAdminWithContext()
+        ->from(route('admin.assignments.create'))
+        ->post(route('admin.assignments.store'), [
+            'user_id' => $this->member->id,
+            'role_ids' => [$this->staffRole->id],
+            'scope_type' => 'zone',
+            'zone_id' => $this->zoneB->id,
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.assignments.create'))
+        ->assertSessionHasErrors('zone_id');
+});
+
+it('lets zone scoped admins create assignments only in their active zone', function () {
+    $zoneMember = User::factory()->create(['name' => 'Zone Member']);
+    EstateMembership::create([
+        'user_id' => $zoneMember->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'accepted',
+        'zone_id' => $this->zoneA->id,
+    ]);
+
+    actingAsZoneAdminWithContext()
+        ->post(route('admin.assignments.store'), [
+            'user_id' => $zoneMember->id,
+            'role_ids' => [$this->staffRole->id],
+            'scope_type' => 'zone',
+            'zone_id' => '',
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.assignments.index'));
+
+    $this->assertDatabaseHas('administrative_assignments', [
+        'user_id' => $zoneMember->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => $this->staffRole->id,
+        'scope_type' => 'zone',
+        'zone_id' => $this->zoneA->id,
+    ]);
+});
+
+it('blocks zone scoped admins from updating assignments outside their active zone', function () {
+    $assignment = $this->createAction->execute(
+        user: $this->member,
+        estate: $this->estate,
+        role: $this->staffRole,
+        scopeType: AssignmentScope::Zone,
+        zone: $this->zoneB,
+    );
+
+    actingAsZoneAdminWithContext()
+        ->from(route('admin.assignments.edit', $assignment))
+        ->put(route('admin.assignments.update', $assignment), [
+            'role_ids' => [$this->staffRole->id],
+            'scope_type' => 'zone',
+            'zone_id' => $this->zoneB->id,
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.assignments.edit', $assignment))
+        ->assertSessionHasErrors('zone_id');
+
+    actingAsZoneAdminWithContext()
+        ->post(route('admin.assignments.deactivate', $assignment))
+        ->assertForbidden();
 });
 
 it('lets estate admins update role and scope', function () {

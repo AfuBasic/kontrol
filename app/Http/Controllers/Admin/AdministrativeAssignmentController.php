@@ -6,6 +6,7 @@ use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Actions\Admin\DeactivateAdministrativeAssignmentAction;
 use App\Actions\Admin\DeleteAdministrativeAssignmentAction;
 use App\Actions\Admin\UpdateAdministrativeAssignmentAction;
+use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreAdministrativeAssignmentRequest;
@@ -54,6 +55,9 @@ class AdministrativeAssignmentController extends Controller
             'users' => $this->assignmentService->getAssignableUsers(),
             'roles' => $this->assignmentService->getAssignableRoles(),
             'zones' => $this->assignmentService->getAssignableZones(),
+            'context' => [
+                'is_zone_scoped' => app(ContextManager::class)->current()?->isZoneScoped() ?? false,
+            ],
         ]);
     }
 
@@ -68,11 +72,13 @@ class AdministrativeAssignmentController extends Controller
 
         $user = User::findOrFail($validated['user_id']);
         $roleIds = $validated['role_ids'];
+        $zoneId = $validated['scope_type'] === AssignmentScope::Zone->value ? (int) $validated['zone_id'] : null;
 
         foreach ($roleIds as $roleId) {
             $exists = AdministrativeAssignment::where('user_id', $user->id)
                 ->where('estate_id', $estate->id)
                 ->where('role_id', $roleId)
+                ->where('zone_id_coalesced', $zoneId ?? 0)
                 ->exists();
 
             if (! $exists) {
@@ -81,7 +87,7 @@ class AdministrativeAssignmentController extends Controller
                     estate: $estate,
                     role: Role::findOrFail($roleId),
                     scopeType: AssignmentScope::from($validated['scope_type']),
-                    zone: isset($validated['zone_id']) ? Zone::find($validated['zone_id']) : null,
+                    zone: $zoneId !== null ? Zone::find($zoneId) : null,
                     isPrimary: (bool) ($validated['is_primary'] ?? false),
                     isActive: (bool) ($validated['is_active'] ?? true),
                 );
@@ -112,6 +118,9 @@ class AdministrativeAssignmentController extends Controller
             'user_role_ids' => $userRoleIds,
             'roles' => $this->assignmentService->getAssignableRoles(),
             'zones' => $this->assignmentService->getAssignableZones(),
+            'context' => [
+                'is_zone_scoped' => app(ContextManager::class)->current()?->isZoneScoped() ?? false,
+            ],
         ]);
     }
 

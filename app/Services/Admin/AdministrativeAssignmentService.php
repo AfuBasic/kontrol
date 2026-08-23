@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\User;
 use App\Models\Zone;
@@ -26,9 +27,11 @@ class AdministrativeAssignmentService
     public function getPaginatedAssignments(int $perPage = 15, array $filters = []): LengthAwarePaginator
     {
         $estateId = $this->estateContext->getEstateId();
+        $context = app(ContextManager::class)->current();
 
         return AdministrativeAssignment::query()
             ->forEstate($estateId)
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
             ->where('is_primary', false)
             ->whereHas('role', function ($query) {
                 $query->whereNotIn('name', ['property_owner', 'resident', 'household_member']);
@@ -76,12 +79,14 @@ class AdministrativeAssignmentService
     public function getAssignableUsers(): Collection
     {
         $estateId = $this->estateContext->getEstateId();
+        $context = app(ContextManager::class)->current();
 
         return User::query()
             ->forEstate($estateId)
-            ->whereHas('estates', function ($query) use ($estateId) {
+            ->whereHas('estates', function ($query) use ($estateId, $context) {
                 $query->where('estates.id', $estateId)
-                    ->where('estate_users_membership.status', 'accepted');
+                    ->where('estate_users_membership.status', 'accepted')
+                    ->when($context?->isZoneScoped(), fn ($membershipQuery) => $membershipQuery->where('estate_users_membership.zone_id', $context->zoneId));
             })
             ->whereDoesntHave('administrativeAssignments', function ($query) use ($estateId) {
                 $query->where('estate_id', $estateId)
@@ -102,9 +107,11 @@ class AdministrativeAssignmentService
     public function getAssignableZones(): Collection
     {
         $estateId = $this->estateContext->getEstateId();
+        $context = app(ContextManager::class)->current();
 
         return Zone::query()
             ->where('estate_id', $estateId)
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('id', $context->zoneId))
             ->orderBy('name')
             ->get(['id', 'name', 'estate_id']);
     }

@@ -22,6 +22,10 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
      */
     public function view(User $user, AdministrativeAssignment $assignment): bool
     {
+        if (! $this->canAccessAssignmentScope($assignment)) {
+            return false;
+        }
+
         if (! $this->hasValidContextForEstate($assignment->estate_id)) {
             return false;
         }
@@ -47,6 +51,10 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
             return false;
         }
 
+        if (! $this->canAccessAssignmentScope($assignment)) {
+            return false;
+        }
+
         if (! $this->hasValidContextForEstate($assignment->estate_id)) {
             return false;
         }
@@ -68,5 +76,12 @@ class AdministrativeAssignmentPolicy extends BaseContextPolicy
     public function delete(User $user, AdministrativeAssignment $assignment): bool
     {
         return $this->update($user, $assignment);
+    }
+
+    private function canAccessAssignmentScope(AdministrativeAssignment $assignment): bool
+    {
+        $context = app(ContextManager::class)->current();
+
+        return ! $context?->isZoneScoped() || (int) $assignment->zone_id === $context->zoneId;
     }
 }
