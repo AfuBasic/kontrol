@@ -285,6 +285,7 @@ export default function SettlementsIndex({ earnings, summary, filters, statusOpt
                             applyFilters();
                         }}
                         className="flex flex-col gap-3 lg:flex-row lg:items-end"
+                        noValidate
                     >
                         <div className="flex-1">
                             <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-[#9297A8] uppercase">Partner</label>
