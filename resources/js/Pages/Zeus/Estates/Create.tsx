@@ -63,7 +63,7 @@ export default function CreateEstate({ partners }: Props) {
                     </div>
                 </motion.div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                     {/* Estate Information */}
                     <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.05 }}>
                         <h3 className="mb-4 text-base font-semibold text-slate-900 dark:text-white">Estate information</h3>
