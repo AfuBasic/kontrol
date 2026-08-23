@@ -84,6 +84,7 @@ export default function Create({ residents, properties }: Props) {
                 transition={{ duration: 0.4, ease: 'easeOut' }}
                 onSubmit={handleSubmit}
                 className="rounded-3xl bg-white p-6 shadow-xs ring-1 ring-slate-100 sm:p-8"
+                noValidate
             >
                 <div className="space-y-6">
                     {/* Title */}
