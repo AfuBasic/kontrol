@@ -101,7 +101,7 @@ export default function AffiliatesIndex({ affiliates, filters }: Props) {
                 transition={{ duration: 0.35, delay: 0.05 }}
                 className="mb-8 rounded-lg border border-slate-200 bg-white p-5"
             >
-                <form onSubmit={handleSearch} className="grid gap-6 lg:grid-cols-4">
+                <form onSubmit={handleSearch} className="grid gap-6 lg:grid-cols-4" noValidate>
                     <div>
                         <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-400 uppercase">Search Partners</label>
                         <div className="relative">
