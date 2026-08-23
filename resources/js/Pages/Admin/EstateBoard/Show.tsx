@@ -340,7 +340,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                             transition={{ duration: 0.5, delay: 0.1 }}
                             className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
                         >
-                            <form onSubmit={handleSubmitComment}>
+                            <form onSubmit={handleSubmitComment} noValidate>
                                 <textarea
                                     value={data.body}
                                     onChange={(e) => setData('body', e.target.value)}
