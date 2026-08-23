@@ -85,7 +85,7 @@ export default function AcceptInvitation({ acceptUrl, user, invitation, _isPassw
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                                 <button
                                     type="submit"
                                     disabled={processing}
