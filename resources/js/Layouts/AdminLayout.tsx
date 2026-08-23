@@ -521,7 +521,7 @@ export default function AdminLayout({ children, _title }: Props) {
                         </button>
 
                         <Link href={DashboardController.url()} className="flex items-center gap-2">
-                            <img src="/assets/images/app-icon.png" alt="Kontrol" className="h-7 w-auto" />
+                            <img src="/assets/images/kontrol-transparent.png" alt="Kontrol" className="h-7 w-auto object-contain" />
                             <span className="text-xl font-black tracking-tighter text-[#0A3D91] uppercase">Kontrol</span>
                             {is_local && (
                                 <span className="rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-600 uppercase">
