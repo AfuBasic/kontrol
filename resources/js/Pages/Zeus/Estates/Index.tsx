@@ -132,7 +132,7 @@ export default function EstateExplorer({ estates, filters }: Props) {
 
             {/* Filters */}
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center">
-                <form onSubmit={handleSearch} className="flex flex-1 items-center gap-3">
+                <form onSubmit={handleSearch} className="flex flex-1 items-center gap-3" noValidate>
                     <div className="relative flex-1 sm:max-w-xs">
                         <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                         <input
