@@ -84,6 +84,14 @@ export default function AnnouncementCard({ post, isPinned = false }: Props) {
                         {/* Category Tag */}
                         <CategoryTag category={post.category} />
 
+                        {/* Draft Badge */}
+                        {post.status === 'draft' && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-slate-600 uppercase ring-1 ring-slate-200">
+                                <FileText className="h-3 w-3 text-slate-500" />
+                                <span>Draft</span>
+                            </span>
+                        )}
+
                         {/* Pinned or Priority Indicator */}
                         {(isPinned || isImportant) && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase ring-1 ring-amber-200">

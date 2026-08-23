@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import {  Search, X, Settings, Pin } from 'lucide-react';
+import { Search, X, Pin, FileText, Globe } from 'lucide-react';
 
-import { index as boardIndex, manage } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import type { CursorPaginatedPosts, PostCategory } from '@/types';
 import { useDebounce } from '@/Hooks/useDebounce';
 
@@ -23,6 +23,7 @@ type Props = {
         audience: string;
         category: string;
         priority: string;
+        status?: string;
     };
     zones?: Array<{ id: number; name: string }>;
 };
@@ -53,11 +54,12 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                     audience: filters.audience,
                     category: filters.category,
                     priority: filters.priority,
+                    status: filters.status,
                 },
                 { preserveState: true, preserveScroll: true, replace: true },
             );
         }
-    }, [debouncedSearch, filters.audience, filters.category, filters.priority]);
+    }, [debouncedSearch, filters.audience, filters.category, filters.priority, filters.status]);
 
     const setFilter = (key: string, value: string) => {
         const currentVal = filters[key as keyof typeof filters] || '';
@@ -135,16 +137,6 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                         Broadcast announcements, critical alerts, and community updates to residents and estate staff.
                     </p>
                 </div>
-
-                <div className="flex items-center gap-2">
-                    <Link
-                        href={manage.url()}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50"
-                    >
-                        <Settings className="h-4 w-4 text-slate-400" />
-                        <span>Manage Posts</span>
-                    </Link>
-                </div>
             </div>
 
             {/* Quick Composer Surface */}
@@ -167,8 +159,21 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                         />
                     </div>
 
-                    {/* Audience & Category Filter Controls */}
+                    {/* Audience, Status & Category Filter Controls */}
                     <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+                        {/* Status Filter */}
+                        <div className="relative">
+                            <select
+                                value={filters.status || 'all'}
+                                onChange={(e) => setFilter('status', e.target.value)}
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:border-primary-500 focus:outline-hidden"
+                            >
+                                <option value="all">All Posts</option>
+                                <option value="published">Published</option>
+                                <option value="draft">Drafts</option>
+                            </select>
+                        </div>
+
                         {/* Category Dropdown */}
                         <div className="relative">
                             <select
