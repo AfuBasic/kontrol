@@ -42,22 +42,24 @@ export default function ActionCenter({ items }: Props) {
     return (
         <section className="space-y-3.5">
             {/* Header / Briefing Title */}
-            <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2.5">
-                    <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Action Center</h3>
+            <div className="flex items-center justify-between gap-3 px-1">
+                <div className="flex items-center gap-2.5 min-w-0">
+                    <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase whitespace-nowrap">Action Center</h3>
                     {items.length > 0 ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-800">
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-                            {totalPendingCount} {totalPendingCount === 1 ? 'Action Required' : 'Actions Required'}
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-800 whitespace-nowrap">
+                            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-amber-500" />
+                            <span>{totalPendingCount} {totalPendingCount === 1 ? 'Action Required' : 'Actions Required'}</span>
                         </span>
                     ) : (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-extrabold text-emerald-800">
-                            <CheckCircle2 className="h-3 w-3 text-emerald-600" />
-                            All Clear
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 whitespace-nowrap">
+                            <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                            <span>All Clear</span>
                         </span>
                     )}
                 </div>
-                <span className="text-[11px] font-semibold text-slate-400">Executive Operational Briefing</span>
+                <span className="hidden sm:inline-block shrink-0 text-[11px] font-semibold text-slate-400 whitespace-nowrap">
+                    Executive Operational Briefing
+                </span>
             </div>
 
             {/* Empty State */}
@@ -100,21 +102,21 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
         >
             <div>
                 {/* Header Row: Title, Severity Pill & Count */}
-                <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
-                    <div className="flex items-center gap-2.5">
+                <div className="flex flex-col gap-2.5 border-b border-slate-100 pb-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-2.5 min-w-0 flex-1">
                         <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${severityConfig.iconBg}`}>
                             <SeverityIcon className={`h-4 w-4 ${severityConfig.iconColor}`} />
                         </div>
-                        <div>
-                            <h4 className="text-xs font-bold text-slate-900 transition group-hover:text-primary-600">{item.title}</h4>
-                            <div className="mt-0.5 flex items-center gap-2">
+                        <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-bold text-slate-900 transition group-hover:text-primary-600 leading-snug">{item.title}</h4>
+                            <div className="mt-1 flex flex-wrap items-center gap-1.5">
                                 <span
-                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${severityConfig.pillClass}`}
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase whitespace-nowrap ${severityConfig.pillClass}`}
                                 >
                                     {severityConfig.label}
                                 </span>
                                 {item.count !== undefined && item.count > 0 && (
-                                    <span className="text-[10px] font-bold text-slate-400">
+                                    <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
                                         {item.count} {item.count === 1 ? 'item' : 'items'}
                                     </span>
                                 )}
@@ -125,10 +127,10 @@ function ActionBlockCard({ item }: { item: AttentionItem }) {
                     {/* Primary Action Button */}
                     <Link
                         href={item.actionUrl}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-2xs transition hover:bg-slate-800 active:scale-95"
+                        className="inline-flex shrink-0 self-start sm:self-auto items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white shadow-2xs transition hover:bg-slate-800 active:scale-95"
                     >
                         <span>{item.actionLabel ?? 'Take Action'}</span>
-                        <ArrowRight className="h-3.5 w-3.5" />
+                        <ArrowRight className="h-3.5 w-3.5 shrink-0" />
                     </Link>
                 </div>
 
