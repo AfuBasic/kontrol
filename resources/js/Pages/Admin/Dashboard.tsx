@@ -181,7 +181,7 @@ export default function Dashboard({
                                 <span className="text-[10px] font-bold tracking-widest text-indigo-300 uppercase">Operational Command</span>
                                 <h1 className="mt-0.5 text-xl font-bold tracking-tight">{estateShell?.name ?? 'Estate'}</h1>
                                 {estateShell?.address && <p className="text-xs font-medium text-indigo-200/70">{estateShell.address}</p>}
-                                <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+                                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-4">
                                     {Array.from({ length: 4 }).map((_, i) => (
                                         <div key={i} className="h-4 animate-pulse rounded bg-white/10" />
                                     ))}
@@ -432,11 +432,11 @@ function EstateHealthHero({ health }: { health: EstateHealth }) {
 
                 <div className="border-t border-white/10 pt-3.5">
                     <h4 className="text-[10px] font-bold tracking-wider text-indigo-200 uppercase">Daily Briefing Summary</h4>
-                    <div className="mt-2 grid grid-cols-2 gap-3 text-xs font-medium text-indigo-100/80 md:grid-cols-4">
+                    <div className="mt-2.5 grid grid-cols-1 gap-2 text-xs font-medium text-indigo-100/90 sm:grid-cols-2 md:grid-cols-4">
                         {health.summary.map((sumText, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
-                                <span className="truncate">{sumText}</span>
+                            <div key={i} className="flex items-start gap-2">
+                                <div className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+                                <span className="leading-snug">{sumText}</span>
                             </div>
                         ))}
                     </div>
