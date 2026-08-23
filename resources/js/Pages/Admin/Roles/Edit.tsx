@@ -215,17 +215,21 @@ export default function EditRole({ role, permissions }: Props) {
                                         return (
                                             <div key={module} className="rounded-xl border border-slate-200/60 bg-white">
                                                 {/* Group Header */}
-                                                <div className="flex flex-col justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:flex-row sm:items-center">
-                                                    <div className="flex items-center gap-3">
+                                                <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+                                                    <div className="flex flex-wrap items-center gap-2 min-w-0">
                                                         <h3 className="text-sm font-semibold text-slate-900">{humanizeModule(module)}</h3>
-                                                        <span className="rounded-full bg-slate-200/60 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                                                        <span className="rounded-full bg-slate-200/60 px-2 py-0.5 text-[10px] font-medium text-slate-600 tabular-nums">
                                                             {selectedCount} of {modulePermissions.length} selected
                                                         </span>
                                                     </div>
                                                     <button
                                                         type="button"
                                                         onClick={() => toggleModule(module)}
-                                                        className="mt-2 text-left text-sm font-medium text-slate-950 hover:text-slate-950/80 sm:mt-0 sm:text-right"
+                                                        className={`inline-flex shrink-0 items-center justify-center rounded-lg px-2.5 py-1 text-xs font-semibold shadow-2xs transition-all active:scale-95 ${
+                                                            isFullySelected
+                                                                ? 'border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                                                                : 'border border-slate-900 bg-slate-900 text-white hover:bg-slate-800'
+                                                        }`}
                                                     >
                                                         {isFullySelected ? 'Clear all' : 'Select all'}
                                                     </button>
