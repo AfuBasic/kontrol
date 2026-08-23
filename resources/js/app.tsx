@@ -19,8 +19,10 @@ import ResidentLayout from './Layouts/ResidentLayout';
 import SecurityLayout from './Layouts/SecurityLayout';
 import useNativeViewport from './Hooks/useNativeViewport';
 import { initErrorReporter } from './Utils/errorReporter';
+import { initMobileFormValidation } from './Utils/mobileFormValidation';
 
 initErrorReporter();
+initMobileFormValidation();
 
 const appName = import.meta.env.VITE_APP_NAME || 'Kontrol';
 
