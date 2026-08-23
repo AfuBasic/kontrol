@@ -326,7 +326,7 @@ export default function ZonesIndex({ zones }: Props) {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4">
+                            <form onSubmit={handleCreateSubmit} className="mt-5 space-y-4" noValidate>
                                 <div>
                                     <label htmlFor="create_zone_name" className="block text-xs font-black tracking-wider text-slate-700 uppercase">
                                         Zone Name <span className="text-rose-500">*</span>
@@ -420,7 +420,7 @@ export default function ZonesIndex({ zones }: Props) {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleEditSubmit} className="mt-5 space-y-4">
+                            <form onSubmit={handleEditSubmit} className="mt-5 space-y-4" noValidate>
                                 <div>
                                     <label htmlFor="edit_zone_name" className="block text-xs font-black tracking-wider text-slate-700 uppercase">
                                         Zone Name <span className="text-rose-500">*</span>
@@ -528,7 +528,11 @@ export default function ZonesIndex({ zones }: Props) {
                                 audits.
                             </div>
 
-                            <form onSubmit={handleArchiveSubmit} className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                            <form
+                                onSubmit={handleArchiveSubmit}
+                                className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4"
+                                noValidate
+                            >
                                 <button
                                     type="button"
                                     onClick={() => setArchivingZone(null)}
