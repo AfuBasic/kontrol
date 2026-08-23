@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 
-
 type SecurityPerson = {
     ulid: string;
     id: number;
@@ -63,6 +62,7 @@ export default function EditSecurity({ security }: Props) {
                     transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
                     onSubmit={handleSubmit}
                     className="rounded-xl border border-gray-200 bg-white p-6"
+                    noValidate
                 >
                     <div className="space-y-6">
                         {/* Email */}
