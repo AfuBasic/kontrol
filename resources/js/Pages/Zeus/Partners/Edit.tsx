@@ -181,7 +181,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                             <p className="mt-1 text-xs text-[#9297A8]">Modify partner profile, commission schedules, and credentials.</p>
                         </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                             <div className="space-y-4">
                                 <div>
                                     <label className="mb-1.5 block text-xs font-semibold text-[#9297A8]">Partner Name</label>
@@ -387,7 +387,7 @@ export default function EditPartner({ partner, members, partnerPortalUrl }: Prop
                                 </div>
                             </div>
 
-                            <form onSubmit={handleInvite} className="space-y-4">
+                            <form onSubmit={handleInvite} className="space-y-4" noValidate>
                                 <div>
                                     <label className="mb-1 block text-xs font-semibold text-[#9297A8]">Name</label>
                                     <input
