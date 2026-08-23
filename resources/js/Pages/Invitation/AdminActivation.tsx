@@ -89,7 +89,7 @@ export default function AdminActivation({ acceptUrl, user, flash, errors, estate
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                                 <button
                                     type="submit"
                                     disabled={processing}
