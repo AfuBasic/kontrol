@@ -40,7 +40,14 @@ interface Props {
 export default function BankingSetupModal({ isOpen, onClose, banks, currentSettings = emptySettings }: Props) {
     const settings = currentSettings ?? emptySettings;
 
-    const { data, setData, post, processing, errors: _errors, reset: _reset } = useForm({
+    const {
+        data,
+        setData,
+        post,
+        processing,
+        errors: _errors,
+        reset: _reset,
+    } = useForm({
         bank_name: settings.bank_name || '',
         bank_code: settings.bank_code || '',
         account_number: settings.account_number || '',
@@ -143,7 +150,7 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                         </div>
                                     </div>
 
-                                    <form onSubmit={handleSubmit} className="space-y-6">
+                                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                                         {/* Bank Selection */}
                                         <div>
                                             <label className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Select Bank</label>
