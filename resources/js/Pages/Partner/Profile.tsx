@@ -241,7 +241,7 @@ function BankingPanel({ banking, banks }: { banking: Banking; banks: Bank[] }) {
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                 {(errors as { message?: string }).message && (
                     <div className="flex gap-2 rounded-xl bg-rose-50 px-3 py-2.5 text-[12px] font-medium text-rose-700 dark:bg-rose-500/10 dark:text-rose-300">
                         <ExclamationCircleIcon className="h-4 w-4 shrink-0" />
