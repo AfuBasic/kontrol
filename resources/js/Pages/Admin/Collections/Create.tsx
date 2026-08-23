@@ -21,9 +21,14 @@ type ZoneOption = {
 type Props = {
     residents: Resident[];
     zones: ZoneOption[];
+    context?: {
+        is_zone_scoped?: boolean;
+    };
 };
 
-export default function CreateCollection({ residents, zones = [] }: Props) {
+export default function CreateCollection({ residents, zones = [], context }: Props) {
+    const isZoneScoped = context?.is_zone_scoped ?? false;
+
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         description: '',
@@ -35,9 +40,9 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
         due_day: 1,
         grace_days: 0,
         late_fee: '',
-        applies_to: 'all',
+        applies_to: isZoneScoped ? 'zone' : 'all',
         targets: [] as number[],
-        zones: [] as number[],
+        zones: isZoneScoped && zones[0] ? [zones[0].id] : ([] as number[]),
     });
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -267,8 +272,8 @@ export default function CreateCollection({ residents, zones = [] }: Props) {
                                     onChange={(e) => setData('applies_to', e.target.value as any)}
                                     className="appearance-none rounded-xl border-0 bg-slate-100 py-2.5 pr-10 pl-4 text-xs font-black tracking-widest text-slate-600 uppercase ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
                                 >
-                                    <option value="all">Everyone</option>
-                                    <option value="property_owner">Property Owners</option>
+                                    {!isZoneScoped && <option value="all">Everyone</option>}
+                                    {!isZoneScoped && <option value="property_owner">Property Owners</option>}
                                     <option value="zone">Specific Zones</option>
                                     <option value="target">Specific List</option>
                                 </select>

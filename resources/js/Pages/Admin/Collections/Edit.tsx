@@ -44,9 +44,13 @@ type Props = {
     collection: Collection;
     residents: Resident[];
     zones: ZoneOption[];
+    context?: {
+        is_zone_scoped?: boolean;
+    };
 };
 
-export default function EditCollection({ collection, residents, zones = [] }: Props) {
+export default function EditCollection({ collection, residents, zones = [], context }: Props) {
+    const isZoneScoped = context?.is_zone_scoped ?? false;
     // Format date for the input field (YYYY-MM-DD)
     const formattedStartDate = collection.start_date ? new Date(collection.start_date).toISOString().split('T')[0] : '';
     const formattedDueAt = collection.due_at ? new Date(collection.due_at).toISOString().split('T')[0] : '';
@@ -62,9 +66,14 @@ export default function EditCollection({ collection, residents, zones = [] }: Pr
         due_day: collection.due_day,
         grace_days: collection.grace_days,
         late_fee: collection.late_fee?.toString() || '',
-        applies_to: collection.applies_to,
+        applies_to: isZoneScoped && !['target', 'zone'].includes(collection.applies_to) ? 'zone' : collection.applies_to,
         targets: (collection.targets || []).filter((t) => !t.target_type.toLowerCase().includes('zone')).map((t) => t.target_id),
-        zones: (collection.targets || []).filter((t) => t.target_type.toLowerCase().includes('zone')).map((t) => t.target_id),
+        zones:
+            collection.targets?.some((t) => t.target_type.toLowerCase().includes('zone'))
+                ? (collection.targets || []).filter((t) => t.target_type.toLowerCase().includes('zone')).map((t) => t.target_id)
+                : isZoneScoped && zones[0]
+                  ? [zones[0].id]
+                  : [],
     });
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -294,8 +303,8 @@ export default function EditCollection({ collection, residents, zones = [] }: Pr
                                     onChange={(e) => setData('applies_to', e.target.value as any)}
                                     className="appearance-none rounded-xl border-0 bg-slate-100 py-2.5 pr-10 pl-4 text-xs font-black tracking-widest text-slate-600 uppercase ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
                                 >
-                                    <option value="all">Everyone</option>
-                                    <option value="property_owner">Property Owners</option>
+                                    {!isZoneScoped && <option value="all">Everyone</option>}
+                                    {!isZoneScoped && <option value="property_owner">Property Owners</option>}
                                     <option value="zone">Specific Zones</option>
                                     <option value="target">Specific List</option>
                                 </select>

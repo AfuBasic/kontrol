@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\AssignmentScope;
 use App\Jobs\Admin\PublishCollectionJob;
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
@@ -77,6 +79,24 @@ function makeZonedResident(Estate $estate, Zone $zone): User
     return $resident;
 }
 
+function asCollectionZoneAdmin(Zone $zone)
+{
+    $adminRole = Role::where('name', 'admin')->where('guard_name', 'web')->firstOrFail();
+
+    $assignment = AdministrativeAssignment::firstOrCreate([
+        'user_id' => test()->admin->id,
+        'estate_id' => test()->estate->id,
+        'role_id' => $adminRole->id,
+        'zone_id' => $zone->id,
+    ], [
+        'scope_type' => AssignmentScope::Zone,
+        'is_active' => true,
+    ]);
+
+    return test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id]);
+}
+
 it('stores zone targets when a collection applies to specific zones', function () {
     $this->actingAs($this->admin)
         ->post(route('admin.collections.store'), [
@@ -148,4 +168,106 @@ it('passes zones to the collection create page', function () {
             ->component('Admin/Collections/Create')
             ->has('zones', 2)
             ->where('zones.0.name', 'Zone A'));
+});
+
+it('limits collection create options to the active zone for zone scoped admins', function () {
+    $residentA = makeZonedResident($this->estate, $this->zoneA);
+    makeZonedResident($this->estate, $this->zoneB);
+
+    asCollectionZoneAdmin($this->zoneA)
+        ->get(route('admin.collections.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/Collections/Create')
+            ->where('context.is_zone_scoped', true)
+            ->has('zones', 1)
+            ->where('zones.0.id', $this->zoneA->id)
+            ->has('residents', 1)
+            ->where('residents.0.id', $residentA->id)
+        );
+});
+
+it('rejects collection targets outside a zone scoped admins active zone', function () {
+    $residentB = makeZonedResident($this->estate, $this->zoneB);
+
+    asCollectionZoneAdmin($this->zoneA)
+        ->from(route('admin.collections.create'))
+        ->post(route('admin.collections.store'), [
+            'name' => 'Estate Wide From Zone',
+            'amount' => 15000,
+            'billing_type' => 'one_time',
+            'start_date' => now()->toDateString(),
+            'applies_to' => 'all',
+        ])
+        ->assertRedirect(route('admin.collections.create'))
+        ->assertSessionHasErrors('applies_to');
+
+    asCollectionZoneAdmin($this->zoneA)
+        ->from(route('admin.collections.create'))
+        ->post(route('admin.collections.store'), [
+            'name' => 'Other Zone Levy',
+            'amount' => 15000,
+            'billing_type' => 'one_time',
+            'start_date' => now()->toDateString(),
+            'applies_to' => 'zone',
+            'zones' => [$this->zoneB->id],
+        ])
+        ->assertRedirect(route('admin.collections.create'))
+        ->assertSessionHasErrors('zones.0');
+
+    asCollectionZoneAdmin($this->zoneA)
+        ->from(route('admin.collections.create'))
+        ->post(route('admin.collections.store'), [
+            'name' => 'Other Resident Levy',
+            'amount' => 15000,
+            'billing_type' => 'one_time',
+            'start_date' => now()->toDateString(),
+            'applies_to' => 'target',
+            'targets' => [$residentB->id],
+        ])
+        ->assertRedirect(route('admin.collections.create'))
+        ->assertSessionHasErrors('targets.0');
+});
+
+it('defaults blank zone scoped collection zone targets to the active zone', function () {
+    asCollectionZoneAdmin($this->zoneA)
+        ->post(route('admin.collections.store'), [
+            'name' => 'Active Zone Levy',
+            'amount' => 15000,
+            'billing_type' => 'one_time',
+            'start_date' => now()->toDateString(),
+            'applies_to' => 'zone',
+            'zones' => [],
+        ])
+        ->assertRedirect();
+
+    $collection = Collection::query()->where('name', 'Active Zone Levy')->firstOrFail();
+
+    $this->assertDatabaseHas('collection_targets', [
+        'collection_id' => $collection->id,
+        'target_type' => Zone::class,
+        'target_id' => $this->zoneA->id,
+    ]);
+});
+
+it('authorizes zone targeted collections through their target zones', function () {
+    $this->actingAs($this->admin);
+
+    $collection = app(CollectionService::class)->createCollection($this->estate, [
+        'name' => 'Zone A Visibility',
+        'amount' => 20000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addWeek()->toDateString(),
+        'applies_to' => 'zone',
+        'zones' => [$this->zoneA->id],
+    ]);
+
+    asCollectionZoneAdmin($this->zoneA)
+        ->get(route('admin.collections.show', $collection->ulid))
+        ->assertOk();
+
+    asCollectionZoneAdmin($this->zoneB)
+        ->get(route('admin.collections.show', $collection->ulid))
+        ->assertForbidden();
 });

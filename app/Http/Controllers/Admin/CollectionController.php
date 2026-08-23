@@ -297,12 +297,16 @@ class CollectionController extends Controller
     {
         $this->ensureBankingIsSetup();
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
         $residents = User::forEstate($estate->id)
             ->where(function ($query) use ($estate) {
                 $query->withRole('resident', $estate->id)
                     ->orWhere(function ($q) use ($estate) {
                         $q->withRole('property_owner', $estate->id);
                     });
+            })
+            ->when($context?->isZoneScoped(), function ($query) use ($estate, $context) {
+                $query->whereIn('users.id', $this->zoneAudience->userIdsInZones($estate->id, [$context->zoneId], false));
             })
             ->get()
             ->map(function ($user) use ($estate) {
@@ -317,7 +321,6 @@ class CollectionController extends Controller
                 ];
             });
 
-        $context = app(ContextManager::class)->current();
         $zones = $this->zoneAudience->zonesForEstate($estate->id);
         if ($context && $context->isZoneScoped()) {
             $zones = $zones->where('id', $context->zoneId);
@@ -326,6 +329,9 @@ class CollectionController extends Controller
         return Inertia::render('Admin/Collections/Create', [
             'residents' => $residents,
             'zones' => $zones,
+            'context' => [
+                'is_zone_scoped' => $context?->isZoneScoped() ?? false,
+            ],
         ]);
     }
 
@@ -455,12 +461,16 @@ class CollectionController extends Controller
         $this->ensureIsDraft($collection);
         $collection->load('targets')->loadCount('targets');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
         $residents = User::forEstate($estate->id)
             ->where(function ($query) use ($estate) {
                 $query->withRole('resident', $estate->id)
                     ->orWhere(function ($q) use ($estate) {
                         $q->withRole('property_owner', $estate->id);
                     });
+            })
+            ->when($context?->isZoneScoped(), function ($query) use ($estate, $context) {
+                $query->whereIn('users.id', $this->zoneAudience->userIdsInZones($estate->id, [$context->zoneId], false));
             })
             ->get()
             ->map(function ($user) use ($estate) {
@@ -475,7 +485,6 @@ class CollectionController extends Controller
                 ];
             });
 
-        $context = app(ContextManager::class)->current();
         $zones = $this->zoneAudience->zonesForEstate($estate->id);
         if ($context && $context->isZoneScoped()) {
             $zones = $zones->where('id', $context->zoneId);
@@ -485,6 +494,9 @@ class CollectionController extends Controller
             'collection' => $collection,
             'residents' => $residents,
             'zones' => $zones,
+            'context' => [
+                'is_zone_scoped' => $context?->isZoneScoped() ?? false,
+            ],
         ]);
     }
 
@@ -589,6 +601,12 @@ class CollectionController extends Controller
      */
     private function validatedCollectionPayload(Request $request, int $estateId): array
     {
+        $context = app(ContextManager::class)->current();
+
+        if ($context?->isZoneScoped() && $request->input('applies_to') === 'zone' && blank($request->input('zones'))) {
+            $request->merge(['zones' => [$context->zoneId]]);
+        }
+
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -600,11 +618,43 @@ class CollectionController extends Controller
             'due_day' => ['nullable', 'integer', 'min:1', 'max:31'],
             'grace_days' => ['nullable', 'integer', 'min:0'],
             'late_fee' => ['nullable', 'numeric', 'min:0'],
-            'applies_to' => ['required', 'string', 'in:all,target,property_owner,zone'],
+            'applies_to' => [
+                'required',
+                'string',
+                'in:all,target,property_owner,zone',
+                function ($attribute, $value, $fail) use ($context) {
+                    if ($context?->isZoneScoped() && ! in_array($value, ['target', 'zone'], true)) {
+                        $fail('Zone-scoped administrators can only target their active zone or selected residents in that zone.');
+                    }
+                },
+            ],
             'targets' => ['required_if:applies_to,target', 'array'],
-            'targets.*' => ['integer', 'exists:users,id'],
+            'targets.*' => [
+                'integer',
+                Rule::exists('estate_users_membership', 'user_id')
+                    ->where('estate_id', $estateId)
+                    ->where('status', 'accepted'),
+                function ($attribute, $value, $fail) use ($context) {
+                    if (! $context?->isZoneScoped()) {
+                        return;
+                    }
+
+                    $user = User::find($value);
+                    if (! $user || ! $context->canAccess($user)) {
+                        $fail('Selected residents must belong to your active zone.');
+                    }
+                },
+            ],
             'zones' => [$request->applies_to === 'zone' ? 'required' : 'nullable', 'array', $request->applies_to === 'zone' ? 'min:1' : 'nullable'],
-            'zones.*' => ['integer', Rule::exists('zones', 'id')->where('estate_id', $estateId)],
+            'zones.*' => [
+                'integer',
+                Rule::exists('zones', 'id')->where('estate_id', $estateId),
+                function ($attribute, $value, $fail) use ($context) {
+                    if ($context?->isZoneScoped() && (int) $value !== $context->zoneId) {
+                        $fail('Zone-scoped administrators can only target their active zone.');
+                    }
+                },
+            ],
         ]);
     }
 
