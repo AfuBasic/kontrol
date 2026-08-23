@@ -2,8 +2,6 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
-
-
 type Props = {
     categories: Array<{ value: string; label: string }>;
 };
@@ -200,7 +198,7 @@ export default function Create({ categories }: Props) {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
                         {/* Title */}
                         <div>
                             <label htmlFor="title" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
