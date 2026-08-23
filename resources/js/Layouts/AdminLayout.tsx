@@ -132,7 +132,6 @@ export default function AdminLayout({ children, _title }: Props) {
     const { url: fullUrl } = page;
     const url = fullUrl.split('?')[0];
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
@@ -792,80 +791,17 @@ export default function AdminLayout({ children, _title }: Props) {
                             <div className="hidden lg:block lg:h-6 lg:w-px lg:bg-slate-200" aria-hidden="true" />
 
                             {/* User Profile */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                                    className="flex items-center gap-2 rounded-full p-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 focus:outline-none"
-                                >
-                                    <span className="sr-only">Open user menu</span>
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A3D91] text-xs font-semibold text-white ring-2 ring-white">
-                                        {auth.user?.name?.charAt(0).toUpperCase()}
-                                    </div>
-                                    <span className="hidden max-w-[120px] truncate lg:block">{auth.user?.name}</span>
-                                    <ChevronDownIcon
-                                        className={`hidden h-4 w-4 shrink-0 text-slate-400 transition-transform lg:block ${userMenuOpen ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
-                                <AnimatePresence>
-                                    {userMenuOpen && (
-                                        <>
-                                            <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)} />
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                                                animate={{ opacity: 1, y: 0, scale: 1 }}
-                                                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                                                className="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-xl border border-slate-200/60 bg-white p-1.5 shadow-xl"
-                                            >
-                                                <Link
-                                                    href={ProfileController.edit.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
-                                                >
-                                                    <UserCircleIcon className="h-4 w-4 text-slate-400" />
-                                                    Profile
-                                                </Link>
-                                                <Link
-                                                    href={TrustedDeviceController.index.url()}
-                                                    onClick={() => setUserMenuOpen(false)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
-                                                >
-                                                    <ShieldCheckIcon className="h-4 w-4 text-slate-400" />
-                                                    Trusted devices
-                                                </Link>
-                                                {isAdmin && hasActivityLogs && (
-                                                    <Link
-                                                        href={ActivityLogController.index.url()}
-                                                        onClick={() => setUserMenuOpen(false)}
-                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
-                                                    >
-                                                        <ClipboardDocumentListIcon className="h-4 w-4 text-slate-400" />
-                                                        Activity Log
-                                                    </Link>
-                                                )}
-
-                                                {(auth.user?.available_contexts?.length || 0) > 1 && (
-                                                    <Link
-                                                        href={ContextController.index.url()}
-                                                        onClick={() => setUserMenuOpen(false)}
-                                                        className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-[#F0F5FF] hover:text-[#0A3D91]"
-                                                    >
-                                                        <BuildingOfficeIcon className="h-4 w-4 text-slate-400" />
-                                                        Switch Workspace
-                                                    </Link>
-                                                )}
-
-                                                <button
-                                                    onClick={() => setShowLogoutConfirmation(true)}
-                                                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"
-                                                >
-                                                    <ArrowLeftStartOnRectangleIcon className="h-4 w-4 text-slate-400" />
-                                                    Sign out
-                                                </button>
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
-                            </div>
+                            <Link
+                                href={ProfileController.edit.url()}
+                                className="group flex items-center gap-2 rounded-full p-1 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 focus:ring-2 focus:ring-[#0A3D91] focus:ring-offset-2 focus:outline-none"
+                                title="My Profile"
+                                aria-label="Go to profile"
+                            >
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0A3D91] text-xs font-semibold text-white ring-2 ring-white transition-transform group-hover:scale-105">
+                                    {auth.user?.name?.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="hidden max-w-[120px] truncate lg:block">{auth.user?.name}</span>
+                            </Link>
                         </div>
                     </header>
 
