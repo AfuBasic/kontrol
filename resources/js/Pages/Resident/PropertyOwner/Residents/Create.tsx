@@ -259,6 +259,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
                         transition={{ duration: 0.15 }}
                         onSubmit={handleSubmitSingle}
                         className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+                        noValidate
                     >
                         <div className="space-y-6">
                             {/* Full Name */}
