@@ -29,7 +29,8 @@ type FormData = {
     images: File[];
 };
 
-export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
+export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
+    const safeZones = zones ?? [];
     const { isZoneScoped, zoneId, zoneName } = useActiveContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [previews, setPreviews] = useState<string[]>([]);
@@ -327,7 +328,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                         {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
                                     </div>
 
-                                    {zones.length > 0 && (
+                                    {safeZones.length > 0 && (
                                         <div>
                                             <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
                                                 Zone targeting
@@ -336,7 +337,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                                 Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
                                             </p>
                                             <div className="space-y-2">
-                                                {zones.map((zone) => {
+                                                {safeZones.map((zone) => {
                                                     const selected = data.zone_ids.includes(zone.id);
                                                     return (
                                                         <label
@@ -374,7 +375,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
 
                             <div>
                                 <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Images</label>
-                                {previews.length > 0 && (
+                                {(previews?.length ?? 0) > 0 && (
                                     <div className="mb-3 grid grid-cols-2 gap-2">
                                         {previews.map((preview, idx) => (
                                             <div key={idx} className="group relative">
@@ -401,7 +402,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    disabled={data.images.length >= 10}
+                                    disabled={(data.images?.length ?? 0) >= 10}
                                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-4 text-xs text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <Upload className="h-4 w-4" />

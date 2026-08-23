@@ -37,6 +37,7 @@ type FormData = {
 };
 
 export default function EditPost({ post, zones = [] }: Props) {
+    const safeZones = zones ?? [];
     const { isZoneScoped, zoneId, zoneName } = useActiveContext();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [previews, setPreviews] = useState<string[]>([]);
@@ -387,7 +388,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                         {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
                                     </div>
 
-                                    {zones.length > 0 && (
+                                    {safeZones.length > 0 && (
                                         <div>
                                             <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
                                                 Zone targeting
@@ -396,7 +397,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                                 Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
                                             </p>
                                             <div className="space-y-2">
-                                                {zones.map((zone) => {
+                                                {safeZones.map((zone) => {
                                                     const selected = data.zone_ids.includes(zone.id);
                                                     return (
                                                         <label
@@ -434,36 +435,42 @@ export default function EditPost({ post, zones = [] }: Props) {
 
                             <div>
                                 <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Images</label>
-                                {existingMedia.length > 0 && (
-                                    <div className="mb-3 grid grid-cols-2 gap-2">
-                                        {existingMedia.map((media) => (
-                                            <div key={media.id} className="group relative">
-                                                <img src={media.url} alt="" className="h-20 w-full rounded-lg object-cover" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeExistingImage(media.id)}
-                                                    className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                                >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </button>
-                                            </div>
-                                        ))}
+                                {(existingMedia?.length ?? 0) > 0 && (
+                                    <div className="mb-3">
+                                        <p className="mb-1.5 text-xs text-gray-500">Current attachments</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {existingMedia.map((item) => (
+                                                <div key={item.id} className="group relative">
+                                                    <img src={item.url} alt="" className="h-20 w-full rounded-lg object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeExistingMedia(item.id)}
+                                                        className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
-                                {previews.length > 0 && (
-                                    <div className="mb-3 grid grid-cols-2 gap-2">
-                                        {previews.map((preview, idx) => (
-                                            <div key={idx} className="group relative">
-                                                <img src={preview} alt="" className="h-20 w-full rounded-lg object-cover" />
-                                                <button
-                                                    type="button"
-                                                    onClick={() => removeNewImage(idx)}
-                                                    className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                                                >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </button>
-                                            </div>
-                                        ))}
+                                {(previews?.length ?? 0) > 0 && (
+                                    <div className="mb-3">
+                                        <p className="mb-1.5 text-xs text-gray-500">New uploads</p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {previews.map((preview, idx) => (
+                                                <div key={idx} className="group relative">
+                                                    <img src={preview} alt="" className="h-20 w-full rounded-lg object-cover" />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeNewImage(idx)}
+                                                        className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
                                 <input
@@ -477,7 +484,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    disabled={existingMedia.length + data.images.length >= 10}
+                                    disabled={totalMediaCount >= 10}
                                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-4 text-xs text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <Upload className="h-4 w-4" />
