@@ -473,7 +473,7 @@ export default function Settings({ settings }: SettingsProps) {
                     </button>
                 </motion.div>
 
-                <form onSubmit={handleSubmit} className="space-y-8">
+                <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                     {/* SECTION 1: VISITOR ACCESS */}
                     <motion.section
                         initial={{ opacity: 0, y: 16 }}
