@@ -275,7 +275,7 @@ function EditSheet({ open, onClose, user, mode }: { open: boolean; onClose: () =
                             </button>
                         </header>
 
-                        <form onSubmit={handleSubmit} className="space-y-4 px-5 pt-2 pb-6">
+                        <form onSubmit={handleSubmit} className="space-y-4 px-5 pt-2 pb-6" noValidate>
                             {mode === 'profile' && (
                                 <FormField label="Name" error={errors.name}>
                                     <input
