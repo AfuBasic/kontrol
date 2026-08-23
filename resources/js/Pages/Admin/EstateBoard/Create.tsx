@@ -122,7 +122,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
 
             <form onSubmit={handleSubmit} noValidate>
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                    <div className="order-2 space-y-6 xl:order-1">
+                    <div className="order-1 space-y-6 xl:order-1">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -200,7 +200,7 @@ export default function CreatePost({ zones = [] }: { zones?: ZoneOption[] }) {
                         </motion.div>
                     </div>
 
-                    <div className="order-1 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
+                    <div className="order-2 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}

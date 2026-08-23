@@ -182,7 +182,7 @@ export default function EditPost({ post, zones = [] }: Props) {
 
             <form onSubmit={handleSubmit} noValidate>
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
-                    <div className="order-2 space-y-6 xl:order-1">
+                    <div className="order-1 space-y-6 xl:order-1">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -214,7 +214,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                         >
                             {validationErrors.length > 0 && (
                                 <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                                    <p className="text-sm font-medium text-red-800">Please fix the following before saving:</p>
+                                    <p className="text-sm font-medium text-red-800">Please fix the following before publishing:</p>
                                     <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
                                         {validationErrors.map(([field, message]) => (
                                             <li key={field}>{message}</li>
@@ -230,6 +230,11 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 <input
                                     type="text"
                                     id="title"
+                                    name="title"
+                                    autoComplete="off"
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="Give your announcement a clear title..."
@@ -255,7 +260,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                         </motion.div>
                     </div>
 
-                    <div className="order-1 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
+                    <div className="order-2 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
