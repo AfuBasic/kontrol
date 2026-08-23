@@ -184,14 +184,17 @@ export default function Edit({ propertyOwner, zones = [] }: Props) {
                     )}
                 </div>
 
-                <div className="mt-10 flex items-center justify-end gap-4 border-t border-gray-100 pt-6">
-                    <Link href={index.url()} className="px-6 py-3 text-sm font-semibold text-gray-500 transition-colors hover:text-gray-700">
+                <div className="mt-10 flex flex-col-reverse gap-3 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
+                    <Link
+                        href={index.url()}
+                        className="w-full rounded-xl py-3 text-center text-sm font-semibold text-gray-500 transition-colors hover:text-gray-700 sm:w-auto sm:px-6"
+                    >
                         Cancel
                     </Link>
                     <button
                         type="submit"
                         disabled={processing}
-                        className="rounded-xl bg-[#0A3D91] px-8 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all hover:bg-blue-800 active:scale-95 disabled:opacity-50"
+                        className="w-full rounded-xl bg-[#0A3D91] px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition-all hover:bg-blue-800 active:scale-95 disabled:opacity-50 sm:w-auto sm:py-3"
                     >
                         {processing ? 'Saving...' : 'Save Changes'}
                     </button>
