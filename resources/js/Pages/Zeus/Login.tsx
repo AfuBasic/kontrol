@@ -71,7 +71,7 @@ export default function Login() {
                         transition={{ duration: 0.6, delay: 0.3, ease: 'easeOut' }}
                     >
                         <div className="rounded-2xl border border-primary-800/40 bg-primary-900/50 p-8 shadow-2xl backdrop-blur-xl">
-                            <form onSubmit={submit} className="space-y-5">
+                            <form onSubmit={submit} className="space-y-5" noValidate>
                                 {/* Username field */}
                                 <div>
                                     <label htmlFor="username" className="mb-2 block text-sm font-semibold text-primary-100">
