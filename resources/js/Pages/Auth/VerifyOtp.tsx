@@ -262,7 +262,7 @@ export default function VerifyOtp({ email }: Props) {
                         </AnimatePresence>
 
                         {/* Form & OTP Input Grid */}
-                        <form onSubmit={handleSubmit} className="mt-7">
+                        <form onSubmit={handleSubmit} className="mt-7" noValidate>
                             <div className="flex justify-between gap-1.5 sm:gap-2.5" onPaste={handlePaste}>
                                 {Array.from({ length: 6 }).map((_, i) => {
                                     const hasValue = !!digits[i]?.trim();
