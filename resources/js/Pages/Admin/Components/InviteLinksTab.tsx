@@ -155,20 +155,19 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
         );
         window.open(`https://wa.me/?text=${text}`, '_blank');
     };
-
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h3 className="text-lg font-semibold text-gray-900">Invite Links</h3>
-                    <p className="text-sm text-gray-500">Manage shareable links for your estate or specific zones.</p>
+            <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-semibold text-gray-900 sm:text-lg">Invite Links</h3>
+                    <p className="mt-0.5 text-xs text-gray-500 sm:text-sm">Manage shareable links for your estate or specific zones.</p>
                 </div>
                 <button
                     onClick={() => setShowCreateModal(true)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
+                    className="inline-flex shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-slate-950 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95 sm:px-4 sm:py-2.5 sm:text-sm"
                 >
-                    <Plus className="h-4 w-4" />
-                    New Link
+                    <Plus className="h-4 w-4 shrink-0" />
+                    <span>New Link</span>
                 </button>
             </div>
 
