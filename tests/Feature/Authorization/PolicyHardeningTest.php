@@ -100,6 +100,46 @@ class PolicyHardeningTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_admin_cannot_manage_global_roles_through_admin_role_forms()
+    {
+        $estate = Estate::factory()->create();
+        $admin = User::factory()->create();
+
+        EstateMembership::create([
+            'estate_id' => $estate->id,
+            'user_id' => $admin->id,
+            'status' => 'accepted',
+        ]);
+
+        $adminRole = Role::where('name', 'admin')->first();
+
+        $assignment = AdministrativeAssignment::create([
+            'user_id' => $admin->id,
+            'estate_id' => $estate->id,
+            'role_id' => $adminRole->id,
+            'scope_type' => AssignmentScope::Estate,
+            'is_active' => true,
+        ]);
+        $admin->roles()->attach($adminRole, ['estate_id' => $estate->id]);
+
+        $globalRole = Role::create([
+            'name' => 'global-custom-role',
+            'estate_id' => null,
+            'guard_name' => 'web',
+        ]);
+
+        $this->actingAs($admin)->withSession(['active_context_assignment_id' => $assignment->id]);
+
+        $this->get(route('admin.roles.edit', $globalRole))->assertForbidden();
+
+        $this->put(route('admin.roles.update', $globalRole), [
+            'name' => 'renamed-global-role',
+            'permissions' => [],
+        ])->assertForbidden();
+
+        $this->delete(route('admin.roles.destroy', $globalRole))->assertForbidden();
+    }
+
     public function test_admin_can_update_role_in_their_own_estate()
     {
         $estateA = Estate::factory()->create();

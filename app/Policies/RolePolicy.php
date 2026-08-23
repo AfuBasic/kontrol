@@ -31,6 +31,10 @@ class RolePolicy extends BaseContextPolicy
      */
     public function update(User $user, Role $role): bool
     {
+        if ($role->estate_id === null) {
+            return false;
+        }
+
         // Spatie roles use team_id to store estate_id in this architecture
         if (! $this->hasValidContextForEstate($role->estate_id)) {
             return false;
@@ -44,6 +48,10 @@ class RolePolicy extends BaseContextPolicy
      */
     public function delete(User $user, Role $role): bool
     {
+        if ($role->estate_id === null) {
+            return false;
+        }
+
         if (! $this->hasValidContextForEstate($role->estate_id)) {
             return false;
         }
