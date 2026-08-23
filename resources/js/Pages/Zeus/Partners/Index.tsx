@@ -208,7 +208,7 @@ export default function PartnersIndex({ partners, filters }: Props) {
                     transition={{ duration: 0.4, delay: 0.1 }}
                     className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-2xl"
                 >
-                    <form onSubmit={handleSearch} className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                    <form onSubmit={handleSearch} className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end" noValidate>
                         <div className="flex flex-1 flex-col gap-4 sm:flex-row">
                             <div className="flex-1">
                                 <label className="mb-2 block text-xs font-bold tracking-wider text-[#9297A8] uppercase">Search Partners</label>
