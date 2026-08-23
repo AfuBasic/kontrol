@@ -218,7 +218,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                 })}
             </div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
                 <AnimatePresence mode="wait">
                     {/* STEP 1: BILL BASICS */}
                     {step === 1 && (
