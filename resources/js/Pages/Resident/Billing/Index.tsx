@@ -482,7 +482,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                             </div>
                         </div>
 
-                        <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                        <form onSubmit={handleApplyCoupon} className="flex gap-2" noValidate>
                             <div className="relative flex-1">
                                 <input
                                     type="text"
