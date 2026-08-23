@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Plus,
-    Search,
-    ShieldAlert,
-    X,
-} from 'lucide-react';
+import { Plus, Search, ShieldAlert, X } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
 import IncidentCard from '@/Components/Incidents/IncidentCard';
 import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
@@ -75,23 +70,18 @@ export default function Index({ incidents, filters, categories }: Props) {
     };
 
     const incidentList = incidents?.data || [];
-    const hasActiveFilters = Boolean(
-        search ||
-            selectedCategory ||
-            (currentTab && currentTab !== 'all') ||
-            (currentSort && currentSort !== 'newest')
-    );
+    const hasActiveFilters = Boolean(search || selectedCategory || (currentTab && currentTab !== 'all') || (currentSort && currentSort !== 'newest'));
 
     return (
         <>
             <Head title="Security Incident Log - Kontrol" />
 
-            <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 sm:py-8 space-y-6">
+            <div className="mx-auto max-w-4xl space-y-6 px-4 py-6 sm:px-6 sm:py-8">
                 {/* Header Section */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+                            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
                                 Incident Dispatch Log
                             </h1>
                             <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-black text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -107,7 +97,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                         href="/security/incidents/create"
                         className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-md shadow-indigo-600/20 transition-all hover:bg-indigo-700 active:scale-95"
                     >
-                        <Plus className="w-4 h-4" />
+                        <Plus className="h-4 w-4" />
                         <span>Log Incident</span>
                     </Link>
                 </div>
@@ -138,14 +128,14 @@ export default function Index({ incidents, filters, categories }: Props) {
                         </div>
 
                         {/* Search Bar */}
-                        <form onSubmit={handleSearchSubmit} className="relative flex-1 sm:max-w-xs">
-                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <form onSubmit={handleSearchSubmit} className="relative flex-1 sm:max-w-xs" noValidate>
+                            <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search log by title, location..."
-                                className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                className="w-full rounded-2xl border border-slate-200 bg-white py-2 pr-9 pl-9 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                             />
                             {search && (
                                 <button
@@ -154,23 +144,23 @@ export default function Index({ incidents, filters, categories }: Props) {
                                         setSearch('');
                                         applyFilters({ search: undefined });
                                     }}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                                 >
-                                    <X className="w-3.5 h-3.5" />
+                                    <X className="h-3.5 w-3.5" />
                                 </button>
                             )}
                         </form>
                     </div>
 
                     {/* Category Filter Pills */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                    <div className="scrollbar-none flex items-center gap-1.5 overflow-x-auto pb-1">
                         <button
                             type="button"
                             onClick={() => handleCategoryClick('')}
                             className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
                                 !selectedCategory
                                     ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-                                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400'
+                                    : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400'
                             }`}
                         >
                             All Categories
@@ -182,17 +172,13 @@ export default function Index({ incidents, filters, categories }: Props) {
                                     key={cat.value}
                                     type="button"
                                     onClick={() => handleCategoryClick(cat.value)}
-                                    className={`shrink-0 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+                                    className={`shrink-0 rounded-xl border px-3 py-1.5 text-xs font-bold transition-all ${
                                         isSelected
-                                            ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs'
-                                            : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+                                            ? 'border-indigo-600 bg-indigo-600 text-white shadow-xs'
+                                            : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
                                     }`}
                                 >
-                                    <IncidentCategoryLabel
-                                        category={cat.value}
-                                        size="xs"
-                                        className={isSelected ? '!text-white' : ''}
-                                    />
+                                    <IncidentCategoryLabel category={cat.value} size="xs" className={isSelected ? '!text-white' : ''} />
                                 </button>
                             );
                         })}
@@ -203,11 +189,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                 {hasActiveFilters && (
                     <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:bg-slate-900/60 dark:text-slate-400">
                         <span>Filtered view active</span>
-                        <button
-                            type="button"
-                            onClick={clearAllFilters}
-                            className="font-bold text-indigo-600 hover:underline dark:text-indigo-400"
-                        >
+                        <button type="button" onClick={clearAllFilters} className="font-bold text-indigo-600 hover:underline dark:text-indigo-400">
                             Reset filters
                         </button>
                     </div>
@@ -220,9 +202,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                             icon={ShieldAlert}
                             title={hasActiveFilters ? 'No Matching Cases' : 'No Incident Logs'}
                             description={
-                                hasActiveFilters
-                                    ? 'Try changing or clearing your search criteria.'
-                                    : 'No security incidents have been logged yet.'
+                                hasActiveFilters ? 'Try changing or clearing your search criteria.' : 'No security incidents have been logged yet.'
                             }
                             action={
                                 !hasActiveFilters ? (
@@ -239,12 +219,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                 ) : (
                     <div className="space-y-3.5">
                         {incidentList.map((incident) => (
-                            <IncidentCard
-                                key={incident.id}
-                                incident={incident}
-                                variant="security"
-                                href={`/security/incidents/${incident.hashid}`}
-                            />
+                            <IncidentCard key={incident.id} incident={incident} variant="security" href={`/security/incidents/${incident.hashid}`} />
                         ))}
                     </div>
                 )}
@@ -269,7 +244,7 @@ export default function Index({ incidents, filters, categories }: Props) {
                                     className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                                         link.active
                                             ? 'bg-indigo-600 text-white shadow-xs'
-                                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+                                            : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
                                     }`}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
                                 />
