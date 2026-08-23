@@ -255,7 +255,7 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                                 </button>
                             </div>
 
-                            <form onSubmit={handleExtendPass} className="mt-4 space-y-4">
+                            <form onSubmit={handleExtendPass} className="mt-4 space-y-4" noValidate>
                                 <div>
                                     <label className="mb-1.5 block text-xs font-semibold text-slate-700">Select Extension Duration</label>
                                     <select
