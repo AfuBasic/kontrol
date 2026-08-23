@@ -66,6 +66,7 @@ export default function EditEstate({ estate }: Props) {
                     transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                     onSubmit={handleSubmit}
                     className="space-y-8"
+                    noValidate
                 >
                     {/* Basic Information Card */}
                     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-[#0f1423]">
