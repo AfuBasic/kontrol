@@ -180,7 +180,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                 )}
             </motion.div>
 
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} noValidate>
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
                     <div className="order-2 space-y-6 xl:order-1">
                         <motion.div
