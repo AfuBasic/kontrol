@@ -1,10 +1,4 @@
-import {
-    
-    ArrowLeftIcon,
-    CalendarIcon,
-    CheckCircleIcon,
-    XMarkIcon,
-} from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CalendarIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion';
 import { useState, useEffect, useRef } from 'react';
@@ -295,7 +289,7 @@ export default function Show({ collection, assignments, collected, outstanding }
                                 </button>
                             </div>
 
-                            <form onSubmit={handleRecordPayment} className="mt-6 space-y-4">
+                            <form onSubmit={handleRecordPayment} className="mt-6 space-y-4" noValidate>
                                 <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase">Resident</p>
                                     <p className="mt-0.5 text-sm font-black text-slate-900">{recordingAssignment.resident_name}</p>
