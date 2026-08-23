@@ -75,7 +75,7 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                 </div>
 
                 <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
-                    <form onSubmit={submit} className="flex flex-col">
+                    <form onSubmit={submit} className="flex flex-col" noValidate>
                         <div className="space-y-12 p-8">
                             {/* SECTION 1: PERSON */}
                             <section>
