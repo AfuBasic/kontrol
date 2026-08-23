@@ -528,7 +528,7 @@ export default function PartnerEstate({ partner }: Props) {
 
                         <MobileProgress step={step} />
 
-                        <form onSubmit={handleFormSubmit} className="mt-8 lg:mt-0">
+                        <form onSubmit={handleFormSubmit} className="mt-8 lg:mt-0" noValidate>
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={step}
