@@ -21,7 +21,7 @@ class EstateBoardService
      * @param  string|null  $search  Filter by search text
      * @return CursorPaginator<EstateBoardPost>
      */
-    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null, ?string $category = null, ?string $priority = null): CursorPaginator
+    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null, ?string $category = null, ?string $priority = null, ?string $status = null): CursorPaginator
     {
         $user = auth()->user();
         $isAdmin = $user && $user->contextHasRole('admin');
@@ -32,7 +32,13 @@ class EstateBoardService
 
         return EstateBoardPost::query()
             ->forEstate($estateId)
-            ->published()
+            ->when($status === 'published', fn ($q) => $q->published())
+            ->when($status === 'draft', fn ($q) => $q->draft())
+            ->when($status === null || $status === '' || $status === 'all', function ($q) use ($isAdmin) {
+                if (! $isAdmin) {
+                    $q->published();
+                }
+            })
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
             ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
             ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'))
@@ -96,7 +102,8 @@ class EstateBoardService
                 'media' => fn ($q) => $q->limit(4)->orderBy('sort_order'),
             ])
             ->withCount('comments')
-            ->orderByDesc('published_at')
+            ->orderByRaw('COALESCE(published_at, created_at) desc')
+            ->orderByDesc('id')
             ->cursorPaginate($perPage);
     }
 
