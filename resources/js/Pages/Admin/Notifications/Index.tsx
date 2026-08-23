@@ -107,7 +107,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
 
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 {/* Search */}
-                <form onSubmit={handleSearch} className="relative w-full max-w-sm flex-1">
+                <form onSubmit={handleSearch} className="relative w-full max-w-sm flex-1" noValidate>
                     <div className="relative rounded-xl bg-white">
                         <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
