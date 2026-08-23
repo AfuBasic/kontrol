@@ -1059,15 +1059,18 @@ export default function Settings({ settings }: SettingsProps) {
                     </motion.section>
 
                     {/* Bottom Save Bar */}
-                    <div className="flex items-center justify-between border-t border-slate-200/80 pt-6 dark:border-slate-800">
-                        <p className="text-xs text-slate-400">Changes take effect immediately across all active estate devices.</p>
+                    <div className="flex flex-col gap-4 border-t border-slate-200/80 pt-6 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
+                        <p className="text-center text-xs leading-relaxed text-slate-400 sm:max-w-xs sm:text-left">
+                            Changes take effect immediately across all active estate devices.
+                        </p>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 py-2.5 text-sm font-semibold text-white shadow-md shadow-sm transition-all hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:opacity-50 dark:bg-slate-950 dark:hover:bg-slate-800"
+                            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-base font-semibold whitespace-nowrap text-white shadow-md transition-all hover:bg-slate-800 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none active:scale-95 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:rounded-xl sm:px-6 sm:py-2.5 sm:text-sm dark:bg-slate-950 dark:hover:bg-slate-800"
                         >
                             <Save className="h-4 w-4" />
-                            {processing ? 'Saving Changes...' : 'Save Settings'}
+                            <span className="sm:hidden">{processing ? 'Saving...' : 'Save'}</span>
+                            <span className="hidden sm:inline">{processing ? 'Saving Changes...' : 'Save Settings'}</span>
                         </button>
                     </div>
                 </form>
