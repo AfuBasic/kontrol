@@ -280,6 +280,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                             transition={{ duration: 0.2 }}
                             onSubmit={handleSubmitSingle}
                             className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
+                            noValidate
                         >
                             <div className="space-y-6">
                                 {/* Name */}
