@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 
@@ -23,7 +23,8 @@ async function getFileHash(file: File): Promise<string> {
 }
 
 export default function AdminIncidentCreate({ categories, admins, zones = [] }: Props) {
-    const { data, setData, processing, errors } = useForm<{
+    const { errors: pageErrors } = usePage().props;
+    const { data, setData, processing, errors: formErrors, setError, clearErrors } = useForm<{
         title: string;
         body: string;
         category: string;
@@ -44,6 +45,8 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
         zone_id: '',
         is_private: false,
     });
+
+    const errors = { ...pageErrors, ...formErrors };
 
     const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
     const [attachmentType, setAttachmentType] = useState<'image' | 'video' | null>(null);
@@ -152,6 +155,7 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                 }
             }
 
+            clearErrors();
             // 5. Submit the incident details to the server
             router.post(
                 '/admin/incidents',
@@ -169,6 +173,9 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                     is_private: data.is_private,
                 },
                 {
+                    onError: (errs) => {
+                        setError(errs as any);
+                    },
                     onFinish: () => setUploadingMedia(false),
                 },
             );
@@ -197,6 +204,20 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                 <div className="mb-6 flex items-center gap-2.5 rounded-xl border border-red-100 bg-red-50/50 p-4 text-xs font-semibold text-red-700">
                     <AlertCircle className="h-4.5 w-4.5 shrink-0" />
                     <span>{customError}</span>
+                </div>
+            )}
+
+            {Object.keys(errors).length > 0 && (
+                <div className="mb-6 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50/50 p-4 text-xs font-semibold text-red-700">
+                    <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                    <div>
+                        <p className="font-bold">Please correct the errors below:</p>
+                        <ul className="mt-1 list-inside list-disc space-y-0.5 text-red-600">
+                            {Object.entries(errors).map(([key, msg]) => (
+                                <li key={key}>{String(msg)}</li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
             )}
 
