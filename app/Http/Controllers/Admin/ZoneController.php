@@ -33,6 +33,8 @@ class ZoneController extends Controller
 
     public function store(StoreZoneRequest $request): RedirectResponse
     {
+        $this->authorize('create', Zone::class);
+
         $context = app(ContextManager::class)->current();
 
         if (! $context) {

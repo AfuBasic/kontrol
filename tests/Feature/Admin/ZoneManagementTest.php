@@ -145,3 +145,50 @@ test('admin cannot create a zone with a name that is already taken by a soft del
 
     $response->assertSessionHasErrors(['name']);
 });
+
+test('zone-scoped admins cannot manage estate zones', function () {
+    $adminRole = Role::where('name', 'admin')->first();
+    $zone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Assigned Zone',
+    ]);
+
+    $zoneAssignment = AdministrativeAssignment::create([
+        'user_id' => $this->admin->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => $zone->id,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->get('/admin/zones')
+        ->assertForbidden();
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->post('/admin/zones', [
+            'name' => 'Another Zone',
+            'description' => 'Should not be allowed from a zone-scoped context.',
+            'is_active' => true,
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->put("/admin/zones/{$zone->id}", [
+            'name' => 'Mutated Zone',
+            'description' => 'Should not update.',
+            'is_active' => false,
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->delete("/admin/zones/{$zone->id}")
+        ->assertForbidden();
+
+    expect($zone->fresh())->name->toBe('Assigned Zone');
+});

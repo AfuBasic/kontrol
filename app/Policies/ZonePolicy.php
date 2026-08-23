@@ -13,6 +13,12 @@ class ZonePolicy
      */
     public function viewAny(User $user): bool
     {
+        $context = app(ContextManager::class)->current();
+
+        if (! $context || $context->isZoneScoped()) {
+            return false;
+        }
+
         return $user->contextHasRole('admin') || $user->contextCan('zones.view');
     }
 
@@ -23,7 +29,7 @@ class ZonePolicy
     {
         $context = app(ContextManager::class)->current();
 
-        if (! $context || $zone->estate_id !== $context->estateId) {
+        if (! $context || $context->isZoneScoped() || $zone->estate_id !== $context->estateId) {
             return false;
         }
 
@@ -35,6 +41,12 @@ class ZonePolicy
      */
     public function create(User $user): bool
     {
+        $context = app(ContextManager::class)->current();
+
+        if (! $context || $context->isZoneScoped()) {
+            return false;
+        }
+
         return $user->contextHasRole('admin') || $user->contextCan('zones.create');
     }
 
@@ -45,7 +57,7 @@ class ZonePolicy
     {
         $context = app(ContextManager::class)->current();
 
-        if (! $context || $zone->estate_id !== $context->estateId) {
+        if (! $context || $context->isZoneScoped() || $zone->estate_id !== $context->estateId) {
             return false;
         }
 
@@ -59,7 +71,7 @@ class ZonePolicy
     {
         $context = app(ContextManager::class)->current();
 
-        if (! $context || $zone->estate_id !== $context->estateId) {
+        if (! $context || $context->isZoneScoped() || $zone->estate_id !== $context->estateId) {
             return false;
         }
 
