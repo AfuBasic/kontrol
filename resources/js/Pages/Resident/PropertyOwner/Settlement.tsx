@@ -103,7 +103,7 @@ export default function Settlement({ settlement, banks = [] }: Props) {
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                     {(errors as any).message && (
                         <div className="rounded-2xl border border-rose-100 bg-rose-50 p-5">
                             <div className="flex items-center gap-3 text-rose-800">
