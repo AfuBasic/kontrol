@@ -204,7 +204,6 @@ export default function AdminLayout({ children, _title }: Props) {
     // Close all open menus on navigation
     useEffect(() => {
         setNotificationOpen(false);
-        setUserMenuOpen(false);
         setMobileMenuOpen(false);
     }, [url]);
 
