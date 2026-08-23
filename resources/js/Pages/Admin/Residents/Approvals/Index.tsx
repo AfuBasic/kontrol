@@ -167,7 +167,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
 
             {/* Search */}
             <div className="mb-6 max-w-md">
-                <form onSubmit={handleSearch} className="relative">
+                <form onSubmit={handleSearch} className="relative" noValidate>
                     <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
                     <input
                         type="text"
