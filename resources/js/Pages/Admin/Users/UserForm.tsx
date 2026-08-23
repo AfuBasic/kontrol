@@ -59,7 +59,7 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
             </div>
 
             <div className="rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
-                <form onSubmit={submit} className="flex flex-col">
+                <form onSubmit={submit} className="flex flex-col" noValidate>
                     <div className="p-8">
                         {/* GLOBAL ERRORS */}
                         {Object.keys(errors).length > 0 && (
