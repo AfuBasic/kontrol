@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Plus,
-    RefreshCw,
-    Search,
-    Shield,
-    SlidersHorizontal,
-    X,
-} from 'lucide-react';
+import { Plus, RefreshCw, Search, Shield, SlidersHorizontal, X } from 'lucide-react';
 import MobileSheet from '@/Components/MobileSheet';
 import IncidentCard from '@/Components/Incidents/IncidentCard';
 import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
@@ -59,9 +52,7 @@ export default function Index({
             });
             setPendingIncidents(merged.filter((i) => i.status !== SyncStatus.Synced));
 
-            const synced = stored.filter(
-                (i) => operations.find((o) => o.id === i.id)?.status === SyncStatus.Synced
-            );
+            const synced = stored.filter((i) => operations.find((o) => o.id === i.id)?.status === SyncStatus.Synced);
             if (synced.length > 0) {
                 await Promise.all(synced.map((i) => ResidentStore.removePendingIncident(i.id)));
                 router.reload({ only: ['incidents'] });
@@ -122,23 +113,13 @@ export default function Index({
     };
 
     const incidentList = incidents?.data || [];
-    const hasActiveFilters = Boolean(
-        search ||
-        selectedCategory ||
-        (currentTab && currentTab !== 'all') ||
-        (currentSort && currentSort !== 'newest')
-    );
+    const hasActiveFilters = Boolean(search || selectedCategory || (currentTab && currentTab !== 'all') || (currentSort && currentSort !== 'newest'));
 
     // Count how many non-default filter dimensions are active (e.g. category, custom sort)
-    const activeFilterCount = [
-        Boolean(selectedCategory),
-        Boolean(currentSort && currentSort !== 'newest'),
-    ].filter(Boolean).length;
+    const activeFilterCount = [Boolean(selectedCategory), Boolean(currentSort && currentSort !== 'newest')].filter(Boolean).length;
 
     // Total incidents in estate (unfiltered).
-    const estateTotalCount = typeof totalIncidentsCount === 'number'
-        ? totalIncidentsCount
-        : (!hasActiveFilters ? (incidents?.total ?? 0) : null);
+    const estateTotalCount = typeof totalIncidentsCount === 'number' ? totalIncidentsCount : !hasActiveFilters ? (incidents?.total ?? 0) : null;
 
     // STATE A: True Zero State (Estate genuinely has zero incident records)
     const isTrueZeroState = estateTotalCount === 0 || (estateTotalCount === null && incidentList.length === 0 && !hasActiveFilters);
@@ -151,9 +132,7 @@ export default function Index({
         <div className="space-y-6 pt-2">
             {/* Status Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Status Group
-                </label>
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Status Group</label>
                 <div className="mt-2 grid grid-cols-3 gap-2">
                     {[
                         { id: 'all', label: 'All' },
@@ -164,10 +143,10 @@ export default function Index({
                             key={item.id}
                             type="button"
                             onClick={() => setCurrentTab(item.id)}
-                            className={`min-h-[44px] rounded-2xl px-3 py-2 text-xs font-bold border transition-all ${
+                            className={`min-h-[44px] rounded-2xl border px-3 py-2 text-xs font-bold transition-all ${
                                 currentTab === item.id
-                                    ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                                    ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                             }`}
                         >
                             {item.label}
@@ -179,17 +158,15 @@ export default function Index({
             {/* Category Options */}
             {categories.length > 0 && (
                 <div>
-                    <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                        Category
-                    </label>
+                    <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Category</label>
                     <div className="mt-2 grid max-h-56 grid-cols-1 gap-2 overflow-y-auto pr-1">
                         <button
                             type="button"
                             onClick={() => setSelectedCategory('')}
-                            className={`min-h-[44px] rounded-2xl px-4 py-2.5 text-left text-xs font-bold border transition-all ${
+                            className={`min-h-[44px] rounded-2xl border px-4 py-2.5 text-left text-xs font-bold transition-all ${
                                 !selectedCategory
-                                    ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                    : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                                    ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                    : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                             }`}
                         >
                             All Categories
@@ -201,17 +178,13 @@ export default function Index({
                                     key={c.value}
                                     type="button"
                                     onClick={() => setSelectedCategory(c.value)}
-                                    className={`min-h-[44px] flex items-center justify-between rounded-2xl px-4 py-2.5 text-left text-xs font-bold border transition-all ${
+                                    className={`flex min-h-[44px] items-center justify-between rounded-2xl border px-4 py-2.5 text-left text-xs font-bold transition-all ${
                                         isSelected
-                                            ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                                            ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                                     }`}
                                 >
-                                    <IncidentCategoryLabel
-                                        category={c.value}
-                                        size="sm"
-                                        className={isSelected ? '!text-white' : ''}
-                                    />
+                                    <IncidentCategoryLabel category={c.value} size="sm" className={isSelected ? '!text-white' : ''} />
                                 </button>
                             );
                         })}
@@ -221,17 +194,15 @@ export default function Index({
 
             {/* Sort Options */}
             <div>
-                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">
-                    Sort By
-                </label>
+                <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">Sort By</label>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                     <button
                         type="button"
                         onClick={() => setCurrentSort('newest')}
-                        className={`min-h-[44px] rounded-2xl px-4 py-2 text-xs font-bold border transition-all ${
+                        className={`min-h-[44px] rounded-2xl border px-4 py-2 text-xs font-bold transition-all ${
                             currentSort === 'newest'
-                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                                ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                         }`}
                     >
                         Newest First
@@ -239,10 +210,10 @@ export default function Index({
                     <button
                         type="button"
                         onClick={() => setCurrentSort('popular')}
-                        className={`min-h-[44px] rounded-2xl px-4 py-2 text-xs font-bold border transition-all ${
+                        className={`min-h-[44px] rounded-2xl border px-4 py-2 text-xs font-bold transition-all ${
                             currentSort === 'popular'
-                                ? 'bg-purple-600 border-purple-600 text-white shadow-sm'
-                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                                ? 'border-purple-600 bg-purple-600 text-white shadow-sm'
+                                : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
                         }`}
                     >
                         Most Upvoted
@@ -281,22 +252,18 @@ export default function Index({
         <>
             <Head title="Incidents & Maintenance - Kontrol" />
 
-            <div className="mx-auto max-w-3xl px-3 sm:px-4 md:px-6 py-4 sm:py-6 space-y-5">
+            <div className="mx-auto max-w-3xl space-y-5 px-3 py-4 sm:px-4 sm:py-6 md:px-6">
                 {/* 1. RESTORED INCIDENT BOARD HERO (Dark Navy Surface + Purple CTA) */}
-                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-5 sm:px-6 py-6 sm:py-7 text-white shadow-xl shadow-slate-900/10 dark:shadow-black/40">
+                <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-5 py-6 text-white shadow-xl shadow-slate-900/10 sm:px-6 sm:py-7 dark:shadow-black/40">
                     {/* Ambient Glow Accents */}
                     <div className="pointer-events-none absolute -top-12 -right-12 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl" />
                     <div className="pointer-events-none absolute -bottom-12 -left-12 h-40 w-40 rounded-full bg-indigo-500/15 blur-3xl" />
 
                     <div className="relative z-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
                         <div>
-                            <span className="text-[10px] font-black tracking-[0.2em] text-purple-400 uppercase">
-                                Community Issue Tracker
-                            </span>
+                            <span className="text-[10px] font-black tracking-[0.2em] text-purple-400 uppercase">Community Issue Tracker</span>
                             <div className="mt-1 flex items-center gap-2.5">
-                                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                                    Incident Board
-                                </h1>
+                                <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Incident Board</h1>
                                 {typeof estateTotalCount === 'number' && estateTotalCount > 0 && (
                                     <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-black text-slate-300 ring-1 ring-slate-700">
                                         {estateTotalCount}
@@ -349,15 +316,14 @@ export default function Index({
 
                 {/* 2. STATE A: TRUE ZERO STATE (Estate has 0 incidents in total) */}
                 {isTrueZeroState ? (
-                    <div className="rounded-3xl border border-slate-100 bg-white p-8 sm:p-12 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900/50">
+                    <div className="rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-xs sm:p-12 dark:border-slate-800 dark:bg-slate-900/50">
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400">
                             <Shield className="h-8 w-8" strokeWidth={1.75} />
                         </div>
-                        <h2 className="mt-4 text-lg font-black text-slate-900 dark:text-slate-100">
-                            No incidents reported
-                        </h2>
+                        <h2 className="mt-4 text-lg font-black text-slate-900 dark:text-slate-100">No incidents reported</h2>
                         <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                            There are currently no incidents or maintenance requests recorded for your estate. If something happens, you can report it here and follow its progress to resolution.
+                            There are currently no incidents or maintenance requests recorded for your estate. If something happens, you can report it
+                            here and follow its progress to resolution.
                         </p>
                     </div>
                 ) : (
@@ -367,14 +333,14 @@ export default function Index({
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             {/* Search & Filter Sheet Trigger */}
                             <div className="flex flex-1 items-center gap-2">
-                                <form onSubmit={handleSearchSubmit} className="relative flex-1">
-                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <form onSubmit={handleSearchSubmit} className="relative flex-1" noValidate>
+                                    <Search className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <input
                                         type="text"
                                         value={search}
                                         onChange={(e) => setSearch(e.target.value)}
                                         placeholder="Search keywords, locations..."
-                                        className="min-h-[42px] w-full rounded-2xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                                        className="min-h-[42px] w-full rounded-2xl border border-slate-200 bg-white py-2 pr-9 pl-9 text-xs text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                                     />
                                     {search && (
                                         <button
@@ -383,7 +349,7 @@ export default function Index({
                                                 setSearch('');
                                                 applyFilters({ search: undefined });
                                             }}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                                         >
                                             <X className="h-3.5 w-3.5" />
                                         </button>
@@ -395,7 +361,7 @@ export default function Index({
                                     onClick={() => setIsFilterSheetOpen(true)}
                                     className={`relative flex min-h-[42px] items-center gap-2 rounded-2xl border px-3.5 text-xs font-bold transition-all active:scale-95 ${
                                         activeFilterCount > 0
-                                            ? 'border-purple-500 bg-purple-50/50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300 dark:border-purple-800'
+                                            ? 'border-purple-500 bg-purple-50/50 text-purple-700 dark:border-purple-800 dark:bg-purple-950/30 dark:text-purple-300'
                                             : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
                                     }`}
                                 >
@@ -436,7 +402,7 @@ export default function Index({
                         {hasActiveFilters && (
                             <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
                                 {selectedCategory && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-800 dark:text-purple-300">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
                                         <span>Category: {selectedCategory}</span>
                                         <button
                                             type="button"
@@ -449,7 +415,7 @@ export default function Index({
                                 )}
 
                                 {currentSort !== 'newest' && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 border border-purple-200 dark:bg-purple-950/40 dark:border-purple-800 dark:text-purple-300">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-xs font-bold text-purple-700 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-300">
                                         <span>Sort: Popular</span>
                                         <button
                                             type="button"
@@ -465,7 +431,7 @@ export default function Index({
                                 )}
 
                                 {search && (
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+                                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                         <span>"{search}"</span>
                                         <button
                                             type="button"
@@ -483,7 +449,7 @@ export default function Index({
                                 <button
                                     type="button"
                                     onClick={clearAllFilters}
-                                    className="text-xs font-bold text-slate-400 hover:text-purple-600 transition-colors dark:hover:text-purple-400 ml-1"
+                                    className="ml-1 text-xs font-bold text-slate-400 transition-colors hover:text-purple-600 dark:hover:text-purple-400"
                                 >
                                     Clear all
                                 </button>
@@ -492,7 +458,7 @@ export default function Index({
 
                         {/* STATE B: Filtered Zero State (No matches for current query) */}
                         {isFilteredZeroState ? (
-                            <div className="rounded-3xl border border-slate-100 bg-white p-8 sm:p-12 text-center shadow-xs dark:border-slate-800 dark:bg-slate-900/50">
+                            <div className="rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-xs sm:p-12 dark:border-slate-800 dark:bg-slate-900/50">
                                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800">
                                     <Search className="h-6 w-6" />
                                 </div>
@@ -500,7 +466,8 @@ export default function Index({
                                     {search ? `No incidents match "${search}"` : 'No matching incidents'}
                                 </h3>
                                 <p className="mx-auto mt-1.5 max-w-sm text-xs text-slate-500 dark:text-slate-400">
-                                    We couldn't find any incidents matching your active filters. Try changing your criteria or clear all filters to see all incidents.
+                                    We couldn't find any incidents matching your active filters. Try changing your criteria or clear all filters to
+                                    see all incidents.
                                 </p>
                                 <div className="mt-5">
                                     <button
@@ -546,7 +513,7 @@ export default function Index({
                                             className={`rounded-xl px-3.5 py-2 text-xs font-bold transition-all ${
                                                 link.active
                                                     ? 'bg-purple-600 text-white shadow-xs'
-                                                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-300'
+                                                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
                                             }`}
                                             dangerouslySetInnerHTML={{ __html: link.label }}
                                         />
@@ -559,11 +526,7 @@ export default function Index({
             </div>
 
             {/* Mobile Filter Sheet Modal */}
-            <MobileSheet
-                isOpen={isFilterSheetOpen}
-                onClose={() => setIsFilterSheetOpen(false)}
-                title="Filter Incidents"
-            >
+            <MobileSheet isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Incidents">
                 {filterSheetContent}
             </MobileSheet>
         </>
