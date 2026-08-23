@@ -124,7 +124,7 @@ export default function Join({ token, estate }: Props) {
                         <p className="mt-2 text-gray-500">Please fill in your details to request access to {estate.name}.</p>
                     </motion.div>
 
-                    <form onSubmit={submit} className="mt-10 space-y-6">
+                    <form onSubmit={submit} className="mt-10 space-y-6" noValidate>
                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div className="sm:col-span-2">
                                 <label className="block text-sm font-medium text-gray-700">Full Name</label>
