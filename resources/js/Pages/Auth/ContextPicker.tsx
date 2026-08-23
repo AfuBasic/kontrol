@@ -102,7 +102,7 @@ export default function ContextPicker({ availableContexts }: Props) {
                     <p className="text-sm text-gray-400">Choose where you'd like to continue.</p>
                 </div>
 
-                <form onSubmit={submit}>
+                <form onSubmit={submit} noValidate>
                     <div className="custom-scrollbar mb-8 max-h-[50vh] space-y-3 overflow-y-auto pr-1 sm:max-h-[400px]">
                         {availableContexts.map((context) => {
                             const isSelected = selectedContext === context.id;
