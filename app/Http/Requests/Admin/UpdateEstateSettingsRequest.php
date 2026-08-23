@@ -71,6 +71,16 @@ class UpdateEstateSettingsRequest extends FormRequest
                 $checkoutMonitoring = $this->input('visitor_checkout_enabled', false);
                 $enforceEntryPoint = $this->input('entry_point_checkout_enforced', false);
                 $entryPoints = $this->input('entry_points', []);
+                $incidentCategories = $this->input('incident_categories', []);
+                $hasDuplicateNames = function (array $names): bool {
+                    $normalizedNames = array_map(function ($name) {
+                        return mb_strtolower(trim((string) $name));
+                    }, $names);
+
+                    $normalizedNames = array_filter($normalizedNames);
+
+                    return count($normalizedNames) !== count(array_unique($normalizedNames));
+                };
 
                 if ($enforceEntryPoint && ! $checkoutMonitoring) {
                     $validator->errors()->add('entry_point_checkout_enforced', 'Entry Point Checkout cannot be enforced when Checkout Monitoring is disabled.');
@@ -82,17 +92,12 @@ class UpdateEstateSettingsRequest extends FormRequest
                     }
                 }
 
-                if (is_array($entryPoints)) {
-                    // Check for case-insensitive duplicates
-                    $lowerNames = array_map(function ($name) {
-                        return strtolower(trim((string) $name));
-                    }, $entryPoints);
+                if (is_array($entryPoints) && $hasDuplicateNames($entryPoints)) {
+                    $validator->errors()->add('entry_points', 'Entry points must have unique names.');
+                }
 
-                    $lowerNames = array_filter($lowerNames);
-
-                    if (count($lowerNames) !== count(array_unique($lowerNames))) {
-                        $validator->errors()->add('entry_points', 'Entry points must have unique names.');
-                    }
+                if (is_array($incidentCategories) && $hasDuplicateNames($incidentCategories)) {
+                    $validator->errors()->add('incident_categories', 'Incident categories must have unique names.');
                 }
             },
         ];

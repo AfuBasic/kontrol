@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { Key, ShieldAlert, CreditCard, Plus, X, Save } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowDown, ArrowUp, Check, ChevronRight, CreditCard, Key, Pencil, Plus, Save, ShieldAlert, Trash2, X } from 'lucide-react';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 
 type SettingsProps = {
@@ -49,6 +49,347 @@ function formatDuration(minutes: number): string {
     return parts.length > 0 ? `= ${parts.join(', ')}` : '';
 }
 
+type IncidentCategoryManagerProps = {
+    categories: string[];
+    error?: string;
+    onChange: (categories: string[]) => void;
+};
+
+function IncidentCategoryManager({ categories, error, onChange }: IncidentCategoryManagerProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [newCategoryInput, setNewCategoryInput] = useState('');
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    const [editingValue, setEditingValue] = useState('');
+    const [localError, setLocalError] = useState('');
+
+    const previewCategories = categories.slice(0, 3);
+    const remainingCount = Math.max(categories.length - previewCategories.length, 0);
+
+    function categoryExists(name: string, exceptIndex?: number): boolean {
+        return categories.some((category, index) => index !== exceptIndex && category.trim().toLowerCase() === name.trim().toLowerCase());
+    }
+
+    function handleAddCategory() {
+        const trimmed = newCategoryInput.trim();
+
+        if (!trimmed) {
+            return;
+        }
+
+        if (categoryExists(trimmed)) {
+            setLocalError('That category already exists.');
+            return;
+        }
+
+        onChange([...categories, trimmed]);
+        setNewCategoryInput('');
+        setLocalError('');
+    }
+
+    function beginEditCategory(index: number) {
+        setEditingIndex(index);
+        setEditingValue(categories[index]);
+        setLocalError('');
+    }
+
+    function cancelEditCategory() {
+        setEditingIndex(null);
+        setEditingValue('');
+        setLocalError('');
+    }
+
+    function saveEditedCategory(index: number) {
+        const trimmed = editingValue.trim();
+
+        if (!trimmed) {
+            setLocalError('Category name cannot be empty.');
+            return;
+        }
+
+        if (categoryExists(trimmed, index)) {
+            setLocalError('That category already exists.');
+            return;
+        }
+
+        onChange(categories.map((category, categoryIndex) => (categoryIndex === index ? trimmed : category)));
+        cancelEditCategory();
+    }
+
+    function removeCategory(indexToRemove: number) {
+        onChange(categories.filter((_, index) => index !== indexToRemove));
+
+        if (editingIndex !== null) {
+            cancelEditCategory();
+        }
+    }
+
+    function moveCategory(index: number, direction: -1 | 1) {
+        const targetIndex = index + direction;
+
+        if (targetIndex < 0 || targetIndex >= categories.length) {
+            return;
+        }
+
+        const nextCategories = [...categories];
+        [nextCategories[index], nextCategories[targetIndex]] = [nextCategories[targetIndex], nextCategories[index]];
+        onChange(nextCategories);
+    }
+
+    return (
+        <div>
+            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                Allowed Incident Categories
+            </label>
+
+            <div className="mt-2 rounded-xl border border-slate-200/80 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-800/30">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-900 dark:text-white">Incident Categories</span>
+                            <span className="rounded-full bg-primary-50 px-2 py-0.5 text-xs font-semibold text-primary-700 dark:bg-primary-950/60 dark:text-primary-300">
+                                {categories.length} active
+                            </span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            Shown across resident, admin, and security incident reports.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(true)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-primary-200 hover:text-primary-700 focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 focus:outline-none active:scale-95 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-primary-700 dark:hover:text-primary-300"
+                    >
+                        Manage
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
+                </div>
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                    {previewCategories.length > 0 ? (
+                        previewCategories.map((category) => (
+                            <span
+                                key={category}
+                                className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            >
+                                {category}
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-sm text-slate-500 dark:text-slate-400">No categories configured yet.</span>
+                    )}
+
+                    {remainingCount > 0 && (
+                        <span className="rounded-lg border border-dashed border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                            +{remainingCount} more
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {error && <p className="mt-2 text-xs font-medium text-red-500">{error}</p>}
+
+            <AnimatePresence>
+                {isOpen && (
+                    <div className="fixed inset-0 z-[120] flex items-end justify-center sm:items-center">
+                        <motion.button
+                            type="button"
+                            aria-label="Close incident category manager"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsOpen(false)}
+                            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+                        />
+
+                        <motion.div
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="incident-category-manager-title"
+                            initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 20, scale: 0.98 }}
+                            transition={{ duration: 0.2 }}
+                            className="relative flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:m-4 sm:rounded-2xl dark:border-slate-800 dark:bg-slate-950"
+                        >
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+                                <div>
+                                    <h3 id="incident-category-manager-title" className="text-lg font-bold text-slate-950 dark:text-white">
+                                        Manage Incident Categories
+                                    </h3>
+                                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                                        Categories shown in incident report category pickers.
+                                    </p>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setIsOpen(false)}
+                                    className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                                    aria-label="Close"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+                                {categories.length === 0 ? (
+                                    <div className="rounded-2xl border border-dashed border-slate-300 p-6 text-center dark:border-slate-700">
+                                        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">No incident categories yet</p>
+                                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Custom report categories will appear here.</p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
+                                        {categories.map((category, index) => {
+                                            const isEditing = editingIndex === index;
+
+                                            return (
+                                                <div
+                                                    key={`${category}-${index}`}
+                                                    className="flex items-center gap-3 bg-white px-3 py-3 dark:bg-slate-950"
+                                                >
+                                                    <div className="flex shrink-0 flex-col gap-1">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveCategory(index, -1)}
+                                                            disabled={index === 0 || editingIndex !== null}
+                                                            className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                                                            aria-label={`Move ${category} up`}
+                                                        >
+                                                            <ArrowUp className="h-3.5 w-3.5" />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => moveCategory(index, 1)}
+                                                            disabled={index === categories.length - 1 || editingIndex !== null}
+                                                            className="rounded-md p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                                                            aria-label={`Move ${category} down`}
+                                                        >
+                                                            <ArrowDown className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+
+                                                    <div className="min-w-0 flex-1">
+                                                        {isEditing ? (
+                                                            <input
+                                                                type="text"
+                                                                value={editingValue}
+                                                                onChange={(event) => setEditingValue(event.target.value)}
+                                                                onKeyDown={(event) => {
+                                                                    if (event.key === 'Enter') {
+                                                                        event.preventDefault();
+                                                                        saveEditedCategory(index);
+                                                                    }
+
+                                                                    if (event.key === 'Escape') {
+                                                                        event.preventDefault();
+                                                                        cancelEditCategory();
+                                                                    }
+                                                                }}
+                                                                className="w-full rounded-xl border border-primary-200 bg-white px-3 py-2 text-sm font-semibold text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-primary-800 dark:bg-slate-900 dark:text-white"
+                                                                autoFocus
+                                                            />
+                                                        ) : (
+                                                            <p className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
+                                                                {category}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex shrink-0 items-center gap-1">
+                                                        {isEditing ? (
+                                                            <>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => saveEditedCategory(index)}
+                                                                    className="rounded-lg bg-slate-950 p-2 text-white transition hover:bg-slate-800 active:scale-95 dark:bg-primary-500 dark:hover:bg-primary-400"
+                                                                    aria-label={`Save ${category}`}
+                                                                >
+                                                                    <Check className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={cancelEditCategory}
+                                                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:scale-95 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                                                                    aria-label="Cancel edit"
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => beginEditCategory(index)}
+                                                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:scale-95 dark:hover:bg-slate-900 dark:hover:text-slate-200"
+                                                                    aria-label={`Rename ${category}`}
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeCategory(index)}
+                                                                    className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600 active:scale-95 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                                                                    aria-label={`Remove ${category}`}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {localError && <p className="mt-3 text-sm font-medium text-red-500">{localError}</p>}
+                            </div>
+
+                            <div className="border-t border-slate-100 bg-white/95 px-5 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1rem)] backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+                                <label
+                                    htmlFor="new_incident_category"
+                                    className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
+                                >
+                                    Add Category
+                                </label>
+                                <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                                    <input
+                                        id="new_incident_category"
+                                        type="text"
+                                        value={newCategoryInput}
+                                        onChange={(event) => {
+                                            setNewCategoryInput(event.target.value);
+                                            setLocalError('');
+                                        }}
+                                        onKeyDown={(event) => {
+                                            if (event.key === 'Enter') {
+                                                event.preventDefault();
+                                                handleAddCategory();
+                                            }
+                                        }}
+                                        placeholder="e.g. Fire Outbreak"
+                                        className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCategory}
+                                        disabled={!newCategoryInput.trim()}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-primary-500 dark:hover:bg-primary-400"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Add
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
 export default function Settings({ settings }: SettingsProps) {
     const { data, setData, put, processing, errors } = useForm({
         // Visitor Access
@@ -78,7 +419,6 @@ export default function Settings({ settings }: SettingsProps) {
         send_reminder_before_due_date_days: settings.send_reminder_before_due_date_days || 1,
     });
 
-    const [newCategoryInput, setNewCategoryInput] = useState('');
     const [newEntryPointInput, setNewEntryPointInput] = useState('');
 
     function handleAddEntryPoint(e: React.KeyboardEvent | React.MouseEvent) {
@@ -95,23 +435,6 @@ export default function Settings({ settings }: SettingsProps) {
         setData(
             'entry_points',
             data.entry_points.filter((ep) => ep !== pointToRemove),
-        );
-    }
-
-    function handleAddCategory(e: React.KeyboardEvent | React.MouseEvent) {
-        if ('key' in e && e.key !== 'Enter') return;
-        e.preventDefault();
-        const trimmed = newCategoryInput.trim();
-        if (trimmed && !data.incident_categories.includes(trimmed)) {
-            setData('incident_categories', [...data.incident_categories, trimmed]);
-            setNewCategoryInput('');
-        }
-    }
-
-    function handleRemoveCategory(categoryToRemove: string) {
-        setData(
-            'incident_categories',
-            data.incident_categories.filter((cat) => cat !== categoryToRemove),
         );
     }
 
@@ -463,47 +786,11 @@ export default function Settings({ settings }: SettingsProps) {
                         </div>
 
                         <div className="mt-6 space-y-6">
-                            {/* Incident Categories Manager */}
-                            <div>
-                                <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                                    Allowed Incident Categories
-                                </label>
-                                <div className="mt-2 flex flex-wrap gap-2 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 dark:border-slate-800 dark:bg-slate-800/30">
-                                    {data.incident_categories.map((category) => (
-                                        <span
-                                            key={category}
-                                            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                                        >
-                                            {category}
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveCategory(category)}
-                                                className="text-slate-400 hover:text-red-500"
-                                            >
-                                                <X className="h-3.5 w-3.5" />
-                                            </button>
-                                        </span>
-                                    ))}
-
-                                    <div className="inline-flex items-center gap-1.5">
-                                        <input
-                                            type="text"
-                                            value={newCategoryInput}
-                                            onChange={(e) => setNewCategoryInput(e.target.value)}
-                                            onKeyDown={handleAddCategory}
-                                            placeholder="Add category & press Enter..."
-                                            className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={handleAddCategory}
-                                            className="rounded-lg bg-slate-950 p-1 text-white hover:bg-slate-800 active:scale-95"
-                                        >
-                                            <Plus className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                            <IncidentCategoryManager
+                                categories={data.incident_categories}
+                                error={errors.incident_categories}
+                                onChange={(categories) => setData('incident_categories', categories)}
+                            />
 
                             {/* Default Incident Severity Select */}
                             <div>
@@ -757,10 +1044,9 @@ export default function Settings({ settings }: SettingsProps) {
                                                 setData('send_reminder_before_due_date_days', val === '' ? ('' as any) : parseInt(val, 10));
                                             }}
                                             onBlur={() => {
-                                                if (
-                                                    data.send_reminder_before_due_date_days === '' ||
-                                                    data.send_reminder_before_due_date_days === undefined
-                                                ) {
+                                                const reminderDays = data.send_reminder_before_due_date_days as number | string | undefined;
+
+                                                if (reminderDays === '' || reminderDays === undefined) {
                                                     setData('send_reminder_before_due_date_days', 1);
                                                 }
                                             }}

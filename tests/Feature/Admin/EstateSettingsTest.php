@@ -123,6 +123,34 @@ it('rejects duplicate entry points case-insensitively', function () {
         ->assertInvalid(['entry_points' => 'Entry points must have unique names.']);
 });
 
+it('rejects duplicate incident categories case-insensitively', function () {
+    EstateSettings::forEstate($this->estate->id);
+
+    $this->actingAs($this->admin)
+        ->put(route('admin.settings.update'), [
+            'access_codes_enabled' => true,
+            'access_code_min_lifespan_minutes' => 60,
+            'access_code_max_lifespan_minutes' => 1440,
+            'access_code_single_use' => false,
+            'require_vehicle_information' => false,
+            'allow_residents_to_extend_visitor_passes' => false,
+            'incident_categories' => ['Noise Complaint', 'noise complaint'],
+            'default_incident_severity' => 'Low',
+            'require_photo_evidence_for_incidents' => false,
+            'require_resolution_notes_for_incidents' => false,
+            'allow_residents_to_report_incidents' => false,
+            'notify_admins_immediately_for_critical_incidents' => false,
+            'allow_partial_payments' => false,
+            'collection_reminder_frequency' => 'weekly',
+            'collection_maximum_reminder_attempts' => 3,
+            'send_reminder_before_due_date_days' => 1,
+            'visitor_checkout_enabled' => false,
+            'entry_point_checkout_enforced' => false,
+            'entry_points' => [],
+        ])
+        ->assertInvalid(['incident_categories' => 'Incident categories must have unique names.']);
+});
+
 it('updates authorized settings and preserves lists', function () {
     $settings = EstateSettings::forEstate($this->estate->id);
 
