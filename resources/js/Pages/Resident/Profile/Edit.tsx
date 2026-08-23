@@ -339,7 +339,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6 pb-8">
+        <form onSubmit={submit} className="space-y-6 pb-8" noValidate>
             <div className="space-y-4">
                 <div>
                     <label className="mb-2 block text-xs font-black tracking-widest text-slate-400 uppercase">Full Name</label>
@@ -358,7 +358,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
                         type="email"
                         value={user?.email ?? ''}
                         readOnly
-                        className="w-full rounded-[20px] border border-slate-100 bg-slate-100/80 px-5 py-4 text-base font-bold text-slate-500 shadow-sm cursor-not-allowed select-none focus:outline-none"
+                        className="w-full cursor-not-allowed rounded-[20px] border border-slate-100 bg-slate-100/80 px-5 py-4 text-base font-bold text-slate-500 shadow-sm select-none focus:outline-none"
                     />
                 </div>
 
@@ -564,7 +564,7 @@ function AddEmergencyContactForm({ onSuccess }: { onSuccess: () => void }) {
     };
 
     return (
-        <form onSubmit={submit} className="space-y-6 pb-10">
+        <form onSubmit={submit} className="space-y-6 pb-10" noValidate>
             <div className="space-y-4">
                 <div className="group relative">
                     <label className="mb-2 block px-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">Contact Name</label>
