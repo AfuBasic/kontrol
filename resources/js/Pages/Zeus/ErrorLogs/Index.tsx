@@ -1,19 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    Terminal,
-    Search,
-    Trash2,
-    CheckCircle2,
-    EyeOff,
-    RotateCcw,
-    AlertCircle,
-    Server,
-    Globe,
-    Flame,
-    Clock,
-    ArrowUpRight,
-    Cpu,
-} from 'lucide-react';
+import { Terminal, Search, Trash2, CheckCircle2, EyeOff, RotateCcw, AlertCircle, Server, Globe, Flame, Clock, ArrowUpRight, Cpu } from 'lucide-react';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
@@ -106,18 +92,26 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
     const handleClearAll = () => {
         if (confirm('Are you sure you want to permanently clear ALL error logs? This cannot be undone.')) {
             setIsClearingAll(true);
-            router.post('/zeus/error-logs/clear-all', {}, {
-                onFinish: () => setIsClearingAll(false),
-            });
+            router.post(
+                '/zeus/error-logs/clear-all',
+                {},
+                {
+                    onFinish: () => setIsClearingAll(false),
+                },
+            );
         }
     };
 
     const handleClearResolved = () => {
         if (confirm('Clear all resolved and ignored error logs?')) {
             setIsClearingResolved(true);
-            router.post('/zeus/error-logs/clear-resolved', {}, {
-                onFinish: () => setIsClearingResolved(false),
-            });
+            router.post(
+                '/zeus/error-logs/clear-resolved',
+                {},
+                {
+                    onFinish: () => setIsClearingResolved(false),
+                },
+            );
         }
     };
 
@@ -143,10 +137,8 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                                     <span className="font-bold tracking-tight">kontrol://observability.telemetry</span>
                                 </div>
                             </div>
-                            <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl font-sans">
-                                System Exception & Crash Center
-                            </h1>
-                            <p className="text-xs text-slate-400 font-sans">
+                            <h1 className="font-sans text-xl font-bold tracking-tight text-white sm:text-2xl">System Exception & Crash Center</h1>
+                            <p className="font-sans text-xs text-slate-400">
                                 Unified real-time telemetry across PHP execution environments and React client runtimes.
                             </p>
                         </div>
@@ -185,8 +177,8 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                             <AlertCircle className="h-4 w-4 text-rose-500" />
                         </div>
                         <p className="mt-2 text-3xl font-black tracking-tight text-white">{metrics.unresolved_count}</p>
-                        <div className="mt-2 flex items-center gap-1 text-[11px] text-slate-500 font-sans">
-                            <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-ping" />
+                        <div className="mt-2 flex items-center gap-1 font-sans text-[11px] text-slate-500">
+                            <span className="h-1.5 w-1.5 animate-ping rounded-full bg-rose-500" />
                             <span>Active unhandled exceptions</span>
                         </div>
                     </div>
@@ -198,7 +190,7 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                             <Clock className="h-4 w-4 text-amber-500" />
                         </div>
                         <p className="mt-2 text-3xl font-black tracking-tight text-white">{metrics.last_24h_count}</p>
-                        <p className="mt-2 text-[11px] text-slate-500 font-sans">Recorded in last 24h cycle</p>
+                        <p className="mt-2 font-sans text-[11px] text-slate-500">Recorded in last 24h cycle</p>
                     </div>
 
                     {/* Source Split */}
@@ -218,7 +210,7 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                                 <span className="ml-1 text-[10px] text-slate-500">JS</span>
                             </div>
                         </div>
-                        <p className="mt-2 text-[11px] text-slate-500 font-sans">Backend vs Client runtime</p>
+                        <p className="mt-2 font-sans text-[11px] text-slate-500">Backend vs Client runtime</p>
                     </div>
 
                     {/* Top Repeater */}
@@ -230,7 +222,7 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                         <p className="mt-2 truncate text-sm font-bold text-orange-300" title={metrics.top_repeater_class}>
                             {metrics.top_repeater_class}
                         </p>
-                        <p className="mt-2 text-[11px] text-slate-500 font-sans">
+                        <p className="mt-2 font-sans text-[11px] text-slate-500">
                             {metrics.top_repeater_occurrences > 0 ? `${metrics.top_repeater_occurrences} occurrences logged` : 'No repeats logged'}
                         </p>
                     </div>
@@ -289,7 +281,7 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                     </div>
 
                     {/* Search Input */}
-                    <form onSubmit={handleSearchSubmit} className="relative min-w-[280px]">
+                    <form onSubmit={handleSearchSubmit} className="relative min-w-[280px]" noValidate>
                         <Search className="pointer-events-none absolute top-2.5 left-3 h-3.5 w-3.5 text-slate-500" />
                         <input
                             type="text"
@@ -308,7 +300,7 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                             <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <h3 className="mt-4 text-sm font-bold text-white">0 Exceptions Detected</h3>
-                        <p className="mt-1 max-w-sm text-xs text-slate-500 font-sans">
+                        <p className="mt-1 max-w-sm font-sans text-xs text-slate-500">
                             No logs currently matching the active filters. Telemetry queue is clear.
                         </p>
                     </div>
@@ -391,14 +383,12 @@ export default function ErrorLogsIndex({ errors, filters, metrics }: Props) {
                                             {/* Exception Class & Message */}
                                             <div>
                                                 <span className="text-xs font-bold text-rose-400">{log.exception_class}</span>
-                                                <p className="mt-0.5 line-clamp-1 text-xs text-slate-300 font-mono">
-                                                    {log.message}
-                                                </p>
+                                                <p className="mt-0.5 line-clamp-1 font-mono text-xs text-slate-300">{log.message}</p>
                                             </div>
 
                                             {/* File & Line location */}
                                             {log.file && (
-                                                <p className="truncate text-[11px] text-slate-500 font-mono">
+                                                <p className="truncate font-mono text-[11px] text-slate-500">
                                                     {log.file}
                                                     {log.line ? `:${log.line}` : ''}
                                                 </p>
