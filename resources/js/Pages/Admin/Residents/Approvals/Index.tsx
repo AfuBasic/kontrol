@@ -11,7 +11,6 @@ import {
 import { index as residentsIndex } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
-
 interface Resident {
     ulid: string;
     id: number;
@@ -132,28 +131,35 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
         <>
             <Head title="Pending Residents" />
 
-            <div className="mb-8 flex items-start gap-4">
-                <Link
-                    href={residentsIndex.url()}
-                    className="mt-1.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95"
-                >
-                    <ArrowLeft className="h-5 w-5" />
-                </Link>
-                <div>
-                    <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900">Pending Resident Applications</h1>
-                    <p className="text-slate-505 mt-2 text-sm leading-relaxed font-medium">
-                        Review and approve residents who signed up via the invite link.
-                    </p>
+            <div className="mb-6 space-y-5 sm:mb-8 sm:flex sm:items-start sm:justify-between sm:gap-6 sm:space-y-0">
+                <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+                    <Link
+                        href={residentsIndex.url()}
+                        className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm ring-1 ring-slate-200 transition-all hover:bg-slate-50 active:scale-95 sm:h-10 sm:w-10"
+                        aria-label="Back to residents"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                        <h1 className="text-[2rem] leading-[1.08] font-black tracking-tight text-slate-900 sm:text-3xl">
+                            Pending Resident Applications
+                        </h1>
+                        <p className="mt-3 max-w-sm text-sm leading-6 font-medium text-slate-500 sm:mt-2">
+                            Review and approve residents who signed up via the invite link.
+                        </p>
+                    </div>
                 </div>
-                <div className="ml-auto flex items-center">
+
+                <div className="sm:ml-auto sm:flex sm:items-center">
                     {residents.total > 0 && (
                         <button
                             onClick={() => setIsApproveAllModalOpen(true)}
                             disabled={isApprovingAll}
-                            className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-bold whitespace-nowrap text-white shadow-lg transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 sm:min-h-0 sm:w-auto sm:rounded-xl sm:py-2.5"
                         >
                             {isApprovingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                            Approve All Pending
+                            <span className="sm:hidden">Approve All</span>
+                            <span className="hidden sm:inline">Approve All Pending</span>
                         </button>
                     )}
                 </div>
@@ -168,7 +174,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Search by name or email..."
-                        className="focus:ring-primary-505/20 w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-all outline-none focus:border-primary-500 focus:ring-2"
+                        className="w-full rounded-xl border border-gray-200 bg-white py-2.5 pr-4 pl-10 text-sm text-gray-900 transition-all outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20"
                     />
                 </form>
             </div>
@@ -189,16 +195,18 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                         exit={{ opacity: 0, x: -20 }}
                                         className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm active:bg-slate-50"
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center gap-3">
+                                        <div className="space-y-4">
+                                            <div className="flex min-w-0 items-start gap-3">
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 font-black text-primary-600 shadow-inner">
                                                     {resident.name.charAt(0).toUpperCase()}
                                                 </div>
-                                                <div>
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <h3 className="text-lg font-black tracking-tight text-slate-900">{resident.name}</h3>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                                        <h3 className="min-w-0 text-lg leading-tight font-black tracking-tight text-slate-900">
+                                                            {resident.name}
+                                                        </h3>
                                                         <span
-                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-105 text-indigo-700' : 'bg-emerald-105 text-emerald-700'}`}
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${resident.is_property_owner ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}
                                                         >
                                                             {resident.is_property_owner ? 'Property Owner' : 'Resident'}
                                                         </span>
@@ -209,18 +217,21 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="text-[10px] font-black text-slate-300 uppercase">{resident.created_at_human}</div>
+                                            <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-3 py-1 text-[10px] font-black tracking-widest text-slate-400 uppercase">
+                                                <Calendar className="h-3 w-3" />
+                                                {resident.created_at_human}
+                                            </div>
                                         </div>
 
                                         <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4">
-                                            <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                                            <div className="flex min-w-0 items-center gap-3 text-sm font-medium text-slate-600">
                                                 <Mail className="h-4 w-4 text-slate-400" />
-                                                {resident.email}
+                                                <span className="min-w-0 break-all">{resident.email}</span>
                                             </div>
                                             {resident.phone && (
-                                                <div className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                                                <div className="flex min-w-0 items-center gap-3 text-sm font-medium text-slate-600">
                                                     <Phone className="h-4 w-4 text-slate-400" />
-                                                    {resident.phone}
+                                                    <span className="min-w-0 break-all">{resident.phone}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -229,7 +240,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             <button
                                                 onClick={() => handleReject(resident)}
                                                 disabled={processingId === (resident.ulid ?? String(resident.id))}
-                                                className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50/50 py-3.5 text-sm font-bold text-rose-600 transition-all active:scale-[0.98] disabled:opacity-50"
+                                                className="flex min-h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50/50 px-3 py-3.5 text-sm font-bold text-rose-600 transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 <X className="h-4 w-4" />
                                                 Reject
@@ -237,7 +248,7 @@ export default function ApprovalsIndex({ residents, filters }: Props) {
                                             <button
                                                 onClick={() => handleApprove(resident)}
                                                 disabled={processingId === (resident.ulid ?? String(resident.id))}
-                                                className="flex flex-2 items-center justify-center gap-2 rounded-2xl bg-slate-950 py-3.5 text-sm font-bold text-white shadow-lg shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
+                                                className="flex min-h-12 flex-[1.35] items-center justify-center gap-2 rounded-2xl bg-slate-950 px-3 py-3.5 text-sm font-bold text-white shadow-lg transition-all active:scale-[0.98] disabled:opacity-50"
                                             >
                                                 {processingId === (resident.ulid ?? String(resident.id)) ? (
                                                     <Loader2 className="h-4 w-4 animate-spin" />
