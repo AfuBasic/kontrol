@@ -162,10 +162,17 @@ createInertiaApp({
                         await StatusBar.setBackgroundColor({ color: '#00000000' });
                     }
 
-                    // All layouts have a white top nav - always use dark icons so they're visible.
                     const applyStatusBarStyle = () => {
-                        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+                        const isDarkTheme = document.documentElement.classList.contains('dark');
+
+                        StatusBar.setStyle({ style: isDarkTheme ? Style.Dark : Style.Light }).catch(() => {});
                     };
+
+                    const themeObserver = new MutationObserver(applyStatusBarStyle);
+                    themeObserver.observe(document.documentElement, {
+                        attributes: true,
+                        attributeFilter: ['class'],
+                    });
 
                     // Apply on first load
                     applyStatusBarStyle();
