@@ -4,7 +4,6 @@ import { index, store } from '@/actions/App/Http/Controllers/Admin/RoleControlle
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { useState, useMemo } from 'react';
 
-
 type Permission = {
     id: number;
     name: string;
@@ -135,6 +134,7 @@ export default function CreateRole({ permissions }: Props) {
                     transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
                     onSubmit={handleSubmit}
                     className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs"
+                    noValidate
                 >
                     <div className="space-y-12 p-6 md:p-8">
                         {/* ROLE SECTION */}
@@ -207,7 +207,7 @@ export default function CreateRole({ permissions }: Props) {
                                             <div key={module} className="rounded-xl border border-slate-200/60 bg-white">
                                                 {/* Group Header */}
                                                 <div className="flex items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3">
-                                                    <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                                                         <h3 className="text-sm font-semibold text-slate-900">{humanizeModule(module)}</h3>
                                                         <span className="rounded-full bg-slate-200/60 px-2 py-0.5 text-[10px] font-medium text-slate-600 tabular-nums">
                                                             {selectedCount} of {modulePermissions.length} selected
