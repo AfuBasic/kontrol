@@ -45,11 +45,12 @@ class EstateBoardController extends Controller
         $audience = request('audience');
         $category = request('category');
         $priority = request('priority');
+        $status = request('status');
         $audiences = ($audience && $audience !== 'all')
             ? [EstateBoardPostAudience::from($audience)]
             : null;
 
-        $posts = $this->boardService->getFeed($estateId, 10, $audiences, null, $search, $category, $priority);
+        $posts = $this->boardService->getFeed($estateId, 10, $audiences, null, $search, $category, $priority, $status);
         $metrics = $this->boardService->getFeedMetrics($estateId, null);
 
         return Inertia::render('Admin/EstateBoard/Index', [
@@ -60,24 +61,20 @@ class EstateBoardController extends Controller
                 'audience' => $audience ?? 'all',
                 'category' => $category ?? '',
                 'priority' => $priority ?? '',
+                'status' => $status ?? 'all',
             ],
             'zones' => $this->zonesForComposer(),
         ]);
     }
 
     /**
-     * Display admin management view.
+     * Display admin management view (redirects to unified index).
      */
-    public function manage(): Response
+    public function manage(): RedirectResponse
     {
         $this->authorize('create', EstateBoardPost::class);
 
-        $estateId = $this->estateContext->getEstateId();
-        $posts = $this->boardService->getAdminPosts($estateId);
-
-        return Inertia::render('Admin/EstateBoard/Manage', [
-            'posts' => $posts,
-        ]);
+        return redirect()->route('estate-board.index');
     }
 
     /**
