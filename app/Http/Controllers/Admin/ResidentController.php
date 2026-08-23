@@ -199,8 +199,12 @@ class ResidentController extends Controller
     public function create(): Response
     {
         $this->authorize('residents.create');
+        $context = app(ContextManager::class)->current();
         $estate = $this->estateContext->getEstate();
-        $inviteLinks = $estate->inviteLinks()->with('zone')->get();
+        $inviteLinks = $estate->inviteLinks()
+            ->with('zone')
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->get();
 
         return Inertia::render('Admin/Residents/Create', [
             'inviteLinks' => $inviteLinks->map(fn ($link) => [
@@ -226,8 +230,8 @@ class ResidentController extends Controller
             'zones' => Zone::query()
                 ->where('estate_id', $estate->id)
                 ->where('is_active', true)
-                ->when(app(ContextManager::class)->current()?->isZoneScoped(), function ($q) {
-                    $q->where('id', app(ContextManager::class)->current()->zoneId);
+                ->when($context?->isZoneScoped(), function ($query) use ($context) {
+                    $query->where('id', $context->zoneId);
                 })
                 ->orderBy('name')
                 ->get(['id', 'name']),

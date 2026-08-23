@@ -182,7 +182,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                 },
             },
         );
-    }, [extractedEmails]);
+    }, [extractedEmails, selectedZone]);
 
     // Clear current selection
     const handleClear = useCallback(() => {

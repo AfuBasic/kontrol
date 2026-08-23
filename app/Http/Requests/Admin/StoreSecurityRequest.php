@@ -12,6 +12,15 @@ use Illuminate\Validation\Rule;
 
 class StoreSecurityRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $context = app(ContextManager::class)->current();
+
+        if ($context?->isZoneScoped() && ! $this->filled('zone_id')) {
+            $this->merge(['zone_id' => $context->zoneId]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -70,7 +79,7 @@ class StoreSecurityRequest extends FormRequest
                 Rule::exists('zones', 'id')->where('estate_id', $estateId),
                 function ($attribute, $value, $fail) {
                     $context = app(ContextManager::class)->current();
-                    if ($context && $context->isZoneScoped() && $value !== $context->zoneId) {
+                    if ($context && $context->isZoneScoped() && (int) $value !== $context->zoneId) {
                         $fail('You are only authorized to assign security personnel to your active zone.');
                     }
                 },

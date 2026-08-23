@@ -107,7 +107,10 @@ class SecurityPersonnelController extends Controller
         $this->authorize('security.create');
         $context = app(ContextManager::class)->current();
         $estate = $this->estateContext->getEstate();
-        $inviteLinks = $estate->securityInviteLinks()->with('zone')->get();
+        $inviteLinks = $estate->securityInviteLinks()
+            ->with('zone')
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->get();
 
         $zones = $this->zoneAudience->zonesForEstate($this->estateContext->getEstateId());
         if ($context && $context->isZoneScoped()) {

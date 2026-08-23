@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreInviteLinkRequest;
 use App\Services\EstateContextService;
@@ -21,7 +22,10 @@ class InviteLinkController extends Controller
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
-        $link = $estate->inviteLink;
+        $context = app(ContextManager::class)->current();
+        $link = $estate->inviteLinks()
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->first();
 
         return Inertia::render('Admin/Residents/InviteLink/Index', [
             'inviteLink' => $link ? [
@@ -39,13 +43,17 @@ class InviteLinkController extends Controller
 
     public function store(StoreInviteLinkRequest $request): RedirectResponse
     {
+        $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
         $validated = $request->validated();
 
         $linkId = $request->input('id');
 
         if ($linkId) {
-            $link = $estate->inviteLinks()->findOrFail($linkId);
+            $link = $estate->inviteLinks()
+                ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+                ->findOrFail($linkId);
             $link->update([
                 'max_usages' => $validated['max_usages'] ?? null,
                 'requires_approval' => $validated['requires_approval'] ?? true,
@@ -72,9 +80,12 @@ class InviteLinkController extends Controller
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate(['id' => 'required|integer']);
-        $link = $estate->inviteLinks()->findOrFail($validated['id']);
+        $link = $estate->inviteLinks()
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->findOrFail($validated['id']);
 
         $link->update([
             'token' => Str::random(32),
@@ -88,9 +99,12 @@ class InviteLinkController extends Controller
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate(['id' => 'required|integer']);
-        $link = $estate->inviteLinks()->findOrFail($validated['id']);
+        $link = $estate->inviteLinks()
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->findOrFail($validated['id']);
 
         $link->update(['is_active' => ! $link->is_active]);
         $status = $link->is_active ? 'enabled' : 'disabled';
@@ -102,9 +116,12 @@ class InviteLinkController extends Controller
     {
         $this->authorize('residents.create');
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         $validated = $request->validate(['id' => 'required|integer']);
-        $link = $estate->inviteLinks()->findOrFail($validated['id']);
+        $link = $estate->inviteLinks()
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->findOrFail($validated['id']);
 
         if ($link->is_active) {
             return back()->with('error', 'Invite link must be disabled before it can be deleted.');

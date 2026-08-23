@@ -4,6 +4,7 @@ use App\Enums\AssignmentScope;
 use App\Events\Admin\ResidentCreated;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
+use App\Models\EstateInviteLink;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
 use App\Models\User;
@@ -11,6 +12,7 @@ use App\Models\Zone;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -22,8 +24,19 @@ beforeEach(function () {
     $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'property_owner', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'security', 'guard_name' => 'web']);
 
-    foreach (['residents.view', 'residents.edit', 'residents.reset-password', 'property_owners.view', 'property_owners.edit'] as $permission) {
+    foreach ([
+        'residents.view',
+        'residents.create',
+        'residents.edit',
+        'residents.reset-password',
+        'property_owners.view',
+        'property_owners.create',
+        'property_owners.edit',
+        'security.view',
+        'security.create',
+    ] as $permission) {
         Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         $adminRole->givePermissionTo($permission);
     }
@@ -65,6 +78,22 @@ function asAdmin()
         ->withSession(['active_context_assignment_id' => test()->adminAssignment->id]);
 }
 
+function asZoneAdmin(Zone $zone)
+{
+    $assignment = AdministrativeAssignment::firstOrCreate([
+        'user_id' => test()->admin->id,
+        'estate_id' => test()->estate->id,
+        'role_id' => Role::where('name', 'admin')->where('guard_name', 'web')->firstOrFail()->id,
+        'zone_id' => $zone->id,
+    ], [
+        'scope_type' => AssignmentScope::Zone,
+        'is_active' => true,
+    ]);
+
+    return test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id]);
+}
+
 function createEstateResident(array $membership = []): User
 {
     $resident = User::factory()->create();
@@ -91,6 +120,20 @@ function createEstatePropertyOwner(array $membership = []): User
     ], $membership));
 
     return $owner;
+}
+
+function createInviteLink(string $role, Zone $zone): EstateInviteLink
+{
+    return EstateInviteLink::create([
+        'estate_id' => test()->estate->id,
+        'role' => $role,
+        'token' => Str::random(32),
+        'is_active' => true,
+        'usage_count' => 0,
+        'max_usages' => null,
+        'requires_approval' => true,
+        'zone_id' => $zone->id,
+    ]);
 }
 
 it('bulk moves selected residents to a zone', function () {
@@ -178,6 +221,169 @@ it('updates a property owner zone from the edit page', function () {
         ->assertRedirect(route('admin.property-owners.index'));
 
     expect($owner->estates()->where('estates.id', $this->estate->id)->first()?->pivot?->zone_id)->toBe($this->zone->id);
+});
+
+it('defaults zone scoped create form submissions to the active zone', function () {
+    asZoneAdmin($this->zone)
+        ->post(route('admin.residents.store'), [
+            'name' => 'Zone Resident',
+            'email' => 'zone-resident@example.test',
+            'zone_id' => '',
+        ])
+        ->assertRedirect(route('admin.residents.index'));
+
+    asZoneAdmin($this->zone)
+        ->post(route('admin.property-owners.store'), [
+            'name' => 'Zone Owner',
+            'email' => 'zone-owner@example.test',
+            'zone_id' => null,
+        ])
+        ->assertRedirect(route('admin.property-owners.index'));
+
+    asZoneAdmin($this->zone)
+        ->post(route('admin.security.store'), [
+            'name' => 'Zone Security',
+            'email' => 'zone-security@example.test',
+            'zone_id' => '',
+        ])
+        ->assertRedirect(route('admin.security.index'));
+
+    foreach (['zone-resident@example.test', 'zone-owner@example.test', 'zone-security@example.test'] as $email) {
+        $user = User::where('email', $email)->firstOrFail();
+
+        expect($user->estates()->where('estates.id', $this->estate->id)->first()?->pivot?->zone_id)->toBe($this->zone->id);
+    }
+});
+
+it('rejects zone scoped create form submissions targeting another zone', function () {
+    $otherZone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'South Gate',
+    ]);
+
+    asZoneAdmin($this->zone)
+        ->from(route('admin.residents.create'))
+        ->post(route('admin.residents.store'), [
+            'name' => 'Wrong Resident',
+            'email' => 'wrong-resident@example.test',
+            'zone_id' => $otherZone->id,
+        ])
+        ->assertRedirect(route('admin.residents.create'))
+        ->assertSessionHasErrors('zone_id');
+
+    asZoneAdmin($this->zone)
+        ->from(route('admin.property-owners.create'))
+        ->post(route('admin.property-owners.store'), [
+            'name' => 'Wrong Owner',
+            'email' => 'wrong-owner@example.test',
+            'zone_id' => $otherZone->id,
+        ])
+        ->assertRedirect(route('admin.property-owners.create'))
+        ->assertSessionHasErrors('zone_id');
+
+    asZoneAdmin($this->zone)
+        ->from(route('admin.security.create'))
+        ->post(route('admin.security.store'), [
+            'name' => 'Wrong Security',
+            'email' => 'wrong-security@example.test',
+            'zone_id' => $otherZone->id,
+        ])
+        ->assertRedirect(route('admin.security.create'))
+        ->assertSessionHasErrors('zone_id');
+});
+
+it('rejects a zone scoped resident assigned to an out of zone property owner', function () {
+    $otherZone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'South Gate',
+    ]);
+    $owner = createEstatePropertyOwner(['zone_id' => $otherZone->id]);
+
+    asZoneAdmin($this->zone)
+        ->from(route('admin.residents.create'))
+        ->post(route('admin.residents.store'), [
+            'name' => 'Mismatched Resident',
+            'email' => 'mismatched-resident@example.test',
+            'property_owner_id' => $owner->id,
+            'zone_id' => $this->zone->id,
+        ])
+        ->assertRedirect(route('admin.residents.create'))
+        ->assertSessionHasErrors('property_owner_id');
+});
+
+it('only exposes active zone invite links on zone scoped create pages', function () {
+    $otherZone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'South Gate',
+    ]);
+
+    createInviteLink('resident', $this->zone);
+    createInviteLink('resident', $otherZone);
+    createInviteLink('property_owner', $this->zone);
+    createInviteLink('property_owner', $otherZone);
+    createInviteLink('security', $this->zone);
+    createInviteLink('security', $otherZone);
+
+    asZoneAdmin($this->zone)
+        ->get(route('admin.residents.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Residents/Create')
+            ->has('inviteLinks', 1)
+            ->where('inviteLinks.0.zone_id', $this->zone->id)
+        );
+
+    asZoneAdmin($this->zone)
+        ->get(route('admin.property-owners.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/PropertyOwners/Create')
+            ->has('inviteLinks', 1)
+            ->where('inviteLinks.0.zone_id', $this->zone->id)
+        );
+
+    asZoneAdmin($this->zone)
+        ->get(route('admin.security.create'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Security/Create')
+            ->has('inviteLinks', 1)
+            ->where('inviteLinks.0.zone_id', $this->zone->id)
+        );
+});
+
+it('scopes invite link writes to the active zone', function () {
+    $otherZone = Zone::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'South Gate',
+    ]);
+
+    asZoneAdmin($this->zone)
+        ->post(route('admin.residents.invite-link.store'), [
+            'max_usages' => 5,
+            'requires_approval' => true,
+            'zone_id' => '',
+        ])
+        ->assertRedirect();
+
+    $link = $this->estate->inviteLinks()->firstOrFail();
+    expect($link->zone_id)->toBe($this->zone->id);
+
+    asZoneAdmin($this->zone)
+        ->from(route('admin.residents.create'))
+        ->post(route('admin.residents.invite-link.store'), [
+            'max_usages' => 5,
+            'requires_approval' => true,
+            'zone_id' => $otherZone->id,
+        ])
+        ->assertRedirect(route('admin.residents.create'))
+        ->assertSessionHasErrors('zone_id');
+
+    $otherLink = createInviteLink('property_owner', $otherZone);
+
+    asZoneAdmin($this->zone)
+        ->post(route('admin.property-owners.invite-link.toggle'), ['id' => $otherLink->id])
+        ->assertNotFound();
 });
 
 it('broadcasts invitation resent instead of password reset', function () {

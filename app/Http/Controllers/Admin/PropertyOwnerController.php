@@ -204,8 +204,12 @@ class PropertyOwnerController extends Controller
     public function create(): Response
     {
         $this->authorize('property_owners.create');
+        $context = app(ContextManager::class)->current();
         $estate = $this->estateContext->getEstate();
-        $inviteLinks = $estate->propertyOwnerInviteLinks()->with('zone')->get();
+        $inviteLinks = $estate->propertyOwnerInviteLinks()
+            ->with('zone')
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where('zone_id', $context->zoneId))
+            ->get();
 
         return Inertia::render('Admin/PropertyOwners/Create', [
             'inviteLinks' => $inviteLinks->map(fn ($link) => [
@@ -221,11 +225,7 @@ class PropertyOwnerController extends Controller
                 'zone_id' => $link->zone_id,
                 'zone_name' => $link->zone?->name ?? 'Entire Estate',
             ])->toArray(),
-            'zones' => Zone::query()
-                ->where('estate_id', $estate->id)
-                ->where('is_active', true)
-                ->orderBy('name')
-                ->get(['id', 'name']),
+            'zones' => $this->zonesForAssignment($estate->id, $context),
         ]);
     }
 
@@ -235,15 +235,21 @@ class PropertyOwnerController extends Controller
     public function bulkInvite(Request $request, BulkInvitePropertyOwnersAction $action): RedirectResponse
     {
         $this->authorize('property_owners.create');
+        $context = app(ContextManager::class)->current();
+        $estate = $this->estateContext->getEstate();
+
+        if ($context?->isZoneScoped() && ! $request->filled('zone_id')) {
+            $request->merge(['zone_id' => $context->zoneId]);
+        }
 
         $validated = $request->validate([
             'emails' => ['required', 'array', 'min:1', 'max:500'],
             'emails.*' => ['required', 'email'],
-            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
+            'zone_id' => $this->zoneAssignmentRules($estate->id, $context),
         ]);
 
-        $estate = $this->estateContext->getEstate();
-        $result = $action->execute($validated['emails'], $estate, $validated['zone_id'] ?? null);
+        $zoneId = $context?->isZoneScoped() ? $context->zoneId : ($validated['zone_id'] ?? null);
+        $result = $action->execute($validated['emails'], $estate, $zoneId);
 
         $message = "Successfully invited {$result['invited']} property owner(s).";
         if ($result['skipped'] > 0) {
@@ -261,6 +267,12 @@ class PropertyOwnerController extends Controller
     public function store(Request $request, CreatePropertyOwnerAction $action): RedirectResponse
     {
         $this->authorize('property_owners.create');
+        $context = app(ContextManager::class)->current();
+        $estate = $this->estateContext->getEstate();
+
+        if ($context?->isZoneScoped() && ! $request->filled('zone_id')) {
+            $request->merge(['zone_id' => $context->zoneId]);
+        }
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -268,10 +280,13 @@ class PropertyOwnerController extends Controller
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
-            'zone_id' => ['nullable', 'integer', Rule::exists('zones', 'id')->where('estate_id', app(EstateContextService::class)->getEstate()->id)],
+            'zone_id' => $this->zoneAssignmentRules($estate->id, $context),
         ]);
 
-        $estate = $this->estateContext->getEstate();
+        if ($context?->isZoneScoped()) {
+            $validated['zone_id'] = $context->zoneId;
+        }
+
         $action->execute($validated, $estate);
 
         return redirect()

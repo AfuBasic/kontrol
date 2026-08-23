@@ -13,6 +13,15 @@ use Illuminate\Validation\Rule;
 
 class StoreResidentRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $context = app(ContextManager::class)->current();
+
+        if ($context?->isZoneScoped() && ! $this->filled('zone_id')) {
+            $this->merge(['zone_id' => $context->zoneId]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -66,7 +75,29 @@ class StoreResidentRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'unit_number' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string', 'max:500'],
-            'property_owner_id' => ['nullable', 'integer', Rule::exists('users', 'id')],
+            'property_owner_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id'),
+                function ($attribute, $value, $fail) {
+                    $context = app(ContextManager::class)->current();
+                    if (! $context?->isZoneScoped()) {
+                        return;
+                    }
+
+                    $isInActiveZone = User::query()
+                        ->whereKey($value)
+                        ->whereHas('estates', function ($query) use ($context) {
+                            $query->where('estates.id', $context->estateId)
+                                ->where('estate_users_membership.zone_id', $context->zoneId);
+                        })
+                        ->exists();
+
+                    if (! $isInActiveZone) {
+                        $fail('The selected property owner must belong to your authorized zone.');
+                    }
+                },
+            ],
             'property_id' => [
                 'nullable',
                 'integer',
@@ -87,7 +118,7 @@ class StoreResidentRequest extends FormRequest
                 Rule::exists('zones', 'id')->where('estate_id', $estateId),
                 function ($attribute, $value, $fail) {
                     $context = app(ContextManager::class)->current();
-                    if ($context && $context->isZoneScoped() && $value !== $context->zoneId) {
+                    if ($context && $context->isZoneScoped() && (int) $value !== $context->zoneId) {
                         $fail('You are only authorized to assign residents to your active zone.');
                     }
                 },
