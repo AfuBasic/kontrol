@@ -148,7 +148,7 @@ export default function CreatePlan({ features, copyPlan }: Props) {
                 </motion.div>
             )}
 
-            <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
+            <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3" noValidate>
                 {/* Main Form Column */}
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
