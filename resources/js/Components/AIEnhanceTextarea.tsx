@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RotateCcw, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -53,22 +54,13 @@ export default function AIEnhanceTextarea({
         setOriginalContent(value);
 
         try {
-            const response = await fetch(ContentEnhanceController.url(), {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                },
-                body: JSON.stringify({
-                    content: value,
-                    title: title || null,
-                    type: 'estate_board',
-                }),
+            const response = await axios.post(ContentEnhanceController.url(), {
+                content: value,
+                title: title || null,
+                type: 'estate_board',
             });
 
-            const data = await response.json();
+            const data = response.data;
 
             if (data.success && data.enhanced) {
                 onChange(data.enhanced);
@@ -76,8 +68,9 @@ export default function AIEnhanceTextarea({
                 setEnhanceError(data.message || 'Enhancement failed');
                 setOriginalContent(null);
             }
-        } catch (_err) {
-            setEnhanceError('Failed to connect. Please try again.');
+        } catch (err: any) {
+            const message = err?.response?.data?.message || 'Failed to connect. Please try again.';
+            setEnhanceError(message);
             setOriginalContent(null);
         } finally {
             setIsEnhancing(false);
