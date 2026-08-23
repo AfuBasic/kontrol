@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import {
-    CornerDownRight,
-    MessageSquare,
-    Send,
-} from 'lucide-react';
+import { CornerDownRight, MessageSquare, Send } from 'lucide-react';
 import type { IncidentComment, PaginatedData } from '@/types/incidents';
 
 interface Props {
@@ -14,19 +10,11 @@ interface Props {
     className?: string;
 }
 
-export default function IncidentDiscussion({
-    comments,
-    canComment = true,
-    onSubmitComment,
-    submitting = false,
-    className = '',
-}: Props) {
+export default function IncidentDiscussion({ comments, canComment = true, onSubmitComment, submitting = false, className = '' }: Props) {
     const [body, setBody] = useState('');
     const [replyTo, setReplyTo] = useState<{ id: number; author: string } | null>(null);
 
-    const commentList: IncidentComment[] = Array.isArray(comments)
-        ? comments
-        : comments?.data || [];
+    const commentList: IncidentComment[] = Array.isArray(comments) ? comments : comments?.data || [];
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -52,13 +40,11 @@ export default function IncidentDiscussion({
 
     return (
         <section className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 ${className}`}>
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
                 <div className="flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-slate-500" />
-                    <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">
-                        Resident Discussion
-                    </h3>
-                    <span className="rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs font-bold px-2 py-0.5">
+                    <MessageSquare className="h-4 w-4 text-slate-500" />
+                    <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">Resident Discussion</h3>
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                         {commentList.length}
                     </span>
                 </div>
@@ -66,18 +52,14 @@ export default function IncidentDiscussion({
 
             {/* Comment Form */}
             {canComment && onSubmitComment && (
-                <form onSubmit={handleSubmit} className="mb-6">
+                <form onSubmit={handleSubmit} className="mb-6" noValidate>
                     {replyTo && (
                         <div className="mb-2 flex items-center justify-between rounded-lg bg-indigo-50 px-3 py-1.5 text-xs text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
                             <span className="flex items-center gap-1">
-                                <CornerDownRight className="w-3.5 h-3.5" />
+                                <CornerDownRight className="h-3.5 w-3.5" />
                                 Replying to <strong className="font-bold">{replyTo.author}</strong>
                             </span>
-                            <button
-                                type="button"
-                                onClick={() => setReplyTo(null)}
-                                className="font-bold hover:underline"
-                            >
+                            <button type="button" onClick={() => setReplyTo(null)} className="font-bold hover:underline">
                                 Cancel
                             </button>
                         </div>
@@ -89,14 +71,14 @@ export default function IncidentDiscussion({
                             placeholder="Share an update or comment on this incident..."
                             rows={3}
                             disabled={submitting}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-indigo-500 dark:focus:bg-slate-900"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-indigo-500 dark:focus:bg-slate-900"
                         />
                         <button
                             type="submit"
                             disabled={!body.trim() || submitting}
                             className="absolute right-2.5 bottom-3.5 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs transition-all hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600"
                         >
-                            <Send className="w-4 h-4" />
+                            <Send className="h-4 w-4" />
                         </button>
                     </div>
                 </form>
@@ -105,7 +87,7 @@ export default function IncidentDiscussion({
             {/* Comments List */}
             {commentList.length === 0 ? (
                 <div className="py-8 text-center text-slate-400 dark:text-slate-600">
-                    <MessageSquare className="w-8 h-8 mx-auto mb-2 stroke-1 text-slate-300 dark:text-slate-700" />
+                    <MessageSquare className="mx-auto mb-2 h-8 w-8 stroke-1 text-slate-300 dark:text-slate-700" />
                     <p className="text-xs font-semibold">No comments yet. Be the first to share details.</p>
                 </div>
             ) : (
@@ -113,7 +95,7 @@ export default function IncidentDiscussion({
                     {commentList.map((comment) => (
                         <div key={comment.id} className="space-y-3">
                             <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                                <div className="flex items-start justify-between gap-3 mb-1.5">
+                                <div className="mb-1.5 flex items-start justify-between gap-3">
                                     <div className="flex items-center gap-2">
                                         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                             {comment.author?.name ? comment.author.name[0].toUpperCase() : 'U'}
@@ -122,17 +104,15 @@ export default function IncidentDiscussion({
                                             {comment.author?.name || 'Resident'}
                                         </span>
                                     </div>
-                                    <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                    <span className="text-[11px] font-semibold whitespace-nowrap text-slate-400 dark:text-slate-500">
                                         {formatDate(comment.created_at)}
                                     </span>
                                 </div>
 
-                                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line pl-9">
-                                    {comment.body}
-                                </p>
+                                <p className="pl-9 text-sm leading-relaxed whitespace-pre-line text-slate-700 dark:text-slate-300">{comment.body}</p>
 
                                 {canComment && onSubmitComment && (
-                                    <div className="pl-9 mt-2">
+                                    <div className="mt-2 pl-9">
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -141,9 +121,9 @@ export default function IncidentDiscussion({
                                                     author: comment.author?.name || 'Resident',
                                                 })
                                             }
-                                            className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1"
+                                            className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:underline dark:text-indigo-400"
                                         >
-                                            <CornerDownRight className="w-3 h-3" /> Reply
+                                            <CornerDownRight className="h-3 w-3" /> Reply
                                         </button>
                                     </div>
                                 )}
@@ -151,13 +131,13 @@ export default function IncidentDiscussion({
 
                             {/* Nested Replies */}
                             {comment.replies && comment.replies.length > 0 && (
-                                <div className="pl-6 ml-3 space-y-2.5 border-l-2 border-slate-200 dark:border-slate-800">
+                                <div className="ml-3 space-y-2.5 border-l-2 border-slate-200 pl-6 dark:border-slate-800">
                                     {comment.replies.map((reply) => (
                                         <div
                                             key={reply.id}
                                             className="rounded-xl border border-slate-100 bg-slate-50/40 p-3 dark:border-slate-800/80 dark:bg-slate-950/20"
                                         >
-                                            <div className="flex items-start justify-between gap-3 mb-1">
+                                            <div className="mb-1 flex items-start justify-between gap-3">
                                                 <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
                                                     {reply.author?.name || 'Resident'}
                                                 </span>
@@ -165,7 +145,7 @@ export default function IncidentDiscussion({
                                                     {formatDate(reply.created_at)}
                                                 </span>
                                             </div>
-                                            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+                                            <p className="text-xs leading-relaxed whitespace-pre-line text-slate-600 dark:text-slate-300">
                                                 {reply.body}
                                             </p>
                                         </div>
