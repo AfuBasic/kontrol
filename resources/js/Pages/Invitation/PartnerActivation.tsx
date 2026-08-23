@@ -70,8 +70,8 @@ export default function PartnerActivation({ acceptUrl, user, partner_name, flash
                             <div className="mb-8">
                                 <h1 className="text-2xl font-semibold tracking-tight text-white">Your partner account is ready.</h1>
                                 <p className="mt-2 text-sm text-white/60">
-                                    Hello, {name}. You've been invited to join{' '}
-                                    <span className="font-semibold text-white">{partner_name}</span> as a Partner Member. Activate your account to begin managing estates and earning commissions.
+                                    Hello, {name}. You've been invited to join <span className="font-semibold text-white">{partner_name}</span> as a
+                                    Partner Member. Activate your account to begin managing estates and earning commissions.
                                 </p>
                             </div>
 
@@ -81,7 +81,7 @@ export default function PartnerActivation({ acceptUrl, user, partner_name, flash
                                 </div>
                             )}
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
+                            <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                                 <button
                                     type="submit"
                                     disabled={processing}
