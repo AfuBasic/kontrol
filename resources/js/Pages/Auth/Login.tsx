@@ -2,19 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, useMotionValue, animate as animateX } from 'framer-motion';
-import {
-
-    Sparkles,
-    Check,
-    QrCode,
-    Smartphone,
-    Bell,
-    CreditCard,
-    ShieldAlert,
-    MessageSquare,
-    ArrowRight,
-    Shield,
-} from 'lucide-react';
+import { Sparkles, Check, QrCode, Smartphone, Bell, CreditCard, ShieldAlert, MessageSquare, ArrowRight, Shield } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import * as SocialLoginController from '@/actions/App/Http/Controllers/Auth/SocialLoginController';
@@ -684,6 +672,7 @@ export default function Login() {
                             transition={{ duration: 0.4, delay: 0.1 }}
                             onSubmit={(e) => submit(e)}
                             className="space-y-5 lg:mt-8"
+                            noValidate
                         >
                             <div>
                                 <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-700">
