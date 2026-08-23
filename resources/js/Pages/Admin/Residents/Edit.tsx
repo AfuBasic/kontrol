@@ -81,6 +81,7 @@ export default function EditResident({ resident, propertyOwners = [], zones = []
                 transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
                 onSubmit={handleSubmit}
                 className="rounded-2xl border border-gray-200 bg-white p-8 shadow-xs"
+                noValidate
             >
                 <div className="space-y-6">
                     {/* Email */}
