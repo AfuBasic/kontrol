@@ -149,7 +149,7 @@ export default function HouseholdIndex({ members }: Props) {
                             </button>
                         </div>
                     ) : (
-                        <form onSubmit={handleSubmit} className="p-1">
+                        <form onSubmit={handleSubmit} className="p-1" noValidate>
                             <p className="mb-6 text-sm font-bold text-slate-400 dark:text-slate-500">
                                 They'll receive an email invitation to set up their account. Household members can generate visitor access codes and
                                 view the estate board.
