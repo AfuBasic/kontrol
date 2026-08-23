@@ -82,7 +82,7 @@ export default function CreatePartner() {
                         <p className="mt-1 text-xs text-[#9297A8]">Register a new partner program with targeted commission structures.</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                         {/* Profile Section */}
                         <div className="space-y-4">
                             <h3 className="mb-2 border-b border-[rgba(255,255,255,0.06)] pb-2 text-xs font-bold tracking-wider text-[#9297A8] uppercase">
