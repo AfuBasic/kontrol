@@ -415,7 +415,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="fixed inset-0 z-40 bg-stone-950/50 backdrop-blur-sm lg:hidden"
+                                className="fixed inset-0 z-[60] bg-stone-950/60 backdrop-blur-sm lg:hidden"
                                 onClick={() => setMobileMenuOpen(false)}
                                 aria-hidden
                             />
@@ -424,7 +424,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
                                 animate={{ x: 0 }}
                                 exit={{ x: '-100%' }}
                                 transition={{ type: 'spring', damping: 30, stiffness: 340 }}
-                                className="pt-safe pb-safe fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col bg-[#0b0f15] shadow-2xl lg:hidden"
+                                className="pt-safe pb-safe fixed inset-y-0 left-0 z-[70] flex w-[280px] flex-col bg-[#0b0f15] shadow-2xl lg:hidden"
                                 aria-label="Partner menu"
                             >
                                 <div className="flex h-[52px] items-center justify-between px-4">
