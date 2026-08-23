@@ -50,7 +50,7 @@ export default function EditAffiliate({ affiliate }: Props) {
                     <h1 className="mb-2 text-3xl font-bold text-gray-900">Edit Affiliate</h1>
                     <p className="mb-8 text-gray-600">Update affiliate partner information</p>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
                                 <label className="mb-2 block text-sm font-semibold text-gray-700">Name</label>
