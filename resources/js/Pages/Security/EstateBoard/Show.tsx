@@ -235,7 +235,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
                 className="mt-6 rounded-xl border border-gray-200 bg-white p-6"
             >
                 <h3 className="mb-4 font-medium text-gray-900">Add a comment</h3>
-                <form onSubmit={handleSubmitComment}>
+                <form onSubmit={handleSubmitComment} noValidate>
                     <textarea
                         value={data.body}
                         onChange={(e) => setData('body', e.target.value)}
