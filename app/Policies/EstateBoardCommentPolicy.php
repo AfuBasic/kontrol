@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 class EstateBoardCommentPolicy extends BaseContextPolicy
 {
@@ -13,7 +14,7 @@ class EstateBoardCommentPolicy extends BaseContextPolicy
      */
     public function create(User $user, EstateBoardPost $post): bool
     {
-        return $this->hasValidContextForEstate($post->estate_id);
+        return Gate::forUser($user)->allows('view', $post);
     }
 
     /**
@@ -22,6 +23,10 @@ class EstateBoardCommentPolicy extends BaseContextPolicy
     public function delete(User $user, EstateBoardComment $comment): bool
     {
         if (! $this->hasValidContextForEstate($comment->estate_id)) {
+            return false;
+        }
+
+        if (! Gate::forUser($user)->allows('view', $comment->post)) {
             return false;
         }
 

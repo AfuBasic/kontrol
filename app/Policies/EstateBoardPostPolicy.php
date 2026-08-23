@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Auth\ContextManager;
 use App\Models\EstateBoardPost;
 use App\Models\User;
+use App\Models\Zone;
 
 class EstateBoardPostPolicy extends BaseContextPolicy
 {
@@ -21,7 +22,7 @@ class EstateBoardPostPolicy extends BaseContextPolicy
      */
     public function view(User $user, EstateBoardPost $post): bool
     {
-        if (! $this->hasValidContextForEstate($post->estate_id)) {
+        if (! $this->postIsVisibleInCurrentContext($post)) {
             return false;
         }
 
@@ -75,6 +76,10 @@ class EstateBoardPostPolicy extends BaseContextPolicy
             return false;
         }
 
+        if (! $this->postIsMutableInCurrentContext($post)) {
+            return false;
+        }
+
         return $post->user_id === $user->id
             || $user->contextHasRole('admin')
             || $user->contextCan('estate-board.edit');
@@ -93,8 +98,49 @@ class EstateBoardPostPolicy extends BaseContextPolicy
             return false;
         }
 
+        if (! $this->postIsMutableInCurrentContext($post)) {
+            return false;
+        }
+
         return $post->user_id === $user->id
             || $user->contextHasRole('admin')
             || $user->contextCan('estate-board.delete');
+    }
+
+    private function postIsVisibleInCurrentContext(EstateBoardPost $post): bool
+    {
+        if (! $this->hasValidContextForEstate($post->estate_id)) {
+            return false;
+        }
+
+        $context = app(ContextManager::class)->current();
+
+        if (! $context?->isZoneScoped()) {
+            return true;
+        }
+
+        if (($post->applies_to === null || $post->applies_to === 'all') && ! $post->targets()->exists()) {
+            return true;
+        }
+
+        return $post->targets()
+            ->whereIn('target_type', ['zone', Zone::class])
+            ->where('target_id', $context->zoneId)
+            ->exists();
+    }
+
+    private function postIsMutableInCurrentContext(EstateBoardPost $post): bool
+    {
+        $context = app(ContextManager::class)->current();
+
+        if (! $context?->isZoneScoped()) {
+            return true;
+        }
+
+        $targets = $post->targets()->get(['target_type', 'target_id']);
+
+        return $targets->isNotEmpty()
+            && $targets->every(fn ($target) => in_array($target->target_type, ['zone', Zone::class], true)
+                && (int) $target->target_id === $context->zoneId);
     }
 }

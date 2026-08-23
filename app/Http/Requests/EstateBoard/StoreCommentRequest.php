@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests\EstateBoard;
 
+use App\Models\EstateBoardPost;
+use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCommentRequest extends FormRequest
 {
@@ -17,9 +20,19 @@ class StoreCommentRequest extends FormRequest
      */
     public function rules(): array
     {
+        $post = $this->route('post');
+        $postId = $post instanceof EstateBoardPost ? $post->id : null;
+
         return [
             'body' => ['required', 'string', 'min:2', 'max:2000'],
-            'parent_id' => ['nullable', 'integer', 'exists:estate_board_comments,id'],
+            'parent_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('estate_board_comments', 'id')
+                    ->where('estate_id', resolve(EstateContextService::class)->getEstateId())
+                    ->where('estate_board_post_id', $postId)
+                    ->whereNull('parent_id'),
+            ],
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Services\Admin;
 
+use App\Auth\ContextManager;
 use App\Enums\EstateBoardPostAudience;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
@@ -9,6 +10,7 @@ use App\Models\EstateBoardPost;
 use App\Models\Zone;
 use App\Services\ZoneAudienceResolver;
 use Illuminate\Contracts\Pagination\CursorPaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class EstateBoardService
@@ -29,9 +31,12 @@ class EstateBoardService
         $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
         $userZoneIds = $user ? app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId) : [];
+        $context = app(ContextManager::class)->current();
+        $activeZoneId = $context?->isZoneScoped() ? $context->zoneId : null;
 
         return EstateBoardPost::query()
             ->forEstate($estateId)
+            ->when($isAdmin && $activeZoneId, fn ($q) => $this->constrainToZoneContext($q, $activeZoneId))
             ->when($status === 'published', fn ($q) => $q->published())
             ->when($status === 'draft', fn ($q) => $q->draft())
             ->when($status === null || $status === '' || $status === 'all', function ($q) use ($isAdmin) {
@@ -109,8 +114,14 @@ class EstateBoardService
 
     public function getFeedMetrics(int $estateId, ?string $filter = null): array
     {
+        $user = auth()->user();
+        $isAdmin = $user && $user->contextHasRole('admin');
+        $context = app(ContextManager::class)->current();
+        $activeZoneId = $context?->isZoneScoped() ? $context->zoneId : null;
+
         $baseQuery = EstateBoardPost::query()
             ->forEstate($estateId)
+            ->when($isAdmin && $activeZoneId, fn ($q) => $this->constrainToZoneContext($q, $activeZoneId))
             ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
             ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'));
 
@@ -142,9 +153,12 @@ class EstateBoardService
         $propertyOwnerId = $user ? $user->getPropertyOwnerForEstate($estateId)?->id : null;
         $propertyId = $user?->profile?->property_id;
         $userZoneIds = $user ? app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId) : [];
+        $context = app(ContextManager::class)->current();
+        $activeZoneId = $context?->isZoneScoped() ? $context->zoneId : null;
 
         return EstateBoardPost::query()
             ->forEstate($estateId)
+            ->when($isAdmin && $activeZoneId, fn ($q) => $this->constrainToZoneContext($q, $activeZoneId))
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
             ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
                 $query->where(function ($q) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
@@ -229,11 +243,44 @@ class EstateBoardService
      */
     public function getAdminPosts(int $estateId, int $perPage = 15): CursorPaginator
     {
+        $user = auth()->user();
+        $isAdmin = $user && $user->contextHasRole('admin');
+        $context = app(ContextManager::class)->current();
+        $activeZoneId = $context?->isZoneScoped() ? $context->zoneId : null;
+
         return EstateBoardPost::query()
             ->forEstate($estateId)
+            ->when($isAdmin && $activeZoneId, fn ($q) => $this->constrainToZoneContext($q, $activeZoneId))
             ->with(['author:id,name,email'])
             ->withCount(['comments', 'media', 'reads'])
             ->orderByDesc('created_at')
             ->cursorPaginate($perPage);
+    }
+
+    /**
+     * @param  Builder<EstateBoardPost>  $query
+     */
+    private function constrainToZoneContext(Builder $query, int $zoneId): void
+    {
+        $query->where(function ($zoneScope) use ($zoneId): void {
+            $zoneScope
+                ->where(function ($allEstate): void {
+                    $allEstate
+                        ->where(function ($scope): void {
+                            $scope->whereNull('applies_to')
+                                ->orWhere('applies_to', 'all');
+                        })
+                        ->whereDoesntHave('targets');
+                })
+                ->orWhere(function ($targeted) use ($zoneId): void {
+                    $targeted
+                        ->whereIn('applies_to', ['custom', 'target', 'zone'])
+                        ->whereHas('targets', function ($target) use ($zoneId): void {
+                            $target
+                                ->whereIn('target_type', ['zone', Zone::class])
+                                ->where('target_id', $zoneId);
+                        });
+                });
+        });
     }
 }

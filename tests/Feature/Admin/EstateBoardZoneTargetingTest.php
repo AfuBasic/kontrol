@@ -8,6 +8,7 @@ use App\Enums\EstateBoardPostStatus;
 use App\Events\EstateBoard\NewPostBroadcast;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
+use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\EstateSubscription;
 use App\Models\Plan;
@@ -215,4 +216,99 @@ it('only offers the assigned zone to zone-scoped admins on the create page', fun
             ->has('zones', 1)
             ->where('zones.0.id', test()->zoneA->id)
         );
+});
+
+it('limits zone-scoped admin board feeds and edits to visible zone posts', function () {
+    $assignment = zoneScopedAdmin();
+
+    $allPost = EstateBoardPost::factory()->create([
+        'estate_id' => test()->estate->id,
+        'user_id' => test()->admin->id,
+        'title' => 'Estate Wide Notice',
+        'applies_to' => 'all',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    $zoneAPost = EstateBoardPost::factory()->create([
+        'estate_id' => test()->estate->id,
+        'user_id' => test()->admin->id,
+        'title' => 'Zone A Notice',
+        'applies_to' => 'custom',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+    $zoneAPost->targets()->create([
+        'target_type' => 'zone',
+        'target_id' => test()->zoneA->id,
+    ]);
+
+    $zoneBPost = EstateBoardPost::factory()->create([
+        'estate_id' => test()->estate->id,
+        'user_id' => test()->admin->id,
+        'title' => 'Zone B Notice',
+        'applies_to' => 'custom',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+    $zoneBPost->targets()->create([
+        'target_type' => 'zone',
+        'target_id' => test()->zoneB->id,
+    ]);
+
+    test()->actingAs(test()->admin)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->get(route('admin.estate-board.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/EstateBoard/Index')
+            ->where('posts.data', function ($posts) use ($allPost, $zoneAPost, $zoneBPost): bool {
+                $visiblePostIds = collect($posts)->pluck('id');
+
+                return $visiblePostIds->contains($allPost->id)
+                    && $visiblePostIds->contains($zoneAPost->id)
+                    && ! $visiblePostIds->contains($zoneBPost->id);
+            })
+        );
+
+    test()->get(route('admin.estate-board.edit', $zoneAPost))->assertOk();
+    test()->get(route('admin.estate-board.edit', $zoneBPost))->assertForbidden();
+    test()->get(route('admin.estate-board.edit', $allPost))->assertForbidden();
+});
+
+it('rejects comment replies whose parent is from another post', function () {
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => test()->estate->id,
+        'user_id' => test()->admin->id,
+        'applies_to' => 'all',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    $otherPost = EstateBoardPost::factory()->create([
+        'estate_id' => test()->estate->id,
+        'user_id' => test()->admin->id,
+        'applies_to' => 'all',
+        'status' => EstateBoardPostStatus::Published,
+        'published_at' => now(),
+    ]);
+
+    $otherParent = EstateBoardComment::factory()->create([
+        'estate_id' => test()->estate->id,
+        'estate_board_post_id' => $otherPost->id,
+        'user_id' => test()->admin->id,
+        'parent_id' => null,
+    ]);
+
+    test()->actingAs(test()->admin)
+        ->post(route('admin.estate-board.comments.store', $post), [
+            'body' => 'Reply text that should not attach across posts.',
+            'parent_id' => $otherParent->id,
+        ])
+        ->assertSessionHasErrors(['parent_id']);
+
+    test()->assertDatabaseMissing('estate_board_comments', [
+        'estate_board_post_id' => $post->id,
+        'parent_id' => $otherParent->id,
+    ]);
 });
