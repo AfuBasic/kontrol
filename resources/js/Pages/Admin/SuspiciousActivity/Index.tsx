@@ -129,6 +129,7 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
                             event.preventDefault();
                             visit({ search, attention: filters.attention });
                         }}
+                        noValidate
                     >
                         <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                         <label className="sr-only" htmlFor="security-search">
@@ -181,7 +182,9 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
                                             </td>
                                             <td className="px-5 py-4 text-slate-600">{event.person_name}</td>
                                             <td className="px-5 py-4">
-                                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severityClass(event.severity)}`}>
+                                                <span
+                                                    className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severityClass(event.severity)}`}
+                                                >
                                                     {event.severity_label}
                                                 </span>
                                             </td>
@@ -217,9 +220,7 @@ export default function SuspiciousActivityIndex({ events, filters, selected }: P
                                         <p className="mt-3 text-xs text-slate-500">
                                             {event.status_label}
                                             {event.device ? ` · ${event.device}` : ''}
-                                            {event.detected_at
-                                                ? ` · ${formatDistanceToNow(new Date(event.detected_at), { addSuffix: true })}`
-                                                : ''}
+                                            {event.detected_at ? ` · ${formatDistanceToNow(new Date(event.detected_at), { addSuffix: true })}` : ''}
                                         </p>
                                     </Link>
                                 </li>
