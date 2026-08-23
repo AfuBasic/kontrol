@@ -240,7 +240,7 @@ export default function FeedShow({ post, comments }: Props) {
                 transition={{ duration: 0.3, delay: 0.1 }}
                 className="mt-4 overflow-hidden rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-100"
             >
-                <form onSubmit={handleSubmitComment}>
+                <form onSubmit={handleSubmitComment} noValidate>
                     <textarea
                         value={data.body}
                         onChange={(e) => setData('body', e.target.value)}
