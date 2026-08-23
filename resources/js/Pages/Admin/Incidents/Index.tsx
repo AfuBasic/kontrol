@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, UserPlus, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, SlidersHorizontal } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { bulk_destroy } from '@/routes/admin/incidents';
@@ -110,15 +110,7 @@ type Props = {
     }>;
 };
 
-export default function IncidentsIndex({
-    incidents: rawIncidents,
-    filters: initialFilters,
-    categories,
-    statuses,
-    stats,
-    admins,
-
-}: Props) {
+export default function IncidentsIndex({ incidents: rawIncidents, filters: initialFilters, categories, statuses, stats, admins }: Props) {
     const filters = initialFilters && !Array.isArray(initialFilters) ? initialFilters : {};
     const viewMode = filters.view || 'board';
 
@@ -388,12 +380,12 @@ export default function IncidentsIndex({
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                     {/* View Switcher */}
-                    <div className="inline-flex rounded-xl bg-slate-100 p-1">
+                    <div className="grid grid-cols-2 rounded-xl bg-slate-100 p-1 sm:inline-flex">
                         <button
                             onClick={() => applyFilters({ view: 'board' })}
-                            className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                            className={`flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-bold transition-all sm:py-1.5 ${
                                 viewMode === 'board' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
@@ -402,7 +394,7 @@ export default function IncidentsIndex({
                         </button>
                         <button
                             onClick={() => applyFilters({ view: 'table' })}
-                            className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                            className={`flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-bold transition-all sm:py-1.5 ${
                                 viewMode === 'table' ? 'bg-white text-slate-950 shadow-xs' : 'text-slate-500 hover:text-slate-800'
                             }`}
                         >
@@ -413,7 +405,7 @@ export default function IncidentsIndex({
 
                     <Link
                         href="/admin/incidents/create"
-                        className="flex items-center gap-2 rounded-xl bg-slate-950 px-4 py-2 text-xs font-black tracking-wide text-white uppercase shadow-sm transition hover:bg-slate-800 active:scale-95"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-3 text-xs font-black tracking-wide whitespace-nowrap text-white uppercase shadow-sm transition hover:bg-slate-800 active:scale-95 sm:w-auto sm:py-2"
                     >
                         <Plus className="h-4 w-4" strokeWidth={3} />
                         Report Incident
@@ -546,23 +538,10 @@ export default function IncidentsIndex({
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center gap-2 self-end sm:self-center">
+                                        <div className="flex items-center self-end sm:self-center">
                                             <span className={`rounded-xl border px-2 py-1 text-[9px] font-black uppercase ${slaInfo.style}`}>
                                                 {slaInfo.label}
                                             </span>
-
-                                            {/* Quick Assign Action */}
-                                            {!incident.assignee ? (
-                                                <button
-                                                    onClick={() => setActiveAssigneeDropdown(incident.id)}
-                                                    className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-[10px] font-bold text-white transition hover:bg-slate-800"
-                                                >
-                                                    <UserPlus className="h-3 w-3" />
-                                                    Assign
-                                                </button>
-                                            ) : (
-                                                <span className="text-[10px] font-bold text-slate-500">Assigned to {incident.assignee.name}</span>
-                                            )}
                                         </div>
                                     </div>
                                 );
