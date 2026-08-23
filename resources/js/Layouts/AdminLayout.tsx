@@ -539,9 +539,14 @@ export default function AdminLayout({ children, _title }: Props) {
                                 <span className="sr-only">Search Kontrol</span>
                                 <Search className="h-5 w-5" />
                             </button>
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200">
+                            <Link
+                                href={ProfileController.edit.url()}
+                                prefetch="click"
+                                aria-label="My Profile"
+                                className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-[#0A3D91] shadow-sm ring-1 ring-slate-200 transition-transform active:scale-90"
+                            >
                                 <span className="text-sm font-bold">{auth.user?.name?.charAt(0).toUpperCase()}</span>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 </header>
