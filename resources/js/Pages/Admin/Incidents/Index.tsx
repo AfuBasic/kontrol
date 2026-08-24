@@ -708,155 +708,159 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                 {incidentsList.length > 0 ? (
                     viewMode === 'board' ? (
                         /* KANBAN BOARD VIEW */
-                        <div className="grid min-w-[900px] grid-cols-1 gap-4 overflow-x-auto pb-4 sm:grid-cols-5">
-                            {boardColumns.map((col) => {
-                                const colIncidents = incidentsList.filter((incident) => {
-                                    const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
-                                    return statusVal === col.id;
-                                });
+                        <div className="sm:overflow-x-auto sm:pb-4">
+                            <div className="grid grid-cols-1 gap-3 pb-4 sm:min-w-[900px] sm:grid-cols-5 sm:gap-4 sm:pb-0">
+                                {boardColumns.map((col) => {
+                                    const colIncidents = incidentsList.filter((incident) => {
+                                        const statusVal = typeof incident.status === 'object' ? incident.status.value : incident.status;
+                                        return statusVal === col.id;
+                                    });
 
-                                return (
-                                    <div key={col.id} className="flex min-h-[450px] flex-col rounded-2xl bg-slate-50/70 p-3">
-                                        <div className="mb-3 flex items-center justify-between px-1">
-                                            <h3 className="text-xs font-black tracking-wider text-slate-700 uppercase">{col.title}</h3>
-                                            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-black text-slate-600">
-                                                {colIncidents.length}
-                                            </span>
-                                        </div>
+                                    return (
+                                        <div key={col.id} className="flex flex-col rounded-2xl bg-slate-50/70 p-3 sm:min-h-[450px]">
+                                            <div className="mb-3 flex items-center justify-between px-1">
+                                                <h3 className="text-xs font-black tracking-wider text-slate-700 uppercase">{col.title}</h3>
+                                                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[9px] font-black text-slate-600">
+                                                    {colIncidents.length}
+                                                </span>
+                                            </div>
 
-                                        <div className="flex flex-col gap-2.5">
-                                            {colIncidents.map((incident) => {
-                                                const priorityInfo = getPriorityStyles(incident.priority);
-                                                const slaInfo = getSlaStatus(incident);
+                                            <div className="flex flex-col gap-2.5">
+                                                {colIncidents.map((incident) => {
+                                                    const priorityInfo = getPriorityStyles(incident.priority);
+                                                    const slaInfo = getSlaStatus(incident);
 
-                                                return (
-                                                    <motion.div
-                                                        layout
-                                                        key={incident.id}
-                                                        className="group relative rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300 hover:shadow-sm"
-                                                    >
-                                                        {/* Category, Reference & Zone */}
-                                                        <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
-                                                            <div className="flex items-center gap-1.5">
-                                                                <span
-                                                                    className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
-                                                                >
-                                                                    {priorityInfo.text}
-                                                                </span>
-                                                                <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
-                                                                    {slaInfo.label}
-                                                                </span>
-                                                            </div>
-                                                            {incident.zone ? (
-                                                                <span className="rounded border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase">
-                                                                    {incident.zone.name}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="rounded border border-slate-200/50 bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase">
-                                                                    Entire Estate
-                                                                </span>
-                                                            )}
-                                                        </div>
-
-                                                        {/* Title */}
-                                                        <Link
-                                                            href={`/admin/incidents/${incident.hashid}`}
-                                                            className="block text-xs leading-snug font-bold text-slate-900 transition group-hover:text-indigo-600"
+                                                    return (
+                                                        <motion.div
+                                                            layout
+                                                            key={incident.id}
+                                                            className="group relative rounded-xl border border-slate-200/60 bg-white p-3.5 shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] transition-all hover:border-slate-300 hover:shadow-sm"
                                                         >
-                                                            {incident.title}
-                                                        </Link>
-
-                                                        {/* Reporter & Location */}
-                                                        <div className="mt-2 flex flex-col gap-0.5 text-[10px] font-bold text-slate-400">
-                                                            <span>
-                                                                By {incident.reporter.name}{' '}
-                                                                <span className="text-[9px] font-normal text-slate-500">
-                                                                    ({incident.reporter_role})
-                                                                </span>
-                                                            </span>
-                                                            <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500">
-                                                                <span className="py-0.2 rounded bg-slate-100 px-1 text-[8px] font-black text-slate-500 uppercase">
-                                                                    {incident.source.replace('_', ' ')}
-                                                                </span>
-                                                                {incident.location && <span>@ {incident.location}</span>}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Engagement icons & Assignee */}
-                                                        <div className="mt-3.5 flex items-center justify-between border-t border-slate-50 pt-2.5">
-                                                            <div className="flex items-center gap-2 text-slate-400">
-                                                                <div className="flex items-center gap-0.5">
-                                                                    <MessageSquare className="h-3 w-3" />
-                                                                    <span className="text-[9px] font-bold">{incident.comments_count}</span>
-                                                                </div>
-                                                                <div className="flex items-center gap-0.5">
-                                                                    <ThumbsUp className="h-3 w-3" />
-                                                                    <span className="text-[9px] font-bold">{incident.upvotes_count}</span>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Assignee inline select */}
-                                                            <div className="relative">
-                                                                <button
-                                                                    onClick={() =>
-                                                                        setActiveAssigneeDropdown(
-                                                                            activeAssigneeDropdown === incident.id ? null : incident.id,
-                                                                        )
-                                                                    }
-                                                                    className="flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-1 text-[9px] font-bold text-slate-600 hover:bg-slate-100"
-                                                                >
-                                                                    <User className="h-2.5 w-2.5" />
-                                                                    <span className="max-w-[70px] truncate">
-                                                                        {incident.assignee ? incident.assignee.name : 'Assign'}
+                                                            {/* Category, Reference & Zone */}
+                                                            <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5">
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span
+                                                                        className={`rounded px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase ${priorityInfo.bg}`}
+                                                                    >
+                                                                        {priorityInfo.text}
                                                                     </span>
-                                                                </button>
-
-                                                                {/* Assignee Popover */}
-                                                                <AnimatePresence>
-                                                                    {activeAssigneeDropdown === incident.id && (
-                                                                        <div
-                                                                            ref={dropdownRef}
-                                                                            className="border-slate-150 absolute right-0 bottom-full z-30 mb-1 w-44 rounded-xl border bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
-                                                                        >
-                                                                            <p className="border-b border-slate-50 px-2 py-1.5 text-[9px] font-black tracking-wider text-slate-400 uppercase">
-                                                                                Assign Guard/Staff
-                                                                            </p>
-                                                                            <div className="max-h-36 overflow-y-auto py-1">
-                                                                                <button
-                                                                                    onClick={() => handleAssign(incident.id, incident.hashid, null)}
-                                                                                    className="w-full rounded-lg px-2 py-1 text-left text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                                                                                >
-                                                                                    Unassigned
-                                                                                </button>
-                                                                                {admins.map((adm) => (
-                                                                                    <button
-                                                                                        key={adm.id}
-                                                                                        onClick={() =>
-                                                                                            handleAssign(incident.id, incident.hashid, adm.id)
-                                                                                        }
-                                                                                        className="w-full rounded-lg px-2 py-1 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                                                                                    >
-                                                                                        {adm.name}
-                                                                                    </button>
-                                                                                ))}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </AnimatePresence>
+                                                                    <span className={`rounded-sm text-[8px] font-bold ${slaInfo.style} border-none`}>
+                                                                        {slaInfo.label}
+                                                                    </span>
+                                                                </div>
+                                                                {incident.zone ? (
+                                                                    <span className="rounded border border-indigo-100 bg-indigo-50 px-1.5 py-0.5 text-[8px] font-black text-indigo-700 uppercase">
+                                                                        {incident.zone.name}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="rounded border border-slate-200/50 bg-slate-50 px-1.5 py-0.5 text-[8px] font-black text-slate-500 uppercase">
+                                                                        Entire Estate
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                        </div>
-                                                    </motion.div>
-                                                );
-                                            })}
-                                            {colIncidents.length === 0 && (
-                                                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 py-8 text-center">
-                                                    <span className="text-[10px] font-bold text-slate-400">Column Empty</span>
-                                                </div>
-                                            )}
+
+                                                            {/* Title */}
+                                                            <Link
+                                                                href={`/admin/incidents/${incident.hashid}`}
+                                                                className="block text-xs leading-snug font-bold text-slate-900 transition group-hover:text-indigo-600"
+                                                            >
+                                                                {incident.title}
+                                                            </Link>
+
+                                                            {/* Reporter & Location */}
+                                                            <div className="mt-2 flex flex-col gap-0.5 text-[10px] font-bold text-slate-400">
+                                                                <span>
+                                                                    By {incident.reporter.name}{' '}
+                                                                    <span className="text-[9px] font-normal text-slate-500">
+                                                                        ({incident.reporter_role})
+                                                                    </span>
+                                                                </span>
+                                                                <div className="flex items-center gap-1.5 text-[9px] font-medium text-slate-500">
+                                                                    <span className="py-0.2 rounded bg-slate-100 px-1 text-[8px] font-black text-slate-500 uppercase">
+                                                                        {incident.source.replace('_', ' ')}
+                                                                    </span>
+                                                                    {incident.location && <span>@ {incident.location}</span>}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Engagement icons & Assignee */}
+                                                            <div className="mt-3.5 flex items-center justify-between border-t border-slate-50 pt-2.5">
+                                                                <div className="flex items-center gap-2 text-slate-400">
+                                                                    <div className="flex items-center gap-0.5">
+                                                                        <MessageSquare className="h-3 w-3" />
+                                                                        <span className="text-[9px] font-bold">{incident.comments_count}</span>
+                                                                    </div>
+                                                                    <div className="flex items-center gap-0.5">
+                                                                        <ThumbsUp className="h-3 w-3" />
+                                                                        <span className="text-[9px] font-bold">{incident.upvotes_count}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Assignee inline select */}
+                                                                <div className="relative">
+                                                                    <button
+                                                                        onClick={() =>
+                                                                            setActiveAssigneeDropdown(
+                                                                                activeAssigneeDropdown === incident.id ? null : incident.id,
+                                                                            )
+                                                                        }
+                                                                        className="flex items-center gap-1 rounded-lg border border-slate-100 bg-slate-50/50 px-2 py-1 text-[9px] font-bold text-slate-600 hover:bg-slate-100"
+                                                                    >
+                                                                        <User className="h-2.5 w-2.5" />
+                                                                        <span className="max-w-[70px] truncate">
+                                                                            {incident.assignee ? incident.assignee.name : 'Assign'}
+                                                                        </span>
+                                                                    </button>
+
+                                                                    {/* Assignee Popover */}
+                                                                    <AnimatePresence>
+                                                                        {activeAssigneeDropdown === incident.id && (
+                                                                            <div
+                                                                                ref={dropdownRef}
+                                                                                className="border-slate-150 absolute right-0 bottom-full z-30 mb-1 w-44 rounded-xl border bg-white p-1 shadow-lg ring-1 ring-black/5 focus:outline-hidden"
+                                                                            >
+                                                                                <p className="border-b border-slate-50 px-2 py-1.5 text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                                                                                    Assign Guard/Staff
+                                                                                </p>
+                                                                                <div className="max-h-36 overflow-y-auto py-1">
+                                                                                    <button
+                                                                                        onClick={() =>
+                                                                                            handleAssign(incident.id, incident.hashid, null)
+                                                                                        }
+                                                                                        className="w-full rounded-lg px-2 py-1 text-left text-xs font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                                                                                    >
+                                                                                        Unassigned
+                                                                                    </button>
+                                                                                    {admins.map((adm) => (
+                                                                                        <button
+                                                                                            key={adm.id}
+                                                                                            onClick={() =>
+                                                                                                handleAssign(incident.id, incident.hashid, adm.id)
+                                                                                            }
+                                                                                            className="w-full rounded-lg px-2 py-1 text-left text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                                                        >
+                                                                                            {adm.name}
+                                                                                        </button>
+                                                                                    ))}
+                                                                                </div>
+                                                                            </div>
+                                                                        )}
+                                                                    </AnimatePresence>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })}
+                                                {colIncidents.length === 0 && (
+                                                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 px-3 py-3 text-center sm:py-8">
+                                                        <span className="text-[10px] font-bold text-slate-400">No incidents</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })}
+                            </div>
                         </div>
                     ) : (
                         /* REDESIGNED SPREADSHEET TABLE VIEW */
