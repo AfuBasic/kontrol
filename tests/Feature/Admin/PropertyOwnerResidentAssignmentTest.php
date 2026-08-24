@@ -5,6 +5,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\User;
 use App\Models\UserProfile;
+use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
@@ -113,6 +114,83 @@ it('can assign residents to a property owner', function () {
                 ->where('estate_id', $this->estate->id)
                 ->value('property_owner_id')
         )->toBe($this->propertyOwner->id);
+});
+
+it('only returns active-zone residents for zone-scoped property owner assignment', function () {
+    $northZone = Zone::factory()->create(['estate_id' => $this->estate->id, 'name' => 'North Gate']);
+    $southZone = Zone::factory()->create(['estate_id' => $this->estate->id, 'name' => 'South Gate']);
+
+    DB::table('estate_users_membership')
+        ->where('estate_id', $this->estate->id)
+        ->where('user_id', $this->propertyOwner->id)
+        ->update(['zone_id' => $northZone->id]);
+
+    DB::table('estate_users_membership')
+        ->where('estate_id', $this->estate->id)
+        ->where('user_id', $this->resident1->id)
+        ->update(['zone_id' => $northZone->id]);
+
+    DB::table('estate_users_membership')
+        ->where('estate_id', $this->estate->id)
+        ->where('user_id', $this->resident2->id)
+        ->update(['zone_id' => $southZone->id]);
+
+    $zoneAssignment = AdministrativeAssignment::create([
+        'user_id' => $this->admin->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => $northZone->id,
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->get(route('admin.property-owners.available-residents', $this->propertyOwner));
+
+    $response->assertOk();
+
+    $names = collect($response->json())->pluck('name');
+    expect($names)->toContain('John Doe')
+        ->not->toContain('Jane Smith');
+});
+
+it('rejects out-of-zone residents on property owner assignment submit', function () {
+    $northZone = Zone::factory()->create(['estate_id' => $this->estate->id, 'name' => 'North Gate']);
+    $southZone = Zone::factory()->create(['estate_id' => $this->estate->id, 'name' => 'South Gate']);
+
+    DB::table('estate_users_membership')
+        ->where('estate_id', $this->estate->id)
+        ->where('user_id', $this->propertyOwner->id)
+        ->update(['zone_id' => $northZone->id]);
+
+    DB::table('estate_users_membership')
+        ->where('estate_id', $this->estate->id)
+        ->where('user_id', $this->resident2->id)
+        ->update(['zone_id' => $southZone->id]);
+
+    $zoneAssignment = AdministrativeAssignment::create([
+        'user_id' => $this->admin->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => $northZone->id,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->post(route('admin.property-owners.assign-residents', $this->propertyOwner), [
+            'resident_ids' => [$this->resident2->id],
+        ])
+        ->assertSessionHasErrors('resident_ids.0');
+
+    expect(
+        DB::table('estate_users_membership')
+            ->where('user_id', $this->resident2->id)
+            ->where('estate_id', $this->estate->id)
+            ->value('property_owner_id')
+    )->toBeNull();
 });
 
 it('requires property_owners.edit permission to fetch or assign residents', function () {

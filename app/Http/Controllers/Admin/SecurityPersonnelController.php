@@ -190,6 +190,11 @@ class SecurityPersonnelController extends Controller
                 'email',
                 'max:255',
                 Rule::unique('users', 'email')->ignore($security->id),
+                function (string $attribute, mixed $value, \Closure $fail) use ($security): void {
+                    if ($security->email_verified_at && $value !== null && $value !== $security->email) {
+                        $fail('The email address cannot be changed once the account has been verified.');
+                    }
+                },
             ],
             'phone' => ['nullable', 'string', 'max:20'],
             'badge_number' => ['nullable', 'string', 'max:50'],

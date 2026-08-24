@@ -451,8 +451,11 @@ class PropertyOwnerController extends Controller
                     ->where('model_has_roles.estate_id', $estate->id);
             })
             ->where(function ($query) use ($propertyOwner, $estate) {
-                $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', '!=', $propertyOwner->id)->orWhereNull('estate_users_membership.property_owner_id'))
-                    ->orWhereDoesntHave('estates', fn ($q) => $q->where('estates.id', $estate->id));
+                $query->whereHas('estates', fn ($q) => $q
+                    ->where('estates.id', $estate->id)
+                    ->where(fn ($membershipQuery) => $membershipQuery
+                        ->where('estate_users_membership.property_owner_id', '!=', $propertyOwner->id)
+                        ->orWhereNull('estate_users_membership.property_owner_id')));
             })
             ->when($search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -485,12 +488,29 @@ class PropertyOwnerController extends Controller
         $context = app(ContextManager::class)->current();
         abort_if($context && ! $context->canAccess($propertyOwner), 403, 'Unauthorized zone scope.');
 
+        $estate = $this->estateContext->getEstate();
+
         $validated = $request->validate([
             'resident_ids' => ['required', 'array', 'min:1'],
-            'resident_ids.*' => ['required', 'integer', Rule::exists('users', 'id')],
-        ]);
+            'resident_ids.*' => [
+                'required',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail) use ($estate, $context): void {
+                    $residentIsAssignable = User::query()
+                        ->whereKey((int) $value)
+                        ->forEstate($estate->id)
+                        ->withRole('resident', $estate->id)
+                        ->when($context?->isZoneScoped(), fn ($query) => $query->whereHas('estates', fn ($estateQuery) => $estateQuery
+                            ->where('estates.id', $estate->id)
+                            ->where('estate_users_membership.zone_id', $context->zoneId)))
+                        ->exists();
 
-        $estate = $this->estateContext->getEstate();
+                    if (! $residentIsAssignable) {
+                        $fail('The selected resident must belong to your estate and authorized zone.');
+                    }
+                },
+            ],
+        ]);
 
         $action->execute($propertyOwner, $validated['resident_ids'], $estate);
 

@@ -30,7 +30,7 @@ beforeEach(function () {
     $this->estate->users()->attach($this->admin->id, ['status' => 'accepted']);
 
     $adminRole = Role::where('name', 'admin')->first();
-    foreach (['security.view', 'security.create'] as $permission) {
+    foreach (['security.view', 'security.create', 'security.edit'] as $permission) {
         Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         $adminRole->givePermissionTo($permission);
     }
@@ -231,4 +231,30 @@ it('sends an invitation email when adding security role to an existing resident'
         'relationship_type' => 'security',
         'status' => 'pending',
     ]);
+});
+
+it('rejects verified security personnel email changes on update', function () {
+    $guard = User::factory()->create([
+        'email' => 'verified.guard@example.com',
+        'email_verified_at' => now(),
+    ]);
+
+    setPermissionsTeamId($this->estate->id);
+    $guard->assignRole('security');
+    $this->estate->users()->attach($guard->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'security',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->put(route('admin.security.update', $guard), [
+            'name' => $guard->name,
+            'email' => 'changed.guard@example.com',
+            'phone' => '',
+            'badge_number' => '',
+        ])
+        ->assertSessionHasErrors('email');
+
+    expect($guard->fresh()->email)->toBe('verified.guard@example.com');
 });
