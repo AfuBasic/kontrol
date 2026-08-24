@@ -1,8 +1,10 @@
 <?php
 
+use App\Enums\AssignmentScope;
 use App\Enums\TransactionDirection;
 use App\Enums\TransactionStatus;
 use App\Enums\TransactionType;
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
@@ -11,6 +13,7 @@ use App\Models\EstateTransaction;
 use App\Models\EstateTransactionAudit;
 use App\Models\Payment;
 use App\Models\User;
+use App\Models\Zone;
 use App\Services\Ledger\LedgerService;
 use App\Services\Ledger\TransactionOverviewService;
 use Database\Seeders\FeatureSeeder;
@@ -73,6 +76,7 @@ it('records collection payments in the ledger via observer', function () {
     $resident = User::factory()->create();
     setPermissionsTeamId($this->estate->id);
     $resident->assignRole('resident');
+    $this->estate->users()->attach($resident->id, ['status' => 'accepted']);
 
     $collection = Collection::factory()->create([
         'estate_id' => $this->estate->id,
@@ -157,6 +161,7 @@ it('auto-syncs legacy payments into the ledger on first visit', function () {
     $resident = User::factory()->create();
     setPermissionsTeamId($this->estate->id);
     $resident->assignRole('resident');
+    $this->estate->users()->attach($resident->id, ['status' => 'accepted']);
 
     $collection = Collection::factory()->create([
         'estate_id' => $this->estate->id,
@@ -257,6 +262,7 @@ it('records offline payments from the transactions page', function () {
     $resident = User::factory()->create();
     setPermissionsTeamId($this->estate->id);
     $resident->assignRole('resident');
+    $this->estate->users()->attach($resident->id, ['status' => 'accepted']);
 
     $collection = Collection::factory()->create([
         'estate_id' => $this->estate->id,
@@ -284,6 +290,108 @@ it('records offline payments from the transactions page', function () {
     expect(EstateTransaction::query()->where('estate_id', $this->estate->id)->count())->toBe(1)
         ->and($assignment->fresh()->amount_paid)->toBe(2500)
         ->and($assignment->fresh()->status)->toBe('partial');
+});
+
+it('rejects offline payments above the assignment remaining balance', function () {
+    $resident = User::factory()->create();
+    setPermissionsTeamId($this->estate->id);
+    $resident->assignRole('resident');
+    $this->estate->users()->attach($resident->id, ['status' => 'accepted']);
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $assignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $resident->id,
+        'amount_due' => 10000,
+        'amount_paid' => 2500,
+        'status' => 'partial',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->post(route('admin.transactions.offline-payment'), [
+            'assignment_id' => $assignment->id,
+            'amount' => 8000,
+            'method' => 'bank_transfer',
+        ])
+        ->assertSessionHasErrors('amount');
+
+    expect($assignment->fresh()->amount_paid)->toBe(2500);
+});
+
+it('scopes offline payment assignment options and submission to the active zone', function () {
+    $northZone = Zone::factory()->create(['estate_id' => $this->estate->id]);
+    $southZone = Zone::factory()->create(['estate_id' => $this->estate->id]);
+
+    $northResident = User::factory()->create(['name' => 'North Resident']);
+    $southResident = User::factory()->create(['name' => 'South Resident']);
+
+    setPermissionsTeamId($this->estate->id);
+    $northResident->assignRole('resident');
+    $southResident->assignRole('resident');
+    $this->estate->users()->attach($northResident->id, ['status' => 'accepted', 'zone_id' => $northZone->id]);
+    $this->estate->users()->attach($southResident->id, ['status' => 'accepted', 'zone_id' => $southZone->id]);
+
+    $collection = Collection::factory()->create([
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->admin->id,
+    ]);
+
+    $northAssignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $northResident->id,
+        'amount_due' => 10000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
+
+    $southAssignment = CollectionAssignment::factory()->create([
+        'collection_id' => $collection->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $southResident->id,
+        'amount_due' => 10000,
+        'amount_paid' => 0,
+        'status' => 'pending',
+    ]);
+
+    $zoneAssignment = AdministrativeAssignment::create([
+        'user_id' => $this->admin->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+        'scope_type' => AssignmentScope::Zone,
+        'zone_id' => $northZone->id,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->get(route('admin.transactions.index'))
+        ->assertOk()
+        ->assertInertia(function ($page) use ($northAssignment, $southAssignment) {
+            $page->component('Admin/Transactions/Index')
+                ->where('recordableAssignments', function ($assignments) use ($northAssignment, $southAssignment): bool {
+                    $ids = collect($assignments)->pluck('id');
+
+                    return $ids->contains($northAssignment->id)
+                        && ! $ids->contains($southAssignment->id);
+                });
+        });
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $zoneAssignment->id])
+        ->post(route('admin.transactions.offline-payment'), [
+            'assignment_id' => $southAssignment->id,
+            'amount' => 2500,
+            'method' => 'bank_transfer',
+        ])
+        ->assertSessionHasErrors('assignment_id');
+
+    expect($southAssignment->fresh()->amount_paid)->toBe(0);
 });
 
 it('exports transactions for users with export permission', function () {

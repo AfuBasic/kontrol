@@ -44,6 +44,7 @@ class TransactionController extends Controller
         $this->authorize('transactions.view');
 
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
         app(ContextManager::class)->setSystemContext($estate->id);
 
         $this->ledgerService->ensureEstateLedgerSynced($estate);
@@ -78,6 +79,15 @@ class TransactionController extends Controller
 
         $recordableAssignments = CollectionAssignment::query()
             ->where('estate_id', $estate->id)
+            ->when($context?->isZoneScoped(), fn ($query) => $query->where(function ($scopeQuery) use ($context, $estate) {
+                $scopeQuery
+                    ->whereHas('property', fn ($propertyQuery) => $propertyQuery
+                        ->where('estate_id', $estate->id)
+                        ->where('zone_id', $context->zoneId))
+                    ->orWhereHas('user.estates', fn ($estateQuery) => $estateQuery
+                        ->where('estates.id', $estate->id)
+                        ->where('estate_users_membership.zone_id', $context->zoneId));
+            }))
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->whereColumn('amount_due', '>', 'amount_paid')
             ->with(['user:id,name', 'collection:id,name'])
@@ -273,7 +283,9 @@ class TransactionController extends Controller
     private function authorizeAssignment(CollectionAssignment $assignment): void
     {
         $estate = $this->estateContext->getEstate();
+        $context = app(ContextManager::class)->current();
 
         abort_if($assignment->estate_id !== $estate->id, 404);
+        abort_if($context && ! $context->canAccess($assignment), 404);
     }
 }
