@@ -432,6 +432,53 @@ it('lets estate admins update role and scope', function () {
         ->and($updatedAssignment->zone_id)->toBe($this->zoneA->id);
 });
 
+it('limits assignment role updates to the edited scope', function () {
+    $zoneAStaff = $this->createAction->execute(
+        user: $this->member,
+        estate: $this->estate,
+        role: $this->staffRole,
+        scopeType: AssignmentScope::Zone,
+        zone: $this->zoneA,
+    );
+
+    $zoneBSecurity = $this->createAction->execute(
+        user: $this->member,
+        estate: $this->estate,
+        role: $this->securityRole,
+        scopeType: AssignmentScope::Zone,
+        zone: $this->zoneB,
+    );
+
+    actingAsAdminWithContext()
+        ->put(route('admin.assignments.update', $zoneAStaff), [
+            'role_ids' => [$this->securityRole->id],
+            'scope_type' => 'zone',
+            'zone_id' => $this->zoneA->id,
+            'is_primary' => false,
+            'is_active' => true,
+        ])
+        ->assertRedirect(route('admin.assignments.index'));
+
+    $this->assertDatabaseMissing('administrative_assignments', [
+        'id' => $zoneAStaff->id,
+        'role_id' => $this->staffRole->id,
+        'zone_id' => $this->zoneA->id,
+    ]);
+
+    $this->assertDatabaseHas('administrative_assignments', [
+        'user_id' => $this->member->id,
+        'estate_id' => $this->estate->id,
+        'role_id' => $this->securityRole->id,
+        'zone_id' => $this->zoneA->id,
+    ]);
+
+    $this->assertDatabaseHas('administrative_assignments', [
+        'id' => $zoneBSecurity->id,
+        'role_id' => $this->securityRole->id,
+        'zone_id' => $this->zoneB->id,
+    ]);
+});
+
 it('lets estate admins deactivate without deleting', function () {
     $assignment = $this->createAction->execute(
         user: $this->member,
