@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Compliance\CompliancePolicy;
 use App\Models\Compliance\Violation;
 use App\Services\Compliance\ComplianceEngine;
+use App\Services\EstateContextService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,8 @@ use Inertia\Response;
 class ComplianceController extends Controller
 {
     public function __construct(
-        protected ComplianceEngine $engine
+        protected ComplianceEngine $engine,
+        protected EstateContextService $estateContext,
     ) {}
 
     /**
@@ -22,8 +24,8 @@ class ComplianceController extends Controller
      */
     public function index(Request $request): Response
     {
-        $estate = $request->user()?->currentEstate();
-        $estateId = $estate?->id;
+        $estate = $this->estateContext->getEstate();
+        $estateId = $estate->id;
 
         $violationsQuery = Violation::query()
             ->with([
@@ -72,8 +74,7 @@ class ComplianceController extends Controller
      */
     public function policies(Request $request): Response
     {
-        $estate = $request->user()?->currentEstate();
-        $estateId = $estate?->id;
+        $estateId = $this->estateContext->getEstateId();
 
         $policies = CompliancePolicy::query()
             ->where('estate_id', $estateId)
@@ -90,6 +91,8 @@ class ComplianceController extends Controller
      */
     public function updatePolicy(Request $request, CompliancePolicy $policy): JsonResponse
     {
+        $this->authorizePolicyEstate($policy);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
@@ -99,6 +102,9 @@ class ComplianceController extends Controller
             'stages.*.trigger_days' => 'required|integer|min:0',
             'stages.*.order' => 'required|integer',
             'stages.*.actions' => 'nullable|array',
+            'stages.*.actions.*.action_type' => 'required|string|max:100',
+            'stages.*.actions.*.configuration' => 'nullable|array',
+            'stages.*.actions.*.is_enabled' => 'boolean',
         ]);
 
         $policy->update([
@@ -137,6 +143,8 @@ class ComplianceController extends Controller
      */
     public function approvePaymentPlan(Request $request, Violation $violation): JsonResponse
     {
+        $this->authorizeViolationEstate($violation);
+
         $validated = $request->validate([
             'installment_amount' => 'required|numeric|min:1',
             'frequency' => 'required|string|in:weekly,biweekly,monthly',
@@ -161,6 +169,8 @@ class ComplianceController extends Controller
      */
     public function resolveViolation(Request $request, Violation $violation): JsonResponse
     {
+        $this->authorizeViolationEstate($violation);
+
         $validated = $request->validate([
             'reason' => 'required|string|max:255',
         ]);
@@ -168,5 +178,19 @@ class ComplianceController extends Controller
         $this->engine->resolution->resolve($violation, $validated['reason']);
 
         return response()->json(['message' => 'Violation resolved successfully']);
+    }
+
+    private function authorizePolicyEstate(CompliancePolicy $policy): void
+    {
+        $estate = $this->estateContext->getEstate();
+
+        abort_if($policy->estate_id !== $estate->id, 404);
+    }
+
+    private function authorizeViolationEstate(Violation $violation): void
+    {
+        $estate = $this->estateContext->getEstate();
+
+        abort_if($violation->estate_id !== $estate->id, 404);
     }
 }
