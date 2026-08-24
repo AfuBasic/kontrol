@@ -45,7 +45,9 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
         setData,
         post,
         processing,
-        errors: _errors,
+        errors,
+        setError,
+        clearErrors,
         reset: _reset,
     } = useForm({
         bank_name: settings.bank_name || '',
@@ -62,7 +64,17 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
     const filteredBanks = bankQuery === '' ? banks : banks.filter((bank) => bank.name.toLowerCase().includes(bankQuery.toLowerCase()));
 
     const handleResolveBank = async () => {
-        if (data.account_number.length !== 10 || !data.bank_code) return;
+        clearErrors();
+
+        if (!data.bank_code) {
+            setError('bank_code', 'Choose a bank before verifying the account.');
+            return;
+        }
+
+        if (!/^\d{10}$/.test(data.account_number)) {
+            setError('account_number', 'Enter a valid 10-digit account number.');
+            return;
+        }
 
         setResolvingBank(true);
         setResolveError(null);
@@ -86,6 +98,23 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        clearErrors();
+
+        if (!data.bank_code) {
+            setError('bank_code', 'Choose a bank.');
+            return;
+        }
+
+        if (!/^\d{10}$/.test(data.account_number)) {
+            setError('account_number', 'Enter a valid 10-digit account number.');
+            return;
+        }
+
+        if (!isVerified || !data.account_name) {
+            setError('account_name', 'Verify the account before saving.');
+            return;
+        }
+
         post('/admin/settlement/update', {
             preserveScroll: true,
             onSuccess: () => onClose(),
@@ -100,6 +129,8 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
             setIsVerified(!!settings.account_name);
         }
     }, [data.account_number, data.bank_code, settings.account_number, settings.bank_code, settings.account_name]);
+
+    const bankingError = (errors as Record<string, string | undefined>).banking;
 
     return (
         <Transition.Root show={isOpen} as={Fragment}>
@@ -196,7 +227,7 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                                 filteredBanks.map((bank) => (
                                                                     <ComboboxOption
                                                                         key={bank.code}
-                                                                        className={({ _active }) =>
+                                                                        className={({ active }) =>
                                                                             cn(
                                                                                 'relative cursor-default py-3 pr-4 pl-12 transition-colors select-none',
                                                                                 active ? 'bg-emerald-50 text-emerald-700' : 'text-slate-900',
@@ -204,7 +235,7 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                                         }
                                                                         value={bank}
                                                                     >
-                                                                        {({ selected, active: _active }) => (
+                                                                        {({ selected }) => (
                                                                             <>
                                                                                 <span
                                                                                     className={cn(
@@ -228,6 +259,12 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                     </Transition>
                                                 </div>
                                             </Combobox>
+                                            {errors.bank_code && (
+                                                <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-rose-500">
+                                                    <AlertCircle className="h-3.5 w-3.5" />
+                                                    {errors.bank_code}
+                                                </p>
+                                            )}
                                         </div>
 
                                         {/* Account Number */}
@@ -267,6 +304,12 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                     {resolveError}
                                                 </p>
                                             )}
+                                            {errors.account_number && (
+                                                <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-rose-500">
+                                                    <AlertCircle className="h-3.5 w-3.5" />
+                                                    {errors.account_number}
+                                                </p>
+                                            )}
                                         </div>
 
                                         {/* Verified Account Name */}
@@ -287,6 +330,12 @@ export default function BankingSetupModal({ isOpen, onClose, banks, currentSetti
                                                 </div>
                                             )}
                                         </AnimatePresence>
+                                        {(errors.account_name || bankingError) && (
+                                            <p className="flex items-center gap-1.5 text-xs font-bold text-rose-500">
+                                                <AlertCircle className="h-3.5 w-3.5" />
+                                                {errors.account_name || bankingError}
+                                            </p>
+                                        )}
 
                                         <div className="pt-4">
                                             <button

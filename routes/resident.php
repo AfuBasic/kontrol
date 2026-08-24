@@ -136,7 +136,6 @@ Route::middleware('role:resident,property_owner')->group(function (): void {
     // Billing
     Route::prefix('billing')->name('resident.billing.')->group(function (): void {
         Route::get('/', [BillingController::class, 'index'])->name('index');
-        Route::patch('/preference', [BillingController::class, 'updatePreference'])->name('preference.update');
         Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
         Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');

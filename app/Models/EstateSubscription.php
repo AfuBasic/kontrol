@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Cache;
  * @property int $estate_id
  * @property int $plan_id
  * @property string $status
- * @property string $billing_preference
  * @property string|null $paystack_authorization_code
  * @property string|null $paystack_customer_code
  * @property string|null $card_brand
@@ -38,7 +37,6 @@ use Illuminate\Support\Facades\Cache;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereBillingAnchorDay($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereBillingInterval($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereBillingPreference($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereCardBrand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereCardLast4($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|EstateSubscription whereCreatedAt($value)
@@ -67,7 +65,6 @@ class EstateSubscription extends Model
         'estate_id',
         'plan_id',
         'status',
-        'billing_preference',
         'paystack_authorization_code',
         'paystack_customer_code',
         'card_brand',
@@ -87,7 +84,6 @@ class EstateSubscription extends Model
         'next_billing_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'billing_preference' => 'string',
         'paystack_authorization_code' => 'encrypted',
         'paystack_customer_code' => 'encrypted',
     ];

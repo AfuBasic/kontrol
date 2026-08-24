@@ -122,35 +122,7 @@ class PaymentVerificationService
                 'customer_email' => $verification['customer']['email'] ?? null,
             ]);
 
-            // 8.1 SAVE AUTHORIZATION CODE FOR RECURRING BILLING (Disabled - manual transfer payments only)
-            /*
-            if ($verification['status'] === 'success' && ! empty($verification['authorization']['authorization_code'])) {
-                $auth = $verification['authorization'];
-                $customer = $verification['customer'];
-
-                $authData = [
-                    'paystack_authorization_code' => $auth['authorization_code'],
-                    'paystack_customer_code' => $customer['customer_code'] ?? null,
-                    'card_brand' => $auth['brand'] ?? null,
-                    'card_last4' => $auth['last4'] ?? null,
-                ];
-
-                if ($invoice->user_id) {
-                    $residentSubscription = ResidentSubscription::where('user_id', $invoice->user_id)
-                        ->where('estate_id', $invoice->estate_id)
-                        ->first();
-
-                    if ($residentSubscription && $residentSubscription->billing_preference === 'auto') {
-                        $residentSubscription->update($authData);
-                    }
-                } else {
-                    $estateSubscription = $invoice->estate->subscriptionRecord;
-                    if ($estateSubscription && $estateSubscription->billing_preference === 'auto') {
-                        $estateSubscription->update($authData);
-                    }
-                }
-            }
-            */
+            // 8.1 Card authorization persistence is disabled; billing is handled by explicit payments.
 
             // 9. RECORD TRANSACTION AS PROCESSED - Prevent reprocessing
             $transaction->update([

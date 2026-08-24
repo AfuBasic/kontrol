@@ -41,7 +41,6 @@ type Plan = {
 type Props = {
     subscription: {
         status: SubscriptionStatus | string;
-        billing_preference: 'auto' | 'manual';
         has_saved_card: boolean;
         card_brand?: string;
         card_last4?: string;

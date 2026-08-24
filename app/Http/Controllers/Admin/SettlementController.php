@@ -22,15 +22,15 @@ class SettlementController extends Controller
      */
     public function resolve(Request $request): JsonResponse
     {
-        $request->validate([
-            'account_number' => 'required|string|size:10',
-            'bank_code' => 'required|string',
+        $validated = $request->validate([
+            'account_number' => ['required', 'string', 'regex:/^\d{10}$/'],
+            'bank_code' => ['required', 'string', 'max:20'],
         ]);
 
         try {
             $data = $this->paystackService->resolveAccountNumber(
-                $request->account_number,
-                $request->bank_code
+                $validated['account_number'],
+                $validated['bank_code']
             );
 
             return response()->json([
@@ -51,16 +51,22 @@ class SettlementController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'bank_name' => ['required', 'string'],
-            'bank_code' => ['required', 'string'],
-            'account_number' => ['required', 'string', 'size:10'],
-            'account_name' => ['required', 'string'],
+            'bank_name' => ['required', 'string', 'max:255'],
+            'bank_code' => ['required', 'string', 'max:20'],
+            'account_number' => ['required', 'string', 'regex:/^\d{10}$/'],
+            'account_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         $estate = $this->estateContext->getEstate();
         $settings = EstateSettings::forEstate($estate->id);
 
         try {
+            $resolvedAccount = $this->paystackService->resolveAccountNumber(
+                $validated['account_number'],
+                $validated['bank_code'],
+            );
+            $validated['account_name'] = $resolvedAccount['account_name'];
+
             // Synchronize with Paystack (Create or Update Subaccount)
             if ($settings->paystack_subaccount_code) {
                 $this->paystackService->updateSubaccount($settings->paystack_subaccount_code, [

@@ -13,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $user_id
  * @property int $estate_id
  * @property string $status
- * @property string $billing_preference
  * @property string|null $paystack_authorization_code
  * @property string|null $paystack_customer_code
  * @property string|null $card_brand
@@ -34,7 +33,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereBillingPreference($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCardBrand($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCardLast4($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ResidentSubscription whereCreatedAt($value)
@@ -62,7 +60,6 @@ class ResidentSubscription extends Model
         'estate_id',
         'plan_id',
         'status',
-        'billing_preference',
         'paystack_authorization_code',
         'paystack_customer_code',
         'card_brand',
@@ -87,7 +84,6 @@ class ResidentSubscription extends Model
             'current_period_end' => 'datetime',
             'last_paid_at' => 'datetime',
             'last_reminded_at' => 'datetime',
-            'billing_preference' => 'string',
             'paystack_authorization_code' => 'encrypted',
             'paystack_customer_code' => 'encrypted',
             'plan_id' => 'integer',
