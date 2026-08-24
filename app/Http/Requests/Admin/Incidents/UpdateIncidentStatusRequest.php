@@ -35,6 +35,7 @@ class UpdateIncidentStatusRequest extends FormRequest
 
         return [
             'status' => ['nullable', Rule::in(['pending', 'acknowledged', 'resolving', 'solved', 'closed'])],
+            'resolution_notes' => ['nullable', 'string', 'max:5000'],
             'assigned_to' => [
                 'nullable',
                 'integer',

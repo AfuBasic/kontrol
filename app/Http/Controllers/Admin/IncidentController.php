@@ -194,10 +194,12 @@ class IncidentController extends Controller
             ->values()
             ->toArray();
 
+        $settings = EstateSettings::forEstate($estateId);
         $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
         return Inertia::render('Admin/Incidents/Show', [
             'incident' => $loadedIncident,
+            'require_resolution_notes' => (bool) $settings->require_resolution_notes_for_incidents,
             'official_comments' => $this->incidentService->getOfficialComments($incident->id),
             'discussion_comments' => Inertia::defer(fn () => $this->incidentService->getDiscussionComments($incident->id)),
             'comments' => Inertia::defer(fn () => $this->incidentService->getDiscussionComments($incident->id)),
@@ -212,7 +214,8 @@ class IncidentController extends Controller
                 ->map(fn ($act) => [
                     'id' => $act->id,
                     'description' => $act->description,
-                    'created_at' => $act->created_at->diffForHumans(),
+                    'created_at' => $act->created_at->toIso8601String(),
+                    'created_at_human' => $act->created_at->diffForHumans(),
                     'causer' => $act->causer ? ['name' => $act->causer->name] : null,
                 ])
                 ->toArray()),

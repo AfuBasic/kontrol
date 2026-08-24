@@ -47,9 +47,11 @@ class UpdateIncidentStatusAction
                         }
                     } elseif ($newStatus === IncidentStatus::Solved || $newStatus === IncidentStatus::Closed) {
                         $settings = EstateSettings::forEstate($incident->estate_id);
-                        if ($settings->require_resolution_notes_for_incidents && empty($data['resolution_notes']) && empty($data['comment'])) {
+                        $resolutionNotes = $data['resolution_notes'] ?? ($data['comment'] ?? null);
+
+                        if ($settings->require_resolution_notes_for_incidents && empty($resolutionNotes)) {
                             throw ValidationException::withMessages([
-                                'resolution_notes' => ['Resolution notes or comments are required by estate policy when resolving an incident.'],
+                                'resolution_notes' => ['Resolution notes are required by estate policy when resolving an incident.'],
                             ]);
                         }
 
@@ -62,6 +64,10 @@ class UpdateIncidentStatusAction
                             }
                             if (! $incident->solved_at) {
                                 $incident->solved_at = now();
+                            }
+
+                            if (! empty($resolutionNotes)) {
+                                $loggedActions[] = "marked incident as resolved: {$resolutionNotes}";
                             }
                         } else {
                             if (! $incident->closed_at) {
