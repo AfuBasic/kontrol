@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
+use App\Models\Estate;
 use App\Models\User;
 use App\Notifications\ResidentApproved;
 use App\Notifications\ResidentRejected;
 use App\Services\Admin\ResidentService;
 use App\Services\EstateContextService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -46,6 +48,7 @@ class ResidentApprovalController extends Controller
             'unit_number' => $user->profile?->unit_number,
             'status' => 'pending',
             'is_property_owner' => $user->roles->contains('name', 'property_owner'),
+            'created_at_human' => $user->created_at->format('M d, Y'),
             'created_at' => $user->created_at->format('M d, Y'),
         ]);
 
@@ -62,6 +65,7 @@ class ResidentApprovalController extends Controller
     {
         $this->authorize('residents.edit');
         $estate = $this->estateContext->getEstate();
+        $this->authorizePendingResident($user, $estate);
 
         $user->estates()->updateExistingPivot($estate->id, [
             'status' => 'accepted',
@@ -82,11 +86,7 @@ class ResidentApprovalController extends Controller
         $this->authorize('residents.edit');
         $estate = $this->estateContext->getEstate();
 
-        // Get all pending users for this estate
-        $pendingUsers = User::whereHas('estates', function ($q) use ($estate) {
-            $q->where('estates.id', $estate->id)
-                ->where('estate_users_membership.status', 'pending');
-        })->get();
+        $pendingUsers = $this->pendingResidentQuery($estate)->get();
 
         if ($pendingUsers->isEmpty()) {
             return back()->with('info', 'No pending residents to approve.');
@@ -110,6 +110,7 @@ class ResidentApprovalController extends Controller
     {
         $this->authorize('residents.edit');
         $estate = $this->estateContext->getEstate();
+        $this->authorizePendingResident($user, $estate);
 
         // Send ResidentRejected notification before detaching/deleting
         $user->notify(new ResidentRejected($estate));
@@ -123,5 +124,24 @@ class ResidentApprovalController extends Controller
         }
 
         return back()->with('success', 'Resident application has been rejected and removed.');
+    }
+
+    private function authorizePendingResident(User $user, Estate $estate): void
+    {
+        $context = app(ContextManager::class)->current();
+
+        abort_if($context && ! $context->canAccess($user), 403, 'Unauthorized zone scope.');
+        abort_unless($this->pendingResidentQuery($estate)->whereKey($user->id)->exists(), 404);
+    }
+
+    private function pendingResidentQuery(Estate $estate): Builder
+    {
+        return User::query()
+            ->forEstate($estate->id)
+            ->topLevelResident($estate->id)
+            ->whereHas('estates', function ($query) use ($estate) {
+                $query->where('estates.id', $estate->id)
+                    ->where('estate_users_membership.status', 'pending');
+            });
     }
 }
