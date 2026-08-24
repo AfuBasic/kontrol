@@ -25,8 +25,8 @@ try {
     console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
 }
 
-const prodUrl = 'https://app.usekontrol.afuwapetunde.com';
-const prodHostname = 'app.usekontrol.afuwapetunde.com';
+const prodUrl = 'https://app.usekontrol.com';
+const prodHostname = 'app.usekontrol.com';
 
 const config: CapacitorConfig = {
     appId: 'com.kontrol.hq',
@@ -40,7 +40,7 @@ const config: CapacitorConfig = {
         // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
         hostname: isDev ? devHostname : prodHostname,
         // Allow all subdomains and the emulator IP for local development
-        allowNavigation: ['app.usekontrol.com', 'app.usekontrol.afuwapetunde.com'],
+        allowNavigation: ['app.usekontrol.com', 'app.usekontrol.afuwapetunde.com', 'usekontrol.com'],
         // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
         androidScheme: isDev && !devUrl.startsWith('https') ? 'http' : 'https',
     },
