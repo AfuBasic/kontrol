@@ -105,10 +105,12 @@ class AdministrativeAssignmentController extends Controller
         $this->ensureAssignmentInCurrentEstate($assignment);
 
         $assignment->load(['user', 'role', 'zone']);
+        $assignmentZoneCoalesced = $assignment->zone_id ?? 0;
 
         $userRoleIds = AdministrativeAssignment::where('user_id', $assignment->user_id)
             ->where('estate_id', $assignment->estate_id)
             ->where('is_primary', false)
+            ->where('zone_id_coalesced', $assignmentZoneCoalesced)
             ->pluck('role_id')
             ->map(fn ($id) => (string) $id)
             ->toArray();
@@ -136,11 +138,13 @@ class AdministrativeAssignmentController extends Controller
         $estate = $this->estateContext->getEstate();
         $validated = $request->validated();
         $roleIds = $validated['role_ids'];
+        $assignmentZoneCoalesced = $assignment->zone_id ?? 0;
 
         // 1. Delete assignments for roles that are no longer selected
         $assignmentsToDelete = AdministrativeAssignment::where('user_id', $assignment->user_id)
             ->where('estate_id', $estate->id)
             ->where('is_primary', false)
+            ->where('zone_id_coalesced', $assignmentZoneCoalesced)
             ->whereNotIn('role_id', $roleIds)
             ->get();
 
@@ -154,6 +158,7 @@ class AdministrativeAssignmentController extends Controller
             $existing = AdministrativeAssignment::where('user_id', $assignment->user_id)
                 ->where('estate_id', $estate->id)
                 ->where('role_id', $roleId)
+                ->where('zone_id_coalesced', $assignmentZoneCoalesced)
                 ->first();
 
             if ($existing) {
