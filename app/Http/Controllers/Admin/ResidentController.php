@@ -299,8 +299,14 @@ class ResidentController extends Controller
                 'email',
                 'max:255',
                 Rule::unique('users')->ignore($resident->id),
-                function ($attribute, $value, $fail) use ($resident) {
-                    if ($value !== $resident->email) {
+                function (string $attribute, mixed $value, \Closure $fail) use ($resident, $estate): void {
+                    if ($value !== null && $value !== $resident->email) {
+                        if ($resident->email === $estate->email) {
+                            $fail('The estate creator\'s email cannot be changed.');
+
+                            return;
+                        }
+
                         $cacheKey = "email_changes_{$resident->id}";
                         $changesCount = Cache::get($cacheKey, 0);
                         if ($changesCount >= 3) {

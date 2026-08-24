@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use App\Auth\ContextManager;
-use App\Models\Property;
 use App\Models\User;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -33,6 +32,7 @@ class StoreResidentRequest extends FormRequest
     public function rules(): array
     {
         $estateId = resolve(EstateContextService::class)->getEstateId();
+        $context = app(ContextManager::class)->current();
 
         return [
             'name' => ['required', 'string', 'max:255'],
@@ -78,39 +78,32 @@ class StoreResidentRequest extends FormRequest
             'property_owner_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id'),
-                function ($attribute, $value, $fail) {
-                    $context = app(ContextManager::class)->current();
-                    if (! $context?->isZoneScoped()) {
+                function (string $attribute, mixed $value, \Closure $fail) use ($estateId, $context): void {
+                    if (! $estateId) {
                         return;
                     }
 
-                    $isInActiveZone = User::query()
-                        ->whereKey($value)
-                        ->whereHas('estates', function ($query) use ($context) {
-                            $query->where('estates.id', $context->estateId)
-                                ->where('estate_users_membership.zone_id', $context->zoneId);
-                        })
+                    $isAssignablePropertyOwner = User::query()
+                        ->whereKey((int) $value)
+                        ->forEstate($estateId)
+                        ->withRole('property_owner', $estateId)
+                        ->active()
+                        ->when($context?->isZoneScoped(), fn ($query) => $query->whereHas('estates', fn ($estateQuery) => $estateQuery
+                            ->where('estates.id', $context->estateId)
+                            ->where('estate_users_membership.zone_id', $context->zoneId)))
                         ->exists();
 
-                    if (! $isInActiveZone) {
-                        $fail('The selected property owner must belong to your authorized zone.');
+                    if (! $isAssignablePropertyOwner) {
+                        $fail('The selected property owner must belong to your estate and authorized zone.');
                     }
                 },
             ],
             'property_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('properties', 'id'),
-                function ($attribute, $value, $fail) {
-                    $context = app(ContextManager::class)->current();
-                    if ($context && $context->isZoneScoped()) {
-                        $property = Property::withoutZoneIsolation()->find($value);
-                        if ($property && $property->zone_id !== $context->zoneId) {
-                            $fail('The selected property must belong to your authorized zone.');
-                        }
-                    }
-                },
+                Rule::exists('properties', 'id')
+                    ->where('estate_id', $estateId)
+                    ->when($context?->isZoneScoped(), fn ($rule) => $rule->where('zone_id', $context->zoneId)),
             ],
             'zone_id' => [
                 'nullable',

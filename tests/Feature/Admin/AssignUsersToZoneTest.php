@@ -248,6 +248,66 @@ it('rejects out-of-zone resident property owner and property updates', function 
         ->assertSessionHasErrors(['property_owner_id', 'property_id']);
 });
 
+it('rejects cross-estate resident property owner and property on create', function () {
+    $otherEstate = Estate::factory()->create();
+    $otherOwner = User::factory()->create();
+
+    setPermissionsTeamId($otherEstate->id);
+    $otherOwner->assignRole('property_owner');
+    $otherEstate->users()->attach($otherOwner->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'property_owner',
+    ]);
+
+    $otherProperty = Property::withoutZoneIsolation()->create([
+        'estate_id' => $otherEstate->id,
+        'property_owner_id' => $otherOwner->id,
+        'name' => 'Other Estate Villa',
+    ]);
+
+    setPermissionsTeamId($this->estate->id);
+
+    asAdmin()
+        ->post(route('admin.residents.store'), [
+            'name' => 'Cross Estate Resident',
+            'email' => 'cross-estate-resident@example.com',
+            'phone' => '',
+            'unit_number' => '',
+            'address' => '',
+            'property_owner_id' => $otherOwner->id,
+            'property_id' => $otherProperty->id,
+            'zone_id' => '',
+        ])
+        ->assertSessionHasErrors(['property_owner_id', 'property_id']);
+});
+
+it('returns a validation error when changing the estate creator resident email', function () {
+    $resident = User::factory()->create(['email' => $this->estate->email]);
+
+    setPermissionsTeamId($this->estate->id);
+    $resident->assignRole('resident');
+    $this->estate->users()->attach($resident->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'resident',
+        'zone_id' => null,
+    ]);
+
+    asAdmin()
+        ->put(route('admin.residents.update', $resident), [
+            'name' => $resident->name,
+            'email' => 'changed-estate-creator@example.com',
+            'phone' => '',
+            'unit_number' => '',
+            'address' => '',
+            'property_owner_id' => '',
+            'property_id' => '',
+            'zone_id' => '',
+        ])
+        ->assertSessionHasErrors('email');
+
+    expect($resident->fresh()->email)->toBe($this->estate->email);
+});
+
 it('includes a zone field on the property owner edit page when zones exist', function () {
     $owner = createEstatePropertyOwner();
 
