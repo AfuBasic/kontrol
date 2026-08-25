@@ -38,9 +38,13 @@ test('partner estate stats combine resident and property_owner roles and exclude
         ['role_id' => $adminRole->id, 'model_type' => User::class, 'model_id' => $admin->id, 'estate_id' => $estate->id],
     ]);
 
-    $affiliateRole = Role::firstOrCreate(['name' => 'affiliate', 'guard_name' => 'web']);
-    $partnerUser = User::factory()->create(['partner_id' => $partner->id]);
-    $partnerUser->assignRole($affiliateRole);
+    setPermissionsTeamId(0);
+    $affiliateRole = Role::firstOrCreate(['name' => 'affiliate', 'guard_name' => 'web', 'estate_id' => null]);
+    $partnerUser = User::factory()->create([
+        'user_type' => 'affiliate',
+        'partner_id' => $partner->id,
+    ]);
+    $partnerUser->assignRole('affiliate');
 
     $this->actingAs($partnerUser)
         ->get(route('partner.estates.show', $estate))
