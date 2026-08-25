@@ -2,10 +2,10 @@
 
 use App\Models\Estate;
 use App\Models\Partner;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
 

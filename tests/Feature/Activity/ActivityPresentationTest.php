@@ -1,12 +1,12 @@
 <?php
 
+use App\Auth\ContextManager;
 use App\Models\Activity;
 use App\Models\Estate;
 use App\Models\Incident;
 use App\Models\User;
 use App\Presenters\ActivityPresenter;
 use App\Services\Admin\ActivityService;
-use App\Services\EstateContextService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -16,7 +16,8 @@ beforeEach(function () {
     $this->admin = User::factory()->create();
     $this->estate->users()->attach($this->admin->id, ['status' => 'accepted']);
 
-    app(EstateContextService::class)->setEstateId($this->estate->id);
+    $this->actingAs($this->admin);
+    app(ContextManager::class)->setSystemContext($this->estate->id);
 });
 
 test('transforms raw activity into human-friendly headline and metadata', function () {
