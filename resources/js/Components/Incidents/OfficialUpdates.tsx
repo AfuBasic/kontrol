@@ -7,14 +7,17 @@ import type { IncidentComment } from '@/types/incidents';
 
 interface Props {
     updates: IncidentComment[];
+    onAddUpdate?: () => void;
+    canAddUpdate?: boolean;
     className?: string;
 }
 
-export default function OfficialUpdates({ updates, className = '' }: Props) {
-    if (!updates || updates.length === 0) {
-        return null;
-    }
-
+export default function OfficialUpdates({
+    updates,
+    onAddUpdate,
+    canAddUpdate = true,
+    className = '',
+}: Props) {
     const formatDate = (isoString: string) => {
         try {
             const d = new Date(isoString);
@@ -31,22 +34,45 @@ export default function OfficialUpdates({ updates, className = '' }: Props) {
 
     return (
         <section className={`rounded-2xl border-2 border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-5 shadow-xs dark:border-indigo-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 ${className}`}>
-            <div className="flex items-center gap-2.5 mb-4">
-                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
-                    <Megaphone className="w-4 h-4" />
+            <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+                        <Megaphone className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            Official Updates & Dispatches
+                            {updates && updates.length > 0 && (
+                                <span className="rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-400/20 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 border border-indigo-300 dark:border-indigo-800">
+                                    {updates.length} {updates.length === 1 ? 'advisory' : 'advisories'}
+                                </span>
+                            )}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            Direct notices from estate administration and security response teams
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                        Official Updates & Dispatches
-                        <span className="rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-400/20 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 border border-indigo-300 dark:border-indigo-800">
-                            {updates.length} {updates.length === 1 ? 'advisory' : 'advisories'}
-                        </span>
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                        Direct notices from estate administration and security response teams
+
+                {canAddUpdate && onAddUpdate && (
+                    <button
+                        type="button"
+                        onClick={onAddUpdate}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 active:scale-95 transition-all"
+                    >
+                        <Megaphone className="w-3.5 h-3.5" />
+                        <span>Post Update</span>
+                    </button>
+                )}
+            </div>
+
+            {(!updates || updates.length === 0) ? (
+                <div className="rounded-xl border border-indigo-100 bg-white/70 p-4 text-center dark:border-indigo-950/60 dark:bg-slate-900/50">
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                        No official updates posted yet.
                     </p>
                 </div>
-            </div>
+            ) : (
 
             <div className="space-y-3.5">
                 {updates.map((update, idx) => (
