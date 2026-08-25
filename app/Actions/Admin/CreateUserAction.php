@@ -58,7 +58,7 @@ class CreateUserAction
                 });
             }
 
-            activity()
+            activity('roles')
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

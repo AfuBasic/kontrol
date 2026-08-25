@@ -74,7 +74,7 @@ class AssignUsersToZoneAction
                     ]);
             }
 
-            activity()
+            activity('zones')
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'estate_id' => $estate->id,

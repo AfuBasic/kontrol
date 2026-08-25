@@ -31,7 +31,7 @@ class CreateRoleAction
             $role->syncPermissions($data['permissions']);
         }
 
-        activity()
+        activity('roles')
             ->performedOn($role)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estateId])

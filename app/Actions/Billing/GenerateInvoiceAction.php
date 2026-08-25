@@ -71,7 +71,7 @@ class GenerateInvoiceAction
             $this->advanceSubscription($subscription, $periodStart, $nextDate);
 
             // Log activity
-            activity()
+            activity('finance')
                 ->on($estate)
                 ->withProperties(['invoice_id' => $invoice->id, 'amount' => $amount])
                 ->log('Estate bulk invoice generated');

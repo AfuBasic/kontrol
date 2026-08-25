@@ -22,7 +22,7 @@ class DeleteRoleAction
             throw new HttpException(403, 'This role cannot be deleted.');
         }
 
-        activity()
+        activity('roles')
             ->performedOn($role)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $role->estate_id])

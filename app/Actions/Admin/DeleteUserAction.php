@@ -20,7 +20,7 @@ class DeleteUserAction
             // Detach from estate key membership
             $user->estates()->detach($estate->id);
 
-            activity()
+            activity('roles')
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

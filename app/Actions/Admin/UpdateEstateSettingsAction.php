@@ -14,7 +14,7 @@ class UpdateEstateSettingsAction
     {
         $settings->update($data);
 
-        activity()
+        activity('system')
             ->performedOn($settings)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $settings->estate_id])
