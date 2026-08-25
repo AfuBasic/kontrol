@@ -13,6 +13,8 @@ type MarkdownEditorProps = {
     placeholder?: string;
     error?: string;
     className?: string;
+    minHeight?: string;
+    compact?: boolean;
 };
 
 type ToolbarButtonProps = {
@@ -30,9 +32,11 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
             onClick={onClick}
             disabled={disabled}
             title={title}
-            className={`rounded p-1.5 transition-colors ${
-                isActive ? 'bg-primary-100 text-primary-700' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
-            } disabled:cursor-not-allowed disabled:opacity-50`}
+            className={`rounded-lg p-1.5 transition-colors ${
+                isActive
+                    ? 'bg-primary-100 text-primary-700 dark:bg-primary-950/60 dark:text-primary-300'
+                    : 'text-slate-500 hover:bg-slate-200/70 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+            } disabled:cursor-not-allowed disabled:opacity-40`}
         >
             {children}
         </button>
@@ -40,10 +44,19 @@ function ToolbarButton({ onClick, isActive, disabled, title, children }: Toolbar
 }
 
 function ToolbarDivider() {
-    return <div className="mx-1 h-6 w-px bg-gray-200" />;
+    return <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-800" />;
 }
 
-export default function MarkdownEditor({ id, value, onChange, placeholder = 'Write something...', error, className = '' }: MarkdownEditorProps) {
+export default function MarkdownEditor({
+    id,
+    value,
+    onChange,
+    placeholder = 'Write something...',
+    error,
+    className = '',
+    minHeight = 'min-h-[150px]',
+    compact = false,
+}: MarkdownEditorProps) {
     const [linkUrl, setLinkUrl] = useState('');
     const [showLinkInput, setShowLinkInput] = useState(false);
 
@@ -69,7 +82,7 @@ export default function MarkdownEditor({ id, value, onChange, placeholder = 'Wri
         editorProps: {
             attributes: {
                 id: id || '',
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] px-4 py-3',
+                class: `prose prose-sm max-w-none focus:outline-none ${minHeight} px-3.5 py-2.5 dark:prose-invert`,
             },
         },
         onUpdate: ({ editor }) => {
@@ -106,26 +119,28 @@ export default function MarkdownEditor({ id, value, onChange, placeholder = 'Wri
     return (
         <div className={`relative ${className}`}>
             <div
-                className={`flex flex-wrap items-center gap-0.5 rounded-t-lg border border-b-0 border-gray-300 bg-gray-50 px-2 py-1.5 ${
-                    error ? 'border-red-300' : ''
+                className={`flex flex-wrap items-center gap-0.5 rounded-t-xl border border-b-0 border-slate-200 bg-slate-50/90 px-2 py-1.5 dark:border-slate-800 dark:bg-slate-900/90 ${
+                    error ? 'border-rose-300 dark:border-rose-800' : ''
                 }`}
             >
                 <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} title="Bold (Ctrl+B)">
-                    <Bold className="h-4 w-4" />
+                    <Bold className="h-3.5 w-3.5" />
                 </ToolbarButton>
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleItalic().run()}
                     isActive={editor.isActive('italic')}
                     title="Italic (Ctrl+I)"
                 >
-                    <Italic className="h-4 w-4" />
+                    <Italic className="h-3.5 w-3.5" />
                 </ToolbarButton>
                 <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive('strike')} title="Strikethrough">
-                    <Strikethrough className="h-4 w-4" />
+                    <Strikethrough className="h-3.5 w-3.5" />
                 </ToolbarButton>
-                <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline Code">
-                    <Code className="h-4 w-4" />
-                </ToolbarButton>
+                {!compact && (
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive('code')} title="Inline Code">
+                        <Code className="h-3.5 w-3.5" />
+                    </ToolbarButton>
+                )}
 
                 <ToolbarDivider />
 
@@ -134,14 +149,14 @@ export default function MarkdownEditor({ id, value, onChange, placeholder = 'Wri
                     isActive={editor.isActive('heading', { level: 1 })}
                     title="Heading 1"
                 >
-                    <Heading1 className="h-4 w-4" />
+                    <Heading1 className="h-3.5 w-3.5" />
                 </ToolbarButton>
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
                     isActive={editor.isActive('heading', { level: 2 })}
                     title="Heading 2"
                 >
-                    <Heading2 className="h-4 w-4" />
+                    <Heading2 className="h-3.5 w-3.5" />
                 </ToolbarButton>
 
                 <ToolbarDivider />
@@ -151,39 +166,41 @@ export default function MarkdownEditor({ id, value, onChange, placeholder = 'Wri
                     isActive={editor.isActive('bulletList')}
                     title="Bullet List"
                 >
-                    <List className="h-4 w-4" />
+                    <List className="h-3.5 w-3.5" />
                 </ToolbarButton>
                 <ToolbarButton
                     onClick={() => editor.chain().focus().toggleOrderedList().run()}
                     isActive={editor.isActive('orderedList')}
                     title="Numbered List"
                 >
-                    <ListOrdered className="h-4 w-4" />
+                    <ListOrdered className="h-3.5 w-3.5" />
                 </ToolbarButton>
-                <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Quote">
-                    <Quote className="h-4 w-4" />
-                </ToolbarButton>
+                {!compact && (
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Quote">
+                        <Quote className="h-3.5 w-3.5" />
+                    </ToolbarButton>
+                )}
 
                 <ToolbarDivider />
 
                 <div className="relative">
                     <ToolbarButton onClick={() => setShowLinkInput(!showLinkInput)} isActive={editor.isActive('link')} title="Add Link">
-                        <LinkIcon className="h-4 w-4" />
+                        <LinkIcon className="h-3.5 w-3.5" />
                     </ToolbarButton>
                     {showLinkInput && (
-                        <div className="absolute top-full left-0 z-10 mt-1 flex items-center gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                        <div className="absolute top-full left-0 z-20 mt-1 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-800 dark:bg-slate-900">
                             <input
                                 type="url"
                                 value={linkUrl}
                                 onChange={(e) => setLinkUrl(e.target.value)}
                                 placeholder="https://..."
-                                className="w-48 rounded border border-gray-300 px-2 py-1 text-sm focus:border-primary-500 focus:outline-none"
+                                className="w-48 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-900 focus:border-primary-500 focus:bg-white focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
                                 onKeyDown={(e) => e.key === 'Enter' && setLink()}
                             />
                             <button
                                 type="button"
                                 onClick={setLink}
-                                className="rounded bg-primary-600 px-2 py-1 text-xs text-white hover:bg-primary-700"
+                                className="rounded-lg bg-primary-600 px-2.5 py-1 text-xs font-bold text-white shadow-xs hover:bg-primary-700 active:scale-95"
                             >
                                 Set
                             </button>
@@ -191,25 +208,25 @@ export default function MarkdownEditor({ id, value, onChange, placeholder = 'Wri
                     )}
                 </div>
 
-                <ToolbarDivider />
-
-                <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl+Z)">
-                    <Undo className="h-4 w-4" />
-                </ToolbarButton>
-                <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Y)">
-                    <Redo className="h-4 w-4" />
-                </ToolbarButton>
+                <div className="ml-auto flex items-center gap-0.5">
+                    <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo (Ctrl+Z)">
+                        <Undo className="h-3.5 w-3.5" />
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo (Ctrl+Y)">
+                        <Redo className="h-3.5 w-3.5" />
+                    </ToolbarButton>
+                </div>
             </div>
 
-            <div className={`rounded-b-lg border border-gray-300 bg-white ${error ? 'border-red-300' : ''}`}>
+            <div className={`rounded-b-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 ${error ? 'border-rose-300 dark:border-rose-800' : ''}`}>
                 <EditorContent editor={editor} />
             </div>
 
-            <div className="mt-1.5 flex justify-end text-xs text-gray-400">
+            <div className="mt-1 flex justify-end text-[11px] font-medium text-slate-400 dark:text-slate-500">
                 <span>{textLength.toLocaleString()} characters</span>
             </div>
 
-            {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-400">{error}</p>}
         </div>
     );
 }
