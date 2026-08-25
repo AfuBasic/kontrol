@@ -76,6 +76,13 @@ class Activity extends SpatieActivity
                 }
             }
 
+            // Check properties for estate_id
+            if (isset($activity->properties['estate_id'])) {
+                $activity->estate_id = (int) $activity->properties['estate_id'];
+
+                return;
+            }
+
             // Fallback: try to get estate_id from the subject
             if ($activity->subject && isset($activity->subject->estate_id)) {
                 $activity->estate_id = $activity->subject->estate_id;
