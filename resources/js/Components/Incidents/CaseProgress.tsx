@@ -60,7 +60,7 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                             </div>
 
                             <div
-                                className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-xl transition-all ${
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all ${
                                     isCurrent
                                         ? 'bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-500/20'
                                         : isCompleted
@@ -68,7 +68,7 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                                           : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500'
                                 }`}
                             >
-                                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                <Icon className="h-4 w-4 shrink-0" />
                             </div>
 
                             <span
