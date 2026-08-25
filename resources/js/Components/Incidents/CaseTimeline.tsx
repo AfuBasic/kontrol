@@ -201,11 +201,11 @@ export default function CaseTimeline({ incident, activities = [], className = ''
                         const Icon = event.icon;
 
                         return (
-                            <div key={event.id} className="relative flex items-start gap-4">
+                            <div key={event.id} className="relative flex items-start gap-3.5 sm:gap-4">
                                 <div
                                     className={`relative z-10 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-2 shadow-2xs ${event.dotColor}`}
                                 >
-                                    <Icon className="h-4 w-4" />
+                                    <Icon className="h-4 w-4 shrink-0" />
                                 </div>
 
                                 <div className="flex-1 min-w-0 pt-0.5">
