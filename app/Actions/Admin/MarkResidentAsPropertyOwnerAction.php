@@ -82,7 +82,7 @@ class MarkResidentAsPropertyOwnerAction
                 ->update(['property_owner_id' => null]);
 
             // Log the activity
-            activity()
+            activity('people')
                 ->performedOn($resident)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

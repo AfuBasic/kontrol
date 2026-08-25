@@ -64,7 +64,7 @@ class BulkInvitePropertyOwnersAction
 
         // 3. Log activity and dispatch notification job
         if (count($invitedIds) > 0) {
-            activity()
+            activity('people')
                 ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estate->id,

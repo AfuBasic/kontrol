@@ -49,7 +49,7 @@ class SuspendPropertyOwnerAction
             }
         }
 
-        activity()
+        activity('people')
             ->performedOn($propertyOwner)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id, 'is_active' => $newActiveState])

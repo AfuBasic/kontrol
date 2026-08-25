@@ -75,7 +75,7 @@ class CreateHouseholdMemberAction
 
             event(new HouseholdMemberCreated($user, $estate, $primaryResident));
 
-            activity()
+            activity('people')
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

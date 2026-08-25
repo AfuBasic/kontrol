@@ -46,7 +46,7 @@ class AssignResidentsToPropertyOwnerAction
                     'property_owner_id' => $propertyOwner->id,
                 ]);
 
-            activity()
+            activity('people')
                 ->performedOn($propertyOwner)
                 ->causedBy(Auth::user())
                 ->withProperties([

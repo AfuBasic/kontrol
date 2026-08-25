@@ -14,7 +14,7 @@ class DeleteHouseholdMemberAction
         DB::transaction(function () use ($householdMember, $estate) {
             $member = $householdMember->member;
 
-            activity()
+            activity('people')
                 ->performedOn($member)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

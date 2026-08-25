@@ -73,7 +73,7 @@ class MarkPropertyOwnerAsResidentAction
             $this->subscriptionService->createForUser($propertyOwner, $estate);
 
             // 6. Log the activity
-            activity()
+            activity('people')
                 ->performedOn($propertyOwner)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

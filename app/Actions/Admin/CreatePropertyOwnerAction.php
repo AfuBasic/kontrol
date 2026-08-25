@@ -126,7 +126,7 @@ class CreatePropertyOwnerAction
                 event(new ResidentCreated($user, $estate, false));
             }
 
-            activity()
+            activity('people')
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

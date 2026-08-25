@@ -68,7 +68,7 @@ class DeletePropertyOwnerAction
                 $propertyOwner->delete();
             }
 
-            activity()
+            activity('people')
                 ->performedOn($propertyOwner)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])
