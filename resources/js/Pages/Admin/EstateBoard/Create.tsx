@@ -291,7 +291,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                     <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Posting to</p>
                                     <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-gray-900">
                                         <MapPin className="h-4 w-4 text-gray-500" />
-                                        {zoneName ?? zones[0]?.name ?? 'Your zone'}
+                                        {zoneName ?? safeZones[0]?.name ?? 'Your zone'}
                                     </p>
                                     <p className="mt-1 text-[11px] text-gray-500">Zone-scoped accounts can only announce to their assigned zone.</p>
                                 </div>

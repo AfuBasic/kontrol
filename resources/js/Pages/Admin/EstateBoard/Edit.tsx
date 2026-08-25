@@ -444,7 +444,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                                     <img src={item.url} alt="" className="h-20 w-full rounded-lg object-cover" />
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeExistingMedia(item.id)}
+                                                        onClick={() => removeExistingImage(item.id)}
                                                         className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                                     >
                                                         <Trash2 className="h-3 w-3" />
@@ -484,7 +484,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    disabled={totalMediaCount >= 10}
+                                    disabled={(existingMedia.length + (data.images?.length ?? 0)) >= 10}
                                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-4 text-xs text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <Upload className="h-4 w-4" />
