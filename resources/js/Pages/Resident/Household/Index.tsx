@@ -23,8 +23,9 @@ interface Props {
 
 export default function HouseholdIndex({ members }: Props) {
     const { flash, auth, estate_plan } = usePage<SharedData>().props;
-    const limit = estate_plan?.limits?.max_household_members;
-    const isAtLimit = limit !== null && members.length >= (limit ?? 0);
+    const limit = estate_plan?.limits?.max_household_members ?? null;
+    const hasHouseholdLimit = typeof limit === 'number';
+    const isAtLimit = hasHouseholdLimit && members.length >= limit;
     const [showForm, setShowForm] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
     const [memberToDelete, setMemberToDelete] = useState<HouseholdMember | null>(null);
@@ -269,7 +270,7 @@ export default function HouseholdIndex({ members }: Props) {
                         <div className="flex items-center justify-between px-2">
                             <h3 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">
                                 Household Members ({members.length}
-                                {limit !== null ? ` / ${limit}` : ''})
+                                {hasHouseholdLimit ? ` / ${limit}` : ''})
                             </h3>
                             {isAtLimit && <span className="text-[10px] font-black text-rose-500 uppercase">Limit Reached</span>}
                         </div>

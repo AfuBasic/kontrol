@@ -1,16 +1,21 @@
 <?php
 
 use App\Enums\CommissionStatus;
+use App\Models\CommissionableRevenue;
 use App\Models\CommissionPlan;
 use App\Models\Estate;
+use App\Models\Invoice;
 use App\Models\Partner;
 use App\Models\PaymentTransaction;
+use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Services\Billing\BillingFinalizationService;
 use App\Services\Commission\CommissionService;
 use App\Services\Commission\PartnerAttributionService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
@@ -94,6 +99,66 @@ it('does not generate commission while resident is on trial', function () {
     $tx = makePayment($estate);
 
     expect($service->generateCommission($resident, $tx))->toBeNull();
+});
+
+it('accrues partner commission when a resident subscription invoice is finalized', function () {
+    Notification::fake();
+
+    [$partner, , $estate] = makePartneredEstate(
+        ['commission_rate' => 10, 'commission_type' => 'percentage', 'commission_length' => null],
+        ['commission_rate' => 10, 'commission_type' => 'percentage', 'duration_months' => null],
+    );
+
+    $billingPlan = Plan::factory()->create([
+        'price' => 100000,
+        'billing_interval' => 'monthly',
+    ]);
+
+    $resident = User::factory()->create(['email' => 'subscriber@example.com']);
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    ResidentSubscription::factory()->create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => null,
+        'status' => 'past_due',
+        'trial_ends_at' => null,
+        'current_period_start' => now()->subDay(),
+        'current_period_end' => now()->subMinute(),
+    ]);
+
+    $invoice = Invoice::factory()->create([
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'plan_id' => $billingPlan->id,
+        'amount' => 100000,
+        'paystack_reference' => 'sub_ref_1',
+    ]);
+
+    $billing = app(BillingFinalizationService::class);
+
+    $billing->finalizeSuccess($invoice, [
+        'reference' => 'sub_ref_1',
+        'payment_method' => 'card',
+        'customer_email' => $resident->email,
+    ]);
+
+    $revenue = CommissionableRevenue::where('partner_id', $partner->id)->first();
+
+    expect($revenue)->not->toBeNull()
+        ->and($revenue->estate_id)->toBe($estate->id)
+        ->and($revenue->user_id)->toBe($resident->id)
+        ->and($revenue->revenue_amount)->toBe(100000)
+        ->and($revenue->commission_amount)->toBe(10000)
+        ->and($revenue->payment_transaction_id)->not->toBeNull();
+
+    $billing->finalizeSuccess($invoice->fresh(), [
+        'reference' => 'sub_ref_1',
+        'payment_method' => 'card',
+        'customer_email' => $resident->email,
+    ]);
+
+    expect(CommissionableRevenue::where('partner_id', $partner->id)->count())->toBe(1);
 });
 
 it('starts commission tenure the day trial ends, not when resident was added', function () {

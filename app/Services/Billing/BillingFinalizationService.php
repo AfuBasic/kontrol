@@ -7,13 +7,15 @@ use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Notifications\Resident\InvoicePaidNotification;
 use App\Services\BillingCycleService;
+use App\Services\Commission\CommissionService;
 use App\Services\CouponService;
 use Illuminate\Support\Facades\DB;
 
 class BillingFinalizationService
 {
     public function __construct(
-        private BillingCycleService $billingCycleService
+        private BillingCycleService $billingCycleService,
+        private CommissionService $commissionService,
     ) {}
 
     /**
@@ -47,10 +49,11 @@ class BillingFinalizationService
             }
 
             // 3. Record Transaction if it doesn't exist
-            $this->ensureTransactionRecorded($invoice, $paymentData);
+            $transaction = $this->ensureTransactionRecorded($invoice, $paymentData);
 
             // 4. Notify User (only if it's a resident invoice)
             if ($invoice->user_id && $invoice->user) {
+                $this->commissionService->generateCommission($invoice->user, $transaction);
                 $invoice->user->notify(new InvoicePaidNotification($invoice));
             }
         });
@@ -102,7 +105,7 @@ class BillingFinalizationService
         }
     }
 
-    private function ensureTransactionRecorded(Invoice $invoice, array $paymentData): void
+    private function ensureTransactionRecorded(Invoice $invoice, array $paymentData): PaymentTransaction
     {
         $invoiceMetadata = $invoice->metadata ?? [];
         $transactionMetadata = array_merge(
@@ -110,7 +113,7 @@ class BillingFinalizationService
             ! empty($invoiceMetadata['coupon_code']) ? ['coupon_code' => $invoiceMetadata['coupon_code']] : []
         );
 
-        PaymentTransaction::updateOrCreate(
+        return PaymentTransaction::updateOrCreate(
             ['paystack_reference' => $paymentData['reference'] ?? $invoice->paystack_reference],
             [
                 'estate_id' => $invoice->estate_id,

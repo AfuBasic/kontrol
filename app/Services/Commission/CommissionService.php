@@ -37,6 +37,14 @@ class CommissionService
 
     public function generateCommission(User $resident, PaymentTransaction $transaction): ?CommissionableRevenue
     {
+        if ($transaction->id) {
+            $existingRevenue = CommissionableRevenue::where('payment_transaction_id', $transaction->id)->first();
+
+            if ($existingRevenue) {
+                return $existingRevenue;
+            }
+        }
+
         $estate = $transaction->estate ?? $resident->estates()->first();
 
         if (! $estate || ! $this->eligibleForCommission($estate)) {

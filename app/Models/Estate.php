@@ -186,6 +186,79 @@ class Estate extends Model
         return $feature ? $feature->pivot->limit : '0';
     }
 
+    public function getHouseholdFeatureLimit(?User $primaryResident = null): ?string
+    {
+        if ($this->settings->charge_type === 'residents' && $primaryResident) {
+            $subscription = $this->householdSubjectSubscription($primaryResident);
+
+            if (! $subscription || ! $subscription->plan) {
+                return null;
+            }
+
+            return $this->getFeatureLimitFromPlan($subscription->plan, 'household-management');
+        }
+
+        return $this->getFeatureLimit('household-management');
+    }
+
+    public function getHouseholdMemberLimit(?User $primaryResident = null): ?int
+    {
+        return $this->normalizeFeatureLimit($this->getHouseholdFeatureLimit($primaryResident));
+    }
+
+    public function householdManagementIsAvailableFor(?User $primaryResident = null): bool
+    {
+        if ($this->settings->charge_type === 'residents' && $primaryResident) {
+            $subscription = $this->householdSubjectSubscription($primaryResident);
+
+            return ! $subscription || ! $subscription->plan || $subscription->plan->hasFeature('household-management');
+        }
+
+        return (bool) $this->subscriptionRecord?->plan?->hasFeature('household-management');
+    }
+
+    private function householdSubjectSubscription(User $primaryResident): ?ResidentSubscription
+    {
+        $subject = $primaryResident;
+
+        if ($primaryResident->isHouseholdMember()) {
+            $household = $primaryResident->householdOf()->where('estate_id', $this->id)->first();
+            $subject = $household?->primaryResident ?? $primaryResident;
+        }
+
+        return $subject->residentSubscription()
+            ->with('plan')
+            ->where('estate_id', $this->id)
+            ->first();
+    }
+
+    private function getFeatureLimitFromPlan(Plan $plan, string $featureSlug): ?string
+    {
+        $feature = $plan->features()
+            ->where('slug', $featureSlug)
+            ->wherePivot('is_enabled', true)
+            ->first();
+
+        return $feature ? $feature->pivot->limit : '0';
+    }
+
+    private function normalizeFeatureLimit(?string $limit): ?int
+    {
+        if ($limit === null) {
+            return null;
+        }
+
+        $normalizedLimit = trim($limit);
+
+        if ($normalizedLimit === '' || strtolower($normalizedLimit) === 'unlimited') {
+            return null;
+        }
+
+        $limitValue = (int) $normalizedLimit;
+
+        return $limitValue > 0 ? $limitValue : null;
+    }
+
     public function canAddMoreResidents(): bool
     {
         $limit = $this->subscriptionRecord?->plan?->max_residents;
@@ -247,27 +320,21 @@ class Estate extends Model
 
     public function canAddMoreHouseholdMembers(User $primaryResident): bool
     {
-        $limit = $this->getFeatureLimit('household-management');
-
-        // If limit is null or empty, it's unlimited. If it's '0', it's disabled.
-        if ($limit === null || $limit === '') {
-            return true;
-        }
-
-        $limitInt = (int) $limit;
-        if ($limitInt === 0 && ! $this->hasFeature('household-management')) {
+        if (! $this->householdManagementIsAvailableFor($primaryResident)) {
             return false;
         }
 
-        if ($limitInt === 0) {
-            return true; // If feature is enabled but limit is '0', treat as unlimited or handled by feature check
+        $limit = $this->getHouseholdMemberLimit($primaryResident);
+
+        if ($limit === null) {
+            return true;
         }
 
         $currentMembers = $primaryResident->householdMembers()
             ->where('estate_id', $this->id)
             ->count();
 
-        return $currentMembers < $limitInt;
+        return $currentMembers < $limit;
     }
 
     /**
