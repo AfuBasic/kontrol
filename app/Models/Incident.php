@@ -16,8 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 class Incident extends Model
 {
@@ -25,7 +23,6 @@ class Incident extends Model
         HasHashid::resolveRouteBinding insteadof GeneratesUlid;
     }
     use HasFactory;
-    use LogsActivity;
     use SoftDeletes;
     use ZoneScoped;
 
@@ -201,12 +198,5 @@ class Incident extends Model
     public function scopeOpenOnly(Builder $query): Builder
     {
         return $query->where('status', '!=', IncidentStatus::Closed);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['status', 'assigned_to', 'title', 'body'])
-            ->logOnlyDirty();
     }
 }
