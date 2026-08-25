@@ -101,6 +101,7 @@ export default function OfficialUpdates({
                     </div>
                 ))}
             </div>
+            )}
         </section>
     );
 }
