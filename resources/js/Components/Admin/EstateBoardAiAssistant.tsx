@@ -197,23 +197,25 @@ export default function EstateBoardAiAssistant({ context, onDraft, onTemplateSel
                     )}
                 </AnimatePresence>
 
-                <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs text-gray-500">Uses your category, priority, and audience settings for context.</p>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-violet-100/60">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-normal">
+                        Uses your category, priority, and audience settings for context.
+                    </p>
                     <button
                         type="button"
                         onClick={handleGenerate}
                         disabled={!canGenerate || isGenerating}
-                        className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-linear-to-r from-violet-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         {isGenerating ? (
                             <>
                                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                Writing...
+                                <span>Writing draft...</span>
                             </>
                         ) : (
                             <>
-                                <Sparkles className="h-4 w-4" />
-                                Generate draft
+                                <Sparkles className="h-4 w-4 shrink-0" />
+                                <span className="whitespace-nowrap">Generate Draft</span>
                             </>
                         )}
                     </button>
