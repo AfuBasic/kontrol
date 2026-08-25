@@ -74,7 +74,7 @@ class UpdateResidentAction
                 );
             }
 
-            activity()
+            activity('people')
                 ->performedOn($resident)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

@@ -67,7 +67,7 @@ class DeleteResidentAction
                 $resident->delete();
             }
 
-            activity()
+            activity('people')
                 ->performedOn($resident)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

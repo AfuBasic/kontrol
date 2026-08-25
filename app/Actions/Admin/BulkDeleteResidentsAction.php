@@ -29,7 +29,7 @@ class BulkDeleteResidentsAction
                 $count++;
             }
 
-            activity()
+            activity('people')
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'estate_id' => $estate->id,

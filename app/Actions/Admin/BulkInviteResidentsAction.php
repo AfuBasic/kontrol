@@ -66,7 +66,7 @@ class BulkInviteResidentsAction
 
         // 3. Log activity for bulk invite
         if (count($invitedIds) > 0) {
-            activity()
+            activity('people')
                 ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estate->id,

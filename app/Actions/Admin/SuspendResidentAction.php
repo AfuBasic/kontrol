@@ -42,7 +42,7 @@ class SuspendResidentAction
                 }
             }
 
-            activity()
+            activity('people')
                 ->performedOn($resident)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id, 'is_active' => $assignment->is_active])

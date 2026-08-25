@@ -68,7 +68,7 @@ class ResendResidentInvitationAction
                 'last_invited_at' => now(),
             ]);
 
-        activity()
+        activity('people')
             ->performedOn($resident)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])
