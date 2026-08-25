@@ -257,13 +257,13 @@ export default function Show({
             </div>
 
             {/* 2-Column Responsive Workspace Grid */}
-            <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
+            <div className="grid grid-cols-1 items-start gap-5 sm:gap-8 lg:grid-cols-12">
                 {/* Main Left Column: Mobile order: 1. Header -> 2. Current Response -> 3. Progress -> 4. Timeline -> 5. Official Updates -> 6. Discussion */}
-                <div className="space-y-6 lg:col-span-8">
+                <div className="space-y-5 sm:space-y-6 lg:col-span-8">
                     {/* 1. Incident Header Card */}
-                    <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                    <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-8 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <IncidentCategoryLabel category={incident.category} size="sm" showBadge />
                                 {incident.reference_code && (
                                     <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
