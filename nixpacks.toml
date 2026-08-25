@@ -1,3 +1,6 @@
+[variables]
+PUPPETEER_SKIP_DOWNLOAD = "true"
+
 [phases.setup]
 nixPkgs = ["...", "python311Packages.supervisor"]
 
