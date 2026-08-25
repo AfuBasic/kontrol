@@ -4,6 +4,7 @@ use App\Enums\AssignmentScope;
 use App\Enums\IncidentStatus;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
+use App\Models\EstateSettings;
 use App\Models\Incident;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -191,7 +192,7 @@ test('resolving incident requires resolution notes when estate policy is enabled
     $admin = User::factory()->create();
     $reporter = User::factory()->create();
 
-    $settings = \App\Models\EstateSettings::forEstate($estate->id);
+    $settings = EstateSettings::forEstate($estate->id);
     $settings->require_resolution_notes_for_incidents = true;
     $settings->save();
 

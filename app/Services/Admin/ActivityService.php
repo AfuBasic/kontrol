@@ -2,7 +2,6 @@
 
 namespace App\Services\Admin;
 
-use App\Http\Resources\ActivityResource;
 use App\Models\Activity;
 use App\Services\EstateContextService;
 use Illuminate\Contracts\Pagination\CursorPaginator;

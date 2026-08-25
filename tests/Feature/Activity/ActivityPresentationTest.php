@@ -1,9 +1,7 @@
 <?php
 
 use App\Auth\ContextManager;
-use App\Models\Activity;
 use App\Models\Estate;
-use App\Models\Incident;
 use App\Models\User;
 use App\Presenters\ActivityPresenter;
 use App\Services\Admin\ActivityService;
