@@ -1,5 +1,5 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { useForm } from '@inertiajs/react';
+import React, { useState, useRef, useCallback, lazy, Suspense } from 'react';
+import { useForm, Link } from '@inertiajs/react';
 import {
     Send,
     Paperclip,
@@ -17,11 +17,13 @@ import {
     PartyPopper,
     Megaphone,
     Clock,
+    Maximize2,
 } from 'lucide-react';
 import { marked } from 'marked';
-import { store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { create, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import { useActiveContext } from '@/Hooks/useActiveContext';
 import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
+import MarkdownEditor from '@/Components/MarkdownEditor';
 import type { PostAudience, PostCategory, PostPriority } from '@/types';
 
 type Props = {
@@ -182,7 +184,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                 </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
                 {/* Title (visible when expanded or typing) */}
                 {isExpanded && (
                     <div>
@@ -194,25 +196,33 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                             onChange={(e) => setData('title', e.target.value)}
                             placeholder="Announcement title..."
                             autoComplete="off"
-                            className="w-full border-none bg-transparent p-0 text-base font-bold text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden"
+                            className="w-full border-none bg-transparent p-0 text-base font-black tracking-tight text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden dark:text-slate-100 dark:placeholder:text-slate-600"
                         />
-                        {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title}</p>}
+                        {errors.title && <p className="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-400">{errors.title}</p>}
                     </div>
                 )}
 
-                {/* Body input / Trigger box */}
+                {/* Body input: Compact Trigger Box or Full WYSIWYG Editor */}
                 <div>
-                    <textarea
-                        id="announcement-body"
-                        name="body"
-                        value={data.body}
-                        onFocus={handleExpand}
-                        onChange={(e) => setData('body', e.target.value)}
-                        placeholder="Share an announcement with your estate... (or click AI Assistant above)"
-                        rows={isExpanded ? 3 : 2}
-                        className="w-full resize-none border-none bg-transparent p-0 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden"
-                    />
-                    {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body}</p>}
+                    {!isExpanded ? (
+                        <div
+                            onClick={handleExpand}
+                            className="cursor-text rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-sm font-medium text-slate-400 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-500 dark:hover:border-slate-700"
+                        >
+                            Share an announcement with your estate... (Click to format text or use AI Assistant)
+                        </div>
+                    ) : (
+                        <div className="space-y-1">
+                            <MarkdownEditor
+                                value={data.body}
+                                onChange={(value) => setData('body', value)}
+                                placeholder="Share an announcement with your estate... (Markdown and rich formatting supported)"
+                                error={errors.body}
+                                minHeight="min-h-[120px]"
+                                compact={true}
+                            />
+                        </div>
+                    )}
                 </div>
 
                 {/* Selected file preview chips */}
@@ -359,18 +369,28 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                     {/* Submit & Cancel Actions */}
                     <div className="flex items-center gap-2">
                         {isExpanded && (
-                            <button
-                                type="button"
-                                onClick={handleCancel}
-                                className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
-                            >
-                                Cancel
-                            </button>
+                            <>
+                                <Link
+                                    href={create.url()}
+                                    className="hidden items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                    title="Open Full Page Composer"
+                                >
+                                    <Maximize2 className="h-3.5 w-3.5" />
+                                    <span>Full Page</span>
+                                </Link>
+                                <button
+                                    type="button"
+                                    onClick={handleCancel}
+                                    className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                                >
+                                    Cancel
+                                </button>
+                            </>
                         )}
                         <button
                             type="submit"
                             disabled={processing || !data.body.trim()}
-                            className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+                            className="flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-1.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 active:scale-95 disabled:opacity-50 dark:bg-primary-600 dark:hover:bg-primary-700"
                         >
                             <Send className="h-3.5 w-3.5" />
                             <span>{processing ? 'Posting...' : 'Post Announcement'}</span>

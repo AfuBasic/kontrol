@@ -137,6 +137,16 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                         Broadcast announcements, critical alerts, and community updates to residents and estate staff.
                     </p>
                 </div>
+
+                <div className="flex items-center gap-2">
+                    <Link
+                        href="/admin/estate-board/create"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-slate-950 px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-95 dark:bg-primary-600 dark:hover:bg-primary-700"
+                    >
+                        <FileText className="h-4 w-4" />
+                        <span>Full Editor</span>
+                    </Link>
+                </div>
             </div>
 
             {/* Quick Composer Surface */}
