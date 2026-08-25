@@ -14,8 +14,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
 
 /**
  * @property int $id
@@ -64,7 +62,6 @@ class EstateBoardPost extends Model
 {
     use HasFactory;
     use HasHashid;
-    use LogsActivity;
 
     protected $fillable = [
         'estate_id',
@@ -195,12 +192,5 @@ class EstateBoardPost extends Model
     public function scopeForAudience(Builder $query, array $audiences): Builder
     {
         return $query->whereIn('audience', $audiences);
-    }
-
-    public function getActivitylogOptions(): LogOptions
-    {
-        return LogOptions::defaults()
-            ->logOnly(['title', 'body', 'status', 'audience'])
-            ->logOnlyDirty();
     }
 }
