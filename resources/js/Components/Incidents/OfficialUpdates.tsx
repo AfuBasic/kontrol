@@ -33,22 +33,24 @@ export default function OfficialUpdates({
     };
 
     return (
-        <section className={`rounded-2xl border-2 border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-5 shadow-xs dark:border-indigo-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 ${className}`}>
-            <div className="flex items-center justify-between gap-3 mb-4">
-                <div className="flex items-center gap-2.5">
-                    <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
-                        <Megaphone className="w-4 h-4" />
+        <section className={`rounded-2xl border-2 border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-4 sm:p-5 shadow-xs dark:border-indigo-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40 ${className}`}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-start gap-2.5">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+                        <Megaphone className="w-4 h-4 shrink-0" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                            Official Updates & Dispatches
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">
+                                Official Updates & Dispatches
+                            </h3>
                             {updates && updates.length > 0 && (
-                                <span className="rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-400/20 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 border border-indigo-300 dark:border-indigo-800">
+                                <span className="rounded-full bg-indigo-600/10 text-indigo-700 dark:bg-indigo-400/20 dark:text-indigo-300 text-[10px] font-bold px-2 py-0.5 border border-indigo-300 dark:border-indigo-800 shrink-0">
                                     {updates.length} {updates.length === 1 ? 'advisory' : 'advisories'}
                                 </span>
                             )}
-                        </h3>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
                             Direct notices from estate administration and security response teams
                         </p>
                     </div>
@@ -58,9 +60,9 @@ export default function OfficialUpdates({
                     <button
                         type="button"
                         onClick={onAddUpdate}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 active:scale-95 transition-all"
+                        className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 active:scale-95 transition-all shrink-0 whitespace-nowrap"
                     >
-                        <Megaphone className="w-3.5 h-3.5" />
+                        <Megaphone className="w-3.5 h-3.5 shrink-0" />
                         <span>Post Update</span>
                     </button>
                 )}
