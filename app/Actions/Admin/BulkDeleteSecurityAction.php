@@ -27,7 +27,7 @@ class BulkDeleteSecurityAction
                 $deletedCount++;
             }
 
-            activity()
+            activity('security')
                 ->causedBy(Auth::user())
                 ->withProperties([
                     'estate_id' => $estate->id,

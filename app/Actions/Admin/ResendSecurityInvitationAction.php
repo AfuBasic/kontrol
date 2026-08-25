@@ -19,7 +19,7 @@ class ResendSecurityInvitationAction
         // 3. Resend invitation email
         event(new SecurityCreated($security, $estate, true));
 
-        activity()
+        activity('security')
             ->performedOn($security)
             ->causedBy(Auth::user())
             ->withProperties(['estate_id' => $estate->id])

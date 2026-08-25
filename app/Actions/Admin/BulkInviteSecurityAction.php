@@ -65,7 +65,7 @@ class BulkInviteSecurityAction
 
         // 3. Log activity
         if (count($invitedIds) > 0) {
-            activity()
+            activity('security')
                 ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estate->id,

@@ -61,7 +61,7 @@ class DeleteSecurityAction
                 $security->delete();
             }
 
-            activity()
+            activity('security')
                 ->performedOn($security)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

@@ -42,7 +42,7 @@ class CheckpointClaimService
             Cache::put($userKey, $entryPoint, self::LOCK_TTL_SECONDS);
             session(['active_checkpoint' => $entryPoint]);
 
-            activity()
+            activity('security')
                 ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estateId,
@@ -60,7 +60,7 @@ class CheckpointClaimService
             Cache::put($userKey, $entryPoint, self::LOCK_TTL_SECONDS);
             session(['active_checkpoint' => $entryPoint]);
 
-            activity()
+            activity('security')
                 ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estateId,
@@ -93,7 +93,7 @@ class CheckpointClaimService
             Cache::forget($userKey);
             session()->forget('active_checkpoint');
 
-            activity()
+            activity('security')
                 ->causedBy($user)
                 ->withProperties([
                     'estate_id' => $estateId,

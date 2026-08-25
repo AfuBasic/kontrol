@@ -113,7 +113,7 @@ class CreateSecurityAction
                 event(new SecurityCreated($user, $estate, false));
             }
 
-            activity()
+            activity('security')
                 ->performedOn($user)
                 ->causedBy(Auth::user())
                 ->withProperties(['estate_id' => $estate->id])

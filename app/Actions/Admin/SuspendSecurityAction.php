@@ -41,7 +41,7 @@ class SuspendSecurityAction
                     }
                 }
 
-                activity()
+                activity('security')
                     ->performedOn($security)
                     ->causedBy(Auth::user())
                     ->withProperties(['estate_id' => $estate->id, 'is_active' => $assignment->is_active])
