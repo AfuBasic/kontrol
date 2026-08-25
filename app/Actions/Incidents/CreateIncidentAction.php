@@ -98,7 +98,7 @@ class CreateIncidentAction
 
             $incident->save();
 
-            activity()
+            activity('incidents')
                 ->performedOn($incident)
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $estate->id])

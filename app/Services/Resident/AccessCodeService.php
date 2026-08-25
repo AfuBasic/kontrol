@@ -339,7 +339,7 @@ class AccessCodeService
             'status' => AccessCodeStatus::Active,
         ]);
 
-        activity()
+        activity('access')
             ->performedOn($accessCode)
             ->by(Auth::user())
             ->withProperties([

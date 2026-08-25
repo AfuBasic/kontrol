@@ -11,7 +11,7 @@ class DeleteCommentAction
     {
         $user = Auth::user();
 
-        activity()
+        activity('announcements')
             ->performedOn($comment->post)
             ->causedBy($user)
             ->withProperties(['comment_id' => $comment->id])

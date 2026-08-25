@@ -88,7 +88,7 @@ class RecordCheckOutAction
             ]);
 
             // Log to the activity feed so the resident sees the checkout
-            activity()
+            activity('access')
                 ->causedBy($verifiedBy)
                 ->performedOn($accessCode)
                 ->withProperties([

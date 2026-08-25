@@ -35,7 +35,7 @@ class AddIncidentCommentAction
 
             $incident->increment('comments_count');
 
-            activity()
+            activity('incidents')
                 ->performedOn($incident)
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $incident->estate_id, 'comment_id' => $comment->id])

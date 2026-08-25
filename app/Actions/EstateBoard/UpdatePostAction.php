@@ -82,7 +82,7 @@ class UpdatePostAction
                 }
             }
 
-            activity()
+            activity('announcements')
                 ->performedOn($post)
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $estate->id])

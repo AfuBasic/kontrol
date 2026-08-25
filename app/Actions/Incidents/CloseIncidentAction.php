@@ -31,7 +31,7 @@ class CloseIncidentAction
             $incident->closed_at = now();
             $incident->save();
 
-            activity()
+            activity('incidents')
                 ->performedOn($incident)
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $incident->estate_id])

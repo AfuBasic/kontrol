@@ -26,7 +26,7 @@ class DeletePostAction
             $postTitle = $post->title ?: 'Untitled';
             $post->delete();
 
-            activity()
+            activity('announcements')
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $estate->id, 'post_title' => $postTitle])
                 ->log('deleted board post: '.$postTitle);

@@ -117,7 +117,7 @@ class UpdateIncidentStatusAction
 
             // Log activity for updates
             foreach ($loggedActions as $actionLog) {
-                activity()
+                activity('incidents')
                     ->performedOn($incident)
                     ->causedBy($user)
                     ->withProperties(['estate_id' => $incident->estate_id, 'status' => $incident->status->value])

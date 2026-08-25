@@ -63,7 +63,7 @@ class CreatePostAction
                 $this->attachMedia($post, $data['images'], $estate);
             }
 
-            activity()
+            activity('announcements')
                 ->performedOn($post)
                 ->causedBy($user)
                 ->withProperties(['estate_id' => $estate->id])
