@@ -261,7 +261,7 @@ class PartnerRequestController extends Controller
     {
         $connected = $estates->count();
         $active = $estates->where('portfolio_status', 'active')->count();
-        $residents = (int) $estates->sum(fn (array $e) => $e['counts']['residents'] ?? 0);
+        $residents = (int) $estates->sum(fn (array $e) => $e['counts']['people'] ?? $e['counts']['residents'] ?? 0);
 
         $monthStart = CarbonImmutable::now()->startOfMonth();
         $monthlyRevenue = 0;
@@ -300,7 +300,9 @@ class PartnerRequestController extends Controller
     private function transformEstateForPartner(Estate $estate, int $partnerId): array
     {
         $roleCounts = $this->acceptedRoleCounts($estate->id);
-        $residents = $roleCounts['resident'] ?? 0;
+        $residentCount = $roleCounts['resident'] ?? 0;
+        $propertyOwnerCount = $roleCounts['property_owner'] ?? 0;
+        $residents = $residentCount + $propertyOwnerCount;
 
         $subscribed = (int) $estate->residentSubscriptions()
             ->whereIn('status', ['active', 'trialing', 'trial', 'past_due'])
@@ -341,7 +343,7 @@ class PartnerRequestController extends Controller
             ->where('estate_users_membership.estate_id', $estate->id)
             ->where('estate_users_membership.status', 'accepted')
             ->where('model_has_roles.estate_id', $estate->id)
-            ->where('roles.name', 'resident')
+            ->whereIn('roles.name', ['resident', 'property_owner'])
             ->where('estate_users_membership.created_at', '>=', $weekAgo)
             ->count();
 
@@ -396,13 +398,13 @@ class PartnerRequestController extends Controller
             'created_at' => $estate->created_at?->toIso8601String(),
             'counts' => [
                 'residents' => $residents,
+                'resident_only' => $residentCount,
+                'property_owners' => $propertyOwnerCount,
+                'people' => $residents,
                 'subscribed' => $subscribed,
                 'security' => $roleCounts['security'] ?? 0,
                 'admins' => $roleCounts['admin'] ?? 0,
-                'members' => (int) DB::table('estate_users_membership')
-                    ->where('estate_id', $estate->id)
-                    ->where('status', 'accepted')
-                    ->count(),
+                'members' => $residents,
             ],
             'commission' => [
                 'earned_kobo' => $commissionEarned,
@@ -422,30 +424,14 @@ class PartnerRequestController extends Controller
      */
     private function portfolioStatus(Estate $estate): array
     {
-        $commission = $estate->commission_status?->value;
-        $partnerStatus = $estate->partner_status?->value;
-
-        if ($commission === 'expired' || $partnerStatus === 'commission_expired') {
-            return ['key' => 'archived', 'label' => 'Archived'];
-        }
-
-        if ($estate->status === 'inactive') {
-            return ['key' => 'suspended', 'label' => 'Suspended'];
-        }
-
-        if (in_array($partnerStatus, ['reviewing', 'submitted'], true)) {
-            return ['key' => 'under_review', 'label' => 'Under Review'];
-        }
-
-        if (in_array($partnerStatus, ['estate_created', 'approved'], true) && $estate->status !== 'active') {
-            return ['key' => 'pending', 'label' => 'Pending'];
-        }
-
-        if ($estate->status === 'active') {
-            return ['key' => 'active', 'label' => 'Active'];
-        }
-
-        return ['key' => 'pending', 'label' => 'Pending'];
+        return match ($estate->status) {
+            'active' => ['key' => 'active', 'label' => 'Active'],
+            'pending' => ['key' => 'pending', 'label' => 'Pending Activation'],
+            'under_review' => ['key' => 'under_review', 'label' => 'Under Review'],
+            'suspended' => ['key' => 'suspended', 'label' => 'Suspended'],
+            'archived' => ['key' => 'archived', 'label' => 'Archived'],
+            default => ['key' => 'unknown', 'label' => ucfirst($estate->status)],
+        };
     }
 
     /**
@@ -462,7 +448,7 @@ class PartnerRequestController extends Controller
             ->where('estate_users_membership.estate_id', $estateId)
             ->where('estate_users_membership.status', 'accepted')
             ->where('model_has_roles.estate_id', $estateId)
-            ->whereIn('roles.name', ['resident', 'security', 'admin'])
+            ->whereIn('roles.name', ['resident', 'property_owner', 'security', 'admin'])
             ->groupBy('roles.name')
             ->selectRaw('roles.name as role_name, count(*) as aggregate')
             ->pluck('aggregate', 'role_name')
