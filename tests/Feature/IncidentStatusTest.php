@@ -185,3 +185,99 @@ test('non-reporter cannot close a solved incident', function () {
 
     $response->assertStatus(403);
 });
+
+test('resolving incident requires resolution notes when estate policy is enabled', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    $reporter = User::factory()->create();
+
+    $settings = \App\Models\EstateSettings::forEstate($estate->id);
+    $settings->require_resolution_notes_for_incidents = true;
+    $settings->save();
+
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $admin->estates()->attach($estate->id, ['status' => 'accepted']);
+    $adminRole = Role::where('name', 'admin')->first();
+    AdministrativeAssignment::create([
+        'user_id' => $admin->id,
+        'estate_id' => $estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    $reporter->assignRole('resident');
+    $reporter->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $incident = Incident::create([
+        'estate_id' => $estate->id,
+        'reporter_id' => $reporter->id,
+        'title' => 'Water pump failure',
+        'body' => 'Borehole pump stopped pumping to the central reservoir tank.',
+        'category' => 'water_plumbing',
+        'status' => IncidentStatus::Resolving,
+    ]);
+
+    // Fails without resolution notes
+    $this->actingAs($admin)
+        ->put(route('admin.incidents.status.update', $incident->hashid), [
+            'status' => 'solved',
+        ])
+        ->assertSessionHasErrors(['resolution_notes']);
+
+    // Passes with resolution notes
+    $this->actingAs($admin)
+        ->put(route('admin.incidents.status.update', $incident->hashid), [
+            'status' => 'solved',
+            'resolution_notes' => 'Pump capacitor replaced and tested successfully.',
+        ])
+        ->assertRedirect();
+
+    expect($incident->fresh()->status)->toBe(IncidentStatus::Solved);
+    expect($incident->fresh()->solved_at)->not->toBeNull();
+});
+
+test('admin can update case details without modifying status', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    $reporter = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $admin->estates()->attach($estate->id, ['status' => 'accepted']);
+    $adminRole = Role::where('name', 'admin')->first();
+    AdministrativeAssignment::create([
+        'user_id' => $admin->id,
+        'estate_id' => $estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    $reporter->assignRole('resident');
+    $reporter->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    $incident = Incident::create([
+        'estate_id' => $estate->id,
+        'reporter_id' => $reporter->id,
+        'title' => 'General maintenance issue',
+        'body' => 'Street lamp #12 is flickering.',
+        'category' => 'lighting',
+        'priority' => 'low',
+        'status' => IncidentStatus::Pending,
+        'is_private' => false,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.incidents.status.update', $incident->hashid), [
+            'priority' => 'critical',
+            'is_private' => true,
+        ])
+        ->assertRedirect();
+
+    $fresh = $incident->fresh();
+    expect($fresh->status)->toBe(IncidentStatus::Pending);
+    expect($fresh->priority->value)->toBe('critical');
+    expect($fresh->is_private)->toBeTrue();
+});
