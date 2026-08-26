@@ -287,7 +287,7 @@ class PartnerRequestController extends Controller
 
             $pendingSettlement = (int) CommissionableRevenue::query()
                 ->where('partner_id', $partnerId)
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'aggregated'])
                 ->sum('commission_amount');
         }
 
@@ -337,7 +337,7 @@ class PartnerRequestController extends Controller
         $pendingCommission = (int) CommissionableRevenue::query()
             ->where('partner_id', $partnerId)
             ->where('estate_id', $estate->id)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'aggregated'])
             ->sum('commission_amount');
 
         $weekAgo = now()->subWeek();
