@@ -2,12 +2,14 @@ import type { CapacitorConfig } from '@capacitor/cli';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Default to production unless explicitly in local dev mode (CAPACITOR_DEV=true)
-const isDev = process.env.CAPACITOR_DEV === 'true';
+// Check if running in dev mode or platform-specific dev
+const isDev = process.env.CAPACITOR_DEV === 'true' || process.env.NODE_ENV === 'development';
+const isIosDev = process.env.CAPACITOR_PLATFORM === 'ios' || process.argv.includes('ios');
+const isAndroidDev = process.env.CAPACITOR_PLATFORM === 'android' || process.argv.includes('android');
 
-// Default local URL
-let devUrl = 'https://app.usekontrol.afuwapetunde.com';
-let devHostname = 'app.usekontrol.afuwapetunde.com';
+// Default URLs
+let devUrl = isIosDev ? 'http://app.kontrol.test' : 'https://app.usekontrol.afuwapetunde.com';
+let devHostname = isIosDev ? 'app.kontrol.test' : 'app.usekontrol.afuwapetunde.com';
 
 // Dynamically read from .env if in dev mode
 if (isDev) {
@@ -15,14 +17,17 @@ if (isDev) {
         const envPath = path.join(process.cwd(), '.env');
         if (fs.existsSync(envPath)) {
             const envFile = fs.readFileSync(envPath, 'utf-8');
-            const match = envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m);
-            if (match) {
-                devUrl = match[1].trim();
+            const customDevUrl = isIosDev
+                ? envFile.match(/^CAPACITOR_IOS_URL=(.*)$/m)?.[1]?.trim()
+                : envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m)?.[1]?.trim();
+
+            if (customDevUrl) {
+                devUrl = customDevUrl;
                 devHostname = new URL(devUrl).hostname;
             }
         }
     } catch (e) {
-        console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
+        console.warn('Could not read custom dev URL from .env', e);
     }
 }
 
@@ -38,10 +43,10 @@ const config: CapacitorConfig = {
     server: {
         url: isDev ? devUrl : prodUrl,
         cleartext: isDev,
-        // The hostname MUST match your production domain in production, or else cookies/CSRF will fail.
+        // The hostname MUST match your domain in production, or else cookies/CSRF will fail.
         hostname: isDev ? devHostname : prodHostname,
         // Allow all subdomains and the emulator IP for local development
-        allowNavigation: ['app.usekontrol.com', 'app.usekontrol.afuwapetunde.com', 'usekontrol.com'],
+        allowNavigation: ['app.usekontrol.com', 'app.usekontrol.afuwapetunde.com', 'app.kontrol.test', '*.kontrol.test', 'usekontrol.com'],
         // CRITICAL: Must be 'https' in production to support modern browser features (Geolocation, Cookies, etc.)
         androidScheme: isDev && !devUrl.startsWith('https') ? 'http' : 'https',
     },
