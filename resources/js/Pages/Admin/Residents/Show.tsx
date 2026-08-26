@@ -231,13 +231,13 @@ export default function Show({ resident, provenance, residence, financials, acti
                     <div className="pointer-events-none absolute -bottom-24 -left-24 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl" />
 
                     <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="flex items-start gap-3.5 sm:items-center sm:gap-4">
+                        <div className="flex min-w-0 flex-1 items-start gap-3.5 sm:items-center sm:gap-4">
                             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-tr from-blue-500 to-indigo-600 text-xl font-black text-white shadow-md sm:h-16 sm:w-16 sm:text-2xl">
                                 {resident.name.charAt(0).toUpperCase()}
                             </div>
-                            <div className="min-w-0 space-y-1.5">
+                            <div className="min-w-0 flex-1 space-y-1.5">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <h1 className="truncate text-lg font-black tracking-tight sm:text-2xl">{resident.name}</h1>
+                                    <h1 className="text-lg font-black tracking-tight sm:text-2xl">{resident.name}</h1>
                                     <span className="inline-flex items-center rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-bold text-white uppercase ring-1 ring-white/15 backdrop-blur-xs">
                                         {resident.role_label}
                                     </span>
@@ -251,17 +251,17 @@ export default function Show({ resident, provenance, residence, financials, acti
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300">
+                                <div className="flex flex-col gap-1 text-xs text-slate-300 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
                                     {resident.email && (
-                                        <a href={`mailto:${resident.email}`} className="flex items-center gap-1.5 hover:text-white">
+                                        <a href={`mailto:${resident.email}`} className="flex min-w-0 items-center gap-1.5 hover:text-white">
                                             <Mail className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                                             <span className="truncate">{resident.email}</span>
                                         </a>
                                     )}
                                     {resident.phone && (
-                                        <a href={`tel:${resident.phone}`} className="flex items-center gap-1.5 hover:text-white">
+                                        <a href={`tel:${resident.phone}`} className="flex min-w-0 items-center gap-1.5 hover:text-white">
                                             <Phone className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                            <span>{resident.phone}</span>
+                                            <span className="truncate">{resident.phone}</span>
                                         </a>
                                     )}
                                 </div>
