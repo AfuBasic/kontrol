@@ -15,6 +15,7 @@ use App\Services\Commission\CommissionService;
 use App\Services\Commission\PartnerAttributionService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
@@ -159,6 +160,67 @@ it('accrues partner commission when a resident subscription invoice is finalized
     ]);
 
     expect(CommissionableRevenue::where('partner_id', $partner->id)->count())->toBe(1);
+});
+
+it('backfills missing partner commissions for existing successful resident payments', function () {
+    [$partner, , $estate] = makePartneredEstate(
+        ['commission_rate' => 15, 'commission_type' => 'percentage', 'commission_length' => null],
+        ['commission_rate' => 15, 'commission_type' => 'percentage', 'duration_months' => null],
+    );
+
+    $billingPlan = Plan::factory()->create([
+        'price' => 200000,
+        'billing_interval' => 'monthly',
+    ]);
+
+    $resident = User::factory()->create(['email' => 'legacy-subscriber@example.com']);
+    $resident->estates()->attach($estate->id, ['status' => 'accepted']);
+
+    ResidentSubscription::factory()->create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => $billingPlan->id,
+        'status' => 'active',
+        'trial_ends_at' => null,
+        'current_period_start' => now()->subDay(),
+        'current_period_end' => now()->addMonth(),
+    ]);
+
+    $invoice = Invoice::factory()->create([
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'plan_id' => $billingPlan->id,
+        'amount' => 200000,
+        'status' => 'paid',
+        'paystack_reference' => 'legacy_ref_1',
+    ]);
+
+    $transaction = PaymentTransaction::create([
+        'invoice_id' => $invoice->id,
+        'estate_id' => $estate->id,
+        'user_id' => null,
+        'paystack_reference' => 'legacy_ref_1',
+        'idempotency_key' => 'legacy_ref_1',
+        'amount' => 200000,
+        'currency' => 'NGN',
+        'status' => 'success',
+        'payment_method' => 'card',
+        'customer_email' => $resident->email,
+        'verified_at' => now(),
+        'recorded_at' => now(),
+    ]);
+
+    expect(Artisan::call('kontrol:backfill-partner-commissions'))->toBe(0);
+
+    $revenue = CommissionableRevenue::where('payment_transaction_id', $transaction->id)->first();
+
+    expect($revenue)->not->toBeNull()
+        ->and($revenue->partner_id)->toBe($partner->id)
+        ->and($revenue->commission_amount)->toBe(30000)
+        ->and($transaction->fresh()->user_id)->toBe($resident->id);
+
+    expect(Artisan::call('kontrol:backfill-partner-commissions'))->toBe(0)
+        ->and(CommissionableRevenue::where('payment_transaction_id', $transaction->id)->count())->toBe(1);
 });
 
 it('starts commission tenure the day trial ends, not when resident was added', function () {
