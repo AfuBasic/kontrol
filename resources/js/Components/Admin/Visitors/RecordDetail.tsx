@@ -83,7 +83,7 @@ export default function RecordDetail({ record, checkoutEnabled, onClose }: Props
                                                 record.is_overstayed ? 'text-warning-700' : 'text-gray-800'
                                             }`}
                                         >
-                                            {formatStayDuration(record.duration_minutes)}
+                                            {formatStayDuration(record.duration_minutes, record)}
                                         </dd>
                                     </div>
                                 )}
