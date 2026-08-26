@@ -1,6 +1,6 @@
 import React from 'react';
-import { Clock, Users, ChevronRight } from 'lucide-react';
-import { ActiveVisitItem } from '@/Components/Visitors/ResidentActiveVisits';
+import { ChevronRight } from 'lucide-react';
+import type { ActiveVisitItem } from '@/Components/Visitors/ResidentActiveVisits';
 
 type Props = {
     activeVisits: ActiveVisitItem[];

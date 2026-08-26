@@ -31,7 +31,7 @@ type Props = {
     expectedTodayCount?: number;
 };
 
-export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, activeVisitCount = 0, expectedTodayCount = 0 }: Props) {
+export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, activeVisitCount = 0, expectedTodayCount: _expectedTodayCount = 0 }: Props) {
     const hostOptions = hosts ?? [];
     const activeView: ActivityView = filters.view === 'table' ? 'table' : 'activity';
 

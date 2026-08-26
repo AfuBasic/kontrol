@@ -278,7 +278,7 @@ export default function Visitors({
                                         <div>
                                             <p className="font-bold text-slate-900">{pass.visitor_name || 'Guest Pass'}</p>
                                             <p className="text-[10px] text-slate-500">
-                                                {pass.type.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                                                {(pass.type || 'single_use').replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">

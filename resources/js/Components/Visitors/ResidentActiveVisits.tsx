@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, Clock, ShieldCheck, Users } from 'lucide-react';
+import { Clock, Users } from 'lucide-react';
 import { formatStayDuration } from '@/Components/Admin/Visitors/types';
 
 export type ActiveVisitItem = {
