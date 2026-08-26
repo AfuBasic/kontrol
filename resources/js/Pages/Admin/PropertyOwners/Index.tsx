@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { properties, residents, create, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import PropertyOwnerCard from '@/Components/Admin/PropertyOwners/PropertyOwnerCard';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
@@ -451,15 +452,40 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                 {/* SECTION 4 - TABLE */}
                 <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
                     {propertyOwners.data.length > 0 ? (
-                        <div className="min-h-[280px] overflow-x-auto">
-                            <table className="w-full table-auto border-collapse">
+                        <>
+                            {/* Mobile Card Feed (< md) */}
+                            <div className="space-y-3 p-3 md:hidden">
+                                {propertyOwners.data.map((owner, idx) => (
+                                    <PropertyOwnerCard
+                                        key={owner.ulid}
+                                        owner={owner}
+                                        index={idx}
+                                        isSelected={selectedIds.includes(owner.id)}
+                                        onToggleSelect={toggleSelect}
+                                        onToggleSuspend={handleToggleSuspend}
+                                        onMakeResident={handleMakeResident}
+                                        onDeleteOwner={handleDeleteOwner}
+                                        onResendInvitation={handleResendInvitation}
+                                        isMenuOpen={menuOpenId === owner.id}
+                                        onToggleMenu={() => setMenuOpenId(menuOpenId === owner.id ? null : owner.id)}
+                                        onCloseMenu={() => setMenuOpenId(null)}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Desktop Table View (>= md) */}
+                            <div className="hidden min-h-[280px] overflow-x-auto md:block">
+                                <table className="w-full table-auto border-collapse">
                                 <thead className="border-b border-slate-100 bg-slate-50/70">
                                     <tr>
                                         {can('property_owners.delete') && (
                                             <th className="w-10 px-4 py-3.5 text-center">
                                                 <input
                                                     type="checkbox"
-                                                    checked={selectedIds.length === propertyOwners.data.length && propertyOwners.data.length > 0}
+                                                    checked={
+                                                        propertyOwners.data.length > 0 &&
+                                                        selectedIds.length === propertyOwners.data.length
+                                                    }
                                                     onChange={toggleSelectAll}
                                                     className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
                                                 />
@@ -475,7 +501,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                             Properties
                                         </th>
                                         <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Co-Residents
+                                            Tenants
                                         </th>
                                         <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                             Joined
@@ -607,20 +633,20 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                 {/* Actions */}
                                                 <td className="relative px-4 py-3.5 text-right">
                                                     <div className="flex items-center justify-end gap-1">
-                                                        {/* Direct Profile View */}
+                                                        {/* Direct Properties Link */}
                                                         <Link
-                                                            href={`/admin/residents/${owner.id}`}
+                                                            href={properties.url(owner.ulid)}
                                                             className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                            title="View Profile"
+                                                            title="View Properties"
                                                         >
-                                                            <Eye className="h-3.5 w-3.5" />
+                                                            <Building className="h-3.5 w-3.5" />
                                                         </Link>
 
-                                                        {/* Direct Profile Edit */}
+                                                        {/* Direct Edit Details */}
                                                         <Link
                                                             href={`/admin/property-owners/${owner.id}/edit`}
                                                             className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                            title="Edit Profile"
+                                                            title="Edit Details"
                                                         >
                                                             <Pencil className="h-3.5 w-3.5" />
                                                         </Link>
@@ -636,14 +662,6 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                             </button>
                                                         )}
 
-                                                        <button
-                                                            onClick={() => handleMakeResident(owner)}
-                                                            className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
-                                                            title="Convert to Resident"
-                                                        >
-                                                            <ShieldCheck className="h-3.5 w-3.5" />
-                                                        </button>
-
                                                         {/* Overflow menu */}
                                                         <button
                                                             onClick={() => setMenuOpenId(menuOpenId === owner.id ? null : owner.id)}
@@ -657,6 +675,20 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                             <>
                                                                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
                                                                 <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
+                                                                    <Link
+                                                                        href={properties.url(owner.ulid)}
+                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                    >
+                                                                        <Building className="h-3.5 w-3.5 text-slate-400" />
+                                                                        View Properties
+                                                                    </Link>
+                                                                    <Link
+                                                                        href={residents.url(owner.ulid)}
+                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                    >
+                                                                        <Users className="h-3.5 w-3.5 text-slate-400" />
+                                                                        View Residents
+                                                                    </Link>
                                                                     <button
                                                                         onClick={() => {
                                                                             handleToggleSuspend(owner.id);
@@ -667,16 +699,18 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                                         <UserMinus className="h-3.5 w-3.5 text-slate-400" />
                                                                         {owner.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
                                                                     </button>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleMakeResident(owner);
-                                                                            setMenuOpenId(null);
-                                                                        }}
-                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                    >
-                                                                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                                                        Convert to Resident
-                                                                    </button>
+                                                                    {!owner.is_resident && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                handleMakeResident(owner);
+                                                                                setMenuOpenId(null);
+                                                                            }}
+                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50"
+                                                                        >
+                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                                            Assign Resident Role
+                                                                        </button>
+                                                                    )}
                                                                     <button
                                                                         onClick={() => {
                                                                             handleDeleteOwner(owner.id);
@@ -698,6 +732,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                 </tbody>
                             </table>
                         </div>
+                        </>
                     ) : (
                         /* Redesigned Empty State */
                         <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
@@ -725,28 +760,68 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
 
                 {/* Pagination */}
                 {propertyOwners.last_page > 1 && (
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
-                        <p className="text-slate-505 text-xs font-bold">
-                            Showing <span className="text-slate-950">{propertyOwners.data.length}</span> of{' '}
-                            <span className="text-slate-950">{propertyOwners.total}</span> landlords
-                        </p>
-                        <div className="flex gap-1.5">
-                            {propertyOwners.links.map((link, idx) => (
+                    <div className="flex items-center justify-between border-t border-slate-100 px-2 pt-5 pb-8 sm:px-0">
+                        {/* Mobile Prev / Next */}
+                        <div className="flex w-full items-center justify-between sm:hidden">
+                            {propertyOwners.links[0]?.url ? (
                                 <Link
-                                    key={idx}
-                                    href={link.url || '#'}
+                                    href={propertyOwners.links[0].url}
                                     preserveScroll
                                     preserveState
-                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                                        link.active
-                                            ? 'bg-slate-950 text-white shadow-sm'
-                                            : link.url
-                                              ? 'text-slate-655 border-slate-205 border bg-white hover:bg-slate-50'
-                                              : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50'
-                                    }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ))}
+                                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                >
+                                    &larr; Previous
+                                </Link>
+                            ) : (
+                                <span className="inline-flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-900">
+                                    &larr; Previous
+                                </span>
+                            )}
+
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                Page {propertyOwners.current_page} of {propertyOwners.last_page}
+                            </span>
+
+                            {propertyOwners.links[propertyOwners.links.length - 1]?.url ? (
+                                <Link
+                                    href={propertyOwners.links[propertyOwners.links.length - 1].url!}
+                                    preserveScroll
+                                    preserveState
+                                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                >
+                                    Next &rarr;
+                                </Link>
+                            ) : (
+                                <span className="inline-flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-900">
+                                    Next &rarr;
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Desktop Numbers */}
+                        <div className="hidden sm:flex sm:w-full sm:items-center sm:justify-between">
+                            <p className="text-slate-500 text-xs font-bold dark:text-slate-400">
+                                Showing <span className="text-slate-950 dark:text-slate-100">{propertyOwners.data.length}</span> of{' '}
+                                <span className="text-slate-950 dark:text-slate-100">{propertyOwners.total}</span> landlords
+                            </p>
+                            <div className="flex gap-1.5">
+                                {propertyOwners.links.map((link, idx) => (
+                                    <Link
+                                        key={idx}
+                                        href={link.url || '#'}
+                                        preserveScroll
+                                        preserveState
+                                        className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                            link.active
+                                                ? 'bg-slate-950 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900'
+                                                : link.url
+                                                  ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
+                                                  : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50 dark:border-slate-800 dark:text-slate-600'
+                                        }`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
