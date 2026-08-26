@@ -7,7 +7,7 @@ import {
     ResolvedDecision,
     resolveVerificationDecision,
     ValidationResult,
-} from './verificationDecision';
+} from '@/Components/Security/verificationDecision';
 
 interface VerificationResultCardProps {
     result: ValidationResult;
