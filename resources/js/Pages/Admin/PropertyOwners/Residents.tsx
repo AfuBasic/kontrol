@@ -6,8 +6,6 @@ import {
     Phone,
     UserPlus,
     Search,
-    ArrowLeft,
-    ShieldCheck,
     Building2,
     Eye,
     Plus,
