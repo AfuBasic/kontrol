@@ -213,20 +213,41 @@ export default function CollectionsIndex({
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
     const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
-    const [search, setSearch] = useState(filters.search || '');
-    const [statusFilter, setStatusFilter] = useState(filters.status || '');
-    const debouncedSearch = useDebounce(search, 300);
-    const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-    const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'list'>('overview');
+    const getInitialTab = (): 'overview' | 'list' => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab');
+            if (tabParam === 'list' || tabParam === 'overview') {
+                return tabParam;
+            }
+        }
+        return 'overview';
+    };
+
+    const [activeTab, setActiveTab] = useState<'overview' | 'list'>(getInitialTab);
     const { quality, isOnline } = useNetworkQuality();
     const skipCharts = quality === 'poor' || quality === 'offline' || !isOnline;
 
+    const handleTabChange = (tab: 'overview' | 'list') => {
+        setActiveTab(tab);
+        const url = new URL(window.location.href);
+        if (tab === 'list') {
+            url.searchParams.set('tab', 'list');
+        } else {
+            url.searchParams.delete('tab');
+        }
+        window.history.replaceState({}, '', url.toString());
+    };
+
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(index.url(), { search: debouncedSearch, status: statusFilter }, { preserveState: true, preserveScroll: true, replace: true });
+            const queryParamsObj: Record<string, string> = { search: debouncedSearch, status: statusFilter };
+            if (activeTab === 'list') {
+                queryParamsObj.tab = 'list';
+            }
+            router.get(index.url(), queryParamsObj, { preserveState: true, preserveScroll: true, replace: true });
         }
-    }, [debouncedSearch, filters.search, statusFilter]);
+    }, [debouncedSearch, filters.search, statusFilter, activeTab]);
 
     useEffect(() => {
         if (skipCharts) {
@@ -439,7 +460,7 @@ export default function CollectionsIndex({
                 {showFinancialDashboard && (
                     <div className="flex border-b border-slate-200">
                         <button
-                            onClick={() => setActiveTab('overview')}
+                            onClick={() => handleTabChange('overview')}
                             className={cn(
                                 'border-b-2 px-6 py-3 text-xs font-black tracking-wider uppercase transition-all',
                                 activeTab === 'overview'
@@ -450,7 +471,7 @@ export default function CollectionsIndex({
                             Overview
                         </button>
                         <button
-                            onClick={() => setActiveTab('list')}
+                            onClick={() => handleTabChange('list')}
                             className={cn(
                                 'border-b-2 px-6 py-3 text-xs font-black tracking-wider uppercase transition-all',
                                 activeTab === 'list' ? 'border-[#1F6FDB] text-[#1F6FDB]' : 'border-transparent text-slate-400 hover:text-slate-700',

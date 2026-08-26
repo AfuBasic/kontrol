@@ -1,7 +1,7 @@
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    
+    ArrowLeft,
     Clock,
     Users,
     CheckCircle,
@@ -529,17 +529,27 @@ export default function ShowCollection({
                     <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-white/5" />
                     <div className="pointer-events-none absolute -bottom-8 -left-8 h-48 w-48 rounded-full bg-white/3" />
 
-                    {/* Breadcrumb */}
-                    <nav className="relative mb-8 flex items-center gap-2">
+                    {/* Breadcrumb & Back Button */}
+                    <div className="relative mb-6 flex flex-wrap items-center justify-between gap-3">
+                        <nav className="flex items-center gap-2">
+                            <Link
+                                href="/admin/collections?tab=list"
+                                className="text-xs font-bold tracking-widest text-white/60 uppercase transition-colors hover:text-white"
+                            >
+                                Collections
+                            </Link>
+                            <ChevronRight className="h-3 w-3 text-white/30" />
+                            <span className="text-xs font-bold tracking-widest text-white/90 uppercase">Details</span>
+                        </nav>
+
                         <Link
-                            href={index.url()}
-                            className="text-xs font-bold tracking-widest text-white/50 uppercase transition-colors hover:text-white"
+                            href="/admin/collections?tab=list"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-xs font-bold text-white shadow-xs backdrop-blur-md transition hover:bg-white/20 active:scale-95"
                         >
-                            Collections
+                            <ArrowLeft className="h-3.5 w-3.5" />
+                            <span>Back to Collections</span>
                         </Link>
-                        <ChevronRight className="h-3 w-3 text-white/30" />
-                        <span className="text-xs font-bold tracking-widest text-white/80 uppercase">Details</span>
-                    </nav>
+                    </div>
 
                     <div className="relative flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
                         {/* Left - Title + Revenue */}
