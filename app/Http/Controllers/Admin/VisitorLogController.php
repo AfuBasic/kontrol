@@ -9,6 +9,7 @@ use App\Models\Estate;
 use App\Models\User;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
+use App\Services\Visitor\ActiveVisitService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -20,7 +21,8 @@ use Throwable;
 class VisitorLogController extends Controller
 {
     public function __construct(
-        protected EstateContextService $estateContext
+        protected EstateContextService $estateContext,
+        protected ActiveVisitService $activeVisitService,
     ) {}
 
     /**
@@ -56,9 +58,9 @@ class VisitorLogController extends Controller
             'hosts' => Inertia::defer(fn () => $this->hostsForFilters($estate)),
             'securityOfficers' => Inertia::defer(fn () => $this->securityOfficersForFilters($estate)),
             'checkoutEnabled' => $checkoutEnabled,
-            'currentlyInsideList' => $checkoutEnabled
-                ? $this->safe(fn () => $this->buildCurrentlyInsideList($estate->id), [])
-                : [],
+            'activeVisitCount' => $checkoutEnabled
+                ? $this->activeVisitService->countEstateActiveVisits($estate->id)
+                : 0,
             'expectedTodayCount' => $this->safe(fn () => $this->buildExpectedTodayCount($estate->id), 0),
         ]);
     }
