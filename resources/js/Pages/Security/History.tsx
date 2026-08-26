@@ -1,6 +1,6 @@
 import { Head, router, InfiniteScroll } from '@inertiajs/react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, MapPin, Phone, UserPlus, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, UserPlus, Loader2, MapPin, Phone } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import { MobileInput, MobileSelect } from '@/Components/MobileInputs';

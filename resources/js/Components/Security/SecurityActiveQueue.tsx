@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
-import { Car, CheckCircle2, Clock, LogOut, ShieldAlert, Users, X } from 'lucide-react';
+import { Car, Clock, LogOut, Users, X } from 'lucide-react';
 import { formatStayDuration } from '@/Components/Admin/Visitors/types';
 import MobileSheet from '@/Components/MobileSheet';
 

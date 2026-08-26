@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Car, Pause, Play, ShieldAlert, WifiOff } from 'lucide-react';
+import { Car, Pause, Play } from 'lucide-react';
 import {
-    formatDateTimeSafe,
-    formatStayDurationSafe,
-    ResolvedDecision,
     resolveVerificationDecision,
-    ValidationResult,
+    type ResolvedDecision,
+    type ValidationResult,
 } from '@/Components/Security/verificationDecision';
 
 interface VerificationResultCardProps {

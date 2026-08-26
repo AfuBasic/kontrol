@@ -1,24 +1,13 @@
-import React from 'react';
+import type React from 'react';
 import {
-    AlertCircle,
     AlertTriangle,
     Ban,
-    Calendar,
-    Car,
     CheckCircle2,
     Clock,
-    DoorOpen,
-    HelpCircle,
-    Info,
     LogOut,
-    MapPin,
-    Pause,
-    Play,
-    Shield,
     ShieldAlert,
     ShieldCheck,
     ShieldX,
-    User,
     WifiOff,
 } from 'lucide-react';
 
