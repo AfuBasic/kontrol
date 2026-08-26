@@ -509,7 +509,7 @@ export default function SecurityVerify() {
         <>
             <Head title="Verify Access · Security" />
 
-            <main className={`mx-auto flex w-full max-w-xl flex-1 flex-col ${result ? '-mx-4 -mt-4 sm:mx-0 sm:mt-0' : 'px-4 pt-8 pb-6 sm:px-8'}`}>
+            <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 py-4 sm:px-8 sm:py-6">
                 {/* Offline & Sync Status Banner */}
                 <AnimatePresence>
                     {!isOnline && (
