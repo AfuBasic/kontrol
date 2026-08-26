@@ -74,13 +74,31 @@ export function hasActiveVisitorFilters(filters: VisitorFilters): boolean {
 
 /**
  * Format elapsed stay duration in a guest-book style (e.g. "12m", "1h 05m").
+ * For visitors still on the property, dynamically computes elapsed time from verified_at_iso if provided.
  */
-export function formatStayDuration(minutes: number | null | undefined): string {
-    if (minutes == null || Number.isNaN(minutes)) {
+export function formatStayDuration(
+    minutes: number | null | undefined,
+    record?: { verified_at_iso?: string | null; checked_out_at?: string | null; verified_at?: string | null },
+): string {
+    let totalMinutes = minutes;
+
+    // If visitor is currently on property and we have verified_at timestamp, calculate live elapsed minutes
+    if (record && !record.checked_out_at && (record.verified_at_iso || record.verified_at)) {
+        const verifiedIso = record.verified_at_iso || record.verified_at;
+        const verifiedTime = new Date(verifiedIso!).getTime();
+        if (!Number.isNaN(verifiedTime)) {
+            const diffMs = Date.now() - verifiedTime;
+            if (diffMs >= 0) {
+                totalMinutes = Math.floor(diffMs / 60000);
+            }
+        }
+    }
+
+    if (totalMinutes == null || Number.isNaN(totalMinutes)) {
         return '-';
     }
 
-    const total = Math.max(0, Math.floor(minutes));
+    const total = Math.max(0, Math.floor(totalMinutes));
     if (total === 0) {
         return '<1m';
     }
