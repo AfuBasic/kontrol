@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
+use App\Services\Notifications\NotificationContextService;
 use App\Services\Resident\AccessCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -13,14 +14,14 @@ class ActivityController extends Controller
 {
     public function __construct(
         protected AccessCodeService $accessCodeService,
+        private NotificationContextService $notificationContext,
     ) {}
 
     public function __invoke(Request $request): Response
     {
         $user = Auth::user();
 
-        // Capture unread count for the tab
-        $unreadCount = $user->unreadNotifications()->count();
+        $unreadCount = $this->notificationContext->unreadCountForCurrentContext($user);
 
         $search = $request->input('search');
 
@@ -30,7 +31,7 @@ class ActivityController extends Controller
             'filters' => [
                 'search' => $search,
             ],
-            'notifications' => $user->notifications()->take(20)->get()->map(function ($notification) {
+            'notifications' => $this->notificationContext->scopeToCurrentContext($user->notifications())->take(20)->get()->map(function ($notification) {
                 return [
                     'id' => $notification->id,
                     'type' => class_basename($notification->type),
