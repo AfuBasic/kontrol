@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 
 const VIEWPORT_HEIGHT_VARIABLE = '--app-viewport-height';
 const KEYBOARD_HEIGHT_VARIABLE = '--app-keyboard-height';
+const SAFE_AREA_TOP_STABLE_VARIABLE = '--safe-area-inset-top-stable';
 const KEYBOARD_OPEN_ATTRIBUTE = 'data-keyboard-open';
 const KEYBOARD_THRESHOLD = 100;
 
@@ -42,6 +43,16 @@ export default function useNativeViewport(): void {
             root.style.setProperty(VIEWPORT_HEIGHT_VARIABLE, `${viewportHeight}px`);
             root.style.setProperty(KEYBOARD_HEIGHT_VARIABLE, `${keyboardOpen ? keyboardHeight : 0}px`);
             root.setAttribute(KEYBOARD_OPEN_ATTRIBUTE, String(keyboardOpen));
+
+            // iOS zeros env(safe-area-inset-top) while the keyboard is open.
+            // Freeze the last closed-keyboard inset so the header cannot slide under the status bar.
+            if (!keyboardOpen) {
+                const safeAreaTop = getComputedStyle(root).getPropertyValue('--safe-area-inset-top').trim();
+
+                if (safeAreaTop && safeAreaTop !== '0px') {
+                    root.style.setProperty(SAFE_AREA_TOP_STABLE_VARIABLE, safeAreaTop);
+                }
+            }
         };
 
         const scheduleSync = () => {
@@ -86,6 +97,7 @@ export default function useNativeViewport(): void {
             timers.forEach((timer) => window.clearTimeout(timer));
             root.style.removeProperty(VIEWPORT_HEIGHT_VARIABLE);
             root.style.removeProperty(KEYBOARD_HEIGHT_VARIABLE);
+            root.style.removeProperty(SAFE_AREA_TOP_STABLE_VARIABLE);
             root.removeAttribute(KEYBOARD_OPEN_ATTRIBUTE);
 
             window.removeEventListener('resize', scheduleSettledSync);

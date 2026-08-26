@@ -309,14 +309,11 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
     return (
         <div className={`flex min-h-screen flex-col ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
             <OfflineBanner variant="security" />
-            {/* Single Header with Safe Area integrated */}
-            <motion.header
+            {/* Fixed header so keyboard / visual-viewport resize cannot pull it under the status bar */}
+            <header
                 id="kontrol-security-header"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
-                className={`pt-safe sticky top-0 z-[60] border-b backdrop-blur-xl ${
-                    isDark ? 'border-slate-800/80 bg-slate-950/95 text-white' : 'border-slate-100 bg-white/80 text-slate-900'
+                className={`fixed inset-x-0 top-0 z-[60] border-b pt-[var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))] ${
+                    isDark ? 'border-slate-800/80 bg-slate-950 text-white' : 'border-slate-100 bg-white text-slate-900'
                 }`}
             >
                 <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
@@ -353,7 +350,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                         <div className="hidden sm:block">
                             <ContextSwitcher variant={variant} />
                         </div>
-                        <SystemHealthMonitor size="md" />
+                        <SystemHealthMonitor size="sm" />
                         <div
                             className={`flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold ${
                                 isDark
@@ -370,9 +367,9 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                         </div>
                     </div>
                 </div>
-            </motion.header>
+            </header>
 
-            <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-4 pb-24">
+            <main className="mx-auto w-full max-w-lg flex-1 px-4 pt-[calc(3.5rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1rem)] pb-[calc(5.75rem+env(safe-area-inset-bottom,0px))]">
                 <PullToRefresh>{children}</PullToRefresh>
             </main>
 
@@ -383,7 +380,7 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, delay: 0.05 }}
-                    className="pb-safe fixed inset-x-0 bottom-0 z-40 bg-white/85 backdrop-blur-xl"
+                    className="fixed inset-x-0 bottom-0 z-40 bg-white pb-[env(safe-area-inset-bottom,0px)]"
                 >
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-slate-200/80" aria-hidden="true" />
                     <div className="mx-auto max-w-lg px-2">

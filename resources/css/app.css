@@ -436,6 +436,7 @@ html.dark .kontrol-form-validation-error {
     --safe-area-inset-bottom: 0px;
     --safe-area-inset-left: 0px;
     --safe-area-inset-right: 0px;
+    --safe-area-inset-top-stable: var(--safe-area-inset-top);
 }
 
 @supports (padding-top: env(safe-area-inset-top)) {
@@ -444,6 +445,7 @@ html.dark .kontrol-form-validation-error {
         --safe-area-inset-bottom: env(safe-area-inset-bottom);
         --safe-area-inset-left: env(safe-area-inset-left);
         --safe-area-inset-right: env(safe-area-inset-right);
+        --safe-area-inset-top-stable: env(safe-area-inset-top);
     }
 
     .pt-safe {
