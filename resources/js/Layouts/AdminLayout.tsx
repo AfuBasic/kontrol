@@ -6,9 +6,7 @@ import {
     BellIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    ChevronDownIcon,
     CreditCardIcon,
-    ShieldCheckIcon,
     UserCircleIcon,
     XMarkIcon,
     BuildingOfficeIcon,
@@ -34,7 +32,6 @@ import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardC
 
 import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
-import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 
 
 
