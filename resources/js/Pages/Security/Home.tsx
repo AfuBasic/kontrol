@@ -57,6 +57,7 @@ export default function SecurityCommandCenter() {
     const estateName = props.estateName ?? '';
     const gateName = props.gateName ?? 'Main Entrance';
     const guardName = props.guardName ?? '';
+    const checkoutEnabled = Boolean(props.checkoutEnabled);
     const stats = props.stats ?? EMPTY_STATS;
     const recentActivity = props.recentActivity ?? [];
     const [clock, setClock] = useState(formatClock());
