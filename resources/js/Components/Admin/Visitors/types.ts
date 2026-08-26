@@ -81,6 +81,9 @@ export function formatStayDuration(minutes: number | null | undefined): string {
     }
 
     const total = Math.max(0, Math.floor(minutes));
+    if (total === 0) {
+        return '<1m';
+    }
     if (total < 60) {
         return `${total}m`;
     }
