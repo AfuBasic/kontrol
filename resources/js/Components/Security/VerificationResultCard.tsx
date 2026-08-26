@@ -183,8 +183,8 @@ export default function VerificationResultCard({
                 )}
             </div>
 
-            {/* 4. ACTIONS & AUTO-RETURN BAR (Sticky Bottom Dock) */}
-            <div className="mt-6 border-t border-slate-100 bg-white pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] dark:border-slate-800 dark:bg-slate-900">
+            {/* 4. ACTIONS & AUTO-RETURN BAR */}
+            <div className="mt-4 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
                 {/* Optional Vehicle Input for check-ins with vehicle */}
                 {result.valid && result.has_vehicle && decision.actionType === 'admit' && (
                     <div className="mb-4">
