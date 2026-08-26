@@ -47,6 +47,50 @@ class ActivityService
         if ($module && $module !== 'all') {
             $query->where(function ($q) use ($module) {
                 $q->where('activity_log.log_name', $module);
+
+                // Fallback for older activities logged with log_name = 'default'
+                $q->orWhere(function ($sub) use ($module) {
+                    $sub->where(function ($defaultLog) {
+                        $defaultLog->whereNull('activity_log.log_name')
+                            ->orWhere('activity_log.log_name', 'default');
+                    });
+
+                    match ($module) {
+                        'people' => $sub->where(function ($p) {
+                            $p->where('activity_log.description', 'like', '%resident%')
+                                ->orWhere('activity_log.description', 'like', '%property owner%')
+                                ->orWhere('activity_log.description', 'like', '%household%');
+                        }),
+                        'incidents' => $sub->where(function ($p) {
+                            $p->where('activity_log.subject_type', 'like', '%Incident%')
+                                ->orWhere('activity_log.description', 'like', '%incident%');
+                        }),
+                        'announcements' => $sub->where(function ($p) {
+                            $p->where('activity_log.subject_type', 'like', '%EstateBoard%')
+                                ->orWhere('activity_log.description', 'like', '%board%')
+                                ->orWhere('activity_log.description', 'like', '%announcement%')
+                                ->orWhere('activity_log.description', 'like', '%comment%');
+                        }),
+                        'access' => $sub->where(function ($p) {
+                            $p->where('activity_log.subject_type', 'like', '%AccessCode%')
+                                ->orWhere('activity_log.description', 'like', '%access code%')
+                                ->orWhere('activity_log.description', 'like', '%visitor%')
+                                ->orWhere('activity_log.description', 'like', '%checkpoint%');
+                        }),
+                        'security' => $sub->where('activity_log.description', 'like', '%security%'),
+                        'roles' => $sub->where(function ($p) {
+                            $p->where('activity_log.description', 'like', '%role%')
+                                ->orWhere('activity_log.description', 'like', '%admin%')
+                                ->orWhere('activity_log.description', 'like', '%permission%');
+                        }),
+                        'zones' => $sub->where('activity_log.description', 'like', '%zone%'),
+                        'finance' => $sub->where(function ($p) {
+                            $p->where('activity_log.description', 'like', '%invoice%')
+                                ->orWhere('activity_log.description', 'like', '%payment%');
+                        }),
+                        default => null,
+                    };
+                });
             });
         }
 
