@@ -82,186 +82,221 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
         <>
             <Head title={`Notifications - ${name}`} />
 
-            <div className="sm:flex sm:items-center sm:justify-between">
-                <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">Notifications</h1>
-                    <p className="mt-1 text-sm text-gray-500">View and manage your system notifications.</p>
-                </div>
-                <div className="mt-4 flex items-center gap-2 sm:mt-0 sm:ml-16 sm:flex-none">
-                    <button
-                        onClick={markAllAsRead}
-                        className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-gray-50"
-                    >
-                        <CheckCircleIcon className="h-5 w-5 text-gray-400" />
-                        Mark all read
-                    </button>
-                    <button
-                        onClick={clearAll}
-                        className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-semibold text-rose-600 shadow-sm ring-1 ring-gray-300 ring-inset hover:bg-rose-50 hover:ring-rose-200"
-                    >
-                        <TrashIcon className="h-5 w-5 text-rose-400" />
-                        Clear all
-                    </button>
-                </div>
-            </div>
-
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                {/* Search */}
-                <form onSubmit={handleSearch} className="relative w-full max-w-sm flex-1" noValidate>
-                    <div className="relative rounded-xl bg-white">
-                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
-                        </div>
-                        <input
-                            type="search"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search notifications..."
-                            className="block w-full rounded-lg border-gray-300 py-2.5 pr-3 pl-10 text-gray-900 shadow-sm focus:border-primary-500 focus:ring-slate-900 sm:text-sm"
-                        />
+            <div className="mx-auto max-w-4xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+                {/* Header with Title and Quick Actions */}
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="font-bold text-2xl text-slate-900 tracking-tight sm:text-3xl dark:text-slate-100">
+                            Notifications
+                        </h1>
+                        <p className="mt-1 text-slate-500 text-sm dark:text-slate-400">
+                            View and manage your system notifications.
+                        </p>
                     </div>
-                </form>
 
-                {/* Filters */}
-                <div className="flex gap-2">
-                    {['all', 'unread', 'read'].map((f) => (
+                    <div className="flex items-center gap-2">
                         <button
-                            key={f}
-                            onClick={() => handleTypeChange(f)}
-                            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-                                type === f
-                                    ? 'bg-slate-950 text-white shadow-sm'
-                                    : 'bg-white text-gray-600 ring-1 ring-gray-200 ring-inset hover:bg-gray-50'
-                            }`}
+                            type="button"
+                            onClick={markAllAsRead}
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 font-medium text-xs text-slate-700 shadow-xs transition-colors hover:bg-slate-50 sm:flex-none sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
-                            {f.charAt(0).toUpperCase() + f.slice(1)}
+                            <CheckCircleIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            <span>Mark all read</span>
                         </button>
-                    ))}
+                        <button
+                            type="button"
+                            onClick={clearAll}
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 font-medium text-rose-600 text-xs shadow-xs transition-colors hover:bg-rose-50 sm:flex-none sm:text-sm dark:border-rose-900/40 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                        >
+                            <TrashIcon className="h-4 w-4 text-rose-500" />
+                            <span>Clear all</span>
+                        </button>
+                    </div>
                 </div>
-            </div>
 
-            <div className="mt-6 flow-root">
-                <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-                            {notifications.data.length > 0 ? (
-                                <ul role="list" className="divide-y divide-gray-100 bg-white">
-                                    {notifications.data.map((notification) => (
-                                        <li
-                                            key={notification.id}
-                                            onClick={() => {
-                                                const url = notification.data.action_url || (notification.data as any).url;
-                                                if (url) {
-                                                    router.visit(url);
-                                                }
-                                            }}
-                                            className={`relative flex justify-between gap-x-6 px-4 py-5 hover:bg-gray-50 sm:px-6 ${
-                                                !notification.read_at ? 'bg-primary-50/30' : ''
-                                            } ${notification.data.action_url || (notification.data as any).url ? 'cursor-pointer' : ''}`}
-                                        >
-                                            <div className="flex min-w-0 gap-x-4">
-                                                <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-primary-100">
-                                                    <BellIcon className="h-5 w-5 text-primary-600" />
-                                                </div>
-                                                <div className="min-w-0 flex-auto">
-                                                    <p className="text-sm leading-6 font-semibold text-gray-900">
-                                                        {notification.data.message || 'New notification'}
-                                                    </p>
-                                                    <p className="mt-1 flex text-xs leading-5 text-gray-500">
-                                                        <time dateTime={notification.created_at}>
-                                                            {new Date(notification.created_at).toLocaleDateString(undefined, {
-                                                                year: 'numeric',
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                hour: '2-digit',
-                                                                minute: '2-digit',
-                                                            })}
-                                                        </time>
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div className="flex shrink-0 items-center gap-x-4">
-                                                {!notification.read_at && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            markAsRead(notification.id);
-                                                        }}
-                                                        className="relative z-10 text-sm font-medium text-primary-600 hover:text-primary-500"
-                                                    >
-                                                        Mark as read
-                                                    </button>
-                                                )}
-                                                {/* <ChevronRightIcon className="h-5 w-5 flex-none text-gray-400" aria-hidden="true" /> */}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center bg-white py-12 text-center">
-                                    <div className="rounded-full bg-gray-100 p-3">
-                                        <BellIcon className="h-8 w-8 text-gray-400" />
-                                    </div>
-                                    <h3 className="mt-2 text-sm font-semibold text-gray-900">No notifications found</h3>
-                                    <p className="mt-1 text-sm text-gray-500">Try adjusting your search or filter to find what you're looking for.</p>
-                                </div>
-                            )}
+                {/* Search & Tabs */}
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    {/* Search */}
+                    <form onSubmit={handleSearch} className="relative flex-1" noValidate>
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
+                                <MagnifyingGlassIcon className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                            </div>
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Search notifications..."
+                                className="block w-full rounded-xl border border-slate-200 bg-white py-2 pr-3 pl-10 text-slate-900 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-slate-100 dark:focus:ring-slate-100"
+                            />
                         </div>
+                    </form>
+
+                    {/* Filter Tabs */}
+                    <div className="no-scrollbar -mx-4 flex items-center gap-1.5 overflow-x-auto px-4 py-1 sm:mx-0 sm:px-0">
+                        {['all', 'unread', 'read'].map((f) => (
+                            <button
+                                key={f}
+                                type="button"
+                                onClick={() => handleTypeChange(f)}
+                                className={`inline-flex shrink-0 items-center justify-center rounded-xl px-3.5 py-1.5 font-medium text-xs transition-all select-none ${
+                                    type === f
+                                        ? 'bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900'
+                                        : 'border border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
+                                }`}
+                            >
+                                {f.charAt(0).toUpperCase() + f.slice(1)}
+                            </button>
+                        ))}
                     </div>
                 </div>
-            </div>
 
-            {/* Pagination Component */}
-            {notifications.total > notifications.data.length && (
-                <div className="mt-4 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-                    <div className="flex flex-1 justify-between sm:hidden">
-                        {notifications.links[0].url && (
-                            <Link
-                                href={notifications.links[0].url}
-                                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Previous
-                            </Link>
-                        )}
-                        {notifications.links[notifications.links.length - 1].url && (
-                            <Link
-                                href={notifications.links[notifications.links.length - 1].url!}
-                                className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                            >
-                                Next
-                            </Link>
-                        )}
-                    </div>
-                    {/* Simplified Desktop Pagination */}
-                    <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-sm text-gray-700">
-                                Showing <span className="font-medium">{notifications.from}</span> to{' '}
-                                <span className="font-medium">{notifications.to}</span> of <span className="font-medium">{notifications.total}</span>{' '}
-                                results
+                {/* Notifications List */}
+                <div className="mt-5 space-y-2.5">
+                    {notifications.data.length > 0 ? (
+                        notifications.data.map((notification) => {
+                            const url = notification.data.action_url || (notification.data as any).url;
+
+                            return (
+                                <div
+                                    key={notification.id}
+                                    onClick={() => {
+                                        if (url) {
+                                            router.visit(url);
+                                        }
+                                    }}
+                                    className={`group relative flex items-start gap-3.5 rounded-2xl border p-4 transition-all duration-200 sm:p-5 ${
+                                        !notification.read_at
+                                            ? 'border-indigo-200/80 bg-indigo-50/20 hover:border-indigo-300 dark:border-indigo-900/40 dark:bg-indigo-950/20'
+                                            : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700'
+                                    } ${url ? 'cursor-pointer' : ''}`}
+                                >
+                                    {/* Icon Badge */}
+                                    <div
+                                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-200 group-hover:scale-105 ${
+                                            !notification.read_at
+                                                ? 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/60 dark:text-indigo-300'
+                                                : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                                        }`}
+                                    >
+                                        <BellIcon className="h-5 w-5" />
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <p className="font-semibold text-slate-900 text-sm leading-snug break-words dark:text-slate-100">
+                                                {notification.data.message || 'New notification'}
+                                            </p>
+                                            {!notification.read_at && (
+                                                <span className="h-2 w-2 shrink-0 rounded-full bg-indigo-600 ring-4 ring-indigo-100 dark:bg-indigo-400 dark:ring-indigo-950/60" />
+                                            )}
+                                        </div>
+
+                                        <div className="mt-2 flex items-center justify-between gap-2">
+                                            <time className="text-slate-400 text-xs dark:text-slate-500">
+                                                {new Date(notification.created_at).toLocaleDateString(undefined, {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
+                                            </time>
+
+                                            {!notification.read_at && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        markAsRead(notification.id);
+                                                    }}
+                                                    className="font-medium text-indigo-600 text-xs hover:text-indigo-500 hover:underline dark:text-indigo-400"
+                                                >
+                                                    Mark as read
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })
+                    ) : (
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 border-dashed bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+                                <BellIcon className="h-6 w-6" />
+                            </div>
+                            <h3 className="mt-4 font-semibold text-base text-slate-900 dark:text-slate-100">
+                                No notifications found
+                            </h3>
+                            <p className="mt-1 max-w-sm text-slate-500 text-sm dark:text-slate-400">
+                                Try adjusting your search keywords or switching filters.
                             </p>
                         </div>
-                        <div>
-                            <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                                {notifications.links.map((link, i) => (
-                                    <Link
-                                        key={i}
-                                        href={link.url || '#'}
-                                        className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
-                                            link.active
-                                                ? 'z-10 bg-slate-950 text-white focus:z-20 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-slate-900'
-                                                : 'text-gray-900 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
-                                        } ${i === 0 ? 'rounded-l-md' : ''} ${
-                                            i === notifications.links.length - 1 ? 'rounded-r-md' : ''
-                                        } ${!link.url ? 'pointer-events-none opacity-50' : ''}`}
-                                        dangerouslySetInnerHTML={{ __html: link.label }}
-                                    />
-                                ))}
-                            </nav>
+                    )}
+                </div>
+
+                {/* Pagination Component */}
+                {notifications.total > notifications.data.length && (
+                    <div className="mt-6 flex items-center justify-between rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex flex-1 justify-between sm:hidden">
+                            {notifications.links[0]?.url ? (
+                                <Link
+                                    href={notifications.links[0].url}
+                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    Previous
+                                </Link>
+                            ) : (
+                                <span className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 font-medium text-slate-400 text-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600">
+                                    Previous
+                                </span>
+                            )}
+                            {notifications.links[notifications.links.length - 1]?.url ? (
+                                <Link
+                                    href={notifications.links[notifications.links.length - 1].url!}
+                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                    Next
+                                </Link>
+                            ) : (
+                                <span className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 font-medium text-slate-400 text-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600">
+                                    Next
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Desktop Pagination */}
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-slate-500 text-xs dark:text-slate-400">
+                                    Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{notifications.from}</span> to{' '}
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">{notifications.to}</span> of{' '}
+                                    <span className="font-semibold text-slate-700 dark:text-slate-200">{notifications.total}</span> notifications
+                                </p>
+                            </div>
+                            <div>
+                                <nav className="isolate inline-flex -space-x-px rounded-lg shadow-xs" aria-label="Pagination">
+                                    {notifications.links.map((link, i) => (
+                                        <Link
+                                            key={i}
+                                            href={link.url || '#'}
+                                            className={`relative inline-flex items-center px-3 py-1.5 font-semibold text-xs ${
+                                                link.active
+                                                    ? 'z-10 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
+                                                    : 'bg-white text-slate-700 ring-1 ring-slate-200 ring-inset hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800'
+                                            } ${i === 0 ? 'rounded-l-lg' : ''} ${
+                                                i === notifications.links.length - 1 ? 'rounded-r-lg' : ''
+                                            } ${!link.url ? 'pointer-events-none opacity-40' : ''}`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
+                                    ))}
+                                </nav>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </>
     );
 }
