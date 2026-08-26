@@ -53,18 +53,31 @@ class CommissionService
 
         $estate->loadMissing(['commissionPlan', 'partner']);
 
-        $plan = $estate->commissionPlan;
-        if (! $plan) {
-            return null;
-        }
-
         if (! $this->residentPaymentIsWithinCommissionTenure($resident, $estate, $transaction)) {
             return null;
         }
 
-        $commissionRate = (float) $plan->commission_rate;
+        $plan = $estate->commissionPlan;
+        $partner = $estate->partner;
 
-        if ($plan->commission_type === 'fixed') {
+        $commissionRate = null;
+        $commissionType = null;
+        $commissionPlanId = null;
+
+        if ($plan !== null) {
+            $commissionRate = (float) $plan->commission_rate;
+            $commissionType = $plan->commission_type;
+            $commissionPlanId = $plan->id;
+        } elseif ($partner !== null && $partner->commission_rate !== null) {
+            $commissionRate = (float) $partner->commission_rate;
+            $commissionType = $partner->commission_type;
+        }
+
+        if ($commissionRate === null || $commissionRate <= 0) {
+            return null;
+        }
+
+        if ($commissionType === 'fixed') {
             $commissionAmount = (int) $commissionRate;
         } else {
             $commissionAmount = (int) round($transaction->amount * ($commissionRate / 100));
@@ -73,7 +86,7 @@ class CommissionService
         return CommissionableRevenue::create([
             'estate_id' => $estate->id,
             'partner_id' => $estate->partner_id,
-            'commission_plan_id' => $estate->commission_plan_id,
+            'commission_plan_id' => $commissionPlanId,
             'user_id' => $resident->id,
             'payment_transaction_id' => $transaction->id,
             'revenue_amount' => $transaction->amount,
