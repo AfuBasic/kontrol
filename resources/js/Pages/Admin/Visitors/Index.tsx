@@ -231,7 +231,17 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                                 icon={LayoutList}
                                 label="Timeline"
                             />
-                            <TabButton active={activeView === 'table'} onClick={() => handleViewChange('table')} icon={Table2} label="Table" />
+                            <TabButton
+                                active={activeView === 'table'}
+                                onClick={() => handleViewChange('table')}
+                                icon={Table2}
+                                label={
+                                    <>
+                                        <span className="sm:hidden">Cards</span>
+                                        <span className="hidden sm:inline">Table</span>
+                                    </>
+                                }
+                            />
                         </div>
                     </div>
 
@@ -302,7 +312,7 @@ function TabButton({
     active: boolean;
     onClick: () => void;
     icon: React.ComponentType<{ className?: string }>;
-    label: string;
+    label: React.ReactNode;
 }) {
     return (
         <button
