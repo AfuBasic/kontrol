@@ -79,7 +79,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                         )}
                                         {checkoutEnabled && (
                                             <span className="font-semibold text-gray-700">
-                                                · {formatStayDuration(log.duration_minutes)}
+                                                · {formatStayDuration(log.duration_minutes, log)}
                                             </span>
                                         )}
                                     </div>
@@ -165,7 +165,7 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                                     )}
                                     {checkoutEnabled && (
                                         <td className="px-4 py-3 font-medium text-gray-700 tabular-nums">
-                                            {formatStayDuration(log.duration_minutes)}
+                                            {formatStayDuration(log.duration_minutes, log)}
                                         </td>
                                     )}
                                     {showGateColumn && (
