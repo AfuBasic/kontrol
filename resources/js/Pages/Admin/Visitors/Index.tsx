@@ -241,6 +241,7 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                             filters={toolbarFilters}
                             hosts={hostOptions}
                             checkoutEnabled={checkoutEnabled}
+                            activeVisitCount={activeVisitCount}
                             onFilterChange={handleFilterChange}
                             onClearFilters={handleClearFilters}
                         />

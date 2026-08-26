@@ -6,6 +6,7 @@ type Props = {
     filters: VisitorFilters;
     hosts: Array<{ id: number; name: string }>;
     checkoutEnabled: boolean;
+    activeVisitCount?: number;
     onFilterChange: (filters: Record<string, string | number | undefined>) => void;
     onClearFilters: () => void;
 };
@@ -13,9 +14,17 @@ type Props = {
 /**
  * Timeline tools - search + filters sit in the journal chrome, not as floating widgets.
  */
-export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, onFilterChange, onClearFilters }: Props) {
+export default function ActivityFiltersBar({
+    filters,
+    hosts,
+    checkoutEnabled,
+    activeVisitCount = 0,
+    onFilterChange,
+    onClearFilters,
+}: Props) {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const active = hasActiveVisitorFilters(filters);
+    const isInsideOnly = filters.status === 'inside';
 
     return (
         <div className="space-y-2">
@@ -30,6 +39,38 @@ export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, on
                         className="w-full rounded-lg border border-gray-200 bg-gray-50/80 py-1.5 pr-2.5 pl-8 text-xs font-medium text-gray-800 transition-[border-color,box-shadow,background-color] duration-150 ease-out placeholder:text-gray-400 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-slate-900/15 focus:outline-hidden"
                     />
                 </div>
+
+                {checkoutEnabled && (
+                    <button
+                        type="button"
+                        onClick={() =>
+                            onFilterChange({
+                                status: isInsideOnly ? undefined : 'inside',
+                            })
+                        }
+                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold transition-colors duration-150 ease-out active:scale-[0.97] ${
+                            isInsideOnly
+                                ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300'
+                                : 'border-gray-200 bg-gray-50/80 text-gray-600 hover:bg-gray-100'
+                        }`}
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                        </span>
+                        <span>Currently Inside</span>
+                        {activeVisitCount > 0 && (
+                            <span
+                                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                                    isInsideOnly
+                                        ? 'bg-emerald-200/80 text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100'
+                                        : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
+                                }`}
+                            >
+                                {activeVisitCount}
+                            </span>
+                        )}
+                    </button>
+                )}
 
                 <button
                     type="button"
