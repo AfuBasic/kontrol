@@ -71,7 +71,7 @@ export default function OnPropertyNow({ visitors, checkoutEnabled, expectedToday
                                             visitor.is_overstayed ? 'text-warning-700' : 'text-gray-400'
                                         }`}
                                     >
-                                        {formatStayDuration(visitor.duration_minutes)}
+                                        {formatStayDuration(visitor.duration_minutes, visitor)}
                                     </p>
                                 </div>
                             </button>
