@@ -450,7 +450,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                 </div>
 
                 {/* SECTION 4 - TABLE */}
-                <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
+                <div className="overflow-visible rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 md:overflow-hidden">
                     {propertyOwners.data.length > 0 ? (
                         <>
                             {/* Mobile Card Feed (< md) */}
