@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
+use App\Services\Notifications\NotificationContextService;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,11 +13,15 @@ use Inertia\Response;
 
 class NotificationController extends Controller
 {
+    public function __construct(
+        private NotificationContextService $notificationContext,
+    ) {}
+
     public function index(Request $request): Response
     {
         $user = $request->user();
 
-        $notifications = $user->notifications()
+        $notifications = $this->notificationContext->scopeToPartnerContext($user->notifications())
             ->when($request->string('type')->toString() === 'unread', fn ($query) => $query->whereNull('read_at'))
             ->when($request->string('type')->toString() === 'read', fn ($query) => $query->whereNotNull('read_at'))
             ->when($request->filled('search'), function ($query) use ($request) {
@@ -34,13 +39,13 @@ class NotificationController extends Controller
                 'search' => $request->string('search')->toString(),
                 'type' => $request->string('type')->toString() ?: 'all',
             ],
-            'unreadCount' => $user->unreadNotifications()->count(),
+            'unreadCount' => $this->notificationContext->unreadCountForPartnerContext($user),
         ]);
     }
 
     public function markAsRead(Request $request, string $notification): RedirectResponse
     {
-        $model = $request->user()->notifications()->findOrFail($notification);
+        $model = $this->notificationContext->findForPartnerContext($request->user(), $notification);
         $model->markAsRead();
 
         return back();
@@ -48,14 +53,14 @@ class NotificationController extends Controller
 
     public function markAllAsRead(Request $request): RedirectResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $this->notificationContext->markAllAsReadForPartnerContext($request->user());
 
         return back();
     }
 
     public function clearAll(Request $request): RedirectResponse
     {
-        $request->user()->notifications()->delete();
+        $this->notificationContext->clearForPartnerContext($request->user());
 
         return back()->with('success', 'All notifications cleared.');
     }
