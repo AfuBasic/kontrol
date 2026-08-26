@@ -381,7 +381,7 @@ export default function Residents({
                 </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 pb-24 md:pb-8">
                 {/* SECTION 1 - RESIDENT OVERVIEW STRIP */}
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <div className="flex flex-col justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
