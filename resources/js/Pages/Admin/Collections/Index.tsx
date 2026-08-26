@@ -213,6 +213,10 @@ export default function CollectionsIndex({
     const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
     const [selectedCollection, setSelectedCollection] = useState<Collection | null>(null);
     const [isPublishing, setIsPublishing] = useState(false);
+    const [search, setSearch] = useState(filters.search || '');
+    const [statusFilter, setStatusFilter] = useState(filters.status || '');
+    const debouncedSearch = useDebounce(search, 300);
+
     const getInitialTab = (): 'overview' | 'list' => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
