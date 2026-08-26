@@ -34,10 +34,10 @@ class ActiveVisitService
      */
     public function baseActiveQuery(int $estateId): Builder
     {
-        return AccessLog::query()
-            ->where('estate_id', $estateId)
-            ->whereNull('checked_out_at')
-            ->whereNotNull('verified_at');
+        return AccessLog::withoutGlobalScope(ZoneScope::class)
+            ->where('access_logs.estate_id', $estateId)
+            ->whereNull('access_logs.checked_out_at')
+            ->whereNotNull('access_logs.verified_at');
     }
 
     /**
