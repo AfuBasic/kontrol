@@ -511,7 +511,7 @@ export default function Residents({
                 </div>
 
                 {/* SECTION 4 - TABLE REDESIGN */}
-                <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
+                <div className="overflow-visible rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 md:overflow-hidden">
                     {isLoading ? (
                         <div className="animate-pulse space-y-4 p-6">
                             {[...Array(5)].map((_, i) => (
