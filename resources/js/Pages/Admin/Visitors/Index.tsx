@@ -27,13 +27,12 @@ type Props = {
     hosts?: Array<{ id: number; name: string }> | null;
     securityOfficers?: Array<{ id: number; name: string }> | null;
     checkoutEnabled: boolean;
-    currentlyInsideList?: VisitorRecord[] | null;
+    activeVisitCount?: number;
     expectedTodayCount?: number;
 };
 
-export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, currentlyInsideList = [], expectedTodayCount = 0 }: Props) {
+export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, activeVisitCount = 0, expectedTodayCount = 0 }: Props) {
     const hostOptions = hosts ?? [];
-    const onProperty = currentlyInsideList ?? [];
     const activeView: ActivityView = filters.view === 'table' ? 'table' : 'activity';
 
     const { isOnline, quality } = useNetworkQuality();
