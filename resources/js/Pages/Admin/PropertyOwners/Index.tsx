@@ -281,8 +281,17 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
         router.post(`/admin/property-owners/${id}/resend-invitation`, {}, { preserveScroll: true });
     };
 
-    const handleToggleSuspend = (id: number) => {
-        router.patch(`/admin/property-owners/${id}/suspend`, {}, { preserveScroll: true });
+    const handleToggleSuspend = (owner: PropertyOwner) => {
+        const isInactive = owner.status === 'inactive';
+        confirm({
+            title: isInactive ? 'Activate account' : 'Suspend account',
+            message: isInactive
+                ? `Are you sure you want to activate ${owner.name}'s account? They will regain access to manage their properties.`
+                : `Are you sure you want to suspend ${owner.name}'s account? They will no longer be able to access their landlord portal.`,
+            confirmLabel: isInactive ? 'Activate account' : 'Suspend account',
+            type: isInactive ? 'info' : 'warning',
+            onConfirm: () => router.patch(`/admin/property-owners/${owner.id}/suspend`, {}, { preserveScroll: true }),
+        });
     };
 
     const handleMakeResident = (owner: PropertyOwner) => {
@@ -295,12 +304,13 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
         });
     };
 
-    const handleDeleteOwner = (id: number) => {
+    const handleDeleteOwner = (owner: PropertyOwner) => {
         confirm({
             title: 'Remove property owner',
-            message: 'Are you sure you want to remove this property owner?',
+            message: `Are you sure you want to remove ${owner.name} from the property owners registry? This action cannot be undone.`,
             confirmLabel: 'Remove owner',
-            onConfirm: () => router.delete(`/admin/property-owners/${id}`, { preserveScroll: true }),
+            type: 'danger',
+            onConfirm: () => router.delete(`/admin/property-owners/${owner.id}`, { preserveScroll: true }),
         });
     };
 
@@ -691,7 +701,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                                     </Link>
                                                                     <button
                                                                         onClick={() => {
-                                                                            handleToggleSuspend(owner.id);
+                                                                            handleToggleSuspend(owner);
                                                                             setMenuOpenId(null);
                                                                         }}
                                                                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
@@ -713,7 +723,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                                                     )}
                                                                     <button
                                                                         onClick={() => {
-                                                                            handleDeleteOwner(owner.id);
+                                                                            handleDeleteOwner(owner);
                                                                             setMenuOpenId(null);
                                                                         }}
                                                                         className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
