@@ -208,17 +208,16 @@ export default function History({
                 <div className="px-2">
                     {checkoutEnabled && activeTab === 'active' ? (
                         <SecurityActiveQueue activeVisits={activeVisits} />
-                    ) : (
-                        logs.data.length > 0 ? (
-                            <InfiniteScroll
-                                data="logs"
-                                className="grid gap-4"
-                                loading={
-                                    <div className="flex justify-center py-8">
-                                        <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-                                    </div>
-                                }
-                            >
+                    ) : logs.data.length > 0 ? (
+                        <InfiniteScroll
+                            data="logs"
+                            className="grid gap-4"
+                            loading={
+                                <div className="flex justify-center py-8">
+                                    <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
+                                </div>
+                            }
+                        >
                             {logs.data.map((log) => (
                                 <div
                                     key={log.id}
@@ -233,34 +232,61 @@ export default function History({
                                             <div>
                                                 <h3 className="text-lg leading-tight font-bold text-slate-900">{log.visitor.name}</h3>
                                                 <p className="mt-0.5 text-xs font-semibold text-slate-500">Host: {log.host.name}</p>
+                                                {log.host.unit && <p className="text-xs font-semibold text-slate-400">Unit: {log.host.unit}</p>}
+                                                {log.host.address && <p className="text-xs font-semibold text-slate-400">{log.host.address}</p>}
                                             </div>
                                         </div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <span className="rounded-xl bg-indigo-50 px-3 py-1.5 text-[11px] font-black tracking-widest text-indigo-600 uppercase ring-1 ring-indigo-100">
-                                                {log.code}
-                                            </span>
-                                            <span className="text-[10px] font-bold tracking-tighter text-slate-400 uppercase">
-                                                {log.verified_at_human}
-                                            </span>
+                                        <span className="rounded-full bg-slate-100 px-3 py-1 font-mono text-xs font-bold text-slate-600">#{log.code}</span>
+                                    </div>
+
+                                    <div className="mt-6 grid grid-cols-2 gap-3">
+                                        <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                                            <Calendar className="h-4 w-4 text-slate-400" />
+                                            <div>
+                                                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Check-In</p>
+                                                <p className="text-xs font-bold text-slate-700">{log.verified_at}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                                            <Clock className="h-4 w-4 text-slate-400" />
+                                            <div>
+                                                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Type</p>
+                                                <p className="text-xs font-bold text-slate-700">{formatVisitorType(log.visitor.type)}</p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {log.vehicle && (
-                                        <div className="mt-5 flex items-center justify-between rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-500 shadow-sm">
-                                                    <Car className="h-5 w-5" />
-                                                </div>
+                                    {/* Checkout Record Info */}
+                                    {log.checked_out_at && (
+                                        <div className="mt-3 grid grid-cols-2 gap-3">
+                                            <div className="flex items-center gap-2 rounded-xl bg-emerald-50/60 p-3 ring-1 ring-emerald-100">
+                                                <Clock className="h-4 w-4 text-emerald-600" />
                                                 <div>
-                                                    <p className="text-[10px] font-black tracking-[0.1em] text-slate-400 uppercase">Vehicle</p>
-                                                    <p className="text-sm font-bold text-slate-900">
-                                                        {log.vehicle.make} {log.vehicle.model}
-                                                    </p>
+                                                    <p className="text-[10px] font-black tracking-widest text-emerald-600 uppercase">Check-Out</p>
+                                                    <p className="text-xs font-bold text-emerald-950">{log.checked_out_at}</p>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-[10px] font-black tracking-[0.1em] text-slate-400 uppercase">Plate</p>
-                                                <p className="text-sm font-black text-slate-900">{log.vehicle.plate}</p>
+
+                                            <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+                                                <ShieldCheck className="h-4 w-4 text-slate-400" />
+                                                <div>
+                                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Exit Gate</p>
+                                                    <p className="text-xs font-bold text-slate-700">{log.exit_point || log.gate || 'Main Entrance'}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {log.vehicle && (
+                                        <div className="mt-3 flex items-center gap-2 rounded-xl bg-indigo-50/50 p-3 ring-1 ring-indigo-100/50">
+                                            <Car className="h-4 w-4 text-indigo-600" />
+                                            <div className="flex-1">
+                                                <p className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">Vehicle Details</p>
+                                                <p className="text-xs font-bold text-indigo-950">
+                                                    {log.vehicle.make} {log.vehicle.model} ·{' '}
+                                                    <span className="font-mono text-indigo-700">{log.vehicle.plate}</span>
+                                                </p>
                                             </div>
                                         </div>
                                     )}
