@@ -5,7 +5,6 @@ import { Calendar, Download, LayoutList, Lock, Table2 } from 'lucide-react';
 import { index, calendar } from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import ActivityFiltersBar from '@/Components/Admin/Visitors/ActivityFiltersBar';
 import ActivityTimeline from '@/Components/Admin/Visitors/ActivityTimeline';
-import OnPropertyNow from '@/Components/Admin/Visitors/OnPropertyNow';
 import RecordDetail from '@/Components/Admin/Visitors/RecordDetail';
 import VisitorTable from '@/Components/Admin/Visitors/VisitorTable';
 import type { ActivityView, SortDirection, SortField, VisitorFilters, VisitorRecord } from '@/Components/Admin/Visitors/types';
@@ -198,13 +197,6 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                         </button>
                     </div>
                 </header>
-
-                <OnPropertyNow
-                    visitors={onProperty}
-                    checkoutEnabled={checkoutEnabled}
-                    expectedTodayCount={expectedTodayCount}
-                    onSelect={setSelectedRecord}
-                />
 
                 {/* Activity journal - tools + feed as one surface */}
                 <section aria-labelledby="activity-heading" className="overflow-hidden rounded-xl border border-gray-200 bg-white">
