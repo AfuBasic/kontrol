@@ -25,6 +25,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
     const [officialUpdateText, setOfficialUpdateText] = useState('');
     const [submittingOfficial, setSubmittingOfficial] = useState(false);
     const [submittingDiscussion, setSubmittingDiscussion] = useState(false);
+    const [discussionError, setDiscussionError] = useState<string | null>(null);
 
     const isReporter = incident.reporter.id === authUser?.id;
     const isClosed = incident.status === 'closed';
@@ -77,6 +78,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
 
     const handleDiscussionComment = (body: string, parentId?: number | null) => {
         setSubmittingDiscussion(true);
+        setDiscussionError(null);
         router.post(
             `/security/incidents/${incident.hashid}/comments`,
             {
@@ -85,6 +87,10 @@ export default function Show({ incident, official_comments = [], discussion_comm
             },
             {
                 preserveScroll: true,
+                onError: (errors) => {
+                    const message = typeof errors.body === 'string' ? errors.body : 'Could not post your comment. Please try again.';
+                    setDiscussionError(message);
+                },
                 onFinish: () => setSubmittingDiscussion(false),
             },
         );
@@ -135,7 +141,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
                 {/* 2-Column Responsive Workspace */}
                 <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12 lg:gap-6">
                     {/* Main Column */}
-                    <div className="space-y-5 sm:space-y-6 lg:col-span-8">
+                    <div className="space-y-6 lg:col-span-8">
                         {/* Primary Incident Case Summary Surface */}
                         <div className="rounded-2xl border border-slate-200/90 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/60 sm:p-6">
                             {/* Context & Status Row */}
@@ -268,7 +274,9 @@ export default function Show({ incident, official_comments = [], discussion_comm
                             canComment={!isClosed}
                             onSubmitComment={handleDiscussionComment}
                             submitting={submittingDiscussion}
+                            error={discussionError}
                             variant="security"
+                            className="border-t border-slate-100 pt-6"
                         />
                     </div>
 
