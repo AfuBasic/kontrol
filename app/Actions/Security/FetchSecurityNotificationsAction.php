@@ -18,6 +18,7 @@ use App\Notifications\ResidentSubscriptionExpiringNotification;
 use App\Notifications\ResidentTrialEndingNotification;
 use App\Notifications\VisitorArrivedNotification;
 use App\Notifications\VisitorCheckedOutNotification;
+use App\Services\Notifications\NotificationContextService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Notifications\DatabaseNotification;
 
@@ -46,6 +47,10 @@ class FetchSecurityNotificationsAction
         'App\Notifications\ResidentSubscriptionNotification',
     ];
 
+    public function __construct(
+        private NotificationContextService $notificationContext,
+    ) {}
+
     /**
      * Fetch paginated notifications for a security user.
      *
@@ -53,7 +58,8 @@ class FetchSecurityNotificationsAction
      */
     public function execute(User $user, int $perPage = 20): LengthAwarePaginator
     {
-        return $user->notifications()
+        return $this->notificationContext
+            ->scopeToCurrentContext($user->notifications())
             ->whereNotIn('type', self::RESIDENT_NOTIFICATION_TYPES)
             ->latest()
             ->paginate($perPage);
@@ -64,7 +70,8 @@ class FetchSecurityNotificationsAction
      */
     public function getUnreadCount(User $user): int
     {
-        return $user->unreadNotifications()
+        return $this->notificationContext
+            ->scopeToCurrentContext($user->unreadNotifications())
             ->whereNotIn('type', self::RESIDENT_NOTIFICATION_TYPES)
             ->count();
     }
@@ -74,11 +81,7 @@ class FetchSecurityNotificationsAction
      */
     public function markAsRead(User $user, string $notificationId): bool
     {
-        $notification = $user->notifications()->find($notificationId);
-
-        if (! $notification) {
-            return false;
-        }
+        $notification = $this->notificationContext->findForCurrentContext($user, $notificationId);
 
         $notification->markAsRead();
 
@@ -87,7 +90,7 @@ class FetchSecurityNotificationsAction
 
     public function markAllAsRead(User $user): void
     {
-        $user->unreadNotifications->markAsRead();
+        $this->notificationContext->markAllAsReadForCurrentContext($user);
     }
 
     /**
@@ -95,7 +98,7 @@ class FetchSecurityNotificationsAction
      */
     public function clearAll(User $user): void
     {
-        $user->notifications()->delete();
+        $this->notificationContext->clearForCurrentContext($user);
     }
 
     /**
