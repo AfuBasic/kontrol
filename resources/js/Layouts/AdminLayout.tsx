@@ -288,6 +288,16 @@ export default function AdminLayout({ children, _title }: Props) {
             const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
             userChannel.notification((notification: any) => {
+                // Filter by role context
+                if (notification.target_role && notification.target_role !== 'admin') {
+                    return;
+                }
+
+                // Filter by estate context
+                if (notification.estate_id && notification.estate_id !== auth.user.current_estate_id) {
+                    return;
+                }
+
                 const message = notification.message || (typeof notification === 'string' ? notification : JSON.stringify(notification));
 
                 // Avoid showing notification if it's likely a duplicate of a recent broadcast
