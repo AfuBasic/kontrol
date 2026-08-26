@@ -130,14 +130,14 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                         </div>
 
                         {/* SECTION: RESPONSIBILITY */}
-                        {roles && roles.length > 0 && (
-                            <div className="border-t border-slate-100 pt-6">
-                                <h2 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Responsibility</h2>
-                                <p className="mt-1 text-sm font-bold text-slate-900">What will they be responsible for?</p>
-                                <p className="mt-1 text-xs font-semibold text-slate-500">
-                                    They will be granted estate-wide access for this responsibility. You can adjust this later in Staff & Authority.
-                                </p>
+                        <div className="border-t border-slate-100 pt-6">
+                            <h2 className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Responsibility</h2>
+                            <p className="mt-1 text-sm font-bold text-slate-900">What will they be responsible for?</p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                                They will be granted estate-wide access for this responsibility. You can adjust this later in Staff & Authority.
+                            </p>
 
+                            {roles && roles.length > 0 ? (
                                 <div className="mt-5 w-full">
                                     <SearchableSelect
                                         options={roles.map((r) => ({
@@ -150,8 +150,33 @@ export default function UserForm({ user, submitUrl, method = 'post', title, desc
                                     />
                                     {(errors as any).role && <p className="mt-1.5 text-xs font-semibold text-red-600">{(errors as any).role}</p>}
                                 </div>
-                            </div>
-                        )}
+                            ) : (
+                                <div className="mt-5 rounded-2xl border border-dashed border-amber-300 bg-amber-50/60 p-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-xs font-bold text-amber-900">No custom roles created yet</p>
+                                            <p className="mt-0.5 text-xs text-amber-700">
+                                                Before inviting a staff member, create a role (e.g. Estate Manager, Accountant, Facility Officer) in Authority Roles.
+                                            </p>
+                                            <div className="mt-3">
+                                                <Link
+                                                    href="/admin/roles/create"
+                                                    className="inline-flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-amber-700"
+                                                >
+                                                    + Create Estate Role
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {(errors as any).role && <p className="mt-2 text-xs font-semibold text-red-600">{(errors as any).role}</p>}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-end gap-3 rounded-b-2xl border-t border-slate-100 bg-slate-50/50 px-8 py-5">
