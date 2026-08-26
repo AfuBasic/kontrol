@@ -22,7 +22,7 @@ import {
     X,
 } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
-import { index, publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
+import { publish, edit, remind, exportMethod, recordPayment, destroy } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import { show as showResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';

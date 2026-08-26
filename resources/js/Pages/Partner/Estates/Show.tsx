@@ -58,7 +58,7 @@ interface TimelineEvent {
 
 interface Props {
     estate: EstateDetail;
-    recentResidents: { id: number; name: string; email: string; joined_at: string | null }[];
+    recentResidents: { id: number; name: string; joined_at: string | null }[];
     monthlySeries: { month: string; revenue_kobo: number; commission_kobo: number }[];
     timeline: TimelineEvent[];
     commission?: { rate: string | null; type: string | null };
@@ -276,10 +276,7 @@ export default function PartnerEstateShow({ estate, recentResidents, monthlySeri
                                 <ul className="mt-5 divide-y divide-stone-100 dark:divide-white/10">
                                     {recentResidents.map((resident) => (
                                         <li key={resident.id} className="flex items-center justify-between py-3">
-                                            <div>
-                                                <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{resident.name}</p>
-                                                <p className="text-[12px] text-stone-400">{resident.email}</p>
-                                            </div>
+                                            <p className="text-[13px] font-semibold text-stone-900 dark:text-white">{resident.name}</p>
                                             <p className="text-[11px] text-stone-400">{formatDate(resident.joined_at)}</p>
                                         </li>
                                     ))}

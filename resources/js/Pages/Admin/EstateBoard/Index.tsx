@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
-import { Search, X, Pin, FileText, Globe } from 'lucide-react';
+import { Search, X, Pin, FileText } from 'lucide-react';
 
 import { index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import type { CursorPaginatedPosts, PostCategory } from '@/types';

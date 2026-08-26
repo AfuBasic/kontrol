@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Auth\ContextManager;
+use App\Channels\ContextualBroadcastChannel;
 use App\Events\Billing\InvoiceGenerated;
 use App\Events\Billing\PaymentReceived;
 use App\Listeners\Billing\SendInvoiceEmail;
 use App\Listeners\Billing\SendInvoiceGeneratedNotification;
 use App\Listeners\Billing\SendPaymentReceivedNotification;
+use App\Listeners\StampDatabaseNotificationContext;
 use App\Listeners\WarmEstateSettings;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
@@ -28,6 +30,9 @@ use App\Services\SMS\TermiiProvider;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Notifications\ChannelManager;
+use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -58,6 +63,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->app->make(ChannelManager::class)->extend('broadcast', function ($app) {
+            return new ContextualBroadcastChannel($app->make(Dispatcher::class));
+        });
         $this->configureDefaults();
         $this->registerPolicies();
         $this->registerObservers();
@@ -167,6 +175,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(InvoiceGenerated::class, SendInvoiceEmail::class);
         Event::listen(InvoiceGenerated::class, SendInvoiceGeneratedNotification::class);
         Event::listen(PaymentReceived::class, SendPaymentReceivedNotification::class);
+        Event::listen(NotificationSent::class, StampDatabaseNotificationContext::class);
         Event::listen(Login::class, WarmEstateSettings::class);
     }
 }

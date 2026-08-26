@@ -16,7 +16,6 @@ import {
     X,
     Users,
     LinkIcon,
-    Eye,
     MapPin,
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';

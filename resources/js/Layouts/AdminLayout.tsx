@@ -6,9 +6,7 @@ import {
     BellIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    ChevronDownIcon,
     CreditCardIcon,
-    ShieldCheckIcon,
     UserCircleIcon,
     XMarkIcon,
     BuildingOfficeIcon,
@@ -34,7 +32,6 @@ import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardC
 
 import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
-import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 
 
 
@@ -288,6 +285,16 @@ export default function AdminLayout({ children, _title }: Props) {
             const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
             userChannel.notification((notification: any) => {
+                // Filter by role context
+                if (notification.target_role && notification.target_role !== 'admin') {
+                    return;
+                }
+
+                // Filter by estate context
+                if (notification.estate_id && notification.estate_id !== auth.user.current_estate_id) {
+                    return;
+                }
+
                 const message = notification.message || (typeof notification === 'string' ? notification : JSON.stringify(notification));
 
                 // Avoid showing notification if it's likely a duplicate of a recent broadcast
@@ -565,8 +572,6 @@ export default function AdminLayout({ children, _title }: Props) {
                         canAccess={canAccess}
                         billingEnabled={billing_enabled || false}
                     />
-
-                    <MobileBottomNav url={url} unreadNotifications={unreadCount} />
                 </Suspense>
             </div>
 
@@ -817,7 +822,13 @@ export default function AdminLayout({ children, _title }: Props) {
             </div>
 
             {/* Mobile Navigation & Bottom Bar */}
-            <MobileBottomNav url={url} unreadNotifications={unreadCount} />
+            <MobileBottomNav
+                url={url}
+                unreadNotifications={unreadCount}
+                canAccess={canAccess}
+                isAdmin={isAdmin}
+                onOpenMenu={() => setMobileMenuOpen(true)}
+            />
 
             {/* Mobile Sidebar (Drawer-style for 'More' or complex navigation) */}
             <AnimatePresence>

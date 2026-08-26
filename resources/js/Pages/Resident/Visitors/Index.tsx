@@ -12,6 +12,7 @@ import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
 import QuickActions from '@/Components/Visitors/QuickActions';
 import TodaySchedule from '@/Components/Visitors/TodaySchedule';
 import UpcomingSchedule from '@/Components/Visitors/UpcomingSchedule';
+import VisitorScheduleEmptyState from '@/Components/Visitors/VisitorScheduleEmptyState';
 import { useSyncStatus } from '@/Hooks/useSyncStatus';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import { type PendingPass, ResidentStore } from '@/Resilience/OfflineStorage/ResidentStore';
@@ -319,25 +320,44 @@ export default function Visitors({
                                 />
                             )}
 
-                            {/* 1. Adaptive Context */}
-                            <ContextBanner upcoming={upcomingTimeline as any} />
+                            {/* 1. If no scheduled visitors, render high-polish Empty State card */}
+                            {upcomingTimeline.length === 0 ? (
+                                <div className="space-y-4 pt-1">
+                                    <VisitorScheduleEmptyState onInvite={() => setShowCreateSheet(true)} />
 
-                            {/* 2. Next Arrival Hero */}
-                            <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
+                                    {/* Show Quick Contacts / Invite Again if available */}
+                                    {recentVisitors && recentVisitors.length > 0 && (
+                                        <QuickActions
+                                            recentVisitors={recentVisitors}
+                                            onInvite={() => setShowCreateSheet(true)}
+                                            onInviteAgain={handleInviteAgain}
+                                            onOpenSearch={() => switchTab('history')}
+                                        />
+                                    )}
+                                </div>
+                            ) : (
+                                <>
+                                    {/* 1. Adaptive Context */}
+                                    <ContextBanner upcoming={upcomingTimeline as any} />
 
-                            {/* 3. Today's Schedule */}
-                            <TodaySchedule visits={todayVisits as any} onCancel={promptCancelPass} />
+                                    {/* 2. Next Arrival Hero */}
+                                    <NextVisitorHero nextCode={upcomingTimeline[0] || null} />
 
-                            {/* 4. Upcoming (Event-based) */}
-                            <UpcomingSchedule visits={futureUpcomingVisits as any} />
+                                    {/* 3. Today's Schedule */}
+                                    <TodaySchedule visits={todayVisits as any} onCancel={promptCancelPass} />
 
-                            {/* 5. Quick Actions & Invite Again */}
-                            <QuickActions
-                                recentVisitors={recentVisitors}
-                                onInvite={() => setShowCreateSheet(true)}
-                                onInviteAgain={handleInviteAgain}
-                                onOpenSearch={() => switchTab('history')}
-                            />
+                                    {/* 4. Upcoming (Event-based) */}
+                                    <UpcomingSchedule visits={futureUpcomingVisits as any} />
+
+                                    {/* 5. Quick Actions & Invite Again */}
+                                    <QuickActions
+                                        recentVisitors={recentVisitors}
+                                        onInvite={() => setShowCreateSheet(true)}
+                                        onInviteAgain={handleInviteAgain}
+                                        onOpenSearch={() => switchTab('history')}
+                                    />
+                                </>
+                            )}
                         </motion.div>
                     ) : activeTab === 'active' && checkoutEnabled ? (
                         <motion.div

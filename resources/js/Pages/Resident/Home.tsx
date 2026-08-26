@@ -94,7 +94,7 @@ export default function Home({
         revalidate: isOnline && quality !== 'offline',
     });
 
-    const displayStats = staleShell?.stats ?? stats;
+
     const displayEstateName = staleShell?.estateName ?? estateName;
     const displayActivePasses = staleShell?.activePassesCount ?? activePassesCount;
     const displayUpcomingPasses = staleShell?.upcomingPassesCount ?? upcomingPassesCount;

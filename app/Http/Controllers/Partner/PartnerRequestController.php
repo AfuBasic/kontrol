@@ -104,16 +104,23 @@ class PartnerRequestController extends Controller
         $estate->load(['residentSubscriptions']);
         $payload = $this->transformEstateForPartner($estate, $partnerId);
 
+        $residentUserIds = DB::table('model_has_roles')
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('model_has_roles.model_type', User::class)
+            ->where('model_has_roles.estate_id', $estate->id)
+            ->whereIn('roles.name', ['resident', 'property_owner'])
+            ->pluck('model_has_roles.model_id');
+
         $recentResidents = $estate->users()
             ->wherePivot('status', 'accepted')
             ->wherePivot('created_at', '>=', now()->subDays(30))
+            ->whereIn('users.id', $residentUserIds)
             ->orderByPivot('created_at', 'desc')
             ->limit(8)
-            ->get(['users.id', 'users.name', 'users.email'])
+            ->get(['users.id', 'users.name'])
             ->map(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'email' => $user->email,
                 'joined_at' => $user->pivot->created_at?->toIso8601String(),
             ])
             ->values()
@@ -280,7 +287,7 @@ class PartnerRequestController extends Controller
 
             $pendingSettlement = (int) CommissionableRevenue::query()
                 ->where('partner_id', $partnerId)
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending', 'aggregated'])
                 ->sum('commission_amount');
         }
 
@@ -330,7 +337,7 @@ class PartnerRequestController extends Controller
         $pendingCommission = (int) CommissionableRevenue::query()
             ->where('partner_id', $partnerId)
             ->where('estate_id', $estate->id)
-            ->where('status', 'pending')
+            ->whereIn('status', ['pending', 'aggregated'])
             ->sum('commission_amount');
 
         $weekAgo = now()->subWeek();

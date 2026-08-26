@@ -124,7 +124,19 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
         const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
-        userChannel.notification((notification: { id?: string; message?: string; [key: string]: unknown }) => {
+        userChannel.notification((notification: { id?: string; message?: string; estate_id?: number | null; target_role?: string | null; type?: string; [key: string]: unknown }) => {
+            // Filter by role context
+            const allowedRoles = ['resident', 'property_owner', 'household_member'];
+            
+            if (notification.target_role && !allowedRoles.includes(notification.target_role)) {
+                return;
+            }
+
+            // Filter by estate context
+            if (notification.estate_id && notification.estate_id !== auth.user.current_estate_id) {
+                return;
+            }
+
             // Update unread count
             setUnreadCount((prev) => prev + 1);
 

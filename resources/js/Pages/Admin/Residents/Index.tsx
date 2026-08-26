@@ -1313,7 +1313,7 @@ function ResidentInsightsPanel({
                             className="fixed top-0 right-0 bottom-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
                         >
                             {/* Header */}
-                            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                            <div className="flex items-center justify-between border-b border-slate-100 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4">
                                 <div>
                                     <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">
                                         Profile Completion Needed
