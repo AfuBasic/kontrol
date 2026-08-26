@@ -180,30 +180,30 @@ export default function Show({ resident, provenance, residence, financials, acti
                         <span>Resident Directory</span>
                     </Link>
 
-                    {/* Action buttons (full-width stacked on mobile, grouped on tablet+) */}
-                    <div className="flex flex-wrap items-center gap-2">
+                    {/* Action buttons */}
+                    <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
                         <Link
                             href={`/admin/residents/${resident.id}/edit`}
-                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 sm:flex-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                            className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                         >
-                            <Pencil className="h-3.5 w-3.5 text-slate-400" />
-                            <span>Edit Profile</span>
+                            <Pencil className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                            <span>Edit</span>
                         </Link>
 
                         {resident.can_resend_invitation && (
                             <button
                                 onClick={handleResendInvitation}
                                 disabled={isResending}
-                                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 disabled:opacity-50 sm:flex-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                                className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                             >
-                                <Clock className="h-3.5 w-3.5 text-slate-500" />
-                                <span>{isResending ? 'Resending...' : 'Resend Invite'}</span>
+                                <Clock className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                <span>{isResending ? 'Sending...' : 'Resend'}</span>
                             </button>
                         )}
 
                         <button
                             onClick={handleToggleSuspend}
-                            className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs font-bold text-white shadow-xs transition sm:flex-none ${
+                            className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-center text-xs font-bold text-white shadow-xs transition active:scale-95 ${
                                 resident.is_active
                                     ? 'bg-rose-600 hover:bg-rose-700'
                                     : 'bg-emerald-600 hover:bg-emerald-700'
@@ -211,13 +211,13 @@ export default function Show({ resident, provenance, residence, financials, acti
                         >
                             {resident.is_active ? (
                                 <>
-                                    <UserMinus className="h-3.5 w-3.5" />
-                                    <span>Suspend Account</span>
+                                    <UserMinus className="h-3.5 w-3.5 shrink-0" />
+                                    <span>Suspend</span>
                                 </>
                             ) : (
                                 <>
-                                    <UserCheck className="h-3.5 w-3.5" />
-                                    <span>Activate Account</span>
+                                    <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                                    <span>Activate</span>
                                 </>
                             )}
                         </button>
