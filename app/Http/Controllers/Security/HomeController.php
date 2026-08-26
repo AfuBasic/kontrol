@@ -7,16 +7,23 @@ use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Services\EstateContextService;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Visitor\ActiveVisitService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HomeController extends Controller
 {
+    public function __construct(
+        protected EstateContextService $estateContext,
+        protected CheckpointClaimService $checkpointClaimService,
+        protected ActiveVisitService $activeVisitService,
+    ) {}
+
     public function __invoke(): Response
     {
         $user = auth()->user();
-        $estate = app(EstateContextService::class)->getEstate();
-        $gateName = app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
+        $estate = $this->estateContext->getEstate();
+        $gateName = $this->checkpointClaimService->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
 
         $today = now()->startOfDay();
 
@@ -33,6 +40,11 @@ class HomeController extends Controller
             ->where('estate_id', $estate->id)
             ->whereDate('verified_at', $today)
             ->count();
+
+        $checkoutEnabled = $this->activeVisitService->isCheckoutMonitoringEnabled($estate->id);
+        $activeInsideCount = $checkoutEnabled
+            ? $this->activeVisitService->countEstateActiveVisits($estate->id)
+            : 0;
 
         $activeCodesCount = AccessCode::query()
             ->forEstate($estate->id)
@@ -59,10 +71,12 @@ class HomeController extends Controller
             'estateName' => $estate->name,
             'gateName' => $gateName,
             'guardName' => $user->name,
+            'checkoutEnabled' => $checkoutEnabled,
             'stats' => [
                 'expected_today' => $expectedTodayCount,
                 'validated_today' => $validatedTodayCount,
                 'active_codes' => $activeCodesCount,
+                'active_inside' => $activeInsideCount,
             ],
             'recentActivity' => $recentActivity,
         ]);
