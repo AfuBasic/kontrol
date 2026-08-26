@@ -38,43 +38,64 @@ export default function OfficialUpdates({ updates, onAddUpdate, canAddUpdate = t
 
     const updateCount = updates?.length ?? 0;
 
+    if (isSecurity) {
+        return (
+            <section className={`scroll-mt-[calc(4.5rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px)))] ${className}`}>
+                <div className="mb-3">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <h3 className="text-sm font-bold tracking-tight text-slate-900">Official Updates</h3>
+                        {updateCount > 0 && <span className="text-[11px] font-medium text-slate-400 tabular-nums">{updateCount}</span>}
+                    </div>
+                    <p className="mt-0.5 text-xs text-slate-500">Verified notices from the incident response team.</p>
+                </div>
+
+                {updateCount === 0 ? (
+                    <p className="text-xs text-slate-500">No official security updates have been posted yet.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {updates.map((update) => (
+                            <article key={update.id} className="rounded-xl border border-indigo-100/90 bg-indigo-50/40 px-3 py-2.5">
+                                <div className="flex items-start gap-2.5">
+                                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-100 text-indigo-600">
+                                        <Shield className="h-3.5 w-3.5" aria-hidden="true" />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="truncate text-xs font-semibold text-slate-900">{update.author?.name || 'Estate Authority'}</p>
+                                        <p className="mt-0.5 min-w-0 text-[11px] leading-snug text-slate-500">
+                                            <span className="font-medium text-indigo-700">Official</span>
+                                            <span aria-hidden="true"> · </span>
+                                            <time dateTime={update.created_at}>{formatDate(update.created_at)}</time>
+                                        </p>
+                                        <p className="mt-2 text-sm leading-relaxed whitespace-pre-line text-slate-800">{update.body}</p>
+                                    </div>
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                )}
+            </section>
+        );
+    }
+
     return (
         <section
-            className={
-                isSecurity
-                    ? className
-                    : `rounded-2xl border-2 border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-4 shadow-xs sm:p-5 ${dark('dark:border-indigo-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40')} ${className}`
-            }
+            className={`rounded-2xl border-2 border-indigo-200/80 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-4 shadow-xs sm:p-5 ${dark('dark:border-indigo-900/60 dark:from-slate-900 dark:via-slate-900 dark:to-indigo-950/40')} ${className}`}
         >
-            <div className={`flex flex-col gap-3 ${isSecurity ? 'mb-3' : 'mb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-3.5'}`}>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3.5">
                 <div className="flex min-w-0 items-start gap-3">
-                    {!isSecurity && (
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
-                            <Megaphone className="h-4.5 w-4.5 shrink-0" />
-                        </div>
-                    )}
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
+                        <Megaphone className="h-4.5 w-4.5 shrink-0" />
+                    </div>
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3
-                                className={
-                                    isSecurity
-                                        ? 'text-xs font-bold text-slate-900'
-                                        : `text-sm font-black tracking-tight text-slate-900 ${dark('dark:text-slate-100')}`
-                                }
-                            >
+                            <h3 className={`text-sm font-black tracking-tight text-slate-900 ${dark('dark:text-slate-100')}`}>
                                 Official Updates & Dispatches
                             </h3>
                             {updateCount > 0 && (
                                 <span
-                                    className={
-                                        isSecurity
-                                            ? 'shrink-0 text-[11px] font-semibold text-slate-500'
-                                            : `inline-flex shrink-0 items-center rounded-full border border-indigo-300 bg-indigo-600/10 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 ${dark('dark:border-indigo-800 dark:bg-indigo-400/20 dark:text-indigo-300')}`
-                                    }
+                                    className={`inline-flex shrink-0 items-center rounded-full border border-indigo-300 bg-indigo-600/10 px-2.5 py-0.5 text-[10px] font-bold text-indigo-700 ${dark('dark:border-indigo-800 dark:bg-indigo-400/20 dark:text-indigo-300')}`}
                                 >
-                                    {isSecurity
-                                        ? `${updateCount} ${updateCount === 1 ? 'update' : 'updates'}`
-                                        : `${updateCount} ${updateCount === 1 ? 'advisory' : 'advisories'}`}
+                                    {updateCount} {updateCount === 1 ? 'advisory' : 'advisories'}
                                 </span>
                             )}
                         </div>
@@ -97,76 +118,44 @@ export default function OfficialUpdates({ updates, onAddUpdate, canAddUpdate = t
             </div>
 
             {updateCount === 0 ? (
-                isSecurity ? (
-                    <p className="border-t border-slate-100 pt-3 text-xs text-slate-500">No official updates have been posted yet.</p>
-                ) : (
-                    <div
-                        className={`rounded-xl border border-indigo-100 bg-white/70 p-4 text-center ${dark('dark:border-indigo-950/60 dark:bg-slate-900/50')}`}
-                    >
-                        <p className={`text-xs font-medium text-slate-500 ${dark('dark:text-slate-400')}`}>No official updates posted yet.</p>
-                    </div>
-                )
+                <div
+                    className={`rounded-xl border border-indigo-100 bg-white/70 p-4 text-center ${dark('dark:border-indigo-950/60 dark:bg-slate-900/50')}`}
+                >
+                    <p className={`text-xs font-medium text-slate-500 ${dark('dark:text-slate-400')}`}>No official updates posted yet.</p>
+                </div>
             ) : (
-                <div className={isSecurity ? 'divide-y divide-slate-100 border-t border-slate-100' : 'space-y-3.5'}>
-                    {updates.map((update, idx) =>
-                        isSecurity ? (
-                            <article key={update.id} className="py-3">
-                                <div className="flex items-start gap-2.5">
-                                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
-                                        <Shield className="h-3.5 w-3.5" />
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex flex-col gap-0.5 min-[380px]:flex-row min-[380px]:items-baseline min-[380px]:justify-between min-[380px]:gap-3">
-                                            <div className="min-w-0">
-                                                <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
-                                                    Official Dispatch #{idx + 1}
-                                                </p>
-                                                <p className="truncate text-xs font-bold text-slate-900">
-                                                    {update.author?.name || 'Estate Authority'}
-                                                </p>
-                                            </div>
-                                            <time className="shrink-0 text-[11px] font-medium text-slate-500" dateTime={update.created_at}>
-                                                {formatDate(update.created_at)}
-                                            </time>
-                                        </div>
-                                        <p className="mt-1.5 text-xs leading-relaxed whitespace-pre-line text-slate-700 sm:text-sm">{update.body}</p>
-                                    </div>
-                                </div>
-                            </article>
-                        ) : (
+                <div className="space-y-3.5">
+                    {updates.map((update, idx) => (
+                        <div
+                            key={update.id}
+                            className={`relative rounded-xl border border-indigo-100 bg-white/95 p-3.5 shadow-xs backdrop-blur-xs transition-all sm:p-4 ${dark('dark:border-indigo-950/80 dark:bg-slate-800/90')}`}
+                        >
                             <div
-                                key={update.id}
-                                className={`relative rounded-xl border border-indigo-100 bg-white/95 p-3.5 shadow-xs backdrop-blur-xs transition-all sm:p-4 ${dark('dark:border-indigo-950/80 dark:bg-slate-800/90')}`}
+                                className={`mb-2.5 flex flex-col justify-between gap-1.5 border-b border-indigo-50 pb-2 sm:flex-row sm:items-center sm:gap-3 ${dark('dark:border-indigo-950/50')}`}
                             >
-                                <div
-                                    className={`mb-2.5 flex flex-col justify-between gap-1.5 border-b border-indigo-50 pb-2 sm:flex-row sm:items-center sm:gap-3 ${dark('dark:border-indigo-950/50')}`}
-                                >
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span
-                                            className={`inline-flex shrink-0 items-center gap-1 rounded-md bg-indigo-100 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-indigo-800 sm:text-[11px] ${dark('dark:bg-indigo-950 dark:text-indigo-300')}`}
-                                        >
-                                            <Shield className="h-3 w-3 shrink-0" />
-                                            <span>Official Dispatch #{idx + 1}</span>
-                                        </span>
-                                        <span className={`truncate text-xs font-bold text-slate-900 ${dark('dark:text-slate-100')}`}>
-                                            {update.author?.name || 'Estate Authority'}
-                                        </span>
-                                    </div>
+                                <div className="flex flex-wrap items-center gap-2">
                                     <span
-                                        className={`shrink-0 text-[10px] font-semibold text-slate-400 sm:text-[11px] ${dark('dark:text-slate-500')}`}
+                                        className={`inline-flex shrink-0 items-center gap-1 rounded-md bg-indigo-100 px-2 py-0.5 text-[10px] font-bold whitespace-nowrap text-indigo-800 sm:text-[11px] ${dark('dark:bg-indigo-950 dark:text-indigo-300')}`}
                                     >
-                                        {formatDate(update.created_at)}
+                                        <Shield className="h-3 w-3 shrink-0" />
+                                        <span>Official Dispatch #{idx + 1}</span>
+                                    </span>
+                                    <span className={`truncate text-xs font-bold text-slate-900 ${dark('dark:text-slate-100')}`}>
+                                        {update.author?.name || 'Estate Authority'}
                                     </span>
                                 </div>
-
-                                <div
-                                    className={`border-l-2 border-indigo-500 pl-2.5 text-xs leading-relaxed font-medium whitespace-pre-line text-slate-700 sm:text-sm ${dark('dark:border-indigo-400 dark:text-slate-200')}`}
-                                >
-                                    {update.body}
-                                </div>
+                                <span className={`shrink-0 text-[10px] font-semibold text-slate-400 sm:text-[11px] ${dark('dark:text-slate-500')}`}>
+                                    {formatDate(update.created_at)}
+                                </span>
                             </div>
-                        ),
-                    )}
+
+                            <div
+                                className={`border-l-2 border-indigo-500 pl-2.5 text-xs leading-relaxed font-medium whitespace-pre-line text-slate-700 sm:text-sm ${dark('dark:border-indigo-400 dark:text-slate-200')}`}
+                            >
+                                {update.body}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
         </section>
