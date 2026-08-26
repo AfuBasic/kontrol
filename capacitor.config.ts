@@ -2,27 +2,28 @@ import type { CapacitorConfig } from '@capacitor/cli';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Set this to true for local development with Simulator/Emulator
-const isDev = process.env.NODE_ENV !== 'production' && process.env.CAPACITOR_PROD !== 'true';
+// Default to production unless explicitly in local dev mode (CAPACITOR_DEV=true)
+const isDev = process.env.CAPACITOR_DEV === 'true';
 
 // Default local URL
 let devUrl = 'https://app.usekontrol.afuwapetunde.com';
-// hostname must match the actual URL being loaded
 let devHostname = 'app.usekontrol.afuwapetunde.com';
 
-// Dynamically read from .env to prevent committing local URLs to Git
-try {
-    const envPath = path.join(process.cwd(), '.env');
-    if (fs.existsSync(envPath)) {
-        const envFile = fs.readFileSync(envPath, 'utf-8');
-        const match = envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m);
-        if (match) {
-            devUrl = match[1].trim();
-            devHostname = new URL(devUrl).hostname;
+// Dynamically read from .env if in dev mode
+if (isDev) {
+    try {
+        const envPath = path.join(process.cwd(), '.env');
+        if (fs.existsSync(envPath)) {
+            const envFile = fs.readFileSync(envPath, 'utf-8');
+            const match = envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m);
+            if (match) {
+                devUrl = match[1].trim();
+                devHostname = new URL(devUrl).hostname;
+            }
         }
+    } catch (e) {
+        console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
     }
-} catch (e) {
-    console.warn('Could not read CAPACITOR_DEV_URL from .env', e);
 }
 
 const prodUrl = 'https://app.usekontrol.com';
