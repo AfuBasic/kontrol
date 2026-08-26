@@ -3,22 +3,29 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Services\Notifications\NotificationContextService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class NotificationController extends Controller
 {
+    public function __construct(
+        private NotificationContextService $notificationContext,
+    ) {}
+
     /**
      * Display a listing of the notifications.
      */
     public function index(Request $request): Response
     {
-        // Mark all as read when visiting the notifications page
-        $request->user()->unreadNotifications->markAsRead();
+        $user = $request->user();
 
-        $notifications = $request->user()
-            ->notifications()
+        $this->notificationContext->markAllAsReadForCurrentContext($user);
+
+        $notifications = $this->notificationContext
+            ->scopeToCurrentContext($user->notifications())
             ->when($request->search, function ($query, $search) {
                 $query->where('data', 'like', "%{$search}%");
             })
@@ -41,30 +48,30 @@ class NotificationController extends Controller
     /**
      * Mark a notification as read.
      */
-    public function markAsRead(string $id, Request $request)
+    public function markAsRead(string $id, Request $request): RedirectResponse
     {
-        $notification = $request->user()->notifications()->findOrFail($id);
+        $notification = $this->notificationContext->findForCurrentContext($request->user(), $id);
         $notification->markAsRead();
 
         return back();
     }
 
-    /**
+     /**
      * Mark all notifications as read.
      */
-    public function markAllAsRead(Request $request)
+    public function markAllAsRead(Request $request): RedirectResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $this->notificationContext->markAllAsReadForCurrentContext($request->user());
 
         return back();
     }
 
-    /**
+     /**
      * Clear all notifications.
      */
-    public function clearAll(Request $request)
+    public function clearAll(Request $request): RedirectResponse
     {
-        $request->user()->notifications()->delete();
+        $this->notificationContext->clearForCurrentContext($request->user());
 
         return back();
     }
