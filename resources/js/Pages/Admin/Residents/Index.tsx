@@ -23,6 +23,7 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 
 import { bulkDelete, index, markAsPropertyOwner } from '@/actions/App/Http/Controllers/Admin/ResidentController';
+import ResidentCard from '@/Components/Admin/Residents/ResidentCard';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
@@ -516,8 +517,30 @@ export default function Residents({
                             ))}
                         </div>
                     ) : hasResidents ? (
-                        <div className="min-h-[280px] overflow-x-auto">
-                            <table className="w-full table-auto border-collapse">
+                        <>
+                            {/* Mobile Card Feed (< md) */}
+                            <div className="space-y-3 p-3 md:hidden">
+                                {residents.data.map((resident, idx) => (
+                                    <ResidentCard
+                                        key={resident.ulid}
+                                        resident={resident}
+                                        index={idx}
+                                        isSelected={selectedIds.includes(resident.id)}
+                                        onToggleSelect={toggleSelect}
+                                        onToggleSuspend={handleToggleSuspend}
+                                        onMarkAsPropertyOwner={handleMarkAsPropertyOwner}
+                                        onDeleteResident={handleDeleteResident}
+                                        onResendInvitation={handleResendInvitation}
+                                        isMenuOpen={menuOpenId === resident.id}
+                                        onToggleMenu={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
+                                        onCloseMenu={() => setMenuOpenId(null)}
+                                    />
+                                ))}
+                            </div>
+
+                            {/* Desktop Table View (>= md) */}
+                            <div className="hidden min-h-[280px] overflow-x-auto md:block">
+                                <table className="w-full table-auto border-collapse">
                                 <thead className="border-b border-slate-100 bg-slate-50/70">
                                     <tr>
                                         {can('residents.delete') && (
@@ -796,6 +819,7 @@ export default function Residents({
                                 </tbody>
                             </table>
                         </div>
+                        </>
                     ) : (
                         /* Redesigned Empty State */
                         <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
@@ -823,28 +847,68 @@ export default function Residents({
 
                 {/* Pagination */}
                 {residents.last_page > 1 && (
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
-                        <p className="text-slate-505 text-xs font-bold">
-                            Showing <span className="text-slate-950">{residents.data.length}</span> of{' '}
-                            <span className="text-slate-950">{residents.total}</span> residents
-                        </p>
-                        <div className="flex gap-1.5">
-                            {residents.links.map((link, idx) => (
+                    <div className="flex items-center justify-between border-t border-slate-100 px-2 pt-5 pb-8 sm:px-0">
+                        {/* Mobile Prev / Next */}
+                        <div className="flex w-full items-center justify-between sm:hidden">
+                            {residents.links[0]?.url ? (
                                 <Link
-                                    key={idx}
-                                    href={link.url || '#'}
+                                    href={residents.links[0].url}
                                     preserveScroll
                                     preserveState
-                                    className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                                        link.active
-                                            ? 'bg-slate-950 text-white shadow-sm'
-                                            : link.url
-                                              ? 'text-slate-655 border-slate-205 border bg-white hover:bg-slate-50'
-                                              : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50'
-                                    }`}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                />
-                            ))}
+                                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                >
+                                    &larr; Previous
+                                </Link>
+                            ) : (
+                                <span className="inline-flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-900">
+                                    &larr; Previous
+                                </span>
+                            )}
+
+                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                Page {residents.current_page} of {residents.last_page}
+                            </span>
+
+                            {residents.links[residents.links.length - 1]?.url ? (
+                                <Link
+                                    href={residents.links[residents.links.length - 1].url!}
+                                    preserveScroll
+                                    preserveState
+                                    className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                >
+                                    Next &rarr;
+                                </Link>
+                            ) : (
+                                <span className="inline-flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-900">
+                                    Next &rarr;
+                                </span>
+                            )}
+                        </div>
+
+                        {/* Desktop Numbers */}
+                        <div className="hidden sm:flex sm:w-full sm:items-center sm:justify-between">
+                            <p className="text-slate-500 text-xs font-bold dark:text-slate-400">
+                                Showing <span className="text-slate-950 dark:text-slate-100">{residents.data.length}</span> of{' '}
+                                <span className="text-slate-950 dark:text-slate-100">{residents.total}</span> residents
+                            </p>
+                            <div className="flex gap-1.5">
+                                {residents.links.map((link, idx) => (
+                                    <Link
+                                        key={idx}
+                                        href={link.url || '#'}
+                                        preserveScroll
+                                        preserveState
+                                        className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                            link.active
+                                                ? 'bg-slate-950 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900'
+                                                : link.url
+                                                  ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
+                                                  : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50 dark:border-slate-800 dark:text-slate-600'
+                                        }`}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
