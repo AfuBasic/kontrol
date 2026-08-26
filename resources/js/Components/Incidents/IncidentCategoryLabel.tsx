@@ -1,19 +1,6 @@
 import React from 'react';
 import type { LucideIcon } from 'lucide-react';
-import {
-    AlertCircle,
-    Building2,
-    Car,
-    Droplet,
-    Globe,
-    HelpCircle,
-    Lightbulb,
-    ShieldAlert,
-    Tag,
-    Trash2,
-    Volume2,
-    Zap,
-} from 'lucide-react';
+import { AlertCircle, Building2, Car, Droplet, Globe, HelpCircle, Lightbulb, ShieldAlert, Tag, Trash2, Volume2, Zap } from 'lucide-react';
 import type { IncidentCategory } from '@/types/incidents';
 
 interface CategoryTheme {
@@ -23,6 +10,13 @@ interface CategoryTheme {
     border: string;
     badgeBg: string;
 }
+
+const withoutDarkVariants = (classes: string): string =>
+    classes
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter((className) => !className.startsWith('dark:'))
+        .join(' ');
 
 export const KNOWN_CATEGORY_THEMES: Record<string, CategoryTheme> = {
     electricity: {
@@ -112,7 +106,7 @@ export const CATEGORY_CONFIG: Record<string, CategoryTheme & { label: string }> 
             const { label, theme } = resolveCategoryDetails(prop);
             return { ...theme, label };
         },
-    }
+    },
 );
 
 export function resolveCategoryDetails(category: any): { label: string; theme: CategoryTheme } {
@@ -120,9 +114,7 @@ export function resolveCategoryDetails(category: any): { label: string; theme: C
         return { label: 'General / Other', theme: KNOWN_CATEGORY_THEMES.other };
     }
 
-    const rawValue = typeof category === 'object' && category !== null
-        ? (category.label || category.value || '')
-        : String(category);
+    const rawValue = typeof category === 'object' && category !== null ? category.label || category.value || '' : String(category);
 
     const trimmed = String(rawValue).trim();
     if (!trimmed) {
@@ -135,7 +127,18 @@ export function resolveCategoryDetails(category: any): { label: string; theme: C
     // If matches a known theme directly
     if (KNOWN_CATEGORY_THEMES[slug]) {
         // Standardize default display label for standard enum values if passed as slug
-        const isExactSlug = ['electricity', 'water_plumbing', 'road_infrastructure', 'security', 'sanitation_waste', 'noise_disturbance', 'lighting', 'common_areas', 'internet_cable', 'other'].includes(slug);
+        const isExactSlug = [
+            'electricity',
+            'water_plumbing',
+            'road_infrastructure',
+            'security',
+            'sanitation_waste',
+            'noise_disturbance',
+            'lighting',
+            'common_areas',
+            'internet_cable',
+            'other',
+        ].includes(slug);
         const standardLabels: Record<string, string> = {
             electricity: 'Electricity & Power',
             water_plumbing: 'Water & Plumbing',
@@ -157,16 +160,47 @@ export function resolveCategoryDetails(category: any): { label: string; theme: C
     if (lower.includes('noise') || lower.includes('music') || lower.includes('sound') || lower.includes('loud')) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.noise_disturbance };
     }
-    if (lower.includes('theft') || lower.includes('security') || lower.includes('safety') || lower.includes('guard') || lower.includes('intruder') || lower.includes('unauthorized') || lower.includes('entry') || lower.includes('vandalism')) {
+    if (
+        lower.includes('theft') ||
+        lower.includes('security') ||
+        lower.includes('safety') ||
+        lower.includes('guard') ||
+        lower.includes('intruder') ||
+        lower.includes('unauthorized') ||
+        lower.includes('entry') ||
+        lower.includes('vandalism')
+    ) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.security };
     }
-    if (lower.includes('water') || lower.includes('plumb') || lower.includes('pipe') || lower.includes('drain') || lower.includes('sewage') || lower.includes('leak')) {
+    if (
+        lower.includes('water') ||
+        lower.includes('plumb') ||
+        lower.includes('pipe') ||
+        lower.includes('drain') ||
+        lower.includes('sewage') ||
+        lower.includes('leak')
+    ) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.water_plumbing };
     }
-    if (lower.includes('power') || lower.includes('electr') || lower.includes('generator') || lower.includes('voltage') || lower.includes('blackout') || lower.includes('transformer')) {
+    if (
+        lower.includes('power') ||
+        lower.includes('electr') ||
+        lower.includes('generator') ||
+        lower.includes('voltage') ||
+        lower.includes('blackout') ||
+        lower.includes('transformer')
+    ) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.electricity };
     }
-    if (lower.includes('road') || lower.includes('car') || lower.includes('pothole') || lower.includes('traffic') || lower.includes('parking') || lower.includes('gate') || lower.includes('barrier')) {
+    if (
+        lower.includes('road') ||
+        lower.includes('car') ||
+        lower.includes('pothole') ||
+        lower.includes('traffic') ||
+        lower.includes('parking') ||
+        lower.includes('gate') ||
+        lower.includes('barrier')
+    ) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.road_infrastructure };
     }
     if (lower.includes('trash') || lower.includes('waste') || lower.includes('garbage') || lower.includes('sanitation') || lower.includes('clean')) {
@@ -175,7 +209,13 @@ export function resolveCategoryDetails(category: any): { label: string; theme: C
     if (lower.includes('light') || lower.includes('lamp') || lower.includes('bulb')) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.lighting };
     }
-    if (lower.includes('medical') || lower.includes('health') || lower.includes('emergency') || lower.includes('ambulance') || lower.includes('fire')) {
+    if (
+        lower.includes('medical') ||
+        lower.includes('health') ||
+        lower.includes('emergency') ||
+        lower.includes('ambulance') ||
+        lower.includes('fire')
+    ) {
         return {
             label: trimmed,
             theme: {
@@ -187,7 +227,14 @@ export function resolveCategoryDetails(category: any): { label: string; theme: C
             },
         };
     }
-    if (lower.includes('gym') || lower.includes('pool') || lower.includes('clubhouse') || lower.includes('amenit') || lower.includes('park') || lower.includes('garden')) {
+    if (
+        lower.includes('gym') ||
+        lower.includes('pool') ||
+        lower.includes('clubhouse') ||
+        lower.includes('amenit') ||
+        lower.includes('park') ||
+        lower.includes('garden')
+    ) {
         return { label: trimmed, theme: KNOWN_CATEGORY_THEMES.common_areas };
     }
     if (lower.includes('internet') || lower.includes('wifi') || lower.includes('cable') || lower.includes('telecom') || lower.includes('intercom')) {
@@ -212,6 +259,7 @@ interface Props {
     size?: 'xs' | 'sm' | 'md';
     showIcon?: boolean;
     showBadge?: boolean;
+    forceLight?: boolean;
     className?: string;
 }
 
@@ -220,10 +268,14 @@ export default function IncidentCategoryLabel({
     size = 'sm',
     showIcon = true,
     showBadge = false,
+    forceLight = false,
     className = '',
 }: Props) {
     const { label, theme } = resolveCategoryDetails(category);
     const Icon = theme.icon;
+    const badgeBgClasses = forceLight ? withoutDarkVariants(theme.badgeBg) : theme.badgeBg;
+    const borderClasses = forceLight ? withoutDarkVariants(theme.border) : theme.border;
+    const textClasses = forceLight ? withoutDarkVariants(theme.text) : theme.text;
 
     const sizeClasses = {
         xs: 'text-[10px] gap-1',
@@ -240,7 +292,7 @@ export default function IncidentCategoryLabel({
     if (showBadge) {
         return (
             <span
-                className={`inline-flex items-center font-bold rounded-lg px-2 py-0.5 border ${theme.badgeBg} ${theme.border} ${sizeClasses} ${className}`}
+                className={`inline-flex items-center rounded-lg border px-2 py-0.5 font-bold ${badgeBgClasses} ${borderClasses} ${sizeClasses} ${className}`}
             >
                 {showIcon && <Icon className={`${iconSizes} shrink-0`} />}
                 <span>{label}</span>
@@ -249,7 +301,7 @@ export default function IncidentCategoryLabel({
     }
 
     return (
-        <span className={`inline-flex items-center font-bold ${theme.text} ${sizeClasses} ${className}`}>
+        <span className={`inline-flex items-center font-bold ${textClasses} ${sizeClasses} ${className}`}>
             {showIcon && <Icon className={`${iconSizes} shrink-0`} />}
             <span>{label}</span>
         </span>

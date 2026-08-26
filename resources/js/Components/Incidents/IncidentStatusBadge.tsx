@@ -1,13 +1,6 @@
 import React from 'react';
-import type {
-    LucideIcon} from 'lucide-react';
-import {
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    Flame,
-    Lock
-} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, Flame, Lock } from 'lucide-react';
 import type { IncidentStatus } from '@/types/incidents';
 
 interface IncidentStatusConfig {
@@ -18,6 +11,13 @@ interface IncidentStatusConfig {
     border: string;
     dot: string;
 }
+
+const withoutDarkVariants = (classes: string): string =>
+    classes
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter((className) => !className.startsWith('dark:'))
+        .join(' ');
 
 export const STATUS_CONFIG: Record<IncidentStatus, IncidentStatusConfig> = {
     pending: {
@@ -67,19 +67,17 @@ interface Props {
     size?: 'sm' | 'md' | 'lg';
     showIcon?: boolean;
     showDot?: boolean;
+    forceLight?: boolean;
     className?: string;
 }
 
-export default function IncidentStatusBadge({
-    status,
-    size = 'md',
-    showIcon = true,
-    showDot = false,
-    className = '',
-}: Props) {
+export default function IncidentStatusBadge({ status, size = 'md', showIcon = true, showDot = false, forceLight = false, className = '' }: Props) {
     const key = (status as IncidentStatus) in STATUS_CONFIG ? (status as IncidentStatus) : 'pending';
     const config = STATUS_CONFIG[key];
     const Icon = config.icon;
+    const bgClasses = forceLight ? withoutDarkVariants(config.bg) : config.bg;
+    const textClasses = forceLight ? withoutDarkVariants(config.text) : config.text;
+    const borderClasses = forceLight ? withoutDarkVariants(config.border) : config.border;
 
     const sizeClasses = {
         sm: 'px-2 py-0.5 text-[11px] gap-1 font-semibold',
@@ -95,7 +93,7 @@ export default function IncidentStatusBadge({
 
     return (
         <span
-            className={`inline-flex items-center rounded-full border transition-colors ${config.bg} ${config.text} ${config.border} ${sizeClasses} ${className}`}
+            className={`inline-flex items-center rounded-full border transition-colors ${bgClasses} ${textClasses} ${borderClasses} ${sizeClasses} ${className}`}
         >
             {showDot && <span className={`h-1.5 w-1.5 rounded-full ${config.dot}`} />}
             {showIcon && !showDot && <Icon className={`${iconSizes} shrink-0`} />}

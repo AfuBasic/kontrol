@@ -7,22 +7,34 @@ interface Props {
     message?: string;
     description?: string;
     action?: ReactNode;
+    forceLight?: boolean;
     className?: string;
 }
 
 /**
  * Distinct empty state - no records exist (not an error).
  */
-export default function EmptyState({ icon: Icon = Inbox, title = 'Nothing here yet', message, description, action, className = '' }: Props) {
+export default function EmptyState({
+    icon: Icon = Inbox,
+    title = 'Nothing here yet',
+    message,
+    description,
+    action,
+    forceLight = false,
+    className = '',
+}: Props) {
     const body = description ?? message ?? 'When data is available, it will show up here.';
+    const dark = (classes: string): string => (forceLight ? '' : classes);
 
     return (
         <div className={`flex flex-col items-center justify-center px-6 py-10 text-center ${className}`}>
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
+            <div
+                className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 ${dark('dark:bg-slate-800 dark:text-slate-500')}`}
+            >
                 <Icon className="h-6 w-6" />
             </div>
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-white">{title}</h3>
-            <p className="mt-1.5 max-w-sm text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">{body}</p>
+            <h3 className={`text-sm font-semibold text-slate-900 ${dark('dark:text-white')}`}>{title}</h3>
+            <p className={`mt-1.5 max-w-sm text-[13px] leading-relaxed text-slate-500 ${dark('dark:text-slate-400')}`}>{body}</p>
             {action && <div className="mt-5">{action}</div>}
         </div>
     );
