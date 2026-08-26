@@ -759,6 +759,8 @@ export default function Settings({ settings }: SettingsProps) {
                                                     Add
                                                 </button>
                                             </div>
+                                        </div>
+                                    )}
 
                                     {/* Grace Period (Minutes) - Only shown if Checkout Tracking is enabled */}
                                     {data.visitor_checkout_enabled && (
