@@ -216,6 +216,8 @@ export default function CollectionsIndex({
     const [search, setSearch] = useState(filters.search || '');
     const [statusFilter, setStatusFilter] = useState(filters.status || '');
     const debouncedSearch = useDebounce(search, 300);
+    const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
+    const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
 
     const getInitialTab = (): 'overview' | 'list' => {
         if (typeof window !== 'undefined') {
