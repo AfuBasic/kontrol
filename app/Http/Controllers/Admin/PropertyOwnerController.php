@@ -406,6 +406,7 @@ class PropertyOwnerController extends Controller
         return Inertia::render('Admin/PropertyOwners/Residents', [
             'propertyOwner' => [
                 'id' => $propertyOwner->id,
+                'ulid' => $propertyOwner->ulid,
                 'name' => $propertyOwner->name,
             ],
             'residents' => Inertia::defer(fn () => User::query()
