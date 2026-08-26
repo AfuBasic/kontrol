@@ -274,7 +274,7 @@ export default function SecurityPersonnel({
                 {/* SECTION 4 - TABLE */}
                 <SectionErrorBoundary name="security-table">
                     <Deferred data="security" fallback={<TableRowSkeleton rows={6} columns={5} />}>
-                        <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50">
+                        <div className="overflow-visible rounded-2xl border border-slate-100 bg-white shadow-xs ring-1 ring-slate-100/50 md:overflow-hidden">
                             {isLoadingSecurity ? (
                                 <TableRowSkeleton rows={6} columns={5} />
                             ) : hasSecurity ? (
