@@ -38,6 +38,7 @@ class SettingsController extends Controller
                 'access_codes_enabled' => (bool) $settings->access_codes_enabled,
                 'access_code_min_lifespan_minutes' => (int) ($settings->access_code_min_lifespan_minutes ?: 30),
                 'access_code_max_lifespan_minutes' => (int) ($settings->access_code_max_lifespan_minutes ?: 1440),
+                'access_code_grace_period_minutes' => (int) ($settings->access_code_grace_period_minutes ?? 0),
                 'access_code_single_use' => (bool) $settings->access_code_single_use,
                 'require_vehicle_information' => (bool) $settings->require_vehicle_information,
                 'allow_residents_to_extend_visitor_passes' => (bool) $settings->allow_residents_to_extend_visitor_passes,
