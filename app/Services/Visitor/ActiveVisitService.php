@@ -4,6 +4,7 @@ namespace App\Services\Visitor;
 
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
+use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use Carbon\Carbon;
@@ -22,9 +23,9 @@ class ActiveVisitService
      */
     public function isCheckoutMonitoringEnabled(int $estateId): bool
     {
-        $settings = EstateSettings::forEstate($estateId);
+        $settings = EstateSettings::where('estate_id', $estateId)->first();
 
-        return (bool) ($settings->visitor_checkout_enabled ?? false);
+        return (bool) ($settings?->visitor_checkout_enabled ?? false);
     }
 
     /**
@@ -34,7 +35,7 @@ class ActiveVisitService
      */
     public function baseActiveQuery(int $estateId): Builder
     {
-        return AccessLog::withoutGlobalScope(ZoneScope::class)
+        return AccessLog::withoutGlobalScopes()
             ->where('access_logs.estate_id', $estateId)
             ->whereNull('access_logs.checked_out_at')
             ->whereNotNull('access_logs.verified_at');
