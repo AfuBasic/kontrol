@@ -125,23 +125,25 @@ function Banner({ title, description, cta, onCtaClick, variant }: BannerProps) {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             style={{ backgroundColor: backgroundColors[variant] }}
-            className="mx-0 mb-6 flex h-[48px] items-center rounded-[12px] px-[14px] py-[10px]"
+            className="mx-0 mb-6 flex min-h-[44px] items-center justify-between rounded-[12px] px-3 py-2 sm:h-[48px] sm:px-[14px] sm:py-[10px]"
         >
-            {/* Status Dot */}
-            <div className={`mr-[10px] h-2 w-2 shrink-0 rounded-full ${dotColors[variant]}`} />
+            <div className="flex min-w-0 flex-1 items-center">
+                {/* Status Dot */}
+                <div className={`mr-2 h-2 w-2 shrink-0 rounded-full sm:mr-[10px] ${dotColors[variant]}`} />
 
-            {/* Text Block */}
-            <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                <span className="shrink-0 text-[14px] font-medium tracking-tight text-[#1C1C1E]">{title}</span>
-                <span className="shrink-0 text-[12px] text-[#6B7280]">·</span>
-                <span className="truncate text-[12px] font-medium text-[#6B7280]">{description}</span>
+                {/* Text Block */}
+                <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
+                    <span className="shrink-0 font-medium text-[13px] tracking-tight text-[#1C1C1E] sm:text-[14px]">{title}</span>
+                    <span className="shrink-0 text-[11px] text-[#6B7280] sm:text-[12px]">·</span>
+                    <span className="truncate font-medium text-[11px] text-[#6B7280] sm:text-[12px]">{description}</span>
+                </div>
             </div>
 
             {/* CTA */}
             {cta && (
                 <button
                     onClick={onCtaClick}
-                    className="ml-auto shrink-0 pl-4 text-[13px] font-medium text-[#6366F1] transition-opacity active:opacity-60"
+                    className="ml-2 shrink-0 pl-2 font-semibold text-[12px] text-[#6366F1] transition-opacity active:opacity-60 sm:ml-auto sm:pl-4 sm:font-medium sm:text-[13px]"
                 >
                     {cta} →
                 </button>

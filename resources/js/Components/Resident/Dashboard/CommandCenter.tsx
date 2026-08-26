@@ -139,12 +139,12 @@ export default function CommandCenter({
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.96 }}
                             onClick={onAction}
-                            className="relative flex h-full w-full items-center justify-center gap-3 rounded-[24px] bg-white py-5 text-lg font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all active:shadow-none"
+                            className="relative flex h-full min-h-[56px] w-full items-center justify-center gap-2 rounded-[20px] bg-white px-4 py-3.5 text-center font-black text-base text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all sm:rounded-[24px] sm:gap-3 sm:py-5 sm:text-lg active:shadow-none"
                         >
-                            <Plus className="h-6 w-6" strokeWidth={3} />
-                            Generate Access Code
+                            <Plus className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" strokeWidth={3} />
+                            <span className="leading-tight">Generate Access Code</span>
                             {/* Subtle button glow */}
-                            <div className="absolute inset-0 -z-10 rounded-[24px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100" />
+                            <div className="absolute inset-0 -z-10 rounded-[20px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100 sm:rounded-[24px]" />
                         </motion.button>
                     )}
                 </div>
