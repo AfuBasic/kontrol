@@ -5,7 +5,6 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import ActivityDateGroup from '@/Components/Admin/Activity/ActivityDateGroup';
 import ActivityModuleFilter from '@/Components/Admin/Activity/ActivityModuleFilter';
 import ActivitySkeletons from '@/Components/Admin/Activity/ActivitySkeletons';
-import AdminLayout from '@/Layouts/AdminLayout';
 import type { ActivityItem, ActivityLogIndexProps } from '@/types/activity';
 
 export default function ActivityLogIndex({
@@ -129,7 +128,7 @@ export default function ActivityLogIndex({
     }, [activities]);
 
     return (
-        <AdminLayout>
+        <>
             <Head title="Estate Activity" />
 
             <div className="mx-auto min-h-screen max-w-4xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
@@ -236,6 +235,6 @@ export default function ActivityLogIndex({
                     )}
                 </div>
             </div>
-        </AdminLayout>
+        </>
     );
 }
