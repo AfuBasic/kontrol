@@ -7,22 +7,25 @@ use App\Models\AccessCode;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
+use App\Services\Visitor\ActiveVisitService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class AccessCodeController extends Controller
 {
     public function __construct(
         protected AccessCodeService $accessCodeService,
         protected EstateContextService $estateContext,
+        protected ActiveVisitService $activeVisitService,
     ) {}
 
     /**
-     * Display the Visitor Timeline (Upcoming + History agenda views).
+     * Display the Visitor Timeline (Upcoming + Active + History views).
      */
     public function index(Request $request): Response
     {
@@ -37,11 +40,21 @@ class AccessCodeController extends Controller
         $estateId = null;
         try {
             $estateId = $this->estateContext->getEstateId();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $estateId = auth()->user()?->estate_id;
         }
 
         $settings = $estateId ? EstateSettings::forEstate($estateId) : null;
+        $checkoutEnabled = $estateId ? $this->activeVisitService->isCheckoutMonitoringEnabled($estateId) : false;
+        $userId = (int) auth()->id();
+
+        $activeVisits = ($checkoutEnabled && $estateId)
+            ? $this->activeVisitService->getResidentActiveVisits($estateId, $userId)
+            : collect();
+
+        $activeCount = ($checkoutEnabled && $estateId)
+            ? $this->activeVisitService->countResidentActiveVisits($estateId, $userId)
+            : 0;
 
         return Inertia::render('Resident/Visitors/Index', [
             'filters' => [
@@ -50,6 +63,9 @@ class AccessCodeController extends Controller
             ],
             'upcomingTimeline' => $upcomingCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress)),
             'historyTimeline' => $historyCodes->map(fn ($code) => $this->serializeAccessCode($code, $residentAddress, withCompletion: true)),
+            'activeVisits' => $activeVisits,
+            'activeCount' => $activeCount,
+            'checkoutEnabled' => $checkoutEnabled,
             'recentVisitors' => $this->accessCodeService->getRecentUniqueVisitors(5),
             'recentActivity' => $this->accessCodeService->getRecentActivity(5),
             'dailyUsage' => $this->accessCodeService->getDailyUsageAndLimit(),
