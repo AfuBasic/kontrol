@@ -565,8 +565,6 @@ export default function AdminLayout({ children, _title }: Props) {
                         canAccess={canAccess}
                         billingEnabled={billing_enabled || false}
                     />
-
-                    <MobileBottomNav url={url} unreadNotifications={unreadCount} />
                 </Suspense>
             </div>
 
@@ -817,7 +815,13 @@ export default function AdminLayout({ children, _title }: Props) {
             </div>
 
             {/* Mobile Navigation & Bottom Bar */}
-            <MobileBottomNav url={url} unreadNotifications={unreadCount} />
+            <MobileBottomNav
+                url={url}
+                unreadNotifications={unreadCount}
+                canAccess={canAccess}
+                isAdmin={isAdmin}
+                onOpenMenu={() => setMobileMenuOpen(true)}
+            />
 
             {/* Mobile Sidebar (Drawer-style for 'More' or complex navigation) */}
             <AnimatePresence>
