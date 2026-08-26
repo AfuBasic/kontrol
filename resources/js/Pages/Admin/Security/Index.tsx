@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Users, ShieldCheck, UserMinus, AlertCircle, Clock, X, Loader2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { bulkDelete, index } from '@/actions/App/Http/Controllers/Admin/SecurityPersonnelController';
+import SecurityCard from '@/Components/Admin/Security/SecurityCard';
 import SecurityActions from '@/Components/Admin/SecurityActions';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { TableRowSkeleton } from '@/Components/Skeletons';
@@ -68,6 +69,7 @@ export default function SecurityPersonnel({
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
     const debouncedSearch = useDebounce(search, 300);
 
     // Apply filters
@@ -116,6 +118,27 @@ export default function SecurityPersonnel({
 
     const toggleSelect = (id: number) => {
         setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    };
+
+    const handleToggleSuspend = (person: SecurityPerson) => {
+        router.patch(`/admin/security/${person.ulid}/suspend`, {}, {
+            preserveScroll: true,
+            preserveState: true,
+        });
+    };
+
+    const handleDeletePerson = (person: SecurityPerson) => {
+        if (confirm(`Are you sure you want to remove ${person.name} from security personnel?`)) {
+            router.delete(`/admin/security/${person.ulid}`, {
+                preserveScroll: true,
+            });
+        }
+    };
+
+    const handleResendInvitation = (person: SecurityPerson) => {
+        router.post(`/admin/security/${person.ulid}/resend-invitation`, {}, {
+            preserveScroll: true,
+        });
     };
 
     const handleBulkDelete = () => {
@@ -255,8 +278,29 @@ export default function SecurityPersonnel({
                             {isLoadingSecurity ? (
                                 <TableRowSkeleton rows={6} columns={5} />
                             ) : hasSecurity ? (
-                                <div className="min-h-[280px] overflow-x-auto">
-                                    <table className="w-full table-auto border-collapse">
+                                <>
+                                    {/* Mobile Card Feed (< md) */}
+                                    <div className="space-y-3 p-3 md:hidden">
+                                        {security.data.map((person, idx) => (
+                                            <SecurityCard
+                                                key={person.ulid}
+                                                person={person}
+                                                index={idx}
+                                                isSelected={selectedIds.includes(person.id)}
+                                                onToggleSelect={toggleSelect}
+                                                onToggleSuspend={() => handleToggleSuspend(person)}
+                                                onDeletePerson={() => handleDeletePerson(person)}
+                                                onResendInvitation={() => handleResendInvitation(person)}
+                                                isMenuOpen={menuOpenId === person.id}
+                                                onToggleMenu={() => setMenuOpenId(menuOpenId === person.id ? null : person.id)}
+                                                onCloseMenu={() => setMenuOpenId(null)}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    {/* Desktop Table View (>= md) */}
+                                    <div className="hidden min-h-[280px] overflow-x-auto md:block">
+                                        <table className="w-full table-auto border-collapse">
                                         <thead className="border-b border-slate-100 bg-slate-50/70">
                                             <tr>
                                                 {can('security.delete') && (
@@ -270,16 +314,16 @@ export default function SecurityPersonnel({
                                                     </th>
                                                 )}
                                                 <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Guards
+                                                    Personnel
                                                 </th>
                                                 <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                                     Contact
                                                 </th>
                                                 <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Coverage / Zone
+                                                    Assigned Zone
                                                 </th>
                                                 <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Badge #
+                                                    Badge ID
                                                 </th>
                                                 <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
                                                     Status
@@ -390,6 +434,7 @@ export default function SecurityPersonnel({
                                         </tbody>
                                     </table>
                                 </div>
+                                </>
                             ) : (
                                 /* Redesigned Empty State */
                                 <div className="flex flex-col items-center justify-center px-4 py-16 text-center">
@@ -417,28 +462,68 @@ export default function SecurityPersonnel({
 
                         {/* Pagination */}
                         {security.last_page > 1 && (
-                            <div className="flex items-center justify-between border-t border-slate-100 pt-5 pb-8">
-                                <p className="text-slate-505 text-xs font-bold">
-                                    Showing <span className="text-slate-950">{security.data.length}</span> of{' '}
-                                    <span className="text-slate-950">{security.total}</span> staff members
-                                </p>
-                                <div className="flex gap-1.5">
-                                    {security.links.map((link, idx) => (
+                            <div className="flex items-center justify-between border-t border-slate-100 px-2 pt-5 pb-8 sm:px-0">
+                                {/* Mobile Prev / Next */}
+                                <div className="flex w-full items-center justify-between sm:hidden">
+                                    {security.links[0]?.url ? (
                                         <Link
-                                            key={idx}
-                                            href={link.url || '#'}
+                                            href={security.links[0].url}
                                             preserveScroll
                                             preserveState
-                                            className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
-                                                link.active
-                                                    ? 'bg-slate-950 text-white shadow-sm'
-                                                    : link.url
-                                                      ? 'text-slate-655 border-slate-205 border bg-white hover:bg-slate-50'
-                                                      : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50'
-                                            }`}
-                                            dangerouslySetInnerHTML={{ __html: link.label }}
-                                        />
-                                    ))}
+                                            className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                        >
+                                            &larr; Previous
+                                        </Link>
+                                    ) : (
+                                        <span className="inline-flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-900">
+                                            &larr; Previous
+                                        </span>
+                                    )}
+
+                                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                                        Page {security.current_page} of {security.last_page}
+                                    </span>
+
+                                    {security.links[security.links.length - 1]?.url ? (
+                                        <Link
+                                            href={security.links[security.links.length - 1].url!}
+                                            preserveScroll
+                                            preserveState
+                                            className="inline-flex items-center rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                        >
+                                            Next &rarr;
+                                        </Link>
+                                    ) : (
+                                        <span className="inline-flex items-center rounded-xl border border-slate-100 bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-400 opacity-50 dark:border-slate-800 dark:bg-slate-900">
+                                            Next &rarr;
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Desktop Numbers */}
+                                <div className="hidden sm:flex sm:w-full sm:items-center sm:justify-between">
+                                    <p className="text-slate-500 text-xs font-bold dark:text-slate-400">
+                                        Showing <span className="text-slate-950 dark:text-slate-100">{security.data.length}</span> of{' '}
+                                        <span className="text-slate-950 dark:text-slate-100">{security.total}</span> staff members
+                                    </p>
+                                    <div className="flex gap-1.5">
+                                        {security.links.map((link, idx) => (
+                                            <Link
+                                                key={idx}
+                                                href={link.url || '#'}
+                                                preserveScroll
+                                                preserveState
+                                                className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-all ${
+                                                    link.active
+                                                        ? 'bg-slate-950 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900'
+                                                        : link.url
+                                                          ? 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300'
+                                                          : 'cursor-not-allowed border border-slate-100 text-slate-300 opacity-50 dark:border-slate-800 dark:text-slate-600'
+                                                }`}
+                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                            />
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         )}
