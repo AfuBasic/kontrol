@@ -28,6 +28,7 @@ class UpdateEstateSettingsRequest extends FormRequest
                 'max:10080',
                 'gte:access_code_min_lifespan_minutes',
             ],
+            'access_code_grace_period_minutes' => ['nullable', 'integer', 'min:0', 'max:1440'],
             'access_code_single_use' => ['required', 'boolean'],
             'require_vehicle_information' => ['required', 'boolean'],
             'allow_residents_to_extend_visitor_passes' => ['required', 'boolean'],

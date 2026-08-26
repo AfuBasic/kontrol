@@ -10,6 +10,7 @@ type SettingsProps = {
         access_codes_enabled: boolean;
         access_code_min_lifespan_minutes: number;
         access_code_max_lifespan_minutes: number;
+        access_code_grace_period_minutes: number;
         access_code_single_use: boolean;
         require_vehicle_information: boolean;
         allow_residents_to_extend_visitor_passes: boolean;
@@ -396,6 +397,7 @@ export default function Settings({ settings }: SettingsProps) {
         access_codes_enabled: settings.access_codes_enabled,
         access_code_min_lifespan_minutes: settings.access_code_min_lifespan_minutes,
         access_code_max_lifespan_minutes: settings.access_code_max_lifespan_minutes,
+        access_code_grace_period_minutes: settings.access_code_grace_period_minutes ?? 0,
         access_code_single_use: settings.access_code_single_use,
         require_vehicle_information: settings.require_vehicle_information,
         allow_residents_to_extend_visitor_passes: settings.allow_residents_to_extend_visitor_passes,
@@ -757,8 +759,46 @@ export default function Settings({ settings }: SettingsProps) {
                                                     Add
                                                 </button>
                                             </div>
+                                        </div>
+                                    )}
 
-                                            {errors.entry_points && <p className="mt-2 text-xs font-medium text-red-500">{errors.entry_points}</p>}
+                                    {/* Grace Period (Minutes) - Only shown if Checkout Tracking is enabled */}
+                                    {data.visitor_checkout_enabled && (
+                                        <div className="mt-4 rounded-xl border border-slate-200/60 bg-slate-50/50 p-4 dark:border-slate-800/60 dark:bg-slate-800/20">
+                                            <label
+                                                htmlFor="grace_period"
+                                                className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
+                                            >
+                                                Visitor Checkout Grace Period (Minutes)
+                                            </label>
+                                            <div className="relative mt-2 max-w-xs">
+                                                <input
+                                                    type="number"
+                                                    id="grace_period"
+                                                    min="0"
+                                                    max="1440"
+                                                    value={data.access_code_grace_period_minutes ?? ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        setData(
+                                                            'access_code_grace_period_minutes',
+                                                            val === '' ? ('' as any) : parseInt(val, 10),
+                                                        );
+                                                    }}
+                                                    onBlur={() => {
+                                                        if (data.access_code_grace_period_minutes === ('' as any) || data.access_code_grace_period_minutes === undefined) {
+                                                            setData('access_code_grace_period_minutes', 0);
+                                                        }
+                                                    }}
+                                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                                />
+                                            </div>
+                                            <p className="mt-1.5 text-xs text-slate-400">
+                                                Extra window granted past official pass expiry for visitors to scan out at checkpoints before being flagged as expired.
+                                            </p>
+                                            {errors.access_code_grace_period_minutes && (
+                                                <p className="mt-1 text-xs text-red-500">{errors.access_code_grace_period_minutes}</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>

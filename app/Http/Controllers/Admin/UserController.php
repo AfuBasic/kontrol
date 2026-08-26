@@ -51,6 +51,7 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'filters' => $request->only(['search']),
+            'hasRoles' => $this->roleService->getManageableRoles()->isNotEmpty(),
         ]);
     }
 

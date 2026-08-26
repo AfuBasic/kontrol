@@ -32,9 +32,10 @@ type Props = {
     filters: {
         search?: string;
     };
+    hasRoles?: boolean;
 };
 
-export default function UsersIndex({ users, filters }: Props) {
+export default function UsersIndex({ users, filters, hasRoles = true }: Props) {
     const { can } = usePermission();
     const _hasUsers = users.total > 0;
     const [search, setSearch] = useState(filters.search || '');
@@ -50,6 +51,9 @@ export default function UsersIndex({ users, filters }: Props) {
         }
     }, [debouncedSearch, filters.search]);
 
+    const primaryActionHref = hasRoles ? index.url() + '/create' : '/admin/roles/create';
+    const primaryActionLabel = hasRoles ? 'Add Staff Member' : 'Create First Role';
+
     return (
         <>
             <Head title="Estate Team" />
@@ -63,11 +67,11 @@ export default function UsersIndex({ users, filters }: Props) {
                 {can('users.create') && (
                     <div className="flex items-center gap-2">
                         <Link
-                            href={index.url() + '/create'}
+                            href={primaryActionHref}
                             className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                         >
                             <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                            Add Staff Member
+                            {primaryActionLabel}
                         </Link>
                     </div>
                 )}
@@ -79,18 +83,21 @@ export default function UsersIndex({ users, filters }: Props) {
                     <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100/50">
                         <Users className="h-8 w-8" strokeWidth={1.5} />
                     </div>
-                    <h3 className="text-base font-black text-slate-900">Build your estate team</h3>
+                    <h3 className="text-base font-black text-slate-900">
+                        {hasRoles ? 'Build your estate team' : 'Create your first estate role'}
+                    </h3>
                     <p className="mt-2 max-w-sm text-xs leading-relaxed font-semibold text-slate-500">
-                        Add the people who help run your estate. Once they're added, you can give them specific responsibilities and define where
-                        those responsibilities apply.
+                        {hasRoles
+                            ? "Add the people who help run your estate. Once they're added, you can give them specific responsibilities and define where those responsibilities apply."
+                            : 'Before inviting staff members to the estate team, define their roles and responsibilities (such as Estate Manager, Accountant, or Facility Officer).'}
                     </p>
                     {can('users.create') && (
                         <Link
-                            href={index.url() + '/create'}
+                            href={primaryActionHref}
                             className="mt-8 flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
                         >
                             <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                            Add Staff Member
+                            {primaryActionLabel}
                         </Link>
                     )}
                 </div>

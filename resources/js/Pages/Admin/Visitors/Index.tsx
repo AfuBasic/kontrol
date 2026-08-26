@@ -5,7 +5,6 @@ import { Calendar, Download, LayoutList, Lock, Table2 } from 'lucide-react';
 import { index, calendar } from '@/actions/App/Http/Controllers/Admin/VisitorLogController';
 import ActivityFiltersBar from '@/Components/Admin/Visitors/ActivityFiltersBar';
 import ActivityTimeline from '@/Components/Admin/Visitors/ActivityTimeline';
-import OnPropertyNow from '@/Components/Admin/Visitors/OnPropertyNow';
 import RecordDetail from '@/Components/Admin/Visitors/RecordDetail';
 import VisitorTable from '@/Components/Admin/Visitors/VisitorTable';
 import type { ActivityView, SortDirection, SortField, VisitorFilters, VisitorRecord } from '@/Components/Admin/Visitors/types';
@@ -28,13 +27,12 @@ type Props = {
     hosts?: Array<{ id: number; name: string }> | null;
     securityOfficers?: Array<{ id: number; name: string }> | null;
     checkoutEnabled: boolean;
-    currentlyInsideList?: VisitorRecord[] | null;
+    activeVisitCount?: number;
     expectedTodayCount?: number;
 };
 
-export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, currentlyInsideList = [], expectedTodayCount = 0 }: Props) {
+export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = false, activeVisitCount = 0, expectedTodayCount = 0 }: Props) {
     const hostOptions = hosts ?? [];
-    const onProperty = currentlyInsideList ?? [];
     const activeView: ActivityView = filters.view === 'table' ? 'table' : 'activity';
 
     const { isOnline, quality } = useNetworkQuality();
@@ -199,13 +197,6 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                     </div>
                 </header>
 
-                <OnPropertyNow
-                    visitors={onProperty}
-                    checkoutEnabled={checkoutEnabled}
-                    expectedTodayCount={expectedTodayCount}
-                    onSelect={setSelectedRecord}
-                />
-
                 {/* Activity journal - tools + feed as one surface */}
                 <section aria-labelledby="activity-heading" className="overflow-hidden rounded-xl border border-gray-200 bg-white">
                     <div className="flex flex-col gap-3 border-b border-gray-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
@@ -231,7 +222,17 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                                 icon={LayoutList}
                                 label="Timeline"
                             />
-                            <TabButton active={activeView === 'table'} onClick={() => handleViewChange('table')} icon={Table2} label="Table" />
+                            <TabButton
+                                active={activeView === 'table'}
+                                onClick={() => handleViewChange('table')}
+                                icon={Table2}
+                                label={
+                                    <>
+                                        <span className="sm:hidden">Cards</span>
+                                        <span className="hidden sm:inline">Table</span>
+                                    </>
+                                }
+                            />
                         </div>
                     </div>
 
@@ -240,6 +241,7 @@ export default function VisitorIndex({ logs, filters, hosts, checkoutEnabled = f
                             filters={toolbarFilters}
                             hosts={hostOptions}
                             checkoutEnabled={checkoutEnabled}
+                            activeVisitCount={activeVisitCount}
                             onFilterChange={handleFilterChange}
                             onClearFilters={handleClearFilters}
                         />
@@ -302,7 +304,7 @@ function TabButton({
     active: boolean;
     onClick: () => void;
     icon: React.ComponentType<{ className?: string }>;
-    label: string;
+    label: React.ReactNode;
 }) {
     return (
         <button

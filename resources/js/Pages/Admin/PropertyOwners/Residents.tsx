@@ -410,19 +410,19 @@ export default function Residents({ propertyOwner, residents }: Props) {
                         </div>
                     </div>
 
-                    <div className="mt-5 flex flex-col-reverse gap-3 border-t border-slate-100 pt-3.5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
-                        <span className="text-center text-xs font-semibold text-slate-500 sm:text-left dark:text-slate-400">
-                            {selectedIds.length > 0 ? (
-                                <span className="font-bold text-indigo-600 dark:text-indigo-400">{selectedIds.length} resident(s) selected</span>
-                            ) : (
-                                'No residents selected'
-                            )}
-                        </span>
-                        <div className="flex items-center gap-2">
+                    <div className="mt-5 space-y-3 border-t border-slate-100 pt-3.5 dark:border-slate-800">
+                        <div className="flex items-center justify-between text-xs">
+                            <span className="font-semibold text-slate-500 dark:text-slate-400">Selected:</span>
+                            <span className={`font-bold ${selectedIds.length > 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                                {selectedIds.length > 0 ? `${selectedIds.length} resident(s) selected` : 'None'}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center gap-3">
                             <button
                                 type="button"
                                 onClick={() => setIsAssignModalOpen(false)}
-                                className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 sm:flex-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                                className="flex-1 whitespace-nowrap rounded-xl border border-slate-200 bg-white py-2.5 px-4 text-center text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
                             >
                                 Cancel
                             </button>
@@ -430,9 +430,9 @@ export default function Residents({ propertyOwner, residents }: Props) {
                                 type="button"
                                 onClick={handleAssign}
                                 disabled={selectedIds.length === 0 || isSubmitting}
-                                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+                                className="flex-1 whitespace-nowrap inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 py-2.5 px-4 text-center text-xs font-bold text-white shadow-xs hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                {isSubmitting ? 'Assigning...' : `Assign Selected (${selectedIds.length})`}
+                                {isSubmitting ? 'Assigning...' : selectedIds.length > 0 ? `Assign (${selectedIds.length})` : 'Assign Selected'}
                             </button>
                         </div>
                     </div>

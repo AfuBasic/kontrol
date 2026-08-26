@@ -218,15 +218,42 @@ export default function CollectionsIndex({
     const debouncedSearch = useDebounce(search, 300);
     const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
     const [isAnalyticsLoading, setIsAnalyticsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'list'>('overview');
+
+    const getInitialTab = (): 'overview' | 'list' => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const tabParam = params.get('tab');
+            if (tabParam === 'list' || tabParam === 'overview') {
+                return tabParam;
+            }
+        }
+        return 'overview';
+    };
+
+    const [activeTab, setActiveTab] = useState<'overview' | 'list'>(getInitialTab);
     const { quality, isOnline } = useNetworkQuality();
     const skipCharts = quality === 'poor' || quality === 'offline' || !isOnline;
 
+    const handleTabChange = (tab: 'overview' | 'list') => {
+        setActiveTab(tab);
+        const url = new URL(window.location.href);
+        if (tab === 'list') {
+            url.searchParams.set('tab', 'list');
+        } else {
+            url.searchParams.delete('tab');
+        }
+        window.history.replaceState({}, '', url.toString());
+    };
+
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
-            router.get(index.url(), { search: debouncedSearch, status: statusFilter }, { preserveState: true, preserveScroll: true, replace: true });
+            const queryParamsObj: Record<string, string> = { search: debouncedSearch, status: statusFilter };
+            if (activeTab === 'list') {
+                queryParamsObj.tab = 'list';
+            }
+            router.get(index.url(), queryParamsObj, { preserveState: true, preserveScroll: true, replace: true });
         }
-    }, [debouncedSearch, filters.search, statusFilter]);
+    }, [debouncedSearch, filters.search, statusFilter, activeTab]);
 
     useEffect(() => {
         if (skipCharts) {
@@ -404,32 +431,34 @@ export default function CollectionsIndex({
                 )}
 
                 {/* ── Page Header ── */}
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="text-2xl font-black tracking-tight text-slate-900">Financial Command Center</h1>
-                        <p className="text-sm text-slate-400">Estate collections overview and financial intelligence.</p>
+                        <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Financial Command Center</h1>
+                        <p className="mt-0.5 text-xs text-slate-400 sm:text-sm">Estate collections overview and financial intelligence.</p>
                     </div>
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsBankingModalOpen(true)}
-                            className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                            className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
                         >
-                            <Settings2 className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">{hasBanking ? 'Settlement' : 'Setup Bank'}</span>
+                            <Settings2 className="h-4 w-4 text-slate-400" />
+                            <span>{hasBanking ? 'Settlement' : 'Setup Bank'}</span>
                         </button>
                         {hasBanking ? (
                             <Link
                                 href={create.url()}
-                                className="flex items-center gap-2 rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                                className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-95"
                             >
-                                <PlusIcon className="h-3.5 w-3.5" /> New Collection
+                                <PlusIcon className="h-4 w-4" />
+                                <span>New Collection</span>
                             </Link>
                         ) : (
                             <button
                                 onClick={() => setIsBankingModalOpen(true)}
-                                className="flex cursor-not-allowed items-center gap-2 rounded-xl bg-slate-200 px-4 py-2.5 text-xs font-bold text-slate-400"
+                                className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-400"
                             >
-                                <PlusIcon className="h-3.5 w-3.5" /> New Collection
+                                <PlusIcon className="h-4 w-4" />
+                                <span>New Collection</span>
                             </button>
                         )}
                     </div>
@@ -439,7 +468,7 @@ export default function CollectionsIndex({
                 {showFinancialDashboard && (
                     <div className="flex border-b border-slate-200">
                         <button
-                            onClick={() => setActiveTab('overview')}
+                            onClick={() => handleTabChange('overview')}
                             className={cn(
                                 'border-b-2 px-6 py-3 text-xs font-black tracking-wider uppercase transition-all',
                                 activeTab === 'overview'
@@ -450,7 +479,7 @@ export default function CollectionsIndex({
                             Overview
                         </button>
                         <button
-                            onClick={() => setActiveTab('list')}
+                            onClick={() => handleTabChange('list')}
                             className={cn(
                                 'border-b-2 px-6 py-3 text-xs font-black tracking-wider uppercase transition-all',
                                 activeTab === 'list' ? 'border-[#1F6FDB] text-[#1F6FDB]' : 'border-transparent text-slate-400 hover:text-slate-700',

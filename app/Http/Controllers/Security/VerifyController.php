@@ -95,6 +95,8 @@ class VerifyController extends Controller
                 );
 
                 $result['access_log_id'] = $log->id;
+                $result['verified_at'] = $log->verified_at?->toIso8601String();
+                $result['entry_point'] = $log->entry_point;
             }
 
             $accessCodeId = isset($log) ? $log->access_code_id : AccessLog::where('id', $result['access_log_id'])->value('access_code_id');
@@ -176,7 +178,9 @@ class VerifyController extends Controller
                     return response()->json([
                         'success' => true,
                         'decision' => 'checkout',
-                        'checked_out_at' => $log->checked_out_at?->format('h:i A, M j'),
+                        'checked_in_at' => $log->verified_at?->toIso8601String(),
+                        'checked_out_at' => $log->checked_out_at?->toIso8601String(),
+                        'entry_point' => $log->entry_point ?? 'Main Gate',
                         'exit_point' => $log->meta['exit_point'] ?? $log->entry_point ?? 'Main Gate',
                         'duration_minutes' => $log->checked_out_at ? (int) $log->checked_out_at->diffInMinutes($log->verified_at) : 0,
                     ]);

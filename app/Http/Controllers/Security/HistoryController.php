@@ -6,21 +6,35 @@ use App\Http\Controllers\Controller;
 use App\Models\AccessLog;
 use App\Models\User;
 use App\Services\EstateContextService;
+use App\Services\Visitor\ActiveVisitService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HistoryController extends Controller
 {
+    public function __construct(
+        protected EstateContextService $estateContext,
+        protected ActiveVisitService $activeVisitService,
+    ) {}
+
     /**
-     * Display a listing of access logs.
+     * Display a listing of access logs and active visits.
      */
     public function index(Request $request): Response
     {
         $user = auth()->user();
-        $estate = app(EstateContextService::class)->getEstate();
+        $estate = $this->estateContext->getEstate();
 
-        $filters = $request->only(['search', 'date', 'vehicle_plate', 'host_id']);
+        $filters = $request->only(['search', 'date', 'vehicle_plate', 'host_id', 'tab']);
+
+        $checkoutEnabled = $this->activeVisitService->isCheckoutMonitoringEnabled($estate->id);
+        $activeVisits = $checkoutEnabled
+            ? $this->activeVisitService->getSecurityActiveVisits($estate->id, $user, $filters['search'] ?? null)
+            : collect();
+        $activeCount = $checkoutEnabled
+            ? $this->activeVisitService->countEstateActiveVisits($estate->id)
+            : 0;
 
         $logs = AccessLog::query()
             ->where('estate_id', $estate->id)
@@ -101,6 +115,9 @@ class HistoryController extends Controller
             'logs' => Inertia::scroll(fn () => $logs),
             'filters' => (object) $filters,
             'hosts' => $hosts,
+            'checkoutEnabled' => $checkoutEnabled,
+            'activeVisits' => $activeVisits,
+            'activeCount' => $activeCount,
         ]);
     }
 }

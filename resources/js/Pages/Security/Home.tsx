@@ -22,18 +22,20 @@ type Stats = {
     expected_today: number;
     validated_today: number;
     active_codes: number;
+    active_inside?: number;
 };
 
 interface PageProps {
     estateName?: string;
     gateName?: string;
     guardName?: string;
+    checkoutEnabled?: boolean;
     stats?: Stats;
     recentActivity?: ActivityItem[];
     [key: string]: unknown;
 }
 
-const EMPTY_STATS: Stats = { expected_today: 0, validated_today: 0, active_codes: 0 };
+const EMPTY_STATS: Stats = { expected_today: 0, validated_today: 0, active_codes: 0, active_inside: 0 };
 
 function formatLastSync(iso: string | null): string {
     if (!iso) {
@@ -55,6 +57,7 @@ export default function SecurityCommandCenter() {
     const estateName = props.estateName ?? '';
     const gateName = props.gateName ?? 'Main Entrance';
     const guardName = props.guardName ?? '';
+    const checkoutEnabled = Boolean(props.checkoutEnabled);
     const stats = props.stats ?? EMPTY_STATS;
     const recentActivity = props.recentActivity ?? [];
     const [clock, setClock] = useState(formatClock());
@@ -234,11 +237,21 @@ export default function SecurityCommandCenter() {
                     </div>
                 </motion.button>
 
-                {/* Live stats - 3-up */}
-                <div className="grid grid-cols-3 gap-2.5">
+                {/* Live stats */}
+                <div className={`grid gap-2.5 ${checkoutEnabled ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-3'}`}>
                     <StatCard label="Expected" value={stats.expected_today} hint="today" />
                     <StatCard label="Validated" value={stats.validated_today} hint="today" tone="emerald" />
-                    <StatCard label="Active" value={stats.active_codes} hint={stats.active_codes === 1 ? 'code' : 'codes'} />
+                    {checkoutEnabled ? (
+                        <Link href={`${HistoryController.index.url()}?tab=active`} className="block active:scale-95 transition">
+                            <StatCard
+                                label="Inside"
+                                value={stats.active_inside ?? 0}
+                                hint={stats.active_inside === 1 ? 'visitor' : 'visitors'}
+                                tone={(stats.active_inside ?? 0) > 0 ? 'emerald' : 'slate'}
+                            />
+                        </Link>
+                    ) : null}
+                    <StatCard label="Active Codes" value={stats.active_codes} hint={stats.active_codes === 1 ? 'code' : 'codes'} />
                 </div>
 
                 {/* Recent activity feed */}

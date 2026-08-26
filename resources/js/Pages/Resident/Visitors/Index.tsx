@@ -4,6 +4,8 @@ import { Calendar, Plus, RefreshCw, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
+import ActiveVisitsCallout from '@/Components/Visitors/ActiveVisitsCallout';
+import ResidentActiveVisits, { type ActiveVisitItem } from '@/Components/Visitors/ResidentActiveVisits';
 import ContextBanner from '@/Components/Visitors/ContextBanner';
 import HistoryArchive from '@/Components/Visitors/HistoryArchive';
 import NextVisitorHero from '@/Components/Visitors/NextVisitorHero';
@@ -27,6 +29,9 @@ type RecentVisitor = {
 type Props = {
     upcomingTimeline: AccessCode[];
     historyTimeline: AccessCode[];
+    activeVisits?: ActiveVisitItem[];
+    activeCount?: number;
+    checkoutEnabled?: boolean;
     recentVisitors?: RecentVisitor[];
     filters: {
         search_upcoming?: string;
@@ -35,7 +40,7 @@ type Props = {
     accessCodesEnabled?: boolean;
 };
 
-type Tab = 'schedule' | 'history';
+type Tab = 'schedule' | 'active' | 'history';
 
 function pendingBadge(status: SyncStatus): { label: string; className: string } {
     switch (status) {
@@ -54,17 +59,28 @@ function pendingBadge(status: SyncStatus): { label: string; className: string } 
     }
 }
 
-export default function Visitors({ upcomingTimeline, historyTimeline, recentVisitors = [], accessCodesEnabled = true }: Props) {
+export default function Visitors({
+    upcomingTimeline,
+    historyTimeline,
+    activeVisits = [],
+    activeCount = 0,
+    checkoutEnabled = false,
+    recentVisitors = [],
+    accessCodesEnabled = true,
+}: Props) {
     const userRoles: string[] = (usePage().props as any).auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const { operations, retryOperation, isSyncing, syncNow } = useSyncStatus();
 
-    const initialTab =
-        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null) === 'history' ? 'history' : 'schedule';
+    const paramTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
+    const initialTab: Tab = paramTab === 'active' && checkoutEnabled ? 'active' : paramTab === 'history' ? 'history' : 'schedule';
 
     const [activeTab, setActiveTab] = useState<Tab>(initialTab);
 
     const switchTab = (tab: Tab) => {
+        if (tab === 'active' && !checkoutEnabled) {
+            tab = 'schedule';
+        }
         setActiveTab(tab);
         if (typeof window !== 'undefined') {
             const url = new URL(window.location.href);
@@ -197,6 +213,31 @@ export default function Visitors({ upcomingTimeline, historyTimeline, recentVisi
                         <span className="relative z-10">Schedule</span>
                     </button>
 
+                    {checkoutEnabled && (
+                        <button
+                            onClick={() => switchTab('active')}
+                            className={`relative flex-1 rounded-lg py-2 text-xs font-bold transition-colors duration-200 ${
+                                activeTab === 'active' ? 'text-slate-900' : 'text-slate-500 hover:text-slate-800'
+                            }`}
+                        >
+                            {activeTab === 'active' && (
+                                <motion.div
+                                    layoutId="activeTabPill"
+                                    className="absolute inset-0 rounded-lg bg-white shadow-2xs"
+                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                />
+                            )}
+                            <span className="relative z-10 flex items-center justify-center gap-1">
+                                <span>Active</span>
+                                {activeCount > 0 && (
+                                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-100 px-1 text-[10px] font-bold text-emerald-800">
+                                        {activeCount}
+                                    </span>
+                                )}
+                            </span>
+                        </button>
+                    )}
+
                     <button
                         onClick={() => switchTab('history')}
                         className={`relative flex-1 rounded-lg py-2 text-xs font-bold transition-colors duration-200 ${
@@ -268,8 +309,16 @@ export default function Visitors({ upcomingTimeline, historyTimeline, recentVisi
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: 8 }}
                             transition={{ duration: 0.2, ease: 'easeOut' }}
-                            className="space-y-2"
+                            className="space-y-2.5"
                         >
+                            {/* Active Visits Callout on Schedule */}
+                            {checkoutEnabled && (
+                                <ActiveVisitsCallout
+                                    activeVisits={activeVisits}
+                                    onViewAll={() => switchTab('active')}
+                                />
+                            )}
+
                             {/* 1. Adaptive Context */}
                             <ContextBanner upcoming={upcomingTimeline as any} />
 
@@ -289,6 +338,16 @@ export default function Visitors({ upcomingTimeline, historyTimeline, recentVisi
                                 onInviteAgain={handleInviteAgain}
                                 onOpenSearch={() => switchTab('history')}
                             />
+                        </motion.div>
+                    ) : activeTab === 'active' && checkoutEnabled ? (
+                        <motion.div
+                            key="active"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.98 }}
+                            transition={{ duration: 0.2, ease: 'easeOut' }}
+                        >
+                            <ResidentActiveVisits activeVisits={activeVisits} />
                         </motion.div>
                     ) : (
                         <motion.div
