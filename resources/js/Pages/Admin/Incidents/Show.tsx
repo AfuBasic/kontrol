@@ -57,7 +57,7 @@ export default function Show({
     discussion_comments,
     comments,
     admins,
-    statuses,
+    // statuses,
     categories,
     activities = [],
 }: Props) {
