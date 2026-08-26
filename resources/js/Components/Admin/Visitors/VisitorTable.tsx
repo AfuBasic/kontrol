@@ -44,7 +44,66 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
 
     return (
         <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white">
-            <div className="overflow-x-auto">
+            {/* Mobile Cards View (< md) */}
+            <div className="divide-y divide-gray-100 md:hidden">
+                {logs.map((log) => {
+                    const eventType = checkoutEnabled && log.checked_out_at ? 'check_out' : 'check_in';
+
+                    return (
+                        <div
+                            key={log.id}
+                            onClick={() => onSelect(log)}
+                            className="flex cursor-pointer items-start justify-between gap-3 p-4 transition-colors duration-150 ease-out hover:bg-gray-50/80 active:bg-gray-100/70"
+                        >
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                                <div className="mt-0.5 shrink-0">
+                                    <VisitEventIcon type={eventType} size="sm" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-1.5">
+                                        <p className="truncate text-sm font-bold text-gray-900">{log.visitor.name}</p>
+                                        {log.code && (
+                                            <span className="font-mono text-[10px] font-bold text-gray-400">#{log.code}</span>
+                                        )}
+                                    </div>
+
+                                    <p className="mt-0.5 text-xs text-gray-600 font-medium">
+                                        Visiting <span className="font-semibold text-gray-900">{log.host.name}</span>
+                                        {log.host.unit ? <span className="text-gray-400"> · {log.host.unit}</span> : null}
+                                    </p>
+
+                                    <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-medium text-gray-400">
+                                        <span>In: {log.verified_at_time || log.verified_at}</span>
+                                        {checkoutEnabled && log.checked_out_at && (
+                                            <span>· Out: {log.checked_out_at_time || log.checked_out_at}</span>
+                                        )}
+                                        {checkoutEnabled && (
+                                            <span className="font-semibold text-gray-700">
+                                                · {formatStayDuration(log.duration_minutes)}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSelect(log);
+                                }}
+                                className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 transition-colors hover:bg-gray-200"
+                            >
+                                <Eye className="h-3 w-3" />
+                                <span>Details</span>
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Desktop Table View (>= md) */}
+            <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[720px] text-left text-xs">
                     <thead>
                         <tr className="border-b border-gray-100 bg-gray-50/80 text-[10px] font-bold tracking-wider text-gray-500 uppercase">
