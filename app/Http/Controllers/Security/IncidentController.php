@@ -37,7 +37,7 @@ class IncidentController extends Controller
         $this->authorize('viewAny', Incident::class);
 
         $estateId = $this->estateContext->getEstateId();
-        $filters = request()->only(['category', 'status', 'tab', 'search', 'sort']);
+        $filters = request()->only(['category', 'status', 'tab', 'search', 'sort', 'priority']);
         $incidents = $this->incidentService->getFeed($estateId, $filters);
 
         $categories = EstateSettings::resolveCategoriesForEstate($estateId);

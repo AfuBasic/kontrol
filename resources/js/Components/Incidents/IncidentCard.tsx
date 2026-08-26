@@ -44,6 +44,14 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
     const relativeTime = getRelativeTime(incident.created_at);
     const locationOrZone = incident.zone?.name || incident.location;
     const commentsCount = incident.comments_count || 0;
+    const priorityLabel = incident.priority ? incident.priority.charAt(0).toUpperCase() + incident.priority.slice(1) : '';
+    const staffPriorityTone =
+        {
+            critical: 'bg-rose-50 text-rose-700 ring-rose-100',
+            high: 'bg-orange-50 text-orange-700 ring-orange-100',
+            medium: 'bg-slate-50 text-slate-600 ring-slate-100',
+            low: 'bg-white text-slate-500 ring-slate-200',
+        }[incident.priority || 'low'] || 'bg-white text-slate-500 ring-slate-200';
 
     // Semantic status rail on the left
     const statusAccentBorder =
@@ -100,46 +108,53 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
     return (
         <div
             onClick={handleCardClick}
-            className={`group relative block cursor-pointer rounded-[26px] border border-l-[5px] border-slate-200/80 bg-white p-4 shadow-sm shadow-slate-200/60 transition-all hover:border-slate-300 hover:shadow-md sm:rounded-3xl sm:p-6 ${dark('dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20 dark:hover:border-slate-700')} ${statusAccentBorder} ${
+            className={`group relative block cursor-pointer rounded-[22px] border border-l-[5px] border-slate-200/80 bg-white p-4 shadow-sm shadow-slate-200/60 transition-all hover:border-slate-300 hover:shadow-md sm:rounded-3xl sm:p-6 ${dark('dark:border-slate-800 dark:bg-slate-900 dark:shadow-black/20 dark:hover:border-slate-700')} ${statusAccentBorder} ${
                 isResolved ? 'opacity-90 hover:opacity-100' : ''
             } ${className}`}
         >
-            {/* 1. Header: Category + Status Badge */}
-            <div className={`mb-3 flex gap-2 ${isStaffVariant ? 'flex-col items-start' : 'items-center justify-between'}`}>
-                <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
-                    <IncidentCategoryLabel
-                        category={incident.category}
-                        size="sm"
-                        showBadge
-                        forceLight={forceLight}
-                        className={isStaffVariant ? 'max-w-full whitespace-nowrap [&>span]:truncate' : ''}
-                    />
-                    {incident.reference_code && (
-                        <span
-                            className={`shrink-0 rounded-full bg-slate-100 px-2 py-1 font-mono text-[10px] font-bold text-slate-500 ${dark('dark:bg-slate-800 dark:text-slate-400')}`}
-                        >
-                            {incident.reference_code}
-                        </span>
-                    )}
-                </div>
+            {/* 1. Header: status first for staff, category first for resident reports */}
+            {isStaffVariant ? (
+                <div className="mb-3 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <IncidentStatusBadge status={incident.status} size="sm" showDot forceLight={forceLight} />
+                        {incident.priority && (
+                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-black tracking-wider uppercase ring-1 ${staffPriorityTone}`}>
+                                {priorityLabel} priority
+                            </span>
+                        )}
+                    </div>
 
-                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                    {incident.priority && variant !== 'resident' && (
-                        <span
-                            className={`rounded-full px-2.5 py-1 text-[10px] font-black tracking-wider uppercase ${
-                                incident.priority === 'critical'
-                                    ? `bg-rose-100 text-rose-800 ${dark('dark:bg-rose-950 dark:text-rose-300')}`
-                                    : incident.priority === 'high'
-                                      ? `bg-orange-100 text-orange-800 ${dark('dark:bg-orange-950 dark:text-orange-300')}`
-                                      : `bg-slate-100 text-slate-600 ${dark('dark:bg-slate-800 dark:text-slate-400')}`
-                            }`}
-                        >
-                            {incident.priority}
-                        </span>
-                    )}
+                    <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-bold text-slate-400">
+                        <IncidentCategoryLabel
+                            category={incident.category}
+                            size="xs"
+                            showBadge={false}
+                            forceLight={forceLight}
+                            className="max-w-full text-slate-500 [&>span]:max-w-[13rem] [&>span]:truncate"
+                        />
+                        {incident.reference_code && (
+                            <>
+                                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                                <span className="font-mono text-[10px] tracking-wide break-all text-slate-400">{incident.reference_code}</span>
+                            </>
+                        )}
+                    </div>
+                </div>
+            ) : (
+                <div className="mb-3 flex items-center justify-between gap-2">
+                    <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">
+                        <IncidentCategoryLabel category={incident.category} size="sm" showBadge forceLight={forceLight} />
+                        {incident.reference_code && (
+                            <span
+                                className={`shrink-0 rounded-full bg-slate-100 px-2 py-1 font-mono text-[10px] font-bold text-slate-500 ${dark('dark:bg-slate-800 dark:text-slate-400')}`}
+                            >
+                                {incident.reference_code}
+                            </span>
+                        )}
+                    </div>
                     <IncidentStatusBadge status={incident.status} size="sm" showDot forceLight={forceLight} />
                 </div>
-            </div>
+            )}
 
             {/* 2. Primary Title */}
             <h3
@@ -172,7 +187,7 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
             {/* 5. Human Reporter Line */}
             <div
                 className={`mt-4 flex items-center gap-3 ${
-                    isStaffVariant ? `rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100 ${dark('dark:bg-slate-950/40 dark:ring-slate-800/80')}` : ''
+                    isStaffVariant ? `rounded-2xl bg-slate-50 p-2.5 ring-1 ring-slate-100 ${dark('dark:bg-slate-950/40 dark:ring-slate-800/80')}` : ''
                 }`}
             >
                 <div
@@ -209,9 +224,7 @@ export default function IncidentCard({ incident, variant = 'resident', href, cla
                             <span className="hidden text-[11px] font-normal opacity-80 sm:inline">{upvotesCount === 1 ? 'upvote' : 'upvotes'}</span>
                         </button>
                     ) : (
-                        <span
-                            className={`inline-flex items-center gap-1.5 rounded-xl bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500 ${dark('dark:bg-slate-800/60 dark:text-slate-400')}`}
-                        >
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 ${dark('dark:text-slate-400')}`}>
                             <ArrowBigUp className="h-4 w-4" />
                             {upvotesCount}
                         </span>

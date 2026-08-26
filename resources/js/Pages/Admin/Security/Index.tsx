@@ -8,6 +8,7 @@ import SecurityCard from '@/Components/Admin/Security/SecurityCard';
 import SecurityActions from '@/Components/Admin/SecurityActions';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { TableRowSkeleton } from '@/Components/Skeletons';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -56,6 +57,7 @@ export default function SecurityPersonnel({
     stats: initialStats,
     insights: initialInsights,
 }: Props) {
+    const { confirm } = useAdminConfirmation();
     const { can } = usePermission();
     const filters = !Array.isArray(initialFilters) ? initialFilters || {} : {};
     const stats = initialStats || { total: 0, active: 0, pending: 0, inactive: 0 };
@@ -121,18 +123,33 @@ export default function SecurityPersonnel({
     };
 
     const handleToggleSuspend = (person: SecurityPerson) => {
-        router.patch(`/admin/security/${person.ulid}/suspend`, {}, {
-            preserveScroll: true,
-            preserveState: true,
+        const isSuspended = !!person.suspended_at || person.status === 'inactive';
+        confirm({
+            title: isSuspended ? 'Activate staff member' : 'Suspend staff member',
+            message: isSuspended
+                ? `Are you sure you want to activate ${person.name}? They will be able to log in and perform security duties.`
+                : `Are you sure you want to suspend ${person.name}? They will no longer be able to log in.`,
+            confirmLabel: isSuspended ? 'Activate staff' : 'Suspend staff',
+            type: isSuspended ? 'info' : 'warning',
+            onConfirm: () =>
+                router.patch(`/admin/security/${person.ulid}/suspend`, {}, {
+                    preserveScroll: true,
+                    preserveState: true,
+                }),
         });
     };
 
     const handleDeletePerson = (person: SecurityPerson) => {
-        if (confirm(`Are you sure you want to remove ${person.name} from security personnel?`)) {
-            router.delete(`/admin/security/${person.ulid}`, {
-                preserveScroll: true,
-            });
-        }
+        confirm({
+            title: 'Remove security staff',
+            message: `Are you sure you want to remove ${person.name} from security personnel? This action cannot be undone.`,
+            confirmLabel: 'Remove staff',
+            type: 'danger',
+            onConfirm: () =>
+                router.delete(`/admin/security/${person.ulid}`, {
+                    preserveScroll: true,
+                }),
+        });
     };
 
     const handleResendInvitation = (person: SecurityPerson) => {
@@ -371,7 +388,7 @@ export default function SecurityPersonnel({
                                                                 </div>
                                                                 <div className="min-w-0">
                                                                     <Link
-                                                                        href={`/admin/residents/${person.id}`}
+                                                                        href={`/admin/security/${person.ulid}/edit`}
                                                                         className="block max-w-[150px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
                                                                     >
                                                                         {person.name}
