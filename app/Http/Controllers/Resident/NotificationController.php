@@ -3,17 +3,22 @@
 namespace App\Http\Controllers\Resident;
 
 use App\Http\Controllers\Controller;
+use App\Services\Notifications\NotificationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    public function __construct(
+        private NotificationContextService $notificationContext,
+    ) {}
+
     /**
      * Mark a specific notification as read.
      */
     public function markAsRead(string $id, Request $request): RedirectResponse
     {
-        $notification = $request->user()->notifications()->findOrFail($id);
+        $notification = $this->notificationContext->findForCurrentContext($request->user(), $id);
         $notification->markAsRead();
 
         return back();
@@ -24,7 +29,7 @@ class NotificationController extends Controller
      */
     public function markAllAsRead(Request $request): RedirectResponse
     {
-        $request->user()->unreadNotifications->markAsRead();
+        $this->notificationContext->markAllAsReadForCurrentContext($request->user());
 
         return back();
     }
@@ -34,7 +39,7 @@ class NotificationController extends Controller
      */
     public function clearAll(Request $request): RedirectResponse
     {
-        $request->user()->notifications()->delete();
+        $this->notificationContext->clearForCurrentContext($request->user());
 
         return back();
     }
