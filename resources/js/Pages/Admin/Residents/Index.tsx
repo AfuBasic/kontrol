@@ -316,8 +316,17 @@ export default function Residents({
         router.post(`/admin/residents/${id}/resend-invitation`, {}, { preserveScroll: true });
     };
 
-    const handleToggleSuspend = (id: number) => {
-        router.patch(`/admin/residents/${id}/suspend`, {}, { preserveScroll: true });
+    const handleToggleSuspend = (resident: Resident) => {
+        const isInactive = resident.status === 'inactive';
+        confirm({
+            title: isInactive ? 'Activate account' : 'Suspend account',
+            message: isInactive
+                ? `Are you sure you want to activate ${resident.name}'s account? They will be granted access again.`
+                : `Are you sure you want to suspend ${resident.name}'s account? They will no longer be able to access their estate account.`,
+            confirmLabel: isInactive ? 'Activate account' : 'Suspend account',
+            type: isInactive ? 'info' : 'warning',
+            onConfirm: () => router.patch(`/admin/residents/${resident.id}/suspend`, {}, { preserveScroll: true }),
+        });
     };
 
     const handleMarkAsPropertyOwner = (resident: Resident) => {
@@ -330,12 +339,13 @@ export default function Residents({
         });
     };
 
-    const handleDeleteResident = (id: number) => {
+    const handleDeleteResident = (resident: Resident) => {
         confirm({
             title: 'Remove resident',
-            message: 'Are you sure you want to remove this resident?',
+            message: `Are you sure you want to remove ${resident.name} from the residents directory? This action cannot be undone.`,
             confirmLabel: 'Remove resident',
-            onConfirm: () => router.delete(`/admin/residents/${id}`, { preserveScroll: true }),
+            type: 'danger',
+            onConfirm: () => router.delete(`/admin/residents/${resident.id}`, { preserveScroll: true }),
         });
     };
 
@@ -775,7 +785,7 @@ export default function Residents({
                                                                     {!resident.is_estate_creator && (
                                                                         <button
                                                                             onClick={() => {
-                                                                                handleToggleSuspend(resident.id);
+                                                                                handleToggleSuspend(resident);
                                                                                 setMenuOpenId(null);
                                                                             }}
                                                                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
@@ -799,7 +809,7 @@ export default function Residents({
                                                                     {!resident.is_estate_creator && (
                                                                         <button
                                                                             onClick={() => {
-                                                                                handleDeleteResident(resident.id);
+                                                                                handleDeleteResident(resident);
                                                                                 setMenuOpenId(null);
                                                                             }}
                                                                             className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
