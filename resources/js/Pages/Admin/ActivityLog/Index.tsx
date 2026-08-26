@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import ActivityDateGroup from '@/Components/Admin/Activity/ActivityDateGroup';
 import ActivityModuleFilter from '@/Components/Admin/Activity/ActivityModuleFilter';
 import ActivitySkeletons from '@/Components/Admin/Activity/ActivitySkeletons';
+import activityLog from '@/routes/admin/activity-log';
 import type { ActivityItem, ActivityLogIndexProps } from '@/types/activity';
 
 export default function ActivityLogIndex({
@@ -29,7 +30,7 @@ export default function ActivityLogIndex({
     // Handle debounced search navigation
     const triggerSearch = useCallback((newSearch: string, newModule: string) => {
         router.get(
-            route('admin.activity-log.index'),
+            activityLog.index.url(),
             {
                 search: newSearch.trim() || undefined,
                 module: newModule !== 'all' ? newModule : undefined,
