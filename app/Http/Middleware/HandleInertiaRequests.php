@@ -9,6 +9,7 @@ use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\ZeusNotification;
+use App\Services\Notifications\NotificationContextService;
 use App\Services\Platform\AndroidMigrationService;
 use App\Services\Resident\AccessCodeService;
 use App\Services\Security\CheckpointClaimService;
@@ -53,12 +54,15 @@ class HandleInertiaRequests extends Middleware
         $partnerContext = null;
         $partnerNotifications = [];
         $partnerUnreadCount = 0;
+        $contextUnreadCount = 0;
+        $contextNotifications = [];
 
         $contextData = null;
         $availableContexts = [];
 
         if ($user) {
             $contextManager = app(ContextManager::class);
+            $notificationContext = app(NotificationContextService::class);
             $currentContext = $contextManager->current();
 
             if ($currentContext) {
@@ -119,8 +123,8 @@ class HandleInertiaRequests extends Middleware
                     ];
                 }
 
-                $partnerUnreadCount = $user->unreadNotifications()->count();
-                $partnerNotifications = $user->notifications()
+                $partnerUnreadCount = $notificationContext->unreadCountForPartnerContext($user);
+                $partnerNotifications = $notificationContext->scopeToPartnerContext($user->notifications())
                     ->latest()
                     ->take(8)
                     ->get()
@@ -128,6 +132,19 @@ class HandleInertiaRequests extends Middleware
                     ->values()
                     ->all();
             }
+
+            $contextUnreadCount = $notificationContext->unreadCountForCurrentContext($user);
+            $contextNotifications = $notificationContext->scopeToCurrentContext($user->unreadNotifications())
+                ->latest()
+                ->take(5)
+                ->get()
+                ->map(fn ($n) => [
+                    'id' => $n->id,
+                    'data' => $n->data,
+                    'created_at_human' => $n->created_at->diffForHumans(),
+                ])
+                ->values()
+                ->all();
         }
 
         return [
@@ -156,7 +173,7 @@ class HandleInertiaRequests extends Middleware
                     'household_parent_name' => ($estate && $user->isHouseholdMember())
                         ? $user->householdOf()->where('estate_id', $estate->id)->first()?->primaryResident?->name
                         : null,
-                    'unread_notifications_count' => $user->unreadNotifications()->count(),
+                    'unread_notifications_count' => $contextUnreadCount,
                     'has_active_coupons' => $estate ? (function () use ($user, $estate) {
                         return Coupon::query()
                             ->availableTo($user, $estate)
@@ -164,11 +181,7 @@ class HandleInertiaRequests extends Middleware
                             ->filter(fn ($coupon) => ! $coupon->isLimitReached($user))
                             ->isNotEmpty();
                     })() : false,
-                    'notifications' => $user->unreadNotifications()->latest()->take(5)->get()->map(fn ($n) => [
-                        'id' => $n->id,
-                        'data' => $n->data,
-                        'created_at_human' => $n->created_at->diffForHumans(),
-                    ])->values()->all(),
+                    'notifications' => $contextNotifications,
                     'resident_subscription' => ($estate) ? (function () use ($user, $estate) {
                         if (! $user->contextHasRole(['resident', 'property_owner'])) {
                             return null;
@@ -218,7 +231,7 @@ class HandleInertiaRequests extends Middleware
             'webpush_public_key' => config('webpush.vapid.public_key'),
             'access_code_durations' => fn () => $estate ? app(AccessCodeService::class)->getDurationOptions() : [],
             'access_code_constraints' => fn () => $estate ? app(AccessCodeService::class)->getDurationConstraints() : ['min' => 30, 'max' => 1440],
-            'unreadCount' => fn () => $user ? $user->unreadNotifications()->count() : 0,
+            'unreadCount' => fn () => $user ? app(NotificationContextService::class)->unreadCountForCurrentContext($user) : 0,
             'app_url' => url('/'),
             'app_subdomain_url' => config('domains.routing_enabled')
                 ? request()->getScheme().'://'.config('domains.app')
