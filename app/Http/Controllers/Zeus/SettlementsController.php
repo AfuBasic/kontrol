@@ -7,6 +7,7 @@ use App\Jobs\GenerateMonthlyPartnerEarningsJob;
 use App\Models\CommissionableRevenue;
 use App\Models\PartnerEarning;
 use App\Notifications\Partner\EarningSettledNotification;
+use App\Services\Zeus\SettlementInboxService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +18,14 @@ use Inertia\Response;
 
 class SettlementsController extends Controller
 {
+    public function __construct(
+        private SettlementInboxService $settlementInbox,
+    ) {}
+
     public function index(Request $request): Response
     {
+        $this->settlementInbox->hydrateOpenPeriods();
+
         $status = $request->string('status')->toString();
         $partnerSearch = $request->string('partner')->toString();
         $monthFrom = $request->string('month_from')->toString();
@@ -70,20 +77,9 @@ class SettlementsController extends Controller
             ->withQueryString()
             ->through(fn (PartnerEarning $earning) => $this->transformEarning($earning));
 
-        $outstanding = (int) PartnerEarning::query()->whereNull('settled_at')->sum('total_amount');
-        $partnersWithBalance = (int) PartnerEarning::query()
-            ->whereNull('settled_at')
-            ->distinct('partner_id')
-            ->count('partner_id');
-        $unsettledCount = (int) PartnerEarning::query()->whereNull('settled_at')->count();
-
         return Inertia::render('Zeus/Settlements/Index', [
             'earnings' => $earnings,
-            'summary' => [
-                'outstanding_kobo' => $outstanding,
-                'partners_with_balance' => $partnersWithBalance,
-                'unsettled_count' => $unsettledCount,
-            ],
+            'summary' => $this->settlementInbox->summary(),
             'filters' => [
                 'status' => $status,
                 'partner' => $partnerSearch,
@@ -166,13 +162,14 @@ class SettlementsController extends Controller
             ? CarbonImmutable::parse($validated['month'])->startOfMonth()
             : CarbonImmutable::now()->startOfMonth();
 
-        GenerateMonthlyPartnerEarningsJob::dispatch($month, $mode);
+        (new GenerateMonthlyPartnerEarningsJob($month, $mode))->handle();
+        $this->settlementInbox->hydrateOpenPeriods();
 
         $label = $mode === GenerateMonthlyPartnerEarningsJob::MODE_CLOSE ? 'Close' : 'Snapshot';
 
         return redirect()
             ->route('zeus.settlements.index')
-            ->with('success', "{$label} job queued for {$month->format('F Y')}.");
+            ->with('success', "{$label} completed for {$month->format('F Y')}.");
     }
 
     /**
