@@ -135,21 +135,19 @@ export default function Show({ incident, official_comments = [], discussion_comm
                 {/* 2-Column Responsive Workspace */}
                 <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12 lg:gap-6">
                     {/* Main Column */}
-                    <div className="space-y-4 sm:space-y-5 lg:col-span-8">
+                    <div className="space-y-5 sm:space-y-6 lg:col-span-8">
                         {/* Primary Incident Case Summary Surface */}
                         <div className="rounded-2xl border border-slate-200/90 bg-white p-4.5 shadow-xs ring-1 ring-slate-100/60 sm:p-6">
                             {/* Context & Status Row */}
                             <div className="mb-3 flex flex-wrap items-center justify-between gap-2.5">
                                 <div className="flex flex-wrap items-center gap-2">
-                                    <IncidentCategoryLabel category={incident.category} size="sm" showBadge={false} />
+                                    <IncidentCategoryLabel category={incident.category} size="sm" showBadge={false} forceLight />
                                 </div>
-                                <IncidentStatusBadge status={incident.status} size="sm" />
+                                <IncidentStatusBadge status={incident.status} size="sm" forceLight />
                             </div>
 
                             {/* Title */}
-                            <h1 className="text-lg leading-snug font-black tracking-tight text-slate-900 sm:text-xl">
-                                {incident.title}
-                            </h1>
+                            <h1 className="text-lg leading-snug font-black tracking-tight text-slate-900 sm:text-xl">{incident.title}</h1>
 
                             {/* Description */}
                             <div className="mt-3 text-xs leading-relaxed font-normal whitespace-pre-line text-slate-700 sm:text-sm">
@@ -197,9 +195,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
                                 )}
 
                                 {incident.reference_code && (
-                                    <span className="font-mono text-[11px] font-bold text-slate-400">
-                                        {incident.reference_code}
-                                    </span>
+                                    <span className="font-mono text-[11px] font-bold text-slate-400">{incident.reference_code}</span>
                                 )}
 
                                 {incident.location && (
@@ -229,11 +225,9 @@ export default function Show({ incident, official_comments = [], discussion_comm
                                         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-indigo-50 text-indigo-600">
                                             <Shield className="h-3.5 w-3.5" />
                                         </div>
-                                        <h3 className="text-xs font-bold text-slate-900">
-                                            Official Security Update
-                                        </h3>
+                                        <h3 className="text-xs font-bold text-slate-900">Official Security Update</h3>
                                     </div>
-                                    <span className="text-[10px] font-semibold text-slate-400">
+                                    <span className="hidden text-[10px] font-semibold text-slate-400 min-[360px]:inline">
                                         Verified Security Broadcast
                                     </span>
                                 </div>
@@ -249,13 +243,13 @@ export default function Show({ incident, official_comments = [], discussion_comm
                                         placeholder="Share a security update..."
                                         rows={2}
                                         disabled={submittingOfficial}
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 focus:outline-hidden"
+                                        className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-900 placeholder:text-slate-400 focus:border-indigo-600 focus:bg-white focus:ring-1 focus:ring-indigo-600 focus:outline-hidden"
                                     />
                                     <div className="flex justify-end">
                                         <button
                                             type="submit"
                                             disabled={!officialUpdateText.trim() || submittingOfficial}
-                                            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                                            className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:bg-indigo-600/50 disabled:text-white"
                                         >
                                             <Megaphone className="h-3.5 w-3.5" />
                                             <span>{submittingOfficial ? 'Publishing...' : 'Post Update'}</span>
@@ -266,7 +260,7 @@ export default function Show({ incident, official_comments = [], discussion_comm
                         )}
 
                         {/* Official Advisories & Dispatches Display */}
-                        <OfficialUpdates updates={official_comments} />
+                        <OfficialUpdates updates={official_comments} variant="security" />
 
                         {/* General Resident Discussion Thread */}
                         <IncidentDiscussion
@@ -274,12 +268,13 @@ export default function Show({ incident, official_comments = [], discussion_comm
                             canComment={!isClosed}
                             onSubmitComment={handleDiscussionComment}
                             submitting={submittingDiscussion}
+                            variant="security"
                         />
                     </div>
 
                     {/* Timeline & Lifecycle Sidebar */}
                     <div className="space-y-4 lg:col-span-4">
-                        <IncidentTimeline incident={incident} />
+                        <IncidentTimeline incident={incident} variant="security" />
                     </div>
                 </div>
             </div>

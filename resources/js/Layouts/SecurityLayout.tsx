@@ -290,6 +290,22 @@ export default function SecurityLayout({ children, hideNav = false, variant = 'l
 
     const isDark = variant === 'dark';
 
+    useEffect(() => {
+        const html = document.documentElement;
+
+        if (isDark) {
+            html.classList.add('dark');
+            html.classList.remove('light');
+            html.style.colorScheme = 'dark';
+
+            return;
+        }
+
+        html.classList.remove('dark');
+        html.classList.add('light');
+        html.style.colorScheme = 'light';
+    }, [isDark]);
+
     return (
         <div className={`flex min-h-screen flex-col ${isDark ? 'bg-slate-950' : 'bg-slate-50'}`}>
             <OfflineBanner variant="security" />
