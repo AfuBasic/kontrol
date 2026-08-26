@@ -852,9 +852,45 @@ html.capacitor-native .h-screen {
     height: var(--app-viewport-height, 100dvh) !important;
 }
 
+html.capacitor-native .auth-login-screen {
+    min-height: var(--app-viewport-height, 100dvh);
+}
+
 html.capacitor-native[data-keyboard-open='true'] [data-mobile-bottom-nav] {
     pointer-events: none;
     opacity: 0 !important;
+}
+
+html.capacitor-native[data-keyboard-open='true'] .auth-login-mobile-brand {
+    margin-bottom: 1rem;
+}
+
+html.capacitor-native[data-keyboard-open='true'] .auth-login-mobile-brand img {
+    width: 3rem;
+    height: 3rem;
+}
+
+html.capacitor-native[data-keyboard-open='true'] .auth-login-mobile-brand h1 {
+    margin-top: 0.75rem;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+}
+
+@media (max-width: 1023px) and (max-height: 720px) {
+    .auth-login-mobile-brand {
+        margin-bottom: 1rem;
+    }
+
+    .auth-login-mobile-brand img {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .auth-login-mobile-brand h1 {
+        margin-top: 0.75rem;
+        font-size: 1.25rem;
+        line-height: 1.75rem;
+    }
 }
 
 /* Fix native iOS WebKit styling and overflow of datetime-local and date inputs */

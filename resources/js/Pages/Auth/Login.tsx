@@ -563,7 +563,7 @@ export default function Login() {
     return (
         <>
             <Head title="Login" />
-            <div className="flex min-h-[100dvh] flex-col bg-white lg:flex-row">
+            <div className="auth-login-screen flex min-h-[100dvh] flex-col overflow-y-auto bg-white lg:flex-row">
                 {/* Branded panel - hidden on mobile, left side on desktop */}
                 <div className="relative hidden overflow-hidden bg-slate-950 lg:flex lg:w-1/2 lg:flex-col">
                     <div className="absolute inset-0">
@@ -617,12 +617,12 @@ export default function Login() {
                     </div>
                 </div>
 
-                {/* Form panel - simple full-screen centered login on mobile, side panel on desktop */}
-                <div className="flex flex-1 flex-col justify-center bg-white px-6 py-12 sm:px-10 lg:w-1/2 lg:px-16 lg:py-12 xl:px-24">
+                {/* Form panel - safe-area anchored on mobile, side panel on desktop */}
+                <div className="auth-login-panel flex flex-1 flex-col justify-start bg-white px-6 pt-[max(6rem,calc(var(--safe-area-inset-top)+4.25rem))] pb-[calc(var(--safe-area-inset-bottom)+2rem)] sm:px-10 lg:w-1/2 lg:justify-center lg:px-16 lg:py-12 xl:px-24">
                     <div className="mx-auto w-full max-w-sm">
                         {/* Logo on mobile/native */}
-                        <div className="mb-8 flex flex-col items-center lg:hidden">
-                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-16 w-16 rounded-2xl" />
+                        <div className="auth-login-mobile-brand mb-8 flex flex-col items-center transition-all duration-200 lg:hidden">
+                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-16 w-16 rounded-2xl transition-all duration-200" />
                             <h1 className="mt-4 text-2xl font-bold tracking-tight text-slate-900">Welcome back</h1>
                             <p className="mt-1 text-sm text-slate-500">Sign in to your estate</p>
                         </div>
