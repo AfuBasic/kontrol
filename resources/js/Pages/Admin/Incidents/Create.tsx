@@ -244,6 +244,10 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                 <input
                                     id="title"
                                     type="text"
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
+                                    autoComplete="on"
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="e.g. Broken water main, Main entrance guard house intrusion"
@@ -260,6 +264,9 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                 </label>
                                 <textarea
                                     id="body"
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
                                     value={data.body}
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Provide full description of the operational issue, safety threat, or maintenance request..."
@@ -323,6 +330,10 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     <input
                                         id="location"
                                         type="text"
+                                        autoCorrect="on"
+                                        autoCapitalize="sentences"
+                                        spellCheck={true}
+                                        autoComplete="on"
                                         value={data.location}
                                         onChange={(e) => setData('location', e.target.value)}
                                         placeholder="e.g. Block A, Unit 12, Main Gate"
