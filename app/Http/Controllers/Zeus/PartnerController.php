@@ -76,51 +76,66 @@ class PartnerController extends Controller
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';
 
-        $estates = $partner->estates()
+        $rawEstates = $partner->estates()
             ->orderBy('name')
-            ->get()
-            ->map(function (Estate $estate) use ($partner) {
-                $activeResidents = DB::table('estate_users_membership')
-                    ->join('model_has_roles', function ($join) use ($estate) {
-                        $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
-                            ->where('model_has_roles.model_type', User::class)
-                            ->where('model_has_roles.estate_id', $estate->id);
-                    })
-                    ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
-                    ->where('estate_users_membership.estate_id', $estate->id)
-                    ->where('estate_users_membership.status', 'accepted')
-                    ->whereIn('roles.name', ['resident', 'property_owner'])
-                    ->distinct('estate_users_membership.user_id')
-                    ->count('estate_users_membership.user_id');
+            ->get();
 
-                $estateRevenue = (int) PaymentTransaction::where('estate_id', $estate->id)
-                    ->where('status', 'success')
-                    ->sum('amount');
+        $partnerEstateIds = $rawEstates->pluck('id')->all();
 
-                $commissionEarned = (int) CommissionableRevenue::where('estate_id', $estate->id)
-                    ->where('partner_id', $partner->id)
-                    ->sum('commission_amount');
+        // Batch aggregate metrics for all partner estates
+        $estateRevenues = ! empty($partnerEstateIds)
+            ? PaymentTransaction::whereIn('estate_id', $partnerEstateIds)
+                ->where('status', 'success')
+                ->groupBy('estate_id')
+                ->selectRaw('estate_id, COALESCE(SUM(amount), 0) as total_revenue')
+                ->pluck('total_revenue', 'estate_id')
+            : collect();
 
-                return [
-                    'id' => $estate->id,
-                    'ulid' => $estate->ulid,
-                    'name' => $estate->name,
-                    'code' => $estate->code ?? null,
-                    'email' => $estate->email,
-                    'address' => $estate->address,
-                    'status' => $estate->status,
-                    'created_at' => $estate->created_at?->toIso8601String(),
-                    'activation_date' => $estate->activation_date?->format('Y-m-d'),
-                    'partner_date' => $estate->partner_date?->format('Y-m-d'),
-                    'commission_starts_at' => $estate->commission_starts_at?->format('Y-m-d'),
-                    'commission_ends_at' => $estate->commission_ends_at?->format('Y-m-d'),
-                    'partner_status' => $estate->partner_status?->value ?? (string) $estate->partner_status,
-                    'commission_status' => $estate->commission_status?->value ?? (string) $estate->commission_status,
-                    'residents_count' => $activeResidents,
-                    'total_revenue' => $estateRevenue,
-                    'commission_earned' => $commissionEarned,
-                ];
-            });
+        $estateCommissions = ! empty($partnerEstateIds)
+            ? CommissionableRevenue::whereIn('estate_id', $partnerEstateIds)
+                ->where('partner_id', $partner->id)
+                ->groupBy('estate_id')
+                ->selectRaw('estate_id, COALESCE(SUM(commission_amount), 0) as total_commission')
+                ->pluck('total_commission', 'estate_id')
+            : collect();
+
+        $estateResidentCounts = ! empty($partnerEstateIds)
+            ? DB::table('estate_users_membership')
+                ->join('model_has_roles', function ($join) {
+                    $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                        ->on('estate_users_membership.estate_id', '=', 'model_has_roles.estate_id')
+                        ->where('model_has_roles.model_type', User::class);
+                })
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->whereIn('estate_users_membership.estate_id', $partnerEstateIds)
+                ->where('estate_users_membership.status', 'accepted')
+                ->whereIn('roles.name', ['resident', 'property_owner'])
+                ->groupBy('estate_users_membership.estate_id')
+                ->selectRaw('estate_users_membership.estate_id, COUNT(DISTINCT estate_users_membership.user_id) as total')
+                ->pluck('total', 'estate_id')
+            : collect();
+
+        $estates = $rawEstates->map(function (Estate $estate) use ($estateRevenues, $estateCommissions, $estateResidentCounts) {
+            return [
+                'id' => $estate->id,
+                'ulid' => $estate->ulid,
+                'name' => $estate->name,
+                'code' => $estate->code ?? null,
+                'email' => $estate->email,
+                'address' => $estate->address,
+                'status' => $estate->status,
+                'created_at' => $estate->created_at?->toIso8601String(),
+                'activation_date' => $estate->activation_date?->format('Y-m-d'),
+                'partner_date' => $estate->partner_date?->format('Y-m-d'),
+                'commission_starts_at' => $estate->commission_starts_at?->format('Y-m-d'),
+                'commission_ends_at' => $estate->commission_ends_at?->format('Y-m-d'),
+                'partner_status' => $estate->partner_status?->value ?? (string) $estate->partner_status,
+                'commission_status' => $estate->commission_status?->value ?? (string) $estate->commission_status,
+                'residents_count' => (int) ($estateResidentCounts->get($estate->id) ?? 0),
+                'total_revenue' => (int) ($estateRevenues->get($estate->id) ?? 0),
+                'commission_earned' => (int) ($estateCommissions->get($estate->id) ?? 0),
+            ];
+        });
 
         $earnings = $partner->earnings()
             ->orderByDesc('month')
@@ -158,6 +173,7 @@ class PartnerController extends Controller
             ]);
 
         $members = $partner->members()
+            ->with('profile')
             ->orderBy('name')
             ->get()
             ->map(fn ($m) => [
@@ -170,10 +186,7 @@ class PartnerController extends Controller
                 'created_at' => $m->created_at->toIso8601String(),
             ]);
 
-        $partnerEstateIds = $partner->estates()->pluck('id');
-        $totalGrossRevenue = (int) PaymentTransaction::whereIn('estate_id', $partnerEstateIds)
-            ->where('status', 'success')
-            ->sum('amount');
+        $totalGrossRevenue = (int) $estateRevenues->sum();
 
         $stats = [
             'total_estates' => $estates->count(),
