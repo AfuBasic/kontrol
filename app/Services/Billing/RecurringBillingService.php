@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Services\PaystackService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RecurringBillingService
@@ -142,7 +143,7 @@ class RecurringBillingService
         );
 
         // 2. Database lock claim: Ensure only one worker processes this invoice
-        $claimed = \Illuminate\Support\Facades\DB::table('invoices')
+        $claimed = DB::table('invoices')
             ->where('id', $invoice->id)
             ->whereNull('active_payment_attempt_id')
             ->update(['active_payment_attempt_id' => $transaction->id]);
@@ -183,7 +184,7 @@ class RecurringBillingService
             }
         } catch (\Exception $e) {
             // Release claim on failure
-            \Illuminate\Support\Facades\DB::table('invoices')
+            DB::table('invoices')
                 ->where('id', $invoice->id)
                 ->where('active_payment_attempt_id', $transaction->id)
                 ->update(['active_payment_attempt_id' => null]);
