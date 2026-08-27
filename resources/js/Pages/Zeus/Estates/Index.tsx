@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Building2, Users, Home, Wallet, Activity, X, TrendingUp, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, Building2, Users, Wallet, Activity, X, TrendingUp, MapPin, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
 import { index, toggleStatus, destroy, resendInvitation } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
@@ -14,6 +14,7 @@ type EstateExplorerData = {
     status: 'active' | 'inactive';
     billing_mode: string;
     total_residents: number;
+    total_security: number;
     total_collections: number;
     total_properties: number;
     health_score: number;
@@ -354,12 +355,20 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                         {selectedEstate.total_collections ?? 0}
                                                     </span>
                                                 </div>
-                                                <div className="flex justify-between pt-3">
+                                                <div className="flex justify-between border-b border-slate-200 py-3 dark:border-slate-800">
                                                     <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                                        Total Properties
+                                                        Security Personnel
                                                     </span>
                                                     <span className="text-sm font-black text-slate-900 dark:text-white">
-                                                        {selectedEstate.total_properties}
+                                                        {selectedEstate.total_security ?? 0}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between pt-3">
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                                        Billing Model
+                                                    </span>
+                                                    <span className="inline-flex items-center rounded-lg bg-indigo-500/10 px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                                                        {selectedEstate.billing_mode === 'estate_pays' ? 'Estate Pays' : 'Resident Direct'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -378,8 +387,9 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                                 </Link>
                                                 <Link
                                                     href={`/zeus/estates/${selectedEstate.id}/edit`}
-                                                    className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white py-3.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-[0.98] dark:border-slate-800 dark:bg-[#0f1423] dark:bg-slate-800/50 dark:text-slate-300 dark:text-slate-600"
+                                                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-300 bg-white py-3.5 text-sm font-bold text-slate-800 shadow-sm transition-all hover:border-slate-400 hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:border-slate-600 dark:hover:bg-slate-700"
                                                 >
+                                                    <Settings className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                                                     Edit Settings
                                                 </Link>
                                                 <div className={`mt-4 grid ${!selectedEstate.has_admin ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
