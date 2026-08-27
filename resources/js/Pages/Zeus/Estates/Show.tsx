@@ -326,7 +326,12 @@ export default function EstateShow({ estate, residentStats, analytics, recentTra
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Partner</p>
-                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{estate.partner.name}</p>
+                                        <Link
+                                            href={`/zeus/partners/${estate.partner.id}`}
+                                            className="text-sm font-semibold text-slate-900 transition-colors hover:text-[#6C5DFD] hover:underline dark:text-white dark:hover:text-[#6C5DFD]"
+                                        >
+                                            {estate.partner.name}
+                                        </Link>
                                         <p className="text-xs text-slate-500 dark:text-slate-400">{estate.partner.email}</p>
                                     </div>
                                     <div>
