@@ -1,7 +1,8 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet } from 'lucide-react';
+import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
+import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
@@ -244,6 +245,21 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                             </div>
                         </section>
                     )}
+
+                    {/* Support Section */}
+                    <section>
+                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Help & Support</h2>
+                        <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+                            <Link href={SupportController.index.url()} className="block">
+                                <SettingsRow
+                                    icon={<HelpCircle className="h-5 w-5" />}
+                                    label="Help & Support"
+                                    description="Contact Kontrol via call, WhatsApp, or email"
+                                    onClick={() => {}}
+                                />
+                            </Link>
+                        </div>
+                    </section>
                 </div>
             </div>
             {/* PROFILE INFORMATION SHEET */}
