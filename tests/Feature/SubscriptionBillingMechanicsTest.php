@@ -283,4 +283,3 @@ test('it processes recurring auto-billing for due subscriptions with saved autho
         ->and($invoice->amount)->toBe(15000)
         ->and($subscription->status)->toBe('active');
 });
-
