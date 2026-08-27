@@ -171,6 +171,14 @@ class Coupon extends Model
      */
     public function isLimitReached(?User $user = null): bool
     {
+        // Non-recurring coupons can only be redeemed once per resident/user
+        if (! $this->is_recurring && $user !== null) {
+            $userUsage = $this->logs()->where('user_id', $user->id)->count();
+            if ($userUsage >= 1) {
+                return true;
+            }
+        }
+
         if ($this->usage_limit === null) {
             return false;
         }
