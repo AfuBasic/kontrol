@@ -72,7 +72,7 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetch(request).catch(() => {
                 return caches.match(request).then((cached) => {
-                    return cached || caches.match('/manifest.json');
+                    return cached || caches.match('/');
                 });
             })
         );
