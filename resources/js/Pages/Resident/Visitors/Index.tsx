@@ -94,29 +94,76 @@ export default function Visitors({
     const [pendingPasses, setPendingPasses] = useState<PendingPass[]>([]);
     const [retryingId, setRetryingId] = useState<string | null>(null);
 
-    const loadPendingPasses = useCallback(async () => {
+    const refreshPendingPasses = useCallback(async () => {
         try {
-            const passes = await ResidentStore.getPendingPasses();
-            setPendingPasses(passes);
+            const stored = await ResidentStore.getPendingPasses();
+            if (stored.length === 0) {
+                setPendingPasses([]);
+                return;
+            }
+
+            const syncedOrDead: string[] = [];
+            const active: PendingPass[] = [];
+
+            for (const pass of stored) {
+                const matchingOp = operations.find(
+                    (op) => op.id === pass.id || ((op.payload as any)?.uuid === pass.id),
+                );
+
+                if (matchingOp) {
+                    if (matchingOp.status === SyncStatus.Synced) {
+                        syncedOrDead.push(pass.id);
+                    } else {
+                        active.push({ ...pass, status: matchingOp.status, error: matchingOp.lastError ?? pass.error });
+                    }
+                } else {
+                    const alreadyOnServer = upcomingTimeline.some(
+                        (code) => code.visitor_name && pass.visitor_name && code.visitor_name.toLowerCase() === pass.visitor_name.toLowerCase(),
+                    ) || historyTimeline.some(
+                        (code) => code.visitor_name && pass.visitor_name && code.visitor_name.toLowerCase() === pass.visitor_name.toLowerCase(),
+                    );
+
+                    if (alreadyOnServer || (!isSyncing && operations.length === 0)) {
+                        syncedOrDead.push(pass.id);
+                    } else {
+                        active.push(pass);
+                    }
+                }
+            }
+
+            if (syncedOrDead.length > 0) {
+                await Promise.all(syncedOrDead.map((id) => ResidentStore.removePendingPass(id)));
+            }
+
+            setPendingPasses(active);
         } catch {
-            // IndexDB unsupported fallback
+            setPendingPasses([]);
         }
-    }, []);
+    }, [operations, upcomingTimeline, historyTimeline, isSyncing]);
 
     useEffect(() => {
-        loadPendingPasses();
-    }, [loadPendingPasses]);
+        void refreshPendingPasses();
+    }, [refreshPendingPasses]);
+
+    const handleClearPendingPasses = async () => {
+        try {
+            await ResidentStore.clearPendingPasses();
+            await refreshPendingPasses();
+        } catch {
+            setPendingPasses([]);
+        }
+    };
 
     const handleRetry = async (pass: PendingPass) => {
         setRetryingId(pass.id);
         try {
-            const matchingOp = operations.find((op) => op.payload && (op.payload as any).uuid === pass.id);
+            const matchingOp = operations.find((op) => op.id === pass.id || ((op.payload as any)?.uuid === pass.id));
             if (matchingOp) {
                 await retryOperation(matchingOp.id);
             } else {
                 await syncNow();
             }
-            await loadPendingPasses();
+            await refreshPendingPasses();
         } finally {
             setRetryingId(null);
         }
@@ -259,16 +306,34 @@ export default function Visitors({
                 {/* Pending Offline Passes Banner */}
                 {pendingPasses.length > 0 && (
                     <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs">
-                        <div className="flex items-center gap-2 font-bold text-amber-900">
-                            <WifiOff className="h-4 w-4 shrink-0 text-amber-600" />
-                            <span>{pendingPasses.length} pass(es) pending sync</span>
+                        <div className="flex items-center justify-between font-bold text-amber-900">
+                            <div className="flex items-center gap-2">
+                                <WifiOff className="h-4 w-4 shrink-0 text-amber-600" />
+                                <span>{pendingPasses.length} pass(es) pending sync</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => syncNow()}
+                                    disabled={isSyncing}
+                                    className="flex items-center gap-1 rounded-md bg-amber-200/80 px-2 py-1 text-[11px] font-semibold text-amber-900 hover:bg-amber-200"
+                                >
+                                    <RefreshCw className={`h-3 w-3 ${isSyncing ? 'animate-spin' : ''}`} />
+                                    Sync All
+                                </button>
+                                <button
+                                    onClick={handleClearPendingPasses}
+                                    className="rounded-md px-1.5 py-1 text-[11px] font-medium text-amber-700 underline hover:text-amber-900"
+                                >
+                                    Dismiss
+                                </button>
+                            </div>
                         </div>
                         <div className="mt-2 space-y-1.5">
                             {pendingPasses.map((pass) => {
                                 const matchingOp = operations.find(
-                                    (op) => op.payload && ((op.payload as any).uuid === pass.id || (op.payload as any).id === pass.id),
+                                    (op) => op.id === pass.id || ((op.payload as any)?.uuid === pass.id),
                                 );
-                                const status = matchingOp ? matchingOp.status : SyncStatus.Pending;
+                                const status = matchingOp ? matchingOp.status : pass.status || SyncStatus.Pending;
                                 const badge = pendingBadge(status);
 
                                 return (
@@ -290,6 +355,7 @@ export default function Visitors({
                                                 onClick={() => handleRetry(pass)}
                                                 disabled={retryingId === pass.id || isSyncing}
                                                 className="rounded-md bg-amber-100 p-1 text-amber-800 hover:bg-amber-200"
+                                                title="Retry sync"
                                             >
                                                 <RefreshCw className={`h-3 w-3 ${retryingId === pass.id ? 'animate-spin' : ''}`} />
                                             </button>
