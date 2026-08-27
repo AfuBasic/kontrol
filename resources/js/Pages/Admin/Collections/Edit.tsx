@@ -143,6 +143,10 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Collection Name</label>
                                 <input
                                     type="text"
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
+                                    autoComplete="on"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
                                     className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
@@ -155,6 +159,9 @@ export default function EditCollection({ collection, residents, zones = [], cont
                             <div className="sm:col-span-2">
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Description</label>
                                 <textarea
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
