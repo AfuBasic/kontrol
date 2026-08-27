@@ -48,6 +48,34 @@ class BillingFinalizationService
                 app(CouponService::class)->logCouponUsage($invoice, $metadata['coupon_code']);
             }
 
+            // 2.6 Persist Card Authorization if provided in paymentData
+            if (! empty($paymentData['authorization']['authorization_code']) && ($paymentData['payment_method'] ?? '') === 'card') {
+                $auth = $paymentData['authorization'];
+                $customer = $paymentData['customer'] ?? [];
+
+                $authData = [
+                    'paystack_authorization_code' => $auth['authorization_code'],
+                    'paystack_customer_code' => $customer['customer_code'] ?? null,
+                    'card_brand' => $auth['brand'] ?? $auth['card_type'] ?? null,
+                    'card_last4' => $auth['last4'] ?? null,
+                ];
+
+                if (! empty($metadata['auto_renew_consent'])) {
+                    $authData['auto_renew_enabled'] = true;
+                }
+
+                if ($invoice->user_id) {
+                    $sub = ResidentSubscription::where('user_id', $invoice->user_id)
+                        ->where('estate_id', $invoice->estate_id)
+                        ->first();
+                    if ($sub) {
+                        $sub->update($authData);
+                    }
+                } elseif ($invoice->estate && $invoice->estate->subscriptionRecord) {
+                    $invoice->estate->subscriptionRecord->update($authData);
+                }
+            }
+
             // 3. Record Transaction if it doesn't exist
             $transaction = $this->ensureTransactionRecorded($invoice, $paymentData);
 
