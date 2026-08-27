@@ -172,8 +172,10 @@ export default function CouponIndexPage({ coupons }: Props) {
                                                 </div>
 
                                                 <div className="mt-3.5 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
-                                                    <span className="text-[10px] font-bold text-slate-400">
-                                                        Uses: {coupon.personal_uses} / {coupon.personal_limit !== null ? coupon.personal_limit : '∞'}
+                                                    <span className="text-[11px] font-semibold text-slate-500">
+                                                        {coupon.personal_limit !== null
+                                                            ? `${coupon.personal_limit - coupon.personal_uses} use${coupon.personal_limit - coupon.personal_uses === 1 ? '' : 's'} left`
+                                                            : 'Unlimited uses'}
                                                     </span>
 
                                                     <div className="flex items-center gap-2">
