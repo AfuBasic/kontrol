@@ -71,4 +71,3 @@ test('authenticated security personnel can access help and support page', functi
         ->component('Account/Support')
     );
 });
-
