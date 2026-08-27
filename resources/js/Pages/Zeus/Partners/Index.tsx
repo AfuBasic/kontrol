@@ -290,7 +290,12 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                         <tr key={partner.id} className="transition-colors hover:bg-[#12141C]/50">
                                             <td className="px-6 py-5">
                                                 <div>
-                                                    <p className="text-[14px] font-bold text-[#F2F3F6]">{partner.name}</p>
+                                                    <Link
+                                                        href={`/zeus/partners/${partner.id}`}
+                                                        className="text-[14px] font-bold text-[#F2F3F6] transition-colors hover:text-[#6C5DFD] hover:underline"
+                                                    >
+                                                        {partner.name}
+                                                    </Link>
                                                     <p className="mt-0.5 text-xs text-[#9297A8]">{partner.email}</p>
                                                     {partner.contact_person && (
                                                         <p className="text-gray-650 mt-1 text-[10px]">Attn: {partner.contact_person}</p>
@@ -308,9 +313,13 @@ export default function PartnersIndex({ partners, filters }: Props) {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-5 text-center">
-                                                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-xs font-semibold text-[#F2F3F6]">
+                                                <Link
+                                                    href={`/zeus/partners/${partner.id}`}
+                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[#0A0B10] text-xs font-semibold text-[#F2F3F6] transition-all hover:border-[#6C5DFD]/40 hover:text-[#6C5DFD]"
+                                                    title="View partner details and referred estates"
+                                                >
                                                     {partner.estates_count}
-                                                </span>
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-5 text-center">
                                                 <span
