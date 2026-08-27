@@ -42,6 +42,12 @@ class PaystackWebhookController extends Controller
             if ($reference) {
                 try {
                     if (str_starts_with($reference, 'COLL-')) {
+                        // Defense-in-depth: Ensure collections are ONLY paid via bank transfer
+                        if (isset($data['channel']) && $data['channel'] !== 'bank_transfer') {
+                            Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$reference}, Channel={$data['channel']}");
+                            return response('OK', 200); // Return 200 so Paystack doesn't retry, but DO NOT grant value
+                        }
+
                         $payment = Payment::where('reference', $reference)->first();
                         if ($payment && $payment->status !== 'success') {
                             app(ContextManager::class)->setSystemContext($payment->estate_id);
