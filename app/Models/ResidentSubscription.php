@@ -88,6 +88,7 @@ class ResidentSubscription extends Model
             'paystack_authorization_code' => 'encrypted',
             'paystack_customer_code' => 'encrypted',
             'plan_id' => 'integer',
+            'auto_renew_enabled' => 'boolean',
         ];
     }
 
