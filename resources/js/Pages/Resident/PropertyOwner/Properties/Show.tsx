@@ -92,6 +92,7 @@ interface Props {
     outstandingCollections: {
         data: OutstandingCollection[];
         next_page_url: string | null;
+        current_page?: number;
         total: number;
     };
     outstandingBalance: number;
@@ -733,7 +734,7 @@ export default function Show({
                                             }
                                             params={{
                                                 data: {
-                                                    collections_page: outstandingCollections.current_page + 1,
+                                                    collections_page: (outstandingCollections.current_page ?? 1) + 1,
                                                 },
                                                 only: ['outstandingCollections'],
                                                 preserveUrl: true,
