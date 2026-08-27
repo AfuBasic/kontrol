@@ -321,10 +321,13 @@ export default function Dashboard({
                                             }}
                                             itemStyle={{ color: '#fff', fontSize: '13px', fontWeight: 500 }}
                                             cursor={{ stroke: 'rgba(148, 163, 184, 0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                            formatter={(value: any, name: any) => [
-                                                name === 'mrr' ? formatExactCurrency(value) : value,
-                                                name === 'mrr' ? 'Revenue' : 'Estates',
-                                            ]}
+                                            formatter={(value: any, name: any, item: any) => {
+                                                const isRevenue = name === 'Revenue' || name === 'mrr' || item?.dataKey === 'mrr';
+                                                return [
+                                                    isRevenue ? formatExactCurrency(Number(value) || 0) : value,
+                                                    isRevenue ? 'Revenue' : 'Estates',
+                                                ];
+                                            }}
                                         />
                                         <Legend
                                             verticalAlign="top"
