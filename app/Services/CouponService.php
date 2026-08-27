@@ -123,12 +123,30 @@ class CouponService
             // Increment usage
             $coupon->increment('used_count');
 
+            $subscriptionId = null;
+            $subscriptionType = null;
+
+            if ($invoice->user_id) {
+                $sub = \App\Models\ResidentSubscription::where('user_id', $invoice->user_id)
+                    ->where('estate_id', $invoice->estate_id)
+                    ->first();
+                if ($sub) {
+                    $subscriptionId = $sub->id;
+                    $subscriptionType = \App\Models\ResidentSubscription::class;
+                }
+            } elseif (! $invoice->user_id && $invoice->estate && $invoice->estate->subscriptionRecord) {
+                $subscriptionId = $invoice->estate->subscriptionRecord->id;
+                $subscriptionType = \App\Models\EstateSubscription::class;
+            }
+
             // Log usage (the audit log)
             return CouponLog::create([
                 'coupon_id' => $coupon->id,
                 'user_id' => $user->id,
                 'invoice_id' => $invoice->id,
                 'discount_amount' => $discountAmount,
+                'subscription_id' => $subscriptionId,
+                'subscription_type' => $subscriptionType,
             ]);
         });
     }
