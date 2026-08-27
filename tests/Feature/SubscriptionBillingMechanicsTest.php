@@ -232,3 +232,53 @@ test('it captures card authorization and enables auto renew upon successful card
         ->and($subscription->card_last4)->toBe('4081')
         ->and($subscription->auto_renew_enabled)->toBe(true);
 });
+
+test('it processes recurring auto-billing for due subscriptions with saved authorizations', function () {
+    $estate = Estate::factory()->create();
+    $estate->settings()->update(['charge_type' => 'residents']);
+
+    $resident = User::factory()->create();
+    $plan = Plan::factory()->create(['price' => 15000, 'billing_interval' => 'monthly']);
+
+    $subscription = ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'auto_renew_enabled' => true,
+        'paystack_authorization_code' => 'AUTH_reusable_123',
+        'current_period_start' => now()->subMonth(),
+        'current_period_end' => now()->subDay(),
+    ]);
+
+    // Mock Paystack chargeAuthorization
+    $paystackMock = Mockery::mock(PaystackService::class);
+    $paystackMock->shouldReceive('chargeAuthorization')
+        ->once()
+        ->andReturn([
+            'status' => 'success',
+            'reference' => 'CHG_auto_9999',
+            'amount' => 15000,
+        ]);
+    $paystackMock->shouldReceive('verifyPayment')
+        ->andReturn([
+            'status' => 'success',
+            'amount' => 15000,
+            'reference' => 'CHG_auto_9999',
+            'channel' => 'card',
+            'customer' => ['email' => $resident->email],
+        ]);
+
+    app()->instance(PaystackService::class, $paystackMock);
+
+    app(RecurringBillingService::class)->processDueResidentSubscriptions();
+
+    $subscription->refresh();
+
+    // Verify invoice was created and paid
+    $invoice = Invoice::where('user_id', $resident->id)->where('status', 'paid')->first();
+    expect($invoice)->not->toBeNull()
+        ->and($invoice->amount)->toBe(15000)
+        ->and($subscription->status)->toBe('active');
+});
+
