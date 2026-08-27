@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Building2, Users, Home, Activity, X, TrendingUp, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, Building2, Users, Home, Wallet, Activity, X, TrendingUp, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { index, toggleStatus, destroy, resendInvitation } from '@/actions/App/Http/Controllers/Zeus/EstateController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 
@@ -14,6 +14,7 @@ type EstateExplorerData = {
     status: 'active' | 'inactive';
     billing_mode: string;
     total_residents: number;
+    total_collections: number;
     total_properties: number;
     health_score: number;
     mrr: number;
@@ -211,18 +212,18 @@ export default function EstateExplorer({ estates, filters }: Props) {
 
                                 <div className="mt-6 grid grid-cols-2 gap-4">
                                     <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
                                             <Users className="h-4 w-4" />
                                             <span className="text-xs font-bold tracking-wider uppercase">Residents</span>
                                         </div>
                                         <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_residents}</p>
                                     </div>
                                     <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/50">
-                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
-                                            <Home className="h-4 w-4" />
-                                            <span className="text-xs font-bold tracking-wider uppercase">Properties</span>
+                                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                            <Wallet className="h-4 w-4" />
+                                            <span className="text-xs font-bold tracking-wider uppercase">Collections</span>
                                         </div>
-                                        <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_properties}</p>
+                                        <p className="mt-1.5 text-lg font-black text-slate-900 dark:text-white">{estate.total_collections ?? 0}</p>
                                     </div>
                                 </div>
                             </div>
@@ -338,15 +339,23 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                             </h3>
                                             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-800/50 dark:bg-slate-800/50">
                                                 <div className="flex justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                                                         Total Residents
                                                     </span>
                                                     <span className="text-sm font-black text-slate-900 dark:text-white">
                                                         {selectedEstate.total_residents}
                                                     </span>
                                                 </div>
+                                                <div className="flex justify-between border-b border-slate-200 py-3 dark:border-slate-800">
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                                                        Active Collections
+                                                    </span>
+                                                    <span className="text-sm font-black text-slate-900 dark:text-white">
+                                                        {selectedEstate.total_collections ?? 0}
+                                                    </span>
+                                                </div>
                                                 <div className="flex justify-between pt-3">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400 dark:text-slate-500">
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
                                                         Total Properties
                                                     </span>
                                                     <span className="text-sm font-black text-slate-900 dark:text-white">

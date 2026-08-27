@@ -6,7 +6,9 @@ use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\PaymentTransaction;
 use App\Models\Property;
+use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EstateHealthService
 {
@@ -17,13 +19,21 @@ class EstateHealthService
     {
         $score = 100;
 
-        $totalResidents = $estate->users()
-            ->whereHas('roles', fn ($q) => $q->where('name', 'resident'))
-            ->count();
+        $communityQuery = $estate->users()
+            ->whereExists(function ($sub) use ($estate) {
+                $sub->select(DB::raw(1))
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', User::class)
+                    ->where('model_has_roles.estate_id', $estate->id)
+                    ->whereIn('roles.name', ['resident', 'property_owner', 'household_member']);
+            });
+
+        $totalResidents = (clone $communityQuery)->count();
 
         if ($totalResidents > 0) {
-            $activeResidents = $estate->users()
-                ->whereHas('roles', fn ($q) => $q->where('name', 'resident'))
+            $activeResidents = (clone $communityQuery)
                 ->whereNotNull('email_verified_at')
                 ->whereNull('suspended_at')
                 ->count();
@@ -55,7 +65,16 @@ class EstateHealthService
         $query = Estate::query()
             ->with(['settings'])
             ->withCount([
-                'users as total_residents' => fn ($q) => $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['resident', 'property_owner'])),
+                'users as total_residents' => fn ($q) => $q->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('model_has_roles')
+                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                        ->whereColumn('model_has_roles.model_id', 'users.id')
+                        ->where('model_has_roles.model_type', User::class)
+                        ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
+                        ->whereIn('roles.name', ['resident', 'property_owner', 'household_member']);
+                }),
+                'collections as total_collections',
             ]);
 
         if (! empty($filters['search'])) {
@@ -94,6 +113,7 @@ class EstateHealthService
                     'status' => $estate->status,
                     'billing_mode' => $estate->billing_mode,
                     'total_residents' => $estate->total_residents,
+                    'total_collections' => $estate->total_collections ?? 0,
                     'total_properties' => $totalProperties,
                     'health_score' => $this->calculateHealthScore($estate),
                     'mrr' => $mrr,
