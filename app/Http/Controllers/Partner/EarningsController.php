@@ -7,6 +7,7 @@ use App\Models\CommissionableRevenue;
 use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\PartnerEarning;
+use App\Services\Zeus\SettlementInboxService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,8 +16,14 @@ use Inertia\Response;
 
 class EarningsController extends Controller
 {
+    public function __construct(
+        private SettlementInboxService $settlementInbox,
+    ) {}
+
     public function __invoke(): Response
     {
+        $this->settlementInbox->hydrateOpenPeriods();
+
         $user = Auth::user();
         $partner = $user->partner;
 
