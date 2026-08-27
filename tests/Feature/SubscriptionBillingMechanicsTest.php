@@ -1,8 +1,6 @@
 <?php
 
 use App\Actions\Billing\CalculateInvoicePricingAction;
-use App\Actions\Billing\ProcessResidentPaymentAction;
-use App\Actions\Billing\GenerateInvoiceAction;
 use App\Models\Coupon;
 use App\Models\CouponLog;
 use App\Models\Estate;
@@ -11,6 +9,7 @@ use App\Models\PaymentTransaction;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Services\Billing\BillingFinalizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
@@ -91,14 +90,14 @@ test('it correctly consumes a coupon cycle and handles pricing calculation', fun
     ]);
 
     // Finalize payment manually to simulate webhook
-    app(\App\Services\Billing\BillingFinalizationService::class)->finalizeSuccess($invoice, [
+    app(BillingFinalizationService::class)->finalizeSuccess($invoice, [
         'reference' => 'test-ref-success',
         'payment_method' => 'card',
-        'customer_email' => 'test@example.com'
+        'customer_email' => 'test@example.com',
     ]);
 
     $subscription->refresh();
-    
+
     // Check coupon log was created
     expect(CouponLog::where('coupon_id', $coupon->id)
         ->where('subscription_id', $subscription->id)
@@ -224,7 +223,7 @@ test('it captures card authorization and enables auto renew upon successful card
         ],
     ];
 
-    app(\App\Services\Billing\BillingFinalizationService::class)->finalizeSuccess($invoice, $paymentData);
+    app(BillingFinalizationService::class)->finalizeSuccess($invoice, $paymentData);
 
     $subscription->refresh();
 
@@ -233,4 +232,3 @@ test('it captures card authorization and enables auto renew upon successful card
         ->and($subscription->card_last4)->toBe('4081')
         ->and($subscription->auto_renew_enabled)->toBe(true);
 });
-
