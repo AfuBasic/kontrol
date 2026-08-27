@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Globe, MapPin, Loader2, ShieldAlert } from 'lucide-react';
+import { Globe, MapPin, Loader2, ShieldAlert, Building2 } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 import { index, update } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import SearchableSelect from '@/Components/UI/SearchableSelect';
@@ -141,7 +141,9 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                         })}
                                     </div>
                                     {errors.role_ids && <p className="mt-2 text-xs font-bold text-red-600">{errors.role_ids}</p>}
-                                    {errors.role && <p className="mt-2 text-xs font-bold text-red-600">{errors.role}</p>}
+                                    {(errors as Record<string, string | undefined>).role && (
+                                        <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).role}</p>
+                                    )}
                                 </div>
                             </section>
 
@@ -150,91 +152,87 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                             {/* SECTION 3: COVERAGE */}
                             <section>
                                 <div className="mb-4">
-                                    <h2 className="text-[13px] font-black text-slate-900">Coverage</h2>
-                                    <p className="mt-1 text-xs font-semibold text-slate-500">Choose where this responsibility applies.</p>
+                                    <h2 className="text-[13px] font-black text-slate-900">Coverage Jurisdiction</h2>
+                                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                                        Where should this authority apply within the estate?
+                                    </p>
                                 </div>
-                                <div className="max-w-2xl">
-                                    <div className="grid gap-4 sm:grid-cols-2">
-                                        {!isZoneScoped && (
-                                            <label
-                                                className={`relative flex cursor-pointer gap-4 rounded-xl border p-4 transition-all ${
-                                                    data.scope_type === 'estate'
-                                                        ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
-                                                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                                                }`}
-                                            >
-                                                <input
-                                                    type="radio"
-                                                    name="scope_type"
-                                                    value="estate"
-                                                    checked={data.scope_type === 'estate'}
-                                                    onChange={() => setData({ ...data, scope_type: 'estate', zone_id: '' })}
-                                                    className="sr-only"
-                                                />
-                                                <div
-                                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                                                        data.scope_type === 'estate' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'
-                                                    }`}
-                                                >
-                                                    <Globe className="h-5 w-5" />
-                                                </div>
-                                                <div className="flex flex-col justify-center">
-                                                    <span className="text-sm font-black text-slate-900">Entire estate</span>
-                                                    <span className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                                                        Authority applies across the estate
-                                                    </span>
-                                                </div>
-                                            </label>
-                                        )}
 
-                                        <label
-                                            className={`relative flex cursor-pointer gap-4 rounded-xl border p-4 transition-all ${
-                                                data.scope_type === 'zone'
-                                                    ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800'
-                                                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50'
-                                            }`}
-                                        >
-                                            <input
-                                                type="radio"
-                                                name="scope_type"
-                                                value="zone"
-                                                checked={data.scope_type === 'zone'}
-                                                onChange={() => setData({ ...data, scope_type: 'zone', zone_id: data.zone_id || zones[0]?.id.toString() || '' })}
-                                                className="sr-only"
-                                            />
-                                            <div
-                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                                                    data.scope_type === 'zone' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'
-                                                }`}
-                                            >
-                                                <MapPin className="h-5 w-5" />
-                                            </div>
-                                            <div className="flex flex-col justify-center">
-                                                <span className="text-sm font-black text-slate-900">Specific zone</span>
-                                                <span className="mt-0.5 text-[11px] font-semibold text-slate-500">
-                                                    Authority is limited to selected zone(s)
-                                                </span>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    {errors.scope_type && <p className="mt-2 text-xs font-bold text-red-600">{errors.scope_type}</p>}
+                                <div className="grid max-w-xl grid-cols-2 gap-3">
+                                    <label
+                                        className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-all ${
+                                            data.scope_type === 'estate'
+                                                ? 'border-slate-900 bg-slate-900 text-white ring-2 ring-slate-900/10'
+                                                : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="scope_type"
+                                            value="estate"
+                                            checked={data.scope_type === 'estate'}
+                                            onChange={(e) => setData('scope_type', e.target.value as 'estate' | 'zone')}
+                                            className="sr-only"
+                                        />
+                                        <Building2 className={`mt-0.5 h-4 w-4 shrink-0 ${data.scope_type === 'estate' ? 'text-white' : 'text-slate-400'}`} />
+                                        <div>
+                                            <p className="text-xs font-black">Estate-wide</p>
+                                            <p className={`mt-0.5 text-[11px] font-medium leading-relaxed ${data.scope_type === 'estate' ? 'text-slate-300' : 'text-slate-500'}`}>
+                                                Global jurisdiction across all estate zones.
+                                            </p>
+                                        </div>
+                                    </label>
 
+                                    <label
+                                        className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-all ${
+                                            data.scope_type === 'zone'
+                                                ? 'border-slate-900 bg-slate-900 text-white ring-2 ring-slate-900/10'
+                                                : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300'
+                                        }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="scope_type"
+                                            value="zone"
+                                            checked={data.scope_type === 'zone'}
+                                            onChange={(e) => setData('scope_type', e.target.value as 'estate' | 'zone')}
+                                            className="sr-only"
+                                        />
+                                        <MapPin className={`mt-0.5 h-4 w-4 shrink-0 ${data.scope_type === 'zone' ? 'text-white' : 'text-slate-400'}`} />
+                                        <div>
+                                            <p className="text-xs font-black">Zone-specific</p>
+                                            <p className={`mt-0.5 text-[11px] font-medium leading-relaxed ${data.scope_type === 'zone' ? 'text-slate-300' : 'text-slate-500'}`}>
+                                                Confined to a designated geographic zone.
+                                            </p>
+                                        </div>
+                                    </label>
+                                </div>
+                                {errors.scope_type && <p className="mt-2 text-xs font-bold text-red-600">{errors.scope_type}</p>}
+
+                                {/* Zone Dropdown */}
+                                <div className="mt-4 max-w-xl">
                                     {data.scope_type === 'zone' && (
-                                        <div className="mt-5 max-w-xl">
-                                            <label className="mb-2 block text-[11px] font-bold tracking-wider text-slate-500 uppercase">
-                                                Select Zone
+                                        <div>
+                                            <label className="block text-[11px] font-black tracking-wider text-slate-600 uppercase">
+                                                Target Zone <span className="text-red-500">*</span>
                                             </label>
                                             {zones.length > 0 ? (
-                                                <SearchableSelect
-                                                    options={zones.map((z) => ({ value: z.id, label: z.name }))}
+                                                <select
                                                     value={data.zone_id}
-                                                    onChange={(v) => setData('zone_id', v)}
-                                                    placeholder="Search zones..."
-                                                />
+                                                    onChange={(e) => setData('zone_id', e.target.value)}
+                                                    className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+                                                >
+                                                    <option value="">Select a zone...</option>
+                                                    {zones.map((zone) => (
+                                                        <option key={zone.id} value={zone.id}>
+                                                            {zone.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
                                             ) : (
-                                                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                                                    <p className="text-xs font-bold text-amber-800">
-                                                        No zones have been created yet.{' '}
+                                                <div className="mt-1 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                                                    <p className="text-xs text-amber-800">
+                                                        No zones available.{' '}
                                                         <Link href="/admin/zones" className="underline hover:text-amber-900">
                                                             Create a zone
                                                         </Link>
@@ -242,7 +240,9 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                                 </div>
                                             )}
                                             {errors.zone_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone_id}</p>}
-                                            {errors.zone && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone}</p>}
+                                            {(errors as Record<string, string | undefined>).zone && (
+                                                <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).zone}</p>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -295,9 +295,9 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                 </div>
                             </section>
 
-                            {errors.assignment && (
+                            {(errors as Record<string, string | undefined>).assignment && (
                                 <div className="max-w-2xl rounded-xl border border-red-200 bg-red-50 p-4">
-                                    <p className="text-sm font-bold text-red-800">{errors.assignment}</p>
+                                    <p className="text-sm font-bold text-red-800">{(errors as Record<string, string | undefined>).assignment}</p>
                                 </div>
                             )}
                         </div>

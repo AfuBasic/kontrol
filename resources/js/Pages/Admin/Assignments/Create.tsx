@@ -134,7 +134,9 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                             className="w-full"
                                         />
                                         {errors.user_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.user_id}</p>}
-                                        {errors.user && <p className="mt-2 text-xs font-bold text-red-600">{errors.user}</p>}
+                                        {(errors as Record<string, string | undefined>).user && (
+                                            <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).user}</p>
+                                        )}
                                     </div>
                                 </section>
 
@@ -177,7 +179,9 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                             })}
                                         </div>
                                         {errors.role_ids && <p className="mt-2 text-xs font-bold text-red-600">{errors.role_ids}</p>}
-                                        {errors.role && <p className="mt-2 text-xs font-bold text-red-600">{errors.role}</p>}
+                                        {(errors as Record<string, string | undefined>).role && (
+                                            <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).role}</p>
+                                        )}
                                     </div>
                                 </section>
 
@@ -280,15 +284,15 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                                     </div>
                                                 )}
                                                 {errors.zone_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone_id}</p>}
-                                                {errors.zone && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone}</p>}
+                                                {(errors as Record<string, string | undefined>).zone && <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).zone}</p>}
                                             </div>
                                         )}
                                     </div>
                                 </section>
 
-                                {errors.assignment && (
+                                {(errors as Record<string, string | undefined>).assignment && (
                                     <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                                        <p className="text-sm font-bold text-red-800">{errors.assignment}</p>
+                                        <p className="text-sm font-bold text-red-800">{(errors as Record<string, string | undefined>).assignment}</p>
                                     </div>
                                 )}
                             </div>
