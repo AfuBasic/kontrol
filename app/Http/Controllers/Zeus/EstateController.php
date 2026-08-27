@@ -18,8 +18,10 @@ use App\Models\Invoice;
 use App\Models\Partner;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
+use App\Models\User;
 use App\Services\Zeus\EstateHealthService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,21 +55,47 @@ class EstateController extends Controller
             'commissionPlan',
         ]);
 
-        $stats = $estate->residentSubscriptions()
-            ->selectRaw("
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
-                SUM(CASE WHEN status = 'trial' THEN 1 ELSE 0 END) as trial,
-                SUM(CASE WHEN status = 'past_due' THEN 1 ELSE 0 END) as past_due,
-                SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
-            ")->first();
+        $residentUsers = $estate->users()
+            ->wherePivot('status', 'accepted')
+            ->whereExists(function ($sub) use ($estate) {
+                $sub->select(DB::raw(1))
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', User::class)
+                    ->where('model_has_roles.estate_id', $estate->id)
+                    ->whereIn('roles.name', ['resident', 'property_owner']);
+            })
+            ->with([
+                'residentSubscriptions' => fn ($q) => $q->where('estate_id', $estate->id),
+            ])
+            ->get();
+
+        $activeCount = 0;
+        $trialCount = 0;
+        $pastDueCount = 0;
+        $expiredCount = 0;
+
+        foreach ($residentUsers as $rUser) {
+            $sub = $rUser->residentSubscriptions->first();
+            $subStatus = $sub?->status;
+            if ($subStatus === 'active') {
+                $activeCount++;
+            } elseif ($subStatus === 'trial') {
+                $trialCount++;
+            } elseif ($subStatus === 'past_due') {
+                $pastDueCount++;
+            } else {
+                $expiredCount++;
+            }
+        }
 
         $residentStats = [
-            'total' => (int) ($stats->total ?? 0),
-            'active' => (int) ($stats->active ?? 0),
-            'trial' => (int) ($stats->trial ?? 0),
-            'past_due' => (int) ($stats->past_due ?? 0),
-            'expired' => (int) ($stats->expired ?? 0),
+            'total' => $residentUsers->count(),
+            'active' => $activeCount,
+            'trial' => $trialCount,
+            'past_due' => $pastDueCount,
+            'expired' => $expiredCount,
         ];
 
         // Financial Analytics
@@ -94,11 +122,7 @@ class EstateController extends Controller
             ->limit(10)
             ->get();
 
-        $rawResidents = ResidentSubscription::where('estate_id', $estate->id)
-            ->with('user:id,ulid,name,email')
-            ->get();
-
-        $userIds = $rawResidents->pluck('user_id')->unique()->toArray();
+        $userIds = $residentUsers->pluck('id')->unique()->toArray();
         $lastInvoices = Invoice::whereIn('user_id', $userIds)
             ->where('estate_id', $estate->id)
             ->orderByDesc('created_at')
@@ -106,17 +130,23 @@ class EstateController extends Controller
             ->groupBy('user_id')
             ->map(fn ($invoices) => $invoices->first());
 
-        $residents = $rawResidents->map(function ($sub) use ($lastInvoices) {
-            $lastInvoice = $lastInvoices->get($sub->user_id);
+        $residents = $residentUsers->map(function ($user) use ($lastInvoices) {
+            $sub = $user->residentSubscriptions->first();
+            $lastInvoice = $lastInvoices->get($user->id);
 
             return [
-                'id' => $sub->id,
-                'ulid' => $sub->ulid,
-                'user' => $sub->user,
-                'status' => $sub->status,
-                'last_payment_at' => $sub->last_paid_at?->toDateString(),
+                'id' => $sub?->id ?? $user->id,
+                'ulid' => $sub?->ulid ?? $user->ulid,
+                'user' => [
+                    'id' => $user->id,
+                    'ulid' => $user->ulid,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                ],
+                'status' => $sub?->status ?? 'past_due',
+                'last_payment_at' => $sub?->last_paid_at?->toDateString(),
                 'last_amount' => $lastInvoice?->amount ?? 0,
-                'next_due' => $sub->current_period_end?->toDateString(),
+                'next_due' => $sub?->current_period_end?->toDateString(),
             ];
         });
 
