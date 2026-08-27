@@ -11,6 +11,7 @@ import {
     XMarkIcon,
     BuildingOfficeIcon,
     ClipboardDocumentListIcon,
+    QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
@@ -19,6 +20,7 @@ import {
     
     Search,
 } from 'lucide-react';
+import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
@@ -897,6 +899,14 @@ export default function AdminLayout({ children, title: _title }: Props) {
                                         <ClipboardDocumentListIcon className="h-5 w-5" /> Activity Log
                                     </Link>
                                 )}
+
+                                <Link
+                                    href={SupportController.index.url()}
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-white/70 transition-colors hover:bg-white/10"
+                                >
+                                    <QuestionMarkCircleIcon className="h-5 w-5" /> Help & Support
+                                </Link>
 
                                 {(auth.user?.available_contexts?.length || 0) > 1 && (
                                     <Link
