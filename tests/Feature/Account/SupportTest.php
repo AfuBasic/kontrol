@@ -3,6 +3,16 @@
 use App\Models\Estate;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
+
+beforeEach(function () {
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'resident', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'security', 'guard_name' => 'web']);
+});
 
 test('guests are redirected to login when accessing support', function () {
     $response = $this->get(route('account.support.index'));
@@ -13,7 +23,8 @@ test('guests are redirected to login when accessing support', function () {
 test('authenticated resident can access help and support page', function () {
     $estate = Estate::factory()->create();
     $user = User::factory()->create();
-    $user->assignRole('resident', $estate->id);
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('resident');
     $user->update(['current_estate_id' => $estate->id]);
 
     $response = $this->actingAs($user)->get(route('account.support.index'));
@@ -34,7 +45,8 @@ test('authenticated resident can access help and support page', function () {
 test('authenticated admin can access help and support page', function () {
     $estate = Estate::factory()->create();
     $user = User::factory()->create();
-    $user->assignRole('admin', $estate->id);
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('admin');
     $user->update(['current_estate_id' => $estate->id]);
 
     $response = $this->actingAs($user)->get(route('account.support.index'));
@@ -48,7 +60,8 @@ test('authenticated admin can access help and support page', function () {
 test('authenticated security personnel can access help and support page', function () {
     $estate = Estate::factory()->create();
     $user = User::factory()->create();
-    $user->assignRole('security', $estate->id);
+    setPermissionsTeamId($estate->id);
+    $user->assignRole('security');
     $user->update(['current_estate_id' => $estate->id]);
 
     $response = $this->actingAs($user)->get(route('account.support.index'));
@@ -58,3 +71,4 @@ test('authenticated security personnel can access help and support page', functi
         ->component('Account/Support')
     );
 });
+
