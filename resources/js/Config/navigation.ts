@@ -12,8 +12,10 @@ import {
     UserGroupIcon,
     Cog6ToothIcon,
     CreditCardIcon,
+    QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
 
+import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 import * as CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
@@ -190,6 +192,13 @@ export const secondaryNav: NavItem[] = [
         role: 'admin',
         description: 'Manage estate settings',
         keywords: ['configuration', 'preferences', 'edit settings', 'setup', 'update settings'],
+    },
+    {
+        name: 'Help & Support',
+        href: SupportController.index.url(),
+        icon: QuestionMarkCircleIcon,
+        description: 'Contact Kontrol support',
+        keywords: ['support', 'help', 'contact', 'call', 'whatsapp', 'email', 'reach out', 'assistance'],
     },
 ];
 
