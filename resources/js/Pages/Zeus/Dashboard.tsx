@@ -299,7 +299,12 @@ export default function Dashboard({
                                             axisLine={false}
                                             tickLine={false}
                                             tick={{ fontSize: 10, fill: '#64748b' }}
-                                            tickFormatter={(value) => `₦${(value / 1000).toFixed(0)}k`}
+                                            tickFormatter={(value) => {
+                                                if (value === 0) return '₦0';
+                                                if (value >= 1000000) return `₦${(value / 1000000).toFixed(1)}M`;
+                                                if (value >= 1000) return `₦${(value / 1000).toFixed(0)}k`;
+                                                return `₦${value}`;
+                                            }}
                                             dx={-10}
                                         />
                                         <YAxis
@@ -324,7 +329,7 @@ export default function Dashboard({
                                             formatter={(value: any, name: any, item: any) => {
                                                 const isRevenue = name === 'Revenue' || name === 'mrr' || item?.dataKey === 'mrr';
                                                 return [
-                                                    isRevenue ? formatExactCurrency(Number(value) || 0) : value,
+                                                    isRevenue ? formatExactCurrency(Number(value) || 0) : Number(value || 0).toLocaleString(),
                                                     isRevenue ? 'Revenue' : 'Estates',
                                                 ];
                                             }}
