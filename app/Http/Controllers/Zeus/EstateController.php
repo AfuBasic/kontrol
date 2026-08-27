@@ -12,12 +12,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\StoreEstateRequest;
 use App\Http\Requests\Zeus\UpdateEstateRequest;
 use App\Http\Requests\Zeus\UpdatePartnerAssignmentRequest;
+use App\Models\CommissionableRevenue;
 use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\Partner;
 use App\Models\PaymentTransaction;
-use App\Models\ResidentSubscription;
 use App\Models\User;
 use App\Services\Zeus\EstateHealthService;
 use Illuminate\Http\RedirectResponse;
@@ -98,23 +98,25 @@ class EstateController extends Controller
             'expired' => $expiredCount,
         ];
 
-        // Financial Analytics
-        $totalRevenue = PaymentTransaction::where('estate_id', $estate->id)
-            ->where('status', 'success')
-            ->sum('amount');
+        // Financial Analytics - consolidated into a single database query
+        $financialStats = PaymentTransaction::where('estate_id', $estate->id)
+            ->selectRaw('
+                COALESCE(SUM(CASE WHEN status = "success" THEN amount ELSE 0 END), 0) as total_revenue,
+                COALESCE(SUM(CASE WHEN status = "success" AND created_at >= ? THEN amount ELSE 0 END), 0) as monthly_revenue,
+                COUNT(*) as total_attempts,
+                COALESCE(SUM(CASE WHEN status = "success" THEN 1 ELSE 0 END), 0) as successful_attempts
+            ', [now()->startOfMonth()])
+            ->first();
 
-        $monthlyRevenue = PaymentTransaction::where('estate_id', $estate->id)
-            ->where('status', 'success')
-            ->where('created_at', '>=', now()->startOfMonth())
-            ->sum('amount');
+        $totalRevenue = (int) ($financialStats->total_revenue ?? 0);
+        $monthlyRevenue = (int) ($financialStats->monthly_revenue ?? 0);
+        $totalAttempts = (int) ($financialStats->total_attempts ?? 0);
+        $successfulAttempts = (int) ($financialStats->successful_attempts ?? 0);
+        $successRate = $totalAttempts > 0 ? round(($successfulAttempts / $totalAttempts) * 100, 1) : 100;
 
-        $outstandingAmount = Invoice::where('estate_id', $estate->id)
+        $outstandingAmount = (int) Invoice::where('estate_id', $estate->id)
             ->whereIn('status', ['pending', 'overdue'])
             ->sum('amount');
-
-        $totalAttempts = PaymentTransaction::where('estate_id', $estate->id)->count();
-        $successfulAttempts = PaymentTransaction::where('estate_id', $estate->id)->where('status', 'success')->count();
-        $successRate = $totalAttempts > 0 ? round(($successfulAttempts / $totalAttempts) * 100, 1) : 100;
 
         $recentTransactions = PaymentTransaction::where('estate_id', $estate->id)
             ->with(['invoice.user:id,name,email'])
@@ -163,6 +165,22 @@ class EstateController extends Controller
             ->latest()
             ->get();
 
+        $partnerEarnings = null;
+        if ($estate->partner_id) {
+            $partnerCommissionStats = CommissionableRevenue::where('estate_id', $estate->id)
+                ->where('partner_id', $estate->partner_id)
+                ->selectRaw('
+                    COALESCE(SUM(commission_amount), 0) as total_commission,
+                    COALESCE(SUM(CASE WHEN created_at >= ? THEN commission_amount ELSE 0 END), 0) as current_month_commission
+                ', [now()->startOfMonth()])
+                ->first();
+
+            $partnerEarnings = [
+                'current_month_commission' => (int) ($partnerCommissionStats?->current_month_commission ?? 0),
+                'total_commission' => (int) ($partnerCommissionStats?->total_commission ?? 0),
+            ];
+        }
+
         return Inertia::render('Zeus/Estates/Show', [
             'estate' => array_merge($estate->toArray(), [
                 'commission_days_remaining' => $estate->commissionDaysRemaining(),
@@ -178,6 +196,7 @@ class EstateController extends Controller
             'residents' => $residents,
             'admin' => $admin,
             'activeCoupons' => $activeCoupons,
+            'partnerEarnings' => $partnerEarnings,
         ]);
     }
 
