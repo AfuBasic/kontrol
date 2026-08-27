@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Billing;
 
+use App\Services\Billing\RecurringBillingService;
 use Illuminate\Console\Command;
 
 class ProcessAutoBilling extends Command
@@ -18,13 +19,17 @@ class ProcessAutoBilling extends Command
      *
      * @var string
      */
-    protected $description = 'Dispatches auto-billing jobs for all pending/overdue invoices with stored cards';
+    protected $description = 'Processes automated recurring charges for due estate and resident subscriptions with stored cards';
 
     /**
      * Execute the console command.
      */
-    public function handle(): void
+    public function handle(RecurringBillingService $recurringBillingService): void
     {
-        $this->info('Auto-billing is disabled in the system.');
+        $this->info('Starting recurring auto-billing run...');
+
+        $recurringBillingService->processDueSubscriptions();
+
+        $this->info('Recurring auto-billing run completed.');
     }
 }
