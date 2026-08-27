@@ -32,7 +32,7 @@ class PaystackService
      *
      * @throws \Exception
      */
-    public function initializePayment(Invoice $invoice, string $callbackUrl, ?string $reference = null): array
+    public function initializePayment(Invoice $invoice, string $callbackUrl, ?string $reference = null, array $channels = ['card', 'bank_transfer']): array
     {
         Log::info('initializePayment called', [
             'invoice_id' => $invoice->id,
@@ -45,7 +45,7 @@ class PaystackService
             'amount' => $invoice->amount,
             'reference' => $reference ?? $invoice->invoice_number,
             'callback_url' => $callbackUrl,
-            'channels' => ['bank_transfer'],
+            'channels' => $channels,
             'metadata' => [
                 'invoice_id' => $invoice->id,
                 'estate_id' => $invoice->estate_id,
@@ -118,6 +118,7 @@ class PaystackService
             'paid_at' => $data['data']['paid_at'] ?? null,
             'authorization' => $data['data']['authorization'] ?? null,
             'customer' => $data['data']['customer'] ?? null,
+            'channel' => $data['data']['channel'] ?? null,
             'message' => $data['message'] ?? null,
         ];
     }
@@ -147,16 +148,18 @@ class PaystackService
     /**
      * Initialize a generic payment transaction.
      */
-    public function initializeTransaction(string $email, int $amount, string $callbackUrl, array $metadata = [], ?string $reference = null): array
+    public function initializeTransaction(string $email, int $amount, string $callbackUrl, array $metadata = [], ?string $reference = null, array $channels = ['bank_transfer'], array $additionalPayload = []): array
     {
-        $response = $this->client->post('/transaction/initialize', [
+        $payload = array_merge([
             'email' => $email,
             'amount' => $amount,
             'reference' => $reference,
             'callback_url' => $callbackUrl,
-            'channels' => ['bank_transfer'],
+            'channels' => $channels,
             'metadata' => $metadata,
-        ]);
+        ], $additionalPayload);
+
+        $response = $this->client->post('/transaction/initialize', $payload);
 
         if (! $response->successful()) {
             throw new \Exception('Paystack initialization failed: '.$response->body());
