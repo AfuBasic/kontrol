@@ -38,7 +38,7 @@ test('zeus admin can view partner details with referred estates and earnings bre
     ]);
 
     // Create a partner earning
-    PartnerEarning::factory()->create([
+    PartnerEarning::create([
         'partner_id' => $partner->id,
         'month' => now()->startOfMonth(),
         'total_amount' => 5000000,
