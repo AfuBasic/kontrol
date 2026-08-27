@@ -7,7 +7,6 @@ use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\BillingCycleService;
-use App\Services\CouponService;
 use App\Services\PaystackService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -98,7 +97,7 @@ class ProcessResidentPaymentAction
             $coupon = null;
             if ($couponCode) {
                 $coupon = Coupon::where('code', $couponCode)->first();
-                if (!$coupon) {
+                if (! $coupon) {
                     throw new PaymentInitializationException(
                         'Invalid coupon code.',
                         'invalid_coupon'
