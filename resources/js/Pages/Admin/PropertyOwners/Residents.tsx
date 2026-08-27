@@ -57,7 +57,7 @@ export default function Residents({ propertyOwner, residents }: Props) {
     const [isSearching, setIsSearching] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const ownerIdentifier = propertyOwner?.ulid || propertyOwner?.id;
+    const ownerIdentifier = String(propertyOwner?.ulid || propertyOwner?.id || '');
 
     const fetchAvailableResidents = useCallback(
         async (query: string) => {
