@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Account\SupportController;
 use App\Http\Controllers\Account\TrustedDeviceController;
 use App\Http\Controllers\Auth\ContextController;
 use App\Http\Controllers\Auth\DeviceAuthorizationController;
@@ -86,6 +87,8 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/account/devices', [TrustedDeviceController::class, 'index'])->name('account.devices.index');
     Route::delete('/account/devices/{device}', [TrustedDeviceController::class, 'destroy'])->name('account.devices.destroy');
+
+    Route::get('/account/support', [SupportController::class, 'index'])->name('account.support.index');
 });
 
 /*
