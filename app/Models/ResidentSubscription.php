@@ -70,6 +70,7 @@ class ResidentSubscription extends Model
         'last_paid_at',
         'last_reminded_at',
         'auto_renew_enabled',
+        'auto_renew_opted_out',
     ];
 
     /**
@@ -89,6 +90,7 @@ class ResidentSubscription extends Model
             'paystack_customer_code' => 'encrypted',
             'plan_id' => 'integer',
             'auto_renew_enabled' => 'boolean',
+            'auto_renew_opted_out' => 'boolean',
         ];
     }
 
