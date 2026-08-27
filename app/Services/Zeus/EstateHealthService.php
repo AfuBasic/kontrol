@@ -55,7 +55,7 @@ class EstateHealthService
         $query = Estate::query()
             ->with(['settings'])
             ->withCount([
-                'users as total_residents' => fn ($q) => $q->whereHas('roles', fn ($r) => $r->where('name', 'resident')),
+                'users as total_residents' => fn ($q) => $q->whereHas('roles', fn ($r) => $r->whereIn('name', ['resident', 'property_owner'])),
             ]);
 
         if (! empty($filters['search'])) {
