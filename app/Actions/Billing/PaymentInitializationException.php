@@ -34,6 +34,6 @@ class PaymentInitializationException extends \Exception
     public function getUserMessage(): string
     {
         return self::USER_MESSAGES[$this->code_key]
-            ?? 'Failed to initialize payment. Please try again or contact support.';
+            ?? ($this->getMessage() ?: 'Failed to initialize payment. Please try again or contact support.');
     }
 }
