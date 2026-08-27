@@ -696,7 +696,7 @@ export default function Residents({
                                                         className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
                                                             resident.status === 'inactive'
                                                                 ? 'bg-rose-50 text-rose-700'
-                                                                : resident.status === 'active' || resident.status === 'accepted'
+                                                                : (resident.status as string) === 'active' || (resident.status as string) === 'accepted'
                                                                   ? 'bg-emerald-50 text-emerald-700'
                                                                   : 'bg-amber-50 text-amber-700'
                                                         }`}
@@ -1319,7 +1319,7 @@ function ResidentInsightsPanel({
                                         Profile Completion Needed
                                     </h3>
                                     <p className="mt-0.5 text-[10px] font-bold text-slate-400">
-                                        {incompleteResidents.length} Residents
+                                        {incompleteResidents?.length ?? 0} Residents
                                     </p>
                                 </div>
                                 <button
