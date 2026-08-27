@@ -10,6 +10,7 @@ import {
     ChevronDownIcon,
     TicketIcon,
     TagIcon,
+    CreditCardIcon,
 } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
@@ -42,6 +43,7 @@ type Props = {
     subscription: {
         status: SubscriptionStatus | string;
         has_saved_card: boolean;
+        auto_renew_enabled?: boolean;
         card_brand?: string;
         card_last4?: string;
         current_period_end?: string;
@@ -168,6 +170,7 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const [couponError, setCouponError] = useState('');
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [isAutoApplied, setIsAutoApplied] = useState(false);
+    const [autoRenewConsent, setAutoRenewConsent] = useState(subscription.auto_renew_enabled ?? true);
 
     useEffect(() => {
         setIsNative(Capacitor.isNativePlatform());
@@ -370,7 +373,10 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         if (payingPlanId) return;
         setPayingPlanId(planId);
 
-        const payload: { plan_id: number; coupon_code?: string } = { plan_id: planId };
+        const payload: { plan_id: number; coupon_code?: string; auto_renew_consent?: boolean } = {
+            plan_id: planId,
+            auto_renew_consent: autoRenewConsent,
+        };
 
         // Find if coupon code is applied for this plan
         const couponForPlan = appliedCoupons[planId];
@@ -461,6 +467,30 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                             <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</p>
                         </div>
                     </div>
+
+                    {/* Saved Payment Method Details */}
+                    {subscription.has_saved_card && (
+                        <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/70 px-6 py-3.5 sm:px-8">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-700 shadow-xs ring-1 ring-slate-200">
+                                    <CreditCardIcon className="h-5 w-5" strokeWidth={2} />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-xs font-semibold text-slate-900 capitalize">
+                                            {subscription.card_brand || 'Card'} •••• {subscription.card_last4 || '••••'}
+                                        </p>
+                                        <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-600/10">
+                                            Saved
+                                        </span>
+                                    </div>
+                                    <p className="text-[11px] text-slate-500">
+                                        {subscription.auto_renew_enabled ? 'Auto-renewal is enabled for this card' : 'Saved for seamless renewal checkout'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </motion.section>
 
                 {/* Coupon Code Input */}
@@ -603,6 +633,27 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                 </div>
                             );
                         })}
+                    </div>
+
+                    {/* Auto-renew consent opt-in */}
+                    <div className="mt-4 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs">
+                        <div className="flex items-start gap-3">
+                            <input
+                                id="auto_renew_consent"
+                                type="checkbox"
+                                checked={autoRenewConsent}
+                                onChange={(e) => setAutoRenewConsent(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <div>
+                                <label htmlFor="auto_renew_consent" className="cursor-pointer text-xs font-semibold text-slate-900">
+                                    Enable automatic renewal
+                                </label>
+                                <p className="text-[11px] text-slate-500">
+                                    Safely charge your card at the end of each billing term to maintain uninterrupted service. You can cancel at any time.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </motion.section>
 
