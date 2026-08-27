@@ -133,7 +133,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
             }
 
             // Filter by estate context
-            if (notification.estate_id && notification.estate_id !== auth.user.current_estate_id) {
+            if (notification.estate_id && notification.estate_id !== auth.user?.current_estate_id) {
                 return;
             }
 
