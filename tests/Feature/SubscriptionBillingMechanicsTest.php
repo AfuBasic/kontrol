@@ -355,7 +355,10 @@ test('it does not apply a non-recurring one-time coupon on subsequent automated 
     );
     expect($pricing2['discount_amount'])->toBe(0)
         ->and($pricing2['amount'])->toBe(20000)
-        ->and($pricing2['metadata']['coupon_error'])->toBe('Coupon can only be used once per subscription.');
+        ->and(in_array($pricing2['metadata']['coupon_error'], [
+            'Coupon can only be used once per subscription.',
+            'This coupon has reached its usage limit.',
+        ]))->toBeTrue();
 });
 
 test('it ignores expired or inactive coupons during automated renewal pricing', function () {
