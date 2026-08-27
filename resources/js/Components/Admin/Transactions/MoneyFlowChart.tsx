@@ -40,7 +40,7 @@ export default function MoneyFlowChart({ data, loading }: Props) {
                         <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8' }} />
                         <YAxis axisLine={false} tickLine={false} tickFormatter={formatCurrency} tick={{ fontSize: 11, fill: '#94a3b8' }} width={70} />
                         <Tooltip
-                            formatter={(value: number) => formatCurrency(value)}
+                            formatter={(value: any) => formatCurrency(Number(value) || 0)}
                             contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 8px 24px rgba(15,23,42,0.08)' }}
                         />
                         <Bar dataKey="money_in" name="Money In" fill="#1F6FDB" radius={[4, 4, 0, 0]} />
