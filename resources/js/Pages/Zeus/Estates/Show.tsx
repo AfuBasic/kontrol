@@ -101,6 +101,11 @@ interface Coupon {
     expires_at: string | null;
 }
 
+interface PartnerEarnings {
+    current_month_commission: number;
+    total_commission: number;
+}
+
 interface Props {
     estate: Estate;
     residentStats: { total: number; active: number; trial: number; past_due: number; expired: number };
@@ -109,9 +114,19 @@ interface Props {
     residents: Resident[];
     admin: { name: string; email: string } | null;
     activeCoupons: Coupon[];
+    partnerEarnings?: PartnerEarnings | null;
 }
 
-export default function EstateShow({ estate, residentStats, analytics, recentTransactions, residents, admin, activeCoupons }: Props) {
+export default function EstateShow({
+    estate,
+    residentStats,
+    analytics,
+    recentTransactions,
+    residents,
+    admin,
+    activeCoupons,
+    partnerEarnings,
+}: Props) {
     const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
     const [actionToConfirm, setActionToConfirm] = useState<'toggle' | 'delete' | 'reset' | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
