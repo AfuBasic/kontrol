@@ -22,6 +22,7 @@ Schedule::command('model:prune', [
 
 // Billing scheduled commands
 Schedule::command('kontrol:process-auto-billing')->dailyAt('02:00');
+Schedule::command('kontrol:send-auto-renew-reminders')->dailyAt('09:00');
 
 // Collections system & Compliance Engine evaluation
 Schedule::job(new RecurringAssignmentJob)->dailyAt('00:05');
