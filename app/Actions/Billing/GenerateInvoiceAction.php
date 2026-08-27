@@ -14,6 +14,7 @@ class GenerateInvoiceAction
 {
     public function __construct(
         private BillingCycleService $billingCycleService,
+        private CalculateInvoicePricingAction $pricingAction,
     ) {}
 
     /**
@@ -26,6 +27,16 @@ class GenerateInvoiceAction
         $subscription = $estate->subscriptionRecord;
 
         if (! $subscription || ! $subscription->plan) {
+            return null;
+        }
+
+        // ONE OUTSTANDING INVOICE INVARIANT
+        // A subscription cannot generate a new renewal invoice while its current renewal invoice remains outstanding.
+        $hasUnpaidInvoice = Invoice::where('estate_subscription_id', $subscription->id)
+            ->whereIn('status', ['pending', 'overdue'])
+            ->exists();
+
+        if ($hasUnpaidInvoice) {
             return null;
         }
 
@@ -48,8 +59,16 @@ class GenerateInvoiceAction
                 return null;
             }
 
-            // Compute amount: plan price × resident count
-            $amount = ($subscription->plan->price ?? 0) * $activeResidents;
+            // Compute subtotal: plan price × resident count
+            $subtotal = ($subscription->plan->price ?? 0) * $activeResidents;
+
+            $pricing = $this->pricingAction->execute(
+                $subtotal,
+                $subscription->coupon,
+                $estate->users()->first(), // Fallback user for estate
+                $estate,
+                $subscription
+            );
 
             // Generate unique invoice number
             $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id);
@@ -60,12 +79,13 @@ class GenerateInvoiceAction
                 'plan_id' => $subscription->plan_id,
                 'estate_subscription_id' => $subscription->id,
                 'invoice_number' => $invoiceNumber,
-                'amount' => $amount,
+                'amount' => $pricing['amount'],
                 'resident_count' => $activeResidents,
                 'billing_period_start' => $periodStart,
                 'billing_period_end' => $periodEnd,
                 'due_date' => $dueDate,
                 'status' => 'pending',
+                'metadata' => $pricing['metadata'],
             ]);
 
             $this->advanceSubscription($subscription, $periodStart, $nextDate);
@@ -73,7 +93,7 @@ class GenerateInvoiceAction
             // Log activity
             activity('finance')
                 ->on($estate)
-                ->withProperties(['invoice_id' => $invoice->id, 'amount' => $amount])
+                ->withProperties(['invoice_id' => $invoice->id, 'amount' => $pricing['amount']])
                 ->log('Estate bulk invoice generated');
 
             // Dispatch event
