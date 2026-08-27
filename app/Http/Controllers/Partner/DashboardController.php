@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
+use App\Models\Estate;
 use App\Models\EstateApplication;
 use App\Models\PartnerEarning;
 use App\Services\Zeus\SettlementInboxService;
@@ -30,6 +31,7 @@ class DashboardController extends Controller
         $partnerRequestCount = 0;
         $approvedRequestCount = 0;
         $convertedEstates = 0;
+        $activeEstates = 0;
         $commissionRate = null;
         $commissionType = null;
         $monthlyEarnings = [];
@@ -73,6 +75,7 @@ class DashboardController extends Controller
                 ->where('status', 'approved')
                 ->count();
             $convertedEstates = $partner->estates()->count();
+            $activeEstates = $partner->estates()->where('status', 'active')->count();
             $commissionRate = $partner->commission_rate;
             $commissionType = $partner->commission_type;
 
@@ -115,9 +118,30 @@ class DashboardController extends Controller
                 ->values()
                 ->all();
 
+            if ($recentActivity === [] && $convertedEstates > 0) {
+                $recentActivity = $partner->estates()
+                    ->latest()
+                    ->limit(8)
+                    ->get()
+                    ->map(fn (Estate $estate) => [
+                        'id' => $estate->id,
+                        'type' => 'estate',
+                        'title' => $estate->name,
+                        'status' => $estate->status,
+                        'status_label' => ucfirst($estate->status),
+                        'description' => $estate->status === 'active'
+                            ? 'Estate is live and active on Kontrol'
+                            : 'Estate registered on Kontrol',
+                        'at' => $estate->created_at?->toIso8601String(),
+                        'at_human' => $estate->created_at?->diffForHumans(),
+                    ])
+                    ->values()
+                    ->all();
+            }
+
             $draftInProgress = false; // client-side drafts; server has no draft status yet
 
-            if ($partnerRequestCount === 0) {
+            if ($partnerRequestCount === 0 && $convertedEstates === 0) {
                 $actions[] = [
                     'key' => 'submit_estate',
                     'title' => 'Submit your first estate',
@@ -129,7 +153,7 @@ class DashboardController extends Controller
             } else {
                 $actions[] = [
                     'key' => 'submit_another',
-                    'title' => 'Grow your pipeline',
+                    'title' => 'Grow your portfolio',
                     'description' => 'Submit another estate to increase future commissions.',
                     'href' => '/partner/partner-requests/create',
                     'cta' => 'Submit estate',
@@ -187,8 +211,8 @@ class DashboardController extends Controller
         $daysUntilSettlement = max(0, (int) CarbonImmutable::now()->startOfDay()->diffInDays($nextSettlement, false));
 
         $conversionRate = $partnerRequestCount > 0
-            ? round(($convertedEstates / $partnerRequestCount) * 100, 1)
-            : 0.0;
+            ? round(($approvedRequestCount / $partnerRequestCount) * 100, 1)
+            : ($convertedEstates > 0 ? 100.0 : 0.0);
 
         return Inertia::render('Partner/Dashboard', [
             'user' => [
@@ -208,6 +232,8 @@ class DashboardController extends Controller
                 'partner_request_count' => $partnerRequestCount,
                 'approved_request_count' => $approvedRequestCount,
                 'converted_estates' => $convertedEstates,
+                'total_estates' => $convertedEstates,
+                'active_estates' => $activeEstates,
                 'conversion_rate' => $conversionRate,
                 'commission_rate' => $commissionRate,
                 'commission_type' => $commissionType,
