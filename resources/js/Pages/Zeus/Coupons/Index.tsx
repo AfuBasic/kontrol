@@ -565,6 +565,7 @@ export default function CouponsIndex({ coupons, stats, filters }: Props) {
                 onConfirm={handleDeleteConfirm}
                 onClose={() => setDeleteModalOpen(false)}
                 isOpen={deleteModalOpen}
+                isLoading={isDeleting}
             />
         </ZeusLayout>
     );
