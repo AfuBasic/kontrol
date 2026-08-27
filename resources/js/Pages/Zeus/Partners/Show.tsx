@@ -107,6 +107,7 @@ interface Stats {
     total_settled_earnings: number;
     pending_commissions: number;
     accruing_commissions: number;
+    total_unpaid_commissions?: number;
     total_gross_revenue: number;
     next_settlement_date: string;
 }
@@ -313,10 +314,16 @@ export default function PartnerShow({
                             </div>
                         </div>
                         <div className="text-2xl font-black text-[#F5A623] sm:text-3xl">
-                            {formatAmount(stats.pending_commissions + stats.accruing_commissions)}
+                            {formatAmount(stats.total_unpaid_commissions ?? (stats.pending_commissions + stats.accruing_commissions))}
                         </div>
                         <div className="mt-1 text-xs text-[#9297A8]">
-                            Accruing this month: {formatAmount(stats.accruing_commissions)}
+                            {stats.pending_commissions > 0 ? (
+                                <span>
+                                    Pending payout: <strong className="text-[#F2F3F6]">{formatAmount(stats.pending_commissions)}</strong> • Accruing: <strong className="text-[#F2F3F6]">{formatAmount(stats.accruing_commissions)}</strong>
+                                </span>
+                            ) : (
+                                <span>Accruing this month: {formatAmount(stats.accruing_commissions)}</span>
+                            )}
                         </div>
                     </div>
 
