@@ -83,7 +83,7 @@ class CommissionService
             $commissionAmount = (int) round($transaction->amount * ($commissionRate / 100));
         }
 
-        return CommissionableRevenue::create([
+        $revenue = CommissionableRevenue::create([
             'estate_id' => $estate->id,
             'partner_id' => $estate->partner_id,
             'commission_plan_id' => $commissionPlanId,
@@ -93,6 +93,10 @@ class CommissionService
             'commission_amount' => $commissionAmount,
             'status' => 'pending',
         ]);
+
+        app(\App\Services\Zeus\SettlementInboxService::class)->hydrateOpenPeriods();
+
+        return $revenue;
     }
 
     /**
