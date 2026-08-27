@@ -43,7 +43,7 @@ import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 
 export default function Edit({ telegram, profile, stats, emergency_contacts, subscription }: Props) {
-    const { confirm: _confirm } = useResidentConfirmation();
+    const { confirm: openConfirm } = useResidentConfirmation();
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
@@ -402,6 +402,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
 
 /* ─── Emergency Contacts Management List ─── */
 function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: Props['emergency_contacts']; limit: number; onAddClick: () => void }) {
+    const { confirm: openConfirm } = useResidentConfirmation();
     const isLimitReached = contacts.length >= limit;
     const [contactToDelete, setContactToDelete] = useState<{ id: number; name: string } | null>(null);
 
@@ -505,7 +506,7 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                     onClick={() => {
                                         const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                         if (isIPadOrDesktop) {
-                                            confirm({
+                                            openConfirm({
                                                 title: 'Remove emergency contact',
                                                 message: `Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`,
                                                 confirmLabel: 'Remove contact',
