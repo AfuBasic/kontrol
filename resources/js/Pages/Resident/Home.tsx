@@ -1,20 +1,7 @@
 import { Deferred, Head, Link, usePage, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import {
-    Megaphone,
-    ChevronRight,
-    Wallet,
-    Users,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    Activity,
-    PlusCircle,
-    XCircle,
-    CreditCard,
-    X,
-} from 'lucide-react';
-import {  useMemo } from 'react';
+import { Megaphone, ChevronRight, Wallet, Users, AlertCircle, CheckCircle2, Clock, Activity, PlusCircle, XCircle, X } from 'lucide-react';
+import { useMemo } from 'react';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import { FeedItemSkeleton } from '@/Components/Skeletons';
 import { OfflineState } from '@/Components/States';
@@ -88,7 +75,7 @@ export default function Home({
             openIncidentsCount,
             activePassesCount,
             upcomingPassesCount,
-            totalScheduledCount: totalScheduledCount ?? (activePassesCount + upcomingPassesCount),
+            totalScheduledCount: totalScheduledCount ?? activePassesCount + upcomingPassesCount,
         }),
         [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount, totalScheduledCount],
     );
@@ -105,11 +92,10 @@ export default function Home({
         revalidate: isOnline && quality !== 'offline',
     });
 
-
     const displayEstateName = staleShell?.estateName ?? estateName;
     const displayActivePasses = staleShell?.activePassesCount ?? activePassesCount;
     const displayUpcomingPasses = staleShell?.upcomingPassesCount ?? upcomingPassesCount;
-    const displayTotalScheduled = staleShell?.totalScheduledCount ?? totalScheduledCount ?? (displayActivePasses + displayUpcomingPasses);
+    const displayTotalScheduled = staleShell?.totalScheduledCount ?? totalScheduledCount ?? displayActivePasses + displayUpcomingPasses;
     const displayOpenIncidents = staleShell?.openIncidentsCount ?? openIncidentsCount;
     const codes = activeCodes ?? [];
     const activity = recentActivity ?? [];
