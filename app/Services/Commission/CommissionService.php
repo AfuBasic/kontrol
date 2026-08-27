@@ -8,6 +8,7 @@ use App\Models\Estate;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Services\Zeus\SettlementInboxService;
 use Carbon\CarbonImmutable;
 
 class CommissionService
@@ -94,7 +95,7 @@ class CommissionService
             'status' => 'pending',
         ]);
 
-        app(\App\Services\Zeus\SettlementInboxService::class)->hydrateOpenPeriods();
+        app(SettlementInboxService::class)->hydrateOpenPeriods();
 
         return $revenue;
     }
