@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Shield, ShieldAlert, ShieldCheck, Key, Copy, Check, QrCode } from 'lucide-react';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import { copyTextToClipboard } from '@/Utils/clipboard';
 
 interface Props {
     isEnabled: boolean;
@@ -17,8 +18,13 @@ export default function SettingsIndex({ isEnabled, qrCodeUrl, secret }: Props) {
 
     const [copied, setCopied] = useState(false);
 
-    function copySecret() {
-        navigator.clipboard.writeText(secret);
+    async function copySecret() {
+        const copiedSecret = await copyTextToClipboard(secret);
+
+        if (!copiedSecret) {
+            return;
+        }
+
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }
