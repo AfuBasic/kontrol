@@ -283,3 +283,118 @@ test('it processes recurring auto-billing for due subscriptions with saved autho
         ->and($invoice->amount)->toBe(15000)
         ->and($subscription->status)->toBe('active');
 });
+
+test('it does not apply a non-recurring one-time coupon on subsequent automated billings', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    $plan = Plan::factory()->create(['price' => 20000]);
+
+    // One-time coupon (is_recurring = false)
+    $oneTimeCoupon = Coupon::create([
+        'code' => 'ONETIME50',
+        'estate_id' => $estate->id,
+        'type' => 'percentage',
+        'value' => 50,
+        'usage_limit' => 10,
+        'status' => 'active',
+        'is_recurring' => false,
+    ]);
+
+    $subscription = ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'auto_renew_enabled' => true,
+        'coupon_id' => $oneTimeCoupon->id,
+        'current_period_start' => now()->subMonth(),
+        'current_period_end' => now(),
+    ]);
+
+    // First billing: Coupon applies
+    $pricing1 = app(CalculateInvoicePricingAction::class)->execute(
+        $plan->price,
+        $oneTimeCoupon,
+        $resident,
+        $estate,
+        $subscription
+    );
+    expect($pricing1['discount_amount'])->toBe(10000)
+        ->and($pricing1['amount'])->toBe(10000);
+
+    $invoice1 = Invoice::create([
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'plan_id' => $plan->id,
+        'invoice_number' => 'INV-TEST-COUPON-1',
+        'amount' => 10000,
+        'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
+        'due_date' => now()->addDays(7),
+        'status' => 'paid',
+    ]);
+
+    // Simulate usage logging for the first invoice
+    CouponLog::create([
+        'coupon_id' => $oneTimeCoupon->id,
+        'user_id' => $resident->id,
+        'invoice_id' => $invoice1->id,
+        'discount_amount' => 10000,
+        'subscription_id' => $subscription->id,
+        'subscription_type' => ResidentSubscription::class,
+    ]);
+
+    // Subsequent automated renewal: One-time coupon MUST NOT apply
+    $pricing2 = app(CalculateInvoicePricingAction::class)->execute(
+        $plan->price,
+        $oneTimeCoupon,
+        $resident,
+        $estate,
+        $subscription
+    );
+    expect($pricing2['discount_amount'])->toBe(0)
+        ->and($pricing2['amount'])->toBe(20000)
+        ->and($pricing2['metadata']['coupon_error'])->toBe('Coupon can only be used once per subscription.');
+});
+
+test('it ignores expired or inactive coupons during automated renewal pricing', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    $plan = Plan::factory()->create(['price' => 20000]);
+
+    // Expired coupon
+    $expiredCoupon = Coupon::create([
+        'code' => 'EXPIRED20',
+        'estate_id' => $estate->id,
+        'type' => 'percentage',
+        'value' => 20,
+        'expires_at' => now()->subDay(),
+        'status' => 'active',
+        'is_recurring' => true,
+    ]);
+
+    $subscription = ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'auto_renew_enabled' => true,
+        'coupon_id' => $expiredCoupon->id,
+        'current_period_start' => now()->subMonth(),
+        'current_period_end' => now(),
+    ]);
+
+    $pricing = app(CalculateInvoicePricingAction::class)->execute(
+        $plan->price,
+        $expiredCoupon,
+        $resident,
+        $estate,
+        $subscription
+    );
+
+    // Full amount charged, 0 discount, coupon error recorded in metadata
+    expect($pricing['discount_amount'])->toBe(0)
+        ->and($pricing['amount'])->toBe(20000)
+        ->and($pricing['coupon_code'])->toBeNull();
+});
