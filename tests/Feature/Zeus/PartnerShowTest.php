@@ -3,8 +3,6 @@
 use App\Models\Estate;
 use App\Models\Partner;
 use App\Models\PartnerEarning;
-use App\Models\PaymentTransaction;
-use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('guests are redirected to zeus login when viewing partner details', function () {
