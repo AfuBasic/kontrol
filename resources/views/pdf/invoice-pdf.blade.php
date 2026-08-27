@@ -3,353 +3,549 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Invoice {{ $invoice->invoice_number }}</title>
+    <title>{{ $invoice->isPaid() ? 'Receipt' : 'Invoice' }} #{{ $invoice->invoice_number }}</title>
     <style>
+        @page {
+            size: a4 portrait;
+            margin: 0;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: 'DejaVu Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            color: #1f2937;
-            background: white;
+            font-family: 'DejaVu Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 42px 42px 32px 42px;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 40px;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
-            margin-bottom: 50px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .logo {
-            height: 60px;
-            width: 60px;
-        }
-
-        .logo img {
-            height: 100%;
+        /* Layout Grid via Table for 100% reliable Dompdf rendering */
+        table {
             width: 100%;
-            object-fit: contain;
+            border-collapse: collapse;
+            border-spacing: 0;
         }
 
-        .header-right {
-            text-align: right;
+        /* Header */
+        .header-table {
+            margin-bottom: 24px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        .invoice-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #111827;
-            margin-bottom: 5px;
+        .header-table td {
+            vertical-align: top;
         }
 
-        .invoice-number {
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 20px;
+        .logo-img {
+            height: 28px;
+            width: auto;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .doc-descriptor {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            letter-spacing: 0.02em;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
         }
 
         .status-badge.paid {
-            background-color: #d1fae5;
-            color: #065f46;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
         }
 
         .status-badge.pending {
-            background-color: #dbeafe;
-            color: #0c4a6e;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
         }
 
         .status-badge.overdue {
-            background-color: #fee2e2;
-            color: #7f1d1d;
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
         }
 
-        .details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 50px;
+        .status-badge.cancelled {
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #cbd5e1;
         }
 
-        .detail-section h3 {
+        .doc-number {
             font-size: 12px;
-            color: #9ca3af;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.01em;
+        }
+
+        /* Information Columns (Bill To & Invoice Details) */
+        .info-table {
+            margin-bottom: 20px;
+        }
+
+        .info-table td {
+            vertical-align: top;
+            width: 50%;
+        }
+
+        .section-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #94a3b8;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-            font-weight: 600;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
         }
 
-        .detail-section p {
-            font-size: 14px;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-
-        .detail-section .company-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 40px;
-        }
-
-        .table thead {
-            background-color: #f3f4f6;
-            border-top: 1px solid #e5e7eb;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .table th {
-            padding: 12px;
-            text-align: left;
-            font-size: 12px;
-            font-weight: 600;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .table td {
-            padding: 16px 12px;
-            font-size: 14px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-
-        .table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .table .amount {
-            text-align: right;
-            font-weight: 500;
-        }
-
-        .table .description {
-            color: #6b7280;
-        }
-
-        .totals {
-            width: 100%;
-            margin-bottom: 50px;
-        }
-
-        .totals-row {
-            display: flex;
-            justify-content: flex-end;
-            padding: 12px 0;
-            font-size: 14px;
-        }
-
-        .totals-row.total {
-            font-size: 16px;
-            font-weight: bold;
-            color: #111827;
-            padding-top: 20px;
-            padding-bottom: 20px;
-            border-top: 2px solid #e5e7eb;
-            border-bottom: 2px solid #e5e7eb;
-        }
-
-        .totals-row.total .label {
-            margin-right: 40px;
-            min-width: 150px;
-        }
-
-        .totals-row .label {
-            color: #6b7280;
-            margin-right: 40px;
-            min-width: 150px;
-        }
-
-        .totals-row .value {
-            text-align: right;
-            min-width: 120px;
-        }
-
-        .info-box {
-            background-color: #f9fafb;
-            border-left: 4px solid #3b82f6;
-            padding: 16px;
-            margin-bottom: 30px;
-            border-radius: 4px;
-        }
-
-        .info-box p {
+        .bill-to-name {
             font-size: 13px;
-            color: #374151;
-            line-height: 1.6;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
         }
 
-        .footer {
-            border-top: 1px solid #e5e7eb;
-            padding-top: 30px;
-            text-align: center;
-            color: #9ca3af;
-            font-size: 12px;
-        }
-
-        .dates-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .date-item {
-            background-color: #f9fafb;
-            padding: 12px;
-            border-radius: 6px;
-        }
-
-        .date-label {
+        .bill-to-sub {
             font-size: 11px;
-            color: #9ca3af;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        .meta-table td {
+            padding: 2px 0;
+            font-size: 11px;
+            vertical-align: top;
+        }
+
+        .meta-label {
+            color: #64748b;
+            font-weight: 500;
+            width: 95px;
+        }
+
+        .meta-value {
+            color: #0f172a;
             font-weight: 600;
         }
 
-        .date-value {
-            font-size: 14px;
-            color: #111827;
-            font-weight: 500;
+        /* Date Summary Panel */
+        .dates-panel {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 22px;
+            padding: 11px 16px;
+        }
+
+        .dates-panel td {
+            vertical-align: middle;
+        }
+
+        .date-cell-label {
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 2px;
+        }
+
+        .date-cell-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Line Items Table */
+        .items-table {
+            margin-bottom: 16px;
+        }
+
+        .items-table th {
+            font-size: 9px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 8px 10px;
+            background-color: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+            text-align: left;
+        }
+
+        .items-table th.amount-col {
+            text-align: right;
+        }
+
+        .items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+
+        .item-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .item-desc {
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .item-amount {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* Financial Breakdown & Totals */
+        .summary-table {
+            margin-bottom: 20px;
+        }
+
+        .summary-table td {
+            vertical-align: top;
+        }
+
+        .totals-box {
+            width: 270px;
+            margin-left: auto;
+        }
+
+        .totals-table td {
+            padding: 3px 0;
+            font-size: 11px;
+        }
+
+        .totals-table .t-label {
+            color: #64748b;
+            text-align: left;
+        }
+
+        .totals-table .t-value {
+            color: #0f172a;
+            font-weight: 600;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .totals-table .discount-row td {
+            color: #047857;
+            font-weight: 600;
+        }
+
+        .total-final-row td {
+            padding-top: 8px;
+            padding-bottom: 4px;
+            border-top: 1.5px solid #0f172a;
+            font-size: 13px;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .total-final-row .t-value {
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        /* Payment Confirmation Box */
+        .payment-box {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 11px 16px;
+            margin-bottom: 22px;
+        }
+
+        .payment-box.unpaid {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+
+        .payment-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #15803d;
+            margin-bottom: 2px;
+        }
+
+        .payment-title.unpaid {
+            color: #334155;
+        }
+
+        .payment-desc {
+            font-size: 11px;
+            color: #166534;
+            line-height: 1.35;
+        }
+
+        .payment-desc.unpaid {
+            color: #64748b;
+        }
+
+        /* Footer & Support */
+        .footer-divider {
+            height: 1px;
+            background-color: #e2e8f0;
+            margin-bottom: 12px;
+        }
+
+        .support-table {
+            font-size: 10px;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .support-table td {
+            vertical-align: top;
+        }
+
+        .support-table a {
+            color: #4f46e5;
+            text-decoration: none;
+        }
+
+        .copyright-text {
+            text-align: right;
+            color: #94a3b8;
+            font-size: 9px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <img src="{{ public_path('assets/images/app-icon.png') }}" alt="Kontrol">
-            </div>
-            <div class="header-right">
-                <div class="invoice-title">INVOICE</div>
-                <div class="invoice-number">{{ $invoice->invoice_number }}</div>
-                <span class="status-badge {{ $invoice->status }}">{{ $invoice->status }}</span>
-            </div>
-        </div>
+    @php
+        $logoPath = public_path('assets/images/kontrol-logo-horizontal.png');
+        $logoBase64 = file_exists($logoPath)
+            ? 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath))
+            : null;
 
-        <!-- Details Grid -->
-        <div class="details-grid">
-            <div class="detail-section">
-                <h3>Bill To</h3>
-                @if($invoice->user)
-                    <p class="company-name">{{ $invoice->user->name }}</p>
-                    <p>{{ $invoice->estate->name }}</p>
-                    <p>{{ $invoice->user->email }}</p>
+        $metadata = $invoice->metadata ?? [];
+        $subtotalKobo = $metadata['subtotal'] ?? null;
+        $discountKobo = $metadata['discount_amount'] ?? null;
+        $couponCode = $metadata['coupon_code'] ?? null;
+
+        // Extract payment method from finalized transaction if recorded
+        $latestTx = $invoice->paymentTransactions->firstWhere('status', 'success');
+        $paymentMethodLabel = null;
+        if ($latestTx && $latestTx->payment_method) {
+            $paymentMethodLabel = match (strtolower($latestTx->payment_method)) {
+                'card' => 'Card Payment',
+                'bank_transfer', 'transfer' => 'Bank Transfer',
+                'ussd' => 'USSD',
+                default => ucfirst(str_replace('_', ' ', $latestTx->payment_method)),
+            };
+        }
+    @endphp
+
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 55%;">
+                @if($logoBase64)
+                    <img src="{{ $logoBase64 }}" alt="Kontrol" class="logo-img">
                 @else
-                    <p class="company-name">{{ $invoice->estate->name }}</p>
-                    <p>{{ $invoice->estate->location ?? '' }}</p>
-                    <p>{{ $invoice->estate->email ?? '' }}</p>
+                    <div style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">KONTROL</div>
                 @endif
-            </div>
+                <div class="doc-descriptor">
+                    {{ $invoice->isPaid() ? 'Subscription Receipt' : 'Subscription Invoice' }}
+                </div>
+            </td>
+            <td style="width: 45%; text-align: right;">
+                <span class="status-badge {{ $invoice->status }}">{{ $invoice->status }}</span>
+                <div class="doc-number">#{{ $invoice->invoice_number }}</div>
+            </td>
+        </tr>
+    </table>
 
-            <div class="detail-section">
-                <h3>Invoice Details</h3>
-                <p><strong>Invoice Date:</strong><br>{{ $invoice->created_at->format('M d, Y') }}</p>
-                <p><strong>Billing Period:</strong><br>{{ $invoice->billing_period_start->format('M d, Y') }} - {{ $invoice->billing_period_end->format('M d, Y') }}</p>
-            </div>
-        </div>
+    <!-- Information Columns: Bill To & Invoice Details -->
+    <table class="info-table">
+        <tr>
+            <!-- Left: Bill To -->
+            <td>
+                <div class="section-label">Bill To</div>
+                @if($invoice->user)
+                    <div class="bill-to-name">{{ $invoice->user->name }}</div>
+                    <div class="bill-to-sub">{{ $invoice->estate->name }}</div>
+                    <div class="bill-to-sub">{{ $invoice->user->email }}</div>
+                @else
+                    <div class="bill-to-name">{{ $invoice->estate->name }}</div>
+                    @if($invoice->estate->location)
+                        <div class="bill-to-sub">{{ $invoice->estate->location }}</div>
+                    @endif
+                    @if($invoice->estate->email)
+                        <div class="bill-to-sub">{{ $invoice->estate->email }}</div>
+                    @endif
+                @endif
+            </td>
 
-        <!-- Dates Info -->
-        <div class="dates-grid">
-            <div class="date-item">
-                <div class="date-label">Due Date</div>
-                <div class="date-value">{{ $invoice->due_date->format('M d, Y') }}</div>
-            </div>
-            @if(!$invoice->user)
-            <div class="date-item">
-                <div class="date-label">Residents Billed</div>
-                <div class="date-value">{{ $invoice->resident_count }}</div>
-            </div>
-            @endif
-            @if($invoice->paid_at)
-            <div class="date-item">
-                <div class="date-label">Paid Date</div>
-                <div class="date-value">{{ $invoice->paid_at->format('M d, Y') }}</div>
-            </div>
-            @endif
-        </div>
+            <!-- Right: Invoice Details -->
+            <td style="padding-left: 20px;">
+                <div class="section-label">Invoice Details</div>
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-label">Invoice Date:</td>
+                        <td class="meta-value">{{ $invoice->created_at->format('M d, Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="meta-label">Billing Period:</td>
+                        <td class="meta-value">{{ $invoice->billing_period_start->format('M d, Y') }} – {{ $invoice->billing_period_end->format('M d, Y') }}</td>
+                    </tr>
+                    @if(!$invoice->user && $invoice->resident_count)
+                    <tr>
+                        <td class="meta-label">Residents Billed:</td>
+                        <td class="meta-value">{{ $invoice->resident_count }}</td>
+                    </tr>
+                    @endif
+                </table>
+            </td>
+        </tr>
+    </table>
 
-        <!-- Table -->
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Description</th>
-                    <th class="amount">Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        @if($invoice->user)
-                            <strong>Resident Subscription</strong>
-                        @else
-                            <strong>{{ $invoice->plan?->name ?? 'Service' }}</strong>
-                        @endif
-                        <div class="description">
-                            Kontrol Billing for the period of {{ $invoice->billing_period_start->format('M d, Y') }} - {{ $invoice->billing_period_end->format('M d, Y') }}
-                        </div>
-                    </td>
-                    <td class="amount">{{ $invoice->formatted_amount }}</td>
-                </tr>
-            </tbody>
+    <!-- Dates Summary Panel -->
+    <div class="dates-panel">
+        <table>
+            <tr>
+                <td style="width: 33.33%;">
+                    <div class="date-cell-label">Due Date</div>
+                    <div class="date-cell-value">{{ $invoice->due_date->format('M d, Y') }}</div>
+                </td>
+                @if($invoice->paid_at)
+                <td style="width: 33.33%;">
+                    <div class="date-cell-label">Paid Date</div>
+                    <div class="date-cell-value">{{ $invoice->paid_at->format('M d, Y') }}</div>
+                </td>
+                @endif
+                @if($paymentMethodLabel)
+                <td style="width: 33.33%; text-align: right;">
+                    <div class="date-cell-label">Payment Method</div>
+                    <div class="date-cell-value">{{ $paymentMethodLabel }}</div>
+                </td>
+                @endif
+            </tr>
         </table>
+    </div>
 
-        <!-- Totals -->
-        <div class="totals">
-            <div class="totals-row total">
-                <div class="label">Total Amount Due</div>
-                <div class="value">{{ $invoice->formatted_amount }}</div>
+    <!-- Line Items Table -->
+    <table class="items-table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="amount-col" style="width: 140px;">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="item-title">
+                        @if($invoice->user)
+                            Resident Subscription
+                        @else
+                            {{ $invoice->plan?->name ?? 'Estate Subscription' }}
+                        @endif
+                    </div>
+                    <div class="item-desc">
+                        Kontrol Billing for {{ $invoice->billing_period_start->format('M d, Y') }} – {{ $invoice->billing_period_end->format('M d, Y') }}
+                    </div>
+                </td>
+                <td class="item-amount">
+                    @if($subtotalKobo && $subtotalKobo > 0 && $discountKobo && $discountKobo > 0)
+                        ₦{{ number_format($subtotalKobo / 100, 2) }}
+                    @else
+                        {{ $invoice->formatted_amount }}
+                    @endif
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Financial Breakdown & Totals -->
+    <table class="summary-table">
+        <tr>
+            <td style="width: 50%;">
+                <!-- Left empty space -->
+            </td>
+            <td style="width: 50%;">
+                <div class="totals-box">
+                    <table class="totals-table">
+                        @if($subtotalKobo && $discountKobo && $discountKobo > 0)
+                            <tr>
+                                <td class="t-label">Subtotal</td>
+                                <td class="t-value">₦{{ number_format($subtotalKobo / 100, 2) }}</td>
+                            </tr>
+                            <tr class="discount-row">
+                                <td class="t-label">
+                                    Discount{{ $couponCode ? " ($couponCode)" : '' }}
+                                </td>
+                                <td class="t-value">−₦{{ number_format($discountKobo / 100, 2) }}</td>
+                            </tr>
+                        @endif
+                        <tr class="total-final-row">
+                            <td class="t-label">{{ $invoice->isPaid() ? 'Total Paid' : 'Total Amount Due' }}</td>
+                            <td class="t-value">{{ $invoice->formatted_amount }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Payment Confirmation or Instructions -->
+    @if($invoice->isPaid())
+        <div class="payment-box">
+            <div class="payment-title">✓ Payment Received</div>
+            <div class="payment-desc">
+                Thank you for your payment. This invoice was successfully paid on {{ $invoice->paid_at->format('M d, Y') }}.
             </div>
         </div>
+    @else
+        <div class="payment-box unpaid">
+            <div class="payment-title unpaid">Payment Instructions</div>
+            <div class="payment-desc unpaid">
+                Please settle this invoice by {{ $invoice->due_date->format('M d, Y') }} to maintain uninterrupted access.
+            </div>
+        </div>
+    @endif
 
-        <!-- Info Box -->
-        @if(!$invoice->isPaid())
-        <div class="info-box">
-            <p><strong>Payment Information:</strong> Please settle this invoice by the due date to avoid any service interruptions. Contact our support team if you have any questions about this invoice.</p>
-        </div>
-        @else
-        <div class="info-box">
-            <p><strong>Payment Received:</strong> Thank you for your payment. This invoice has been marked as paid on {{ $invoice->paid_at->format('M d, Y') }}.</p>
-        </div>
-        @endif
-
-        <!-- Footer -->
-        <div class="footer">
-            <p>This is an automated invoice generated by Kontrol. For questions or concerns, please contact our support team.</p>
-            <p style="margin-top: 8px;">© {{ date('Y') }} Kontrol. All rights reserved.</p>
-        </div>
-    </div>
+    <!-- Footer & Support Information -->
+    <div class="footer-divider"></div>
+    <table class="support-table">
+        <tr>
+            <td style="width: 60%;">
+                <div style="font-weight: 600; color: #334155; margin-bottom: 2px;">Questions about this receipt?</div>
+                <div>Email: <a href="mailto:support@usekontrol.com">support@usekontrol.com</a> · WhatsApp / Phone: +234 703 648 1189</div>
+            </td>
+            <td style="width: 40%; text-align: right;" class="copyright-text">
+                <div>Automated Kontrol billing document.</div>
+                <div>© {{ date('Y') }} Kontrol. All rights reserved.</div>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
