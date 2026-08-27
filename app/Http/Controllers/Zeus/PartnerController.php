@@ -172,8 +172,15 @@ class PartnerController extends Controller
             'total_estates' => $estates->count(),
             'active_estates' => $estates->where('status', 'active')->count(),
             'total_settled_earnings' => (int) $partner->earnings()->whereNotNull('settled_at')->sum('total_amount'),
-            'pending_commissions' => (int) $partner->earnings()->whereNull('settled_at')->sum('total_amount'),
+            'pending_commissions' => (int) $partner->earnings()
+                ->whereNull('settled_at')
+                ->where('month', '<', now()->startOfMonth())
+                ->sum('total_amount'),
             'accruing_commissions' => (int) $partner->commissionableRevenues()
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->whereIn('status', ['pending', 'aggregated'])
+                ->sum('commission_amount'),
+            'total_unpaid_commissions' => (int) $partner->commissionableRevenues()
                 ->whereIn('status', ['pending', 'aggregated'])
                 ->sum('commission_amount'),
             'total_gross_revenue' => $totalGrossRevenue,
