@@ -56,7 +56,7 @@ class NotificationController extends Controller
         return back();
     }
 
-     /**
+    /**
      * Mark all notifications as read.
      */
     public function markAllAsRead(Request $request): RedirectResponse
@@ -66,7 +66,7 @@ class NotificationController extends Controller
         return back();
     }
 
-     /**
+    /**
      * Clear all notifications.
      */
     public function clearAll(Request $request): RedirectResponse
