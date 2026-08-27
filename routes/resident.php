@@ -138,6 +138,9 @@ Route::middleware('role:resident,property_owner')->group(function (): void {
         Route::get('/', [BillingController::class, 'index'])->name('index');
         Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
         Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
+        Route::post('/auto-renew/enable', [BillingController::class, 'enableAutoRenew'])->name('auto-renew.enable');
+        Route::post('/auto-renew/disable', [BillingController::class, 'disableAutoRenew'])->name('auto-renew.disable');
+        Route::post('/auto-renew/dismiss', [BillingController::class, 'dismissAutoRenewSuggestion'])->name('auto-renew.dismiss');
         Route::get('/payment/callback', PaymentCallbackController::class)->name('payment.callback');
         Route::get('/magic-url', [BillingController::class, 'generateMagicUrl'])->name('magic-url');
         Route::post('/validate-coupon', [BillingController::class, 'validateCoupon'])->name('coupon.validate');
