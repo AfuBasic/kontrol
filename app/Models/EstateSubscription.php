@@ -76,6 +76,7 @@ class EstateSubscription extends Model
         'override_notes',
         'billing_anchor_day',
         'next_billing_date',
+        'auto_renew_enabled',
     ];
 
     protected $casts = [
