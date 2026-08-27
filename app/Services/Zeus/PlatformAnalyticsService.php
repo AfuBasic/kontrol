@@ -120,7 +120,7 @@ class PlatformAnalyticsService
                     'type' => 'error',
                     'created_at' => clone $error->last_seen_at,
                 ]),
-            'partnerRequests' => EstateApplication::with('partner:id,company_name')
+            'partnerRequests' => EstateApplication::with('partner:id,name')
                 ->whereNotNull('partner_id')
                 ->whereIn('status', EstateApplication::OPEN_STATUSES)
                 ->latest()
@@ -129,7 +129,7 @@ class PlatformAnalyticsService
                 ->map(fn ($req) => [
                     'id' => $req->id,
                     'title' => $req->estate_name,
-                    'subtitle' => 'Partner: '.($req->partner?->company_name ?? 'Referral'),
+                    'subtitle' => 'Partner: '.($req->partner?->name ?? 'Referral'),
                     'type' => 'partner_request',
                     'created_at' => clone $req->created_at,
                 ]),
@@ -167,7 +167,7 @@ class PlatformAnalyticsService
         $activePartners = Partner::where('status', 'active')->count();
         $unpaidEarningsKobo = PartnerEarning::whereNull('settled_at')->sum('total_amount');
 
-        $recentSourcedEstates = Estate::with('partner:id,company_name')
+        $recentSourcedEstates = Estate::with('partner:id,name')
             ->whereNotNull('partner_id')
             ->latest()
             ->limit(3)
@@ -175,7 +175,7 @@ class PlatformAnalyticsService
             ->map(fn ($estate) => [
                 'id' => $estate->id,
                 'name' => $estate->name,
-                'partner_name' => $estate->partner?->company_name ?? 'Unknown Partner',
+                'partner_name' => $estate->partner?->name ?? 'Unknown Partner',
                 'created_at' => clone $estate->created_at,
             ]);
 
