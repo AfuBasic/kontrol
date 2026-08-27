@@ -59,7 +59,7 @@ const MobileBottomNav = lazy(() => import('@/Components/Admin/MobileBottomNav'))
 
 interface Props {
     children: ReactNode;
-    _title?: string;
+    title?: string;
 }
 
 const primaryNav: NavItem[] = baseNav;
@@ -115,7 +115,7 @@ const NavGroup = ({ group, items, isCollapsed, isCurrentPath }: any) => {
     );
 };
 
-export default function AdminLayout({ children, _title }: Props) {
+export default function AdminLayout({ children, title: _title }: Props) {
     const page = usePage<
         SharedData & {
             flash: { success?: string; error?: string };
@@ -291,7 +291,7 @@ export default function AdminLayout({ children, _title }: Props) {
                 }
 
                 // Filter by estate context
-                if (notification.estate_id && notification.estate_id !== auth.user.current_estate_id) {
+                if (notification.estate_id && notification.estate_id !== auth.user?.current_estate_id) {
                     return;
                 }
 
