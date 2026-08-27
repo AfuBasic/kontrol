@@ -146,6 +146,8 @@ class PaystackWebhookController extends Controller
                                 'reference' => $reference,
                                 'payment_method' => $data['channel'] ?? 'card',
                                 'customer_email' => $data['customer']['email'] ?? null,
+                                'authorization' => $data['authorization'] ?? null,
+                                'customer' => $data['customer'] ?? null,
                             ]);
                         }
                     }
