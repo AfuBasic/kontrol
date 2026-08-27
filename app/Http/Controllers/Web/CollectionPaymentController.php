@@ -143,6 +143,7 @@ class CollectionPaymentController extends Controller
                     if ($channel !== 'bank_transfer') {
                         Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$p->reference}, Channel={$channel}");
                         $p->update(['status' => 'failed']);
+
                         continue;
                     }
 
@@ -266,7 +267,7 @@ class CollectionPaymentController extends Controller
                 'error' => $e->getMessage(),
                 'reference' => $payment->reference,
             ]);
-            
+
             return response()->json([
                 'message' => 'Failed to initialize payment gateway. Please try again.',
             ], 500);
@@ -674,6 +675,7 @@ class CollectionPaymentController extends Controller
                     if ($channel !== 'bank_transfer') {
                         Log::error("Security violation: Bulk collection payment attempted with restricted channel. Ref={$p->reference}, Channel={$channel}");
                         $p->update(['status' => 'failed']);
+
                         continue;
                     }
 
@@ -818,7 +820,7 @@ class CollectionPaymentController extends Controller
                 'error' => $e->getMessage(),
                 'reference' => $payment->reference,
             ]);
-            
+
             return response()->json([
                 'message' => 'Failed to initialize payment gateway. Please try again.',
             ], 500);
