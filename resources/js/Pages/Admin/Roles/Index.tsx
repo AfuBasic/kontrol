@@ -116,20 +116,23 @@ export default function Roles({ roles }: Props) {
                                         key={role.id}
                                         className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
                                     >
-                                        <div className="absolute top-4 right-4">
+                                        <div className="absolute top-3.5 right-3.5 z-10">
                                             <Menu as="div" className="relative inline-block text-left">
-                                                <MenuButton className="flex items-center rounded-lg p-1 text-slate-400 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-slate-100 hover:text-slate-600">
+                                                <MenuButton
+                                                    aria-label={`Actions for ${role.name} role`}
+                                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-700 active:bg-slate-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+                                                >
                                                     <EllipsisVerticalIcon className="h-5 w-5" />
                                                 </MenuButton>
-                                                <MenuItems className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-xl border border-slate-100 bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
+                                                <MenuItems className="absolute right-0 z-30 mt-1 w-36 origin-top-right rounded-xl border border-slate-100 bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
                                                     {can('roles.edit') && (
                                                         <MenuItem>
                                                             {({ active }) => (
                                                                 <Link
                                                                     href={index.url() + `/${role.id}/edit`}
-                                                                    className={`${active ? 'bg-slate-50 text-slate-950' : 'text-slate-700'} flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors`}
+                                                                    className={`${active ? 'bg-slate-50 text-slate-950' : 'text-slate-700'} flex min-h-[38px] w-full items-center gap-2 px-3 py-2 text-sm font-medium transition-colors`}
                                                                 >
-                                                                    <PencilIcon className="h-4 w-4" />
+                                                                    <PencilIcon className="h-4 w-4 text-slate-500" />
                                                                     Edit
                                                                 </Link>
                                                             )}
@@ -139,10 +142,11 @@ export default function Roles({ roles }: Props) {
                                                         <MenuItem>
                                                             {({ active }) => (
                                                                 <button
+                                                                    type="button"
                                                                     onClick={() => handleDelete(role)}
-                                                                    className={`${active ? 'bg-red-50 text-red-700' : 'text-red-600'} flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors`}
+                                                                    className={`${active ? 'bg-red-50 text-red-700' : 'text-red-600'} flex min-h-[38px] w-full items-center gap-2 px-3 py-2 text-sm font-medium transition-colors`}
                                                                 >
-                                                                    <TrashIcon className="h-4 w-4" />
+                                                                    <TrashIcon className="h-4 w-4 text-red-500" />
                                                                     Delete
                                                                 </button>
                                                             )}
