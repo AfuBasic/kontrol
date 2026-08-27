@@ -27,7 +27,7 @@ class EstateHealthService
                     ->whereColumn('model_has_roles.model_id', 'users.id')
                     ->where('model_has_roles.model_type', User::class)
                     ->where('model_has_roles.estate_id', $estate->id)
-                    ->whereIn('roles.name', ['resident', 'property_owner', 'household_member']);
+                    ->whereIn('roles.name', ['resident', 'property_owner']);
             });
 
         $totalResidents = (clone $communityQuery)->count();
@@ -72,7 +72,7 @@ class EstateHealthService
                         ->whereColumn('model_has_roles.model_id', 'users.id')
                         ->where('model_has_roles.model_type', User::class)
                         ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
-                        ->whereIn('roles.name', ['resident', 'property_owner', 'household_member']);
+                        ->whereIn('roles.name', ['resident', 'property_owner']);
                 }),
                 'users as total_security' => fn ($q) => $q->whereExists(function ($sub) {
                     $sub->select(DB::raw(1))
