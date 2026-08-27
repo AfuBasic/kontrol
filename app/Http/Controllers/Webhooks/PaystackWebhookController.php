@@ -45,6 +45,7 @@ class PaystackWebhookController extends Controller
                         // Defense-in-depth: Ensure collections are ONLY paid via bank transfer
                         if (isset($data['channel']) && $data['channel'] !== 'bank_transfer') {
                             Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$reference}, Channel={$data['channel']}");
+
                             return response('OK', 200); // Return 200 so Paystack doesn't retry, but DO NOT grant value
                         }
 
