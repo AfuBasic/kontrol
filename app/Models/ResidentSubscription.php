@@ -69,6 +69,7 @@ class ResidentSubscription extends Model
         'current_period_end',
         'last_paid_at',
         'last_reminded_at',
+        'auto_renew_enabled',
     ];
 
     /**
