@@ -82,6 +82,7 @@ class BillingController extends Controller
             'subscription' => [
                 'status' => $subscription->status,
                 'has_saved_card' => $subscription->hasSavedCard(),
+                'auto_renew_enabled' => (bool) $subscription->auto_renew_enabled,
                 'card_brand' => $subscription->card_brand,
                 'card_last4' => $subscription->card_last4,
                 'current_period_end' => $subscription->current_period_end?->toDateString(),
@@ -106,6 +107,7 @@ class BillingController extends Controller
         $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
             'coupon_code' => ['nullable', 'string'],
+            'auto_renew_consent' => ['nullable', 'boolean'],
         ]);
 
         $user = auth()->user();
@@ -125,6 +127,7 @@ class BillingController extends Controller
                 route('resident.billing.payment.callback'),
                 route('resident.billing.index'),
                 $request->coupon_code,
+                (bool) $request->boolean('auto_renew_consent', false),
             );
         } catch (PaymentInitializationException $e) {
             return back()->with('error', $e->getUserMessage());

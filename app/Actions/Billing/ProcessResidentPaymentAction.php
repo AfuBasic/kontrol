@@ -30,7 +30,8 @@ class ProcessResidentPaymentAction
         Plan $plan,
         string $callbackUrl,
         string $invoiceShowUrl,
-        ?string $couponCode = null
+        ?string $couponCode = null,
+        bool $autoRenewConsent = false,
     ): InitializePaymentResult {
         Log::info('ProcessResidentPaymentAction::execute', [
             'user_id' => $subscription->user_id,
@@ -82,7 +83,7 @@ class ProcessResidentPaymentAction
             $existingInvoice->update(['status' => 'cancelled']);
         }
 
-        $invoice = DB::transaction(function () use ($subscription, $plan, $couponCode) {
+        $invoice = DB::transaction(function () use ($subscription, $plan, $couponCode, $autoRenewConsent) {
             $estate = $subscription->estate;
 
             // Period starts when the resident's current active/trial period ends, or today if past due
@@ -123,6 +124,11 @@ class ProcessResidentPaymentAction
             // Generate unique invoice number
             $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id, $subscription->user_id);
 
+            $metadata = $pricing['metadata'] ?? [];
+            if ($autoRenewConsent) {
+                $metadata['auto_renew_consent'] = true;
+            }
+
             // Create the pending invoice that serves as the transaction base
             return Invoice::create([
                 'estate_id' => $estate->id,
@@ -136,7 +142,7 @@ class ProcessResidentPaymentAction
                 'billing_period_end' => $periodEnd,
                 'due_date' => $dueDate,
                 'status' => 'pending',
-                'metadata' => $pricing['metadata'],
+                'metadata' => $metadata,
             ]);
         });
 
