@@ -43,7 +43,6 @@ import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 
 export default function Edit({ telegram, profile, stats, emergency_contacts, subscription }: Props) {
-    const { confirm: openConfirm } = useResidentConfirmation();
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
