@@ -385,6 +385,10 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                 </label>
                                 <input
                                     type="text"
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
+                                    autoComplete="on"
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="e.g. Streetlight flickering at Gate 2 entrance"
@@ -400,6 +404,9 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                     Detailed Description <span className="text-rose-500">*</span>
                                 </label>
                                 <textarea
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
                                     value={data.body}
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Please provide full details so estate personnel or security can address it quickly..."
@@ -419,6 +426,10 @@ export default function Create({ categories, requirePhotoEvidence = false }: Pro
                                     <MapPin className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <input
                                         type="text"
+                                        autoCorrect="on"
+                                        autoCapitalize="sentences"
+                                        spellCheck={true}
+                                        autoComplete="on"
                                         value={data.location}
                                         onChange={(e) => setData('location', e.target.value)}
                                         placeholder="e.g. Block C near children playground"
