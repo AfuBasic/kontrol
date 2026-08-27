@@ -529,9 +529,9 @@ export default function Dashboard({
                                                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{timeAgo(item.created_at)}</span>
                                                     <Link
                                                         href={
-                                                            item.type === 'application' ? `/zeus/applications/${item.id}` :
-                                                            item.type === 'error' ? `/zeus/system/logs` :
-                                                            `/zeus/partners/requests`
+                                                            item.type === 'error'
+                                                                ? `/zeus/error-logs/${item.id}`
+                                                                : `/zeus/applications/${item.id}`
                                                         }
                                                         className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
                                                     >
