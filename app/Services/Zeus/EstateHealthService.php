@@ -74,6 +74,15 @@ class EstateHealthService
                         ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
                         ->whereIn('roles.name', ['resident', 'property_owner', 'household_member']);
                 }),
+                'users as total_security' => fn ($q) => $q->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('model_has_roles')
+                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                        ->whereColumn('model_has_roles.model_id', 'users.id')
+                        ->where('model_has_roles.model_type', User::class)
+                        ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
+                        ->where('roles.name', 'security');
+                }),
                 'collections as total_collections',
             ]);
 
@@ -113,6 +122,7 @@ class EstateHealthService
                     'status' => $estate->status,
                     'billing_mode' => $estate->billing_mode,
                     'total_residents' => $estate->total_residents,
+                    'total_security' => $estate->total_security ?? 0,
                     'total_collections' => $estate->total_collections ?? 0,
                     'total_properties' => $totalProperties,
                     'health_score' => $this->calculateHealthScore($estate),
