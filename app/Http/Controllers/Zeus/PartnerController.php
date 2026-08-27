@@ -12,6 +12,7 @@ use App\Models\Partner;
 use App\Models\PartnerEarning;
 use App\Models\PaymentTransaction;
 use App\Models\User;
+use App\Services\Zeus\SettlementInboxService;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,10 @@ use Inertia\Response;
 
 class PartnerController extends Controller
 {
+    public function __construct(
+        private SettlementInboxService $settlementInbox,
+    ) {}
+
     public function index(Request $request): Response
     {
         $query = Partner::orderBy('name');
@@ -66,6 +71,8 @@ class PartnerController extends Controller
 
     public function show(Partner $partner): Response
     {
+        $this->settlementInbox->hydrateOpenPeriods();
+
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';
 
