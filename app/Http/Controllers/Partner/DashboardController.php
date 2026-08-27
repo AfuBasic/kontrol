@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Partner;
 use App\Http\Controllers\Controller;
 use App\Models\EstateApplication;
 use App\Models\PartnerEarning;
+use App\Services\Zeus\SettlementInboxService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -12,8 +13,14 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
+    public function __construct(
+        private SettlementInboxService $settlementInbox,
+    ) {}
+
     public function __invoke(): Response
     {
+        $this->settlementInbox->hydrateOpenPeriods();
+
         $user = Auth::user();
         $partner = $user->partner;
 
