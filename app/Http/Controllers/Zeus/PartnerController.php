@@ -188,10 +188,19 @@ class PartnerController extends Controller
 
         $totalGrossRevenue = (int) $estateRevenues->sum();
 
+        $pendingCommissions = (int) $partner->earnings()
+            ->whereNull('settled_at')
+            ->where('month', '<', now()->startOfMonth())
+            ->sum('total_amount');
+
+        $accruingCommissions = (int) $partner->commissionableRevenues()
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->whereIn('status', ['pending', 'aggregated'])
+            ->sum('commission_amount');
+
         $stats = [
             'total_estates' => $estates->count(),
             'active_estates' => $estates->where('status', 'active')->count(),
-            'total_settled_earnings' => (int) $partner->earnings()->whereNotNull('settled_at')->sum('total_amount'),
             'pending_commissions' => (int) $partner->earnings()
                 ->whereNull('settled_at')
                 ->where('month', '<', now()->startOfMonth())
@@ -200,9 +209,7 @@ class PartnerController extends Controller
                 ->where('created_at', '>=', now()->startOfMonth())
                 ->whereIn('status', ['pending', 'aggregated'])
                 ->sum('commission_amount'),
-            'total_unpaid_commissions' => (int) $partner->commissionableRevenues()
-                ->whereIn('status', ['pending', 'aggregated'])
-                ->sum('commission_amount'),
+            'total_unpaid_commissions' => $pendingCommissions + $accruingCommissions,
             'total_gross_revenue' => $totalGrossRevenue,
             'next_settlement_date' => CarbonImmutable::now()->addMonthNoOverflow()->startOfMonth()->format('Y-m-d'),
         ];
