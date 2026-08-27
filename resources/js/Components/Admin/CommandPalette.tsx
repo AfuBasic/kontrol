@@ -117,7 +117,7 @@ export default function CommandPalette({ isOpen, setIsOpen, canAccess, billingEn
                         leaveTo="opacity-0 scale-95"
                     >
                         <Dialog.Panel className="mx-auto max-w-2xl transform divide-y divide-slate-100 overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 transition-all">
-                            <Combobox onChange={(item: NavItem) => handleSelect(item)}>
+                            <Combobox onChange={(item: NavItem | null) => item && handleSelect(item)}>
                                 {({ activeOption: _activeOption }) => (
                                     <>
                                         <div className="relative">
