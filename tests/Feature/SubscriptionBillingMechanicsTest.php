@@ -177,3 +177,60 @@ test('it prevents concurrent duplicate payment attempts via active_payment_attem
 
     expect($claimed2)->toBe(0);
 });
+
+test('it captures card authorization and enables auto renew upon successful card payment', function () {
+    $estate = Estate::factory()->create();
+    $resident = User::factory()->create();
+    $plan = Plan::factory()->create(['price' => 20000]);
+
+    $subscription = ResidentSubscription::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'current_period_start' => now()->subMonth(),
+        'current_period_end' => now(),
+    ]);
+
+    $invoice = Invoice::create([
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'plan_id' => $plan->id,
+        'invoice_number' => 'INV-CARD-TEST-1',
+        'amount' => 20000,
+        'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
+        'due_date' => now()->addDays(7),
+        'status' => 'pending',
+        'metadata' => [
+            'auto_renew_consent' => true,
+        ],
+    ]);
+
+    $paymentData = [
+        'reference' => 'ref-auth-123',
+        'payment_method' => 'card',
+        'customer_email' => $resident->email,
+        'authorization' => [
+            'authorization_code' => 'AUTH_test_987xyz',
+            'card_type' => 'visa',
+            'last4' => '4081',
+            'brand' => 'visa',
+        ],
+        'customer' => [
+            'customer_code' => 'CUST_test_123',
+            'email' => $resident->email,
+        ],
+    ];
+
+    app(\App\Services\Billing\BillingFinalizationService::class)->finalizeSuccess($invoice, $paymentData);
+
+    $subscription->refresh();
+
+    expect($subscription->paystack_authorization_code)->toBe('AUTH_test_987xyz')
+        ->and($subscription->card_brand)->toBe('visa')
+        ->and($subscription->card_last4)->toBe('4081')
+        ->and($subscription->auto_renew_enabled)->toBe(true);
+});
+
