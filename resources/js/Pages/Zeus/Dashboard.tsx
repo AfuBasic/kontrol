@@ -11,6 +11,9 @@ import {
     UsersIcon,
     BuildingOfficeIcon,
     ArrowRightIcon,
+    BanknotesIcon,
+    BriefcaseIcon,
+    ShieldExclamationIcon,
 } from '@heroicons/react/24/outline';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 import DateRangePicker from '@/Components/UI/DateRangePicker';
@@ -33,8 +36,8 @@ interface BriefingData {
     greeting: string;
     headline: string;
     highlights: {
-        estates_added: number;
-        mrr: string;
+        active_estates: number;
+        unresolved_errors: number;
         pending_apps: number;
     };
 }
@@ -47,12 +50,11 @@ interface Activity {
     created_at: string;
 }
 
-interface Application {
+interface QueueItem {
     id: number;
-    estate_name: string;
-    contact_name: string;
-    contact_email: string;
-    contact_phone: string;
+    title: string;
+    subtitle: string;
+    type: string;
     created_at: string;
 }
 
@@ -60,6 +62,7 @@ interface SystemHealth {
     total_users: number;
     active_users_7d: number;
     database_size: string;
+    unresolved_errors: number;
     system_status: string;
 }
 
@@ -71,15 +74,38 @@ interface TopEstate {
 
 interface Props {
     briefing: BriefingData;
-    metrics: {
-        revenue: MetricData;
+    snapshot: {
         estates: MetricData;
+        residents: MetricData;
         subscriptions: MetricData;
-        trials: MetricData;
+        pendingApps: MetricData;
+    };
+    operationsQueue: {
+        pendingApplications: QueueItem[];
+        unresolvedErrors: QueueItem[];
+        partnerRequests: QueueItem[];
+    };
+    financialPulse: {
+        mrr: MetricData;
+        recentPayments: Array<{
+            id: number;
+            amount: number;
+            status: string;
+            created_at: string;
+        }>;
+    };
+    partnerMetrics: {
+        active_partners: number;
+        unpaid_earnings: number;
+        recent_sourced_estates: Array<{
+            id: number;
+            name: string;
+            partner_name: string;
+            created_at: string;
+        }>;
     };
     growthChart: GrowthChartData[];
     liveActivityStream: Activity[];
-    pendingApplications: Application[];
     systemHealth: SystemHealth;
     topEstates: TopEstate[];
     startDate: string;
@@ -88,10 +114,12 @@ interface Props {
 
 export default function Dashboard({
     briefing,
-    metrics,
+    snapshot,
+    operationsQueue,
+    financialPulse,
+    partnerMetrics,
     growthChart,
     liveActivityStream,
-    pendingApplications,
     systemHealth,
     topEstates,
     startDate,
@@ -151,10 +179,12 @@ export default function Dashboard({
                         className={`mb-1.5 flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide ${
                             data.trend === 'up'
                                 ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
-                                : 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
+                                : data.trend === 'down'
+                                ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
+                                : 'bg-slate-500/10 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400'
                         }`}
                     >
-                        {data.trend === 'up' ? <ArrowTrendingUpIcon className="h-3 w-3" /> : <ArrowTrendingDownIcon className="h-3 w-3" />}
+                        {data.trend === 'up' ? <ArrowTrendingUpIcon className="h-3 w-3" /> : data.trend === 'down' ? <ArrowTrendingDownIcon className="h-3 w-3" /> : null}
                         {Math.abs(data.growth)}%
                     </span>
                 </div>
@@ -190,6 +220,12 @@ export default function Dashboard({
         return Math.floor(seconds) + 's ago';
     };
 
+    const combinedOperations = [
+        ...(operationsQueue?.pendingApplications || []),
+        ...(operationsQueue?.unresolvedErrors || []),
+        ...(operationsQueue?.partnerRequests || []),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6);
+
     return (
         <ZeusLayout>
             <Head title="Zeus Command Center" />
@@ -201,23 +237,24 @@ export default function Dashboard({
                         {briefing.greeting}, <span className="text-slate-400 dark:text-indigo-400">Idris.</span>
                     </h1>
                     <p className="mt-4 text-lg leading-relaxed text-slate-500 dark:text-slate-400">
-                        {briefing.headline} You acquired{' '}
-                        <span className="font-semibold text-slate-900 dark:text-white">{briefing.highlights.estates_added} new estates</span> this
-                        week, pushing MRR to <span className="font-semibold text-slate-900 dark:text-white">₦{briefing.highlights.mrr}</span>. You
-                        have{' '}
+                        {briefing.headline} You have{' '}
+                        <span className="font-semibold text-slate-900 dark:text-white">{briefing.highlights.active_estates} active estates</span> and{' '}
                         <span className="font-semibold text-indigo-600 dark:text-indigo-400">
                             {briefing.highlights.pending_apps} pending applications
                         </span>{' '}
-                        awaiting review.
+                        awaiting review. Platform health reports{' '}
+                        <span className={briefing.highlights.unresolved_errors > 0 ? "font-semibold text-rose-500" : "font-semibold text-emerald-500"}>
+                            {briefing.highlights.unresolved_errors} unresolved errors
+                        </span>.
                     </p>
                 </motion.div>
 
                 {/* KPI Grid */}
                 <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <MetricCard title="Monthly Recurring" data={metrics.revenue} isCurrency={true} />
-                    <MetricCard title="Active Estates" data={metrics.estates} />
-                    <MetricCard title="Active Subscriptions" data={metrics.subscriptions} />
-                    <MetricCard title="Trial Pipelines" data={metrics.trials} />
+                    <MetricCard title="Active Estates" data={snapshot.estates} />
+                    <MetricCard title="Total Residents" data={snapshot.residents} />
+                    <MetricCard title="Active Subscriptions" data={snapshot.subscriptions} />
+                    <MetricCard title="Pending Applications" data={snapshot.pendingApps} />
                 </div>
 
                 {/* Main Command Center Grid */}
@@ -322,114 +359,116 @@ export default function Dashboard({
                             </div>
                         </motion.div>
 
-                        {/* Live Activity Stream */}
-                        <motion.div
-                            variants={itemVariants}
-                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
-                        >
-                            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
-                                <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
-                                    <ClockIcon className="h-4 w-4 text-indigo-500" />
-                                    Live Platform Feed
-                                </h2>
-                                <Link
-                                    href="/zeus/risk-center"
-                                    className="text-[11px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
-                                >
-                                    View All Activity
-                                </Link>
-                            </div>
-                            <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
-                                {liveActivityStream.length === 0 ? (
-                                    <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                                        No recent activity on the platform.
-                                    </div>
-                                ) : (
-                                    liveActivityStream.map((activity) => (
-                                        <div
-                                            key={activity.id}
-                                            className="flex items-center gap-4 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
-                                        >
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-                                                {activity.event === 'created' ? (
-                                                    <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
-                                                ) : activity.event === 'updated' ? (
-                                                    <ClockIcon className="h-5 w-5 text-blue-500" />
-                                                ) : (
-                                                    <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.description}</p>
-                                                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                                                    {activity.type} • {timeAgo(activity.created_at)}
-                                                </p>
-                                            </div>
+                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                            {/* Live Activity Stream */}
+                            <motion.div
+                                variants={itemVariants}
+                                className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                            >
+                                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
+                                    <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                                        <ClockIcon className="h-4 w-4 text-indigo-500" />
+                                        Platform Feed
+                                    </h2>
+                                </div>
+                                <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
+                                    {liveActivityStream.length === 0 ? (
+                                        <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                                            No recent activity.
                                         </div>
-                                    ))
-                                )}
-                            </div>
-                        </motion.div>
+                                    ) : (
+                                        liveActivityStream.slice(0, 4).map((activity) => (
+                                            <div
+                                                key={activity.id}
+                                                className="flex items-center gap-4 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                                            >
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+                                                    {activity.event === 'created' ? (
+                                                        <CheckCircleIcon className="h-5 w-5 text-emerald-500" />
+                                                    ) : activity.event === 'updated' ? (
+                                                        <ClockIcon className="h-5 w-5 text-blue-500" />
+                                                    ) : (
+                                                        <ShieldExclamationIcon className="h-5 w-5 text-amber-500" />
+                                                    )}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.description}</p>
+                                                    <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                                                        {activity.type} • {timeAgo(activity.created_at)}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </motion.div>
+
+                            {/* Financial Pulse */}
+                            <motion.div
+                                variants={itemVariants}
+                                className="rounded-3xl border border-slate-200/50 bg-white shadow-sm flex flex-col dark:border-slate-800/50 dark:bg-[#0f1423]"
+                            >
+                                <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
+                                    <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                                        <BanknotesIcon className="h-4 w-4 text-emerald-500" />
+                                        Financial Pulse
+                                    </h2>
+                                </div>
+                                <div className="p-6">
+                                    <div className="mb-6 rounded-2xl border border-emerald-500/10 bg-emerald-500/5 p-4 dark:border-emerald-500/20 dark:bg-emerald-500/10">
+                                        <h3 className="text-xs font-bold text-emerald-600 uppercase dark:text-emerald-400">Platform MRR</h3>
+                                        <div className="mt-2 flex items-end justify-between">
+                                            <span className="text-2xl font-bold text-slate-900 dark:text-white">
+                                                {formatExactCurrency(financialPulse.mrr.current)}
+                                            </span>
+                                            <span className={`flex items-center gap-1 text-xs font-bold ${financialPulse.mrr.trend === 'up' ? 'text-emerald-500' : financialPulse.mrr.trend === 'down' ? 'text-rose-500' : 'text-slate-500'}`}>
+                                                {financialPulse.mrr.trend === 'up' ? <ArrowTrendingUpIcon className="h-3 w-3" /> : financialPulse.mrr.trend === 'down' ? <ArrowTrendingDownIcon className="h-3 w-3" /> : null}
+                                                {Math.abs(financialPulse.mrr.growth)}%
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <h3 className="mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">Recent Collections</h3>
+                                    <div className="space-y-3">
+                                        {financialPulse.recentPayments.length === 0 ? (
+                                            <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">No recent payments.</div>
+                                        ) : (
+                                            financialPulse.recentPayments.map((payment) => (
+                                                <div key={payment.id} className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
+                                                            <BanknotesIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+                                                        </div>
+                                                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{timeAgo(payment.created_at)}</span>
+                                                    </div>
+                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{formatCompactCurrency(payment.amount / 100)}</span>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
                     </div>
 
                     {/* Right Column (1/3 width) - Tasks, Health, Leaderboard */}
                     <div className="space-y-8">
-                        {/* Pending Applications Widget */}
-                        <motion.div
-                            variants={itemVariants}
-                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
-                        >
-                            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
-                                <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
-                                    <BuildingOfficeIcon className="h-4 w-4 text-amber-500" />
-                                    Pending Apps ({pendingApplications.length})
-                                </h2>
-                            </div>
-                            <div className="p-5">
-                                {pendingApplications.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-6 text-center">
-                                        <CheckCircleIcon className="mb-2 h-8 w-8 text-emerald-500/50" />
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">All caught up!</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {pendingApplications.map((app) => (
-                                            <div
-                                                key={app.id}
-                                                className="rounded-2xl border border-slate-100 bg-slate-50 p-4 dark:border-slate-800 dark:bg-[#0a0e17]"
-                                            >
-                                                <p className="text-sm font-bold text-slate-900 dark:text-white">{app.estate_name}</p>
-                                                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{app.contact_name}</p>
-                                                <Link
-                                                    href={`/zeus/applications/${app.id}`}
-                                                    className="mt-3 flex items-center gap-1 text-[10px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
-                                                >
-                                                    Review <ArrowRightIcon className="h-3 w-3" />
-                                                </Link>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </motion.div>
-
+                        
                         {/* System Health Widget */}
                         <motion.div
                             variants={itemVariants}
                             className="rounded-3xl border border-slate-200/50 bg-gradient-to-br from-slate-900 to-[#0f1423] p-6 text-white shadow-xl dark:border-slate-800/50"
                         >
-                            <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-300 uppercase">
-                                <ServerStackIcon className="h-4 w-4 text-sky-400" />
-                                Platform Health
-                            </h2>
+                            <div className="flex items-center justify-between">
+                                <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-300 uppercase">
+                                    <ServerStackIcon className="h-4 w-4 text-sky-400" />
+                                    Platform Health
+                                </h2>
+                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ring-1 ${systemHealth.system_status === 'Operational' ? 'bg-emerald-500/20 text-emerald-400 ring-emerald-500/30' : 'bg-rose-500/20 text-rose-400 ring-rose-500/30'}`}>
+                                    <div className={`h-1.5 w-1.5 rounded-full ${systemHealth.system_status === 'Operational' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                    {systemHealth.system_status}
+                                </span>
+                            </div>
                             <div className="mt-6 space-y-5">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs font-medium text-slate-400">Status</span>
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold tracking-wide text-emerald-400 ring-1 ring-emerald-500/30">
-                                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                        {systemHealth.system_status}
-                                    </span>
-                                </div>
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-medium text-slate-400">Total Global Users</span>
                                     <span className="text-sm font-bold">{systemHealth.total_users.toLocaleString()}</span>
@@ -442,10 +481,71 @@ export default function Dashboard({
                                     <span className="text-xs font-medium text-slate-400">Database Size</span>
                                     <span className="text-sm font-bold">{systemHealth.database_size}</span>
                                 </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-medium text-slate-400">Unresolved Errors</span>
+                                    <span className={`text-sm font-bold ${systemHealth.unresolved_errors > 0 ? 'text-rose-400' : 'text-slate-200'}`}>
+                                        {systemHealth.unresolved_errors}
+                                    </span>
+                                </div>
                             </div>
                         </motion.div>
 
-                        {/* Top Estates Leaderboard */}
+                        {/* Operations Queue Widget */}
+                        <motion.div
+                            variants={itemVariants}
+                            className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
+                        >
+                            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
+                                <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
+                                    <ExclamationTriangleIcon className="h-4 w-4 text-amber-500" />
+                                    Operations Queue
+                                </h2>
+                            </div>
+                            <div className="p-5">
+                                {combinedOperations.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-6 text-center">
+                                        <CheckCircleIcon className="mb-2 h-8 w-8 text-emerald-500/50" />
+                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Zero pending items.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {combinedOperations.map((item) => (
+                                            <div
+                                                key={`${item.type}-${item.id}`}
+                                                className="flex flex-col rounded-xl border border-slate-100 bg-slate-50 p-4 transition-colors hover:border-slate-200 dark:border-slate-800 dark:bg-slate-800/20 dark:hover:border-slate-700"
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className="mt-0.5">
+                                                        {item.type === 'application' && <BuildingOfficeIcon className="h-4 w-4 text-blue-500" />}
+                                                        {item.type === 'error' && <ShieldExclamationIcon className="h-4 w-4 text-rose-500" />}
+                                                        {item.type === 'partner_request' && <BriefcaseIcon className="h-4 w-4 text-amber-500" />}
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</p>
+                                                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{item.subtitle}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{timeAgo(item.created_at)}</span>
+                                                    <Link
+                                                        href={
+                                                            item.type === 'application' ? `/zeus/applications/${item.id}` :
+                                                            item.type === 'error' ? `/zeus/system/logs` :
+                                                            `/zeus/partners/requests`
+                                                        }
+                                                        className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
+                                                    >
+                                                        Review <ArrowRightIcon className="h-3 w-3" />
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+
+                        {/* Partner & Estate Overview Widget */}
                         <motion.div
                             variants={itemVariants}
                             className="rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
@@ -453,24 +553,39 @@ export default function Dashboard({
                             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
                                 <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
                                     <UsersIcon className="h-4 w-4 text-emerald-500" />
-                                    Top Estates
+                                    Partners & Estates
                                 </h2>
                             </div>
-                            <div className="space-y-3 p-5">
-                                {topEstates.map((estate, idx) => (
-                                    <div
-                                        key={estate.id}
-                                        className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/30"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-[10px] font-black text-slate-400">0{idx + 1}</span>
-                                            <span className="text-sm font-semibold text-slate-900 dark:text-white">{estate.name}</span>
-                                        </div>
-                                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{estate.users_count} users</span>
+                            <div className="p-5">
+                                <div className="mb-4 flex items-center justify-between rounded-xl bg-indigo-50/50 p-4 dark:bg-indigo-500/5">
+                                    <div>
+                                        <p className="text-xs font-bold text-indigo-600 uppercase dark:text-indigo-400">Active Partners</p>
+                                        <p className="mt-1 text-2xl font-bold text-slate-900 dark:text-white">{partnerMetrics.active_partners}</p>
                                     </div>
-                                ))}
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-indigo-600 uppercase dark:text-indigo-400">Unpaid Comm.</p>
+                                        <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">{formatExactCurrency(partnerMetrics.unpaid_earnings)}</p>
+                                    </div>
+                                </div>
+                                
+                                <h3 className="mb-3 mt-5 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">Top Estates (Users)</h3>
+                                <div className="space-y-2">
+                                    {topEstates.slice(0, 3).map((estate, idx) => (
+                                        <div
+                                            key={estate.id}
+                                            className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-800/30"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-[10px] font-black text-slate-400">0{idx + 1}</span>
+                                                <span className="text-sm font-semibold text-slate-900 dark:text-white">{estate.name}</span>
+                                            </div>
+                                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{estate.users_count} users</span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </motion.div>
+                        
                     </div>
                 </div>
             </motion.div>
