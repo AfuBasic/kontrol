@@ -28,6 +28,8 @@ class CouponLog extends Model
         'user_id',
         'invoice_id',
         'discount_amount',
+        'subscription_id',
+        'subscription_type',
     ];
 
     protected $casts = [
