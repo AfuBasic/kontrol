@@ -6,6 +6,7 @@ import { index, store } from '@/actions/App/Http/Controllers/Admin/Administrativ
 import { create as createUser } from '@/actions/App/Http/Controllers/Admin/UserController';
 import { create as createRole } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SearchableSelect from '@/Components/UI/SearchableSelect';
+import { usePermission } from '@/Hooks/usePermission';
 
 type OptionUser = { id: number; ulid: string; name: string; email: string };
 type OptionRole = { id: number; name: string; estate_id: number };
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function CreateAssignment({ users, roles, zones, context }: Props) {
+    const { can } = usePermission();
     const isZoneScoped = context?.is_zone_scoped ?? false;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -86,7 +88,7 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                         </p>
 
                         <div className="mt-8 flex flex-wrap justify-center gap-3">
-                            {!hasUsers && (
+                            {!hasUsers && can('users.create') && (
                                 <Link
                                     href={createUser.url()}
                                     className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
@@ -95,7 +97,7 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                     Add staff member
                                 </Link>
                             )}
-                            {!hasRoles && (
+                            {!hasRoles && can('roles.create') && (
                                 <Link
                                     href={createRole.url()}
                                     className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black tracking-wider uppercase shadow-sm transition-all active:scale-95 ${
