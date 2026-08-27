@@ -28,7 +28,7 @@ interface Props {
     groups: string[];
 }
 
-export default function FeaturesIndex({ features, plans, _groups }: Props) {
+export default function FeaturesIndex({ features, plans, groups }: Props) {
     const [updating, setUpdating] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
