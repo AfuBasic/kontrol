@@ -25,10 +25,10 @@ interface Feature {
 interface Props {
     features: Record<string, Feature[]>;
     plans: Plan[];
-    groups: string[];
+    groups?: string[];
 }
 
-export default function FeaturesIndex({ features, plans, groups }: Props) {
+export default function FeaturesIndex({ features, plans, groups: _groups }: Props) {
     const [updating, setUpdating] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
 
