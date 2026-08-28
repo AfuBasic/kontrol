@@ -20,14 +20,24 @@ class EstateHealthService
         $score = 100;
 
         $communityQuery = $estate->users()
-            ->whereExists(function ($sub) use ($estate) {
-                $sub->select(DB::raw(1))
-                    ->from('model_has_roles')
-                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                    ->whereColumn('model_has_roles.model_id', 'users.id')
-                    ->where('model_has_roles.model_type', User::class)
-                    ->where('model_has_roles.estate_id', $estate->id)
-                    ->whereIn('roles.name', ['resident', 'property_owner']);
+            ->where(function ($rq) {
+                $rq->whereIn('estate_users_membership.relationship_type', ['resident', 'property_owner'])
+                    ->orWhere(function ($sub) {
+                        $sub->whereNull('estate_users_membership.relationship_type')
+                            ->whereExists(function ($roleSub) {
+                                $roleSub->select(DB::raw(1))
+                                    ->from('model_has_roles')
+                                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                                    ->where('model_has_roles.model_type', User::class)
+                                    ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
+                                    ->whereIn('roles.name', ['resident', 'property_owner']);
+                            });
+                    });
+            })
+            ->where(function ($sub) {
+                $sub->where('estate_users_membership.relationship_type', '!=', 'security')
+                    ->orWhereNull('estate_users_membership.relationship_type');
             });
 
         $totalResidents = (clone $communityQuery)->count();
@@ -65,23 +75,35 @@ class EstateHealthService
         $query = Estate::query()
             ->with(['settings'])
             ->withCount([
-                'users as total_residents' => fn ($q) => $q->whereExists(function ($sub) {
-                    $sub->select(DB::raw(1))
-                        ->from('model_has_roles')
-                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                        ->whereColumn('model_has_roles.model_id', 'users.id')
-                        ->where('model_has_roles.model_type', User::class)
-                        ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
-                        ->whereIn('roles.name', ['resident', 'property_owner']);
+                'users as total_residents' => fn ($q) => $q->where(function ($rq) {
+                    $rq->whereIn('estate_users_membership.relationship_type', ['resident', 'property_owner'])
+                        ->orWhere(function ($sub) {
+                            $sub->whereNull('estate_users_membership.relationship_type')
+                                ->whereExists(function ($roleSub) {
+                                    $roleSub->select(DB::raw(1))
+                                        ->from('model_has_roles')
+                                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                        ->whereColumn('model_has_roles.model_id', 'users.id')
+                                        ->where('model_has_roles.model_type', User::class)
+                                        ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
+                                        ->whereIn('roles.name', ['resident', 'property_owner']);
+                                });
+                        });
+                })->where(function ($sub) {
+                    $sub->where('estate_users_membership.relationship_type', '!=', 'security')
+                        ->orWhereNull('estate_users_membership.relationship_type');
                 }),
-                'users as total_security' => fn ($q) => $q->whereExists(function ($sub) {
-                    $sub->select(DB::raw(1))
-                        ->from('model_has_roles')
-                        ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                        ->whereColumn('model_has_roles.model_id', 'users.id')
-                        ->where('model_has_roles.model_type', User::class)
-                        ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
-                        ->where('roles.name', 'security');
+                'users as total_security' => fn ($q) => $q->where(function ($sq) {
+                    $sq->where('estate_users_membership.relationship_type', 'security')
+                        ->orWhereExists(function ($roleSub) {
+                            $roleSub->select(DB::raw(1))
+                                ->from('model_has_roles')
+                                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                ->whereColumn('model_has_roles.model_id', 'users.id')
+                                ->where('model_has_roles.model_type', User::class)
+                                ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
+                                ->where('roles.name', 'security');
+                        });
                 }),
                 'collections as total_collections',
             ]);
