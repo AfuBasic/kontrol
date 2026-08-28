@@ -108,7 +108,17 @@ class EstateSubscription extends Model
 
     public function hasSavedCard(): bool
     {
-        return ! empty($this->paystack_authorization_code);
+        $raw = $this->getRawOriginal('paystack_authorization_code');
+
+        if (empty($raw)) {
+            return false;
+        }
+
+        try {
+            return ! empty($this->paystack_authorization_code);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function isActive(): bool
