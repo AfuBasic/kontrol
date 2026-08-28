@@ -730,11 +730,13 @@ export default function Apply() {
                                                                 name="estateName"
                                                                 value={data.estateName}
                                                                 onChange={(e) => setData('estateName', e.target.value)}
-                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.estateName ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
+                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.estateName || (errors as any).estate_name ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
                                                                 placeholder="E.g., Aethewood Estate"
                                                             />
                                                         </div>
-                                                        {errors.estateName && <p className="mt-2 text-sm text-red-500">{errors.estateName}</p>}
+                                                        {(errors.estateName || (errors as any).estate_name) && (
+                                                            <p className="mt-2 text-sm text-red-500">{errors.estateName || (errors as any).estate_name}</p>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -749,12 +751,12 @@ export default function Apply() {
                                                                 name="estateLocation"
                                                                 value={data.estateLocation}
                                                                 onChange={(e) => setData('estateLocation', e.target.value)}
-                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.estateLocation ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
+                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.estateLocation || (errors as any).address ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
                                                                 placeholder="E.g., Lagos, Nigeria"
                                                             />
                                                         </div>
-                                                        {errors.estateLocation && (
-                                                            <p className="mt-2 text-sm text-red-500">{errors.estateLocation}</p>
+                                                        {(errors.estateLocation || (errors as any).address) && (
+                                                            <p className="mt-2 text-sm text-red-500">{errors.estateLocation || (errors as any).address}</p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -789,11 +791,13 @@ export default function Apply() {
                                                                 name="contactName"
                                                                 value={data.contactName}
                                                                 onChange={(e) => setData('contactName', e.target.value)}
-                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.contactName ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
+                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.contactName || (errors as any).contact_name ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
                                                                 placeholder="Your Name"
                                                             />
                                                         </div>
-                                                        {errors.contactName && <p className="mt-2 text-sm text-red-500">{errors.contactName}</p>}
+                                                        {(errors.contactName || (errors as any).contact_name) && (
+                                                            <p className="mt-2 text-sm text-red-500">{errors.contactName || (errors as any).contact_name}</p>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -808,11 +812,13 @@ export default function Apply() {
                                                                 name="contactEmail"
                                                                 value={data.contactEmail}
                                                                 onChange={(e) => setData('contactEmail', e.target.value)}
-                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.contactEmail ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
+                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 transition-all ring-inset dark:bg-slate-900/80 dark:text-white ${errors.contactEmail || (errors as any).email ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-200 focus:ring-blue-500 dark:ring-white/10'} placeholder:text-slate-400 focus:bg-white focus:ring-2 dark:placeholder:text-slate-500 dark:focus:bg-slate-900`}
                                                                 placeholder="you@example.com"
                                                             />
                                                         </div>
-                                                        {errors.contactEmail && <p className="mt-2 text-sm text-red-500">{errors.contactEmail}</p>}
+                                                        {(errors.contactEmail || (errors as any).email) && (
+                                                            <p className="mt-2 text-sm text-red-500">{errors.contactEmail || (errors as any).email}</p>
+                                                        )}
                                                     </div>
                                                     <div>
                                                         <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
@@ -829,10 +835,13 @@ export default function Apply() {
                                                                 name="contactPhone"
                                                                 value={data.contactPhone}
                                                                 onChange={(e) => setData('contactPhone', e.target.value)}
-                                                                className="block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-blue-500 dark:bg-slate-900/80 dark:text-white dark:ring-white/10 dark:focus:bg-slate-900"
+                                                                className={`block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-4 pl-12 text-slate-900 shadow-sm ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-blue-500 dark:bg-slate-900/80 dark:text-white ${errors.contactPhone || (errors as any).phone ? 'ring-red-500 focus:ring-red-500' : 'dark:ring-white/10'} dark:focus:bg-slate-900`}
                                                                 placeholder="+234..."
                                                             />
                                                         </div>
+                                                        {(errors.contactPhone || (errors as any).phone) && (
+                                                            <p className="mt-2 text-sm text-red-500">{errors.contactPhone || (errors as any).phone}</p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -860,11 +869,17 @@ export default function Apply() {
                                                         <div className="flex items-center gap-3">
                                                             <AlertCircle className="h-5 w-5 shrink-0 text-red-500" />
                                                             <p className="text-sm font-medium text-red-600 dark:text-red-400">
-                                                                {errors.contactEmail ||
+                                                                {errors.estateName ||
+                                                                    (errors as any).estate_name ||
+                                                                    errors.contactEmail ||
+                                                                    (errors as any).email ||
                                                                     errors.contactPhone ||
-                                                                    errors.estateName ||
-                                                                    errors.estateLocation ||
+                                                                    (errors as any).phone ||
                                                                     errors.contactName ||
+                                                                    (errors as any).contact_name ||
+                                                                    errors.estateLocation ||
+                                                                    (errors as any).address ||
+                                                                    Object.values(errors)[0] ||
                                                                     'An error occurred. Please go back and check your details.'}
                                                             </p>
                                                         </div>
