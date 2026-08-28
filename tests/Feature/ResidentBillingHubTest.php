@@ -251,4 +251,3 @@ test('resident cannot download another residents receipt', function () {
 
     $response->assertNotFound();
 });
-
