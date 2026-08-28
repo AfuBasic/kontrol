@@ -36,6 +36,8 @@ return [
 
     'authorization_ttl_minutes' => (int) env('DEVICE_AUTHORIZATION_TTL_MINUTES', 120),
 
+    'pending_cookie' => env('DEVICE_PENDING_COOKIE', 'kontrol_pending_auth'),
+
     'resend_per_hour' => (int) env('DEVICE_AUTHORIZATION_RESEND_PER_HOUR', 3),
 
     /*
