@@ -2,6 +2,7 @@
 
 namespace App\Actions\Zeus;
 
+use App\Jobs\Billing\SyncEstateTrialSettingsJob;
 use App\Models\Estate;
 use Illuminate\Validation\ValidationException;
 
@@ -72,6 +73,10 @@ class UpdateEstateAction
                 ['estate_id' => $estate->id],
                 $settingsData
             );
+
+            if ($chargeType !== null || $freeTrialEnabled !== null || $freeTrialDays !== null) {
+                SyncEstateTrialSettingsJob::dispatch($estate);
+            }
         }
 
         return $estate->fresh();
