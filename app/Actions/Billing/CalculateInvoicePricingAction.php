@@ -30,7 +30,8 @@ class CalculateInvoicePricingAction
         ?Coupon $coupon,
         User $user,
         Estate $estate,
-        $subscription = null
+        $subscription = null,
+        bool $isRecurringRenewal = false
     ): array {
         if (! $coupon) {
             return [
@@ -85,13 +86,14 @@ class CalculateInvoicePricingAction
                 ];
             }
         } elseif (! $coupon->is_recurring && $subscription) {
-            // If it's NOT a recurring coupon, it can only be used exactly once per subscription
+            // Check if this is an automated recurring renewal (where a non-recurring coupon attached to the subscription must only apply for cycle 1)
+            $isAutomatedRenewal = $isRecurringRenewal ?? false;
             $consumedCycles = CouponLog::where('coupon_id', $coupon->id)
                 ->where('subscription_id', $subscription->id)
                 ->where('subscription_type', get_class($subscription))
                 ->count();
 
-            if ($consumedCycles >= 1) {
+            if ($isAutomatedRenewal && $consumedCycles >= 1) {
                 return [
                     'subtotal' => $subtotal,
                     'discount_amount' => 0,
@@ -100,6 +102,20 @@ class CalculateInvoicePricingAction
                     'metadata' => [
                         'subtotal' => $subtotal,
                         'coupon_error' => 'Coupon can only be used once per subscription.',
+                    ],
+                ];
+            }
+
+            // For manual checkout, enforce coupon usage_limit if defined
+            if ($coupon->usage_limit !== null && $consumedCycles >= $coupon->usage_limit) {
+                return [
+                    'subtotal' => $subtotal,
+                    'discount_amount' => 0,
+                    'amount' => max(0, $subtotal),
+                    'coupon_code' => null,
+                    'metadata' => [
+                        'subtotal' => $subtotal,
+                        'coupon_error' => 'Coupon usage limit reached.',
                     ],
                 ];
             }
