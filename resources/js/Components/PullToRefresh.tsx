@@ -23,6 +23,20 @@ export default function PullToRefresh({ children, onRefresh, className }: Props)
     const handleTouchStart = (e: React.TouchEvent) => {
         if (isRefreshing) return;
 
+        // Never trigger pull-to-refresh when touching form inputs, selects, or textareas
+        const target = e.target as HTMLElement | null;
+        if (
+            target &&
+            (target.tagName === 'INPUT' ||
+                target.tagName === 'TEXTAREA' ||
+                target.tagName === 'SELECT' ||
+                target.tagName === 'BUTTON' ||
+                target.isContentEditable ||
+                target.closest('input, textarea, select, button, [contenteditable="true"]'))
+        ) {
+            return;
+        }
+
         // Only allow pull if we are at the top of the scroll
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         if (scrollTop > 0) return;
