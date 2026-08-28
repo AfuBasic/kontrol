@@ -149,7 +149,10 @@ test('if authorization was approved while session was gone, returning to /login/
         ['authorization' => $authorization->ulid],
     );
 
-    // Email client approves
+    // Email client approves (in a different browser context)
+    session()->forget('device_authorization_id');
+    $this->flushSession();
+
     $this->get($approveUrl)->assertOk();
     $this->assertGuest();
     expect($authorization->fresh()->status)->toBe(DeviceAuthorizationStatus::Approved);
