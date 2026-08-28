@@ -40,5 +40,74 @@ it('renders partner section with correct attribution data on estate details page
             ->where('estate.partner_status', PartnerStatus::CommissionActive->value)
             ->where('estate.commission_status', CommissionStatus::Active->value)
             ->where('estate.commission_days_remaining', 25)
-            ->has('estate.commission_plan'));
+            ->has('estate.commission_plan')
+            ->has('partners'));
+});
+
+it('allows zeus admin to assign a partner to an unassigned estate', function () {
+    $partner = Partner::factory()->create([
+        'name' => 'Prime Channel Partners',
+        'commission_rate' => 15.0,
+    ]);
+
+    $estate = Estate::factory()->create([
+        'partner_id' => null,
+    ]);
+
+    session()->put(config('zeus.session_key'), true);
+
+    $response = $this->patch(route('zeus.estates.partner-assignment.update', $estate), [
+        'partner_id' => $partner->id,
+        'reason' => 'Assigned from zeus estate show page',
+    ]);
+
+    $response->assertRedirect(route('zeus.estates.show', $estate));
+    $response->assertSessionHas('success', 'Partner assignment updated successfully.');
+
+    $estate->refresh();
+    expect($estate->partner_id)->toBe($partner->id)
+        ->and($estate->commission_plan_id)->not->toBeNull()
+        ->and($estate->commission_status)->toBe(CommissionStatus::Active);
+});
+
+it('allows zeus admin to change partner assignment with a reason', function () {
+    $oldPartner = Partner::factory()->create(['name' => 'Old Partner']);
+    $newPartner = Partner::factory()->create(['name' => 'New Partner', 'commission_rate' => 10.0]);
+
+    $estate = Estate::factory()->create([
+        'partner_id' => $oldPartner->id,
+    ]);
+
+    session()->put(config('zeus.session_key'), true);
+
+    $response = $this->patch(route('zeus.estates.partner-assignment.update', $estate), [
+        'partner_id' => $newPartner->id,
+        'reason' => 'Reassigned to correct partner',
+    ]);
+
+    $response->assertRedirect(route('zeus.estates.show', $estate));
+
+    $estate->refresh();
+    expect($estate->partner_id)->toBe($newPartner->id);
+});
+
+it('allows zeus admin to remove partner assignment from an estate', function () {
+    $partner = Partner::factory()->create(['name' => 'Assigned Partner']);
+
+    $estate = Estate::factory()->create([
+        'partner_id' => $partner->id,
+    ]);
+
+    session()->put(config('zeus.session_key'), true);
+
+    $response = $this->patch(route('zeus.estates.partner-assignment.update', $estate), [
+        'partner_id' => null,
+        'reason' => 'Removed partner attribution',
+    ]);
+
+    $response->assertRedirect(route('zeus.estates.show', $estate));
+
+    $estate->refresh();
+    expect($estate->partner_id)->toBeNull()
+        ->and($estate->commission_status)->toBe(CommissionStatus::Inactive);
 });
