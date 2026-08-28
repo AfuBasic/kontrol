@@ -61,7 +61,7 @@ class InitializeInvoicePaymentAction
                 // Update the last checked timestamp
                 $existing->update(['last_checked_at' => now()]);
 
-                if ($verification['status'] === 'success') {
+                if (($verification['status'] ?? null) === 'success' && ($verification['amount'] ?? 0) === $invoice->amount) {
                     $this->verificationService->verifyAndRecordPayment(
                         $existing->paystack_reference,
                         $invoice,
