@@ -74,14 +74,25 @@ class BillingCycleService
 
         $sequence = $count + 1;
 
-        // Generate compact number: estate_id + (user_id if exists) + date + sequence
-        if ($userId) {
-            $number = sprintf('%d%d%s%03d', $estateId, $userId, $dateStr, $sequence);
-        } else {
-            $number = sprintf('%d%s%03d', $estateId, $dateStr, $sequence);
-        }
+        $entropy = strtoupper(substr(uniqid(), -4));
 
-        return sprintf('KTRL-%s', $number);
+        do {
+            if ($userId) {
+                $number = sprintf('%d%d%s%03d%s', $estateId, $userId, $dateStr, $sequence, $entropy);
+            } else {
+                $number = sprintf('%d%s%03d%s', $estateId, $dateStr, $sequence, $entropy);
+            }
+
+            $candidate = sprintf('KTRL-%s', $number);
+            $exists = \DB::table('invoices')->where('invoice_number', $candidate)->exists()
+                || \DB::table('payment_transactions')->where('paystack_reference', $candidate)->exists();
+
+            if (! $exists) {
+                return $candidate;
+            }
+
+            $sequence++;
+        } while (true);
     }
 
     /**
