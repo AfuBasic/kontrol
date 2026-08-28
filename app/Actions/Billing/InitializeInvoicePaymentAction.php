@@ -206,7 +206,7 @@ class InitializeInvoicePaymentAction
         try {
             $verification = $this->paystackService->verifyPayment($invoice->invoice_number);
 
-            if ($verification['status'] === 'success') {
+            if (($verification['status'] ?? null) === 'success' && ($verification['amount'] ?? 0) === $invoice->amount) {
                 $this->verificationService->verifyAndRecordPayment(
                     $invoice->invoice_number,
                     $invoice,
