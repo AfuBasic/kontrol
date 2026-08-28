@@ -206,7 +206,7 @@ test('resident can download receipt for paid invoice repeatedly', function () {
     $response = $this->actingAs($resident)->get(route('resident.billing.receipts.download', $invoice));
 
     $response->assertOk();
-    $response->assertHeader('content-disposition', 'attachment; filename=receipt-KTRL-RES-999.pdf');
+    $response->assertHeader('content-disposition', 'attachment; filename="receipt-KTRL-RES-999.pdf"');
 });
 
 test('resident cannot download receipt for unpaid invoice', function () {
