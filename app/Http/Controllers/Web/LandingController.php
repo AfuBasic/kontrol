@@ -61,7 +61,15 @@ class LandingController extends Controller
             'notes' => $request->input('notes'),
         ];
 
-        $storeApplication->execute($payload);
+        $application = $storeApplication->execute($payload);
+
+        if ($request->wantsJson() && ! $request->header('X-Inertia')) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Application received successfully!',
+                'application' => $application,
+            ]);
+        }
 
         return back()->with('success', 'Application received successfully!');
     }
