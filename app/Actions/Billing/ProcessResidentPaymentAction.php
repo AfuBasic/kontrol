@@ -55,7 +55,7 @@ class ProcessResidentPaymentAction
                     $paystackService = app(PaystackService::class);
                     $verification = $paystackService->verifyPayment($transaction->paystack_reference);
 
-                    if ($verification['status'] === 'success') {
+                    if (($verification['status'] ?? null) === 'success' && ($verification['amount'] ?? 0) === $existingInvoice->amount) {
                         app(RecordPaymentAction::class)->execute(
                             $existingInvoice,
                             $transaction->paystack_reference,
