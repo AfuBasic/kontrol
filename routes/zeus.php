@@ -61,6 +61,7 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
 
         // Global Transactions
         Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/{transaction}', [TransactionController::class, 'show'])->name('transactions.show');
 
         // Billing configuration
         Route::get('/billing', fn () => inertia('zeus/billing/index'))->name('billing.index');
