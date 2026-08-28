@@ -521,7 +521,7 @@
         <div class="payment-box">
             <div class="payment-title">✓ Payment Received</div>
             <div class="payment-desc">
-                Thank you for your payment. This invoice was successfully paid on {{ $invoice->paid_at->format('M d, Y') }}.
+                Thank you for your payment. This invoice was successfully paid on {{ $invoice->paid_at ? $invoice->paid_at->format('M d, Y') : ($invoice->updated_at ? $invoice->updated_at->format('M d, Y') : now()->format('M d, Y')) }}.
             </div>
         </div>
     @else
