@@ -185,3 +185,69 @@ test('magic url generation supports specific destinations', function () {
     $subResponse->assertOk();
     expect($subResponse->json('magic_url'))->toContain('/auth/magic-login/');
 });
+
+test('resident can download receipt for paid invoice repeatedly', function () {
+    [$estate, $resident, $plan] = createBillingResident();
+
+    $invoice = Invoice::create([
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'plan_id' => $plan->id,
+        'invoice_number' => 'KTRL-RES-999',
+        'amount' => 15000,
+        'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
+        'status' => 'paid',
+        'due_date' => now()->addDays(7),
+    ]);
+
+    $response = $this->actingAs($resident)->get(route('resident.billing.receipts.download', $invoice));
+
+    $response->assertOk();
+    $response->assertHeader('content-disposition', 'attachment; filename=receipt-KTRL-RES-999.pdf');
+});
+
+test('resident cannot download receipt for unpaid invoice', function () {
+    [$estate, $resident, $plan] = createBillingResident();
+
+    $invoice = Invoice::create([
+        'estate_id' => $estate->id,
+        'user_id' => $resident->id,
+        'plan_id' => $plan->id,
+        'invoice_number' => 'KTRL-RES-998',
+        'amount' => 15000,
+        'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
+        'status' => 'pending',
+        'due_date' => now()->addDays(7),
+    ]);
+
+    $response = $this->actingAs($resident)->get(route('resident.billing.receipts.download', $invoice));
+
+    $response->assertForbidden();
+});
+
+test('resident cannot download another residents receipt', function () {
+    [$estate, $resident, $plan] = createBillingResident();
+    $otherResident = User::factory()->create();
+
+    $invoice = Invoice::create([
+        'estate_id' => $estate->id,
+        'user_id' => $otherResident->id,
+        'plan_id' => $plan->id,
+        'invoice_number' => 'KTRL-RES-997',
+        'amount' => 15000,
+        'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
+        'status' => 'paid',
+        'due_date' => now()->addDays(7),
+    ]);
+
+    $response = $this->actingAs($resident)->get(route('resident.billing.receipts.download', $invoice));
+
+    $response->assertNotFound();
+});
+
