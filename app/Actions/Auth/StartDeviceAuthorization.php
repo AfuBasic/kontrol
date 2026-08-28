@@ -12,6 +12,7 @@ use App\Models\SecurityEvent;
 use App\Models\User;
 use App\Notifications\Security\NewDeviceSignInNotification;
 use App\Services\Security\DeviceTrustCookie;
+use App\Services\Security\PendingDeviceAuthorizationCookie;
 use App\Support\DeviceMetadata;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ class StartDeviceAuthorization
 {
     public function __construct(
         private DeviceTrustCookie $deviceTrustCookie,
+        private PendingDeviceAuthorizationCookie $pendingDeviceAuthorizationCookie,
         private RecordSecurityEvent $recordSecurityEvent,
     ) {}
 
@@ -81,6 +83,7 @@ class StartDeviceAuthorization
         $request->session()->forget(['otp_user_id', 'otp_remember', 'otp_via_social']);
 
         $this->deviceTrustCookie->queue($plainTextToken);
+        $this->pendingDeviceAuthorizationCookie->queue($authorization->ulid);
 
         return [
             'authorization' => $authorization,
