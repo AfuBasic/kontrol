@@ -7,10 +7,12 @@ use App\Enums\IncidentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CollectionAssignment;
 use App\Models\Incident;
+use App\Models\ResidentSubscription;
 use App\Services\Admin\EstateBoardService;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -179,7 +181,7 @@ class HomeController extends Controller
                     return null;
                 }
 
-                $subscription = \App\Models\ResidentSubscription::where('user_id', $user->id)
+                $subscription = ResidentSubscription::where('user_id', $user->id)
                     ->where('estate_id', $estate->id)
                     ->first();
 
@@ -199,7 +201,7 @@ class HomeController extends Controller
                 // Check dismissal for current billing period
                 $currentMonthKey = $subscription->current_period_start ? $subscription->current_period_start->format('Y-m') : now()->format('Y-m');
                 $dismissCacheKey = "auto_renew_dismissed:{$subscription->id}:{$currentMonthKey}";
-                if (\Illuminate\Support\Facades\Cache::get($dismissCacheKey, false)) {
+                if (Cache::get($dismissCacheKey, false)) {
                     return null;
                 }
 

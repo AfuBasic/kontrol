@@ -47,11 +47,15 @@ export default function useNativeViewport(): void {
             // Ensure the active text input is cleanly in view without jarring viewport shifts
             if (keyboardOpen && document.activeElement instanceof HTMLElement) {
                 const activeEl = document.activeElement;
-                window.setTimeout(() => {
-                    if (document.activeElement === activeEl) {
-                        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                }, 100);
+                [80, 250].forEach((delay) => {
+                    const timer = window.setTimeout(() => {
+                        timers.delete(timer);
+                        if (document.activeElement === activeEl) {
+                            activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }, delay);
+                    timers.add(timer);
+                });
             }
 
             // iOS zeros env(safe-area-inset-top) while the keyboard is open.

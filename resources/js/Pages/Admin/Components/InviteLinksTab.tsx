@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Plus, Power, RefreshCw, Share2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import { copyTextToClipboard } from '@/Utils/clipboard';
 
 export interface InviteLink {
     id: number;
@@ -76,18 +77,9 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
         );
     };
 
-    const fallbackCopy = (id: number, url: string) => {
-        try {
-            const textArea = document.createElement('textarea');
-            textArea.value = url;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
+    const handleCopy = async (id: number, url: string) => {
+        const success = await copyTextToClipboard(url);
+        if (success) {
             setIsCopied(id);
             setToast({
                 show: true,
@@ -95,31 +87,7 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                 type: 'success',
             });
             setTimeout(() => setIsCopied(null), 2000);
-        } catch (err) {
-            console.error('Fallback copy failed', err);
         }
-    };
-
-    const handleCopy = (id: number, url: string) => {
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard
-                .writeText(url)
-                .then(() => {
-                    setIsCopied(id);
-                    setToast({
-                        show: true,
-                        message: 'Invite link copied to clipboard!',
-                        type: 'success',
-                    });
-                    setTimeout(() => setIsCopied(null), 2000);
-                })
-                .catch(() => {
-                    fallbackCopy(id, url);
-                });
-            return;
-        }
-
-        fallbackCopy(id, url);
     };
 
     const handleToggle = (id: number) => {
