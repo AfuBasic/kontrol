@@ -44,6 +44,16 @@ export default function useNativeViewport(): void {
             root.style.setProperty(KEYBOARD_HEIGHT_VARIABLE, `${keyboardOpen ? keyboardHeight : 0}px`);
             root.setAttribute(KEYBOARD_OPEN_ATTRIBUTE, String(keyboardOpen));
 
+            // Ensure the active text input is cleanly in view without jarring viewport shifts
+            if (keyboardOpen && document.activeElement instanceof HTMLElement) {
+                const activeEl = document.activeElement;
+                window.setTimeout(() => {
+                    if (document.activeElement === activeEl) {
+                        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }, 100);
+            }
+
             // iOS zeros env(safe-area-inset-top) while the keyboard is open.
             // Freeze the last closed-keyboard inset so the header cannot slide under the status bar.
             if (!keyboardOpen) {
