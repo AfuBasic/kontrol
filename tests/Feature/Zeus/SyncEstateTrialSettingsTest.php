@@ -3,7 +3,6 @@
 use App\Actions\Zeus\UpdateEstateAction;
 use App\Jobs\Billing\SyncEstateTrialSettingsJob;
 use App\Models\Estate;
-use App\Models\EstateSettings;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
