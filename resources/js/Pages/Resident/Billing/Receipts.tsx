@@ -1,6 +1,7 @@
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import {
+    ArrowDownTrayIcon,
     ArrowLeftIcon,
     ArrowTopRightOnSquareIcon,
     CheckCircleIcon,
@@ -11,6 +12,7 @@ import {
     SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { type ReactNode, useEffect, useState } from 'react';
@@ -53,6 +55,7 @@ const formatDate = (iso?: string) => {
 export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
     const [isNative, setIsNative] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<number | null>(null);
 
     const invoiceData = invoices || recentInvoices || { data: [], next_page_url: null, total: 0 };
 
@@ -63,6 +66,41 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
     const paidInvoiceCount = invoiceData.data.filter((invoice) => invoice.status === 'paid').length;
     const openInvoiceCount = invoiceData.data.filter((invoice) => invoice.status !== 'paid').length;
     const receiptCountLabel = `${invoiceData.total} ${invoiceData.total === 1 ? 'receipt' : 'receipts'}`;
+
+    const handleDownloadReceipt = async (invoice: Invoice, e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (downloadingId === invoice.id) return;
+        setDownloadingId(invoice.id);
+
+        const downloadUrl = `/resident/billing/receipts/${invoice.ulid || invoice.id}/download`;
+
+        try {
+            if (isNative) {
+                await Browser.open({ url: `${window.location.origin}${downloadUrl}` });
+            } else {
+                const response = await axios.get(downloadUrl, {
+                    responseType: 'blob',
+                });
+                const blob = new Blob([response.data], { type: 'application/pdf' });
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.setAttribute('download', `receipt-${invoice.invoice_number}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            }
+        } catch (error) {
+            console.error('Failed to download receipt', error);
+            window.open(downloadUrl, '_blank');
+        } finally {
+            setDownloadingId(null);
+        }
+    };
 
     const openWebApp = async () => {
         let url = `${window.location.origin}/resident/billing/receipts`;
@@ -164,12 +202,18 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                 {invoiceData.data.map((invoice) => {
                                     const paid = invoice.status === 'paid';
                                     const overdue = invoice.status === 'overdue' || invoice.status === 'failed';
+                                    const isDownloading = downloadingId === invoice.id;
+
                                     return (
-                                        <li key={invoice.id} className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                                            <div className="flex min-w-0 items-start gap-3">
+                                        <li key={invoice.id} className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6 transition hover:bg-slate-50/60">
+                                            <div className="flex min-w-0 items-center gap-3.5 flex-1">
                                                 <span
-                                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                                                        paid ? 'bg-emerald-50 text-emerald-600' : overdue ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600'
+                                                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                                                        paid
+                                                            ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100'
+                                                            : overdue
+                                                              ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-100'
+                                                              : 'bg-amber-50 text-amber-600 ring-1 ring-amber-100'
                                                     }`}
                                                 >
                                                     {paid ? (
@@ -180,24 +224,43 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                                         <ClockIcon className="h-5 w-5" strokeWidth={2.2} />
                                                     )}
                                                 </span>
-                                                <div className="min-w-0">
-                                                    <p className="text-sm font-black text-slate-950">{invoice.formatted_amount}</p>
-                                                    <p className="mt-0.5 break-all text-xs leading-5 text-slate-500">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm sm:text-base font-black text-slate-950">{invoice.formatted_amount}</p>
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap ${
+                                                                paid
+                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200'
+                                                                    : overdue
+                                                                      ? 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200'
+                                                                      : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200'
+                                                            }`}
+                                                        >
+                                                            {paid ? 'Paid' : overdue ? 'Overdue' : 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-0.5 text-xs text-slate-500 font-medium truncate">
                                                         {formatDate(invoice.created_at)} · {invoice.invoice_number}
                                                     </p>
                                                 </div>
                                             </div>
-                                            <span
-                                                className={`inline-flex w-fit items-center rounded-full px-2.5 py-1 text-[11px] font-black capitalize ${
-                                                    paid
-                                                        ? 'bg-emerald-50 text-emerald-700'
-                                                        : overdue
-                                                          ? 'bg-rose-50 text-rose-700'
-                                                          : 'bg-amber-50 text-amber-700'
-                                                }`}
-                                            >
-                                                {paid ? 'Paid' : overdue ? 'Overdue' : 'Pending'}
-                                            </span>
+
+                                            {paid && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => handleDownloadReceipt(invoice, e)}
+                                                    disabled={isDownloading}
+                                                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 disabled:opacity-50"
+                                                    title="Download PDF Receipt"
+                                                >
+                                                    {isDownloading ? (
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-600" />
+                                                    ) : (
+                                                        <ArrowDownTrayIcon className="h-3.5 w-3.5 text-slate-500" strokeWidth={2.2} />
+                                                    )}
+                                                    <span className="hidden xs:inline sm:inline">Receipt</span>
+                                                </button>
+                                            )}
                                         </li>
                                     );
                                 })}
