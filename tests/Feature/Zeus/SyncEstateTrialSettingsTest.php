@@ -3,7 +3,7 @@
 use App\Actions\Zeus\UpdateEstateAction;
 use App\Jobs\Billing\SyncEstateTrialSettingsJob;
 use App\Models\Estate;
-use App\Models\EstateSetting;
+use App\Models\EstateSettings;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Models\User;
@@ -11,8 +11,7 @@ use Illuminate\Support\Facades\Queue;
 
 test('it syncs existing resident trial periods when trial days are changed', function () {
     $estate = Estate::factory()->create();
-    EstateSetting::create([
-        'estate_id' => $estate->id,
+    $estate->settings->update([
         'charge_type' => 'residents',
         'free_trial_enabled' => true,
         'free_trial_days' => 30,
@@ -30,8 +29,9 @@ test('it syncs existing resident trial periods when trial days are changed', fun
         'trial_ends_at' => now()->addDays(25),
         'current_period_start' => now()->subDays(5),
         'current_period_end' => now()->addDays(25),
-        'created_at' => now()->subDays(5),
     ]);
+    $subOld->created_at = now()->subDays(5);
+    $subOld->save();
 
     // Resident registered 2 hours ago
     $subNew = ResidentSubscription::create([
@@ -42,8 +42,9 @@ test('it syncs existing resident trial periods when trial days are changed', fun
         'trial_ends_at' => now()->addDays(30),
         'current_period_start' => now()->subHours(2),
         'current_period_end' => now()->addDays(30),
-        'created_at' => now()->subHours(2),
     ]);
+    $subNew->created_at = now()->subHours(2);
+    $subNew->save();
 
     // Change estate trial setting to 1 day
     $estate->settings->update(['free_trial_days' => 1]);
@@ -64,8 +65,7 @@ test('it syncs existing resident trial periods when trial days are changed', fun
 
 test('it transitions unpaid trial residents to past_due when free trial is disabled', function () {
     $estate = Estate::factory()->create();
-    EstateSetting::create([
-        'estate_id' => $estate->id,
+    $estate->settings->update([
         'charge_type' => 'residents',
         'free_trial_enabled' => true,
         'free_trial_days' => 30,
@@ -95,8 +95,7 @@ test('it transitions unpaid trial residents to past_due when free trial is disab
 
 test('it does not modify active paid resident subscriptions', function () {
     $estate = Estate::factory()->create();
-    EstateSetting::create([
-        'estate_id' => $estate->id,
+    $estate->settings->update([
         'charge_type' => 'residents',
         'free_trial_enabled' => true,
         'free_trial_days' => 30,
@@ -134,8 +133,7 @@ test('it dispatches SyncEstateTrialSettingsJob when estate trial settings are up
     Queue::fake();
 
     $estate = Estate::factory()->create();
-    EstateSetting::create([
-        'estate_id' => $estate->id,
+    $estate->settings->update([
         'charge_type' => 'residents',
         'free_trial_enabled' => true,
         'free_trial_days' => 30,
