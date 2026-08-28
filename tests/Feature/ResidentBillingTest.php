@@ -5,6 +5,7 @@ use App\Events\Billing\PaymentReceived;
 use App\Jobs\Admin\PublishCollectionJob;
 use App\Mail\Admin\BillingInvoiceMail;
 use App\Mail\SendInvoiceMail;
+use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
@@ -215,6 +216,19 @@ test('property owners can create recurring collections successfully', function (
         'user_id' => $resident->id,
     ]);
 
+    AdministrativeAssignment::create([
+        'user_id' => $owner->id,
+        'estate_id' => $estate->id,
+        'role_id' => $ownerRole->id,
+        'is_active' => true,
+    ]);
+    AdministrativeAssignment::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'role_id' => $residentRole->id,
+        'is_active' => true,
+    ]);
+
     // 2. Act: Post to the store route as the property owner
     $response = $this->actingAs($owner)
         ->withHeaders(['X-Capacitor-App' => 'true'])
@@ -266,6 +280,20 @@ test('property owners can create collections and include themselves in the assig
     $estate->users()->attach($resident->id, ['status' => 'accepted', 'property_owner_id' => $owner->id]);
     UserProfile::create([
         'user_id' => $resident->id,
+        'property_owner_id' => $owner->id,
+    ]);
+
+    AdministrativeAssignment::create([
+        'user_id' => $owner->id,
+        'estate_id' => $estate->id,
+        'role_id' => $ownerRole->id,
+        'is_active' => true,
+    ]);
+    AdministrativeAssignment::create([
+        'user_id' => $resident->id,
+        'estate_id' => $estate->id,
+        'role_id' => $residentRole->id,
+        'is_active' => true,
     ]);
 
     // 2. Act: Post to the store route with include_creator = true
