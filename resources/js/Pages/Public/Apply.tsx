@@ -219,6 +219,10 @@ export default function Apply() {
                 setError('contactEmail', 'A valid email address is required');
                 hasErrors = true;
             }
+            if (!data.contactPhone.trim()) {
+                setError('contactPhone', 'Phone Number is required');
+                hasErrors = true;
+            }
         }
 
         if (hasErrors) return;
@@ -822,7 +826,7 @@ export default function Apply() {
                                                     </div>
                                                     <div>
                                                         <label className="mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                                            Phone Number <span className="font-normal text-slate-500">(Optional)</span>
+                                                            Phone Number
                                                         </label>
                                                         <div className="relative">
                                                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
