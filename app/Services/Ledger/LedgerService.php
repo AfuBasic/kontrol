@@ -342,6 +342,7 @@ class LedgerService
 
         PaymentTransaction::query()
             ->where('estate_id', $estate->id)
+            ->whereNull('invoice_id')
             ->chunkById(200, function ($transactions) use (&$synced) {
                 foreach ($transactions as $transaction) {
                     $this->recordFromPaymentTransaction($transaction);

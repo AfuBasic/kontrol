@@ -366,6 +366,7 @@ class TransactionOverviewService
     {
         return EstateTransaction::query()
             ->where('estate_id', $estate->id)
+            ->whereNull('invoice_id')
             ->whereNot('type', TransactionType::SubscriptionPayment);
     }
 

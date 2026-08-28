@@ -52,8 +52,8 @@ export default function VerifyDevice({ email, status, displayName }: Props) {
 
                     <h1 className="text-3xl font-semibold tracking-tight text-white">Verify this device</h1>
                     <p className="mt-3 text-sm leading-relaxed text-slate-400">
-                        We sent a verification request to <span className="font-medium text-slate-200">{email}</span>. Approve this
-                        device from the email to continue
+                        We sent a verification request to <span className="font-medium text-slate-200">{email}</span>. You can open
+                        your email app to approve this device, then return to Kontrol. We’ll continue automatically
                         {displayName ? ` as ${displayName}` : ''}.
                     </p>
 
@@ -64,7 +64,7 @@ export default function VerifyDevice({ email, status, displayName }: Props) {
                                 Device approved. Continuing…
                             </span>
                         ) : (
-                            'Waiting for approval. Keep this screen open.'
+                            'Waiting for approval… Open your email to approve.'
                         )}
                     </div>
 

@@ -104,7 +104,9 @@ test('unknown device triggers a challenge and does not authenticate', function (
 
     $this->assertGuest();
     $response->assertRedirect(route('login.device.show'));
-    expect(DeviceAuthorizationRequest::query()->where('user_id', $user->id)->pending()->count())->toBe(1);
+    $authorization = DeviceAuthorizationRequest::query()->where('user_id', $user->id)->pending()->first();
+    expect($authorization)->not->toBeNull();
+    expect(queuedPendingAuthToken())->toBe($authorization->ulid);
     expect(SecurityEvent::query()->where('user_id', $user->id)->where('type', SecurityEventType::NewDeviceAttempt)->count())->toBe(1);
     Notification::assertSentTo($user, NewDeviceSignInNotification::class);
 });
@@ -271,6 +273,20 @@ function queuedDeviceTrustToken(): string
 {
     $queued = Cookie::getQueuedCookies();
     $name = config('device-trust.cookie');
+
+    foreach ($queued as $cookie) {
+        if ($cookie->getName() === $name) {
+            return $cookie->getValue();
+        }
+    }
+
+    return '';
+}
+
+function queuedPendingAuthToken(): string
+{
+    $queued = Cookie::getQueuedCookies();
+    $name = config('device-trust.pending_cookie');
 
     foreach ($queued as $cookie) {
         if ($cookie->getName() === $name) {

@@ -1,0 +1,363 @@
+import { Browser } from '@capacitor/browser';
+import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import {
+    ArrowDownTrayIcon,
+    ArrowLeftIcon,
+    ArrowTopRightOnSquareIcon,
+    CheckCircleIcon,
+    ChevronDownIcon,
+    ClockIcon,
+    ExclamationTriangleIcon,
+    ShieldCheckIcon,
+    SparklesIcon,
+} from '@heroicons/react/24/outline';
+import { Head, Link, router } from '@inertiajs/react';
+import axios from 'axios';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import { type ReactNode, useEffect, useState } from 'react';
+import * as ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
+import ResidentLayout from '@/Layouts/ResidentLayout';
+
+type Invoice = {
+    ulid: string;
+    id: number;
+    invoice_number: string;
+    amount: number;
+    formatted_amount: string;
+    status: 'pending' | 'paid' | 'overdue' | 'failed';
+    due_date: string;
+    created_at: string;
+};
+
+type Props = {
+    recentInvoices?: {
+        data: Invoice[];
+        next_page_url: string | null;
+        total: number;
+    };
+    invoices?: {
+        data: Invoice[];
+        next_page_url: string | null;
+        total: number;
+    };
+    subscription?: {
+        status: string;
+        plan_name?: string;
+    };
+};
+
+const formatDate = (iso?: string) => {
+    if (!iso) return '-';
+    return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64data = reader.result as string;
+            const base64 = base64data.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
+
+export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
+    const [isNative, setIsNative] = useState(false);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+    const invoiceData = invoices || recentInvoices || { data: [], next_page_url: null, total: 0 };
+
+    useEffect(() => {
+        setIsNative(Capacitor.isNativePlatform());
+    }, []);
+
+    const paidInvoiceCount = invoiceData.data.filter((invoice) => invoice.status === 'paid').length;
+    const openInvoiceCount = invoiceData.data.filter((invoice) => invoice.status !== 'paid').length;
+    const receiptCountLabel = `${invoiceData.total} ${invoiceData.total === 1 ? 'receipt' : 'receipts'}`;
+
+    const handleDownloadReceipt = async (invoice: Invoice, e?: React.MouseEvent) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        if (downloadingId === invoice.id) return;
+        setDownloadingId(invoice.id);
+
+        const downloadUrl = `/resident/billing/receipts/${invoice.ulid || invoice.id}/download`;
+        const filename = `receipt-${invoice.invoice_number}.pdf`;
+
+        try {
+            const response = await axios.get(downloadUrl, {
+                responseType: 'blob',
+            });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+
+            if (isNative) {
+                // Native iOS/Android: write to device storage and open native save/share sheet
+                const base64Data = await blobToBase64(blob);
+                await Filesystem.writeFile({
+                    path: filename,
+                    data: base64Data,
+                    directory: Directory.Cache,
+                });
+                const uriResult = await Filesystem.getUri({
+                    directory: Directory.Cache,
+                    path: filename,
+                });
+
+                const canShare = await Share.canShare();
+                if (canShare.value) {
+                    await Share.share({
+                        title: `Receipt #${invoice.invoice_number}`,
+                        dialogTitle: 'Save or Share Receipt',
+                        files: [uriResult.uri],
+                    });
+                }
+            } else {
+                // Mobile Web: Check if Web Share API with files is available
+                const file = new File([blob], filename, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: `Receipt #${invoice.invoice_number}`,
+                        });
+                        return;
+                    } catch (shareErr) {
+                        if ((shareErr as Error).name === 'AbortError') return;
+                    }
+                }
+
+                // Desktop/Standard Browser: trigger direct attachment download
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.setAttribute('download', filename);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(blobUrl);
+            }
+        } catch (error) {
+            console.error('Failed to download receipt', error);
+            window.open(downloadUrl, '_blank');
+        } finally {
+            setDownloadingId(null);
+        }
+    };
+
+    const openWebApp = async () => {
+        let url = `${window.location.origin}/resident/billing/receipts`;
+        try {
+            const response = await fetch(ResidentBillingController.generateMagicUrl.url({ destination: 'receipts' } as any));
+            const data = await response.json();
+            if (data.magic_url) {
+                url = data.magic_url;
+            }
+        } catch (error) {
+            console.error('Failed to generate magic URL', error);
+        }
+
+        if (isNative) {
+            try {
+                await Browser.open({ url });
+            } catch (e) {
+                console.warn('Capacitor Browser open failed, fallback to window.open', e);
+                window.open(url, '_system');
+            }
+        } else {
+            window.open(url, '_blank');
+        }
+    };
+
+    const loadMore = () => {
+        if (invoiceData.next_page_url && !isLoadingMore) {
+            setIsLoadingMore(true);
+            router.get(
+                invoiceData.next_page_url,
+                {},
+                {
+                    preserveScroll: true,
+                    only: invoices ? ['invoices'] : ['recentInvoices'],
+                    // @ts-expect-error - merge is Inertia v2 feature
+                    merge: true,
+                    onFinish: () => setIsLoadingMore(false),
+                },
+            );
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
+            <Head title="Receipts & Payments" />
+
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+                <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
+                    <Link
+                        href={ResidentBillingController.index.url()}
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                        aria-label="Back to Billing Hub"
+                    >
+                        <ArrowLeftIcon className="h-5 w-5" strokeWidth={2.2} />
+                    </Link>
+
+                    <div className="min-w-0 flex-1">
+                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase leading-tight">Billing destination</p>
+                        <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Receipts & Payments</h1>
+                    </div>
+
+                    {isNative && (
+                        <button
+                            type="button"
+                            onClick={openWebApp}
+                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 active:scale-95"
+                            title="Open in Web Browser"
+                        >
+                            <span className="hidden sm:inline">Browser</span>
+                            <ArrowTopRightOnSquareIcon className="h-4 w-4 text-slate-400" strokeWidth={2.2} />
+                        </button>
+                    )}
+                </div>
+            </header>
+
+            <main className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
+                <motion.section
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)]"
+                >
+                    <div className="flex flex-col gap-2 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <div>
+                            <span className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase">Transaction Records</span>
+                            <p className="mt-1 text-sm font-bold text-slate-950">{receiptCountLabel}</p>
+                        </div>
+                        {invoiceData.data.length > 0 && (
+                            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500">
+                                <span>{paidInvoiceCount} settled</span>
+                                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                                <span>{openInvoiceCount} pending/failed</span>
+                            </div>
+                        )}
+                    </div>
+
+                    {invoiceData.data.length > 0 ? (
+                        <>
+                            <ul className="divide-y divide-slate-100">
+                                {invoiceData.data.map((invoice) => {
+                                    const paid = invoice.status === 'paid';
+                                    const overdue = invoice.status === 'overdue' || invoice.status === 'failed';
+                                    const isDownloading = downloadingId === invoice.id;
+
+                                    return (
+                                        <li key={invoice.id} className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6 transition hover:bg-slate-50/60">
+                                            <div className="flex min-w-0 items-center gap-3.5 flex-1">
+                                                <span
+                                                    className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
+                                                        paid
+                                                            ? 'bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100'
+                                                            : overdue
+                                                              ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-100'
+                                                              : 'bg-amber-50 text-amber-600 ring-1 ring-amber-100'
+                                                    }`}
+                                                >
+                                                    {paid ? (
+                                                        <CheckCircleIcon className="h-5 w-5" strokeWidth={2.2} />
+                                                    ) : overdue ? (
+                                                        <ExclamationTriangleIcon className="h-5 w-5" strokeWidth={2.2} />
+                                                    ) : (
+                                                        <ClockIcon className="h-5 w-5" strokeWidth={2.2} />
+                                                    )}
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-sm sm:text-base font-black text-slate-950">{invoice.formatted_amount}</p>
+                                                        <span
+                                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap ${
+                                                                paid
+                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200'
+                                                                    : overdue
+                                                                      ? 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200'
+                                                                      : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200'
+                                                            }`}
+                                                        >
+                                                            {paid ? 'Paid' : overdue ? 'Overdue' : 'Pending'}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-0.5 text-xs text-slate-500 font-medium truncate">
+                                                        {formatDate(invoice.created_at)} · {invoice.invoice_number}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {paid && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => handleDownloadReceipt(invoice, e)}
+                                                    disabled={isDownloading}
+                                                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 hover:text-slate-900 active:scale-95 disabled:opacity-50"
+                                                    title="Download PDF Receipt"
+                                                >
+                                                    {isDownloading ? (
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-600" />
+                                                    ) : (
+                                                        <ArrowDownTrayIcon className="h-3.5 w-3.5 text-slate-500" strokeWidth={2.2} />
+                                                    )}
+                                                    <span className="hidden xs:inline sm:inline">Receipt</span>
+                                                </button>
+                                            )}
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+
+                            {invoiceData.next_page_url && (
+                                <div className="border-t border-slate-100 p-4 sm:p-6">
+                                    <button
+                                        onClick={loadMore}
+                                        disabled={isLoadingMore}
+                                        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-50 text-[11px] font-black tracking-[0.16em] text-slate-600 uppercase transition-all hover:bg-slate-100 active:scale-[0.98] disabled:opacity-50"
+                                    >
+                                        {isLoadingMore ? (
+                                            <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                        ) : (
+                                            <>
+                                                Load More Invoices
+                                                <ChevronDownIcon className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center px-6 py-12 text-center sm:px-8">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                <SparklesIcon className="h-5 w-5" strokeWidth={2} />
+                            </span>
+                            <p className="mt-3 text-sm font-black text-slate-950">No transaction records yet</p>
+                            <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">Invoices and payment receipts will appear here after completed transactions.</p>
+                        </div>
+                    )}
+                </motion.section>
+
+                <p className="mt-6 flex items-center justify-center gap-1.5 pb-[calc(2rem+env(safe-area-inset-bottom,0px))] text-[11px] font-bold text-slate-400">
+                    <ShieldCheckIcon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    Payments secured by Gateway
+                </p>
+            </main>
+        </div>
+    );
+}
+
+ReceiptsPage.layout = (page: ReactNode) => (
+    <ResidentLayout hideHeader hideNav className="bg-[#f6f8fb]">
+        {page}
+    </ResidentLayout>
+);

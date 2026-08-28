@@ -49,9 +49,25 @@ class PlatformAnalyticsService
         $activeEstatesCurrent = Estate::count();
         $activeEstatesLastMonth = Estate::where('created_at', '<=', $endOfLastMonth)->count();
 
-        // Total Residents
-        $totalResidentsCurrent = User::where('user_type', 'user')->count();
-        $totalResidentsLastMonth = User::where('user_type', 'user')->where('created_at', '<=', $endOfLastMonth)->count();
+        // Total Residents (Actual residents/property owners with accepted memberships)
+        $totalResidentsQuery = DB::table('estate_users_membership')
+            ->join('model_has_roles', function ($join) {
+                $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                    ->on('estate_users_membership.estate_id', '=', 'model_has_roles.estate_id')
+                    ->where('model_has_roles.model_type', User::class);
+            })
+            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+            ->where('estate_users_membership.status', 'accepted')
+            ->whereIn('roles.name', ['resident', 'property_owner']);
+
+        $totalResidentsCurrent = (clone $totalResidentsQuery)
+            ->distinct('estate_users_membership.user_id')
+            ->count('estate_users_membership.user_id');
+
+        $totalResidentsLastMonth = (clone $totalResidentsQuery)
+            ->where('estate_users_membership.created_at', '<=', $endOfLastMonth)
+            ->distinct('estate_users_membership.user_id')
+            ->count('estate_users_membership.user_id');
 
         // Active Subscriptions
         $activeSubscriptionsCurrent = DB::table('resident_subscriptions')

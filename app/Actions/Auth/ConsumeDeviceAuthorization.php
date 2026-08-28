@@ -6,6 +6,7 @@ use App\Enums\DeviceAuthorizationStatus;
 use App\Models\DeviceAuthorizationRequest;
 use App\Models\TrustedDevice;
 use App\Services\Security\DeviceTrustCookie;
+use App\Services\Security\PendingDeviceAuthorizationCookie;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class ConsumeDeviceAuthorization
     public function __construct(
         private CompleteAuthenticatedLogin $completeAuthenticatedLogin,
         private DeviceTrustCookie $deviceTrustCookie,
+        private PendingDeviceAuthorizationCookie $pendingDeviceAuthorizationCookie,
     ) {}
 
     public function execute(Request $request, DeviceAuthorizationRequest $authorization): RedirectResponse
@@ -91,6 +93,7 @@ class ConsumeDeviceAuthorization
         });
 
         $request->session()->forget('device_authorization_id');
+        $this->pendingDeviceAuthorizationCookie->clear();
 
         return $this->completeAuthenticatedLogin->execute(
             $user,

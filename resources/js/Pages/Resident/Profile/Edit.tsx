@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle } from 'lucide-react';
+import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle, CreditCard, ExternalLink } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
@@ -9,6 +9,7 @@ import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import MobileSheet from '@/Components/MobileSheet';
 import TelegramLinkToggle from '@/Components/TelegramLinkToggle';
+import { useExternalBilling } from '@/Hooks/useExternalBilling';
 
 interface Props {
     mustVerifyEmail: boolean;
@@ -51,6 +52,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
     const userRoles = auth.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
     const parentResidentName = auth.user?.household_parent_name;
+    const { openExternalBilling } = useExternalBilling();
     const [activeSheet, setActiveSheet] = useState<'profile' | 'emergency_management' | null>(null);
     const [isAddContactSheetOpen, setIsAddContactSheetOpen] = useState(false);
 
@@ -133,7 +135,11 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
 
                 {/* 2.5. SUBSCRIPTION STATUS */}
                 {!isHouseholdMember && subscription?.expires_at && (
-                    <div className="group relative overflow-hidden rounded-3xl bg-[#0B101E] p-6 shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:shadow-2xl hover:ring-white/10">
+                    <button
+                        type="button"
+                        onClick={() => openExternalBilling()}
+                        className="group relative w-full overflow-hidden rounded-3xl bg-[#0B101E] p-6 text-left shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:shadow-2xl hover:ring-white/10 active:scale-[0.99]"
+                    >
                         {/* Subtle Top Edge Highlight */}
                         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
 
@@ -147,19 +153,22 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                                     <Crown className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
                                     <h2 className="text-[14px] font-medium tracking-wide">{subscription.name || 'Estate Subscription'}</h2>
                                 </div>
-                                {subscription.status === 'active' || subscription.status === 'trial' ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
-                                        <span className="text-[13px] font-medium text-emerald-400">
-                                            {subscription.status === 'active' ? 'Active' : 'Trial'}
-                                        </span>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
-                                        <span className="text-[13px] font-medium text-rose-400">Expired</span>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-2">
+                                    {subscription.status === 'active' || subscription.status === 'trial' ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                                            <span className="text-[13px] font-medium text-emerald-400">
+                                                {subscription.status === 'active' ? 'Active' : 'Trial'}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
+                                            <span className="text-[13px] font-medium text-rose-400">Expired</span>
+                                        </div>
+                                    )}
+                                    <ChevronRight className="h-4 w-4 text-slate-500 transition-transform group-hover:translate-x-0.5" />
+                                </div>
                             </div>
 
                             {/* Body */}
@@ -178,7 +187,7 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                                     })()}
                             </div>
                         </div>
-                    </div>
+                    </button>
                 )}
 
                 {/* 3. SETTINGS HUB */}
@@ -220,18 +229,29 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                     </section>
 
                     {/* Billing Section */}
-                    {!isHouseholdMember && auth.user?.roles?.includes('resident') && hasPaymentCollection && (
+                    {!isHouseholdMember && auth.user?.roles?.some((r: string) => ['resident', 'property_owner'].includes(r)) && (
                         <section>
                             <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
                             <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
-                                <Link href="/resident/dues" className="block">
-                                    <SettingsRow
-                                        icon={<Wallet className="h-5 w-5" />}
-                                        label="Estate Collections"
-                                        description="Review and resolve estate dues"
-                                        onClick={() => {}}
-                                    />
-                                </Link>
+                                <SettingsRow
+                                    icon={<CreditCard className="h-5 w-5" />}
+                                    label="Subscription & Billing"
+                                    description="Manage plan, saved cards & auto-renew"
+                                    onClick={() => openExternalBilling()}
+                                />
+                                {hasPaymentCollection && (
+                                    <>
+                                        <div className="mx-6 h-px bg-slate-50" />
+                                        <Link href="/resident/dues" className="block">
+                                            <SettingsRow
+                                                icon={<Wallet className="h-5 w-5" />}
+                                                label="Estate Collections"
+                                                description="Review and resolve estate dues"
+                                                onClick={() => {}}
+                                            />
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </section>
                     )}

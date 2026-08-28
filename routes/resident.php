@@ -136,6 +136,10 @@ Route::middleware('role:resident,property_owner')->group(function (): void {
     // Billing
     Route::prefix('billing')->name('resident.billing.')->group(function (): void {
         Route::get('/', [BillingController::class, 'index'])->name('index');
+        Route::get('/subscription', [BillingController::class, 'subscription'])->name('subscription');
+        Route::get('/payment', [BillingController::class, 'payment'])->name('payment');
+        Route::get('/receipts', [BillingController::class, 'receipts'])->name('receipts');
+        Route::get('/receipts/{invoice}/download', [BillingController::class, 'downloadReceipt'])->name('receipts.download')->middleware('throttle:30,1');
         Route::post('/subscribe', [BillingController::class, 'subscribe'])->name('subscribe');
         Route::post('/setup-payment', [BillingController::class, 'setupPaymentMethod'])->name('setup-payment');
         Route::post('/auto-renew/enable', [BillingController::class, 'enableAutoRenew'])->name('auto-renew.enable');

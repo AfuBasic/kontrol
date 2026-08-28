@@ -11,6 +11,7 @@ use App\Models\Estate;
 use App\Models\EstateSettings;
 use App\Models\EstateTransaction;
 use App\Models\EstateTransactionAudit;
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Zone;
@@ -458,10 +459,35 @@ it('excludes subscription transactions from the admin ledger', function () {
         'status' => TransactionStatus::Success,
     ]);
 
+    $invoice = Invoice::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+    ]);
+
+    $invoicePayment = $ledger->record([
+        'idempotency_key' => 'sub_exclude_invoice',
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->admin->id,
+        'invoice_id' => $invoice->id,
+        'type' => TransactionType::CardPayment,
+        'direction' => TransactionDirection::Credit,
+        'amount' => 300000,
+        'status' => TransactionStatus::Success,
+    ]);
+
     $overview = app(TransactionOverviewService::class);
     $results = $overview->query($this->estate)->get();
 
     expect($results)->toHaveCount(1)
         ->and($results->first()->id)->toBe($collectionPayment->id)
-        ->and($results->pluck('type')->contains(TransactionType::SubscriptionPayment))->toBeFalse();
+        ->and($results->pluck('type')->contains(TransactionType::SubscriptionPayment))->toBeFalse()
+        ->and($results->pluck('id')->contains($invoicePayment->id))->toBeFalse();
+
+    $this->actingAs($this->admin)
+        ->get(route('admin.transactions.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('filterOptions.types')
+            ->where('filterOptions.types', fn ($types) => ! collect($types)->contains('value', TransactionType::SubscriptionPayment->value))
+        );
 });

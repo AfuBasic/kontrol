@@ -8,6 +8,7 @@ use App\Actions\Auth\DenyDeviceAuthorization;
 use App\Actions\Auth\StartDeviceAuthorization;
 use App\Http\Controllers\Controller;
 use App\Models\DeviceAuthorizationRequest;
+use App\Services\Security\PendingDeviceAuthorizationCookie;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +20,10 @@ use RuntimeException;
 
 class DeviceAuthorizationController extends Controller
 {
+    public function __construct(
+        private PendingDeviceAuthorizationCookie $pendingCookie,
+    ) {}
+
     public function show(Request $request): Response|RedirectResponse
     {
         $authorization = $this->pendingAuthorization($request);
@@ -108,6 +113,7 @@ class DeviceAuthorizationController extends Controller
     public function abort(Request $request): RedirectResponse
     {
         $request->session()->forget('device_authorization_id');
+        $this->pendingCookie->clear();
 
         return redirect()->route('login');
     }
@@ -157,13 +163,52 @@ class DeviceAuthorizationController extends Controller
     {
         $id = $request->session()->get('device_authorization_id');
 
-        if (! $id) {
+        if ($id) {
+            $authorization = DeviceAuthorizationRequest::query()
+                ->with('user')
+                ->find($id);
+
+            if ($authorization) {
+                if ($authorization->isDenied() || $authorization->isExpired() || $authorization->isConsumed()) {
+                    $this->pendingCookie->clear();
+                }
+
+                return $authorization;
+            }
+        }
+
+        $ulid = $this->pendingCookie->read($request);
+
+        if (! $ulid) {
             return null;
         }
 
-        return DeviceAuthorizationRequest::query()
+        $authorization = DeviceAuthorizationRequest::query()
             ->with('user')
-            ->find($id);
+            ->where('ulid', $ulid)
+            ->first();
+
+        if (! $authorization) {
+            $this->pendingCookie->clear();
+
+            return null;
+        }
+
+        if ($authorization->isConsumed()) {
+            $this->pendingCookie->clear();
+
+            return null;
+        }
+
+        if ($authorization->isDenied() || $authorization->isExpired()) {
+            $this->pendingCookie->clear();
+
+            return $authorization;
+        }
+
+        $request->session()->put('device_authorization_id', $authorization->id);
+
+        return $authorization;
     }
 
     private function maskEmail(string $email): string

@@ -107,7 +107,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-xs"
+                        className="fixed inset-0 z-70 bg-slate-900/40 backdrop-blur-xs"
                         onClick={onClose}
                     />
                     <motion.aside
@@ -115,7 +115,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         animate={{ x: 0 }}
                         exit={{ x: '100%' }}
                         transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-                        className="fixed inset-y-0 right-0 z-50 flex w-full max-w-lg flex-col border-l border-slate-200/50 bg-slate-50 shadow-2xl"
+                        className="pb-safe fixed inset-y-0 right-0 z-80 flex w-full max-w-lg flex-col border-l border-slate-200/50 bg-slate-50 shadow-2xl"
                     >
                         {/* Drawer Header */}
                         <div className="flex items-center justify-between border-b border-slate-200/50 bg-white px-6 py-4.5">
@@ -292,7 +292,7 @@ export default function TransactionDrawer({ transactionUlid, open, onClose, perm
                         </div>
 
                         {/* Drawer Actions */}
-                        <div className="border-t border-slate-200/50 bg-white px-6 py-4.5">
+                        <div className="border-t border-slate-200/50 bg-white px-6 pt-4.5 pb-[calc(1.125rem+env(safe-area-inset-bottom))]">
                             <div className="flex gap-2">
                                 {permissions.download_receipts && transaction?.status_label?.toLowerCase() !== 'pending' && (
                                     <button

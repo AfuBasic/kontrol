@@ -198,9 +198,14 @@ class PartnerController extends Controller
             ->whereIn('status', ['pending', 'aggregated'])
             ->sum('commission_amount');
 
+        $totalSettledEarnings = (int) $partner->earnings()
+            ->whereNotNull('settled_at')
+            ->sum('total_amount');
+
         $stats = [
             'total_estates' => $estates->count(),
             'active_estates' => $estates->where('status', 'active')->count(),
+            'total_settled_earnings' => $totalSettledEarnings,
             'pending_commissions' => (int) $partner->earnings()
                 ->whereNull('settled_at')
                 ->where('month', '<', now()->startOfMonth())

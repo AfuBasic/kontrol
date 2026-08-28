@@ -7,6 +7,7 @@ use App\Actions\Auth\GenerateLoginOtp;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Security\PendingDeviceAuthorizationCookie;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,8 +16,12 @@ use Inertia\Response;
 
 class LoginController extends Controller
 {
-    public function show(): Response
+    public function show(Request $request, PendingDeviceAuthorizationCookie $pendingCookie): Response|RedirectResponse
     {
+        if ($request->session()->has('device_authorization_id') || $pendingCookie->read($request) !== null) {
+            return redirect()->route('login.device.show');
+        }
+
         return Inertia::render('Auth/Login');
     }
 

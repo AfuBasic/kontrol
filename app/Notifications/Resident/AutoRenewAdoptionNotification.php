@@ -58,7 +58,7 @@ class AutoRenewAdoptionNotification extends Notification implements ShouldQueue
             'subscription_id' => $this->subscription->id,
             'title' => 'Make your next renewal easier',
             'message' => "Turn on automatic renewal for your Kontrol subscription using your saved {$cardBrand}{$cardLast4}.",
-            'action_url' => '/resident/billing?section=renewal',
+            'action_url' => '/resident/billing/payment',
         ];
     }
 
