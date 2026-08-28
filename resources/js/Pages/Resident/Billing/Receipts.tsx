@@ -109,26 +109,26 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
         <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
             <Head title="Receipts & Payments" />
 
-            <header className="border-b border-slate-200/70 bg-white/95 pt-[env(safe-area-inset-top,0px)]">
-                <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+                <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
                     <Link
                         href={ResidentBillingController.index.url()}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 active:scale-95"
                         aria-label="Back to Billing Hub"
                     >
                         <ArrowLeftIcon className="h-5 w-5" strokeWidth={2.2} />
                     </Link>
 
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase">Billing destination</p>
-                        <h1 className="mt-0.5 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">Receipts & Payments</h1>
+                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase leading-tight">Billing destination</p>
+                        <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Receipts & Payments</h1>
                     </div>
 
                     {isNative && (
                         <button
                             type="button"
                             onClick={openWebApp}
-                            className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 active:scale-95"
+                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-slate-50 active:scale-95"
                             title="Open in Web Browser"
                         >
                             <span className="hidden sm:inline">Browser</span>
