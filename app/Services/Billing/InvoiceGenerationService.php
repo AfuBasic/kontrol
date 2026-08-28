@@ -101,7 +101,8 @@ class InvoiceGenerationService
             $subscription->coupon,
             $subscription->user,
             $estate,
-            $subscription
+            $subscription,
+            true // Automated recurring cycle generation
         );
 
         $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id, $subscription->user_id);
