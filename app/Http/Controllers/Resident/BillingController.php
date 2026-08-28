@@ -23,6 +23,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
+use PdfStudio\Laravel\Facades\Pdf;
 use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class BillingController extends Controller
@@ -158,6 +159,32 @@ class BillingController extends Controller
             'subscription' => $this->formatSubscriptionData($subscription),
             'recentInvoices' => $invoices,
         ]);
+    }
+
+    public function downloadReceipt(Invoice $invoice): \Illuminate\Http\Response
+    {
+        $user = auth()->user();
+        abort_if(! $user || ! $user->contextHasRole(['resident', 'property_owner']), 403, 'Unauthorized.');
+
+        $estate = $this->estateContext->getEstate();
+
+        abort_if(
+            $invoice->user_id !== $user->id || $invoice->estate_id !== $estate->id,
+            404,
+            'Invoice not found.'
+        );
+
+        abort_if(
+            $invoice->status !== 'paid',
+            403,
+            'Receipts can only be downloaded for paid invoices.'
+        );
+
+        $invoice->loadMissing(['estate', 'plan', 'user', 'paymentTransactions']);
+
+        return Pdf::view('pdf.invoice-pdf')
+            ->data(['invoice' => $invoice])
+            ->download("receipt-{$invoice->invoice_number}.pdf");
     }
 
     public function enableAutoRenew(): RedirectResponse
