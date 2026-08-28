@@ -135,10 +135,13 @@ class TransactionController extends Controller
             'filterOptions' => [
                 'residents' => $residents,
                 'collections' => $collections,
-                'types' => collect(TransactionType::cases())->map(fn ($t) => [
-                    'value' => $t->value,
-                    'label' => $t->label(),
-                ]),
+                'types' => collect(TransactionType::cases())
+                    ->reject(fn ($t) => $t === TransactionType::SubscriptionPayment)
+                    ->values()
+                    ->map(fn ($t) => [
+                        'value' => $t->value,
+                        'label' => $t->label(),
+                    ]),
                 'statuses' => collect(TransactionStatus::cases())->map(fn ($s) => [
                     'value' => $s->value,
                     'label' => $s->label(),
