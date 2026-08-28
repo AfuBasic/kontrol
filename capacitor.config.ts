@@ -53,7 +53,7 @@ const config: CapacitorConfig = {
     android: {
         // Hardware acceleration is on by default in modern Capacitor,
         // but we ensure the WebView background matches the app theme to prevent flickering.
-        backgroundColor: '#020617',
+        backgroundColor: '#F8FAFC',
         allowMixedContent: isDev,
         captureInput: true,
         buildOptions: {
@@ -63,7 +63,7 @@ const config: CapacitorConfig = {
     ios: {
         // 'never' allows the app to handle its own safe area padding via CSS env(safe-area-inset-*)
         contentInset: 'never',
-        backgroundColor: '#020617',
+        backgroundColor: '#F8FAFC',
         allowsLinkPreview: true,
     },
     plugins: {
