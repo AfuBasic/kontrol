@@ -9,9 +9,11 @@ use App\Actions\Billing\ProcessResidentPaymentAction;
 use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
+use App\Models\Estate;
 use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
+use App\Models\User;
 use App\Services\Billing\InvoiceGenerationService;
 use App\Services\CouponService;
 use App\Services\EstateContextService;
@@ -20,6 +22,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -161,7 +164,7 @@ class BillingController extends Controller
         ]);
     }
 
-    public function downloadReceipt(Invoice $invoice): \Illuminate\Http\Response
+    public function downloadReceipt(Invoice $invoice): HttpResponse
     {
         $user = auth()->user();
         abort_if(! $user || ! $user->contextHasRole(['resident', 'property_owner']), 403, 'Unauthorized.');
@@ -377,7 +380,7 @@ class BillingController extends Controller
     }
 
     /**
-     * @return array{0: \App\Models\User, 1: \App\Models\Estate, 2: ?\App\Models\ResidentSubscription}
+     * @return array{0: User, 1: Estate, 2: ?ResidentSubscription}
      */
     private function resolveSubscription(): array
     {
