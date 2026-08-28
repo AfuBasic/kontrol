@@ -74,3 +74,37 @@ it('renders the public terms page', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('Public/Terms'));
 });
+
+it('accepts public estate application and redirects with success', function () {
+    $response = $this->post(route('public.apply.post'), [
+        'estateName' => 'Pinecrest Heights',
+        'estateLocation' => 'Lekki Phase 1, Lagos',
+        'contactName' => 'John Doe',
+        'contactEmail' => 'john.pinecrest@example.com',
+        'contactPhone' => '+2348012345678',
+    ]);
+
+    $response->assertRedirect();
+    $response->assertSessionHas('success', 'Application received successfully!');
+
+    $this->assertDatabaseHas('estate_applications', [
+        'estate_name' => 'Pinecrest Heights',
+        'email' => 'john.pinecrest@example.com',
+    ]);
+});
+
+it('returns json response on apply endpoint when requested as json', function () {
+    $response = $this->postJson(route('public.apply.post'), [
+        'estate_name' => 'Summit Valley Estate',
+        'address' => 'Victoria Island, Lagos',
+        'contact_name' => 'Jane Smith',
+        'email' => 'jane.summit@example.com',
+        'phone' => '+2348098765432',
+    ]);
+
+    $response->assertOk()
+        ->assertJson([
+            'status' => 'success',
+            'message' => 'Application received successfully!',
+        ]);
+});
