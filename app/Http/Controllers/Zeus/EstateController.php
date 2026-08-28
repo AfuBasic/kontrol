@@ -185,6 +185,7 @@ class EstateController extends Controller
             'estate' => array_merge($estate->toArray(), [
                 'commission_days_remaining' => $estate->commissionDaysRemaining(),
             ]),
+            'partners' => Partner::active()->orderBy('name')->get(['id', 'name', 'email', 'commission_rate']),
             'residentStats' => $residentStats,
             'analytics' => [
                 'total_revenue' => $totalRevenue,
