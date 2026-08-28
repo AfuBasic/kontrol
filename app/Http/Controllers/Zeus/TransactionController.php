@@ -15,7 +15,7 @@ class TransactionController extends Controller
     public function index(Request $request, TransactionIntelligenceService $intelligenceService): Response
     {
         $query = PaymentTransaction::query()
-            ->with(['estate:id,name', 'invoice.user:id,name,email'])
+            ->with(['estate:id,name', 'user:id,name,email', 'invoice.plan', 'invoice.user:id,name,email'])
             ->latest();
 
         // Filters
