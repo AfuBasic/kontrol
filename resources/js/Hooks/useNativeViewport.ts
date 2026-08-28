@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { Keyboard } from '@capacitor/keyboard';
 import { useEffect } from 'react';
 
 const VIEWPORT_HEIGHT_VARIABLE = '--app-viewport-height';
@@ -94,6 +95,27 @@ export default function useNativeViewport(): void {
 
         scheduleSettledSync();
 
+        // Attach native Capacitor Keyboard listeners for exact pixel-height notifications
+        let showListenerHandle: { remove: () => void } | null = null;
+        let hideListenerHandle: { remove: () => void } | null = null;
+
+        Keyboard.addListener('keyboardWillShow', (info) => {
+            const kh = Math.round(info.keyboardHeight);
+            root.style.setProperty(KEYBOARD_HEIGHT_VARIABLE, `${kh}px`);
+            root.setAttribute(KEYBOARD_OPEN_ATTRIBUTE, 'true');
+            scheduleSettledSync();
+        }).then((handle) => {
+            showListenerHandle = handle;
+        }).catch(() => {});
+
+        Keyboard.addListener('keyboardWillHide', () => {
+            root.style.setProperty(KEYBOARD_HEIGHT_VARIABLE, '0px');
+            root.setAttribute(KEYBOARD_OPEN_ATTRIBUTE, 'false');
+            scheduleSettledSync();
+        }).then((handle) => {
+            hideListenerHandle = handle;
+        }).catch(() => {});
+
         window.addEventListener('resize', scheduleSettledSync);
         window.addEventListener('pageshow', scheduleSettledSync);
         window.addEventListener('focus', scheduleSettledSync);
@@ -109,6 +131,9 @@ export default function useNativeViewport(): void {
             }
 
             timers.forEach((timer) => window.clearTimeout(timer));
+            showListenerHandle?.remove();
+            hideListenerHandle?.remove();
+
             root.style.removeProperty(VIEWPORT_HEIGHT_VARIABLE);
             root.style.removeProperty(KEYBOARD_HEIGHT_VARIABLE);
             root.style.removeProperty(SAFE_AREA_TOP_STABLE_VARIABLE);
