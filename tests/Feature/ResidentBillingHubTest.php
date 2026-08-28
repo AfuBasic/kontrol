@@ -70,6 +70,8 @@ test('billing hub page renders concise 3-destination dashboard without raw plans
         'invoice_number' => 'KTRL-RES-101',
         'amount' => 15000,
         'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
         'status' => 'paid',
         'due_date' => now()->addDays(7),
     ]);
@@ -149,6 +151,8 @@ test('receipts sub-page renders paginated invoice history', function () {
         'invoice_number' => 'KTRL-RES-202',
         'amount' => 15000,
         'resident_count' => 1,
+        'billing_period_start' => now(),
+        'billing_period_end' => now()->addMonth(),
         'status' => 'paid',
         'due_date' => now()->addDays(7),
     ]);
