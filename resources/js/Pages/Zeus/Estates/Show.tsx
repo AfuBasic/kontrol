@@ -166,7 +166,7 @@ export default function EstateShow({
 
         setIsAssigning(true);
         router.patch(
-            updatePartnerAssignment.url({ estate: estate.ulid || estate.id }),
+            updatePartnerAssignment.url({ estate: estate.ulid }),
             {
                 partner_id: Number(selectedPartnerId),
                 reason: assignmentReason || undefined,
@@ -202,7 +202,7 @@ export default function EstateShow({
             router.post(resendInvitation.url({ estate: estate.ulid }), {}, { preserveScroll: true, onFinish });
         } else if (actionToConfirm === 'remove-partner') {
             router.patch(
-                updatePartnerAssignment.url({ estate: estate.ulid || estate.id }),
+                updatePartnerAssignment.url({ estate: estate.ulid }),
                 { partner_id: null, reason: 'Removed partner attribution via Zeus dashboard' },
                 { preserveScroll: true, onFinish }
             );
