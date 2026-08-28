@@ -7,8 +7,6 @@ use App\Models\Plan;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-
-
 test('guests are redirected to zeus login when viewing transactions', function () {
     $response = $this->get(route('zeus.transactions.index'));
 
