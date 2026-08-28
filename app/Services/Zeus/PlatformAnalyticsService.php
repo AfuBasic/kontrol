@@ -51,14 +51,26 @@ class PlatformAnalyticsService
 
         // Total Residents (Actual residents/property owners with accepted memberships)
         $totalResidentsQuery = DB::table('estate_users_membership')
-            ->join('model_has_roles', function ($join) {
-                $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
-                    ->on('estate_users_membership.estate_id', '=', 'model_has_roles.estate_id')
-                    ->where('model_has_roles.model_type', User::class);
-            })
-            ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
             ->where('estate_users_membership.status', 'accepted')
-            ->whereIn('roles.name', ['resident', 'property_owner']);
+            ->where(function ($q) {
+                $q->whereIn('estate_users_membership.relationship_type', ['resident', 'property_owner'])
+                    ->orWhere(function ($sub) {
+                        $sub->whereNull('estate_users_membership.relationship_type')
+                            ->whereExists(function ($roleSub) {
+                                $roleSub->select(DB::raw(1))
+                                    ->from('model_has_roles')
+                                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                    ->whereColumn('model_has_roles.model_id', 'estate_users_membership.user_id')
+                                    ->where('model_has_roles.model_type', User::class)
+                                    ->whereColumn('model_has_roles.estate_id', 'estate_users_membership.estate_id')
+                                    ->whereIn('roles.name', ['resident', 'property_owner']);
+                            });
+                    });
+            })
+            ->where(function ($sub) {
+                $sub->where('estate_users_membership.relationship_type', '!=', 'security')
+                    ->orWhereNull('estate_users_membership.relationship_type');
+            });
 
         $totalResidentsCurrent = (clone $totalResidentsQuery)
             ->distinct('estate_users_membership.user_id')
