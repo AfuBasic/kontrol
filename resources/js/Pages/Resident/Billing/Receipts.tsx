@@ -1,5 +1,7 @@
 import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
+import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import {
     ArrowDownTrayIcon,
     ArrowLeftIcon,
@@ -52,6 +54,19 @@ const formatDate = (iso?: string) => {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const blobToBase64 = (blob: Blob): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const base64data = reader.result as string;
+            const base64 = base64data.split(',')[1];
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+};
+
 export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
     const [isNative, setIsNative] = useState(false);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -76,19 +91,55 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
         setDownloadingId(invoice.id);
 
         const downloadUrl = `/resident/billing/receipts/${invoice.ulid || invoice.id}/download`;
+        const filename = `receipt-${invoice.invoice_number}.pdf`;
 
         try {
+            const response = await axios.get(downloadUrl, {
+                responseType: 'blob',
+            });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+
             if (isNative) {
-                await Browser.open({ url: `${window.location.origin}${downloadUrl}` });
-            } else {
-                const response = await axios.get(downloadUrl, {
-                    responseType: 'blob',
+                // Native iOS/Android: write to device storage and open native save/share sheet
+                const base64Data = await blobToBase64(blob);
+                await Filesystem.writeFile({
+                    path: filename,
+                    data: base64Data,
+                    directory: Directory.Cache,
                 });
-                const blob = new Blob([response.data], { type: 'application/pdf' });
+                const uriResult = await Filesystem.getUri({
+                    directory: Directory.Cache,
+                    path: filename,
+                });
+
+                const canShare = await Share.canShare();
+                if (canShare.value) {
+                    await Share.share({
+                        title: `Receipt #${invoice.invoice_number}`,
+                        dialogTitle: 'Save or Share Receipt',
+                        files: [uriResult.uri],
+                    });
+                }
+            } else {
+                // Mobile Web: Check if Web Share API with files is available
+                const file = new File([blob], filename, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            files: [file],
+                            title: `Receipt #${invoice.invoice_number}`,
+                        });
+                        return;
+                    } catch (shareErr) {
+                        if ((shareErr as Error).name === 'AbortError') return;
+                    }
+                }
+
+                // Desktop/Standard Browser: trigger direct attachment download
                 const blobUrl = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = blobUrl;
-                link.setAttribute('download', `receipt-${invoice.invoice_number}.pdf`);
+                link.setAttribute('download', filename);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
