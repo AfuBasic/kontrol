@@ -1,3 +1,4 @@
+import { Browser } from '@capacitor/browser';
 import { Capacitor } from '@capacitor/core';
 import {
     CheckCircleIcon,
@@ -321,18 +322,26 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const needsAttention = isExpiringSoon || statusKey === 'past_due' || statusKey === 'expired';
 
     const openWebApp = async () => {
+        let url = `${window.location.origin}/resident/billing`;
         try {
             const response = await fetch(ResidentBillingController.generateMagicUrl.url());
             const data = await response.json();
-
             if (data.magic_url) {
-                window.open(data.magic_url, '_blank');
-            } else {
-                window.open(`${window.location.origin}/resident/billing`, '_blank');
+                url = data.magic_url;
             }
         } catch (error) {
             console.error('Failed to generate magic URL', error);
-            window.open(`${window.location.origin}/resident/billing`, '_blank');
+        }
+
+        if (isNative) {
+            try {
+                await Browser.open({ url });
+            } catch (e) {
+                console.warn('Capacitor Browser open failed, fallback to window.open', e);
+                window.open(url, '_system');
+            }
+        } else {
+            window.open(url, '_blank');
         }
     };
 
@@ -461,6 +470,17 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                         <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Billing & Renewal</h1>
                         <p className="text-sm text-slate-500">Manage your subscription, automatic renewal, and receipts.</p>
                     </div>
+                    {isNative && (
+                        <button
+                            type="button"
+                            onClick={openWebApp}
+                            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:bg-slate-50 active:scale-98"
+                            title="Open Billing in Web Browser"
+                        >
+                            <span>Browser</span>
+                            <ArrowTopRightOnSquareIcon className="h-3.5 w-3.5 text-slate-400" strokeWidth={2.2} />
+                        </button>
+                    )}
                 </div>
             </header>
 
