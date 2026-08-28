@@ -830,12 +830,15 @@ html.dark .kontrol-form-validation-error {
     }
 }
 
-/* Native WebViews need natural document scroll to prevent input focus pushing #app offscreen */
+/* Native WebViews need natural document scroll and proper scroll-padding to prevent header overlap */
 html.capacitor-native,
 html.capacitor-native body {
     min-height: 100%;
     overflow-x: hidden;
     background-color: #f8fafc;
+    scroll-padding-top: calc(5rem + env(safe-area-inset-top, 0px));
+    scroll-padding-bottom: calc(var(--app-keyboard-height, 0px) + 2rem);
+    -webkit-overflow-scrolling: touch;
 }
 
 html.dark.capacitor-native,
@@ -847,6 +850,15 @@ html.capacitor-native[data-keyboard-open='true'] [data-mobile-bottom-nav] {
     pointer-events: none;
     opacity: 0 !important;
     visibility: hidden;
+}
+
+/* Prevent auto-zooming and unexpected horizontal shifts on mobile inputs */
+@media screen and (max-width: 768px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='button']):not([type='submit']),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 }
 
 html.capacitor-native[data-keyboard-open='true'] .auth-login-mobile-brand {
