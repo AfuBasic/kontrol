@@ -15,34 +15,85 @@ import {
     Activity,
     ChevronDown,
     RotateCcw,
+    User,
+    Calendar,
+    Receipt,
+    Tag,
+    AlertTriangle,
+    Clock,
+    Hash,
+    ChevronUp,
 } from 'lucide-react';
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import ZeusLayout from '@/Layouts/ZeusLayout';
 
+interface TransactionPlan {
+    id: number;
+    name: string;
+    slug: string;
+    billing_interval: string;
+    price: number;
+}
+
+interface TransactionInvoice {
+    id: number;
+    invoice_number: string;
+    amount: number;
+    resident_count: number;
+    billing_period_start: string;
+    billing_period_end: string;
+    due_date: string;
+    paid_at: string | null;
+    status: string;
+    metadata: {
+        subtotal?: number;
+        coupon_code?: string;
+        discount_amount?: number;
+        finalized_at?: string;
+        attempts?: number;
+    } | null;
+    plan: TransactionPlan | null;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+}
+
+interface TransactionEstate {
+    id: number;
+    name: string;
+    email: string | null;
+    address: string | null;
+    billing_mode: string | null;
+}
+
 interface Transaction {
     id: number;
     paystack_reference: string;
+    provider: string;
+    idempotency_key: string | null;
     amount: number;
+    currency: string;
     status: 'pending' | 'success' | 'failed';
     payment_method: string | null;
     customer_email: string | null;
-    created_at: string;
+    error_code: string | null;
+    error_message: string | null;
     verified_at: string | null;
-    metadata: any;
-    estate: {
+    recorded_at: string | null;
+    last_checked_at: string | null;
+    attempt_count: number;
+    created_at: string;
+    metadata: Record<string, unknown> | null;
+    estate: TransactionEstate | null;
+    user: {
         id: number;
         name: string;
+        email: string;
     } | null;
-    invoice?: {
-        id: number;
-        invoice_number: string;
-        user?: {
-            id: number;
-            name: string;
-            email: string;
-        };
-    };
+    invoice: TransactionInvoice | null;
 }
 
 interface Stats {
@@ -454,6 +505,27 @@ export default function TransactionsIndex({ transactions, estates, filters, stat
     );
 }
 
+function DetailRow({ label, value, mono = false, icon: Icon }: { label: string; value: React.ReactNode; mono?: boolean; icon?: React.ElementType }) {
+    if (!value && value !== 0) {
+        return null;
+    }
+    return (
+        <div className="flex flex-col gap-1">
+            <p className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">
+                {Icon && <Icon className="h-3 w-3" />}
+                {label}
+            </p>
+            <p className={`text-sm font-semibold text-slate-900 dark:text-white ${mono ? 'font-mono text-xs tracking-tight' : ''}`}>{value}</p>
+        </div>
+    );
+}
+
+function SectionHeading({ children }: { children: React.ReactNode }) {
+    return (
+        <p className="mb-5 text-[10px] font-bold tracking-widest text-indigo-500 uppercase dark:text-indigo-400">{children}</p>
+    );
+}
+
 function TransactionDetailModal({
     transaction,
     onClose,
@@ -465,99 +537,250 @@ function TransactionDetailModal({
     formatCurrency: (amount: number) => string;
     formatDate: (date: string) => string;
 }) {
+    const [metaOpen, setMetaOpen] = useState(false);
+
+    const payer = transaction.user ?? transaction.invoice?.user ?? null;
+    const inv = transaction.invoice;
+    const hasDiscount = inv?.metadata?.discount_amount && inv.metadata.discount_amount > 0;
+    const hasCoupon = !!inv?.metadata?.coupon_code;
+    const hasError = transaction.status !== 'success' && (transaction.error_code || transaction.error_message);
+
+    const billingModeLabel: Record<string, string> = {
+        estate_pays: 'Estate Pays',
+        resident_pays: 'Resident Pays',
+    };
+
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm dark:bg-black/60"
+                className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm dark:bg-black/70"
             />
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                initial={{ opacity: 0, scale: 0.96, y: 24 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[40px] bg-white shadow-2xl dark:bg-[#0f1423] dark:ring-1 dark:ring-white/10"
+                exit={{ opacity: 0, scale: 0.96, y: 24 }}
+                transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+                className="relative z-10 w-full max-w-2xl overflow-hidden rounded-[36px] bg-white shadow-2xl dark:bg-[#0c1020] dark:ring-1 dark:ring-white/10"
             >
-                <div className="flex items-center justify-between border-b border-slate-50 bg-slate-50/30 px-10 py-8 dark:border-slate-800/50 dark:bg-slate-800/20">
+                {/* Header */}
+                <div className="flex items-center justify-between border-b border-slate-100 bg-white px-8 py-6 dark:border-slate-800/50 dark:bg-[#0c1020]">
                     <div>
-                        <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">Transaction Details</h2>
-                        <p className="mt-1 flex items-center gap-2 font-mono text-xs tracking-tighter text-slate-400 uppercase">
+                        <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Transaction Details</h2>
+                        <p className="mt-0.5 font-mono text-[11px] tracking-tight text-slate-400 dark:text-slate-500">
                             {transaction.paystack_reference}
-                            <div className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-                            ID #{transaction.id}
                         </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="rounded-2xl bg-slate-100 p-3 transition-colors hover:bg-slate-200 active:scale-90 dark:bg-slate-800 dark:hover:bg-slate-700"
+                        className="rounded-2xl bg-slate-100 p-2.5 transition-colors hover:bg-slate-200 active:scale-90 dark:bg-slate-800 dark:hover:bg-slate-700"
                     >
-                        <X className="h-5 w-5 text-slate-900 dark:text-white" />
+                        <X className="h-5 w-5 text-slate-600 dark:text-slate-300" />
                     </button>
                 </div>
 
-                <div className="max-h-[70vh] overflow-y-auto px-10 py-10">
-                    <div className="mb-10 flex flex-col items-center justify-center rounded-[32px] bg-slate-900 py-10 text-white shadow-xl shadow-slate-900/10 dark:bg-indigo-500/10 dark:ring-1 dark:ring-indigo-500/20">
-                        <p className="text-[11px] font-bold tracking-widest text-slate-400 uppercase dark:text-indigo-300/70">Paid Amount</p>
-                        <p className="mt-2 text-5xl font-black dark:text-indigo-100">{formatCurrency(transaction.amount)}</p>
-                        <div className="mt-6">
+                <div className="max-h-[78vh] overflow-y-auto">
+                    {/* Hero Amount Banner */}
+                    <div className="flex flex-col items-center justify-center gap-4 bg-slate-950 px-8 py-10 dark:bg-indigo-500/10 dark:ring-1 dark:ring-inset dark:ring-indigo-500/20">
+                        <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase dark:text-indigo-300/60">Amount Charged</p>
+                        <p className="text-5xl font-black tracking-tight text-white dark:text-indigo-100">
+                            {formatCurrency(transaction.amount)}
+                            <span className="ml-2 text-xl font-bold text-slate-500 dark:text-indigo-400/70">{transaction.currency}</span>
+                        </p>
+                        <div className="flex items-center gap-2">
                             {transaction.status === 'success' ? (
                                 <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-4 py-1.5 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                                     <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                                    Transaction Successful
+                                    Paid Successfully
                                 </span>
-                            ) : (
+                            ) : transaction.status === 'failed' ? (
                                 <span className="inline-flex items-center gap-2 rounded-full bg-rose-500/20 px-4 py-1.5 text-xs font-bold text-rose-400 ring-1 ring-rose-500/30">
                                     <div className="h-1.5 w-1.5 rounded-full bg-rose-400" />
-                                    {transaction.status}
+                                    Failed
+                                </span>
+                            ) : (
+                                <span className="inline-flex items-center gap-2 rounded-full bg-amber-500/20 px-4 py-1.5 text-xs font-bold text-amber-400 ring-1 ring-amber-500/30">
+                                    <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-400" />
+                                    Pending
                                 </span>
                             )}
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800/80 px-3 py-1.5 text-[11px] font-bold text-slate-300 capitalize dark:bg-white/5">
+                                <CreditCard className="h-3 w-3" />
+                                {transaction.provider}
+                            </span>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-x-12 gap-y-10">
-                        <div>
-                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Estate Entity</p>
-                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">{transaction.estate?.name || 'Kontrol HQ'}</p>
-                            <p className="text-[11px] font-medium text-slate-500">ID: {transaction.estate?.id || 'SYSTEM'}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Customer / Resident</p>
-                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">
-                                {transaction.invoice?.user?.name || 'Bulk / System Payment'}
-                            </p>
-                            <p className="text-[11px] font-medium text-slate-500">{transaction.invoice?.user?.email || transaction.customer_email}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Payment Method</p>
-                            <div className="mt-2 flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
-                                <CreditCard className="h-4 w-4 text-slate-400" />
-                                {transaction.payment_method || 'Paystack Gateway'}
+                    {/* Error Banner — failed/pending only */}
+                    {hasError && (
+                        <div className="mx-6 mt-6 flex items-start gap-3 rounded-2xl bg-rose-50 px-5 py-4 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:ring-rose-500/20">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
+                            <div>
+                                {transaction.error_code && (
+                                    <p className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
+                                        Code: {transaction.error_code}
+                                    </p>
+                                )}
+                                {transaction.error_message && (
+                                    <p className="mt-0.5 text-xs text-rose-600 dark:text-rose-300">{transaction.error_message}</p>
+                                )}
                             </div>
                         </div>
-                        <div>
-                            <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Verified At</p>
-                            <p className="mt-2 text-sm font-black text-slate-900 dark:text-white">
-                                {transaction.verified_at ? formatDate(transaction.verified_at) : 'Not yet verified'}
-                            </p>
-                        </div>
-                    </div>
+                    )}
 
-                    <div className="mt-12">
-                        <p className="mb-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase">Transaction Metadata (JSON)</p>
-                        <div className="rounded-[24px] border border-slate-100 bg-slate-50 p-6 font-mono text-[11px] leading-relaxed text-slate-600 shadow-inner dark:border-slate-800/50 dark:bg-[#0a0e17] dark:text-slate-400">
-                            <pre className="whitespace-pre-wrap">{JSON.stringify(transaction.metadata, null, 2)}</pre>
+                    <div className="space-y-8 px-8 py-8">
+                        {/* Section 1 — Payment Details */}
+                        <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
+                            <SectionHeading>Payment Details</SectionHeading>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                                <DetailRow label="Transaction Ref" value={transaction.paystack_reference} mono icon={Hash} />
+                                {inv && <DetailRow label="Invoice Number" value={inv.invoice_number} mono icon={Receipt} />}
+                                <DetailRow
+                                    label="Payment Method"
+                                    value={
+                                        <span className="inline-flex items-center gap-1.5 capitalize">
+                                            <CreditCard className="h-3.5 w-3.5 text-slate-400" />
+                                            {transaction.payment_method?.replace(/_/g, ' ') || 'Paystack Gateway'}
+                                        </span>
+                                    }
+                                    icon={CreditCard}
+                                />
+                                <DetailRow label="Attempt Count" value={`${transaction.attempt_count} attempt${transaction.attempt_count !== 1 ? 's' : ''}`} icon={RotateCcw} />
+                                <DetailRow label="Initiated At" value={formatDate(transaction.created_at)} icon={Clock} />
+                                <DetailRow
+                                    label="Paid / Verified At"
+                                    value={transaction.verified_at ? formatDate(transaction.verified_at) : <span className="text-slate-400">Not yet verified</span>}
+                                    icon={CheckCircle2}
+                                />
+                                {transaction.recorded_at && (
+                                    <DetailRow label="Recorded At" value={formatDate(transaction.recorded_at)} icon={Clock} />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Section 2 — Who Paid */}
+                        <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
+                            <SectionHeading>Who Paid</SectionHeading>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                                <DetailRow
+                                    label="Payer Name"
+                                    value={payer?.name || <span className="text-slate-400">System / Bulk Payment</span>}
+                                    icon={User}
+                                />
+                                <DetailRow
+                                    label="Payer Email"
+                                    value={payer?.email || transaction.customer_email || <span className="text-slate-400">—</span>}
+                                    icon={User}
+                                />
+                                {payer?.id && (
+                                    <DetailRow label="User ID" value={`#${payer.id}`} mono icon={Hash} />
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Section 3 — What They Paid For */}
+                        {inv && (
+                            <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
+                                <SectionHeading>What They Paid For</SectionHeading>
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+                                    {inv.plan && (
+                                        <>
+                                            <DetailRow label="Plan" value={inv.plan.name} icon={Tag} />
+                                            <DetailRow
+                                                label="Billing Interval"
+                                                value={<span className="capitalize">{inv.plan.billing_interval.replace(/-/g, ' ')}</span>}
+                                                icon={Calendar}
+                                            />
+                                        </>
+                                    )}
+                                    <DetailRow
+                                        label="Estate"
+                                        value={
+                                            <span>
+                                                {transaction.estate?.name}
+                                                {transaction.estate?.billing_mode && (
+                                                    <span className="ml-2 rounded-md bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                                                        {billingModeLabel[transaction.estate.billing_mode] ?? transaction.estate.billing_mode}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        }
+                                        icon={Building2}
+                                    />
+                                    <DetailRow label="Resident Count" value={`${inv.resident_count} resident${inv.resident_count !== 1 ? 's' : ''}`} icon={User} />
+                                    {inv.billing_period_start && (
+                                        <DetailRow
+                                            label="Billing Period"
+                                            value={`${new Date(inv.billing_period_start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} → ${new Date(inv.billing_period_end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                                            icon={Calendar}
+                                        />
+                                    )}
+
+                                    {/* Pricing breakdown */}
+                                    {inv.metadata?.subtotal != null && (
+                                        <DetailRow label="Original Subtotal" value={formatCurrency(inv.metadata.subtotal)} icon={DollarSign} />
+                                    )}
+                                    {hasCoupon && (
+                                        <DetailRow
+                                            label="Coupon Applied"
+                                            value={
+                                                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20">
+                                                    {inv.metadata!.coupon_code}
+                                                </span>
+                                            }
+                                            icon={Tag}
+                                        />
+                                    )}
+                                    {hasDiscount && (
+                                        <DetailRow
+                                            label="Discount Applied"
+                                            value={<span className="text-emerald-600 dark:text-emerald-400">− {formatCurrency(inv.metadata!.discount_amount!)}</span>}
+                                            icon={Tag}
+                                        />
+                                    )}
+                                    <DetailRow
+                                        label="Final Charge"
+                                        value={<span className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(transaction.amount)}</span>}
+                                        icon={DollarSign}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Section 4 — Raw Metadata (collapsed) */}
+                        <div className="rounded-3xl border border-slate-100 dark:border-slate-800/50">
+                            <button
+                                onClick={() => setMetaOpen((o) => !o)}
+                                className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
+                            >
+                                <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Raw Metadata</p>
+                                {metaOpen ? (
+                                    <ChevronUp className="h-4 w-4 text-slate-400" />
+                                ) : (
+                                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                                )}
+                            </button>
+                            {metaOpen && (
+                                <div className="border-t border-slate-100 px-6 pb-6 dark:border-slate-800/50">
+                                    <pre className="mt-4 whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 font-mono text-[11px] leading-relaxed text-slate-600 dark:bg-[#0a0e17] dark:text-slate-400">
+                                        {JSON.stringify({ transaction: transaction.metadata, invoice: transaction.invoice?.metadata }, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className="border-t border-slate-50 bg-slate-50/20 px-10 py-6 dark:border-slate-800/50 dark:bg-slate-800/10">
+                {/* Footer */}
+                <div className="border-t border-slate-100 bg-slate-50/40 px-8 py-5 dark:border-slate-800/50 dark:bg-slate-800/10">
                     <button
                         onClick={onClose}
-                        className="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-95 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                        className="w-full rounded-2xl bg-indigo-600 py-3.5 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-95 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                     >
-                        Dismiss Details
+                        Dismiss
                     </button>
                 </div>
             </motion.div>
