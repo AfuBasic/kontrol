@@ -464,6 +464,9 @@ export default function CreateCoupon({ estates, residents, plans }: Props) {
                                             Description (Optional)
                                         </label>
                                         <textarea
+                                            autoCorrect="on"
+                                            autoCapitalize="sentences"
+                                            spellCheck={true}
                                             value={data.description}
                                             onChange={(e) => setData('description', e.target.value)}
                                             placeholder="Describe what this coupon does..."

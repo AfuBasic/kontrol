@@ -34,7 +34,7 @@ window.Echo = new Echo({
     },
     // pusher-js reads headers once at construct unless headersProvider is used.
     authorizer: (channel: { name: string }, options: { authEndpoint?: string; auth?: { headers?: Record<string, string> } }) => ({
-        authorize: (socketId: string, callback: (error: boolean, data: unknown) => void) => {
+        authorize: (socketId: string, callback: any) => {
             const body = new URLSearchParams({
                 socket_id: socketId,
                 channel_name: channel.name,

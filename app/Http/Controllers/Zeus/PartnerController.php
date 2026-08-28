@@ -6,8 +6,14 @@ use App\Actions\Zeus\InvitePartnerMemberAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Zeus\InvitePartnerMemberRequest;
 use App\Mail\Zeus\PartnerMemberInvitationMail;
+use App\Models\CommissionableRevenue;
+use App\Models\Estate;
 use App\Models\Partner;
+use App\Models\PartnerEarning;
+use App\Models\PaymentTransaction;
 use App\Models\User;
+use App\Services\Zeus\SettlementInboxService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +23,10 @@ use Inertia\Response;
 
 class PartnerController extends Controller
 {
+    public function __construct(
+        private SettlementInboxService $settlementInbox,
+    ) {}
+
     public function index(Request $request): Response
     {
         $query = Partner::orderBy('name');
@@ -56,6 +66,185 @@ class PartnerController extends Controller
                 'search' => $request->search,
                 'status' => $request->status,
             ],
+        ]);
+    }
+
+    public function show(Partner $partner): Response
+    {
+        $this->settlementInbox->hydrateOpenPeriods();
+
+        $appDomain = config('domains.app');
+        $scheme = app()->environment('local') ? 'http' : 'https';
+
+        $rawEstates = $partner->estates()
+            ->orderBy('name')
+            ->get();
+
+        $partnerEstateIds = $rawEstates->pluck('id')->all();
+
+        // Batch aggregate metrics for all partner estates
+        $estateRevenues = ! empty($partnerEstateIds)
+            ? PaymentTransaction::whereIn('estate_id', $partnerEstateIds)
+                ->where('status', 'success')
+                ->groupBy('estate_id')
+                ->selectRaw('estate_id, COALESCE(SUM(amount), 0) as total_revenue')
+                ->pluck('total_revenue', 'estate_id')
+            : collect();
+
+        $estateCommissions = ! empty($partnerEstateIds)
+            ? CommissionableRevenue::whereIn('estate_id', $partnerEstateIds)
+                ->where('partner_id', $partner->id)
+                ->groupBy('estate_id')
+                ->selectRaw('estate_id, COALESCE(SUM(commission_amount), 0) as total_commission')
+                ->pluck('total_commission', 'estate_id')
+            : collect();
+
+        $estateResidentCounts = ! empty($partnerEstateIds)
+            ? DB::table('estate_users_membership')
+                ->join('model_has_roles', function ($join) {
+                    $join->on('estate_users_membership.user_id', '=', 'model_has_roles.model_id')
+                        ->on('estate_users_membership.estate_id', '=', 'model_has_roles.estate_id')
+                        ->where('model_has_roles.model_type', User::class);
+                })
+                ->join('roles', 'model_has_roles.role_id', '=', 'roles.id')
+                ->whereIn('estate_users_membership.estate_id', $partnerEstateIds)
+                ->where('estate_users_membership.status', 'accepted')
+                ->whereIn('roles.name', ['resident', 'property_owner'])
+                ->groupBy('estate_users_membership.estate_id')
+                ->selectRaw('estate_users_membership.estate_id, COUNT(DISTINCT estate_users_membership.user_id) as total')
+                ->pluck('total', 'estate_id')
+            : collect();
+
+        $estates = $rawEstates->map(function (Estate $estate) use ($estateRevenues, $estateCommissions, $estateResidentCounts) {
+            return [
+                'id' => $estate->id,
+                'ulid' => $estate->ulid,
+                'name' => $estate->name,
+                'code' => $estate->code ?? null,
+                'email' => $estate->email,
+                'address' => $estate->address,
+                'status' => $estate->status,
+                'created_at' => $estate->created_at?->toIso8601String(),
+                'activation_date' => $estate->activation_date?->format('Y-m-d'),
+                'partner_date' => $estate->partner_date?->format('Y-m-d'),
+                'commission_starts_at' => $estate->commission_starts_at?->format('Y-m-d'),
+                'commission_ends_at' => $estate->commission_ends_at?->format('Y-m-d'),
+                'partner_status' => $estate->partner_status?->value ?? (string) $estate->partner_status,
+                'commission_status' => $estate->commission_status?->value ?? (string) $estate->commission_status,
+                'residents_count' => (int) ($estateResidentCounts->get($estate->id) ?? 0),
+                'total_revenue' => (int) ($estateRevenues->get($estate->id) ?? 0),
+                'commission_earned' => (int) ($estateCommissions->get($estate->id) ?? 0),
+            ];
+        });
+
+        $earnings = $partner->earnings()
+            ->orderByDesc('month')
+            ->get()
+            ->map(fn (PartnerEarning $earning) => [
+                'id' => $earning->id,
+                'month' => $earning->month->format('Y-m-01'),
+                'month_label' => $earning->month->format('F Y'),
+                'total_amount' => $earning->total_amount,
+                'revenue_amount' => $earning->revenue_amount,
+                'settled_at' => $earning->settled_at?->toDateTimeString(),
+                'is_settled' => $earning->isSettled(),
+                'is_pending' => $earning->isPendingSettlement() && ! $earning->isAccruing(),
+                'is_accruing' => $earning->isAccruing(),
+                'status' => $earning->statusKey(),
+                'status_label' => $earning->statusLabel(),
+                'payment_reference_masked' => $earning->maskedPaymentReference(),
+                'payment_note' => $earning->payment_note,
+            ]);
+
+        $recentCommissions = $partner->commissionableRevenues()
+            ->with(['estate:id,name', 'user:id,name,email'])
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->map(fn (CommissionableRevenue $cr) => [
+                'id' => $cr->id,
+                'estate_name' => $cr->estate?->name ?? 'Unknown Estate',
+                'user_name' => $cr->user?->name ?? 'Anonymous',
+                'user_email' => $cr->user?->email,
+                'revenue_amount' => $cr->revenue_amount,
+                'commission_amount' => $cr->commission_amount,
+                'status' => $cr->status,
+                'created_at' => $cr->created_at?->toIso8601String(),
+            ]);
+
+        $members = $partner->members()
+            ->with('profile')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($m) => [
+                'id' => $m->id,
+                'name' => $m->name,
+                'email' => $m->email,
+                'phone' => $m->profile?->phone,
+                'email_verified_at' => $m->email_verified_at?->toIso8601String(),
+                'suspended_at' => $m->suspended_at?->toIso8601String(),
+                'created_at' => $m->created_at->toIso8601String(),
+            ]);
+
+        $totalGrossRevenue = (int) $estateRevenues->sum();
+
+        $pendingCommissions = (int) $partner->earnings()
+            ->whereNull('settled_at')
+            ->where('month', '<', now()->startOfMonth())
+            ->sum('total_amount');
+
+        $accruingCommissions = (int) $partner->commissionableRevenues()
+            ->where('created_at', '>=', now()->startOfMonth())
+            ->whereIn('status', ['pending', 'aggregated'])
+            ->sum('commission_amount');
+
+        $stats = [
+            'total_estates' => $estates->count(),
+            'active_estates' => $estates->where('status', 'active')->count(),
+            'pending_commissions' => (int) $partner->earnings()
+                ->whereNull('settled_at')
+                ->where('month', '<', now()->startOfMonth())
+                ->sum('total_amount'),
+            'accruing_commissions' => (int) $partner->commissionableRevenues()
+                ->where('created_at', '>=', now()->startOfMonth())
+                ->whereIn('status', ['pending', 'aggregated'])
+                ->sum('commission_amount'),
+            'total_unpaid_commissions' => $pendingCommissions + $accruingCommissions,
+            'total_gross_revenue' => $totalGrossRevenue,
+            'next_settlement_date' => CarbonImmutable::now()->addMonthNoOverflow()->startOfMonth()->format('Y-m-d'),
+        ];
+
+        return Inertia::render('Zeus/Partners/Show', [
+            'partner' => [
+                'id' => $partner->id,
+                'name' => $partner->name,
+                'email' => $partner->email,
+                'phone' => $partner->phone,
+                'website' => $partner->website,
+                'contact_person' => $partner->contact_person,
+                'description' => $partner->description,
+                'notes' => $partner->notes,
+                'commission_type' => $partner->commission_type,
+                'commission_rate' => $partner->commission_type === 'fixed'
+                    ? $partner->commission_rate / 100
+                    : $partner->commission_rate,
+                'commission_length' => $partner->commission_length,
+                'status' => $partner->status,
+                'api_key' => $partner->api_key,
+                'has_bank_account' => $partner->hasVerifiedBankAccount(),
+                'bank_name' => $partner->bank_name,
+                'account_name' => $partner->account_name,
+                'account_number_masked' => $partner->maskedAccountNumber(),
+                'account_number' => $partner->account_number,
+                'account_verified_at' => $partner->account_verified_at?->toIso8601String(),
+                'created_at' => $partner->created_at?->toIso8601String(),
+            ],
+            'estates' => $estates,
+            'earnings' => $earnings,
+            'recentCommissions' => $recentCommissions,
+            'members' => $members,
+            'stats' => $stats,
+            'partnerPortalUrl' => "$scheme://$appDomain/login",
         ]);
     }
 

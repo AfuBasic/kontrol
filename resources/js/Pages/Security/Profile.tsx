@@ -1,8 +1,9 @@
 import { Capacitor } from '@capacitor/core';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Building2, Check, ChevronRight, Eye, EyeOff, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
+import { Building2, Check, ChevronRight, Eye, EyeOff, HelpCircle, KeyRound, LogOut, Mail, Pencil, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Security/ProfileController';
@@ -137,6 +138,13 @@ export default function ProfilePage({ user, estateName }: Props) {
                         }}
                     />
                 )}
+
+                <ActionRow
+                    icon={<HelpCircle className="h-4 w-4" strokeWidth={2.2} />}
+                    label="Help & support"
+                    sub="Call, WhatsApp, or email support"
+                    onClick={() => router.visit(SupportController.index.url())}
+                />
             </section>
 
             {/* Logout */}

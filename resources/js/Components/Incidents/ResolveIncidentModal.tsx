@@ -91,6 +91,9 @@ export default function ResolveIncidentModal({
                         </div>
 
                         <textarea
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            spellCheck={true}
                             value={notes}
                             onChange={(e) => {
                                 setNotes(e.target.value);

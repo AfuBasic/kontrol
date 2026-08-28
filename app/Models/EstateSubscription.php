@@ -76,6 +76,7 @@ class EstateSubscription extends Model
         'override_notes',
         'billing_anchor_day',
         'next_billing_date',
+        'auto_renew_enabled',
     ];
 
     protected $casts = [
@@ -86,6 +87,7 @@ class EstateSubscription extends Model
         'updated_at' => 'datetime',
         'paystack_authorization_code' => 'encrypted',
         'paystack_customer_code' => 'encrypted',
+        'auto_renew_enabled' => 'boolean',
     ];
 
     /**
@@ -106,7 +108,17 @@ class EstateSubscription extends Model
 
     public function hasSavedCard(): bool
     {
-        return ! empty($this->paystack_authorization_code);
+        $raw = $this->getRawOriginal('paystack_authorization_code');
+
+        if (empty($raw)) {
+            return false;
+        }
+
+        try {
+            return ! empty($this->paystack_authorization_code);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function isActive(): bool

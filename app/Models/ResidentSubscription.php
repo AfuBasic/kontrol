@@ -69,6 +69,8 @@ class ResidentSubscription extends Model
         'current_period_end',
         'last_paid_at',
         'last_reminded_at',
+        'auto_renew_enabled',
+        'auto_renew_opted_out',
     ];
 
     /**
@@ -87,6 +89,8 @@ class ResidentSubscription extends Model
             'paystack_authorization_code' => 'encrypted',
             'paystack_customer_code' => 'encrypted',
             'plan_id' => 'integer',
+            'auto_renew_enabled' => 'boolean',
+            'auto_renew_opted_out' => 'boolean',
         ];
     }
 
@@ -126,7 +130,17 @@ class ResidentSubscription extends Model
 
     public function hasSavedCard(): bool
     {
-        return ! empty($this->paystack_authorization_code);
+        $raw = $this->getRawOriginal('paystack_authorization_code');
+
+        if (empty($raw)) {
+            return false;
+        }
+
+        try {
+            return ! empty($this->paystack_authorization_code);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     public function isActive(): bool

@@ -244,6 +244,9 @@ export default function Show({ incident, official_comments = [], discussion_comm
 
                                 <form onSubmit={handlePostOfficialUpdate} className="space-y-3" noValidate>
                                     <textarea
+                                        autoCorrect="on"
+                                        autoCapitalize="sentences"
+                                        spellCheck={true}
                                         value={officialUpdateText}
                                         onChange={(e) => setOfficialUpdateText(e.target.value)}
                                         placeholder="Share a security update..."

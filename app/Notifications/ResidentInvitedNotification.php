@@ -117,17 +117,17 @@ class ResidentInvitedNotification extends Notification implements ShouldQueue
                 ->title($data['title'])
                 ->body($data['message'])
             )
-            ->android([
-                'priority' => 'high',
-                'notification' => [
-                    'title' => $data['title'],
-                    'body' => $data['message'],
-                    'color' => '#0A3D91',
-                    'sound' => 'default',
-                    'channel_id' => 'kontrol_v1_alerts',
-                ],
-            ])
             ->custom([
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'title' => $data['title'],
+                        'body' => $data['message'],
+                        'color' => '#0A3D91',
+                        'sound' => 'default',
+                        'channel_id' => 'kontrol_v1_alerts',
+                    ],
+                ],
                 'apns' => [
                     'payload' => [
                         'aps' => [

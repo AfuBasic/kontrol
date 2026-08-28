@@ -260,9 +260,6 @@ class CouponController extends Controller
         }
 
         $usageLimit = $validated['usage_limit'] ?? null;
-        if (in_array($validated['scope'], ['estate', 'resident']) && is_null($usageLimit)) {
-            $usageLimit = 1;
-        }
 
         $eligiblePlans = $validated['eligible_plans'] ?? null;
 

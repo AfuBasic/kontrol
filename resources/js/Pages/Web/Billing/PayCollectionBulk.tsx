@@ -111,37 +111,24 @@ export default function PayCollectionBulk({ assignments, paystackKey, totalAmoun
                 return;
             }
 
-            const subaccount =
-                data.subaccount && !String(data.subaccount).startsWith('ACCT_estate') && !String(data.subaccount).startsWith('ACCT_landlord')
-                    ? data.subaccount
-                    : null;
-
-            const validEmail = data.email && String(data.email).includes('@') ? data.email : firstAssignment.user?.email || 'support@usekontrol.com';
+            if (!data.access_code) {
+                setErrorMessage('Payment gateway initialization failed. Missing access code.');
+                setIsProcessing(false);
+                return;
+            }
 
             const statusUrlFor = (ref: string) => `/billing/collection/status/${encodeURIComponent(ref)}`;
 
             const setupOptions: Record<string, unknown> = {
                 key: paystackKey,
-                email: validEmail,
-                amount: amountKobo,
-                ref: data.reference,
-                channels: ['bank_transfer'],
-                callback_url: statusUrlFor(data.reference),
+                access_code: data.access_code,
                 onClose: () => {
                     setIsProcessing(false);
                 },
                 callback: (paystackResponse: { reference: string }) => {
-                    window.location.href = statusUrlFor(paystackResponse.reference);
+                    window.location.href = statusUrlFor(paystackResponse.reference || data.reference);
                 },
             };
-
-            if (subaccount) {
-                setupOptions.subaccount = subaccount;
-                setupOptions.bearer = data.bearer || 'account';
-                if (data.transaction_charge) {
-                    setupOptions.transaction_charge = data.transaction_charge;
-                }
-            }
 
             const handler = window.PaystackPop.setup(setupOptions);
             handler.openIframe();

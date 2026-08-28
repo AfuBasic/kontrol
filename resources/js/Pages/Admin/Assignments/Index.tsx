@@ -6,6 +6,7 @@ import { activate, create, deactivate, destroy, edit, index } from '@/actions/Ap
 import AuthorityEmptyState from '@/Components/Admin/Assignments/AuthorityEmptyState';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useDebounce } from '@/Hooks/useDebounce';
+import { usePermission } from '@/Hooks/usePermission';
 
 type AssignmentUser = {
     id: number | null;
@@ -48,6 +49,7 @@ type Props = {
 
 export default function AssignmentsIndex({ assignments, filters, has_assignable_roles, has_assignable_users }: Props) {
     const { confirm } = useAdminConfirmation();
+    const { can } = usePermission();
     const [search, setSearch] = useState(filters.search || '');
     const [status, setStatus] = useState(filters.status || '');
     const [scopeType, setScopeType] = useState(filters.scope_type || '');
@@ -57,7 +59,7 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
 
     const isZeroData = assignments.total === 0 && !filters.search && !filters.status && !filters.scope_type;
     const isSearchEmpty = assignments.total === 0 && !isZeroData;
-    const canAssignAuthority = has_assignable_roles && has_assignable_users;
+    const canAssignAuthority = can('assignments.create') && has_assignable_roles && has_assignable_users;
 
     useEffect(() => {
         if (debouncedSearch !== (filters.search || '')) {
@@ -123,15 +125,17 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
                         Manage the people responsible for operating your estate and the areas they can manage.
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Link
-                        href={create.url()}
-                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
-                    >
-                        <PlusIcon className="h-4 w-4" strokeWidth={3} />
-                        Assign Authority
-                    </Link>
-                </div>
+                {can('assignments.create') && (
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href={create.url()}
+                            className="flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4.5 py-2.5 text-xs font-black tracking-wide text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
+                        >
+                            <PlusIcon className="h-4 w-4" strokeWidth={3} />
+                            Assign Authority
+                        </Link>
+                    </div>
+                )}
             </div>
 
             {isZeroData ? (
@@ -293,56 +297,64 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
 
                                                     {/* Actions */}
                                                     <td className="relative px-4 py-3.5 text-right">
-                                                        {!assignment.is_primary && (
+                                                        {!assignment.is_primary && (can('assignments.edit') || can('assignments.delete')) && (
                                                             <div className="flex items-center justify-end gap-1">
-                                                                <Link
-                                                                    href={edit.url(assignment.id)}
-                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                    title="Edit Assignment"
-                                                                >
-                                                                    <Pencil className="h-3.5 w-3.5" />
-                                                                </Link>
+                                                                {can('assignments.edit') && (
+                                                                    <Link
+                                                                        href={edit.url(assignment.id)}
+                                                                        className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                        title="Edit Assignment"
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5" />
+                                                                    </Link>
+                                                                )}
 
-                                                                <button
-                                                                    onClick={() => setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)}
-                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                >
-                                                                    <EllipsisVerticalIcon className="h-4 w-4" />
-                                                                </button>
+                                                                {(can('assignments.edit') || can('assignments.delete')) && (
+                                                                    <button
+                                                                        onClick={() => setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)}
+                                                                        className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                    >
+                                                                        <EllipsisVerticalIcon className="h-4 w-4" />
+                                                                    </button>
+                                                                )}
 
                                                                 {menuOpenId === assignment.id && (
                                                                     <>
                                                                         <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
                                                                         <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    handleToggleActive(assignment);
-                                                                                    setMenuOpenId(null);
-                                                                                }}
-                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                            >
-                                                                                {assignment.is_active ? (
-                                                                                    <>
-                                                                                        <UserMinus className="h-3.5 w-3.5 text-amber-500" />
-                                                                                        Deactivate Authority
-                                                                                    </>
-                                                                                ) : (
-                                                                                    <>
-                                                                                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                                                                        Activate Authority
-                                                                                    </>
-                                                                                )}
-                                                                            </button>
-                                                                            <button
-                                                                                onClick={() => {
-                                                                                    handleDelete(assignment);
-                                                                                    setMenuOpenId(null);
-                                                                                }}
-                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
-                                                                            >
-                                                                                <Trash2 className="h-3.5 w-3.5" />
-                                                                                Delete Authority
-                                                                            </button>
+                                                                            {can('assignments.edit') && (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        handleToggleActive(assignment);
+                                                                                        setMenuOpenId(null);
+                                                                                    }}
+                                                                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                                >
+                                                                                    {assignment.is_active ? (
+                                                                                        <>
+                                                                                            <UserMinus className="h-3.5 w-3.5 text-amber-500" />
+                                                                                            Deactivate Authority
+                                                                                        </>
+                                                                                    ) : (
+                                                                                        <>
+                                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                                                            Activate Authority
+                                                                                        </>
+                                                                                    )}
+                                                                                </button>
+                                                                            )}
+                                                                            {can('assignments.delete') && (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        handleDelete(assignment);
+                                                                                        setMenuOpenId(null);
+                                                                                    }}
+                                                                                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                                >
+                                                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                                                    Delete Authority
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                     </>
                                                                 )}

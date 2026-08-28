@@ -17,6 +17,7 @@ interface Transaction {
     direction: string;
     payment_method_label: string | null;
     provider: string | null;
+    currency?: string;
     created_at: string | null;
     resident: { name: string } | null;
     collection: { name: string } | null;

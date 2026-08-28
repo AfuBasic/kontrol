@@ -8,6 +8,7 @@ use App\Models\Estate;
 use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Models\User;
+use App\Services\Zeus\SettlementInboxService;
 use Carbon\CarbonImmutable;
 
 class CommissionService
@@ -83,7 +84,7 @@ class CommissionService
             $commissionAmount = (int) round($transaction->amount * ($commissionRate / 100));
         }
 
-        return CommissionableRevenue::create([
+        $revenue = CommissionableRevenue::create([
             'estate_id' => $estate->id,
             'partner_id' => $estate->partner_id,
             'commission_plan_id' => $commissionPlanId,
@@ -93,6 +94,10 @@ class CommissionService
             'commission_amount' => $commissionAmount,
             'status' => 'pending',
         ]);
+
+        app(SettlementInboxService::class)->hydrateOpenPeriods();
+
+        return $revenue;
     }
 
     /**

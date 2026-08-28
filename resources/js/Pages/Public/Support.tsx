@@ -564,6 +564,9 @@ export default function Support() {
                                             id="message"
                                             name="message"
                                             rows={6}
+                                            autoCorrect="on"
+                                            autoCapitalize="sentences"
+                                            spellCheck={true}
                                             value={data.message}
                                             onChange={(e) => setData('message', e.target.value)}
                                             className={`block w-full rounded-2xl border-0 p-5 text-slate-900 shadow-sm ring-1 ring-inset ${errors.message ? 'ring-red-500 focus:ring-red-500' : 'ring-slate-300 focus:ring-blue-600'} bg-slate-50 transition-all placeholder:text-slate-400 focus:ring-2 focus:ring-inset dark:bg-slate-900 dark:text-white dark:ring-slate-700`}

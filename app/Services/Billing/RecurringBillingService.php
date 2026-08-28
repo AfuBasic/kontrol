@@ -5,8 +5,10 @@ namespace App\Services\Billing;
 use App\Actions\Billing\RecordPaymentAction;
 use App\Models\EstateSubscription;
 use App\Models\Invoice;
+use App\Models\PaymentTransaction;
 use App\Models\ResidentSubscription;
 use App\Services\PaystackService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class RecurringBillingService
@@ -29,12 +31,36 @@ class RecurringBillingService
     /**
      * Process Estate-level subscriptions (where charge_type = 'estate').
      */
-    public function processDueEstateSubscriptions(): void {}
+    public function processDueEstateSubscriptions(): void
+    {
+        EstateSubscription::where('status', 'active')
+            ->where('auto_renew_enabled', true)
+            ->whereNotNull('paystack_authorization_code')
+            ->whereDate('next_billing_date', '<=', today())
+            ->with(['estate.settings'])
+            ->get()
+            ->filter(fn ($sub) => ($sub->estate->settings->charge_type ?? '') === 'estate')
+            ->each(function ($sub) {
+                $this->chargeEstateSubscription($sub);
+            });
+    }
 
     /**
      * Process Resident-level subscriptions (where charge_type = 'residents').
      */
-    public function processDueResidentSubscriptions(): void {}
+    public function processDueResidentSubscriptions(): void
+    {
+        ResidentSubscription::where('status', 'active')
+            ->where('auto_renew_enabled', true)
+            ->whereNotNull('paystack_authorization_code')
+            ->whereDate('current_period_end', '<=', today())
+            ->with(['estate.settings'])
+            ->get()
+            ->filter(fn ($sub) => ($sub->estate->settings->charge_type ?? '') === 'residents')
+            ->each(function ($sub) {
+                $this->chargeResidentSubscription($sub);
+            });
+    }
 
     /**
      * Charge an Estate subscription using saved authorization.
@@ -89,37 +115,81 @@ class RecurringBillingService
     }
 
     /**
-     * Common charge execution logic.
+     * Common charge execution logic with database-enforced idempotency locking.
      */
     private function executeCharge(Invoice $invoice, string $authCode): void
     {
         $email = $invoice->user->email ?? $invoice->estate->email ?? $invoice->estate->users()->first()?->email;
+        $chargeReference = $invoice->invoice_number.'-AUTO-'.now()->format('Y-m-d');
 
-        $chargeResult = $this->paystackService->chargeAuthorization(
-            $authCode,
-            $email,
-            $invoice->amount,
-            $invoice->invoice_number,
+        // Check if transaction already exists
+        $existingTx = PaymentTransaction::where('paystack_reference', $chargeReference)->first();
+        if ($existingTx && $existingTx->status === 'success') {
+            return;
+        }
+
+        // 1. Create or retrieve the pending PaymentTransaction
+        $transaction = PaymentTransaction::firstOrCreate(
+            ['paystack_reference' => $chargeReference],
             [
                 'invoice_id' => $invoice->id,
-                'is_recurring' => true,
+                'estate_id' => $invoice->estate_id,
+                'user_id' => $invoice->user_id,
+                'amount' => $invoice->amount,
+                'currency' => 'NGN',
+                'status' => 'pending',
+                'idempotency_key' => 'idem_'.$chargeReference,
             ]
         );
 
-        if ($chargeResult['status'] === 'success') {
-            // Record payment locally
-            $this->recordPaymentAction->execute(
-                $invoice,
-                $chargeResult['reference'],
-                'auto_'.$chargeResult['reference']
+        // 2. Database lock claim: Ensure only one worker processes this invoice
+        $claimed = DB::table('invoices')
+            ->where('id', $invoice->id)
+            ->whereNull('active_payment_attempt_id')
+            ->update(['active_payment_attempt_id' => $transaction->id]);
+
+        if (! $claimed && $invoice->active_payment_attempt_id !== $transaction->id) {
+            Log::info("Invoice {$invoice->id} is already claimed by another payment attempt.");
+
+            return;
+        }
+
+        try {
+            // 3. Perform network call outside lock
+            $chargeResult = $this->paystackService->chargeAuthorization(
+                $authCode,
+                $email,
+                $invoice->amount,
+                $chargeReference,
+                [
+                    'invoice_id' => $invoice->id,
+                    'is_recurring' => true,
+                ]
             );
 
-            Log::info('Auto-charge successful', [
-                'invoice_id' => $invoice->id,
-                'reference' => $chargeResult['reference'],
-            ]);
-        } else {
-            throw new \Exception('Charge result status not success: '.$chargeResult['status']);
+            if (($chargeResult['status'] ?? '') === 'success') {
+                // 4. Record successful payment
+                $this->recordPaymentAction->execute(
+                    $invoice,
+                    $chargeResult['reference'] ?? $chargeReference,
+                    'auto_'.$chargeReference
+                );
+
+                Log::info('Auto-charge successful', [
+                    'invoice_id' => $invoice->id,
+                    'reference' => $chargeResult['reference'] ?? $chargeReference,
+                ]);
+            } else {
+                throw new \Exception('Charge result status not success: '.($chargeResult['status'] ?? 'unknown'));
+            }
+        } catch (\Exception $e) {
+            // Release claim on failure
+            DB::table('invoices')
+                ->where('id', $invoice->id)
+                ->where('active_payment_attempt_id', $transaction->id)
+                ->update(['active_payment_attempt_id' => null]);
+
+            throw $e;
         }
     }
 }

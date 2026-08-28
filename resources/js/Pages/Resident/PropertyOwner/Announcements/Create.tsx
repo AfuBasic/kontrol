@@ -96,6 +96,10 @@ export default function Create({ residents, properties }: Props) {
                             type="text"
                             id="title"
                             required
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            spellCheck={true}
+                            autoComplete="on"
                             value={data.title}
                             onChange={(e) => setData('title', e.target.value)}
                             className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 placeholder:font-normal placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
@@ -112,6 +116,9 @@ export default function Create({ residents, properties }: Props) {
                         <textarea
                             id="body"
                             required
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            spellCheck={true}
                             value={data.body}
                             onChange={(e) => setData('body', e.target.value)}
                             rows={6}

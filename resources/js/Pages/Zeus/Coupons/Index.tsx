@@ -69,6 +69,7 @@ interface Props {
 export default function CouponsIndex({ coupons, stats, filters }: Props) {
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState(filters.q || '');
@@ -564,6 +565,7 @@ export default function CouponsIndex({ coupons, stats, filters }: Props) {
                 onConfirm={handleDeleteConfirm}
                 onClose={() => setDeleteModalOpen(false)}
                 isOpen={deleteModalOpen}
+                isLoading={isDeleting}
             />
         </ZeusLayout>
     );

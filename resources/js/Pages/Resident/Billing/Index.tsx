@@ -10,11 +10,15 @@ import {
     ChevronDownIcon,
     TicketIcon,
     TagIcon,
+    CreditCardIcon,
+    ArrowPathIcon,
+    CheckIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Head, router } from '@inertiajs/react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import * as ResidentBillingController from '@/actions/App/Http/Controllers/Resident/BillingController';
 
 type SubscriptionStatus = 'active' | 'trial' | 'past_due' | 'expired';
@@ -42,8 +46,17 @@ type Props = {
     subscription: {
         status: SubscriptionStatus | string;
         has_saved_card: boolean;
+        auto_renew_enabled?: boolean;
+        can_auto_renew?: boolean;
+        show_auto_renew_suggestion?: boolean;
+        payment_method?: {
+            type: string;
+            brand: string;
+            last4: string;
+        } | null;
         card_brand?: string;
         card_last4?: string;
+        current_period_start?: string;
         current_period_end?: string;
         trial_ends_at?: string;
         plan_id?: number;
@@ -63,8 +76,6 @@ type Props = {
         formatted_value: string;
     } | null;
 };
-
-const _formatCurrency = (amount: number) => new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(amount / 100);
 
 const formatDate = (iso?: string) => {
     if (!iso) return '-';
@@ -160,6 +171,9 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const [isNative, setIsNative] = useState(false);
     const [payingPlanId, setPayingPlanId] = useState<number | null>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [showPlanSelection, setShowPlanSelection] = useState(false);
+    const [isTogglingAutoRenew, setIsTogglingAutoRenew] = useState(false);
+    const renewalSectionRef = useRef<HTMLElement>(null);
 
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupons, setAppliedCoupons] = useState<
@@ -168,9 +182,19 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const [couponError, setCouponError] = useState('');
     const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
     const [isAutoApplied, setIsAutoApplied] = useState(false);
+    const [autoRenewConsent, setAutoRenewConsent] = useState(subscription.auto_renew_enabled ?? true);
 
     useEffect(() => {
         setIsNative(Capacitor.isNativePlatform());
+
+        if (typeof window !== 'undefined') {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('section') === 'renewal') {
+                setTimeout(() => {
+                    renewalSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+        }
     }, []);
 
     useEffect(() => {
@@ -261,7 +285,6 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
     const statusKey = getComputedStatus();
     const status = STATUS_MAP[statusKey];
 
-    // Compute remaining days
     const periodEnd = subscription.current_period_end || subscription.trial_ends_at;
     const getDaysRemaining = (): number => {
         if (!periodEnd) return 999;
@@ -278,7 +301,6 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         return `expires in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}`;
     };
 
-    // Determine dynamic label and description
     let displayLabel = status.label;
     let displayDescription = '';
     let tone = TONE_STYLES[status.tone];
@@ -370,9 +392,11 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         if (payingPlanId) return;
         setPayingPlanId(planId);
 
-        const payload: { plan_id: number; coupon_code?: string } = { plan_id: planId };
+        const payload: { plan_id: number; coupon_code?: string; auto_renew_consent?: boolean } = {
+            plan_id: planId,
+            auto_renew_consent: autoRenewConsent,
+        };
 
-        // Find if coupon code is applied for this plan
         const couponForPlan = appliedCoupons[planId];
         if (couponForPlan) {
             payload.coupon_code = couponForPlan.code;
@@ -382,6 +406,21 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
             preserveScroll: true,
             onFinish: () => setPayingPlanId(null),
         });
+    };
+
+    const handleToggleAutoRenew = (enable: boolean) => {
+        if (isTogglingAutoRenew) return;
+        setIsTogglingAutoRenew(true);
+
+        const endpoint = enable ? '/resident/billing/auto-renew/enable' : '/resident/billing/auto-renew/disable';
+        router.post(
+            endpoint,
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setIsTogglingAutoRenew(false),
+            },
+        );
     };
 
     const loadMore = () => {
@@ -401,6 +440,9 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
         }
     };
 
+    const currentPlan = plans.find((p) => p.id === subscription.plan_id) || plans[0];
+    const isPlanActive = statusKey === 'active' || statusKey === 'trial';
+
     return (
         <div className="min-h-screen bg-slate-50/60">
             <Head title="Billing" />
@@ -416,13 +458,13 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                         <ArrowLeftIcon className="h-5 w-5" strokeWidth={2.2} />
                     </button>
                     <div className="min-w-0 flex-1">
-                        <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Billing</h1>
-                        <p className="text-sm text-slate-500">Manage your plan and settlement details.</p>
+                        <h1 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Billing & Renewal</h1>
+                        <p className="text-sm text-slate-500">Manage your subscription, automatic renewal, and receipts.</p>
                     </div>
                 </div>
             </header>
 
-            <main className="mx-auto max-w-2xl px-5 py-6 sm:px-8 sm:py-10">
+            <main className="mx-auto max-w-2xl space-y-6 px-5 py-6 sm:px-8 sm:py-10">
                 <StatusBanner
                     needsAttention={needsAttention}
                     statusKey={statusKey}
@@ -432,189 +474,318 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                     onOpenWeb={openWebApp}
                 />
 
-                {/* Subscription Status Card */}
+                {/* ─────────────────────────────────────────────────────────────
+                    SECTION A: SUBSCRIPTION OVERVIEW
+                ───────────────────────────────────────────────────────────── */}
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mb-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]"
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)]"
                 >
-                    <div className="px-6 py-6 sm:px-8">
-                        <div className="flex items-center gap-2">
-                            <span className={`inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
-                            <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tone.pill}`}
-                            >
-                                {displayLabel}
-                            </span>
-                        </div>
-
-                        <div className="mt-4">
-                            <h2 className="text-xl font-semibold tracking-tight text-slate-900">
-                                {isTrialExpired
-                                    ? 'Trial expired on'
-                                    : isSubscriptionExpired || statusKey === 'expired'
-                                      ? 'Subscription expired on'
-                                      : statusKey === 'trial'
-                                        ? 'Trial ends'
-                                        : 'Valid through'}
-                            </h2>
-                            <p className="mt-1 text-sm font-semibold text-slate-900">{formatDate(periodEnd)}</p>
-                        </div>
+                    <div className="border-b border-slate-100 px-6 py-4 sm:px-8">
+                        <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Subscription</span>
                     </div>
-                </motion.section>
 
-                {/* Coupon Code Input */}
-                <motion.section
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.02 }}
-                    className="mb-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
-                >
-                    <div className="flex flex-col gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                                <TicketIcon className="h-4 w-4" strokeWidth={2.2} />
-                            </span>
+                    <div className="p-6 sm:p-8">
+                        <div className="flex items-start justify-between gap-4">
                             <div>
-                                <h3 className="text-sm font-semibold text-slate-900">Have a subscription coupon?</h3>
-                                <p className="text-xs text-slate-500">Apply it below to get discount on subscription payment.</p>
+                                <div className="flex items-center gap-2">
+                                    <span className={`inline-flex h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${tone.pill}`}>
+                                        {displayLabel}
+                                    </span>
+                                </div>
+
+                                <h2 className="mt-3 text-2xl font-bold tracking-tight text-slate-900">
+                                    {currentPlan?.name || 'Resident Plan'}
+                                </h2>
+                                <p className="mt-1 text-sm font-semibold text-slate-700">
+                                    {currentPlan?.formatted_price}{' '}
+                                    <span className="text-xs font-normal text-slate-500">/ {currentPlan?.billing_interval || 'term'}</span>
+                                </p>
+                            </div>
+
+                            {isPlanActive && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPlanSelection(!showPlanSelection)}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 active:scale-98"
+                                >
+                                    <ArrowPathIcon className="h-3.5 w-3.5" />
+                                    {showPlanSelection ? 'Keep current' : 'Change billing cycle'}
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-2 gap-4 rounded-2xl bg-slate-50/70 p-4 sm:p-5">
+                            <div>
+                                <p className="text-[11px] font-medium text-slate-500">Billing interval</p>
+                                <p className="mt-0.5 text-sm font-bold text-slate-900 capitalize">
+                                    {currentPlan?.billing_interval || 'Monthly'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-[11px] font-medium text-slate-500">
+                                    {statusKey === 'trial' ? 'Trial ends' : isPlanActive ? 'Next renewal' : 'Ended on'}
+                                </p>
+                                <p className="mt-0.5 text-sm font-bold text-slate-900">{formatDate(periodEnd)}</p>
                             </div>
                         </div>
+                    </div>
 
-                        <form onSubmit={handleApplyCoupon} className="flex gap-2" noValidate>
-                            <div className="relative flex-1">
-                                <input
-                                    type="text"
-                                    value={couponCode}
-                                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                    placeholder="Enter coupon code..."
-                                    disabled={Object.keys(appliedCoupons).length > 0 || isValidatingCoupon}
-                                    className="w-full rounded-2xl border border-slate-200 bg-white py-2.5 pr-10 pl-4 font-mono text-sm tracking-wider uppercase focus:border-indigo-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
-                                />
-                                {Object.keys(appliedCoupons).length > 0 && (
-                                    <span className="absolute inset-y-0 right-3 flex items-center text-emerald-600">
-                                        <CheckCircleIcon className="h-5 w-5" strokeWidth={2.4} />
+                    {/* Change Plan / Renew Flow */}
+                    <AnimatePresence>
+                        {(showPlanSelection || !isPlanActive) && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="border-t border-slate-100 bg-slate-50/40 p-6 sm:p-8"
+                            >
+                                <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-700 uppercase">
+                                    Select a billing term
+                                </h3>
+
+                                <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                                    {plans.map((plan) => {
+                                        const isCurrent = subscription.plan_id === plan.id && isPlanActive;
+                                        const isPaying = payingPlanId === plan.id;
+
+                                        return (
+                                            <div
+                                                key={plan.id}
+                                                className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border p-4 transition-all ${
+                                                    isCurrent
+                                                        ? 'border-indigo-200 bg-indigo-50/40 shadow-xs'
+                                                        : 'border-slate-200 bg-white hover:border-slate-300'
+                                                }`}
+                                            >
+                                                {isCurrent && (
+                                                    <span className="absolute top-0 right-0 rounded-tr-xl rounded-bl-xl bg-indigo-100 px-2.5 py-0.5 text-[9px] font-bold tracking-wider text-indigo-700 uppercase">
+                                                        Current
+                                                    </span>
+                                                )}
+
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-slate-900">{plan.name}</h4>
+                                                    <div className="mt-2">
+                                                        {appliedCoupons[plan.id] ? (
+                                                            <>
+                                                                <span className="text-xs font-medium text-slate-400 line-through">
+                                                                    {plan.formatted_price}
+                                                                </span>
+                                                                <p className="text-xl font-bold tracking-tight text-indigo-600">
+                                                                    {appliedCoupons[plan.id].formatted_final_amount}
+                                                                </p>
+                                                                <span className="mt-0.5 inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                                                    Save {appliedCoupons[plan.id].formatted_discount}
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <p className="text-xl font-bold tracking-tight text-slate-900">
+                                                                {plan.formatted_price}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                    <p className="mt-0.5 text-xs text-slate-500 capitalize">{plan.billing_interval}</p>
+                                                </div>
+
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleSubscribe(plan.id)}
+                                                    disabled={payingPlanId !== null || (isCurrent && !appliedCoupons[plan.id])}
+                                                    className={`mt-4 w-full rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                                                        isCurrent && !appliedCoupons[plan.id]
+                                                            ? 'cursor-default bg-slate-100 text-slate-400'
+                                                            : 'bg-slate-900 text-white hover:bg-slate-800'
+                                                    } flex items-center justify-center disabled:opacity-60`}
+                                                >
+                                                    {isPaying ? (
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    ) : isCurrent ? (
+                                                        appliedCoupons[plan.id] ? (
+                                                            'Renew with Coupon'
+                                                        ) : (
+                                                            'Active Term'
+                                                        )
+                                                    ) : (
+                                                        'Switch to this term'
+                                                    )}
+                                                </button>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Coupon drawer when selecting a term */}
+                                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                                    <form onSubmit={handleApplyCoupon} className="flex gap-2" noValidate>
+                                        <input
+                                            type="text"
+                                            value={couponCode}
+                                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                            placeholder="Enter coupon code..."
+                                            disabled={Object.keys(appliedCoupons).length > 0 || isValidatingCoupon}
+                                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pr-4 pl-3 font-mono text-xs tracking-wider uppercase focus:border-indigo-500 focus:outline-none"
+                                        />
+                                        {Object.keys(appliedCoupons).length > 0 ? (
+                                            <button
+                                                type="button"
+                                                onClick={handleRemoveCoupon}
+                                                className="shrink-0 rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                                            >
+                                                Remove
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="submit"
+                                                disabled={!couponCode.trim() || isValidatingCoupon}
+                                                className="flex shrink-0 items-center justify-center rounded-xl bg-slate-900 px-5 py-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
+                                            >
+                                                {isValidatingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
+                                            </button>
+                                        )}
+                                    </form>
+
+                                    {couponError && (
+                                        <p className="mt-2 text-xs font-medium text-rose-600">{couponError}</p>
+                                    )}
+
+                                    {Object.keys(appliedCoupons).length > 0 && (
+                                        <p className="mt-2 flex items-center gap-1 text-xs font-semibold text-emerald-700">
+                                            <TagIcon className="h-3.5 w-3.5" />
+                                            Coupon applied for checkout
+                                        </p>
+                                    )}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.section>
+
+                {/* ─────────────────────────────────────────────────────────────
+                    SECTION B: PAYMENT & RENEWAL (Deep-link target #renewal)
+                ───────────────────────────────────────────────────────────── */}
+                <motion.section
+                    ref={renewalSectionRef}
+                    id="renewal"
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                >
+                    <div className="border-b border-slate-100 px-6 py-4 sm:px-8">
+                        <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Payment & Renewal</span>
+                    </div>
+
+                    <div className="p-6 sm:p-8">
+                        {/* Saved Payment Method */}
+                        <div className="mb-6">
+                            <h3 className="text-sm font-semibold text-slate-900">Saved payment method</h3>
+                            <p className="text-xs text-slate-500">Method used for future subscription renewals.</p>
+
+                            <div className="mt-3 flex items-center justify-between rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-slate-700 shadow-2xs ring-1 ring-slate-200">
+                                        <CreditCardIcon className="h-5 w-5" strokeWidth={1.8} />
+                                    </div>
+                                    <div>
+                                        {subscription.has_saved_card ? (
+                                            <>
+                                                <p className="text-xs font-bold text-slate-900 capitalize">
+                                                    {subscription.payment_method?.brand || subscription.card_brand || 'Card'} ••••{' '}
+                                                    {subscription.payment_method?.last4 || subscription.card_last4 || '••••'}
+                                                </p>
+                                                <p className="text-[11px] text-slate-500">Stored safely via payment gateway</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p className="text-xs font-semibold text-slate-700">No saved card</p>
+                                                <p className="text-[11px] text-slate-400">Card authorization is stored upon successful card payment.</p>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {subscription.has_saved_card && (
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-600/20">
+                                        <CheckIcon className="h-3 w-3 stroke-[2.5]" />
+                                        Ready
                                     </span>
                                 )}
                             </div>
-                            {Object.keys(appliedCoupons).length > 0 ? (
-                                <button
-                                    type="button"
-                                    onClick={handleRemoveCoupon}
-                                    className="cursor-pointer rounded-2xl border border-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-                                >
-                                    Remove
-                                </button>
-                            ) : (
-                                <button
-                                    type="submit"
-                                    disabled={!couponCode.trim() || isValidatingCoupon}
-                                    className="flex cursor-pointer items-center justify-center gap-1.5 rounded-2xl bg-slate-900 px-6 py-2.5 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
-                                >
-                                    {isValidatingCoupon ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Apply'}
-                                </button>
-                            )}
-                        </form>
+                        </div>
 
-                        {couponError && (
-                            <p className="flex items-center gap-1 text-xs font-medium text-rose-600">
-                                <ExclamationTriangleIcon className="h-3.5 w-3.5" />
-                                {couponError}
-                            </p>
-                        )}
-
-                        {Object.keys(appliedCoupons).length > 0 && (
-                            <div className="flex items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/50 p-3">
-                                <TagIcon className="h-4 w-4 text-emerald-600" />
-                                <span className="text-xs font-semibold text-emerald-800">
-                                    Coupon Applied: Code <span className="font-mono">{Object.values(appliedCoupons)[0]?.code}</span> matches!
-                                    {isAutoApplied && ' (Auto-applied)'}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                </motion.section>
-
-                {/* Plan Selection */}
-                <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="mb-6">
-                    <h3 className="mb-4 px-1 text-sm font-semibold text-slate-900">Select a billing term</h3>
-                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                        {plans.map((plan) => {
-                            const isCurrent = subscription.plan_id === plan.id && (statusKey === 'active' || statusKey === 'trial');
-                            const isPaying = payingPlanId === plan.id;
-
-                            return (
-                                <div
-                                    key={plan.id}
-                                    className={`relative flex flex-col justify-between overflow-hidden rounded-2xl border p-5 transition-all sm:p-6 ${
-                                        isCurrent
-                                            ? 'border-indigo-200 bg-indigo-50/30 shadow-sm'
-                                            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-md'
-                                    }`}
-                                >
-                                    {isCurrent && (
-                                        <span className="absolute top-0 right-0 rounded-tr-xl rounded-bl-xl bg-indigo-100 px-3 py-1 text-[10px] font-bold tracking-wider text-indigo-700 uppercase">
-                                            Current
+                        {/* Auto-renew Control */}
+                        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2">
+                                        <h4 className="text-sm font-bold text-slate-900">Automatic renewal</h4>
+                                        <span
+                                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                subscription.auto_renew_enabled
+                                                    ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20'
+                                                    : 'bg-slate-100 text-slate-600'
+                                            }`}
+                                        >
+                                            {subscription.auto_renew_enabled ? 'Enabled' : 'Off'}
                                         </span>
-                                    )}
-
-                                    <div>
-                                        <h4 className="text-base font-semibold text-slate-900">{plan.name}</h4>
-                                        <p className="mt-2 flex flex-col items-start gap-0.5">
-                                            {appliedCoupons[plan.id] ? (
-                                                <>
-                                                    <span className="text-xs font-medium text-slate-400 line-through">{plan.formatted_price}</span>
-                                                    <span className="text-2xl font-bold tracking-tight text-indigo-600">
-                                                        {appliedCoupons[plan.id].formatted_final_amount}
-                                                    </span>
-                                                    <span className="mt-1 inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-600/10">
-                                                        Save {appliedCoupons[plan.id].formatted_discount}
-                                                    </span>
-                                                </>
-                                            ) : (
-                                                <span className="text-2xl font-bold tracking-tight text-slate-900">{plan.formatted_price}</span>
-                                            )}
-                                        </p>
-                                        <p className="mt-1 text-sm text-slate-500 capitalize">{plan.billing_interval}</p>
                                     </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSubscribe(plan.id)}
-                                        disabled={payingPlanId !== null || (isCurrent && !appliedCoupons[plan.id])}
-                                        className={`mt-6 w-full rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                                            isCurrent && !appliedCoupons[plan.id]
-                                                ? 'cursor-default bg-indigo-50 text-indigo-400'
-                                                : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]'
-                                        } flex items-center justify-center disabled:opacity-70 disabled:active:scale-100`}
-                                    >
-                                        {isPaying ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                        ) : isCurrent ? (
-                                            appliedCoupons[plan.id] ? (
-                                                'Renew with Coupon'
-                                            ) : (
-                                                'Active'
-                                            )
-                                        ) : (
-                                            'Select'
-                                        )}
-                                    </button>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        {subscription.auto_renew_enabled
+                                            ? 'Future subscription invoices will be automatically charged using your saved card at the end of each billing term.'
+                                            : 'Automatically pay future subscription invoices using your saved card so you do not have to settle them manually.'}
+                                    </p>
                                 </div>
-                            );
-                        })}
+
+                                {subscription.has_saved_card && (
+                                    <div className="shrink-0">
+                                        {subscription.auto_renew_enabled ? (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleAutoRenew(false)}
+                                                disabled={isTogglingAutoRenew}
+                                                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                                            >
+                                                {isTogglingAutoRenew && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                                Turn off automatic renewal
+                                            </button>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleAutoRenew(true)}
+                                                disabled={isTogglingAutoRenew}
+                                                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
+                                            >
+                                                {isTogglingAutoRenew && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                                                Turn on automatic renewal
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {!subscription.has_saved_card && (
+                                <p className="mt-3 text-[11px] text-slate-400">
+                                    Automatic renewal can be enabled once your first subscription card payment is made.
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </motion.section>
 
-                {/* Transaction history */}
+                {/* ─────────────────────────────────────────────────────────────
+                    SECTION C: INVOICES & PAYMENTS
+                ───────────────────────────────────────────────────────────── */}
                 <motion.section
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="mt-5 rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
                 >
                     <div className="border-b border-slate-100 px-6 py-4 sm:px-8">
-                        <h3 className="text-sm font-semibold text-slate-900">Transaction history</h3>
+                        <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Invoices & Payments</span>
                     </div>
 
                     {recentInvoices.data.length > 0 ? (
@@ -636,13 +807,11 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                                                         <ClockIcon className="h-4 w-4" strokeWidth={2.2} />
                                                     )}
                                                 </span>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="min-w-0">
-                                                        <p className="text-sm font-medium text-slate-900">{invoice.formatted_amount}</p>
-                                                        <p className="text-xs text-slate-500">
-                                                            {formatDate(invoice.created_at)} · {invoice.invoice_number}
-                                                        </p>
-                                                    </div>
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-slate-900">{invoice.formatted_amount}</p>
+                                                    <p className="text-xs text-slate-500">
+                                                        {formatDate(invoice.created_at)} · {invoice.invoice_number}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <span className={`text-xs font-medium ${paid ? 'text-emerald-700' : 'text-amber-700'}`}>
@@ -677,8 +846,8 @@ export default function ResidentBillingPage({ subscription, plans, recentInvoice
                             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                                 <SparklesIcon className="h-5 w-5" strokeWidth={2} />
                             </span>
-                            <p className="mt-3 text-sm font-medium text-slate-900">Nothing here yet</p>
-                            <p className="mt-1 text-xs text-slate-500">Your invoices will appear here once your first transaction is made.</p>
+                            <p className="mt-3 text-sm font-medium text-slate-900">No payment history yet</p>
+                            <p className="mt-1 text-xs text-slate-500">Receipts and payment records will appear here after transactions.</p>
                         </div>
                     )}
                 </motion.section>

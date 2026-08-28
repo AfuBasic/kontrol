@@ -48,6 +48,8 @@ class Coupon extends Model
         'eligible_plans',
         'min_purchase',
         'starts_at',
+        'is_recurring',
+        'billing_cycles',
     ];
 
     protected $casts = [

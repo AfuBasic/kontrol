@@ -1,18 +1,7 @@
 import { Deferred, Head, Link, usePage, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
-import {
-    Megaphone,
-    ChevronRight,
-    Wallet,
-    Users,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    Activity,
-    PlusCircle,
-    XCircle,
-} from 'lucide-react';
-import {  useMemo } from 'react';
+import { Megaphone, ChevronRight, Wallet, Users, AlertCircle, CheckCircle2, Clock, Activity, PlusCircle, XCircle, X } from 'lucide-react';
+import { useMemo } from 'react';
 import CommandCenter from '@/Components/Resident/Dashboard/CommandCenter';
 import { FeedItemSkeleton } from '@/Components/Skeletons';
 import { OfflineState } from '@/Components/States';
@@ -48,6 +37,14 @@ type Props = SharedData & {
     totalScheduledCount?: number;
     unpaidDuesCount?: number | null;
     totalUnpaidDuesAmount?: number | null;
+    billingPrompt?: {
+        show_auto_renew_suggestion: boolean;
+        payment_method: {
+            type: string;
+            brand: string;
+            last4: string;
+        } | null;
+    } | null;
 };
 
 export default function Home({
@@ -64,6 +61,7 @@ export default function Home({
     totalScheduledCount,
     unpaidDuesCount,
     totalUnpaidDuesAmount,
+    billingPrompt,
 }: Props) {
     const userRoles = auth?.user?.roles ?? [];
     const isHouseholdMember = userRoles.includes('household_member') && !userRoles.includes('resident');
@@ -77,7 +75,7 @@ export default function Home({
             openIncidentsCount,
             activePassesCount,
             upcomingPassesCount,
-            totalScheduledCount: totalScheduledCount ?? (activePassesCount + upcomingPassesCount),
+            totalScheduledCount: totalScheduledCount ?? activePassesCount + upcomingPassesCount,
         }),
         [stats, estateName, openIncidentsCount, activePassesCount, upcomingPassesCount, totalScheduledCount],
     );
@@ -94,11 +92,10 @@ export default function Home({
         revalidate: isOnline && quality !== 'offline',
     });
 
-
     const displayEstateName = staleShell?.estateName ?? estateName;
     const displayActivePasses = staleShell?.activePassesCount ?? activePassesCount;
     const displayUpcomingPasses = staleShell?.upcomingPassesCount ?? upcomingPassesCount;
-    const displayTotalScheduled = staleShell?.totalScheduledCount ?? totalScheduledCount ?? (displayActivePasses + displayUpcomingPasses);
+    const displayTotalScheduled = staleShell?.totalScheduledCount ?? totalScheduledCount ?? displayActivePasses + displayUpcomingPasses;
     const displayOpenIncidents = staleShell?.openIncidentsCount ?? openIncidentsCount;
     const codes = activeCodes ?? [];
     const activity = recentActivity ?? [];
@@ -191,6 +188,32 @@ export default function Home({
         });
     }
 
+    if (billingPrompt?.show_auto_renew_suggestion && attentionItems.length === 0) {
+        const cardBrand = billingPrompt.payment_method?.brand || 'card';
+        const cardLast4 = billingPrompt.payment_method?.last4 ? ` ending in ${billingPrompt.payment_method.last4}` : '';
+        attentionItems.push({
+            type: 'auto_renew_suggestion',
+            title: 'Make renewals automatic',
+            desc: `Your ${cardBrand}${cardLast4} is ready. Turn on automatic renewal to pay future subscriptions seamlessly.`,
+            href: '/resident/billing?section=renewal',
+            color: 'border-indigo-100 bg-indigo-50/30 text-indigo-900',
+            isDismissible: true,
+        });
+    }
+
+    const handleDismissBillingPrompt = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        router.post(
+            '/resident/billing/auto-renew/dismiss',
+            {},
+            {
+                preserveScroll: true,
+                only: ['billingPrompt'],
+            },
+        );
+    };
+
     // Timeline icons helper
     const getActivityIcon = (type: string) => {
         switch (type) {
@@ -245,7 +268,19 @@ export default function Home({
                                             <h4 className="text-xs font-bold text-slate-900">{item.title}</h4>
                                             <p className="mt-0.5 text-[11px] leading-normal font-medium text-slate-500">{item.desc}</p>
                                         </div>
-                                        {item.href && <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />}
+                                        <div className="flex shrink-0 items-center gap-1.5">
+                                            {item.isDismissible && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleDismissBillingPrompt}
+                                                    className="rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700"
+                                                    title="Dismiss for this billing period"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            )}
+                                            {item.href && <ChevronRight className="h-4 w-4 text-slate-400" />}
+                                        </div>
                                     </div>
                                 );
 

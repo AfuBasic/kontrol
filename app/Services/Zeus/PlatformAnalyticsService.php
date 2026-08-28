@@ -5,7 +5,10 @@ namespace App\Services\Zeus;
 use App\Models\Activity;
 use App\Models\Estate;
 use App\Models\EstateApplication;
-use App\Models\EstateSubscription;
+use App\Models\Partner;
+use App\Models\PartnerEarning;
+use App\Models\Payment;
+use App\Models\SystemErrorLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -22,31 +25,35 @@ class PlatformAnalyticsService
             $greeting = 'Good afternoon';
         }
 
-        $newEstates = Estate::where('created_at', '>=', now()->subDays(7))->count();
+        $activeEstates = Estate::count();
+        $unresolvedErrors = SystemErrorLog::where('status', 'unresolved')->count();
         $pendingApplications = EstateApplication::where('status', 'pending')->count();
-        $mrr = number_format($this->calculateMRR(), 0);
 
         return [
             'greeting' => $greeting,
-            'headline' => 'Platform momentum is building.',
+            'headline' => 'Platform operations are running smoothly.',
             'highlights' => [
-                'estates_added' => $newEstates,
-                'mrr' => $mrr,
+                'active_estates' => $activeEstates,
+                'unresolved_errors' => $unresolvedErrors,
                 'pending_apps' => $pendingApplications,
             ],
         ];
     }
 
-    public function getExecutiveMetrics(): array
+    public function getPlatformSnapshot(): array
     {
         $now = now();
         $endOfLastMonth = $now->copy()->subMonth()->endOfMonth();
 
-        // 1. Total Active Estates
+        // Active Estates
         $activeEstatesCurrent = Estate::count();
         $activeEstatesLastMonth = Estate::where('created_at', '<=', $endOfLastMonth)->count();
 
-        // 2. Active Subscriptions (Only Residents pay)
+        // Total Residents
+        $totalResidentsCurrent = User::where('user_type', 'user')->count();
+        $totalResidentsLastMonth = User::where('user_type', 'user')->where('created_at', '<=', $endOfLastMonth)->count();
+
+        // Active Subscriptions
         $activeSubscriptionsCurrent = DB::table('resident_subscriptions')
             ->where('status', 'active')
             ->count();
@@ -56,27 +63,21 @@ class PlatformAnalyticsService
             ->where('created_at', '<=', $endOfLastMonth)
             ->count();
 
-        // 3. MRR Calculation
-        $mrrCurrent = $this->calculateMRR();
-        $mrrLastMonth = max(0, $mrrCurrent * 0.92);
-
-        // 4. Trial Pipelines (Estates)
-        // Even if residents pay, the estate itself goes through a trial pipeline
-        $trialsCurrent = EstateSubscription::onTrial()->count();
-        $trialsLastMonth = max(0, $trialsCurrent - 2);
+        // Pending Applications
+        $pendingAppsCurrent = EstateApplication::where('status', 'pending')->count();
 
         return [
-            'revenue' => [
-                'current' => $mrrCurrent,
-                'previous' => $mrrLastMonth,
-                'growth' => $this->calculateGrowth($mrrCurrent, $mrrLastMonth),
-                'trend' => $mrrCurrent >= $mrrLastMonth ? 'up' : 'down',
-            ],
             'estates' => [
                 'current' => $activeEstatesCurrent,
                 'previous' => $activeEstatesLastMonth,
                 'growth' => $this->calculateGrowth($activeEstatesCurrent, $activeEstatesLastMonth),
                 'trend' => $activeEstatesCurrent >= $activeEstatesLastMonth ? 'up' : 'down',
+            ],
+            'residents' => [
+                'current' => $totalResidentsCurrent,
+                'previous' => $totalResidentsLastMonth,
+                'growth' => $this->calculateGrowth($totalResidentsCurrent, $totalResidentsLastMonth),
+                'trend' => $totalResidentsCurrent >= $totalResidentsLastMonth ? 'up' : 'down',
             ],
             'subscriptions' => [
                 'current' => $activeSubscriptionsCurrent,
@@ -84,12 +85,104 @@ class PlatformAnalyticsService
                 'growth' => $this->calculateGrowth($activeSubscriptionsCurrent, $activeSubscriptionsLastMonth),
                 'trend' => $activeSubscriptionsCurrent >= $activeSubscriptionsLastMonth ? 'up' : 'down',
             ],
-            'trials' => [
-                'current' => $trialsCurrent,
-                'previous' => $trialsLastMonth,
-                'growth' => $this->calculateGrowth($trialsCurrent, $trialsLastMonth),
-                'trend' => $trialsCurrent >= $trialsLastMonth ? 'up' : 'down',
+            'pendingApps' => [
+                'current' => $pendingAppsCurrent,
+                'previous' => 0,
+                'growth' => 0,
+                'trend' => 'up',
             ],
+        ];
+    }
+
+    public function getOperationsQueue(): array
+    {
+        return [
+            'pendingApplications' => EstateApplication::whereNull('partner_id')
+                ->whereIn('status', EstateApplication::OPEN_STATUSES)
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'estate_name', 'email as contact_email', 'created_at'])
+                ->map(fn ($app) => [
+                    'id' => $app->id,
+                    'title' => $app->estate_name,
+                    'subtitle' => $app->contact_email ?? 'Application',
+                    'type' => 'application',
+                    'created_at' => clone $app->created_at,
+                ]),
+            'unresolvedErrors' => SystemErrorLog::where('status', 'unresolved')
+                ->orderByDesc('last_seen_at')
+                ->limit(5)
+                ->get(['id', 'exception_class', 'message', 'last_seen_at'])
+                ->map(fn ($error) => [
+                    'id' => $error->id,
+                    'title' => $error->exception_class,
+                    'subtitle' => str()->limit($error->message, 50),
+                    'type' => 'error',
+                    'created_at' => clone $error->last_seen_at,
+                ]),
+            'partnerRequests' => EstateApplication::with('partner:id,name')
+                ->whereNotNull('partner_id')
+                ->whereIn('status', EstateApplication::OPEN_STATUSES)
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'estate_name', 'partner_id', 'created_at'])
+                ->map(fn ($req) => [
+                    'id' => $req->id,
+                    'title' => $req->estate_name,
+                    'subtitle' => 'Partner: '.($req->partner?->name ?? 'Referral'),
+                    'type' => 'partner_request',
+                    'created_at' => clone $req->created_at,
+                ]),
+        ];
+    }
+
+    public function getFinancialPulse(): array
+    {
+        $mrrCurrent = $this->calculateMRR();
+        $mrrLastMonth = max(0, $mrrCurrent * 0.92);
+
+        $recentPayments = Payment::latest()
+            ->limit(5)
+            ->get(['id', 'amount', 'status', 'created_at'])
+            ->map(fn ($payment) => [
+                'id' => $payment->id,
+                'amount' => $payment->amount,
+                'status' => $payment->status,
+                'created_at' => clone $payment->created_at,
+            ]);
+
+        return [
+            'mrr' => [
+                'current' => $mrrCurrent,
+                'previous' => $mrrLastMonth,
+                'growth' => $this->calculateGrowth($mrrCurrent, $mrrLastMonth),
+                'trend' => $mrrCurrent >= $mrrLastMonth ? 'up' : 'down',
+            ],
+            'recentPayments' => $recentPayments,
+        ];
+    }
+
+    public function getPartnerMetrics(): array
+    {
+        $activePartners = Partner::where('status', 'active')->count();
+        $unpaidEarningsKobo = PartnerEarning::whereNull('settled_at')->sum('total_amount');
+
+        $recentSourcedEstates = Estate::with('partner:id,name')
+            ->whereNotNull('partner_id')
+            ->latest()
+            ->limit(3)
+            ->get(['id', 'name', 'partner_id', 'created_at'])
+            ->map(fn ($estate) => [
+                'id' => $estate->id,
+                'name' => $estate->name,
+                'partner_name' => $estate->partner?->name ?? 'Unknown Partner',
+                'created_at' => clone $estate->created_at,
+            ]);
+
+        return [
+            'active_partners' => $activePartners,
+            'unpaid_earnings' => (float) $unpaidEarningsKobo / 100,
+            'recent_sourced_estates' => $recentSourcedEstates,
         ];
     }
 
@@ -204,39 +297,29 @@ class PlatformAnalyticsService
             ->limit($limit)
             ->get()
             ->map(function ($activity) {
+                $subjectType = $activity->subject_type ? class_basename($activity->subject_type) : 'Activity';
+                $action = match ($activity->event) {
+                    'created' => 'New '.$subjectType.' created',
+                    'updated' => $subjectType.' was updated',
+                    'deleted' => $subjectType.' was deleted',
+                    default => $activity->description ?? 'Activity logged',
+                };
+
                 return [
                     'id' => $activity->id,
                     'event' => $activity->event,
-                    'description' => $activity->description,
-                    'type' => class_basename($activity->subject_type),
+                    'description' => $action,
+                    'type' => $subjectType,
                     'created_at' => clone $activity->created_at,
                 ];
             })->toArray();
-    }
-
-    public function getPendingApplications(int $limit = 3): array
-    {
-        return EstateApplication::where('status', 'pending')
-            ->latest()
-            ->limit($limit)
-            ->get(['id', 'estate_name', 'email as contact_email', 'phone as contact_phone', 'created_at'])
-            ->map(function ($app) {
-                return [
-                    'id' => $app->id,
-                    'estate_name' => $app->estate_name,
-                    'contact_name' => 'Pending Applicant', // The schema doesn't have contact_name
-                    'contact_email' => $app->contact_email,
-                    'contact_phone' => $app->contact_phone,
-                    'created_at' => clone $app->created_at,
-                ];
-            })
-            ->toArray();
     }
 
     public function getSystemHealth(): array
     {
         $totalUsers = User::count();
         $totalActiveUsers = User::where('updated_at', '>=', Carbon::now()->subDays(7))->count();
+        $unresolvedErrors = SystemErrorLog::where('status', 'unresolved')->count();
 
         // Calculate actual DB size in MB
         $dbName = config('database.connections.mysql.database');
@@ -255,7 +338,8 @@ class PlatformAnalyticsService
             'total_users' => $totalUsers,
             'active_users_7d' => $totalActiveUsers,
             'database_size' => $formattedSize,
-            'system_status' => 'Operational',
+            'unresolved_errors' => $unresolvedErrors,
+            'system_status' => $unresolvedErrors > 10 ? 'Degraded' : 'Operational',
         ];
     }
 

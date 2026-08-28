@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\Coupon;
 use App\Models\CouponLog;
 use App\Models\Estate;
+use App\Models\EstateSubscription;
 use App\Models\Invoice;
 use App\Models\Plan;
+use App\Models\ResidentSubscription;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -123,12 +125,30 @@ class CouponService
             // Increment usage
             $coupon->increment('used_count');
 
+            $subscriptionId = null;
+            $subscriptionType = null;
+
+            if ($invoice->user_id) {
+                $sub = ResidentSubscription::where('user_id', $invoice->user_id)
+                    ->where('estate_id', $invoice->estate_id)
+                    ->first();
+                if ($sub) {
+                    $subscriptionId = $sub->id;
+                    $subscriptionType = ResidentSubscription::class;
+                }
+            } elseif (! $invoice->user_id && $invoice->estate && $invoice->estate->subscriptionRecord) {
+                $subscriptionId = $invoice->estate->subscriptionRecord->id;
+                $subscriptionType = EstateSubscription::class;
+            }
+
             // Log usage (the audit log)
             return CouponLog::create([
                 'coupon_id' => $coupon->id,
                 'user_id' => $user->id,
                 'invoice_id' => $invoice->id,
                 'discount_amount' => $discountAmount,
+                'subscription_id' => $subscriptionId,
+                'subscription_type' => $subscriptionType,
             ]);
         });
     }

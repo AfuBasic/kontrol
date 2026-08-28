@@ -7,7 +7,6 @@ use App\Models\Invoice;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;
 use App\Services\BillingCycleService;
-use App\Services\CouponService;
 use App\Services\PaystackService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,7 +15,8 @@ class ProcessResidentPaymentAction
 {
     public function __construct(
         private BillingCycleService $billingCycleService,
-        private InitializeInvoicePaymentAction $initializeInvoicePaymentAction
+        private InitializeInvoicePaymentAction $initializeInvoicePaymentAction,
+        private CalculateInvoicePricingAction $pricingAction
     ) {}
 
     /**
@@ -29,7 +29,8 @@ class ProcessResidentPaymentAction
         Plan $plan,
         string $callbackUrl,
         string $invoiceShowUrl,
-        ?string $couponCode = null
+        ?string $couponCode = null,
+        bool $autoRenewConsent = false,
     ): InitializePaymentResult {
         Log::info('ProcessResidentPaymentAction::execute', [
             'user_id' => $subscription->user_id,
@@ -54,7 +55,7 @@ class ProcessResidentPaymentAction
                     $paystackService = app(PaystackService::class);
                     $verification = $paystackService->verifyPayment($transaction->paystack_reference);
 
-                    if ($verification['status'] === 'success') {
+                    if (($verification['status'] ?? null) === 'success' && ($verification['amount'] ?? 0) === $existingInvoice->amount) {
                         app(RecordPaymentAction::class)->execute(
                             $existingInvoice,
                             $transaction->paystack_reference,
@@ -81,7 +82,7 @@ class ProcessResidentPaymentAction
             $existingInvoice->update(['status' => 'cancelled']);
         }
 
-        $invoice = DB::transaction(function () use ($subscription, $plan, $couponCode) {
+        $invoice = DB::transaction(function () use ($subscription, $plan, $couponCode, $autoRenewConsent) {
             $estate = $subscription->estate;
 
             // Period starts when the resident's current active/trial period ends, or today if past due
@@ -93,30 +94,39 @@ class ProcessResidentPaymentAction
             $dueDate = $periodStart->copy()->addDays(7);
 
             // Handle coupon validation and discount calculation
-            $discountAmount = 0;
-            $metadata = [];
+            $coupon = null;
             if ($couponCode) {
-                $couponService = app(CouponService::class);
-                $validation = $couponService->validate($couponCode, $subscription->user, $estate);
-                if ($validation['status'] === 'success') {
-                    /** @var Coupon $coupon */
-                    $coupon = $validation['coupon'];
-                    $discountAmount = $coupon->calculateDiscount($plan->price);
-                    $metadata['coupon_code'] = $coupon->code;
-                    $metadata['discount_amount'] = $discountAmount;
-                } else {
+                $coupon = Coupon::where('code', $couponCode)->first();
+                if (! $coupon) {
                     throw new PaymentInitializationException(
-                        $validation['message'] ?? 'Invalid coupon code.',
+                        'Invalid coupon code.',
                         'invalid_coupon'
                     );
                 }
             }
 
-            // Amount is the specific plan's price net of discount
-            $amount = max(0, $plan->price - $discountAmount);
+            $pricing = $this->pricingAction->execute(
+                $plan->price ?? 0,
+                $coupon,
+                $subscription->user,
+                $estate,
+                $subscription
+            );
+
+            if (isset($pricing['metadata']['coupon_error']) && $couponCode) {
+                throw new PaymentInitializationException(
+                    $pricing['metadata']['coupon_error'],
+                    'invalid_coupon'
+                );
+            }
 
             // Generate unique invoice number
             $invoiceNumber = $this->billingCycleService->generateInvoiceNumber($estate->id, $subscription->user_id);
+
+            $metadata = $pricing['metadata'] ?? [];
+            if ($autoRenewConsent) {
+                $metadata['auto_renew_consent'] = true;
+            }
 
             // Create the pending invoice that serves as the transaction base
             return Invoice::create([
@@ -125,7 +135,7 @@ class ProcessResidentPaymentAction
                 'plan_id' => $plan->id,
                 'estate_subscription_id' => null, // Not tied to estate's bulk subscription
                 'invoice_number' => $invoiceNumber,
-                'amount' => $amount,
+                'amount' => $pricing['amount'],
                 'resident_count' => 1,
                 'billing_period_start' => $periodStart,
                 'billing_period_end' => $periodEnd,

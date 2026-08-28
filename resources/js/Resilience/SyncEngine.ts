@@ -1,6 +1,7 @@
 import { isConflictStatus, resolveConflict, ConflictStrategy } from './ConflictResolver';
 import { NetworkMonitor, type NetworkQuality } from './NetworkMonitor';
 import { clear, createId, get, getAll, put, remove, type StoreConfig } from './OfflineStorage/BaseStore';
+import { ResidentStore } from './OfflineStorage/ResidentStore';
 import { computeBackoffMs, getRetryPolicy, hasExhaustedRetries, isExpired, type RetryPolicy, type RetryPolicyKey } from './RetryPolicy';
 import { SyncStatus, type HttpMethod, type OperationType } from './SyncStatus';
 
@@ -326,6 +327,12 @@ class SyncEngineImpl {
                 op.lastError = null;
                 op.lastErrorCode = null;
                 await put(queueConfig, QUEUE_STORE, op);
+
+                if (op.type === 'visitor_pass') {
+                    void ResidentStore.removePendingPass(op.id);
+                } else if (op.type === 'incident') {
+                    void ResidentStore.removePendingIncident(op.id);
+                }
 
                 // Drop successfully synced ops after a short retention window.
                 setTimeout(() => {

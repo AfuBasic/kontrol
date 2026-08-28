@@ -87,3 +87,28 @@ it('includes suspicious activity in the action center when events require attent
         ->and($item['count'])->toBe(1)
         ->and($item['severity'])->toBe('critical');
 });
+
+it('counts both residents and property owners in dashboard community metrics', function () {
+    Role::firstOrCreate(['name' => 'property_owner', 'guard_name' => 'web']);
+
+    $resident = User::factory()->create(['email_verified_at' => now(), 'suspended_at' => null]);
+    $propertyOwner = User::factory()->create(['email_verified_at' => now(), 'suspended_at' => null]);
+
+    setPermissionsTeamId($this->estate->id);
+    $resident->assignRole('resident');
+    $propertyOwner->assignRole('property_owner');
+
+    $this->estate->users()->attach($resident->id, ['status' => 'accepted']);
+    $this->estate->users()->attach($propertyOwner->id, ['status' => 'accepted']);
+
+    $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id]);
+
+    $overview = app(DashboardService::class)->getOverviewStats();
+    $detailed = app(DashboardService::class)->getDetailedDashboardStats();
+
+    expect($overview['residents']['total'])->toBe(2)
+        ->and($overview['residents']['active'])->toBe(2)
+        ->and($detailed['operationalSnapshot']['residentsTotal'])->toBe(2)
+        ->and($detailed['operationalSnapshot']['residentsActive'])->toBe(2);
+});

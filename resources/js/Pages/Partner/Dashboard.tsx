@@ -164,8 +164,8 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
         {
             label: 'My Estates',
             display: null as string | null,
-            numeric: stats.partner_request_count,
-            hint: `${stats.converted_estates} live estates`,
+            numeric: stats.converted_estates,
+            hint: `${stats.converted_estates} live estate${stats.converted_estates === 1 ? '' : 's'}`,
             href: '/partner/partner-requests',
             icon: BuildingOffice2Icon,
             iconWrap: 'bg-violet-500/10 text-violet-600 ring-violet-500/15 dark:text-violet-300',
@@ -174,7 +174,9 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
         {
             label: 'Conversion',
             display: `${stats.conversion_rate}%`,
-            hint: `${stats.approved_request_count} approved`,
+            hint: stats.partner_request_count > 0
+                ? `${stats.approved_request_count} of ${stats.partner_request_count} approved`
+                : `${stats.converted_estates} active`,
             href: '/partner/partner-requests',
             icon: SparklesIcon,
             iconWrap: 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/15 dark:text-emerald-300',

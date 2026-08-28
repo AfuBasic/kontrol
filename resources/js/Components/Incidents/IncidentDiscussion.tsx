@@ -138,6 +138,9 @@ export default function IncidentDiscussion({
                             <textarea
                                 id="incident-discussion-composer"
                                 ref={textareaRef}
+                                autoCorrect="on"
+                                autoCapitalize="sentences"
+                                spellCheck={true}
                                 value={body}
                                 onChange={(e) => setBody(e.target.value)}
                                 onFocus={(e) => e.currentTarget.scrollIntoView({ block: 'center', behavior: 'smooth' })}
@@ -272,6 +275,9 @@ export default function IncidentDiscussion({
                     )}
                     <div className="relative">
                         <textarea
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            spellCheck={true}
                             value={body}
                             onChange={(e) => setBody(e.target.value)}
                             placeholder="Share an update or comment on this incident..."

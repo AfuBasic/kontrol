@@ -331,18 +331,25 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
             {collections.next_page_url && (
                 <WhenVisible
                     always
-                    data="collections"
                     params={{
-                        page: collections.current_page + 1,
-                        search: search,
-                        status: status,
+                        data: {
+                            page: collections.current_page + 1,
+                            search: search,
+                            status: status,
+                        },
+                        only: ['collections'],
+                        preserveUrl: true,
                     }}
                     fallback={
                         <div className="mt-8 flex justify-center pb-12">
                             <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
                         </div>
                     }
-                />
+                >
+                    <div className="mt-8 flex justify-center pb-12">
+                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></div>
+                    </div>
+                </WhenVisible>
             )}
         </div>
     );

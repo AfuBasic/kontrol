@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import ZeusLayout from '@/Layouts/ZeusLayout';
+import { copyTextToClipboard } from '@/Utils/clipboard';
 
 interface ErrorDetail {
     id: number;
@@ -43,9 +44,17 @@ interface Props {
 export default function ErrorLogsShow({ error }: Props) {
     const [copied, setCopied] = useState(false);
 
-    const handleCopyTrace = () => {
-        if (!error.stack_trace) return;
-        navigator.clipboard.writeText(error.stack_trace);
+    const handleCopyTrace = async () => {
+        if (!error.stack_trace) {
+            return;
+        }
+
+        const copiedTrace = await copyTextToClipboard(error.stack_trace);
+
+        if (!copiedTrace) {
+            return;
+        }
+
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
     };

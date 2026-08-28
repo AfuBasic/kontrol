@@ -53,7 +53,7 @@ export default function LedgerCharts({ data, loading }: Props) {
                             tickLine={false}
                             width={45}
                         />
-                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                        <Tooltip formatter={(v: any) => formatCurrency(Number(v) || 0)} />
                         <Line type="monotone" dataKey="amount" name="Revenue" stroke="#10b981" strokeWidth={2} dot={false} />
                     </LineChart>
                 </ResponsiveContainer>
@@ -82,7 +82,7 @@ export default function LedgerCharts({ data, loading }: Props) {
                             tickLine={false}
                             width={45}
                         />
-                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                        <Tooltip formatter={(v: any) => formatCurrency(Number(v) || 0)} />
                         <Bar dataKey="money_in" name="Money In" fill="#10b981" radius={[3, 3, 0, 0]} />
                         <Bar dataKey="money_out" name="Money Out" fill="#f43f5e" radius={[3, 3, 0, 0]} />
                     </BarChart>

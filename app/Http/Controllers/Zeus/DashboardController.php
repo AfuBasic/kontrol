@@ -22,10 +22,12 @@ class DashboardController extends Controller
 
         return Inertia::render('Zeus/Dashboard', [
             'briefing' => $this->platformAnalyticsService->getFounderBriefing(),
-            'metrics' => $this->platformAnalyticsService->getExecutiveMetrics(),
+            'snapshot' => $this->platformAnalyticsService->getPlatformSnapshot(),
+            'operationsQueue' => $this->platformAnalyticsService->getOperationsQueue(),
+            'financialPulse' => $this->platformAnalyticsService->getFinancialPulse(),
+            'partnerMetrics' => $this->platformAnalyticsService->getPartnerMetrics(),
             'growthChart' => $this->platformAnalyticsService->getPlatformGrowthChart($startDate, $endDate),
             'liveActivityStream' => $this->platformAnalyticsService->getLiveActivityStream(),
-            'pendingApplications' => $this->platformAnalyticsService->getPendingApplications(),
             'systemHealth' => $this->platformAnalyticsService->getSystemHealth(),
             'topEstates' => $this->platformAnalyticsService->getTopEstates(),
             'startDate' => $startDate,

@@ -174,6 +174,44 @@ class HomeController extends Controller
 
                 return $rows->sum('amount_due') - $rows->sum('amount_paid');
             }),
+            'billingPrompt' => Inertia::defer(function () use ($user, $estate, $isHouseholdMember) {
+                if ($isHouseholdMember) {
+                    return null;
+                }
+
+                $subscription = \App\Models\ResidentSubscription::where('user_id', $user->id)
+                    ->where('estate_id', $estate->id)
+                    ->first();
+
+                if (! $subscription || ! $subscription->hasSavedCard() || $subscription->auto_renew_enabled || $subscription->auto_renew_opted_out) {
+                    return null;
+                }
+
+                // Check urgent billing issues
+                $hasUrgentBillingIssue = $subscription->status === 'past_due' ||
+                    ($subscription->status === 'active' && $subscription->current_period_end && $subscription->current_period_end->isPast()) ||
+                    ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast());
+
+                if ($hasUrgentBillingIssue) {
+                    return null;
+                }
+
+                // Check dismissal for current billing period
+                $currentMonthKey = $subscription->current_period_start ? $subscription->current_period_start->format('Y-m') : now()->format('Y-m');
+                $dismissCacheKey = "auto_renew_dismissed:{$subscription->id}:{$currentMonthKey}";
+                if (\Illuminate\Support\Facades\Cache::get($dismissCacheKey, false)) {
+                    return null;
+                }
+
+                return [
+                    'show_auto_renew_suggestion' => true,
+                    'payment_method' => [
+                        'type' => 'card',
+                        'brand' => $subscription->card_brand ?: 'Card',
+                        'last4' => $subscription->card_last4 ?: '••••',
+                    ],
+                ];
+            }),
         ]);
     }
 }

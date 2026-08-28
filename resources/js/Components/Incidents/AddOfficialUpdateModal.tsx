@@ -84,6 +84,9 @@ export default function AddOfficialUpdateModal({
                         </div>
 
                         <textarea
+                            autoCorrect="on"
+                            autoCapitalize="sentences"
+                            spellCheck={true}
                             value={body}
                             onChange={(e) => {
                                 setBody(e.target.value);

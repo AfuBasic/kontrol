@@ -175,8 +175,7 @@ export default function PartnerLayout({ children, fullWidth = false }: Props) {
 
             router.reload({
                 only,
-                preserveScroll: true,
-                preserveState: true,
+                preserveUrl: true,
             });
         });
 

@@ -2,7 +2,6 @@
 
 namespace App\Services\Notifications;
 
-use App\Auth\ActiveContext;
 use App\Auth\ContextManager;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;

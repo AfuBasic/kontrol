@@ -93,6 +93,9 @@ export default function AIEnhanceTextarea({
             <textarea
                 ref={textareaRef}
                 id={id}
+                autoCorrect="on"
+                autoCapitalize="sentences"
+                spellCheck={true}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}

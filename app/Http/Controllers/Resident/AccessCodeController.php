@@ -180,7 +180,7 @@ class AccessCodeController extends Controller
         $estateId = null;
         try {
             $estateId = $this->estateContext->getEstateId();
-        } catch (\Throwable) {
+        } catch (Throwable) {
             $estateId = $user?->estate_id;
         }
 

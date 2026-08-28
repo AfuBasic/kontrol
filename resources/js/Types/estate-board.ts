@@ -40,6 +40,7 @@ export type EstateBoardPost = {
     reads_count?: number;
     media_count?: number;
     property_owner_id?: number | null;
+    applies_to?: string;
 };
 
 export type CommentAuthor = {

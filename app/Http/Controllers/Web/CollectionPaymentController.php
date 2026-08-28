@@ -139,6 +139,14 @@ class CollectionPaymentController extends Controller
                 $status = $verification['status'] ?? null;
 
                 if ($status === 'success') {
+                    $channel = $verification['channel'] ?? 'bank_transfer';
+                    if ($channel !== 'bank_transfer') {
+                        Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$p->reference}, Channel={$channel}");
+                        $p->update(['status' => 'failed']);
+
+                        continue;
+                    }
+
                     DB::transaction(function () use ($p, $assignment) {
                         $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
                         $lockedAssignment = CollectionAssignment::withoutGlobalScope(CollectionAssignmentScope::class)
@@ -228,19 +236,42 @@ class CollectionPaymentController extends Controller
 
         $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : ($assignment->user?->email ?? 'billing@kontrol.ng');
 
-        return response()->json([
-            'already_paid' => false,
-            'reference' => $payment->reference,
-            'email' => $payerEmail,
-            'amount' => $fees['total_amount'], // Total charged in NGN
-            'amount_kobo' => $amountKobo, // Integer kobo for PaystackPop.setup({ amount })
-            'base_amount' => $baseAmountNaira,
-            'kontrol_fee' => $fees['kontrol_fee'],
-            'paystack_fee' => $fees['paystack_fee'],
-            'subaccount' => $subaccount,
-            'bearer' => 'account', // Kontrol bears the Paystack charge
-            'transaction_charge' => $fees['transaction_charge'], // Integer kobo kept by main account
-        ]);
+        try {
+            $paystackInit = $paystackService->initializeTransaction(
+                $payerEmail,
+                $amountKobo,
+                route('web.billing.collection.status', ['reference' => $payment->reference]),
+                [], // metadata
+                $payment->reference,
+                ['bank_transfer'], // RESTRICTED CHANNEL
+                [
+                    'subaccount' => $subaccount,
+                    'bearer' => 'account',
+                    'transaction_charge' => $fees['transaction_charge'],
+                ]
+            );
+
+            return response()->json([
+                'already_paid' => false,
+                'reference' => $payment->reference,
+                'access_code' => $paystackInit['access_code'],
+                'email' => $payerEmail,
+                'amount' => $fees['total_amount'], // Total charged in NGN
+                'amount_kobo' => $amountKobo,
+                'base_amount' => $baseAmountNaira,
+                'kontrol_fee' => $fees['kontrol_fee'],
+                'paystack_fee' => $fees['paystack_fee'],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to initialize collection payment with Paystack', [
+                'error' => $e->getMessage(),
+                'reference' => $payment->reference,
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to initialize payment gateway. Please try again.',
+            ], 500);
+        }
     }
 
     public function verify(string $reference): JsonResponse
@@ -397,8 +428,14 @@ class CollectionPaymentController extends Controller
                 $paystackStatus = $verification['status'] ?? null;
 
                 if ($paystackStatus === 'success') {
-                    $this->verify($reference);
-                    $payment->refresh();
+                    $channel = $verification['channel'] ?? 'bank_transfer';
+                    if ($channel !== 'bank_transfer') {
+                        Log::error("Security violation: Collection payment attempted with restricted channel. Ref={$reference}, Channel={$channel}");
+                        $payment->update(['status' => 'failed']);
+                    } else {
+                        $this->verify($reference);
+                        $payment->refresh();
+                    }
                 } elseif (in_array($paystackStatus, ['failed', 'abandoned', 'reversed'], true)) {
                     $payment->update(['status' => 'failed']);
                 }
@@ -634,6 +671,14 @@ class CollectionPaymentController extends Controller
                 ]);
 
                 if ($status === 'success') {
+                    $channel = $verification['channel'] ?? 'bank_transfer';
+                    if ($channel !== 'bank_transfer') {
+                        Log::error("Security violation: Bulk collection payment attempted with restricted channel. Ref={$p->reference}, Channel={$channel}");
+                        $p->update(['status' => 'failed']);
+
+                        continue;
+                    }
+
                     DB::transaction(function () use ($p, $unpaidAssignments) {
                         $lockedPayment = Payment::where('id', $p->id)->lockForUpdate()->first();
 
@@ -744,19 +789,42 @@ class CollectionPaymentController extends Controller
 
         $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : 'billing@kontrol.ng';
 
-        return response()->json([
-            'already_paid' => false,
-            'reference' => $payment->reference,
-            'email' => $payerEmail,
-            'amount' => $fees['total_amount'],
-            'amount_kobo' => $amountKobo,
-            'base_amount' => $baseAmount,
-            'kontrol_fee' => $fees['kontrol_fee'],
-            'paystack_fee' => $fees['paystack_fee'],
-            'subaccount' => $firstSubaccount,
-            'bearer' => 'account',
-            'transaction_charge' => $fees['transaction_charge'],
-        ]);
+        try {
+            $paystackInit = $paystackService->initializeTransaction(
+                $payerEmail,
+                $amountKobo,
+                route('web.billing.collection.status', ['reference' => $payment->reference]),
+                [], // metadata
+                $payment->reference,
+                ['bank_transfer'], // RESTRICTED CHANNEL
+                [
+                    'subaccount' => $firstSubaccount,
+                    'bearer' => 'account',
+                    'transaction_charge' => $fees['transaction_charge'],
+                ]
+            );
+
+            return response()->json([
+                'already_paid' => false,
+                'reference' => $payment->reference,
+                'access_code' => $paystackInit['access_code'],
+                'email' => $payerEmail,
+                'amount' => $fees['total_amount'],
+                'amount_kobo' => $amountKobo,
+                'base_amount' => $baseAmount,
+                'kontrol_fee' => $fees['kontrol_fee'],
+                'paystack_fee' => $fees['paystack_fee'],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to initialize bulk collection payment with Paystack', [
+                'error' => $e->getMessage(),
+                'reference' => $payment->reference,
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to initialize payment gateway. Please try again.',
+            ], 500);
+        }
     }
 
     /**

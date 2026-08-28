@@ -6,6 +6,7 @@ import { index, store } from '@/actions/App/Http/Controllers/Admin/Administrativ
 import { create as createUser } from '@/actions/App/Http/Controllers/Admin/UserController';
 import { create as createRole } from '@/actions/App/Http/Controllers/Admin/RoleController';
 import SearchableSelect from '@/Components/UI/SearchableSelect';
+import { usePermission } from '@/Hooks/usePermission';
 
 type OptionUser = { id: number; ulid: string; name: string; email: string };
 type OptionRole = { id: number; name: string; estate_id: number };
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export default function CreateAssignment({ users, roles, zones, context }: Props) {
+    const { can } = usePermission();
     const isZoneScoped = context?.is_zone_scoped ?? false;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -86,7 +88,7 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                         </p>
 
                         <div className="mt-8 flex flex-wrap justify-center gap-3">
-                            {!hasUsers && (
+                            {!hasUsers && can('users.create') && (
                                 <Link
                                     href={createUser.url()}
                                     className="inline-flex items-center gap-2 rounded-xl bg-slate-950 px-5 py-2.5 text-xs font-black tracking-wider text-white uppercase shadow-sm transition-all hover:bg-slate-800 active:scale-95"
@@ -95,7 +97,7 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                     Add staff member
                                 </Link>
                             )}
-                            {!hasRoles && (
+                            {!hasRoles && can('roles.create') && (
                                 <Link
                                     href={createRole.url()}
                                     className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-black tracking-wider uppercase shadow-sm transition-all active:scale-95 ${
@@ -134,7 +136,9 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                             className="w-full"
                                         />
                                         {errors.user_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.user_id}</p>}
-                                        {errors.user && <p className="mt-2 text-xs font-bold text-red-600">{errors.user}</p>}
+                                        {(errors as Record<string, string | undefined>).user && (
+                                            <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).user}</p>
+                                        )}
                                     </div>
                                 </section>
 
@@ -177,7 +181,9 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                             })}
                                         </div>
                                         {errors.role_ids && <p className="mt-2 text-xs font-bold text-red-600">{errors.role_ids}</p>}
-                                        {errors.role && <p className="mt-2 text-xs font-bold text-red-600">{errors.role}</p>}
+                                        {(errors as Record<string, string | undefined>).role && (
+                                            <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).role}</p>
+                                        )}
                                     </div>
                                 </section>
 
@@ -280,15 +286,15 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                                     </div>
                                                 )}
                                                 {errors.zone_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone_id}</p>}
-                                                {errors.zone && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone}</p>}
+                                                {(errors as Record<string, string | undefined>).zone && <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).zone}</p>}
                                             </div>
                                         )}
                                     </div>
                                 </section>
 
-                                {errors.assignment && (
+                                {(errors as Record<string, string | undefined>).assignment && (
                                     <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                                        <p className="text-sm font-bold text-red-800">{errors.assignment}</p>
+                                        <p className="text-sm font-bold text-red-800">{(errors as Record<string, string | undefined>).assignment}</p>
                                     </div>
                                 )}
                             </div>

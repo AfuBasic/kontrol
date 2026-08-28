@@ -37,10 +37,10 @@ class DashboardService
         $estate = $this->estateContext->getEstate();
         $estateId = $estate->id;
 
-        // Optimized resident stats
+        // Optimized resident stats (residents + property owners)
         $residentStats = User::query()
             ->forEstate($estateId)
-            ->withRole('resident', $estateId)
+            ->withRole(['resident', 'property_owner'], $estateId)
             ->selectRaw('count(*) as total')
             ->selectRaw('sum(case when suspended_at is null and email_verified_at is not null then 1 else 0 end) as active')
             ->toBase()
@@ -74,7 +74,7 @@ class DashboardService
         // Optimized resident trends
         $residentTrends = User::query()
             ->forEstate($estateId)
-            ->withRole('resident', $estateId)
+            ->withRole(['resident', 'property_owner'], $estateId)
             ->selectRaw('sum(case when created_at >= ? then 1 else 0 end) as new_this_period', [$thirtyDaysAgo])
             ->selectRaw('sum(case when created_at >= ? and created_at < ? then 1 else 0 end) as new_last_period', [$sixtyDaysAgo, $thirtyDaysAgo])
             ->toBase()
@@ -148,19 +148,19 @@ class DashboardService
         // 1. Core Counts
         $residentsTotal = User::query()
             ->forEstate($estateId)
-            ->withRole('resident', $estateId)
+            ->withRole(['resident', 'property_owner'], $estateId)
             ->count();
 
         $residentsActive = User::query()
             ->forEstate($estateId)
-            ->withRole('resident', $estateId)
+            ->withRole(['resident', 'property_owner'], $estateId)
             ->whereNull('suspended_at')
             ->whereNotNull('email_verified_at')
             ->count();
 
         $residentsAwaitingApproval = User::query()
             ->forEstate($estateId)
-            ->topLevelResident($estateId)
+            ->withRole(['resident', 'property_owner'], $estateId)
             ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.status', 'pending'))
             ->count();
 
@@ -276,7 +276,7 @@ class DashboardService
         if ($residentsAwaitingApproval > 0) {
             $pendingResidents = User::query()
                 ->forEstate($estateId)
-                ->withRole('resident', $estateId)
+                ->withRole(['resident', 'property_owner'], $estateId)
                 ->whereHas('estates', fn ($q) => $q->where('estates.id', $estateId)->where('estate_users_membership.status', 'pending'))
                 ->with('profile')
                 ->latest()
@@ -332,10 +332,10 @@ class DashboardService
             ];
         }
 
-        // Residents Without Assigned Units
+        // Residents & Property Owners Without Assigned Units
         $unassignedCount = User::query()
             ->forEstate($estateId)
-            ->withRole('resident', $estateId)
+            ->withRole(['resident', 'property_owner'], $estateId)
             ->whereNull('suspended_at')
             ->where(function ($q) {
                 $q->whereDoesntHave('profile')
@@ -346,7 +346,7 @@ class DashboardService
         if ($unassignedCount > 0) {
             $unassignedResidents = User::query()
                 ->forEstate($estateId)
-                ->withRole('resident', $estateId)
+                ->withRole(['resident', 'property_owner'], $estateId)
                 ->whereNull('suspended_at')
                 ->where(function ($q) {
                     $q->whereDoesntHave('profile')
@@ -568,7 +568,7 @@ class DashboardService
                 ->count(),
             'new_residents' => User::query()
                 ->forEstate($estateId)
-                ->withRole('resident', $estateId)
+                ->withRole(['resident', 'property_owner'], $estateId)
                 ->whereDate('created_at', $today)
                 ->count(),
         ];

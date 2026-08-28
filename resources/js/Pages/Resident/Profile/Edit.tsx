@@ -1,7 +1,8 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet } from 'lucide-react';
+import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle } from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
+import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
 import * as EmergencyContactController from '@/actions/App/Http/Controllers/Resident/EmergencyContactController';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
@@ -43,7 +44,6 @@ import resident from '@/routes/resident';
 import type { SharedData } from '@/types';
 
 export default function Edit({ telegram, profile, stats, emergency_contacts, subscription }: Props) {
-    const { confirm: _confirm } = useResidentConfirmation();
     const { auth } = usePage<SharedData>().props;
     const hasTelegram = useFeature('telegram-bot-integration');
     const hasHousehold = useFeature('household-management');
@@ -245,6 +245,21 @@ export default function Edit({ telegram, profile, stats, emergency_contacts, sub
                             </div>
                         </section>
                     )}
+
+                    {/* Support Section */}
+                    <section>
+                        <h2 className="mb-4 px-2 text-xs font-black tracking-[0.2em] text-slate-400 uppercase">Help & Support</h2>
+                        <div className="overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-slate-200">
+                            <Link href={SupportController.index.url()} className="block">
+                                <SettingsRow
+                                    icon={<HelpCircle className="h-5 w-5" />}
+                                    label="Help & Support"
+                                    description="Contact Kontrol via call, WhatsApp, or email"
+                                    onClick={() => {}}
+                                />
+                            </Link>
+                        </div>
+                    </section>
                 </div>
             </div>
             {/* PROFILE INFORMATION SHEET */}
@@ -402,6 +417,7 @@ function ProfileForm({ profile, onSuccess }: { profile: Props['profile']; onSucc
 
 /* ─── Emergency Contacts Management List ─── */
 function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: Props['emergency_contacts']; limit: number; onAddClick: () => void }) {
+    const { confirm: openConfirm } = useResidentConfirmation();
     const isLimitReached = contacts.length >= limit;
     const [contactToDelete, setContactToDelete] = useState<{ id: number; name: string } | null>(null);
 
@@ -505,7 +521,7 @@ function EmergencyContactsManager({ contacts, limit, onAddClick }: { contacts: P
                                     onClick={() => {
                                         const isIPadOrDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
                                         if (isIPadOrDesktop) {
-                                            confirm({
+                                            openConfirm({
                                                 title: 'Remove emergency contact',
                                                 message: `Are you sure you want to remove ${contact.name}? They will no longer receive your SOS alerts.`,
                                                 confirmLabel: 'Remove contact',

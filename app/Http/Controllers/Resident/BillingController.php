@@ -78,12 +78,32 @@ class BillingController extends Controller
             ->sortByDesc(fn ($coupon) => $coupon->type === 'percentage' ? $coupon->value * 1000 : $coupon->value)
             ->first();
 
+        $currentMonthKey = $subscription->current_period_start ? $subscription->current_period_start->format('Y-m') : now()->format('Y-m');
+        $dismissCacheKey = "auto_renew_dismissed:{$subscription->id}:{$currentMonthKey}";
+        $isDismissed = (bool) \Illuminate\Support\Facades\Cache::get($dismissCacheKey, false);
+
+        $hasUrgentBillingIssue = $subscription->status === 'past_due' ||
+            ($subscription->status === 'active' && $subscription->current_period_end && $subscription->current_period_end->isPast()) ||
+            ($subscription->status === 'trial' && $subscription->trial_ends_at && $subscription->trial_ends_at->isPast());
+
+        $canAutoRenew = $subscription->hasSavedCard() && ! $subscription->auto_renew_enabled;
+        $showAutoRenewSuggestion = $canAutoRenew && ! $subscription->auto_renew_opted_out && ! $isDismissed && ! $hasUrgentBillingIssue;
+
         return Inertia::render('Resident/Billing/Index', [
             'subscription' => [
                 'status' => $subscription->status,
                 'has_saved_card' => $subscription->hasSavedCard(),
+                'auto_renew_enabled' => (bool) $subscription->auto_renew_enabled,
+                'can_auto_renew' => $canAutoRenew,
+                'show_auto_renew_suggestion' => $showAutoRenewSuggestion,
+                'payment_method' => $subscription->hasSavedCard() ? [
+                    'type' => 'card',
+                    'brand' => $subscription->card_brand ?: 'Card',
+                    'last4' => $subscription->card_last4 ?: '••••',
+                ] : null,
                 'card_brand' => $subscription->card_brand,
                 'card_last4' => $subscription->card_last4,
+                'current_period_start' => $subscription->current_period_start?->toDateString(),
                 'current_period_end' => $subscription->current_period_end?->toDateString(),
                 'trial_ends_at' => $subscription->trial_ends_at?->toDateString(),
                 'plan_id' => $subscription->plan_id,
@@ -101,11 +121,77 @@ class BillingController extends Controller
         ]);
     }
 
+    public function enableAutoRenew(): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $subscription = ResidentSubscription::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->first();
+
+        abort_if(! $subscription, 404, 'No subscription found.');
+        abort_if(! $subscription->hasSavedCard(), 422, 'Cannot enable automatic renewal without a saved card.');
+
+        $subscription->update([
+            'auto_renew_enabled' => true,
+            'auto_renew_opted_out' => false,
+        ]);
+
+        return back()->with('success', 'Automatic renewal has been enabled.');
+    }
+
+    public function disableAutoRenew(): RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $subscription = ResidentSubscription::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->first();
+
+        abort_if(! $subscription, 404, 'No subscription found.');
+
+        $subscription->update([
+            'auto_renew_enabled' => false,
+            'auto_renew_opted_out' => true,
+        ]);
+
+        return back()->with('success', 'Automatic renewal has been turned off.');
+    }
+
+    public function dismissAutoRenewSuggestion(): JsonResponse|RedirectResponse
+    {
+        $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
+
+        $subscription = ResidentSubscription::where('user_id', $user->id)
+            ->where('estate_id', $estate->id)
+            ->first();
+
+        if ($subscription) {
+            $currentMonthKey = $subscription->current_period_start ? $subscription->current_period_start->format('Y-m') : now()->format('Y-m');
+            $dismissCacheKey = "auto_renew_dismissed:{$subscription->id}:{$currentMonthKey}";
+            $ttl = $subscription->current_period_end && $subscription->current_period_end->isFuture()
+                ? $subscription->current_period_end
+                : now()->endOfMonth();
+
+            \Illuminate\Support\Facades\Cache::put($dismissCacheKey, true, $ttl);
+        }
+
+        if (request()->wantsJson()) {
+            return response()->json(['status' => 'success']);
+        }
+
+        return back();
+    }
+
     public function subscribe(Request $request, ProcessResidentPaymentAction $initialize): RedirectResponse|SymfonyResponse
     {
         $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
             'coupon_code' => ['nullable', 'string'],
+            'auto_renew_consent' => ['nullable', 'boolean'],
         ]);
 
         $user = auth()->user();
@@ -125,6 +211,7 @@ class BillingController extends Controller
                 route('resident.billing.payment.callback'),
                 route('resident.billing.index'),
                 $request->coupon_code,
+                (bool) $request->boolean('auto_renew_consent', false),
             );
         } catch (PaymentInitializationException $e) {
             return back()->with('error', $e->getUserMessage());

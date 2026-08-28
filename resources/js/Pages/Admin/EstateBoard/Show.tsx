@@ -342,6 +342,9 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                         >
                             <form onSubmit={handleSubmitComment} noValidate>
                                 <textarea
+                                    autoCorrect="on"
+                                    autoCapitalize="sentences"
+                                    spellCheck={true}
                                     value={data.body}
                                     onChange={(e) => setData('body', e.target.value)}
                                     placeholder="Write your comment..."

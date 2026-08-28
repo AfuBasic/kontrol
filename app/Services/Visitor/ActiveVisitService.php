@@ -4,7 +4,6 @@ namespace App\Services\Visitor;
 
 use App\Models\AccessLog;
 use App\Models\EstateSettings;
-use App\Models\Scopes\ZoneScope;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
 use Carbon\Carbon;

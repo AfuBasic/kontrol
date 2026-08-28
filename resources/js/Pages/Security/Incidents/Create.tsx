@@ -228,6 +228,10 @@ export default function Create({ categories }: Props) {
                             <input
                                 id="title"
                                 type="text"
+                                autoCorrect="on"
+                                autoCapitalize="sentences"
+                                spellCheck={true}
+                                autoComplete="on"
                                 value={data.title}
                                 onChange={(e) => setData('title', e.target.value)}
                                 placeholder="e.g. Suspicious vehicle near gate house"
@@ -244,6 +248,9 @@ export default function Create({ categories }: Props) {
                             </label>
                             <textarea
                                 id="body"
+                                autoCorrect="on"
+                                autoCapitalize="sentences"
+                                spellCheck={true}
                                 value={data.body}
                                 onChange={(e) => setData('body', e.target.value)}
                                 placeholder="Describe the safety threat, property damage, or operational breakdown..."
@@ -306,6 +313,10 @@ export default function Create({ categories }: Props) {
                             <input
                                 id="location"
                                 type="text"
+                                autoCorrect="on"
+                                autoCapitalize="sentences"
+                                spellCheck={true}
+                                autoComplete="on"
                                 value={data.location}
                                 onChange={(e) => setData('location', e.target.value)}
                                 placeholder="e.g. Block C, Visitor Car Park"
