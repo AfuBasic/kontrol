@@ -31,7 +31,7 @@ import { toggleStatus, destroy, resendInvitation, updatePartnerAssignment } from
 interface Partner {
     id: number;
     name: string;
-    email: string;
+    email?: string | null;
     commission_rate: string;
 }
 
@@ -891,7 +891,7 @@ export default function EstateShow({
                                         </option>
                                         {partners.map((partner) => (
                                             <option key={partner.id} value={partner.id}>
-                                                {partner.name} ({partner.commission_rate}%) — {partner.email}
+                                                {partner.name} ({partner.commission_rate}%){partner.email ? ` — ${partner.email}` : ''}
                                             </option>
                                         ))}
                                     </select>
@@ -904,9 +904,11 @@ export default function EstateShow({
                                                 <p className="text-xs font-bold text-slate-900 dark:text-white">
                                                     {currentSelectedPartner.name}
                                                 </p>
-                                                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                                    {currentSelectedPartner.email}
-                                                </p>
+                                                {currentSelectedPartner.email && (
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                                                        {currentSelectedPartner.email}
+                                                    </p>
+                                                )}
                                             </div>
                                             <span className="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
                                                 {currentSelectedPartner.commission_rate}% Rate
