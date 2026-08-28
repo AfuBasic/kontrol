@@ -163,7 +163,7 @@ export default function TransactionsTable({ transactions, onSelect, permissions 
                                         <td className="px-4 py-3 text-xs font-semibold text-slate-600">{tx.resident?.name || '-'}</td>
                                         <td className="px-4 py-3 text-xs font-semibold text-slate-600">{tx.collection?.name || '-'}</td>
                                         <td className="px-4 py-3 text-xs font-black text-slate-950">
-                                            {formatCurrency(tx.amount, tx.currency || 'NGN')}
+                                            {formatCurrency(tx.amount / 100, tx.currency || 'NGN')}
                                         </td>
                                         <td className="px-4 py-3 text-xs font-semibold text-slate-500">
                                             {tx.payment_method_label || tx.provider || '-'}
