@@ -351,7 +351,8 @@ test('it does not apply a non-recurring one-time coupon on subsequent automated 
         $oneTimeCoupon,
         $resident,
         $estate,
-        $subscription
+        $subscription,
+        true // automated recurring renewal
     );
     expect($pricing2['discount_amount'])->toBe(0)
         ->and($pricing2['amount'])->toBe(20000)
