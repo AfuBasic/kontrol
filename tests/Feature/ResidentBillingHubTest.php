@@ -199,6 +199,7 @@ test('resident can download receipt for paid invoice repeatedly', function () {
         'billing_period_start' => now(),
         'billing_period_end' => now()->addMonth(),
         'status' => 'paid',
+        'paid_at' => now(),
         'due_date' => now()->addDays(7),
     ]);
 
