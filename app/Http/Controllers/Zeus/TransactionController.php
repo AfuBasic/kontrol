@@ -6,16 +6,32 @@ use App\Http\Controllers\Controller;
 use App\Models\Estate;
 use App\Models\PaymentTransaction;
 use App\Services\Zeus\TransactionIntelligenceService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class TransactionController extends Controller
 {
+    /**
+     * Eager-load relationships shared by both index and show.
+     *
+     * @return array<string>
+     */
+    private function eagerLoads(): array
+    {
+        return [
+            'estate:id,name,email,address,billing_mode',
+            'user:id,name,email',
+            'invoice.plan:id,name,slug,billing_interval,price',
+            'invoice.user:id,name,email',
+        ];
+    }
+
     public function index(Request $request, TransactionIntelligenceService $intelligenceService): Response
     {
         $query = PaymentTransaction::query()
-            ->with(['estate:id,name', 'user:id,name,email', 'invoice.plan', 'invoice.user:id,name,email'])
+            ->with($this->eagerLoads())
             ->latest();
 
         // Filters
@@ -59,5 +75,15 @@ class TransactionController extends Controller
             'stats' => $stats,
             'volumeTrend' => $volumeTrend,
         ]);
+    }
+
+    /**
+     * Return a single fully-enriched transaction for the detail drawer.
+     */
+    public function show(PaymentTransaction $transaction): JsonResponse
+    {
+        $transaction->loadMissing($this->eagerLoads());
+
+        return response()->json($transaction);
     }
 }
