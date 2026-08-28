@@ -40,8 +40,13 @@ class PaystackService
             'reference' => $reference ?? $invoice->invoice_number,
         ]);
 
+        $customerEmail = $invoice->user?->email
+            ?? $invoice->estate?->email
+            ?? $invoice->estate?->users()->first()?->email
+            ?? auth()->user()?->email;
+
         $response = $this->client->post('/transaction/initialize', [
-            'email' => $invoice->estate->email ?? $invoice->estate->users()->first()?->email,
+            'email' => $customerEmail,
             'amount' => $invoice->amount,
             'reference' => $reference ?? $invoice->invoice_number,
             'callback_url' => $callbackUrl,
