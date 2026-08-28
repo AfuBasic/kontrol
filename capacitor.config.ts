@@ -1,4 +1,5 @@
 import type { CapacitorConfig } from '@capacitor/cli';
+import { KeyboardResize, KeyboardStyle } from '@capacitor/keyboard';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -87,7 +88,11 @@ const config: CapacitorConfig = {
             splashFullScreen: true,
             splashImmersive: true,
         },
-        // Android keyboard resizing is owned by MainActivity's adjustResize mode.
+        Keyboard: {
+            resize: KeyboardResize.Body,
+            resizeOnFullScreen: true,
+            style: KeyboardStyle.Light,
+        },
         StatusBar: {
             style: 'LIGHT',
             backgroundColor: '#FFFFFF',
