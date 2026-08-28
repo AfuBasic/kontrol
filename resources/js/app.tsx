@@ -7,6 +7,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { useState, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
+import './bootstrap';
 import './echo';
 
 import AppLoader from './Components/AppLoader';
