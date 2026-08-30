@@ -59,23 +59,21 @@ class Activity extends SpatieActivity
     {
         static::creating(function ($activity): void {
             // Check if Support Mode / Impersonation is active
-            if (app()->bound(ImpersonationService::class)) {
-                $impersonationService = app(ImpersonationService::class);
-                if ($impersonationService->isImpersonating()) {
-                    $session = $impersonationService->getActiveSession();
-                    if ($session) {
-                        $props = $activity->properties ? $activity->properties->toArray() : [];
-                        $props['impersonation'] = true;
-                        $props['impersonation_session_id'] = $session->id;
-                        $props['provider_identifier'] = $session->provider_identifier;
-                        $props['effective_user_id'] = $session->effective_user_id;
-                        $props['effective_actor_name'] = $session->effectiveUser?->name ?? 'Administrator';
-                        $props['reason'] = $session->reason;
-                        $activity->properties = $props;
-                        $activity->estate_id = $session->estate_id;
+            $impersonationService = app(ImpersonationService::class);
+            if ($impersonationService->isImpersonating()) {
+                $session = $impersonationService->getActiveSession();
+                if ($session) {
+                    $props = $activity->properties ? $activity->properties->toArray() : [];
+                    $props['impersonation'] = true;
+                    $props['impersonation_session_id'] = $session->id;
+                    $props['provider_identifier'] = $session->provider_identifier;
+                    $props['effective_user_id'] = $session->effective_user_id;
+                    $props['effective_actor_name'] = $session->effectiveUser?->name ?? 'Administrator';
+                    $props['reason'] = $session->reason;
+                    $activity->properties = $props;
+                    $activity->estate_id = $session->estate_id;
 
-                        return;
-                    }
+                    return;
                 }
             }
 
