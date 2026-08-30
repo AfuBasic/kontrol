@@ -121,18 +121,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 BaseValidateCsrfToken::class => ValidateCsrfToken::class,
             ]
         );
-        $middleware->prependToPriorityList(
-            SubstituteBindings::class,
-            ResolveImpersonationContext::class,
-            BlockSensitiveDuringImpersonation::class,
-            ResolveContext::class,
-        );
         $middleware->trustProxies('*');
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
             'webhooks/paystack',
             'api/*',
             'api/v1/client-errors',
+            'zeus/impersonation/stop',
         ]);
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
