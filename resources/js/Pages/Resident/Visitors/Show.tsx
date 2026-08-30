@@ -1,16 +1,18 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
-import { ArrowLeft, Copy, Share2, Clock, X, Loader2, CheckCircle2 } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
+import { ArrowLeft, Copy, Share2, Clock, X, Loader2, CheckCircle2, Bell, BellRing, BellOff } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
 import PassCard from '@/Components/Resident/PassCard';
+import VisitReminderModal from '@/Components/Resident/VisitReminderModal';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import resident from '@/routes/resident';
-import type { AccessCode, CursorPaginatedUsageLogs, DurationOption } from '@/types/access-code';
+import type { AccessCode, CursorPaginatedUsageLogs, DurationOption, ReminderOption } from '@/types/access-code';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 import { shareAccessCode } from '@/Utils/share';
 
 type Props = {
     accessCode: AccessCode;
+    availableReminderOptions?: ReminderOption[];
     usageLogs: CursorPaginatedUsageLogs;
     filters: {
         date: string | null;
@@ -19,12 +21,34 @@ type Props = {
     allowExtendPasses?: boolean;
 };
 
-export default function CodeShow({ accessCode, usageLogs, durationOptions = [], allowExtendPasses = true }: Props) {
+export default function CodeShow({
+    accessCode,
+    availableReminderOptions = [],
+    usageLogs,
+    durationOptions = [],
+    allowExtendPasses = true,
+}: Props) {
+    const { flash } = usePage<{ flash?: { success?: string; error?: string } }>().props;
     const { confirm } = useResidentConfirmation();
     const [copied, setCopied] = useState(false);
     const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+    const [isReminderModalOpen, setIsReminderModalOpen] = useState(false);
+    const [isPostCreationPrompt, setIsPostCreationPrompt] = useState(false);
     const [selectedDuration, setSelectedDuration] = useState<number>(durationOptions[0]?.minutes || 120);
     const [successBanner, setSuccessBanner] = useState<string | null>(null);
+
+    // Auto-open reminder prompt if eligible and navigated with a fresh creation success message
+    useEffect(() => {
+        if (
+            accessCode.is_eligible_for_reminder &&
+            !accessCode.reminder &&
+            flash?.success?.includes('generated successfully') &&
+            availableReminderOptions.length > 0
+        ) {
+            setIsPostCreationPrompt(true);
+            setIsReminderModalOpen(true);
+        }
+    }, [accessCode.id]);
 
     const { post: _post, processing } = useForm({
         duration_minutes: selectedDuration,
@@ -94,6 +118,22 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
         }
     }
 
+    function handleRemoveReminder() {
+        confirm({
+            title: 'Remove Visit Reminder',
+            message: 'Are you sure you want to remove this reminder? Kontrol will not send a push notification before this visit.',
+            confirmLabel: 'Remove Reminder',
+            onConfirm: () =>
+                router.delete(resident.visitors.reminder.destroy.url(accessCode.id), {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        setSuccessBanner('Visit reminder removed.');
+                        setTimeout(() => setSuccessBanner(null), 4000);
+                    },
+                }),
+        });
+    }
+
     const isExpired = accessCode.expires_at ? new Date(accessCode.expires_at) < new Date() : false;
     const isPassValid = (accessCode.status === 'active' || accessCode.status === 'scheduled') && !isExpired;
 
@@ -101,6 +141,9 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
         (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('from_tab') : null) === 'history' ? 'history' : 'schedule';
 
     const backUrl = `/resident/visitors?tab=${fromTab}`;
+
+    const activeReminder = accessCode.reminder;
+    const canSetReminder = isPassValid && availableReminderOptions.length > 0;
 
     return (
         <>
@@ -184,6 +227,49 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
 
                 {/* Primary & Secondary Action Controls */}
                 <div className="mx-auto w-full max-w-sm space-y-3 px-1">
+                    {/* Active Reminder Badge / Card */}
+                    {activeReminder && isPassValid && (
+                        <div className="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/60 p-3.5 shadow-xs">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm">
+                                    <BellRing className="h-4 w-4 animate-pulse" />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-xs font-black tracking-tight text-indigo-950">Visit Reminder</span>
+                                        <span className="inline-flex items-center rounded-md bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
+                                            Active
+                                        </span>
+                                    </div>
+                                    <p className="truncate text-[11px] font-medium text-indigo-700/80">
+                                        {activeReminder.formatted_date ? `${activeReminder.formatted_date} at ` : ''}
+                                        {activeReminder.formatted_time || 'Scheduled'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsPostCreationPrompt(false);
+                                        setIsReminderModalOpen(true);
+                                    }}
+                                    className="rounded-lg px-2 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100/80 active:scale-95 transition"
+                                >
+                                    Change
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleRemoveReminder}
+                                    className="rounded-lg p-1 text-indigo-400 hover:bg-indigo-100 hover:text-rose-600 active:scale-95 transition"
+                                    title="Remove reminder"
+                                >
+                                    <BellOff className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Primary Actions: Copy, Share & Prominent Extend */}
                     {isPassValid && (
                         <div className="space-y-2">
@@ -214,6 +300,21 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                                 </button>
                             </div>
 
+                            {/* Set Reminder Button if not active yet */}
+                            {!activeReminder && canSetReminder && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsPostCreationPrompt(false);
+                                        setIsReminderModalOpen(true);
+                                    }}
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-200 bg-indigo-50/50 py-2.5 text-xs font-bold text-indigo-700 transition-all hover:bg-indigo-100/70 active:scale-98"
+                                >
+                                    <Bell className="h-3.5 w-3.5 text-indigo-600" />
+                                    <span>Set Visit Reminder</span>
+                                </button>
+                            )}
+
                             {/* Repositioned Prominent Extend Pass Action Button (Not available for Long-Term passes) */}
                             {allowExtendPasses && accessCode.type !== 'long_lived' && (
                                 <button
@@ -236,6 +337,19 @@ export default function CodeShow({ accessCode, usageLogs, durationOptions = [], 
                         </div>
                     )}
                 </div>
+
+                {/* Visit Reminder Modal */}
+                <VisitReminderModal
+                    isOpen={isReminderModalOpen}
+                    onClose={() => setIsReminderModalOpen(false)}
+                    accessCode={accessCode}
+                    availableOptions={availableReminderOptions}
+                    isPostCreation={isPostCreationPrompt}
+                    onSuccess={(msg) => {
+                        setSuccessBanner(msg);
+                        setTimeout(() => setSuccessBanner(null), 4000);
+                    }}
+                />
 
                 {/* Extend Pass Confirmation Modal */}
                 {isExtendModalOpen && allowExtendPasses && accessCode.type !== 'long_lived' && (
