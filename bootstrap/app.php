@@ -8,6 +8,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
 use App\Http\Middleware\ValidateEstateContext;
+use App\Http\Middleware\Zeus\BlockSensitiveDuringImpersonation;
 use App\Http\Middleware\Zeus\ResolveImpersonationContext;
 use App\Models\SystemErrorLog;
 use Illuminate\Auth\AuthenticationException;
@@ -111,6 +112,7 @@ return Application::configure(basePath: dirname(__DIR__))
             append: [
                 AuthenticateSession::class,
                 ResolveImpersonationContext::class,
+                BlockSensitiveDuringImpersonation::class,
                 ResolveContext::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
@@ -122,6 +124,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToPriorityList(
             SubstituteBindings::class,
             ResolveImpersonationContext::class,
+            BlockSensitiveDuringImpersonation::class,
             ResolveContext::class,
         );
         $middleware->trustProxies('*');
