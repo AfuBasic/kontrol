@@ -5,7 +5,6 @@ use App\Enums\VisitorPassReminderStatus;
 use App\Jobs\Resident\SendVisitorPassRemindersJob;
 use App\Models\AccessCode;
 use App\Models\Estate;
-use App\Models\EstateSettings;
 use App\Models\Feature;
 use App\Models\Plan;
 use App\Models\ResidentSubscription;

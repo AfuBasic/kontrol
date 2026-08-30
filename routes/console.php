@@ -42,4 +42,3 @@ Schedule::job(new GenerateMonthlyPartnerEarningsJob(mode: GenerateMonthlyPartner
 
 // Scheduled Visitor Pass Reminders
 Schedule::job(new SendVisitorPassRemindersJob)->everyMinute();
-
