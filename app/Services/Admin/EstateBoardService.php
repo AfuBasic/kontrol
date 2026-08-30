@@ -7,6 +7,7 @@ use App\Enums\EstateBoardPostAudience;
 use App\Models\Estate;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
+use App\Models\EstateBoardPostRead;
 use App\Models\Zone;
 use App\Services\ZoneAudienceResolver;
 use Illuminate\Contracts\Pagination\CursorPaginator;
@@ -93,6 +94,17 @@ class EstateBoardService
                     }
                 });
             })
+            ->when($user, function ($q) use ($user) {
+                $q->withExists(['reads as is_read' => fn ($sub) => $sub->where('user_id', $user->id)])
+                    ->selectSub(
+                        EstateBoardPostRead::query()
+                            ->select('created_at')
+                            ->whereColumn('estate_board_post_id', 'estate_board_posts.id')
+                            ->where('user_id', $user->id)
+                            ->limit(1),
+                        'read_at'
+                    );
+            })
             ->when($search, function ($q) use ($search) {
                 $q->where(function ($sub) use ($search) {
                     $term = '%'.$search.'%';
@@ -110,6 +122,77 @@ class EstateBoardService
             ->orderByRaw('COALESCE(published_at, created_at) desc')
             ->orderByDesc('id')
             ->cursorPaginate($perPage);
+    }
+
+    /**
+     * Get count of unread announcements for the authenticated resident.
+     *
+     * @param  array<EstateBoardPostAudience>|null  $audiences
+     */
+    public function getResidentUnreadCount(int $estateId, ?array $audiences = null, ?string $filter = null): int
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return 0;
+        }
+
+        $isPropertyOwner = $user->contextHasRole('property_owner');
+        $propertyOwnerId = $user->getPropertyOwnerForEstate($estateId)?->id;
+        $propertyId = $user->profile?->property_id;
+        $userZoneIds = app(ZoneAudienceResolver::class)->zoneIdsForUser($user, $estateId);
+
+        return EstateBoardPost::query()
+            ->forEstate($estateId)
+            ->published()
+            ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
+            ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
+            ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'))
+            ->where(function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
+                $query->where(function ($estatePosts) use ($user, $propertyId, $userZoneIds) {
+                    $estatePosts->whereNull('property_owner_id')
+                        ->where(function ($scope) use ($user, $propertyId, $userZoneIds) {
+                            $scope->where(function ($all) {
+                                $all->where(function ($inner) {
+                                    $inner->whereNull('applies_to')->orWhere('applies_to', 'all');
+                                })->whereDoesntHave('targets');
+                            })->orWhere(function ($targeted) use ($user, $propertyId, $userZoneIds) {
+                                $targeted->whereIn('applies_to', ['custom', 'target', 'zone'])
+                                    ->whereHas('targets', function ($t) use ($user, $propertyId, $userZoneIds) {
+                                        $t->where(fn ($sub) => $sub->where('target_type', 'user')->where('target_id', $user->id))
+                                            ->when($propertyId, fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->where('target_type', 'property')->where('target_id', $propertyId)))
+                                            ->when($userZoneIds !== [], fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->whereIn('target_type', ['zone', Zone::class])->whereIn('target_id', $userZoneIds)));
+                                    });
+                            });
+                        });
+                });
+
+                if ($propertyOwnerId) {
+                    $query->orWhere(function ($sq) use ($user, $propertyOwnerId, $propertyId) {
+                        $sq->where('property_owner_id', $propertyOwnerId)
+                            ->where(function ($sq2) use ($user, $propertyId) {
+                                $sq2->where('applies_to', 'all')
+                                    ->orWhere(function ($sq3) use ($user, $propertyId) {
+                                        $sq3->where('applies_to', 'custom')
+                                            ->whereExists(function ($tq) use ($user, $propertyId) {
+                                                $tq->select(DB::raw(1))
+                                                    ->from('estate_board_post_targets')
+                                                    ->whereColumn('estate_board_post_targets.estate_board_post_id', 'estate_board_posts.id')
+                                                    ->where(function ($tq2) use ($user, $propertyId) {
+                                                        $tq2->where(fn ($sub) => $sub->where('target_type', 'user')->where('target_id', $user->id))
+                                                            ->when($propertyId, fn ($sub) => $sub->orWhere(fn ($sub2) => $sub2->where('target_type', 'property')->where('target_id', $propertyId)));
+                                                    });
+                                            });
+                                    });
+                            });
+                    });
+                }
+
+                if ($isPropertyOwner) {
+                    $query->orWhere('property_owner_id', $user->id);
+                }
+            })
+            ->whereDoesntHave('reads', fn ($q) => $q->where('user_id', $user->id))
+            ->count();
     }
 
     public function getFeedMetrics(int $estateId, ?string $filter = null): array
@@ -205,6 +288,17 @@ class EstateBoardService
                         $q->orWhere('property_owner_id', $user->id);
                     }
                 });
+            })
+            ->when($user, function ($q) use ($user) {
+                $q->withExists(['reads as is_read' => fn ($sub) => $sub->where('user_id', $user->id)])
+                    ->selectSub(
+                        EstateBoardPostRead::query()
+                            ->select('created_at')
+                            ->whereColumn('estate_board_post_id', 'estate_board_posts.id')
+                            ->where('user_id', $user->id)
+                            ->limit(1),
+                        'read_at'
+                    );
             })
             ->with([
                 'author:id,name,email',
