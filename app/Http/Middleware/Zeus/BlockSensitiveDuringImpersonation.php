@@ -35,13 +35,22 @@ class BlockSensitiveDuringImpersonation
         // 2. Block deleting or revoking the effective administrator's own account or assignment
         if ($request->isMethod('DELETE') || str_contains($routeName, 'destroy') || str_contains($routeName, 'deactivate')) {
             $userParam = $request->route('user');
-            if ($userParam instanceof User && $effectiveUser && $userParam->id === $effectiveUser->id) {
-                abort(403, 'Modifying or deleting the effective administrator account is restricted during Support Mode.');
+            if ($userParam && $effectiveUser) {
+                $targetUserId = $userParam instanceof User ? $userParam->id : (is_numeric($userParam) ? (int) $userParam : null);
+                if ($targetUserId === $effectiveUser->id) {
+                    abort(403, 'Modifying or deleting the effective administrator account is restricted during Support Mode.');
+                }
             }
 
-            $assignmentParam = $request->route('administrativeAssignment') ?? $request->route('assignment');
-            if ($assignmentParam instanceof AdministrativeAssignment && $effectiveUser && $assignmentParam->user_id === $effectiveUser->id) {
-                abort(403, 'Modifying or revoking the active administrator assignment is restricted during Support Mode.');
+            $assignmentParam = $request->route('assignment') ?? $request->route('administrativeAssignment');
+            if ($assignmentParam && $effectiveUser) {
+                $assignment = $assignmentParam instanceof AdministrativeAssignment
+                    ? $assignmentParam
+                    : AdministrativeAssignment::find($assignmentParam);
+
+                if ($assignment && $assignment->user_id === $effectiveUser->id) {
+                    abort(403, 'Modifying or revoking the active administrator assignment is restricted during Support Mode.');
+                }
             }
         }
 
