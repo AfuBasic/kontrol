@@ -7,6 +7,7 @@ use App\Models\AccessCode;
 use App\Models\EstateSettings;
 use App\Services\EstateContextService;
 use App\Services\Resident\AccessCodeService;
+use App\Services\Resident\VisitorPassReminderService;
 use App\Services\Visitor\ActiveVisitService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ class AccessCodeController extends Controller
         protected AccessCodeService $accessCodeService,
         protected EstateContextService $estateContext,
         protected ActiveVisitService $activeVisitService,
+        protected VisitorPassReminderService $reminderService,
     ) {}
 
     /**
@@ -284,13 +286,23 @@ class AccessCodeController extends Controller
 
         abort_if(! $userCode, 404);
 
-        $userCode->load(['estate', 'user:id,name']);
+        $userCode->load(['estate', 'user:id,name', 'reminder']);
 
         $dateFilter = $request->input('date');
         $usageLogs = $this->accessCodeService->getUsageHistory($userCode, $dateFilter);
 
         $tz = config('app.timezone', 'Africa/Lagos');
         $effectiveVisitAt = $userCode->effective_visit_at;
+
+        $reminder = $userCode->reminder;
+        $reminderData = ($reminder && $reminder->status->value === 'scheduled') ? [
+            'id' => $reminder->id,
+            'reminder_offset_minutes' => $reminder->reminder_offset_minutes,
+            'scheduled_for' => $reminder->scheduled_for->toISOString(),
+            'status' => $reminder->status->value,
+            'formatted_time' => $reminder->scheduled_for->timezone($tz)->format('g:i A'),
+            'formatted_date' => $reminder->scheduled_for->timezone($tz)->format('l, F j'),
+        ] : null;
 
         return Inertia::render('Resident/Visitors/Show', [
             'accessCode' => [
@@ -323,7 +335,10 @@ class AccessCodeController extends Controller
                 'expires_time' => $userCode->expires_at !== null
                     ? $userCode->expires_at->timezone($tz)->format('g:i A')
                     : null,
+                'is_eligible_for_reminder' => $userCode->isEligibleForVisitReminder(),
+                'reminder' => $reminderData,
             ],
+            'availableReminderOptions' => $this->reminderService->getAvailableReminderOptions($userCode),
             'usageLogs' => [
                 'data' => collect($usageLogs->items())->map(fn ($log) => [
                     'id' => $log->id,

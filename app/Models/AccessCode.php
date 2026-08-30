@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -44,6 +45,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * @property-read CarbonImmutable|null $completion_at
  * @property-read User $user
  * @property-read User|null $verifiedBy
+ * @property-read VisitorPassReminder|null $reminder
  *
  * @method static Builder<static>|AccessCode active()
  * @method static Builder<static>|AccessCode expiredButNotMarked()
@@ -308,6 +310,14 @@ class AccessCode extends Model
         return $this->expires_at->isPast();
     }
 
+    /**
+     * @return HasOne<VisitorPassReminder, $this>
+     */
+    public function reminder(): HasOne
+    {
+        return $this->hasOne(VisitorPassReminder::class);
+    }
+
     public function markAsUsed(?User $verifiedBy = null): void
     {
         $this->update([
@@ -315,6 +325,8 @@ class AccessCode extends Model
             'used_at' => now(),
             'verified_by' => $verifiedBy?->id,
         ]);
+
+        $this->reminder?->cancel();
     }
 
     public function revoke(): void
@@ -323,6 +335,21 @@ class AccessCode extends Model
             'status' => AccessCodeStatus::Revoked,
             'revoked_at' => now(),
         ]);
+
+        $this->reminder?->cancel();
+    }
+
+    public function isEligibleForVisitReminder(): bool
+    {
+        if (! $this->starts_at) {
+            return false;
+        }
+
+        if (! in_array($this->status, [AccessCodeStatus::Active, AccessCodeStatus::Scheduled], true)) {
+            return false;
+        }
+
+        return $this->starts_at->greaterThan(now()->addHours(24));
     }
 
     public function getTimeRemainingAttribute(): string

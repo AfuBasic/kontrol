@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Notifications\Admin;
+namespace App\Notifications\Resident;
 
-use App\Models\Collection;
+use App\Channels\TelegramChannel;
+use App\Models\AccessCode;
+use App\Models\VisitorPassReminder;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\Fcm\FcmChannel;
 use NotificationChannels\Fcm\FcmMessage;
@@ -14,68 +15,68 @@ use NotificationChannels\Fcm\Resources\Notification as FcmNotification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class CollectionPublishedNotification extends Notification implements ShouldQueue
+class VisitorPassReminderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public function __construct(
-        public Collection $collection,
-        public int $targetCount
+        public VisitorPassReminder $reminder,
+        public AccessCode $accessCode
     ) {}
 
     /**
-     * Get the notification's delivery channels.
-     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
-        $via = ['mail', 'database', 'broadcast'];
+        $channels = ['database', 'broadcast'];
 
-        if ($notifiable->pushSubscriptions()->exists()) {
-            $via[] = WebPushChannel::class;
+        if (method_exists($notifiable, 'pushSubscriptions') && $notifiable->pushSubscriptions()->exists()) {
+            $channels[] = WebPushChannel::class;
         }
 
-        if ($notifiable->fcm_token) {
-            $via[] = FcmChannel::class;
+        if (! empty($notifiable->fcm_token)) {
+            $channels[] = FcmChannel::class;
         }
 
-        return $via;
+        if (method_exists($notifiable, 'hasTelegramLinked') && $notifiable->hasTelegramLinked()) {
+            $channels[] = TelegramChannel::class;
+        }
+
+        return $channels;
     }
 
     /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
-    {
-        $url = route('admin.collections.show', $this->collection->ulid);
-
-        return (new MailMessage)
-            ->subject("Collection Published: {$this->collection->title}")
-            ->greeting("Hello {$notifiable->name},")
-            ->line("Your collection '{$this->collection->title}' has finished processing and is now active.")
-            ->line("It has been successfully distributed to {$this->targetCount} resident(s).")
-            ->action('View Collection', $url)
-            ->line('Thank you for using our application!');
-    }
-
-    /**
-     * Get the array representation of the notification.
-     *
      * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array
     {
+        $visitorName = $this->accessCode->visitor_name ?? 'Your visitor';
+        $tz = config('app.timezone', 'Africa/Lagos');
+        $startTime = $this->accessCode->starts_at
+            ? $this->accessCode->starts_at->timezone($tz)->format('g:i A')
+            : 'soon';
+
+        $offsetMinutes = $this->reminder->reminder_offset_minutes;
+        $offsetText = match ($offsetMinutes) {
+            1440 => '24 hours',
+            720 => '12 hours',
+            360 => '6 hours',
+            120 => '2 hours',
+            60 => '1 hour',
+            default => "{$offsetMinutes} minutes",
+        };
+
+        $message = "{$visitorName}'s pass becomes valid at {$startTime} today (in {$offsetText}).";
+
         return [
-            'type' => 'collection_published',
-            'estate_id' => $this->collection->estate_id,
-            'target_role' => 'admin',
-            'collection_id' => $this->collection->id,
-            'collection_ulid' => $this->collection->ulid,
-            'title' => $this->collection->title,
-            'target_count' => $this->targetCount,
-            'message' => "Collection '{$this->collection->title}' has been successfully published to {$this->targetCount} resident(s).",
-            'action_url' => route('admin.collections.show', $this->collection->ulid, false),
+            'title' => 'Visitor arriving soon',
+            'message' => $message,
+            'access_code_id' => $this->accessCode->id,
+            'visitor_name' => $visitorName,
+            'type' => 'visitor_reminder',
+            'target_role' => 'resident',
+            'action_url' => "/resident/visitors/{$this->accessCode->id}",
         ];
     }
 
@@ -91,7 +92,7 @@ class CollectionPublishedNotification extends Notification implements ShouldQueu
         return (new WebPushMessage)
             ->title($data['title'])
             ->body($data['message'])
-            ->data(['url' => $data['action_url']])
+            ->data(['url' => $data['action_url'], 'type' => $data['type']])
             ->badge('/assets/images/icon.png')
             ->icon('/assets/images/icon.png');
     }
@@ -109,8 +110,8 @@ class CollectionPublishedNotification extends Notification implements ShouldQueu
                 'title' => (string) $data['title'],
                 'body' => (string) $data['message'],
                 'action_url' => (string) $data['action_url'],
-                'collection_id' => (string) $this->collection->id,
-                'type' => 'collection_published',
+                'access_code_id' => (string) $this->accessCode->id,
+                'type' => 'visitor_reminder',
             ])
             ->custom([
                 'android' => [
@@ -129,11 +130,27 @@ class CollectionPublishedNotification extends Notification implements ShouldQueu
                                 'body' => $data['message'],
                             ],
                             'sound' => 'default',
-                            'badge' => $notifiable->unreadNotifications()->count(),
-                            'category' => 'collection_published',
+                            'category' => 'visitor_reminder',
                         ],
                     ],
                 ],
             ]);
+    }
+
+    /**
+     * @return array{text: string}
+     */
+    public function toTelegram(object $notifiable): array
+    {
+        $data = $this->toArray($notifiable);
+
+        $text = "🔔 <b>{$data['title']}</b>\n\n"
+            ."Hi <b>{$notifiable->name}</b>,\n"
+            ."{$data['message']}\n\n"
+            .'<i>Tap in your Kontrol app to view scheduled pass details.</i>';
+
+        return [
+            'text' => $text,
+        ];
     }
 }

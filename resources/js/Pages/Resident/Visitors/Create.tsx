@@ -59,7 +59,7 @@ const CreateAccessCode = () => {
     const { isOnline, isServerReachable } = useNetworkQuality();
     const [queuingOffline, setQueuingOffline] = useState(false);
 
-    const features = estate_plan?.features || [];
+    const features = Array.isArray(estate_plan?.features) ? estate_plan.features : [];
     const hasFlexibleCodes = features.includes('flexible-code-types');
     const hasEventCodes = true;
 

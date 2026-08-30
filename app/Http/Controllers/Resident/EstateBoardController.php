@@ -37,10 +37,12 @@ class EstateBoardController extends Controller
         $filter = request('filter', 'estate');
         $estateId = $this->estateContext->getEstateId();
         $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences, $filter);
+        $unreadCount = $this->boardService->getResidentUnreadCount($estateId, $this->allowedAudiences, $filter);
 
         return Inertia::render('Resident/EstateBoard/Index', [
             'posts' => $posts,
             'filter' => $filter,
+            'unread_count' => $unreadCount,
         ]);
     }
 

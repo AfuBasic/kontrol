@@ -28,6 +28,7 @@ use App\Http\Controllers\Resident\PropertyOwner\ResidentController as POResident
 use App\Http\Controllers\Resident\PropertyOwner\SettlementController as POSettlementController;
 use App\Http\Controllers\Resident\SosController;
 use App\Http\Controllers\Resident\TelegramLinkController;
+use App\Http\Controllers\Resident\VisitorPassReminderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -88,6 +89,8 @@ Route::middleware('role:resident,household_member,property_owner')->group(functi
         Route::get('/visitors/{accessCode}', [AccessCodeController::class, 'show'])->name('resident.visitors.show');
         Route::post('/visitors/{accessCode}/share', [AccessCodeController::class, 'share'])->name('resident.visitors.share');
         Route::post('/visitors/{accessCode}/extend', [AccessCodeController::class, 'extend'])->name('resident.visitors.extend');
+        Route::post('/visitors/{accessCode}/reminder', [VisitorPassReminderController::class, 'store'])->name('resident.visitors.reminder.store');
+        Route::delete('/visitors/{accessCode}/reminder', [VisitorPassReminderController::class, 'destroy'])->name('resident.visitors.reminder.destroy');
         Route::delete('/visitors/{accessCode}', [AccessCodeController::class, 'destroy'])->name('resident.visitors.destroy');
     });
 

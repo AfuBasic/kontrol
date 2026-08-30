@@ -1,107 +1,33 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Globe, MessageCircle, Send, Shield, Trash2, Users, Home } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { ArrowLeft, Trash2, Share2, Check } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Resident/EstateBoardCommentController';
 import { index } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
+import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
+import AnnouncementDiscussion from '@/Components/EstateBoard/AnnouncementDiscussion';
+import AnnouncementHeader from '@/Components/EstateBoard/AnnouncementHeader';
+import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import ResidentLayout from '@/Layouts/ResidentLayout';
-import type { CursorPaginatedComments, EstateBoardComment, EstateBoardPost, PostAudience } from '@/types';
+import type { CursorPaginatedComments, EstateBoardPost, SharedData } from '@/types';
 
 type Props = {
     post: EstateBoardPost;
     comments: CursorPaginatedComments;
 };
 
-function getAudienceIcon(audience: PostAudience) {
-    switch (audience) {
-        case 'residents':
-            return <Users className="h-3 w-3" />;
-        case 'security':
-            return <Shield className="h-3 w-3" />;
-        default:
-            return <Globe className="h-3 w-3" />;
-    }
-}
-
-function getAudienceLabel(audience: PostAudience) {
-    switch (audience) {
-        case 'residents':
-            return 'Residents';
-        case 'security':
-            return 'Security';
-        default:
-            return 'Everyone';
-    }
-}
-
-function CommentItem({ comment, postHashid }: { comment: EstateBoardComment; postHashid: string }) {
-    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-    function handleDelete() {
-        router.delete(destroyComment.url({ comment: comment.id }), {
-            preserveScroll: true,
-        });
-    }
-
-    return (
-        <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-600 text-white shadow-sm">
-                <span className="text-xs font-semibold">{comment.author.name.charAt(0).toUpperCase()}</span>
-            </div>
-            <div className="flex-1">
-                <div className="rounded-xl bg-gray-50 px-4 py-3">
-                    <div className="mb-1 flex items-center justify-between">
-                        <span className="text-sm font-semibold text-gray-900">{comment.author.name}</span>
-                        <span className="text-xs text-gray-500">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}</span>
-                    </div>
-                    <p className="text-sm leading-relaxed text-gray-700">{comment.body}</p>
-                </div>
-                {comment.can_delete && (
-                    <div className="mt-1 flex items-center gap-4 px-1">
-                        {showDeleteConfirm ? (
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs text-gray-500">Delete?</span>
-                                <button onClick={handleDelete} className="text-xs font-medium text-red-600 hover:text-red-700">
-                                    Yes
-                                </button>
-                                <button onClick={() => setShowDeleteConfirm(false)} className="text-xs font-medium text-gray-500 hover:text-gray-700">
-                                    No
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="flex items-center gap-1 text-xs text-gray-400 transition-colors hover:text-red-600"
-                            >
-                                <Trash2 className="h-3 w-3" />
-                                Delete
-                            </button>
-                        )}
-                    </div>
-                )}
-
-                {/* Replies */}
-                {comment.replies && comment.replies.length > 0 && (
-                    <div className="mt-3 space-y-3 border-l-2 border-gray-100 pl-4">
-                        {comment.replies.map((reply) => (
-                            <CommentItem key={reply.id} comment={reply} postHashid={postHashid} />
-                        ))}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
 export default function EstateBoardShow({ post, comments }: Props) {
     const { confirm } = useResidentConfirmation();
-    const { auth } = usePage<any>().props;
+    const { auth } = usePage<SharedData>().props;
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
+    const [copied, setCopied] = useState(false);
+
+    const isPropertyOwnerCreator = Boolean(
+        post.property_owner_id && auth?.user?.id && post.property_owner_id === auth.user.id
+    );
 
     const handleDeletePost = () => {
         confirm({
@@ -168,176 +94,122 @@ export default function EstateBoardShow({ post, comments }: Props) {
         });
     }
 
-    return (
-        <>
-            <Head title={post.title || 'Post'} />
+    function handleDeleteComment(commentId: number) {
+        router.delete(destroyComment.url({ comment: commentId as any }), {
+            preserveScroll: true,
+        });
+    }
 
-            {/* Back Button */}
-            <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-6 flex items-center justify-between"
-            >
+    async function handleShare() {
+        const shareData = {
+            title: post.title || 'Estate Announcement',
+            text: `Announcement from ${post.author?.name || 'Estate'}: ${post.title || ''}`,
+            url: window.location.href,
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+            } catch {
+                // User cancelled or error
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch {
+                // Fallback
+            }
+        }
+    }
+
+    return (
+        <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6 sm:py-6 pb-28 text-left">
+            <Head title={post.title || 'Announcement'} />
+
+            {/* Quiet Contextual Header */}
+            <div className="mb-4 sm:mb-6 flex items-center justify-between">
                 <Link
                     href={index.url()}
-                    className="inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-500 shadow-sm transition-colors hover:text-gray-900"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to Feed
+                    <span>Back to Feed</span>
                 </Link>
 
-                {post.property_owner_id === auth?.user?.id && post.comments_count === 0 && (
+                <div className="flex items-center gap-2">
+                    {/* Share Action */}
                     <button
-                        onClick={handleDeletePost}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-bold text-rose-700 shadow-sm transition-colors hover:bg-rose-100"
+                        type="button"
+                        onClick={handleShare}
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-600 shadow-xs transition-colors hover:bg-slate-50 hover:text-slate-900"
+                        title="Share announcement"
                     >
-                        <Trash2 className="h-4 w-4" />
-                        Delete Announcement
-                    </button>
-                )}
-            </motion.div>
-
-            {/* Post Header */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.05, ease: 'easeOut' }}
-                className="mb-8"
-            >
-                <div className="flex items-center gap-4">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 font-black text-white shadow-xl ring-2 shadow-indigo-200 ring-white">
-                        <span className="text-xl">{post.author.name.charAt(0).toUpperCase()}</span>
-                    </div>
-                    <div>
-                        <h1 className="text-3xl leading-tight font-black tracking-tight text-slate-900">{post.title}</h1>
-                        <div className="mt-2 flex flex-wrap items-center gap-3">
-                            {post.property_owner_id ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-purple-700 uppercase ring-1 ring-purple-100/50">
-                                    <Home className="h-2.5 w-2.5" /> Landlord Notice
-                                </span>
-                            ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[9px] font-black tracking-widest text-blue-700 uppercase ring-1 ring-blue-100/50">
-                                    <Shield className="h-2.5 w-2.5" /> Estate Update
-                                </span>
-                            )}
-                            <span className="text-xs font-bold text-slate-900">{post.author.name}</span>
-                            <span className="h-1 w-1 rounded-full bg-slate-300" />
-                            <span className="text-xs font-bold tracking-widest text-slate-400 uppercase">
-                                {post.published_at
-                                    ? format(new Date(post.published_at), 'MMMM d, yyyy')
-                                    : format(new Date(post.created_at), 'MMMM d, yyyy')}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* Media & Content Card */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                className="overflow-hidden rounded-[32px] bg-white shadow-[0_8px_40px_rgba(0,0,0,0.04)] ring-1 ring-slate-100"
-            >
-                {/* Media */}
-                {post.media && post.media.length > 0 && (
-                    <div className="relative border-b border-slate-50 bg-slate-50/50">
-                        {post.media.length === 1 ? (
-                            <img src={post.media[0].url} alt="" className="max-h-[600px] w-full object-contain" />
+                        {copied ? (
+                            <>
+                                <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                <span className="text-emerald-600">Copied</span>
+                            </>
                         ) : (
-                            <div className="grid grid-cols-2 gap-1 p-2">
-                                {post.media.map((media) => (
-                                    <img key={media.id} src={media.url} alt="" className="aspect-square w-full rounded-2xl object-cover" />
-                                ))}
-                            </div>
+                            <>
+                                <Share2 className="h-3.5 w-3.5" />
+                                <span>Share</span>
+                            </>
                         )}
+                    </button>
+
+                    {/* Delete for creator */}
+                    {isPropertyOwnerCreator && post.comments_count === 0 && (
+                        <button
+                            type="button"
+                            onClick={handleDeletePost}
+                            className="inline-flex items-center gap-1 rounded-xl border border-rose-200/80 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 shadow-xs transition-colors hover:bg-rose-100"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>Delete</span>
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Announcement Article Flow */}
+            <article className="space-y-6">
+                {/* Header */}
+                <AnnouncementHeader post={post} />
+
+                <hr className="border-slate-100" />
+
+                {/* Natural Document Flow - Clean Prose */}
+                <div className="text-slate-800">
+                    <AnnouncementProse html={post.body} />
+                </div>
+
+                {/* Attachments */}
+                {post.media && post.media.length > 0 && (
+                    <div className="border-t border-slate-100 pt-6">
+                        <AnnouncementAttachments media={post.media} />
                     </div>
                 )}
+            </article>
 
-                <div className="p-8 sm:p-10">
-                    <div
-                        className="prose prose-slate prose-lg prose-headings:font-black prose-headings:tracking-tight prose-headings:text-slate-900 prose-p:mb-6 prose-p:leading-relaxed max-w-none leading-relaxed text-slate-700"
-                        dangerouslySetInnerHTML={{ __html: post.body }}
-                    />
-
-                    <div className="mt-12 flex items-center gap-2 rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-400">
-                            {post.property_owner_id ? <Home className="h-3.5 w-3.5 text-purple-600" /> : getAudienceIcon(post.audience)}
-                        </div>
-                        <p className="text-[10px] font-black tracking-[0.15em] text-slate-500 uppercase">
-                            {post.property_owner_id
-                                ? `Private Landlord Bulletin (${getAudienceLabel(post.audience)})`
-                                : `Official Estate ${getAudienceLabel(post.audience)} Bulletin`}
-                        </p>
-                    </div>
-                </div>
-            </motion.div>
-
-            {/* Comments Section */}
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
-                className="mt-6"
-            >
-                <div className="rounded-2xl bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.04)] ring-1 ring-gray-100">
-                    <h3 className="mb-6 font-bold text-gray-900">Comments ({post.comments_count})</h3>
-
-                    {/* Comments List */}
-                    {comments.data.length > 0 ? (
-                        <div className="mb-8 space-y-6">
-                            {comments.data.map((comment) => (
-                                <CommentItem key={comment.id} comment={comment} postHashid={post.hashid} />
-                            ))}
-
-                            {/* Load More */}
-                            {comments.next_page_url && (
-                                <div ref={loadMoreRef} className="flex justify-center pt-4">
-                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-200 border-t-indigo-600" />
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="mb-8 py-8 text-center">
-                            <MessageCircle className="mx-auto h-10 w-10 text-gray-200" />
-                            <p className="mt-2 text-sm text-gray-500">No comments yet. Be the first to start the conversation!</p>
-                        </div>
-                    )}
-
-                    {/* Comment Form */}
-                    <div className="flex gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                            <span className="text-xs font-semibold">?</span>
-                        </div>
-                        <div className="flex-1">
-                            <form onSubmit={handleSubmitComment} className="relative" noValidate>
-                                <textarea
-                                    autoCorrect="on"
-                                    autoCapitalize="sentences"
-                                    spellCheck={true}
-                                    value={data.body}
-                                    onChange={(e) => setData('body', e.target.value)}
-                                    placeholder="Add a comment..."
-                                    rows={2} // Start small
-                                    className="block w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-12 text-sm text-slate-900 transition-all focus:border-indigo-500 focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                />
-                                <div className="absolute right-2 bottom-2">
-                                    <button
-                                        type="submit"
-                                        disabled={processing || !data.body.trim()}
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white transition-colors hover:bg-indigo-700 disabled:bg-gray-300 disabled:opacity-50"
-                                    >
-                                        <Send className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </form>
-                            {errors.body && <p className="mt-1 text-sm text-red-600">{errors.body}</p>}
-                        </div>
-                    </div>
-                </div>
-            </motion.div>
-        </>
+            {/* Discussion Flow */}
+            <div className="mt-10 border-t border-slate-200/80 pt-8">
+                <AnnouncementDiscussion
+                    comments={comments.data}
+                    commentsCount={post.comments_count}
+                    commentBody={data.body}
+                    onCommentBodyChange={(val) => setData('body', val)}
+                    onSubmitComment={handleSubmitComment}
+                    onDeleteComment={handleDeleteComment}
+                    processing={processing}
+                    error={errors.body}
+                    currentUserId={auth?.user?.id}
+                    nextPageUrl={comments.next_page_url}
+                    loadMoreRef={loadMoreRef}
+                />
+            </div>
+        </div>
     );
 }
 

@@ -81,6 +81,8 @@ class NewCollectionNotification extends Notification implements ShouldQueue
 
         return [
             'type' => 'new_collection',
+            'estate_id' => $this->assignment->estate_id,
+            'target_role' => $isPropertyOwner ? 'resident' : 'resident',
             'collection_id' => $this->assignment->collection_id,
             'assignment_id' => $this->assignment->id,
             'amount' => $this->assignment->amount_due,
