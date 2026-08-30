@@ -272,3 +272,55 @@ test('sensitive security actions are blocked during support mode', function () {
 
     $response->assertForbidden();
 });
+
+test('zeus admin can repeatedly start, exit, and re-start impersonation without session or csrf corruption', function () {
+    $sessionKey = config('zeus.session_key');
+    $estate = Estate::factory()->create(['name' => 'Highland Park']);
+    $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+
+    $adminUser = User::factory()->create(['name' => 'Boluwatife Adeleke']);
+    EstateMembership::create([
+        'estate_id' => $estate->id,
+        'user_id' => $adminUser->id,
+        'status' => 'accepted',
+    ]);
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $adminUser->id,
+        'estate_id' => $estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    // 1. First Impersonation Cycle
+    $start1 = $this->withSession([$sessionKey => true])
+        ->post(route('zeus.estates.impersonate.start', $estate), [
+            'user_id' => $adminUser->id,
+            'reason' => 'Cycle 1',
+        ]);
+    $start1->assertRedirect(route('admin.dashboard'));
+    $this->assertDatabaseHas('impersonation_sessions', [
+        'effective_user_id' => $adminUser->id,
+        'ended_at' => null,
+    ]);
+
+    // 2. Exit Support Mode
+    $exit1 = $this->post(route('zeus.impersonation.stop'));
+    $exit1->assertRedirect(route('zeus.estates.show', $estate));
+    $this->assertDatabaseMissing('impersonation_sessions', [
+        'effective_user_id' => $adminUser->id,
+        'ended_at' => null,
+    ]);
+
+    // 3. Second Impersonation Cycle (immediately re-start)
+    $start2 = $this->post(route('zeus.estates.impersonate.start', $estate), [
+        'user_id' => $adminUser->id,
+        'reason' => 'Cycle 2',
+    ]);
+    $start2->assertRedirect(route('admin.dashboard'));
+    $this->assertDatabaseHas('impersonation_sessions', [
+        'effective_user_id' => $adminUser->id,
+        'reason' => 'Cycle 2',
+        'ended_at' => null,
+    ]);
+});
