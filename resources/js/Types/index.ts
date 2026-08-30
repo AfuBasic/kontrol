@@ -18,10 +18,25 @@ export type EstatePlan = {
     };
 };
 
+export type SupportModeData = {
+    active: boolean;
+    estate: {
+        id: number;
+        name: string;
+    };
+    operating_as: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    exit_url: string;
+};
+
 export type SharedData = {
     name: string;
     auth: Auth;
     estate_plan: EstatePlan | null;
+    support_mode?: SupportModeData | null;
     flash: {
         success?: string;
         error?: string;

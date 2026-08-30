@@ -1,11 +1,18 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { useEffect } from 'react';
 
 export default function Login2FA() {
     const { data, setData, post, processing, errors } = useForm({
         code: '',
     });
+
+    useEffect(() => {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.documentElement.style.colorScheme = 'dark';
+    }, []);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();

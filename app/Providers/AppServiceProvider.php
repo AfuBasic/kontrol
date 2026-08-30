@@ -27,6 +27,7 @@ use App\Policies\RolePolicy;
 use App\Services\SMS\SMSProvider;
 use App\Services\SMS\SmsService;
 use App\Services\SMS\TermiiProvider;
+use App\Services\Zeus\ImpersonationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -56,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         $this->app->scoped(ContextManager::class, fn () => new ContextManager);
+        $this->app->scoped(ImpersonationService::class, fn () => new ImpersonationService);
     }
 
     /**

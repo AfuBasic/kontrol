@@ -8,6 +8,8 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
 use App\Http\Middleware\ValidateEstateContext;
+use App\Http\Middleware\Zeus\BlockSensitiveDuringImpersonation;
+use App\Http\Middleware\Zeus\ResolveImpersonationContext;
 use App\Models\SystemErrorLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -17,7 +19,6 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken as BaseValidateCsrfT
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Route;
@@ -109,6 +110,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(
             append: [
                 AuthenticateSession::class,
+                ResolveImpersonationContext::class,
+                BlockSensitiveDuringImpersonation::class,
                 ResolveContext::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
@@ -117,16 +120,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 BaseValidateCsrfToken::class => ValidateCsrfToken::class,
             ]
         );
-        $middleware->prependToPriorityList(
-            SubstituteBindings::class,
-            ResolveContext::class,
-        );
         $middleware->trustProxies('*');
         $middleware->validateCsrfTokens(except: [
             'telegram/webhook',
             'webhooks/paystack',
             'api/*',
             'api/v1/client-errors',
+            'zeus/impersonation/stop',
+            'zeus/estates/*/impersonate',
         ]);
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
@@ -136,6 +137,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'feature' => CheckEstateFeature::class,
             'check-estate-feature' => CheckEstateFeature::class,
             'validate-estate' => ValidateEstateContext::class,
+            'zeus.impersonation' => ResolveImpersonationContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

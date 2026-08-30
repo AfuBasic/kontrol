@@ -74,6 +74,13 @@ export default function ZeusLayout({ children, backUrl: _backUrl }: Props) {
 
     const currentPath = usePathFromUrl(url);
 
+    // Force dark mode for Zeus administration module
+    useEffect(() => {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.documentElement.style.colorScheme = 'dark';
+    }, [url]);
+
     // Show toast on flash messages
     useEffect(() => {
         if (flash?.success) {

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Auth\ContextManager;
+use App\Services\Zeus\ImpersonationService;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -57,6 +58,25 @@ class Activity extends SpatieActivity
     protected static function booted(): void
     {
         static::creating(function ($activity): void {
+            // Check if Support Mode / Impersonation is active
+            $impersonationService = app(ImpersonationService::class);
+            if ($impersonationService->isImpersonating()) {
+                $session = $impersonationService->getActiveSession();
+                if ($session) {
+                    $props = $activity->properties ? $activity->properties->toArray() : [];
+                    $props['impersonation'] = true;
+                    $props['impersonation_session_id'] = $session->id;
+                    $props['provider_identifier'] = $session->provider_identifier;
+                    $props['effective_user_id'] = $session->effective_user_id;
+                    $props['effective_actor_name'] = $session->effectiveUser?->name ?? 'Administrator';
+                    $props['reason'] = $session->reason;
+                    $activity->properties = $props;
+                    $activity->estate_id = $session->estate_id;
+
+                    return;
+                }
+            }
+
             // Try to get estate_id from active ContextManager
             $context = app(ContextManager::class)->current();
             if ($context && $context->estateId) {

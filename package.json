@@ -11,8 +11,13 @@
         "lint": "eslint . --fix",
         "verify:forms": "node scripts/verify-mobile-form-validation.mjs",
         "types": "tsc --noEmit",
-        "cap:dev:android": "CAPACITOR_DEV=true CAPACITOR_PLATFORM=android npx cap sync android",
-        "cap:dev:ios": "CAPACITOR_DEV=true CAPACITOR_PLATFORM=ios npx cap sync ios",
+        "cap:dev:android": "CAPACITOR_DEV=true CAPACITOR_PLATFORM=android CAPACITOR_DEV_URL=http://10.0.2.2:8000 npx cap sync android",
+        "cap:dev:ios": "CAPACITOR_DEV=true CAPACITOR_PLATFORM=ios CAPACITOR_IOS_URL=http://app.kontrol.test npx cap sync ios",
+        "cap:staging:android": "CAPACITOR_DEV=true CAPACITOR_PLATFORM=android CAPACITOR_DEV_URL=https://app.usekontrol.afuwapetunde.com npx cap sync android",
+        "cap:staging:ios": "CAPACITOR_DEV=true CAPACITOR_PLATFORM=ios CAPACITOR_IOS_URL=https://app.usekontrol.afuwapetunde.com npx cap sync ios",
+        "cap:staging": "CAPACITOR_DEV=true CAPACITOR_DEV_URL=https://app.usekontrol.afuwapetunde.com CAPACITOR_IOS_URL=https://app.usekontrol.afuwapetunde.com npx cap sync",
+        "cap:prod:android": "npx cap sync android",
+        "cap:prod:ios": "npx cap sync ios",
         "cap:prod": "npx cap sync"
     },
     "devDependencies": {

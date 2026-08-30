@@ -41,6 +41,7 @@ import * as ProfileController from '@/actions/App/Http/Controllers/Admin/Profile
 
 
 
+import SupportModeBanner from '@/Components/SupportModeBanner';
 import OfflineBanner from '@/Components/OfflineBanner';
 import PullToRefresh from '@/Components/PullToRefresh';
 import SystemHealthMonitor from '@/Components/SystemHealthMonitor';
@@ -519,6 +520,7 @@ export default function AdminLayout({ children, title: _title }: Props) {
             <OfflineBanner />
             {/* Mobile View Structure */}
             <div className="md:hidden">
+                <SupportModeBanner />
                 <header className="fixed top-0 right-0 left-0 z-50 border-b border-slate-200/50 bg-white/80 ring-1 ring-black/5 backdrop-blur-xl">
                     <div className="h-[env(safe-area-inset-top)] w-full" />
                     <div className="flex h-16 items-center justify-between px-4">
@@ -682,6 +684,7 @@ export default function AdminLayout({ children, title: _title }: Props) {
                     transition={{ duration: 0.2, ease: 'easeInOut' }}
                     className="flex min-h-screen flex-1 flex-col"
                 >
+                    <SupportModeBanner />
                     <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-slate-200/60 bg-white/80 px-6 shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-xl lg:px-8">
                         <div className="flex items-center gap-4">
                             <ContextSwitcher variant="light" />

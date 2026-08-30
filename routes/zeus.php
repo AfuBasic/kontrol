@@ -8,6 +8,7 @@ use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\ErrorLogController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
+use App\Http\Controllers\Zeus\ImpersonationController;
 use App\Http\Controllers\Zeus\MoneyFlowController;
 use App\Http\Controllers\Zeus\NotificationController;
 use App\Http\Controllers\Zeus\PartnerController;
@@ -88,6 +89,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::post('/estates/{estate}/toggle-status', [EstateController::class, 'toggleStatus'])->name('estates.toggle-status');
         Route::post('/estates/{estate}/resend-invitation', [EstateController::class, 'resendInvitation'])->name('estates.resend-invitation');
         Route::patch('/estates/{estate}/partner-assignment', [EstateController::class, 'updatePartnerAssignment'])->name('estates.partner-assignment.update');
+        Route::get('/estates/{estate}/impersonate', [ImpersonationController::class, 'selectAdmin'])->name('estates.impersonate');
+        Route::post('/estates/{estate}/impersonate', [ImpersonationController::class, 'start'])->name('estates.impersonate.start');
+        Route::post('/impersonation/stop', [ImpersonationController::class, 'stop'])->name('impersonation.stop');
 
         // Zeus notifications inbox
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
