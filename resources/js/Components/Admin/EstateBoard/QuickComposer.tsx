@@ -1,13 +1,11 @@
-import React, { useState, useRef, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { useForm, Link } from '@inertiajs/react';
 import {
     Send,
     Paperclip,
-    Image as ImageIcon,
     Globe,
     Users,
     Shield,
-    Pin,
     AlertTriangle,
     AlertOctagon,
     X,
@@ -18,10 +16,14 @@ import {
     Megaphone,
     Clock,
     Maximize2,
+    Check,
+    RotateCcw,
 } from 'lucide-react';
 import { marked } from 'marked';
 import { create, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useActiveContext } from '@/Hooks/useActiveContext';
+import { useEstateBoardAutoDraft } from '@/Hooks/useEstateBoardAutoDraft';
 import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
 import MarkdownEditor from '@/Components/MarkdownEditor';
 import type { PostAudience, PostCategory, PostPriority } from '@/types';
@@ -46,14 +48,9 @@ const AUDIENCES: { value: PostAudience; label: string; icon: React.ElementType }
     { value: 'security', label: 'Security Only', icon: Shield },
 ];
 
-const _PRIORITIES: { value: PostPriority; label: string; badge: string; icon: React.ElementType }[] = [
-    { value: 'normal', label: 'Normal', badge: 'bg-slate-100 text-slate-700', icon: Megaphone },
-    { value: 'important', label: 'Important', badge: 'bg-amber-100 text-amber-700', icon: AlertTriangle },
-    { value: 'critical', label: 'Critical', badge: 'bg-rose-100 text-rose-700', icon: AlertOctagon },
-];
-
 export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = [] }: Props) {
     const { isZoneScoped, zoneId, zoneName } = useActiveContext();
+    const { confirm } = useAdminConfirmation();
     const [isExpanded, setIsExpanded] = useState(false);
     const [showAiAssistant, setShowAiAssistant] = useState(false);
     const [files, setFiles] = useState<File[]>([]);
@@ -70,11 +67,51 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
         media: [] as File[],
     });
 
+    const setFormValues = useCallback((draft: any) => {
+        setData((prev) => ({
+            ...prev,
+            ...draft,
+        }));
+        if (draft.title || draft.body) {
+            setIsExpanded(true);
+        }
+    }, [setData]);
+
+    const { saveStatus, hasDraft, clearDraft, isMeaningful } = useEstateBoardAutoDraft({
+        formState: {
+            title: data.title,
+            body: data.body,
+            category: data.category,
+            priority: data.priority,
+            audience: data.audience,
+            zone_ids: data.zone_ids,
+        },
+        setFormValues,
+    });
+
     const handleExpand = () => {
         if (!isExpanded) setIsExpanded(true);
     };
 
     const handleCancel = () => {
+        if (isMeaningful) {
+            confirm({
+                title: 'Discard draft announcement?',
+                message: 'Your unsent announcement content will be removed. Are you sure you want to discard it?',
+                confirmLabel: 'Discard draft',
+                type: 'warning',
+                onConfirm: () => {
+                    clearDraft();
+                    setIsExpanded(false);
+                    setShowAiAssistant(false);
+                    reset();
+                    setFiles([]);
+                    clearErrors();
+                },
+            });
+            return;
+        }
+
         setIsExpanded(false);
         setShowAiAssistant(false);
         reset();
@@ -118,6 +155,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
         post(store.url(), {
             preserveScroll: true,
             onSuccess: () => {
+                clearDraft();
                 setIsExpanded(false);
                 setShowAiAssistant(false);
                 reset();
@@ -134,6 +172,26 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                 <div className="flex items-center gap-2">
                     <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
                     <span className="font-bold text-slate-900">Post an Announcement</span>
+
+                    {/* Auto-Draft Status Indicator */}
+                    {saveStatus === 'saving' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400">
+                            <span className="h-1.5 w-1.5 animate-ping rounded-full bg-slate-400" />
+                            <span>Saving draft...</span>
+                        </span>
+                    )}
+                    {saveStatus === 'saved' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+                            <Check className="h-3 w-3" />
+                            <span>Draft saved</span>
+                        </span>
+                    )}
+                    {saveStatus === 'restored' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600">
+                            <RotateCcw className="h-3 w-3" />
+                            <span>Recovered your unsent changes</span>
+                        </span>
+                    )}
                 </div>
                 <div className="flex items-center gap-3">
                     {lastBroadcastNote && (
@@ -198,142 +256,130 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                             autoComplete="off"
                             className="w-full border-none bg-transparent p-0 text-base font-black tracking-tight text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-hidden dark:text-slate-100 dark:placeholder:text-slate-600"
                         />
-                        {errors.title && <p className="mt-1 text-xs font-semibold text-rose-600 dark:text-rose-400">{errors.title}</p>}
+                        {errors.title && <p className="mt-1 text-xs text-rose-500">{errors.title}</p>}
                     </div>
                 )}
 
-                {/* Body input: Compact Trigger Box or Full WYSIWYG Editor */}
-                <div>
-                    {!isExpanded ? (
-                        <div
-                            onClick={handleExpand}
-                            className="cursor-text rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-3 text-sm font-medium text-slate-400 transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-600 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-500 dark:hover:border-slate-700"
-                        >
-                            Share an announcement with your estate... (Click to format text or use AI Assistant)
-                        </div>
-                    ) : (
-                        <div className="space-y-1">
-                            <MarkdownEditor
-                                value={data.body}
-                                onChange={(value) => setData('body', value)}
-                                placeholder="Share an announcement with your estate... (Markdown and rich formatting supported)"
-                                error={errors.body}
-                                minHeight="min-h-[120px]"
-                                compact={true}
-                            />
-                        </div>
-                    )}
-                </div>
+                {/* Body: MarkdownEditor when expanded, simple input trigger when collapsed */}
+                {isExpanded ? (
+                    <div>
+                        <MarkdownEditor
+                            value={data.body}
+                            onChange={(content) => setData('body', content)}
+                            placeholder="What would you like to broadcast to the estate? Mention upcoming meetings, water maintenance, security notices..."
+                            minHeight="min-h-[140px]"
+                            compact
+                        />
+                        {errors.body && <p className="mt-1 text-xs text-rose-500">{errors.body}</p>}
+                    </div>
+                ) : (
+                    <div
+                        onClick={handleExpand}
+                        className="cursor-text rounded-xl border border-slate-100 bg-slate-50/70 px-3.5 py-2.5 text-xs text-slate-400 transition hover:border-slate-200 hover:bg-slate-50"
+                    >
+                        What would you like to broadcast to the estate? Click to start writing...
+                    </div>
+                )}
 
-                {/* Selected file preview chips */}
+                {/* File Attachment Previews */}
                 {files.length > 0 && (
                     <div className="flex flex-wrap gap-2 pt-1">
                         {files.map((file, idx) => (
                             <div
                                 key={idx}
-                                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700"
+                                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700"
                             >
-                                {file.type.startsWith('image/') ? (
-                                    <ImageIcon className="h-3.5 w-3.5 text-primary-500" />
-                                ) : (
-                                    <Paperclip className="h-3.5 w-3.5 text-slate-500" />
-                                )}
-                                <span className="max-w-[140px] truncate">{file.name}</span>
+                                <span className="max-w-[120px] truncate">{file.name}</span>
                                 <button
                                     type="button"
                                     onClick={() => removeFile(idx)}
-                                    className="ml-1 rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+                                    className="text-slate-400 hover:text-rose-500"
                                 >
-                                    <X className="h-3.5 w-3.5" />
+                                    <X className="h-3 w-3" />
                                 </button>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Quick Controls Bar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {isZoneScoped ? (
-                            <span className="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700">
-                                Zone: {zoneName ?? zones[0]?.name ?? 'Your zone'}
-                            </span>
-                        ) : (
-                            <>
-                                <div className="relative">
-                                    <select
-                                        value={data.audience}
-                                        onChange={(e) => setData('audience', e.target.value as PostAudience)}
-                                        className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                                    >
-                                        {AUDIENCES.map((aud) => (
-                                            <option key={aud.value} value={aud.value}>
-                                                Audience: {aud.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                {zones.length > 0 && (
-                                    <div className="relative">
-                                        <select
-                                            value={data.zone_ids[0] ?? ''}
-                                            onChange={(e) => {
-                                                const value = e.target.value;
-                                                setData('zone_ids', value ? [Number(value)] : []);
-                                            }}
-                                            className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                                        >
-                                            <option value="">Entire Estate</option>
-                                            {zones.map((zone) => (
-                                                <option key={zone.id} value={zone.id}>
-                                                    Zone: {zone.name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                )}
-                            </>
-                        )}
-
-                        {/* Category Selector (Pills when expanded, dropdown when compact) */}
+                {/* Action Bar / Controls */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                    {/* Selectors / Quick Toggles */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        {/* Category Dropdown */}
                         <div className="relative">
                             <select
                                 value={data.category}
                                 onChange={(e) => setData('category', e.target.value as PostCategory)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 py-1.5 pr-7 pl-3 text-xs font-bold text-slate-700 capitalize transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
                             >
                                 {CATEGORIES.map((cat) => (
                                     <option key={cat.value} value={cat.value}>
-                                        Category: {cat.label}
+                                        {cat.label}
                                     </option>
                                 ))}
                             </select>
                         </div>
 
-                        {/* Priority Toggle */}
+                        {/* Audience Dropdown */}
+                        <div className="relative">
+                            <select
+                                value={data.audience}
+                                onChange={(e) => setData('audience', e.target.value as PostAudience)}
+                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                            >
+                                {AUDIENCES.map((aud) => (
+                                    <option key={aud.value} value={aud.value}>
+                                        {aud.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Zone Targeting */}
+                        {isZoneScoped && zoneName ? (
+                            <span className="inline-flex items-center gap-1 rounded-xl bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 ring-1 ring-amber-200/60">
+                                <span>Zone: {zoneName}</span>
+                            </span>
+                        ) : zones.length > 0 ? (
+                            <div className="relative">
+                                <select
+                                    value={data.zone_ids[0] || ''}
+                                    onChange={(e) => {
+                                        const val = e.target.value ? [parseInt(e.target.value, 10)] : [];
+                                        setData('zone_ids', val);
+                                    }}
+                                    className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
+                                >
+                                    <option value="">All Zones</option>
+                                    {zones.map((z) => (
+                                        <option key={z.id} value={z.id}>
+                                            Zone: {z.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : null}
+
+                        {/* Priority Quick Toggle */}
                         <button
                             type="button"
                             onClick={() => {
-                                const nextPriority: Record<PostPriority, PostPriority> = {
-                                    normal: 'important',
-                                    important: 'critical',
-                                    critical: 'normal',
-                                };
-                                setData('priority', nextPriority[data.priority]);
+                                const next = data.priority === 'normal' ? 'important' : data.priority === 'important' ? 'critical' : 'normal';
+                                setData('priority', next);
                             }}
-                            className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition ${
+                            className={`flex items-center gap-1 rounded-xl border px-2.5 py-1.5 text-xs font-bold transition ${
                                 data.priority === 'important'
-                                    ? 'border-amber-300 bg-amber-50 text-amber-700'
+                                    ? 'border-amber-200 bg-amber-50 text-amber-800'
                                     : data.priority === 'critical'
-                                      ? 'border-rose-300 bg-rose-50 text-rose-700'
+                                      ? 'border-rose-200 bg-rose-50 text-rose-800'
                                       : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
                             }`}
-                            title="Toggle Post Priority"
+                            title="Cycle Priority: Normal -> Important -> Critical"
                         >
                             {data.priority === 'important' ? (
                                 <>
-                                    <Pin className="h-3.5 w-3.5 text-amber-600" />
+                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                                     <span>Important</span>
                                 </>
                             ) : data.priority === 'critical' ? (
@@ -383,7 +429,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                                     onClick={handleCancel}
                                     className="rounded-xl px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                                 >
-                                    Cancel
+                                    {isMeaningful ? 'Discard' : 'Cancel'}
                                 </button>
                             </>
                         )}
