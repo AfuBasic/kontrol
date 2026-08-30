@@ -216,11 +216,11 @@ export default function CollectionsIndex({ summary, paid, filters }: Props) {
 
     return (
         <div className="flex flex-col gap-6 pb-32">
-            <Head title="Billing & Dues" />
+            <Head title="Collections" />
 
             {/* Header Section */}
             <section className="px-1">
-                <h1 className="text-3xl font-black tracking-tight text-slate-900">Billing</h1>
+                <h1 className="text-3xl font-black tracking-tight text-slate-900">Collections</h1>
                 <p className="mt-1 font-medium text-slate-500">Manage your estate dues and levies.</p>
             </section>
 
