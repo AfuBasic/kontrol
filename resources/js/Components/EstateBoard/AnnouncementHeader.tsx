@@ -102,18 +102,36 @@ export default function AnnouncementHeader({
             </h1>
 
             {/* Author & Publication Context */}
-            <div className="flex items-center gap-3 pt-1">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700 ring-1 ring-slate-200">
-                    {initial}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700 ring-1 ring-slate-200">
+                        {initial}
+                    </div>
+                    <div className="min-w-0">
+                        <p className="truncate text-xs font-bold text-slate-900">
+                            {authorName}
+                        </p>
+                        <p className="text-[11px] font-medium text-slate-500">
+                            {post.published_at ? `Published ${formattedDate}` : `Created ${formattedDate}`}
+                        </p>
+                    </div>
                 </div>
-                <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-slate-900">
-                        {authorName}
-                    </p>
-                    <p className="text-[11px] font-medium text-slate-500">
-                        {post.published_at ? `Published ${formattedDate}` : `Created ${formattedDate}`}
-                    </p>
-                </div>
+
+                {!isAdminView && (
+                    <div className="flex items-center gap-1.5 text-xs font-semibold">
+                        {post.is_read ? (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-500">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                <span>Read</span>
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
+                                <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                                <span>Unread</span>
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Priority Callout if Important / Critical */}
