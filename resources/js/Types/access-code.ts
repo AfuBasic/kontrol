@@ -43,7 +43,22 @@ export type AccessCode = {
     /** YYYY-MM-DD derived from completion_at. */
     completion_date?: string | null;
     /** "3:45 PM" derived from completion_at. */
-    completion_time?: string | null;
+    is_eligible_for_reminder?: boolean;
+    reminder?: VisitorPassReminderData | null;
+};
+
+export type VisitorPassReminderData = {
+    id: number;
+    reminder_offset_minutes: number;
+    scheduled_for: string;
+    status: 'scheduled' | 'sending' | 'sent' | 'cancelled' | 'failed';
+    formatted_time?: string;
+    formatted_date?: string;
+};
+
+export type ReminderOption = {
+    minutes: number;
+    label: string;
 };
 
 export type DurationOption = {
