@@ -77,8 +77,8 @@ return [
     | Toggle when the native Android application becomes available on Google Play.
     |
     */
-    'android_native_available' => false,
+    'android_native_available' => true,
 
     'app_store_url' => 'https://apps.apple.com/ng/app/access-kontrol/id6772562083',
-    'play_store_url' => 'https://play.google.com/store/apps/details?id=com.kontrol.hq',
+    'play_store_url' => 'https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en',
 ];

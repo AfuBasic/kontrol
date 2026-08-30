@@ -82,8 +82,7 @@ class LandingController extends Controller
         $userAgent = $request->header('User-Agent');
 
         if (stripos($userAgent, 'android') !== false) {
-            // Android redirect (Update with real Play Store URL when available)
-            $url = 'https://play.google.com/store/apps/details?id=com.usekontrol.app';
+            $url = 'https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en';
             if ($request->header('X-Inertia')) {
                 return Inertia::location($url);
             }
