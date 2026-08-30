@@ -40,12 +40,12 @@ class VisitorPassReminderController extends Controller
         $offsetMinutes = $reminder->reminder_offset_minutes;
         $offsetText = match (true) {
             $offsetMinutes === 1440 => '24 hours',
-            $offsetMinutes === 720  => '12 hours',
-            $offsetMinutes === 360  => '6 hours',
-            $offsetMinutes === 120  => '2 hours',
-            $offsetMinutes === 60   => '1 hour',
-            $offsetMinutes >= 60    => round($offsetMinutes / 60, 1) . ' hours',
-            default                 => "{$offsetMinutes} minutes",
+            $offsetMinutes === 720 => '12 hours',
+            $offsetMinutes === 360 => '6 hours',
+            $offsetMinutes === 120 => '2 hours',
+            $offsetMinutes === 60 => '1 hour',
+            $offsetMinutes >= 60 => round($offsetMinutes / 60, 1).' hours',
+            default => "{$offsetMinutes} minutes",
         };
 
         $visitorName = $userCode->visitor_name ?? 'your visitor';
