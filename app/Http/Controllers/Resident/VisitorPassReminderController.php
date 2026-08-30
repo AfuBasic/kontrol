@@ -28,7 +28,7 @@ class VisitorPassReminderController extends Controller
         abort_if(! $userCode, 404);
 
         $validated = $request->validate([
-            'reminder_offset_minutes' => ['required', 'integer', 'in:60,120,360,720,1440'],
+            'reminder_offset_minutes' => ['required', 'integer', 'min:5', 'max:10080'],
         ]);
 
         $reminder = $this->reminderService->setReminder(
@@ -37,13 +37,15 @@ class VisitorPassReminderController extends Controller
             $user
         );
 
-        $offsetText = match ($reminder->reminder_offset_minutes) {
-            1440 => '24 hours',
-            720 => '12 hours',
-            360 => '6 hours',
-            120 => '2 hours',
-            60 => '1 hour',
-            default => "{$reminder->reminder_offset_minutes} minutes",
+        $offsetMinutes = $reminder->reminder_offset_minutes;
+        $offsetText = match (true) {
+            $offsetMinutes === 1440 => '24 hours',
+            $offsetMinutes === 720  => '12 hours',
+            $offsetMinutes === 360  => '6 hours',
+            $offsetMinutes === 120  => '2 hours',
+            $offsetMinutes === 60   => '1 hour',
+            $offsetMinutes >= 60    => round($offsetMinutes / 60, 1) . ' hours',
+            default                 => "{$offsetMinutes} minutes",
         };
 
         $visitorName = $userCode->visitor_name ?? 'your visitor';
