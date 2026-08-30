@@ -262,7 +262,7 @@ test('sensitive security actions are blocked during support mode', function () {
     ]);
 
     // Attempting to delete the effective admin user
-    $response = $this->withSession([
+    $response = $this->actingAs($adminUser)->withSession([
         $sessionKey => true,
         ImpersonationService::SESSION_ID_KEY => $impersonationSession->id,
         ImpersonationService::ESTATE_ID_KEY => $estate->id,
