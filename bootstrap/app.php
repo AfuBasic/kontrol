@@ -8,6 +8,7 @@ use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\ResolveContext;
 use App\Http\Middleware\ValidateCsrfToken;
 use App\Http\Middleware\ValidateEstateContext;
+use App\Http\Middleware\Zeus\ResolveImpersonationContext;
 use App\Models\SystemErrorLog;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -109,6 +110,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(
             append: [
                 AuthenticateSession::class,
+                ResolveImpersonationContext::class,
                 ResolveContext::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
@@ -119,6 +121,7 @@ return Application::configure(basePath: dirname(__DIR__))
         );
         $middleware->prependToPriorityList(
             SubstituteBindings::class,
+            ResolveImpersonationContext::class,
             ResolveContext::class,
         );
         $middleware->trustProxies('*');
@@ -136,6 +139,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'feature' => CheckEstateFeature::class,
             'check-estate-feature' => CheckEstateFeature::class,
             'validate-estate' => ValidateEstateContext::class,
+            'zeus.impersonation' => ResolveImpersonationContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
