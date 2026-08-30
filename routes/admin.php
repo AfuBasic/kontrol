@@ -35,6 +35,7 @@ use App\Http\Controllers\Admin\VisitorLogController;
 use App\Http\Controllers\Admin\ZoneController;
 use App\Http\Controllers\Api\ContentEnhanceController;
 use App\Http\Middleware\EnsureIsAdmin;
+use App\Http\Middleware\Zeus\BlockSensitiveDuringImpersonation;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,7 +48,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware(['auth', EnsureIsAdmin::class])->name('admin.')->group(function (): void {
+Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonation::class])->name('admin.')->group(function (): void {
     // Compliance & Enforcement Engine
     Route::prefix('compliance')->name('compliance.')->group(function (): void {
         Route::get('/', [ComplianceController::class, 'index'])->name('index');
