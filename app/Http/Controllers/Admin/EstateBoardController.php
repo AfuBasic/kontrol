@@ -169,12 +169,15 @@ class EstateBoardController extends Controller
             return ['type' => 'Property', 'name' => $property ? $property->name : 'Unknown'];
         })->values()->all();
 
+        $unreadCount = max(0, $targetsCount - $readsCount);
+
         return Inertia::render('Admin/EstateBoard/Show', [
             'post' => $postData,
             'comments' => Inertia::defer(fn () => $this->boardService->getComments($post->id, $estateId)),
             'metrics' => [
                 'targets_count' => $targetsCount,
                 'reads_count' => $readsCount,
+                'unread_count' => $unreadCount,
                 'read_rate' => $readRate,
             ],
             'targets' => $formattedTargets,
