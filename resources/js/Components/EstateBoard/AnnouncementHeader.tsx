@@ -1,4 +1,4 @@
-import { AlertOctagon, AlertTriangle, CalendarDays, CheckCircle2, Circle, Clock, Globe, Home, Megaphone, PartyPopper, Shield, Users, Wrench } from 'lucide-react';
+import { AlertOctagon, AlertTriangle, CalendarDays, CheckCircle2, Home, Megaphone, PartyPopper, Shield, Wrench } from 'lucide-react';
 import React from 'react';
 import type { EstateBoardPost, PostCategory, PostPriority } from '@/types';
 
