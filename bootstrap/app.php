@@ -128,6 +128,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api/*',
             'api/v1/client-errors',
             'zeus/impersonation/stop',
+            'zeus/estates/*/impersonate',
         ]);
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
