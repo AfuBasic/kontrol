@@ -32,12 +32,21 @@ class ActivityPresenter
      */
     public static function present(Activity $activity): array
     {
+        $properties = $activity->properties?->toArray() ?? [];
+        $isSupportMode = ! empty($properties['impersonation']);
+        $assistingAdminName = $properties['effective_actor_name'] ?? null;
+
         $actor = self::resolveActor($activity);
         $module = self::resolveModule($activity);
         $moduleLabel = self::resolveModuleLabel($module);
-        $actorName = $actor ? $actor['name'] : 'System';
+        $actorName = $isSupportMode ? 'Kontrol Support' : ($actor ? $actor['name'] : 'System');
 
         $headline = self::resolveHeadline($activity, $actorName);
+
+        if ($isSupportMode && $assistingAdminName) {
+            $headline .= " while assisting {$assistingAdminName}";
+        }
+
         $supportingContext = self::resolveSupportingContext($activity);
         $semanticTone = self::resolveSemanticTone($activity);
         $isImportant = self::resolveIsImportant($activity);
@@ -56,7 +65,7 @@ class ActivityPresenter
             'timestamp' => $activity->created_at?->toIso8601String() ?? now()->toIso8601String(),
             'relative_time' => $activity->created_at?->diffForHumans() ?? 'just now',
             'destination_url' => $destinationUrl,
-            'is_system' => $actor === null,
+            'is_system' => $actor === null && ! $isSupportMode,
             'is_important' => $isImportant,
         ];
     }
@@ -66,6 +75,15 @@ class ActivityPresenter
      */
     private static function resolveActor(Activity $activity): ?array
     {
+        $properties = $activity->properties?->toArray() ?? [];
+        if (! empty($properties['impersonation'])) {
+            return [
+                'id' => null,
+                'name' => 'Kontrol Support',
+                'initials' => 'KS',
+            ];
+        }
+
         if (! $activity->causer) {
             return null;
         }
