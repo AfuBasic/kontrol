@@ -43,6 +43,7 @@ export type AccessCode = {
     /** YYYY-MM-DD derived from completion_at. */
     completion_date?: string | null;
     /** "3:45 PM" derived from completion_at. */
+    completion_time?: string | null;
     is_eligible_for_reminder?: boolean;
     reminder?: VisitorPassReminderData | null;
 };
