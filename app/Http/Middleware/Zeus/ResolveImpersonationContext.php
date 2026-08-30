@@ -70,7 +70,7 @@ class ResolveImpersonationContext
         // 4. Ensure Web Guard is authenticated as the effective user
         $currentUser = Auth::user();
         if (! $currentUser || $currentUser->id !== $effectiveUser->id) {
-            Auth::login($effectiveUser);
+            Auth::setUser($effectiveUser);
         }
 
         // 5. Ensure the active assignment is set to the effective administrator's assignment
