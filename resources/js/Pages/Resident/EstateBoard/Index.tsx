@@ -4,11 +4,9 @@ import { motion } from 'framer-motion';
 import {
     ArrowRight,
     Check,
-    FileText,
     Home,
     MessageSquare,
     Megaphone,
-    Sparkles,
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef } from 'react';
 
@@ -37,7 +35,6 @@ function AnnouncementFeedItem({ post, index: idx }: { post: EstateBoardPost; ind
     const category = post.category || 'general';
     const categoryLabel = CATEGORY_LABELS[category] || 'Update';
     const authorName = post.author?.name || 'Estate Office';
-    const initial = authorName.charAt(0).toUpperCase();
 
     // Clean plain text excerpt (up to 3 lines)
     const bodyPreview = post.body
