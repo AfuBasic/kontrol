@@ -19,7 +19,6 @@ use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken as BaseValidateCsrfT
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Exceptions\InvalidSignatureException;
-use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Route;
