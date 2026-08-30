@@ -13,6 +13,7 @@ use App\Services\Notifications\NotificationContextService;
 use App\Services\Platform\AndroidMigrationService;
 use App\Services\Resident\AccessCodeService;
 use App\Services\Security\CheckpointClaimService;
+use App\Services\Zeus\ImpersonationService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -150,6 +151,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'support_mode' => fn () => app(ImpersonationService::class)->getSupportModeData($request),
             'partnerContext' => $partnerContext,
             'partnerNotifications' => $partnerNotifications,
             'partnerUnreadCount' => $partnerUnreadCount,
