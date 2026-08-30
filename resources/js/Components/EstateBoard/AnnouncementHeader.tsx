@@ -1,6 +1,7 @@
+import { usePage } from '@inertiajs/react';
 import { AlertOctagon, AlertTriangle, CalendarDays, CheckCircle2, Home, Megaphone, PartyPopper, Shield, Wrench } from 'lucide-react';
 import React from 'react';
-import type { EstateBoardPost, PostCategory, PostPriority } from '@/types';
+import type { EstateBoardPost, PostCategory, PostPriority, SharedData } from '@/types';
 
 const CATEGORY_CONFIG: Record<PostCategory, { label: string; badge: string; icon: React.ElementType }> = {
     general: { label: 'General', badge: 'bg-slate-100 text-slate-700 ring-slate-200/60', icon: Megaphone },
@@ -60,7 +61,13 @@ export default function AnnouncementHeader({
               year: 'numeric',
           }).format(new Date(post.created_at));
 
-    const authorName = post.author?.name || 'Estate Administration';
+    const { auth } = usePage<SharedData>().props;
+    const estateName = (auth as any)?.estate?.name || auth?.user?.context?.estate_name || auth?.user?.estate_name || 'Estate Administration';
+
+    const authorName = post.property_owner_id
+        ? (post.author?.name ? `Landlord (${post.author.name})` : 'Landlord Bulletin')
+        : estateName;
+
     const initial = authorName.charAt(0).toUpperCase();
 
     return (
@@ -97,18 +104,18 @@ export default function AnnouncementHeader({
             </div>
 
             {/* Title */}
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 leading-tight">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 leading-tight [overflow-wrap:anywhere] break-words">
                 {post.title || 'Untitled Announcement'}
             </h1>
 
             {/* Author & Publication Context */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 max-w-full">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700 ring-1 ring-slate-200">
                         {initial}
                     </div>
-                    <div className="min-w-0">
-                        <p className="truncate text-xs font-bold text-slate-900">
+                    <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-bold text-slate-900" title={authorName}>
                             {authorName}
                         </p>
                         <p className="text-[11px] font-medium text-slate-500">

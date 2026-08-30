@@ -29,12 +29,15 @@ const CATEGORY_LABELS: Record<PostCategory, string> = {
     event: 'Event',
 };
 
-function AnnouncementFeedItem({ post, index: idx }: { post: EstateBoardPost; index: number }) {
+function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBoardPost; index: number; estateName: string }) {
     const isUnread = !post.is_read;
     const hasMedia = post.media && post.media.length > 0;
     const category = post.category || 'general';
     const categoryLabel = CATEGORY_LABELS[category] || 'Update';
-    const authorName = post.author?.name || 'Estate Office';
+
+    const authorName = post.property_owner_id
+        ? (post.author?.name ? `Landlord (${post.author.name})` : 'Landlord Bulletin')
+        : (estateName || 'Estate Office');
 
     // Clean plain text excerpt (up to 3 lines)
     const bodyPreview = post.body
@@ -82,7 +85,10 @@ function AnnouncementFeedItem({ post, index: idx }: { post: EstateBoardPost; ind
                         <span className="text-slate-300">·</span>
 
                         <div className="flex min-w-0 items-center gap-1.5 truncate">
-                            <span className="truncate text-xs font-bold text-slate-800">
+                            <span
+                                className="truncate text-xs font-bold text-slate-800 max-w-[130px] sm:max-w-[200px]"
+                                title={authorName}
+                            >
                                 {authorName}
                             </span>
                             <span className="shrink-0 text-[11px] font-medium text-slate-600">
@@ -287,7 +293,12 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
             {posts.data.length > 0 ? (
                 <div className="space-y-3">
                     {posts.data.map((post, idx) => (
-                        <AnnouncementFeedItem key={post.id} post={post} index={idx} />
+                        <AnnouncementFeedItem
+                            key={post.id}
+                            post={post}
+                            index={idx}
+                            estateName={estateName}
+                        />
                     ))}
 
                     {/* Load More Spinner */}
