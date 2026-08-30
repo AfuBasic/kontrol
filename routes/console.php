@@ -5,6 +5,7 @@ use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
 use App\Jobs\Compliance\EvaluateViolationsJob;
 use App\Jobs\GenerateMonthlyPartnerEarningsJob;
+use App\Jobs\Resident\SendVisitorPassRemindersJob;
 use App\Models\DeviceAuthorizationRequest;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -38,3 +39,7 @@ Schedule::command('sitemap:generate')->dailyAt('03:00');
 // Partner commission close – previous month lock on the 1st at 00:30 (does not mark paid)
 Schedule::job(new GenerateMonthlyPartnerEarningsJob(mode: GenerateMonthlyPartnerEarningsJob::MODE_CLOSE))
     ->monthlyOn(1, '00:30');
+
+// Scheduled Visitor Pass Reminders
+Schedule::job(new SendVisitorPassRemindersJob)->everyMinute();
+
