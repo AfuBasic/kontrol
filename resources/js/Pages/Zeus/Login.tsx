@@ -1,7 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 
 export default function Login() {
@@ -11,6 +11,12 @@ export default function Login() {
     });
 
     const [showPassword, setShowPassword] = useState(false);
+
+    useEffect(() => {
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+        document.documentElement.style.colorScheme = 'dark';
+    }, []);
 
     function submit(e: React.FormEvent) {
         e.preventDefault();
