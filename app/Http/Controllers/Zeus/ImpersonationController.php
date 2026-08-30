@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Services\Zeus;
-
 namespace App\Http\Controllers\Zeus;
 
 use App\Actions\Zeus\StartImpersonationAction;
