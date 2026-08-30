@@ -26,7 +26,7 @@ type Props = {
     };
 };
 
-export default function CreateCollection({ residents, zones = [], context }: Props) {
+export default function CreateCollection({ residents = [], zones = [], context }: Props) {
     const isZoneScoped = context?.is_zone_scoped ?? false;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -48,13 +48,13 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
     const [searchQuery, setSearchQuery] = useState('');
 
     const filteredResidents = useMemo(() => {
-        return residents.filter(
+        return (residents || []).filter(
             (r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()) || r.email.toLowerCase().includes(searchQuery.toLowerCase()),
         );
     }, [residents, searchQuery]);
 
     const toggleZone = (id: number) => {
-        const current = [...data.zones];
+        const current = [...(data.zones || [])];
         const index = current.indexOf(id);
         if (index > -1) {
             current.splice(index, 1);
@@ -65,7 +65,7 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
     };
 
     const toggleResident = (id: number) => {
-        const current = [...data.targets];
+        const current = [...(data.targets || [])];
         const index = current.indexOf(id);
         if (index > -1) {
             current.splice(index, 1);
@@ -305,7 +305,7 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
                                     ) : (
                                         <div className="grid gap-3">
                                             {zones.map((zone) => {
-                                                const isSelected = data.zones.includes(zone.id);
+                                                const isSelected = (data.zones || []).includes(zone.id);
                                                 return (
                                                     <button
                                                         key={zone.id}
@@ -363,7 +363,7 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
                                     <div className="max-h-[400px] overflow-y-auto rounded-3xl border border-slate-100 bg-slate-50/50 p-4">
                                         <div className="grid gap-3">
                                             {filteredResidents.map((resident) => {
-                                                const isSelected = data.targets.includes(resident.id);
+                                                const isSelected = (data.targets || []).includes(resident.id);
                                                 return (
                                                     <button
                                                         key={resident.id}
@@ -404,13 +404,13 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
                                         </div>
                                     </div>
                                     <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2">
-                                        <p className="text-xs font-bold text-slate-500">{data.targets.length} residents selected</p>
+                                        <p className="text-xs font-bold text-slate-500">{(data.targets || []).length} residents selected</p>
                                         <div className="flex flex-wrap gap-2 sm:gap-3">
                                             <AnimatePresence mode="popLayout">
                                                 {/* Search-specific Select All */}
                                                 {searchQuery &&
                                                     filteredResidents.length > 0 &&
-                                                    !filteredResidents.every((r) => data.targets.includes(r.id)) && (
+                                                    !filteredResidents.every((r) => (data.targets || []).includes(r.id)) && (
                                                         <motion.button
                                                             key="select-matches"
                                                             initial={{ opacity: 0, scale: 0.9 }}
@@ -419,7 +419,7 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
                                                             type="button"
                                                             onClick={() => {
                                                                 const newTargets = Array.from(
-                                                                    new Set([...data.targets, ...filteredResidents.map((r) => r.id)]),
+                                                                    new Set([...(data.targets || []), ...filteredResidents.map((r) => r.id)]),
                                                                 );
                                                                 setData('targets', newTargets);
                                                             }}
@@ -430,7 +430,7 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
                                                     )}
 
                                                 {/* Global Select All */}
-                                                {data.targets.length < residents.length && !searchQuery && (
+                                                {(data.targets || []).length < (residents || []).length && !searchQuery && (
                                                     <motion.button
                                                         key="select-all"
                                                         initial={{ opacity: 0, scale: 0.9 }}
@@ -440,17 +440,17 @@ export default function CreateCollection({ residents, zones = [], context }: Pro
                                                         onClick={() =>
                                                             setData(
                                                                 'targets',
-                                                                residents.map((r) => r.id),
+                                                                (residents || []).map((r) => r.id),
                                                             )
                                                         }
                                                         className="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-slate-200"
                                                     >
-                                                        Select All ({residents.length})
+                                                        Select All ({(residents || []).length})
                                                     </motion.button>
                                                 )}
 
                                                 {/* Global Unselect All */}
-                                                {data.targets.length > 0 && (
+                                                {(data.targets || []).length > 0 && (
                                                     <motion.button
                                                         key="unselect-all"
                                                         initial={{ opacity: 0, scale: 0.9 }}
