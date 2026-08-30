@@ -12,23 +12,31 @@ const isAndroidDev = process.env.CAPACITOR_PLATFORM === 'android' || process.arg
 let devUrl = isIosDev ? 'http://app.kontrol.test' : 'https://app.usekontrol.afuwapetunde.com';
 let devHostname = isIosDev ? 'app.kontrol.test' : 'app.usekontrol.afuwapetunde.com';
 
-// Dynamically read from .env if in dev mode
+// Dynamically read from environment or .env if in dev mode
 if (isDev) {
-    try {
-        const envPath = path.join(process.cwd(), '.env');
-        if (fs.existsSync(envPath)) {
-            const envFile = fs.readFileSync(envPath, 'utf-8');
-            const customDevUrl = isIosDev
-                ? envFile.match(/^CAPACITOR_IOS_URL=(.*)$/m)?.[1]?.trim()
-                : envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m)?.[1]?.trim();
+    if (isIosDev && process.env.CAPACITOR_IOS_URL) {
+        devUrl = process.env.CAPACITOR_IOS_URL;
+        devHostname = new URL(devUrl).hostname;
+    } else if (!isIosDev && process.env.CAPACITOR_DEV_URL) {
+        devUrl = process.env.CAPACITOR_DEV_URL;
+        devHostname = new URL(devUrl).hostname;
+    } else {
+        try {
+            const envPath = path.join(process.cwd(), '.env');
+            if (fs.existsSync(envPath)) {
+                const envFile = fs.readFileSync(envPath, 'utf-8');
+                const customDevUrl = isIosDev
+                    ? envFile.match(/^CAPACITOR_IOS_URL=(.*)$/m)?.[1]?.trim()
+                    : envFile.match(/^CAPACITOR_DEV_URL=(.*)$/m)?.[1]?.trim();
 
-            if (customDevUrl) {
-                devUrl = customDevUrl;
-                devHostname = new URL(devUrl).hostname;
+                if (customDevUrl) {
+                    devUrl = customDevUrl;
+                    devHostname = new URL(devUrl).hostname;
+                }
             }
+        } catch (e) {
+            console.warn('Could not read custom dev URL from .env', e);
         }
-    } catch (e) {
-        console.warn('Could not read custom dev URL from .env', e);
     }
 }
 
