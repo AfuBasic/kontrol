@@ -18,8 +18,19 @@ import type { CursorPaginatedPosts, EstateBoardPost, PostCategory, SharedData } 
 type Props = {
     posts: CursorPaginatedPosts;
     filter: string | null;
+    category?: string | null;
+    unread_only?: boolean;
     unread_count?: number;
 };
+
+const CATEGORY_FILTERS: Array<{ id: string | null; label: string }> = [
+    { id: null, label: 'All' },
+    { id: 'general', label: 'Updates' },
+    { id: 'maintenance', label: 'Maintenance' },
+    { id: 'security', label: 'Security' },
+    { id: 'event', label: 'Events' },
+    { id: 'meeting', label: 'Meetings' },
+];
 
 const CATEGORY_LABELS: Record<PostCategory, string> = {
     general: 'Update',
@@ -171,7 +182,7 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
     );
 }
 
-export default function EstateBoardIndex({ posts, filter, unread_count }: Props) {
+export default function EstateBoardIndex({ posts, filter, category, unread_only = false, unread_count }: Props) {
     const { auth } = usePage<SharedData>().props;
     const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
     const hasLandlord = Boolean(auth?.user?.property_owner_id);
@@ -183,10 +194,14 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
         { id: 'property_owner', label: 'My House' },
     ];
 
-    const handleFilterChange = (filterId: string | null) => {
+    const handleFilterChange = (newFilter?: string | null, newCategory?: string | null, newUnreadOnly?: boolean) => {
         router.get(
             index.url(),
-            { filter: filterId || undefined },
+            {
+                filter: newFilter !== undefined ? (newFilter || undefined) : (filter || undefined),
+                category: newCategory !== undefined ? (newCategory || undefined) : (category || undefined),
+                unread_only: newUnreadOnly !== undefined ? (newUnreadOnly ? 1 : undefined) : (unread_only ? 1 : undefined),
+            },
             { preserveState: true, preserveScroll: true },
         );
     };
@@ -200,7 +215,11 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
         isLoadingMore.current = true;
         router.get(
             posts.next_page_url,
-            { filter: filter || undefined },
+            {
+                filter: filter || undefined,
+                category: category || undefined,
+                unread_only: unread_only ? 1 : undefined,
+            },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -210,7 +229,7 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
                 },
             },
         );
-    }, [posts.next_page_url, filter]);
+    }, [posts.next_page_url, filter, category, unread_only]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -245,16 +264,24 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
                 </div>
 
                 {typeof unread_count === 'number' && unread_count > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-black text-indigo-700 ring-1 ring-indigo-200/60">
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
+                    <button
+                        type="button"
+                        onClick={() => handleFilterChange(undefined, undefined, !unread_only)}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-black transition-all active:scale-95 ${
+                            unread_only
+                                ? 'bg-indigo-600 text-white shadow-xs'
+                                : 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200/60 hover:bg-indigo-100'
+                        }`}
+                    >
+                        <span className={`h-1.5 w-1.5 rounded-full ${unread_only ? 'bg-white' : 'bg-indigo-600'}`} />
                         <span>{unread_count} unread</span>
-                    </span>
+                    </button>
                 )}
             </div>
 
             {/* Filter Tabs - only for property owners and residents with a landlord */}
             {showTabs && (
-                <div className="mb-4">
+                <div className="mb-3">
                     <div className="flex max-w-xs rounded-xl bg-slate-100 p-1">
                         {tabs.map((tab) => {
                             const isActive =
@@ -263,7 +290,7 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
                                 <button
                                     key={tab.id}
                                     type="button"
-                                    onClick={() => handleFilterChange(tab.id)}
+                                    onClick={() => handleFilterChange(tab.id, undefined, undefined)}
                                     className={`relative flex flex-1 items-center justify-center rounded-lg py-1.5 text-xs font-bold transition-all ${
                                         isActive
                                             ? 'text-slate-900'
@@ -288,6 +315,41 @@ export default function EstateBoardIndex({ posts, filter, unread_count }: Props)
                     </div>
                 </div>
             )}
+
+            {/* Simple Category Filter Pills */}
+            <div className="mb-4 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {CATEGORY_FILTERS.map((cat) => {
+                    const isCatActive = (category || null) === cat.id;
+                    return (
+                        <button
+                            key={cat.id ?? 'all'}
+                            type="button"
+                            onClick={() => handleFilterChange(undefined, cat.id, undefined)}
+                            className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold transition-all active:scale-95 ${
+                                isCatActive
+                                    ? 'bg-slate-900 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                            }`}
+                        >
+                            {cat.label}
+                        </button>
+                    );
+                })}
+
+                {/* Unread Pill Toggle (Quick filter) */}
+                <button
+                    type="button"
+                    onClick={() => handleFilterChange(undefined, undefined, !unread_only)}
+                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all active:scale-95 ${
+                        unread_only
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                    }`}
+                >
+                    <span className={`h-1.5 w-1.5 rounded-full ${unread_only ? 'bg-white' : 'bg-indigo-500'}`} />
+                    <span>Unread only</span>
+                </button>
+            </div>
 
             {/* Feed Stream */}
             {posts.data.length > 0 ? (
