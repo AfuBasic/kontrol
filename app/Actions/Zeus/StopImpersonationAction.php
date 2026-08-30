@@ -42,8 +42,10 @@ class StopImpersonationAction
         // 2. Clear ContextManager and Spatie team state
         $this->contextManager->clear();
 
-        // 3. Log out effective user from standard web guard
-        Auth::logout();
+        // 3. Clear effective user from standard web guard cleanly without destroying session
+        Auth::guard('web')->forgetUser();
+        $request->session()->forget(Auth::guard('web')->getName());
+        $request->session()->forget('password_hash_web');
 
         // 4. Ensure Zeus provider session remains intact
         $request->session()->put(config('zeus.session_key'), true);
