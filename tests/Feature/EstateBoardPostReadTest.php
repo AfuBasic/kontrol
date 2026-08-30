@@ -130,3 +130,50 @@ it('redirects the admin manage page to the unified estate board index', function
         ->get(route('admin.estate-board.manage'))
         ->assertRedirect(route('admin.estate-board.index'));
 });
+
+it('exposes resident-specific is_read and unread_count on the resident feed', function () {
+    $residentB = User::factory()->create();
+    $residentB->assignRole('resident');
+    $residentB->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    UserProfile::create(['user_id' => $residentB->id]);
+
+    // Unread initially
+    $this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/EstateBoard/Index')
+            ->where('unread_count', 1)
+            ->where('posts.data.0.is_read', false)
+        );
+
+    // Resident A reads the post
+    $this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.show', $this->post))
+        ->assertOk();
+
+    // Resident A sees is_read=true and unread_count=0
+    $this->actingAs($this->resident)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/EstateBoard/Index')
+            ->where('unread_count', 0)
+            ->where('posts.data.0.is_read', true)
+        );
+
+    // Resident B still sees unread_count=1 and is_read=false
+    $this->actingAs($residentB)
+        ->withHeaders(['X-Bypass-Mobile-Restrict' => 'true'])
+        ->get(route('resident.estate-board.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Resident/EstateBoard/Index')
+            ->where('unread_count', 1)
+            ->where('posts.data.0.is_read', false)
+        );
+});
+
