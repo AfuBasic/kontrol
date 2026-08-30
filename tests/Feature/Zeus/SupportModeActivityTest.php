@@ -38,8 +38,8 @@ test('performing actions in support mode attributes activity to Kontrol Support 
         'started_at' => now(),
     ]);
 
-    // Create an activity during Support Mode
-    $this->withSession([
+    // Activate Support Mode session in test environment
+    session([
         $sessionKey => true,
         ImpersonationService::SESSION_ID_KEY => $impersonationSession->id,
         ImpersonationService::ESTATE_ID_KEY => $estate->id,
@@ -88,6 +88,9 @@ test('normal estate admin actions maintain normal attribution without support me
         'is_active' => true,
     ]);
 
+    // Ensure session is cleared for normal test
+    session()->flush();
+
     // Create an activity normally (NOT in support mode)
     activity('announcements')
         ->causedBy($adminUser)
@@ -135,7 +138,7 @@ test('multiple domain actions preserve support attribution across different modu
         'started_at' => now(),
     ]);
 
-    $this->withSession([
+    session([
         $sessionKey => true,
         ImpersonationService::SESSION_ID_KEY => $impersonationSession->id,
         ImpersonationService::ESTATE_ID_KEY => $estate->id,
