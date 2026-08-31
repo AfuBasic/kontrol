@@ -14,7 +14,20 @@ class RolePolicy extends BaseContextPolicy
     public function viewAny(User $user): bool
     {
         return app(ContextManager::class)->hasContext()
-            && $user->contextHasRole('admin');
+            && ($user->contextHasRole('admin') || $user->contextCan('roles.view'));
+    }
+
+    /**
+     * Determine if the user can view a role.
+     */
+    public function view(User $user, Role $role): bool
+    {
+        if ($role->estate_id !== null && ! $this->hasValidContextForEstate($role->estate_id)) {
+            return false;
+        }
+
+        return app(ContextManager::class)->hasContext()
+            && ($user->contextHasRole('admin') || $user->contextCan('roles.view'));
     }
 
     /**
@@ -23,7 +36,7 @@ class RolePolicy extends BaseContextPolicy
     public function create(User $user): bool
     {
         return app(ContextManager::class)->hasContext()
-            && $user->contextHasRole('admin');
+            && ($user->contextHasRole('admin') || $user->contextCan('roles.create'));
     }
 
     /**
@@ -40,7 +53,7 @@ class RolePolicy extends BaseContextPolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->contextCan('roles.edit');
     }
 
     /**
@@ -56,6 +69,6 @@ class RolePolicy extends BaseContextPolicy
             return false;
         }
 
-        return $user->contextHasRole('admin');
+        return $user->contextHasRole('admin') || $user->contextCan('roles.delete');
     }
 }
