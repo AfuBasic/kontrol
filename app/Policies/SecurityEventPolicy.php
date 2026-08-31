@@ -11,7 +11,11 @@ class SecurityEventPolicy extends BaseContextPolicy
 {
     public function viewAny(User $user): bool
     {
-        return app(ContextManager::class)->hasContext();
+        if (! app(ContextManager::class)->hasContext()) {
+            return false;
+        }
+
+        return $user->contextHasRole('admin') || $user->contextCan('suspicious_activity.view');
     }
 
     public function view(User $user, SecurityEvent $securityEvent): bool
@@ -22,11 +26,25 @@ class SecurityEventPolicy extends BaseContextPolicy
             return false;
         }
 
+        if (! ($user->contextHasRole('admin') || $user->contextCan('suspicious_activity.view'))) {
+            return false;
+        }
+
         return $this->belongsToEstate($securityEvent, $context->estateId);
     }
 
     public function review(User $user, SecurityEvent $securityEvent): bool
     {
+        $context = app(ContextManager::class)->current();
+
+        if ($context === null) {
+            return false;
+        }
+
+        if (! ($user->contextHasRole('admin') || $user->contextCan('suspicious_activity.review'))) {
+            return false;
+        }
+
         return $this->view($user, $securityEvent);
     }
 

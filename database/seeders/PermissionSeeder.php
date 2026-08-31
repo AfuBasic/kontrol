@@ -93,6 +93,13 @@ class PermissionSeeder extends Seeder
             'zones.edit' => 'Edit existing zones',
             'zones.delete' => 'Delete zones',
         ],
+        'activity_logs' => [
+            'activity_logs.view' => 'View estate activity and audit logs',
+        ],
+        'suspicious_activity' => [
+            'suspicious_activity.view' => 'View suspicious sign-in and security events',
+            'suspicious_activity.review' => 'Review and manage suspicious security events',
+        ],
     ];
 
     /**

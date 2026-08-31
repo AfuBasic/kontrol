@@ -24,8 +24,6 @@ import * as SupportController from '@/actions/App/Http/Controllers/Account/Suppo
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
-import * as ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
-
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 
 
@@ -892,16 +890,6 @@ export default function AdminLayout({ children, title: _title }: Props) {
                                 >
                                     <UserCircleIcon className="h-5 w-5" /> Profile
                                 </Link>
-
-                                {isAdmin && hasActivityLogs && (
-                                    <Link
-                                        href={ActivityLogController.index.url()}
-                                        onClick={() => setMobileMenuOpen(false)}
-                                        className="flex items-center gap-3 rounded-xl px-4 py-3 text-white/70 transition-colors hover:bg-white/10"
-                                    >
-                                        <ClipboardDocumentListIcon className="h-5 w-5" /> Activity Log
-                                    </Link>
-                                )}
 
                                 <Link
                                     href={SupportController.index.url()}

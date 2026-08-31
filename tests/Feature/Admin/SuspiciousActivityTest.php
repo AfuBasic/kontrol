@@ -11,6 +11,7 @@ use App\Models\SecurityEvent;
 use App\Models\User;
 use App\Services\Admin\DashboardService;
 use App\Services\Admin\SuspiciousActivityService;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 function estateAdmin(): array
@@ -19,6 +20,9 @@ function estateAdmin(): array
     $admin = User::factory()->create(['email_verified_at' => now()]);
     $estate->users()->attach($admin->id, ['status' => 'accepted']);
     $role = Role::create(['name' => 'admin', 'guard_name' => 'web', 'estate_id' => $estate->id]);
+    $viewPerm = Permission::firstOrCreate(['name' => 'suspicious_activity.view', 'guard_name' => 'web']);
+    $reviewPerm = Permission::firstOrCreate(['name' => 'suspicious_activity.review', 'guard_name' => 'web']);
+    $role->givePermissionTo([$viewPerm, $reviewPerm]);
     $assignment = AdministrativeAssignment::create([
         'user_id' => $admin->id,
         'estate_id' => $estate->id,
@@ -208,4 +212,73 @@ test('action center includes suspicious activity that requires attention', funct
         ->and($item['severity'])->toBe('warning')
         ->and($item['previews'][0]['subtitle'])->toBe('John Adeyemi')
         ->and(collect($attention)->firstWhere('id', 'suspicious_activity'))->not->toBeNull();
+});
+
+test('user with custom role having suspicious_activity permissions can view and review events', function () {
+    $estate = Estate::factory()->create();
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $estate->users()->attach($user->id, ['status' => 'accepted']);
+    $resident = residentIn($estate, 'Jane Doe');
+
+    $customRole = Role::create(['name' => 'security_supervisor', 'guard_name' => 'web', 'estate_id' => $estate->id]);
+    $viewPerm = Permission::firstOrCreate(['name' => 'suspicious_activity.view', 'guard_name' => 'web']);
+    $reviewPerm = Permission::firstOrCreate(['name' => 'suspicious_activity.review', 'guard_name' => 'web']);
+    $customRole->givePermissionTo([$viewPerm, $reviewPerm]);
+
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'role_id' => $customRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+        'is_primary' => true,
+    ]);
+
+    setPermissionsTeamId($estate->id);
+    $user->assignRole($customRole);
+
+    $event = SecurityEvent::factory()->create([
+        'user_id' => $resident->id,
+        'status' => SecurityEventStatus::Pending,
+    ]);
+
+    $this->actingAs($user)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->get(route('admin.suspicious-activity.index'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('Admin/SuspiciousActivity/Index')
+            ->has('events.data', 1));
+
+    $this->actingAs($user)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->post(route('admin.suspicious-activity.review', $event))
+        ->assertRedirect();
+
+    expect($event->fresh()->reviewed_at)->not->toBeNull();
+});
+
+test('user with custom role without suspicious_activity.view permission gets 403', function () {
+    $estate = Estate::factory()->create();
+    $user = User::factory()->create(['email_verified_at' => now()]);
+    $estate->users()->attach($user->id, ['status' => 'accepted']);
+
+    $customRole = Role::create(['name' => 'maintenance_lead', 'guard_name' => 'web', 'estate_id' => $estate->id]);
+
+    $assignment = AdministrativeAssignment::create([
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'role_id' => $customRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+        'is_primary' => true,
+    ]);
+
+    setPermissionsTeamId($estate->id);
+    $user->assignRole($customRole);
+
+    $this->actingAs($user)
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->get(route('admin.suspicious-activity.index'))
+        ->assertForbidden();
 });

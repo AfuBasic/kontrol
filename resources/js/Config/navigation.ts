@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
+import * as ActivityLogController from '@/actions/App/Http/Controllers/Admin/ActivityLogController';
 import * as AdministrativeAssignmentController from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 import * as CollectionController from '@/actions/App/Http/Controllers/Admin/CollectionController';
@@ -126,9 +127,20 @@ export const baseNav: NavItem[] = [
         name: 'Suspicious Activity',
         href: SuspiciousActivityController.index.url(),
         icon: ShieldExclamationIcon,
+        permission: 'suspicious_activity.view',
         group: 'Operations',
         description: 'Review security-relevant sign-in events',
         keywords: ['security', 'devices', 'login', 'alerts', 'suspicious'],
+    },
+    {
+        name: 'Activity Log',
+        href: ActivityLogController.index.url(),
+        icon: ClipboardDocumentListIcon,
+        permission: 'activity_logs.view',
+        feature: 'activity-logs',
+        group: 'Operations',
+        description: 'View estate audit trail and system activity',
+        keywords: ['activity', 'logs', 'audit', 'history', 'actions', 'events'],
     },
 
     // Finance Group
