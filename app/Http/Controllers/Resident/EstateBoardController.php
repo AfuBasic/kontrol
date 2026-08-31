@@ -35,13 +35,25 @@ class EstateBoardController extends Controller
         $this->authorize('viewAny', EstateBoardPost::class);
 
         $filter = request('filter', 'estate');
+        $category = request('category');
+        $unreadOnly = request()->boolean('unread_only');
         $estateId = $this->estateContext->getEstateId();
-        $posts = $this->boardService->getFeed($estateId, 10, $this->allowedAudiences, $filter);
+
+        $posts = $this->boardService->getFeed(
+            estateId: $estateId,
+            perPage: 10,
+            audiences: $this->allowedAudiences,
+            filter: $filter,
+            category: $category ?: null,
+            unreadOnly: $unreadOnly
+        );
         $unreadCount = $this->boardService->getResidentUnreadCount($estateId, $this->allowedAudiences, $filter);
 
         return Inertia::render('Resident/EstateBoard/Index', [
             'posts' => $posts,
             'filter' => $filter,
+            'category' => $category ?: null,
+            'unread_only' => $unreadOnly,
             'unread_count' => $unreadCount,
         ]);
     }

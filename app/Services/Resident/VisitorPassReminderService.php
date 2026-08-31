@@ -70,10 +70,12 @@ class VisitorPassReminderService
             ]);
         }
 
-        $validOffsets = collect(self::PRESET_OPTIONS)->pluck('minutes')->all();
-        if (! in_array($offsetMinutes, $validOffsets, true)) {
+        $maxOffset = (int) $accessCode->starts_at->diffInMinutes(now(), absolute: true);
+        $minutesUntilStart = (int) now()->diffInMinutes($accessCode->starts_at, absolute: true);
+
+        if ($offsetMinutes < 5 || $offsetMinutes > $minutesUntilStart) {
             throw ValidationException::withMessages([
-                'reminder_offset_minutes' => ['Invalid reminder option selected.'],
+                'reminder_offset_minutes' => ['The reminder time must be between 5 minutes and the scheduled visit time.'],
             ]);
         }
 

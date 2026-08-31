@@ -1,13 +1,15 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Eye, FileEdit, MapPin, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, Check, Eye, FileEdit, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { marked } from 'marked';
 import { useCallback, useRef, useState, lazy, Suspense } from 'react';
 
 import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
 import EstateBoardPostPreview from '@/Components/Admin/EstateBoardPostPreview';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { useActiveContext } from '@/Hooks/useActiveContext';
+import { useEstateBoardAutoDraft } from '@/Hooks/useEstateBoardAutoDraft';
 import { audienceOptions, categoryOptions, priorityOptions } from '@/Lib/estate-board-options';
 import type { PostAudience, PostCategory, PostPriority, PostStatus } from '@/types';
 
@@ -32,10 +34,11 @@ type FormData = {
 export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
     const safeZones = zones ?? [];
     const { isZoneScoped, zoneId, zoneName } = useActiveContext();
+    const { confirm } = useAdminConfirmation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [previews, setPreviews] = useState<string[]>([]);
 
-    const { data, setData, post, processing, errors } = useForm<FormData>({
+    const { data, setData, post, processing, errors, reset } = useForm<FormData>({
         title: '',
         body: '',
         category: 'general',
@@ -44,6 +47,25 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
         audience: 'all',
         zone_ids: isZoneScoped && zoneId ? [zoneId] : ([] as number[]),
         images: [],
+    });
+
+    const setFormValues = useCallback((draft: any) => {
+        setData((prev) => ({
+            ...prev,
+            ...draft,
+        }));
+    }, [setData]);
+
+    const { saveStatus, hasDraft, clearDraft, isMeaningful } = useEstateBoardAutoDraft({
+        formState: {
+            title: data.title,
+            body: data.body,
+            category: data.category,
+            priority: data.priority,
+            audience: data.audience,
+            zone_ids: data.zone_ids,
+        },
+        setFormValues,
     });
 
     const validationErrors = Object.entries(errors).filter(([, message]) => Boolean(message));
@@ -88,10 +110,34 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
         setPreviews(previews.filter((_, i) => i !== index));
     }
 
+    const handleDiscard = () => {
+        if (isMeaningful) {
+            confirm({
+                title: 'Discard draft announcement?',
+                message: 'Your unsent announcement content will be removed. Are you sure you want to discard it?',
+                confirmLabel: 'Discard draft',
+                type: 'warning',
+                onConfirm: () => {
+                    clearDraft();
+                    reset();
+                    setPreviews([]);
+                },
+            });
+            return;
+        }
+
+        clearDraft();
+        reset();
+        setPreviews([]);
+    };
+
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         post(store.url(), {
             forceFormData: true,
+            onSuccess: () => {
+                clearDraft();
+            },
         });
     }
 
@@ -103,12 +149,45 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="mb-6"
+                className="mb-6 flex items-center justify-between"
             >
                 <Link href={index.url()} className="inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-700">
                     <ArrowLeft className="h-4 w-4" />
                     Back to Board
                 </Link>
+
+                {/* Auto-Draft Status Indicators & Manual Discard */}
+                <div className="flex items-center gap-3">
+                    {saveStatus === 'saving' && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-400">
+                            <span className="h-1.5 w-1.5 animate-ping rounded-full bg-slate-400" />
+                            <span>Saving draft...</span>
+                        </span>
+                    )}
+                    {saveStatus === 'saved' && (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                            <Check className="h-3.5 w-3.5" />
+                            <span>Draft saved</span>
+                        </span>
+                    )}
+                    {saveStatus === 'restored' && (
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600">
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            <span>Recovered your unsent changes</span>
+                        </span>
+                    )}
+
+                    {isMeaningful && (
+                        <button
+                            type="button"
+                            onClick={handleDiscard}
+                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-2xs transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                        >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Discard draft</span>
+                        </button>
+                    )}
+                </div>
             </motion.div>
 
             <motion.div
@@ -138,10 +217,11 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                 }}
                                 onDraft={handleAiDraft}
                                 onTemplateSelect={({ category, priority }) => {
-                                    setData({
+                                    setData((prev) => ({
+                                        ...prev,
                                         category,
                                         priority,
-                                    });
+                                    }));
                                 }}
                                 disabled={processing}
                             />
@@ -151,62 +231,49 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
-                            className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+                            className="space-y-4 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
                         >
-                            {validationErrors.length > 0 && (
-                                <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-                                    <p className="text-sm font-medium text-red-800">Please fix the following before publishing:</p>
-                                    <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-red-700">
-                                        {validationErrors.map(([field, message]) => (
-                                            <li key={field}>{message}</li>
-                                        ))}
-                                    </ul>
-                                </div>
-                            )}
-
-                            <div className="mb-6">
-                                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                                    Title <span className="text-gray-400">(optional)</span>
+                            <div>
+                                <label htmlFor="title" className="mb-2 block text-sm font-medium text-gray-700">
+                                    Title
                                 </label>
                                 <input
-                                    type="text"
                                     id="title"
-                                    name="title"
-                                    autoComplete="off"
-                                    autoCorrect="on"
-                                    autoCapitalize="sentences"
-                                    spellCheck={true}
+                                    type="text"
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
-                                    placeholder="Give your announcement a clear title..."
-                                    className="mt-1 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-100 focus:outline-none"
+                                    placeholder="Enter post title..."
+                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                                 />
                                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                             </div>
 
                             <div>
-                                <label htmlFor="body" className="mb-1 block text-sm font-medium text-gray-700">
-                                    Content <span className="text-red-500">*</span>
-                                </label>
-                                <Suspense fallback={<div className="h-64 animate-pulse rounded-xl bg-slate-100" />}>
+                                <label className="mb-2 block text-sm font-medium text-gray-700">Content</label>
+                                <Suspense
+                                    fallback={
+                                        <div className="flex h-64 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-400">
+                                            Loading editor...
+                                        </div>
+                                    }
+                                >
                                     <MarkdownEditor
-                                        id="body"
                                         value={data.body}
-                                        onChange={(value) => setData('body', value)}
-                                        placeholder="Generate a draft above, or write your announcement here..."
+                                        onChange={(content) => setData('body', content)}
+                                        placeholder="Write your announcement content here..."
                                         error={errors.body}
                                     />
                                 </Suspense>
                             </div>
                         </motion.div>
-                    </div>
 
-                    <div className="order-2 space-y-6 xl:sticky xl:top-6 xl:order-2 xl:self-start">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.12, ease: 'easeOut' }}
+                            transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
+                            className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
                         >
+                            <h2 className="mb-4 text-base font-semibold text-gray-900">Live Preview</h2>
                             <EstateBoardPostPreview
                                 title={data.title}
                                 body={data.body}
@@ -215,175 +282,160 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                 audience={data.audience}
                             />
                         </motion.div>
+                    </div>
 
+                    <div className="order-2 xl:order-2">
                         <motion.div
                             initial={{ opacity: 0, y: 16 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.5, delay: 0.18, ease: 'easeOut' }}
-                            className="space-y-5 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                            transition={{ duration: 0.5, delay: 0.25, ease: 'easeOut' }}
+                            className="sticky top-6 space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm"
                         >
-                            <div>
-                                <h2 className="text-sm font-semibold text-gray-900">Publish settings</h2>
-                                <p className="mt-0.5 text-xs text-gray-500">Set these first - they guide the AI draft and preview.</p>
-                            </div>
+                            <h2 className="text-base font-semibold text-gray-900">Post Settings</h2>
+
+                            {validationErrors.length > 0 && (
+                                <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                                    <p className="font-semibold">Please fix the following:</p>
+                                    <ul className="mt-1 list-inside list-disc space-y-0.5">
+                                        {validationErrors.map(([key, message]) => (
+                                            <li key={key}>{message}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
 
                             <div>
-                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Category</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {categoryOptions.map((option) => (
-                                        <label
-                                            key={option.value}
-                                            className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 transition-all ${
-                                                data.category === option.value
-                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
-                                                    : 'border-gray-200 hover:bg-gray-50'
+                                <label htmlFor="category" className="mb-2 block text-sm font-medium text-gray-700">
+                                    Category
+                                </label>
+                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                    {categoryOptions.map((opt) => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => setData('category', opt.value)}
+                                            className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                                                data.category === opt.value
+                                                    ? 'border-primary-600 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-950/60 dark:text-primary-300'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700/60'
                                             }`}
                                         >
-                                            <input
-                                                type="radio"
-                                                name="category"
-                                                value={option.value}
-                                                checked={data.category === option.value}
-                                                onChange={() => setData('category', option.value)}
-                                                className="sr-only"
-                                            />
-                                            <option.icon className="h-4 w-4 text-gray-500" />
-                                            <span className="text-xs font-medium text-gray-800">{option.label}</span>
-                                        </label>
+                                            {opt.label}
+                                        </button>
                                     ))}
                                 </div>
                                 {errors.category && <p className="mt-1 text-sm text-red-600">{errors.category}</p>}
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Priority</label>
-                                <div className="space-y-2">
-                                    {priorityOptions.map((option) => (
-                                        <label
-                                            key={option.value}
-                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
-                                                data.priority === option.value
-                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
-                                                    : 'border-gray-200 hover:bg-gray-50'
+                                <label className="mb-2 block text-sm font-medium text-gray-700">Priority</label>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {priorityOptions.map((opt) => (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => setData('priority', opt.value)}
+                                            className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                                                data.priority === opt.value
+                                                    ? 'border-primary-600 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-950/60 dark:text-primary-300'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700/60'
                                             }`}
                                         >
-                                            <input
-                                                type="radio"
-                                                name="priority"
-                                                value={option.value}
-                                                checked={data.priority === option.value}
-                                                onChange={() => setData('priority', option.value)}
-                                                className="sr-only"
-                                            />
-                                            <option.icon className="h-4 w-4 text-gray-500" />
-                                            <div>
-                                                <p className="text-xs font-medium text-gray-900">{option.label}</p>
-                                                <p className="text-[11px] text-gray-500">{option.description}</p>
-                                            </div>
-                                        </label>
+                                            {opt.label}
+                                        </button>
                                     ))}
                                 </div>
                                 {errors.priority && <p className="mt-1 text-sm text-red-600">{errors.priority}</p>}
                             </div>
 
-                            {isZoneScoped ? (
-                                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-                                    <p className="text-xs font-medium tracking-wide text-gray-500 uppercase">Posting to</p>
-                                    <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-gray-900">
-                                        <MapPin className="h-4 w-4 text-gray-500" />
-                                        {zoneName ?? safeZones[0]?.name ?? 'Your zone'}
-                                    </p>
-                                    <p className="mt-1 text-[11px] text-gray-500">Zone-scoped accounts can only announce to their assigned zone.</p>
+                            <div>
+                                <label className="mb-2 block text-sm font-medium text-gray-700">Target Audience</label>
+                                <div className="space-y-2">
+                                    {audienceOptions.map((opt) => (
+                                        <label
+                                            key={opt.value}
+                                            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                                                data.audience === opt.value
+                                                    ? 'border-primary-600 bg-primary-50 text-primary-900 dark:border-primary-400 dark:bg-primary-950/60 dark:text-primary-100'
+                                                    : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700/60'
+                                            }`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="audience"
+                                                value={opt.value}
+                                                checked={data.audience === opt.value}
+                                                onChange={() => setData('audience', opt.value)}
+                                                className="mt-0.5 text-primary-600 focus:ring-primary-500"
+                                            />
+                                            <div>
+                                                <div className="text-xs font-medium">{opt.label}</div>
+                                                <div className="text-xs text-gray-500">{opt.description}</div>
+                                            </div>
+                                        </label>
+                                    ))}
                                 </div>
-                            ) : (
-                                <>
-                                    <div>
-                                        <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Audience</label>
-                                        <div className="space-y-2">
-                                            {audienceOptions.map((option) => (
+                                {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
+                            </div>
+
+                            {isZoneScoped ? (
+                                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                                    <div className="flex items-center gap-1.5 font-medium">
+                                        <span className="inline-block h-2 w-2 rounded-full bg-amber-500" />
+                                        <span>Target Zone</span>
+                                    </div>
+                                    <p className="mt-1">
+                                        This broadcast is automatically targeted to <strong>{zoneName}</strong>.
+                                    </p>
+                                </div>
+                            ) : safeZones.length > 0 ? (
+                                <div>
+                                    <label className="mb-2 block text-sm font-medium text-gray-700">Target Zones (Optional)</label>
+                                    <div className="space-y-1.5">
+                                        {safeZones.map((zone) => {
+                                            const isChecked = data.zone_ids?.includes(zone.id) ?? false;
+                                            return (
                                                 <label
-                                                    key={option.value}
-                                                    className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
-                                                        data.audience === option.value
-                                                            ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
-                                                            : 'border-gray-200 hover:bg-gray-50'
+                                                    key={zone.id}
+                                                    className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${
+                                                        isChecked
+                                                            ? 'border-primary-500 bg-primary-50 text-primary-900 font-medium'
+                                                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                                                     }`}
                                                 >
                                                     <input
-                                                        type="radio"
-                                                        name="audience"
-                                                        value={option.value}
-                                                        checked={data.audience === option.value}
-                                                        onChange={() => setData('audience', option.value)}
-                                                        className="sr-only"
+                                                        type="checkbox"
+                                                        value={zone.id}
+                                                        checked={isChecked}
+                                                        onChange={(e) => {
+                                                            const current = data.zone_ids ?? [];
+                                                            const updated = e.target.checked
+                                                                ? [...current, zone.id]
+                                                                : current.filter((id) => id !== zone.id);
+                                                            setData('zone_ids', updated);
+                                                        }}
+                                                        className="rounded text-primary-600 focus:ring-primary-500"
                                                     />
-                                                    <option.icon className="h-4 w-4 text-gray-500" />
-                                                    <div>
-                                                        <p className="text-xs font-medium text-gray-900">{option.label}</p>
-                                                        <p className="text-[11px] text-gray-500">{option.description}</p>
-                                                    </div>
+                                                    <span>{zone.name}</span>
                                                 </label>
-                                            ))}
-                                        </div>
-                                        {errors.audience && <p className="mt-1 text-sm text-red-600">{errors.audience}</p>}
+                                            );
+                                        })}
                                     </div>
-
-                                    {safeZones.length > 0 && (
-                                        <div>
-                                            <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">
-                                                Zone targeting
-                                            </label>
-                                            <p className="mb-3 text-[11px] text-gray-500">
-                                                Leave empty to reach the entire estate. Select zones to notify only residents in those areas.
-                                            </p>
-                                            <div className="space-y-2">
-                                                {safeZones.map((zone) => {
-                                                    const selected = data.zone_ids.includes(zone.id);
-                                                    return (
-                                                        <label
-                                                            key={zone.id}
-                                                            className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-all ${
-                                                                selected
-                                                                    ? 'border-primary-500 bg-primary-50 ring-1 ring-primary-500'
-                                                                    : 'border-gray-200 hover:bg-gray-50'
-                                                            }`}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={selected}
-                                                                onChange={() => {
-                                                                    setData(
-                                                                        'zone_ids',
-                                                                        selected
-                                                                            ? data.zone_ids.filter((id) => id !== zone.id)
-                                                                            : [...data.zone_ids, zone.id],
-                                                                    );
-                                                                }}
-                                                                className="rounded border-gray-300 text-primary-600 focus:ring-slate-900"
-                                                            />
-                                                            <MapPin className="h-4 w-4 text-gray-500" />
-                                                            <span className="text-xs font-medium text-gray-900">{zone.name}</span>
-                                                        </label>
-                                                    );
-                                                })}
-                                            </div>
-                                            {errors.zone_ids && <p className="mt-1 text-sm text-red-600">{errors.zone_ids}</p>}
-                                        </div>
-                                    )}
-                                </>
-                            )}
+                                    <p className="mt-1 text-xs text-gray-400">Leave unselected to target all zones.</p>
+                                </div>
+                            ) : null}
 
                             <div>
-                                <label className="mb-2 block text-xs font-medium tracking-wide text-gray-500 uppercase">Images</label>
-                                {(previews?.length ?? 0) > 0 && (
+                                <label className="mb-2 block text-sm font-medium text-gray-700">Images (Max 10)</label>
+                                {previews.length > 0 && (
                                     <div className="mb-3 grid grid-cols-2 gap-2">
-                                        {previews.map((preview, idx) => (
-                                            <div key={idx} className="group relative">
-                                                <img src={preview} alt="" className="h-20 w-full rounded-lg object-cover" />
+                                        {previews.map((preview, index) => (
+                                            <div key={index} className="group relative aspect-video overflow-hidden rounded-lg bg-gray-100">
+                                                <img src={preview} alt={`Preview ${index + 1}`} className="h-full w-full object-cover" />
                                                 <button
                                                     type="button"
-                                                    onClick={() => removeImage(idx)}
-                                                    className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute top-1 right-1 rounded-full bg-red-600 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100"
                                                 >
                                                     <Trash2 className="h-3 w-3" />
                                                 </button>
@@ -394,7 +446,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                 <input
                                     ref={fileInputRef}
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp"
+                                    accept="image/*"
                                     multiple
                                     onChange={handleFilesChange}
                                     className="hidden"

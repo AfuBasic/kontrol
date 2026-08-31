@@ -43,7 +43,18 @@ export default function DownloadApp({ autologinToken }: Props) {
                 }
             }, 2000);
         } else if (deviceType === 'android') {
-            alert('Android app integration is coming soon! Please download the app from the Play Store once available.');
+            const storeLink = 'https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en';
+
+            // Try to open deep link
+            window.location.href = deepLink;
+
+            // Fallback to store if the app doesn't open within 2 seconds
+            const start = Date.now();
+            setTimeout(() => {
+                if (Date.now() - start < 2200) {
+                    window.location.href = storeLink;
+                }
+            }, 2000);
         } else {
             window.location.href = deepLink;
         }
@@ -129,18 +140,20 @@ export default function DownloadApp({ autologinToken }: Props) {
                                 </div>
                             </a>
 
-                            <Link
-                                href="/platform/install/android"
+                            <a
+                                href="https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
                                 <Play className="h-5 w-5 fill-current text-white dark:text-slate-950" />
                                 <div className="text-left leading-tight">
                                     <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
-                                        Install for
+                                        Download for
                                     </div>
-                                    <div className="text-xs font-bold text-white dark:text-slate-950">Android PWA</div>
+                                    <div className="text-xs font-bold text-white dark:text-slate-950">Google Play (Android)</div>
                                 </div>
-                            </Link>
+                            </a>
                         </div>
                     </div>
 

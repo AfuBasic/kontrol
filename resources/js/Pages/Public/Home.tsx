@@ -285,7 +285,9 @@ export default function Home() {
                                 </div>
                             </a>
                             <a
-                                href="#"
+                                href="https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en"
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="flex items-center gap-3 rounded-2xl bg-slate-800/80 px-8 py-4 text-white ring-1 ring-white/10 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:bg-slate-700 hover:ring-white/20"
                             >
                                 <img src="/assets/images/google-play.svg" alt="Google Play" className="h-8 w-8" />

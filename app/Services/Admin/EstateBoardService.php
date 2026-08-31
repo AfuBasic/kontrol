@@ -24,7 +24,7 @@ class EstateBoardService
      * @param  string|null  $search  Filter by search text
      * @return CursorPaginator<EstateBoardPost>
      */
-    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null, ?string $category = null, ?string $priority = null, ?string $status = null): CursorPaginator
+    public function getFeed(int $estateId, int $perPage = 10, ?array $audiences = null, ?string $filter = null, ?string $search = null, ?string $category = null, ?string $priority = null, ?string $status = null, bool $unreadOnly = false): CursorPaginator
     {
         $user = auth()->user();
         $isAdmin = $user && $user->contextHasRole('admin');
@@ -46,6 +46,7 @@ class EstateBoardService
                 }
             })
             ->when($audiences !== null, fn ($q) => $q->forAudience($audiences))
+            ->when($unreadOnly && $user, fn ($q) => $q->whereDoesntHave('reads', fn ($sub) => $sub->where('user_id', $user->id)))
             ->when($filter === 'estate', fn ($q) => $q->whereNull('property_owner_id'))
             ->when($filter === 'property_owner', fn ($q) => $q->whereNotNull('property_owner_id'))
             ->when(! $isAdmin, function ($query) use ($user, $propertyOwnerId, $propertyId, $isPropertyOwner, $userZoneIds) {
