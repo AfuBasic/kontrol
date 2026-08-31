@@ -192,13 +192,18 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
             Route::post('/resolve', [SettlementController::class, 'resolve'])->name('resolve');
             Route::post('/update', [SettlementController::class, 'update'])->name('update');
         });
+    });
 
-        // Activity Log
-        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')->middleware('feature:activity-logs');
+    // Activity Log
+    Route::middleware(['permission:activity_logs.view', 'feature:activity-logs'])->group(function (): void {
+        Route::get('/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    });
 
+    // Suspicious Activity
+    Route::middleware('permission:suspicious_activity.view')->group(function (): void {
         Route::get('/suspicious-activity', [SuspiciousActivityController::class, 'index'])->name('suspicious-activity.index');
         Route::get('/suspicious-activity/{event}', [SuspiciousActivityController::class, 'show'])->name('suspicious-activity.show');
-        Route::post('/suspicious-activity/{event}/review', [SuspiciousActivityController::class, 'review'])->name('suspicious-activity.review');
+        Route::post('/suspicious-activity/{event}/review', [SuspiciousActivityController::class, 'review'])->middleware('permission:suspicious_activity.review')->name('suspicious-activity.review');
     });
 
     // Profile (own profile)
@@ -229,7 +234,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
     Route::post('/notifications/clear-all', [NotificationController::class, 'clearAll'])->name('notifications.clear-all');
 
     // Admin User management (manage other admins)
-    Route::middleware('role:admin')->group(function (): void {
+    Route::middleware('permission:users.view')->group(function (): void {
         Route::post('users/{user}/resend-invitation', [UserController::class, 'resetPassword'])->name('users.resend-invitation');
         Route::resource('users', UserController::class)->except(['show']);
     });
