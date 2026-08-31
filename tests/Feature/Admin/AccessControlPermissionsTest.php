@@ -169,4 +169,96 @@ it('retains default full access for admin role context', function () {
         ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
         ->get(route('admin.assignments.index'))
         ->assertOk();
+
+    // Admin should access roles
+    $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->get(route('admin.roles.index'))
+        ->assertOk();
+
+    // Admin should access users
+    $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->get(route('admin.users.index'))
+        ->assertOk();
+
+    // Admin should access suspicious activity
+    $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->get(route('admin.suspicious-activity.index'))
+        ->assertOk();
+
+    // Admin should access activity log
+    $this->actingAs($this->adminUser)
+        ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])
+        ->get(route('admin.activity-log.index'))
+        ->assertOk();
+});
+
+it('restricts roles index page for manager without roles.view permission and allows with permission', function () {
+    setPermissionsTeamId($this->estate->id);
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.roles.index'))
+        ->assertForbidden();
+
+    $this->managerRole->givePermissionTo('roles.view');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.roles.index'))
+        ->assertOk();
+});
+
+it('restricts users index page for manager without users.view permission and allows with permission', function () {
+    setPermissionsTeamId($this->estate->id);
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.users.index'))
+        ->assertForbidden();
+
+    $this->managerRole->givePermissionTo('users.view');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.users.index'))
+        ->assertOk();
+});
+
+it('restricts suspicious activity page for manager without suspicious_activity.view permission and allows with permission', function () {
+    setPermissionsTeamId($this->estate->id);
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.suspicious-activity.index'))
+        ->assertForbidden();
+
+    $this->managerRole->givePermissionTo('suspicious_activity.view');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.suspicious-activity.index'))
+        ->assertOk();
+});
+
+it('restricts activity log page for manager without activity_logs.view permission and allows with permission', function () {
+    setPermissionsTeamId($this->estate->id);
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.activity-log.index'))
+        ->assertForbidden();
+
+    $this->managerRole->givePermissionTo('activity_logs.view');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($this->managerUser)
+        ->withSession(['active_context_assignment_id' => $this->managerAssignment->id])
+        ->get(route('admin.activity-log.index'))
+        ->assertOk();
 });
