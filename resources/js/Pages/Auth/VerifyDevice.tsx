@@ -41,11 +41,11 @@ export default function VerifyDevice({ email, status, displayName }: Props) {
                     <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-15" />
                 </div>
 
-                <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
+                <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 sm:py-6">
                     <span className="text-sm font-semibold tracking-wide text-white">Kontrol</span>
                 </header>
 
-                <main className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 pb-16">
+                <main className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] sm:pb-16">
                     <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/15 ring-1 ring-indigo-400/20">
                         <Shield className="h-7 w-7 text-indigo-300" aria-hidden="true" />
                     </div>
