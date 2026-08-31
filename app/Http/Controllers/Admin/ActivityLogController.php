@@ -20,6 +20,8 @@ class ActivityLogController extends Controller
 
     public function index(Request $request): Response
     {
+        $this->authorize('activity_logs.view');
+
         $search = $request->string('search')->toString() ?: null;
         $module = $request->string('module')->toString() ?: null;
 
