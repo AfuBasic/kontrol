@@ -193,7 +193,7 @@ export default function VerifyOtp({ email }: Props) {
                 </div>
 
                 {/* Top Brand Header */}
-                <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-6">
+                <header className="relative z-10 mx-auto flex w-full max-w-4xl items-center justify-between px-6 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4 sm:py-6">
                     <Link
                         href="/login"
                         className="group flex items-center gap-2 text-xs font-semibold text-slate-400 transition-colors hover:text-white"
@@ -204,7 +204,7 @@ export default function VerifyOtp({ email }: Props) {
                 </header>
 
                 {/* Main Card Container */}
-                <main className="relative z-10 mx-auto my-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-6 sm:px-6">
+                <main className="relative z-10 mx-auto my-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-4 sm:px-6 sm:py-6">
                     <motion.div
                         initial={{ opacity: 0, y: 16, scale: 0.98 }}
                         animate={isShaking ? { x: [-8, 8, -6, 6, -3, 3, 0], transition: { duration: 0.5 } } : { opacity: 1, y: 0, scale: 1 }}
@@ -343,7 +343,7 @@ export default function VerifyOtp({ email }: Props) {
                 </main>
 
                 {/* Footer */}
-                <footer className="relative z-10 py-6 text-center text-xs text-slate-500">
+                <footer className="relative z-10 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)] text-center text-xs text-slate-500 sm:py-6">
                     <div className="mb-1.5 flex items-center justify-center gap-1.5 text-slate-400">
                         <ShieldCheck className="h-3.5 w-3.5 text-indigo-400" />
                         <span>256-bit Encrypted Identity Verification</span>
