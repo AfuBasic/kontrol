@@ -16,5 +16,8 @@ Route::post('/support', [LandingController::class, 'support'])->name('public.sup
 Route::get('/apply', fn () => Inertia::render('Public/Apply'))->name('public.apply');
 Route::post('/apply', [LandingController::class, 'apply'])->name('public.apply.post');
 
+Route::get('/product/estates', fn () => Inertia::render('Public/ProductEstates'))->name('public.product.estates');
+Route::get('/product/residents', fn () => Inertia::render('Public/ProductResidents'))->name('public.product.residents');
+
 Route::get('/privacy', fn () => Inertia::render('Public/Privacy'))->name('public.privacy');
 Route::get('/terms', fn () => Inertia::render('Public/Terms'))->name('public.terms');
