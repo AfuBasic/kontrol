@@ -1,7 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { Smartphone, QrCode, CreditCard, Bell, Users, Shield, ArrowRight, Apple, CheckCircle2, MessageSquare, KeyRound } from 'lucide-react';
+import { Smartphone, QrCode, CreditCard, Bell, Users, ArrowRight, Apple, KeyRound } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
-import MagneticButton from '@/Components/Public/MagneticButton';
 
 export default function ProductResidents() {
     return (
