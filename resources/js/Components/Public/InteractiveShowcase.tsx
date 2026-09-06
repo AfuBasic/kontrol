@@ -25,7 +25,7 @@ const FEATURES: FeatureItem[] = [
         id: 'collections',
         title: 'Estate Collections',
         description: 'Automated billing, instant checkout, direct bank settlements, and full transparency for community funds.',
-        icon: Lock,
+        icon: CreditCard,
         color: 'from-emerald-500 to-teal-500',
         glowColor: 'rgba(16,185,129,0.15)',
     },
