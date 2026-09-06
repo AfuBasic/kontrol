@@ -37,12 +37,20 @@ class VerifyController extends Controller
         $settings = EstateSettings::forEstate($estate->id);
         $gateName = app(CheckpointClaimService::class)->getCurrentCheckpoint($estate->id, $user) ?? 'Main Entrance';
 
+        $organizations = $estate->organizations()
+            ->quickEntryEnabled()
+            ->select(['id', 'name', 'type', 'operating_hours'])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Security/Verify', [
             'estateName' => $estate->name,
             'gateName' => $gateName,
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
+            'quickEntryEnabled' => (bool) ($settings->quick_entry_enabled ?? true),
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
+            'organizations' => $organizations,
         ]);
     }
 
@@ -241,10 +249,17 @@ class VerifyController extends Controller
                 ];
             });
 
+            $organizations = $estate->organizations()
+                ->quickEntryEnabled()
+                ->select(['id', 'name', 'type', 'operating_hours'])
+                ->orderBy('name')
+                ->get();
+
             return response()->json([
                 'success' => true,
                 'synced_count' => 0,
                 'codes' => $cachedCodes,
+                'organizations' => $organizations,
                 'timestamp' => now()->toIso8601String(),
             ]);
         } catch (Throwable $e) {
