@@ -142,7 +142,7 @@ class Estate extends Model
 
     public function hasFeature(string $featureSlug): bool
     {
-        return in_array($featureSlug, $this->getActiveFeatureSlugs());
+        return in_array($featureSlug, $this->getActiveFeatureSlugs(), true);
     }
 
     /**
@@ -160,7 +160,7 @@ class Estate extends Model
         }
 
         return $this->memoizedFeatures = Cache::remember(
-            "estate_features:{$this->id}",
+            'estate_features:all_active',
             now()->addMinutes(15),
             function () {
                 return Feature::where('is_active', true)
