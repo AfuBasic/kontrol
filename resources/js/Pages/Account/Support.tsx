@@ -1,11 +1,15 @@
 import { Head, usePage } from '@inertiajs/react';
-import { ArrowLeft, ChevronRight, Mail, Phone, Info } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Mail, Phone, Info, MessageSquareHeart, Star, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import AdminLayout from '@/Layouts/AdminLayout';
 import PartnerLayout from '@/Layouts/PartnerLayout';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import SecurityLayout from '@/Layouts/SecurityLayout';
+import FeedbackModal from '@/Components/Feedback/FeedbackModal';
+import Toast from '@/Components/Toast';
+import { openNativeStoreReview } from '@/Utils/nativeRating';
 import type { SharedData } from '@/types';
 
 interface SupportDetails {
@@ -36,6 +40,9 @@ function WhatsAppIcon({ className = 'h-5 w-5' }: { className?: string }) {
 export default function Support({ support }: Props) {
     const { auth } = usePage<SharedData>().props;
     const roles = auth.user?.roles ?? [];
+
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+    const [showSuccessToast, setShowSuccessToast] = useState(false);
 
     const handleBack = () => {
         if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -70,7 +77,7 @@ export default function Support({ support }: Props) {
                         <ArrowLeft className="h-5 w-5" />
                     </button>
                     <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest dark:text-slate-400">
-                        Support
+                        Help & Feedback
                     </span>
                 </div>
 
@@ -80,82 +87,149 @@ export default function Support({ support }: Props) {
                         Help & Support
                     </h1>
                     <p className="text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                        Need help with Kontrol? Reach our support team using any of the options below.
+                        Reach customer support, share ideas to improve Kontrol, or rate your experience.
                     </p>
                 </header>
 
-                {/* Contact Action Surfaces */}
-                <section aria-label="Support contact options">
-                    <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs divide-y divide-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:divide-slate-800/70">
-                        {/* 1. Call Support */}
-                        <a
-                            href={phoneUrl}
-                            aria-label={`Call Kontrol Support at ${support.phone_formatted}`}
-                            className="group flex min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
-                        >
-                            <div className="flex min-w-0 items-center gap-3.5">
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-transform group-hover:scale-105 dark:bg-emerald-500/20 dark:text-emerald-400">
-                                    <Phone className="h-5 w-5" strokeWidth={2.2} />
+                {/* Pillar 1: Contact Support (I need help) */}
+                <div className="space-y-2.5">
+                    <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400 px-1">
+                        Contact Support
+                    </h2>
+                    <section aria-label="Support contact options">
+                        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs divide-y divide-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:divide-slate-800/70">
+                            {/* WhatsApp Support */}
+                            <a
+                                href={whatsappUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="Chat with Kontrol Support on WhatsApp"
+                                className="group flex min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
+                            >
+                                <div className="flex min-w-0 items-center gap-3.5">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#25D366]/10 text-[#25D366] transition-transform group-hover:scale-105 dark:bg-[#25D366]/20 dark:text-[#25D366]">
+                                        <WhatsAppIcon className="h-5 w-5" />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            Chat on WhatsApp
+                                        </div>
+                                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            Fastest assistance for urgent questions
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-                                        Call Support
-                                    </h2>
-                                    <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                                        {support.phone_formatted}
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
-                        </a>
+                                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                            </a>
 
-                        {/* 2. WhatsApp Support */}
-                        <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label="Chat with Kontrol Support on WhatsApp"
-                            className="group flex min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
-                        >
-                            <div className="flex min-w-0 items-center gap-3.5">
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#25D366]/10 text-[#25D366] transition-transform group-hover:scale-105 dark:bg-[#25D366]/20 dark:text-[#25D366]">
-                                    <WhatsAppIcon className="h-5 w-5" />
+                            {/* Call Support */}
+                            <a
+                                href={phoneUrl}
+                                aria-label={`Call Kontrol Support at ${support.phone_formatted}`}
+                                className="group flex min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
+                            >
+                                <div className="flex min-w-0 items-center gap-3.5">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 transition-transform group-hover:scale-105 dark:bg-emerald-500/20 dark:text-emerald-400">
+                                        <Phone className="h-5 w-5" strokeWidth={2.2} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            Call Support
+                                        </div>
+                                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            {support.phone_formatted}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-                                        Chat on WhatsApp
-                                    </h2>
-                                    <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                                        Typically the fastest way to reach us.
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
-                        </a>
+                                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                            </a>
 
-                        {/* 3. Email Support */}
-                        <a
-                            href={emailUrl}
-                            aria-label={`Email Kontrol Support at ${support.email}`}
-                            className="group flex min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
-                        >
-                            <div className="flex min-w-0 items-center gap-3.5">
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 transition-transform group-hover:scale-105 dark:bg-indigo-500/20 dark:text-indigo-400">
-                                    <Mail className="h-5 w-5" strokeWidth={2.2} />
+                            {/* Email Support */}
+                            <a
+                                href={emailUrl}
+                                aria-label={`Email Kontrol Support at ${support.email}`}
+                                className="group flex min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
+                            >
+                                <div className="flex min-w-0 items-center gap-3.5">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-600 transition-transform group-hover:scale-105 dark:bg-indigo-500/20 dark:text-indigo-400">
+                                        <Mail className="h-5 w-5" strokeWidth={2.2} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            Email Support
+                                        </div>
+                                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            {support.email}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
-                                        Email Support
-                                    </h2>
-                                    <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                                        {support.email}
-                                    </p>
+                                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                            </a>
+                        </div>
+                    </section>
+                </div>
+
+                {/* Pillar 2: Product Feedback (I have ideas/improvements) */}
+                <div className="space-y-2.5">
+                    <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400 px-1">
+                        Product Feedback
+                    </h2>
+                    <section aria-label="Product feedback">
+                        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                            <button
+                                type="button"
+                                onClick={() => setIsFeedbackOpen(true)}
+                                className="group flex w-full min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
+                            >
+                                <div className="flex min-w-0 items-center gap-3.5">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 transition-transform group-hover:scale-105 dark:bg-amber-500/20 dark:text-amber-400">
+                                        <MessageSquareHeart className="h-5 w-5" strokeWidth={2.2} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            Send Feedback
+                                        </div>
+                                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            Share feature ideas, friction points, or praise with the team
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
-                            <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
-                        </a>
-                    </div>
-                </section>
+                                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                            </button>
+                        </div>
+                    </section>
+                </div>
+
+                {/* Pillar 3: Native Store Rating (App Store / Play Store) */}
+                <div className="space-y-2.5">
+                    <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400 px-1">
+                        App Rating
+                    </h2>
+                    <section aria-label="App Rating">
+                        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                            <button
+                                type="button"
+                                onClick={() => openNativeStoreReview()}
+                                className="group flex w-full min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
+                            >
+                                <div className="flex min-w-0 items-center gap-3.5">
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 transition-transform group-hover:scale-105 dark:bg-violet-500/20 dark:text-violet-400">
+                                        <Star className="h-5 w-5" strokeWidth={2.2} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                            Rate Kontrol on the App Store
+                                        </div>
+                                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                            Help other estates and residents discover Kontrol
+                                        </p>
+                                    </div>
+                                </div>
+                                <ExternalLink className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                            </button>
+                        </div>
+                    </section>
+                </div>
 
                 {/* Restrained Supporting Guidance */}
                 <section aria-label="Support guidance">
@@ -168,12 +242,30 @@ export default function Support({ support }: Props) {
                                 Before contacting support
                             </h3>
                             <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                                If you're reporting an issue, including what you were trying to do and what happened will help us assist you faster.
+                                If you're reporting a malfunction, mentioning what you were doing right before helps our support engineers resolve it immediately.
                             </p>
                         </div>
                     </div>
                 </section>
             </div>
+
+            {/* Feedback Modal */}
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+                onSuccess={() => setShowSuccessToast(true)}
+                source="support_page"
+                routeOrScreen="/account/support"
+            />
+
+            {/* Success Toast */}
+            <Toast
+                show={showSuccessToast}
+                title="Feedback received"
+                message="Thank you! Your feedback goes straight to the product team."
+                type="success"
+                onClose={() => setShowSuccessToast(false)}
+            />
         </>
     );
 }
