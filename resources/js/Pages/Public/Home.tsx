@@ -181,7 +181,7 @@ export default function Home() {
                                 </span>
                             </h1>
 
-                            <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg text-slate-300 sm:text-xl">
+                            <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg font-normal text-slate-100/95 sm:text-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
                                 Manage gate access, service charges, and resident communication — from one platform your whole community uses.
                             </p>
 
