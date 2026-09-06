@@ -31,13 +31,14 @@ class BulkInviteResidentsAction
 
         // 2. Iterate and create invitations
         foreach ($uniqueEmails as $email) {
-            // Check if user is already an accepted member of this estate
+            // Check if user is already an accepted resident of this estate
             $existingUser = User::where('email', $email)->first();
             if ($existingUser) {
                 $isAlreadyAccepted = DB::table('estate_users_membership')
                     ->where('user_id', $existingUser->id)
                     ->where('estate_id', $estate->id)
                     ->whereIn('status', ['accepted', 'active'])
+                    ->where('relationship_type', 'resident')
                     ->exists();
 
                 if ($isAlreadyAccepted) {
