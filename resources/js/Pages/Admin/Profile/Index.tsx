@@ -1,6 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
-import { ArrowRight, Building2, Loader2, Shield, User, LayoutDashboard, Key, Mail, Building, MapPin, BadgeCheck, HelpCircle } from 'lucide-react';
-import type { FormEvent } from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { ArrowRight, Building2, Loader2, Shield, User, LayoutDashboard, Key, Mail, Building, MapPin, BadgeCheck, HelpCircle, LogOut } from 'lucide-react';
+import { type FormEvent, useState } from 'react';
 import { motion } from 'framer-motion';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
@@ -44,12 +44,20 @@ export default function Profile({ user, account, estate_context }: Props) {
         name: user.name,
     });
 
+    const [loggingOut, setLoggingOut] = useState(false);
+
     function handleSubmit(event: FormEvent) {
         event.preventDefault();
         put(update.url(), {
             preserveScroll: true,
             onSuccess: () => setDefaults('name', data.name),
         });
+    }
+
+    function handleLogout() {
+        if (loggingOut) return;
+        setLoggingOut(true);
+        router.post('/logout');
     }
 
     return (
@@ -290,6 +298,27 @@ export default function Profile({ user, account, estate_context }: Props) {
                                     </div>
                                     <ArrowRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-indigo-600" />
                                 </Link>
+
+                                <button
+                                    type="button"
+                                    onClick={handleLogout}
+                                    disabled={loggingOut}
+                                    className="group flex w-full items-center justify-between rounded-xl bg-white p-4 shadow-sm ring-1 ring-red-100 transition-all hover:bg-red-50/50 hover:ring-red-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 text-red-600 transition-colors group-hover:bg-red-100">
+                                            {loggingOut ? (
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                            ) : (
+                                                <LogOut className="h-4 w-4" />
+                                            )}
+                                        </div>
+                                        <div className="text-sm font-bold text-red-600">
+                                            {loggingOut ? 'Signing Out...' : 'Sign Out'}
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="h-4 w-4 text-red-300 transition-transform group-hover:translate-x-1 group-hover:text-red-500" />
+                                </button>
                             </div>
                             {estate_context && (
                                 <div className="space-y-2 border-t border-slate-100 bg-slate-50/50 p-6">

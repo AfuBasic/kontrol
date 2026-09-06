@@ -657,6 +657,15 @@ export default function AdminLayout({ children, title: _title }: Props) {
                                             {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">{item.name}</span>}
                                         </Link>
                                     ))}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLogoutConfirmation(true)}
+                                        title={isCollapsed ? 'Sign Out' : undefined}
+                                        className="group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-base font-medium text-white/70 transition-all hover:bg-red-500/20 hover:text-red-300"
+                                    >
+                                        <ArrowLeftStartOnRectangleIcon className="h-5 w-5 shrink-0 text-white/60 group-hover:text-red-300" />
+                                        {!isCollapsed && <span className="overflow-hidden whitespace-nowrap">Sign Out</span>}
+                                    </button>
                                 </div>
                             </>
                         )}
