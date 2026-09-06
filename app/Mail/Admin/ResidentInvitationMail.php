@@ -20,15 +20,19 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public string $userName;
 
+    public bool $isExistingUser;
+
     public function __construct(
         public Invitation|User $user,
         public Estate $estate,
         public ?Invitation $invitation = null,
         public ?string $zoneName = null,
+        ?bool $isExistingUser = null,
     ) {
         if ($this->user instanceof Invitation) {
             $token = $this->user->token;
             $this->userName = $this->user->email;
+            $this->isExistingUser = $isExistingUser ?? (User::where('email', strtolower(trim($this->user->email)))->whereNotNull('password')->exists());
         } else {
             $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
                 ->where('email', strtolower(trim($this->user->email)))
@@ -38,14 +42,19 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
             $token = $invitation?->token ?? ($this->user->token ?? $this->user->id);
             $this->userName = $this->user->name;
+            $this->isExistingUser = $isExistingUser ?? (! is_null($this->user->password));
         }
 
-        $this->invitationUrl = route('invitations.show', ['token' => $token]);
+        $this->invitationUrl = $this->isExistingUser
+            ? route('login')
+            : route('invitations.show', ['token' => $token]);
     }
 
     public function envelope(): Envelope
     {
-        $subject = "You've been invited to join {$this->estate->name}";
+        $subject = $this->isExistingUser
+            ? "New role added: Resident at {$this->estate->name}"
+            : "You've been invited to join {$this->estate->name}";
 
         return new Envelope(
             subject: $subject,
@@ -54,7 +63,6 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
-
         return new Content(
             view: 'mail.admin.resident-invitation',
             with: [
@@ -62,6 +70,7 @@ class ResidentInvitationMail extends Mailable implements ShouldQueue
                 'userName' => $this->userName,
                 'invitationUrl' => $this->invitationUrl,
                 'zoneName' => $this->zoneName,
+                'isExistingUser' => $this->isExistingUser,
             ],
         );
     }

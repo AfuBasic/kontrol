@@ -18,33 +18,46 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
 
     public string $invitationUrl;
 
+    public bool $isExistingUser;
+
     public function __construct(
         public User $user,
         public Estate $estate,
         public bool $isResend = false,
+        ?bool $isExistingUser = null,
     ) {
-        // Generate signed URL on app domain that expires in 72 hours
-        $parameters = ['token' => $user->id];
+        $this->isExistingUser = $isExistingUser ?? (! is_null($this->user->password));
 
-        $appDomain = config('domains.app');
-        $scheme = app()->environment('local') ? 'http' : 'https';
+        if ($this->isExistingUser) {
+            $this->invitationUrl = route('login');
+        } else {
+            // Generate signed URL on app domain that expires in 72 hours
+            $parameters = ['token' => $user->id];
 
-        URL::forceRootUrl("{$scheme}://{$appDomain}");
+            $appDomain = config('domains.app');
+            $scheme = app()->environment('local') ? 'http' : 'https';
 
-        $this->invitationUrl = URL::temporarySignedRoute(
-            'invitation.accept',
-            now()->addHours(72),
-            $parameters
-        );
+            URL::forceRootUrl("{$scheme}://{$appDomain}");
 
-        URL::forceRootUrl(null);
+            $this->invitationUrl = URL::temporarySignedRoute(
+                'invitation.accept',
+                now()->addHours(72),
+                $parameters
+            );
+
+            URL::forceRootUrl(null);
+        }
     }
 
     public function envelope(): Envelope
     {
-        $subject = $this->isResend
-            ? "Your invitation to {$this->estate->name} has been resent"
-            : "You've been invited to join {$this->estate->name} as a Property Owner";
+        if ($this->isExistingUser) {
+            $subject = "New role added: Property Owner at {$this->estate->name}";
+        } else {
+            $subject = $this->isResend
+                ? "Your invitation to {$this->estate->name} has been resent"
+                : "You've been invited to join {$this->estate->name} as a Property Owner";
+        }
 
         return new Envelope(
             subject: $subject,
@@ -60,6 +73,7 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
                 'userName' => $this->user->name,
                 'invitationUrl' => $this->invitationUrl,
                 'isResend' => $this->isResend,
+                'isExistingUser' => $this->isExistingUser,
             ],
         );
     }

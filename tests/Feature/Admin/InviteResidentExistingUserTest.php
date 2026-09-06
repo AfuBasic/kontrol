@@ -2,6 +2,9 @@
 
 use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Enums\AssignmentScope;
+use App\Mail\Admin\PropertyOwnerInvitationMail;
+use App\Mail\Admin\ResidentInvitationMail;
+use App\Mail\Admin\SecurityInvitationMail;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateSubscription;
@@ -133,4 +136,85 @@ it('skips user if they are already an accepted resident in the estate', function
 
     expect($result['invited'])->toBe(1);
     expect($result['skipped'])->toBe(1);
+});
+
+it('sends informational role update email to existing users when invited as resident', function () {
+    $existingUser = User::factory()->create([
+        'name' => 'John Doe',
+        'email' => 'john.doe@example.com',
+        'password' => bcrypt('secret123'),
+    ]);
+
+    $mailable = new ResidentInvitationMail($existingUser, $this->estate);
+
+    expect($mailable->isExistingUser)->toBeTrue();
+    expect($mailable->envelope()->subject)->toBe("New role added: Resident at {$this->estate->name}");
+    expect($mailable->invitationUrl)->toBe(route('login'));
+
+    $mailable->assertSeeInHtml('Resident role added to your account');
+    $mailable->assertSeeInHtml('Go to Dashboard');
+    $mailable->assertDontSeeInHtml('This link will expire in 72 hours');
+});
+
+it('sends standard invitation email to new users without accounts when invited as resident', function () {
+    $newUser = User::factory()->create([
+        'name' => 'New User',
+        'email' => 'new.user@example.com',
+        'password' => null,
+    ]);
+
+    $invitation = Invitation::create([
+        'estate_id' => $this->estate->id,
+        'email' => $newUser->email,
+        'token' => 'test-token-12345',
+        'status' => 'pending',
+        'relationship_type' => 'resident',
+        'scope_type' => 'estate',
+        'expires_at' => now()->addDays(3),
+    ]);
+
+    $mailable = new ResidentInvitationMail($newUser, $this->estate, $invitation);
+
+    expect($mailable->isExistingUser)->toBeFalse();
+    expect($mailable->envelope()->subject)->toBe("You've been invited to join {$this->estate->name}");
+    expect($mailable->invitationUrl)->toBe(route('invitations.show', ['token' => 'test-token-12345']));
+
+    $mailable->assertSeeInHtml('Accept Invitation');
+    $mailable->assertSeeInHtml('This link will expire in 72 hours');
+});
+
+it('sends informational role update email to existing users when added as security personnel', function () {
+    $existingUser = User::factory()->create([
+        'name' => 'Security Existing',
+        'email' => 'sec.existing@example.com',
+        'password' => bcrypt('secret123'),
+    ]);
+
+    $mailable = new SecurityInvitationMail($existingUser, $this->estate);
+
+    expect($mailable->isExistingUser)->toBeTrue();
+    expect($mailable->envelope()->subject)->toBe("New role added: Security Personnel at {$this->estate->name}");
+    expect($mailable->invitationUrl)->toBe(route('login'));
+
+    $mailable->assertSeeInHtml('Security role added to your account');
+    $mailable->assertSeeInHtml('Go to Dashboard');
+    $mailable->assertDontSeeInHtml('This link will expire in 72 hours');
+});
+
+it('sends informational role update email to existing users when added as property owner', function () {
+    $existingUser = User::factory()->create([
+        'name' => 'Owner Existing',
+        'email' => 'owner.existing@example.com',
+        'password' => bcrypt('secret123'),
+    ]);
+
+    $mailable = new PropertyOwnerInvitationMail($existingUser, $this->estate);
+
+    expect($mailable->isExistingUser)->toBeTrue();
+    expect($mailable->envelope()->subject)->toBe("New role added: Property Owner at {$this->estate->name}");
+    expect($mailable->invitationUrl)->toBe(route('login'));
+
+    $mailable->assertSeeInHtml('Property Owner role added to your account');
+    $mailable->assertSeeInHtml('Go to Dashboard');
+    $mailable->assertDontSeeInHtml('This link will expire in 72 hours');
 });
