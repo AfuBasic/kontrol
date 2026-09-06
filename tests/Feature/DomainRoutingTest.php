@@ -18,6 +18,24 @@ test('root domain loads public marketing landing page', function () {
     $response->assertInertia(fn ($page) => $page->component('Public/Home'));
 });
 
+test('root domain loads for estates product page', function () {
+    $domain = config('domains.root');
+
+    $response = $this->get("http://{$domain}/product/estates");
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page->component('Public/ProductEstates'));
+});
+
+test('root domain loads for residents product page', function () {
+    $domain = config('domains.root');
+
+    $response = $this->get("http://{$domain}/product/residents");
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page->component('Public/ProductResidents'));
+});
+
 test('www domain loads public marketing landing page', function () {
     $this->seed(FeatureSeeder::class);
     $this->seed(PlanSeeder::class);
