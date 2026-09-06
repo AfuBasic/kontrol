@@ -1,15 +1,24 @@
 @extends('mail.layout')
 
 @section('content')
-    <div class="badge" style="background-color: #f0fdf4; color: #166534;">Welcome</div>
-    <h1>{{ ($isResend ?? false) ? 'Your invitation was resent' : 'Join your estate on Kontrol' }}</h1>
-    
-    <p>Hello <span class="bold">{{ $userName }}</span>,</p>
-    
-    @if($isResend ?? false)
-        <p>Your invitation to join <span class="bold">{{ $estateName }}</span> as a resident has been resent. Click the button below to accept it.</p>
+    @if($isExistingUser ?? false)
+        <div class="badge" style="background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;">Role Update</div>
+        <h1>Resident role added to your account</h1>
+
+        <p>Hello <span class="bold">{{ $userName }}</span>,</p>
+
+        <p>You have been assigned the <span class="bold">Resident</span> role at <span class="bold">{{ $estateName }}</span>. This role has been added to your Kontrol account, and you can access your resident features and community services immediately.</p>
     @else
-        <p>You've been invited to join <span class="bold">{{ $estateName }}</span> as a resident. To get started and access your community features, please accept your invitation.</p>
+        <div class="badge" style="background-color: #f0fdf4; color: #166534;">Welcome</div>
+        <h1>{{ ($isResend ?? false) ? 'Your invitation was resent' : 'Join your estate on Kontrol' }}</h1>
+        
+        <p>Hello <span class="bold">{{ $userName }}</span>,</p>
+        
+        @if($isResend ?? false)
+            <p>Your invitation to join <span class="bold">{{ $estateName }}</span> as a resident has been resent. Click the button below to accept it.</p>
+        @else
+            <p>You've been invited to join <span class="bold">{{ $estateName }}</span> as a resident. To get started and access your community features, please accept your invitation.</p>
+        @endif
     @endif
     
     <div style="background-color: #f8fafc; border-radius: 12px; padding: 24px; margin: 32px 0; border: 1px solid #e2e8f0;">
@@ -32,24 +41,36 @@
     </div>
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow">Accept Invitation</a>
+        @if($isExistingUser ?? false)
+            <a href="{{ $invitationUrl }}" class="button shadow">Go to Dashboard</a>
+        @else
+            <a href="{{ $invitationUrl }}" class="button shadow">Accept Invitation</a>
+        @endif
     </div>
     
-    <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
-        <strong>Link Validity</strong><br>
-        This link will expire in 72 hours. Please accept the invitation within this timeframe.
-    </div>
-    
-    @if(!($isResend ?? false))
-        <div style="margin-top: 32px; padding: 20px; border-radius: 12px; border: 1px solid #dcfce7; background-color: #f0fdf4;">
-            <p style="margin: 0; font-size: 14px; color: #166534;">
-                <strong>What's next?</strong><br>
-                Once set up, you can log in to view estate announcements, manage visitor access, and stay connected with your community.
-            </p>
+    @if($isExistingUser ?? false)
+        <div style="background-color: #f0fdf4; border-radius: 12px; padding: 20px; font-size: 14px; color: #166534; border: 1px solid #bbf7d0;">
+            <strong>Already logged in?</strong><br>
+            If you are currently signed in, simply switch to <strong>{{ $estateName }}</strong> from your account menu to access your resident services.
         </div>
+    @else
+        <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
+            <strong>Link Validity</strong><br>
+            This link will expire in 72 hours. Please accept the invitation within this timeframe.
+        </div>
+        
+        @if(!($isResend ?? false))
+            <div style="margin-top: 32px; padding: 20px; border-radius: 12px; border: 1px solid #dcfce7; background-color: #f0fdf4;">
+                <p style="margin: 0; font-size: 14px; color: #166534;">
+                    <strong>What's next?</strong><br>
+                    Once set up, you can log in to view estate announcements, manage visitor access, and stay connected with your community.
+                </p>
+            </div>
+        @endif
+        
+        <div class="divider"></div>
+        
+        <p style="font-size: 14px; color: #64748b;">If you're having trouble, copy and paste this link: <br> <span style="font-size: 12px; color: #6366f1;">{{ $invitationUrl }}</span></p>
     @endif
-    
-    <div class="divider"></div>
-    
-    <p style="font-size: 14px; color: #64748b;">If you're having trouble, copy and paste this link: <br> <span style="font-size: 12px; color: #6366f1;">{{ $invitationUrl }}</span></p>
 @endsection
+
