@@ -1,8 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
-import { Shield, CreditCard, Users, Megaphone, FileSpreadsheet, ArrowRight, CheckCircle2, Clock, Smartphone, Bell, Lock, Building } from 'lucide-react';
+import { Shield, CreditCard, Users, Megaphone, FileSpreadsheet, ArrowRight, CheckCircle2, Clock, Bell, Building } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import MagneticButton from '@/Components/Public/MagneticButton';
-import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import { apply } from '@/routes/public';
 
 export default function ProductEstates() {
