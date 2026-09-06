@@ -40,10 +40,15 @@ class HistoryController extends Controller
             ->where('estate_id', $estate->id)
             ->with(['accessCode.user.profile', 'verifier:id,name'])
             ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->whereHas('accessCode', function ($q) use ($search) {
-                    $q->where('code', 'like', "%{$search}%")
-                        ->orWhere('visitor_name', 'like', "%{$search}%")
-                        ->orWhere('visitor_phone', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('accessCode', function ($sq) use ($search) {
+                        $sq->where('code', 'like', "%{$search}%")
+                            ->orWhere('visitor_name', 'like', "%{$search}%")
+                            ->orWhere('visitor_phone', 'like', "%{$search}%");
+                    })
+                    ->orWhere('meta->tag', 'like', "%{$search}%")
+                    ->orWhere('meta->visitor_name', 'like', "%{$search}%")
+                    ->orWhere('meta->organization_name', 'like', "%{$search}%");
                 });
             })
             ->when($filters['date'] ?? null, function ($query, $date) {
@@ -60,36 +65,44 @@ class HistoryController extends Controller
             ->orderByDesc('verified_at')
             ->paginate(15)
             ->withQueryString()
-            ->through(fn ($log) => [
-                'id' => $log->id,
-                'code' => $log->accessCode?->code,
-                'visitor' => [
-                    'name' => $log->accessCode?->visitor_name ?? 'N/A',
-                    'phone' => null,
-                    'type' => $log->accessCode?->type,
-                ],
-                'host' => [
-                    'id' => $log->accessCode?->user_id,
-                    'name' => $log->accessCode?->user?->name ?? 'N/A',
-                    'unit' => $log->accessCode?->user?->profile?->unit_number,
-                    'address' => $log->accessCode?->user?->profile?->address,
-                ],
-                'purpose' => $log->accessCode?->purpose,
-                'verified_at' => $log->verified_at->format('M j, Y g:i A'),
-                'verified_at_human' => $log->verified_at->diffForHumans(),
-                'verifier_name' => $log->verifier?->name ?? 'System',
-                'checked_out_at' => $log->checked_out_at?->format('M j, Y g:i A'),
-                'checked_out_at_human' => $log->checked_out_at?->diffForHumans(),
-                'checkout_verifier_name' => $log->checkoutVerifier?->name,
-                'entry_point' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
-                'exit_point' => $log->checked_out_at ? ($log->meta['exit_point'] ?? $log->entry_point ?? 'Main Entrance') : null,
-                'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
-                'vehicle' => $log->vehicle_make ? [
-                    'make' => $log->vehicle_make,
-                    'model' => $log->vehicle_model,
-                    'plate' => $log->vehicle_plate_number,
-                ] : null,
-            ]);
+            ->through(function ($log) {
+                $isQuickEntry = ($log->meta['entry_type'] ?? null) === 'quick_entry';
+                $tag = $log->meta['tag'] ?? null;
+                $orgName = $log->meta['organization_name'] ?? null;
+
+                return [
+                    'id' => $log->id,
+                    'code' => $log->accessCode?->code ?? $tag,
+                    'tag' => $tag,
+                    'is_quick_entry' => $isQuickEntry,
+                    'visitor' => [
+                        'name' => $isQuickEntry ? ($log->meta['visitor_name'] ?? "Visitor ({$orgName})") : ($log->accessCode?->visitor_name ?? 'N/A'),
+                        'phone' => null,
+                        'type' => $isQuickEntry ? 'quick_entry' : $log->accessCode?->type,
+                    ],
+                    'host' => [
+                        'id' => $log->accessCode?->user_id,
+                        'name' => $isQuickEntry ? $orgName : ($log->accessCode?->user?->name ?? 'N/A'),
+                        'unit' => $log->accessCode?->user?->profile?->unit_number,
+                        'address' => $log->accessCode?->user?->profile?->address,
+                    ],
+                    'purpose' => $isQuickEntry ? ($orgName ? "Visit to {$orgName}" : 'Quick Entry') : $log->accessCode?->purpose,
+                    'verified_at' => $log->verified_at->format('M j, Y g:i A'),
+                    'verified_at_human' => $log->verified_at->diffForHumans(),
+                    'verifier_name' => $log->verifier?->name ?? 'System',
+                    'checked_out_at' => $log->checked_out_at?->format('M j, Y g:i A'),
+                    'checked_out_at_human' => $log->checked_out_at?->diffForHumans(),
+                    'checkout_verifier_name' => $log->checkoutVerifier?->name,
+                    'entry_point' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
+                    'exit_point' => $log->checked_out_at ? ($log->meta['exit_point'] ?? $log->entry_point ?? 'Main Entrance') : null,
+                    'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
+                    'vehicle' => $log->vehicle_make ? [
+                        'make' => $log->vehicle_make,
+                        'model' => $log->vehicle_model,
+                        'plate' => $log->vehicle_plate_number,
+                    ] : null,
+                ];
+            });
 
         // Get unique hosts (residents) from the estate who have visitor history
         $hosts = User::query()
