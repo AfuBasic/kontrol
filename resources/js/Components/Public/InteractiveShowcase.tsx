@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, Lock, Users, Bell, Shield, QrCode, CheckCircle, Send, Smartphone, CreditCard, TrendingUp } from 'lucide-react';
+import { Fingerprint, Users, Bell, Shield, QrCode, CheckCircle, Send, Smartphone, CreditCard, TrendingUp } from 'lucide-react';
 import InteractiveTilt from './InteractiveTilt';
 
 interface FeatureItem {
@@ -25,7 +25,7 @@ const FEATURES: FeatureItem[] = [
         id: 'collections',
         title: 'Estate Collections',
         description: 'Automated billing, instant checkout, direct bank settlements, and full transparency for community funds.',
-        icon: Lock,
+        icon: CreditCard,
         color: 'from-emerald-500 to-teal-500',
         glowColor: 'rgba(16,185,129,0.15)',
     },

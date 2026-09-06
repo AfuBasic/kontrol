@@ -8,6 +8,7 @@ use App\Http\Controllers\Zeus\DashboardController;
 use App\Http\Controllers\Zeus\ErrorLogController;
 use App\Http\Controllers\Zeus\EstateController;
 use App\Http\Controllers\Zeus\FeatureController;
+use App\Http\Controllers\Zeus\FeedbackController;
 use App\Http\Controllers\Zeus\ImpersonationController;
 use App\Http\Controllers\Zeus\MoneyFlowController;
 use App\Http\Controllers\Zeus\NotificationController;
@@ -122,5 +123,9 @@ Route::prefix('zeus')->name('zeus.')->group(function (): void {
         Route::delete('/error-logs/{errorLog}', [ErrorLogController::class, 'destroy'])->name('error-logs.destroy');
         Route::post('/error-logs/clear-all', [ErrorLogController::class, 'clearAll'])->name('error-logs.clear-all');
         Route::post('/error-logs/clear-resolved', [ErrorLogController::class, 'clearResolved'])->name('error-logs.clear-resolved');
+
+        // User Feedback Inbox
+        Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+        Route::patch('/feedback/{feedback}/status', [FeedbackController::class, 'updateStatus'])->name('feedback.update-status');
     });
 });

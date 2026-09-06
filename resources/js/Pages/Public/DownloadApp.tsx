@@ -30,7 +30,7 @@ export default function DownloadApp({ autologinToken }: Props) {
         const deepLink = autologinToken ? `kontrol://login?token=${autologinToken}` : 'kontrol://login';
 
         if (deviceType === 'apple') {
-            const storeLink = 'https://apps.apple.com/us/app/access-kontrol/id6772562083';
+            const storeLink = 'https://apps.apple.com/ng/app/access-kontrol/id6772562083';
 
             // Try to open deep link
             window.location.href = deepLink;
@@ -126,7 +126,7 @@ export default function DownloadApp({ autologinToken }: Props) {
                         {/* Download Options Grid */}
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <a
-                                href="https://apps.apple.com/us/app/access-kontrol/id6772562083"
+                                href="https://apps.apple.com/ng/app/access-kontrol/id6772562083"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"

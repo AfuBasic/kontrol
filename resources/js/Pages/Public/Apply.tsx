@@ -305,19 +305,65 @@ export default function Apply() {
                         {/* Floating Hero UI Elements */}
                         <div className="perspective-1000 relative hidden h-[600px] w-full lg:block">
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-x-[5deg] rotate-y-[-15deg] transform">
-                                {/* Abstract Dashboard Mockup */}
-                                <div className="h-[400px] w-[600px] rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-2xl backdrop-blur-xl">
-                                    <div className="mb-4 flex items-center gap-2 border-b border-slate-800 pb-4">
-                                        <div className="h-3 w-3 rounded-full bg-red-500/50" />
-                                        <div className="h-3 w-3 rounded-full bg-yellow-500/50" />
-                                        <div className="h-3 w-3 rounded-full bg-green-500/50" />
+                                {/* Estate Admin Dashboard Mockup */}
+                                <div className="h-[420px] w-[600px] overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/95 p-5 shadow-2xl backdrop-blur-xl">
+                                    <div className="mb-4 flex items-center justify-between border-b border-slate-800 pb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-3 w-3 rounded-full bg-red-500/70" />
+                                            <div className="h-3 w-3 rounded-full bg-yellow-500/70" />
+                                            <div className="h-3 w-3 rounded-full bg-green-500/70" />
+                                            <span className="ml-2 text-xs font-semibold text-slate-400">Kontrol Estate Command Center</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                            <span className="text-[11px] font-medium text-emerald-400">Gate Active · Main Gate</span>
+                                        </div>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-4">
-                                        <div className="h-24 rounded-xl bg-slate-800/50" />
-                                        <div className="h-24 rounded-xl border border-blue-500/20 bg-blue-900/20" />
-                                        <div className="h-24 rounded-xl bg-slate-800/50" />
+
+                                    {/* Real Data KPI Cards */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-left">
+                                            <p className="text-[11px] font-medium text-slate-400">Active Passes</p>
+                                            <p className="mt-1 text-xl font-extrabold text-white">42</p>
+                                            <p className="mt-0.5 text-[10px] text-emerald-400">+12 from yesterday</p>
+                                        </div>
+                                        <div className="rounded-xl border border-blue-500/30 bg-blue-950/30 p-3 text-left">
+                                            <p className="text-[11px] font-medium text-blue-300">Today Entries</p>
+                                            <p className="mt-1 text-xl font-extrabold text-white">128</p>
+                                            <p className="mt-0.5 text-[10px] text-blue-400">Avg check-in 8s</p>
+                                        </div>
+                                        <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-left">
+                                            <p className="text-[11px] font-medium text-slate-400">Dues Collected</p>
+                                            <p className="mt-1 text-xl font-extrabold text-white">₦8.4M</p>
+                                            <p className="mt-0.5 text-[10px] text-emerald-400">89% completion rate</p>
+                                        </div>
                                     </div>
-                                    <div className="mt-4 h-48 rounded-xl bg-slate-800/30" />
+
+                                    {/* Live Activity Table Preview */}
+                                    <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                                        <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                            <span>Recent Gate Activity</span>
+                                            <span className="text-[10px] text-blue-400">View All Entries</span>
+                                        </div>
+                                        <div className="mt-2 space-y-2">
+                                            {[
+                                                { code: 'PASS-892', guest: 'Engr. Damilola O.', host: 'Unit 4B', time: '14:38', type: 'Visitor' },
+                                                { code: 'PASS-714', guest: 'FedEx Courier', host: 'Unit 12A', time: '14:25', type: 'Delivery' },
+                                                { code: 'PASS-603', guest: 'Dr. Chika Amadi', host: 'Unit 1A', time: '14:12', type: 'Guest' },
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-900/80 px-2.5 py-1.5 text-left text-xs">
+                                                    <div>
+                                                        <span className="font-semibold text-white">{item.guest}</span>
+                                                        <span className="ml-2 text-[11px] text-slate-400">({item.host})</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">{item.type}</span>
+                                                        <span className="text-[11px] text-slate-400">{item.time}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

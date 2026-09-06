@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { ArrowRight, Building2, Loader2, Shield, User, LayoutDashboard, Key, Mail, Building, MapPin, BadgeCheck, HelpCircle } from 'lucide-react';
-import type { FormEvent } from 'react';
+import { type FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\SupportController;
 use App\Http\Controllers\Account\TrustedDeviceController;
+use App\Http\Controllers\App\FeedbackController;
 use App\Http\Controllers\Auth\ContextController;
 use App\Http\Controllers\Auth\DeviceAuthorizationController;
 use App\Http\Controllers\Auth\EmailVerificationController;
@@ -89,6 +90,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/account/devices/{device}', [TrustedDeviceController::class, 'destroy'])->name('account.devices.destroy');
 
     Route::get('/account/support', [SupportController::class, 'index'])->name('account.support.index');
+    Route::post('/account/feedback', [FeedbackController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('account.feedback.store');
 });
 
 /*

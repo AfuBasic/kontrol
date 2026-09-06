@@ -18,16 +18,19 @@ export default function PublicLayout({ children }: Props) {
     const [activeSection, setActiveSection] = useState(() => {
         return typeof window !== 'undefined' && window.location.pathname === '/' ? 'home' : '';
     });
-    const [isLoading, setIsLoading] = useState(true);
-    const [skipPreloader] = useState(() => {
-        return typeof window !== 'undefined' && sessionStorage.getItem('kontrol-preloader-played') === 'true';
+    const [isLoading, setIsLoading] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
+        const alreadyPlayed = sessionStorage.getItem('kontrol-preloader-played') === 'true';
+        return isHomePage && !alreadyPlayed;
     });
 
     useEffect(() => {
-        // Run preloader on every fresh page load of the public website
-        delete document.documentElement.dataset.kontrolPublicReady;
-        setIsLoading(true);
-    }, []);
+        if (!isLoading) {
+            document.documentElement.dataset.kontrolPublicReady = 'true';
+            window.dispatchEvent(new Event('kontrol:public-ready'));
+        }
+    }, [isLoading]);
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
@@ -100,7 +103,7 @@ export default function PublicLayout({ children }: Props) {
                 {isLoading && (
                     <BrandPreloader
                         key="preloader"
-                        skipToKontrol={skipPreloader}
+                        skipToKontrol={false}
                         onComplete={() => {
                             setIsLoading(false);
                             sessionStorage.setItem('kontrol-preloader-played', 'true');
@@ -169,29 +172,44 @@ export default function PublicLayout({ children }: Props) {
                             )}
                         </a>
 
-                        <a
-                            href="/#download"
-                            onClick={(e) => {
-                                if (window.location.pathname === '/') {
-                                    e.preventDefault();
-                                    document.querySelector('#download')?.scrollIntoView({ behavior: 'smooth' });
-                                }
-                            }}
+                        <Link
+                            href="/product/estates"
+                            prefetch="click"
                             className={`relative py-1 text-sm font-medium transition-colors ${
-                                activeSection === 'download'
+                                window.location.pathname === '/product/estates'
                                     ? 'font-semibold text-blue-600 dark:text-blue-400'
                                     : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
                             }`}
                         >
-                            Download App
-                            {activeSection === 'download' && (
+                            For Estates
+                            {window.location.pathname === '/product/estates' && (
                                 <motion.div
                                     layoutId="activeNavIndicator"
                                     className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
                                     transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                                 />
                             )}
-                        </a>
+                        </Link>
+
+                        <Link
+                            href="/product/residents"
+                            prefetch="click"
+                            className={`relative py-1 text-sm font-medium transition-colors ${
+                                window.location.pathname === '/product/residents'
+                                    ? 'font-semibold text-blue-600 dark:text-blue-400'
+                                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
+                            }`}
+                        >
+                            For Residents
+                            {window.location.pathname === '/product/residents' && (
+                                <motion.div
+                                    layoutId="activeNavIndicator"
+                                    className="absolute right-0 bottom-0 left-0 h-0.5 bg-blue-600 dark:bg-blue-400"
+                                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                                />
+                            )}
+                        </Link>
+
                         <Link
                             href="/support"
                             className={`relative py-1 text-sm font-medium transition-colors ${
@@ -278,19 +296,20 @@ export default function PublicLayout({ children }: Props) {
                             >
                                 Features
                             </a>
-                            <a
-                                href="/#download"
-                                onClick={(e) => {
-                                    handleNavClick();
-                                    if (window.location.pathname === '/') {
-                                        e.preventDefault();
-                                        document.querySelector('#download')?.scrollIntoView({ behavior: 'smooth' });
-                                    }
-                                }}
+                            <Link
+                                href="/product/estates"
+                                onClick={handleNavClick}
                                 className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             >
-                                Download App
-                            </a>
+                                For Estates
+                            </Link>
+                            <Link
+                                href="/product/residents"
+                                onClick={handleNavClick}
+                                className="block rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                            >
+                                For Residents
+                            </Link>
                             <Link
                                 href="/support"
                                 onClick={handleNavClick}
@@ -337,6 +356,12 @@ export default function PublicLayout({ children }: Props) {
                                 Support
                             </Link>
                             <Link
+                                href="/product/residents#download"
+                                className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+                            >
+                                Download App
+                            </Link>
+                            <Link
                                 href="/privacy"
                                 className="text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
                             >
@@ -350,7 +375,7 @@ export default function PublicLayout({ children }: Props) {
                             </Link>
                         </div>
 
-                        <p className="text-sm text-slate-400 dark:text-slate-500">&copy; {currentYear} Afutunde Solutions. All rights reserved.</p>
+                        <p className="text-sm text-slate-400 dark:text-slate-500">&copy; {currentYear} Kontrol · A product of Afutunde Solutions</p>
                     </div>
                 </div>
             </footer>
