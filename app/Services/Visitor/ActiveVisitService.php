@@ -146,7 +146,11 @@ class ActiveVisitService
                         ->orWhereHas('user', function (Builder $uq) use ($search) {
                             $uq->where('name', 'like', "%{$search}%");
                         });
-                })->orWhere('vehicle_plate_number', 'like', "%{$search}%");
+                })
+                ->orWhere('vehicle_plate_number', 'like', "%{$search}%")
+                ->orWhere('meta->tag', 'like', "%{$search}%")
+                ->orWhere('meta->visitor_name', 'like', "%{$search}%")
+                ->orWhere('meta->organization_name', 'like', "%{$search}%");
             });
         }
 
@@ -205,23 +209,29 @@ class ActiveVisitService
             }
         }
 
+        $isQuickEntry = ($log->meta['entry_type'] ?? null) === 'quick_entry';
+        $tag = $log->meta['tag'] ?? null;
+        $orgName = $log->meta['organization_name'] ?? null;
+
         return [
             'id' => $log->id,
             'access_log_id' => $log->id,
-            'code' => $code?->code,
+            'code' => $code?->code ?? $tag,
+            'tag' => $tag,
+            'is_quick_entry' => $isQuickEntry,
             'pass_uuid' => $code?->pass_uuid,
             'visitor' => [
-                'name' => $code?->visitor_name ?? 'Visitor',
+                'name' => $isQuickEntry ? ($log->meta['visitor_name'] ?? "Visitor ({$orgName})") : ($code?->visitor_name ?? 'Visitor'),
                 'phone' => $code?->visitor_phone,
-                'type' => $code?->type,
+                'type' => $isQuickEntry ? 'quick_entry' : $code?->type,
             ],
             'host' => [
                 'id' => $user?->id,
-                'name' => $user?->name ?? 'Resident',
+                'name' => $isQuickEntry ? $orgName : ($user?->name ?? 'Resident'),
                 'unit' => $profile?->unit_number,
                 'address' => $profile?->address,
             ],
-            'purpose' => $code?->purpose,
+            'purpose' => $isQuickEntry ? ($orgName ? "Visit to {$orgName}" : 'Quick Entry') : $code?->purpose,
             'verified_at' => $verifiedAt ? $verifiedAt->format('M j, Y g:i A') : null,
             'verified_at_iso' => $verifiedAt ? $verifiedAt->toIso8601String() : null,
             'verified_at_time' => $verifiedAt ? $verifiedAt->format('g:i A') : null,
