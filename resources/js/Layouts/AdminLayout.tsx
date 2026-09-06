@@ -900,14 +900,6 @@ export default function AdminLayout({ children, title: _title }: Props) {
                                     <UserCircleIcon className="h-5 w-5" /> Profile
                                 </Link>
 
-                                <Link
-                                    href={SupportController.index.url()}
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-white/70 transition-colors hover:bg-white/10"
-                                >
-                                    <QuestionMarkCircleIcon className="h-5 w-5" /> Help & Support
-                                </Link>
-
                                 {(auth.user?.available_contexts?.length || 0) > 1 && (
                                     <Link
                                         href={ContextController.index.url()}
