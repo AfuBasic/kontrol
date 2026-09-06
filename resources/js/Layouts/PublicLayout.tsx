@@ -18,16 +18,19 @@ export default function PublicLayout({ children }: Props) {
     const [activeSection, setActiveSection] = useState(() => {
         return typeof window !== 'undefined' && window.location.pathname === '/' ? 'home' : '';
     });
-    const [isLoading, setIsLoading] = useState(true);
-    const [skipPreloader] = useState(() => {
-        return typeof window !== 'undefined' && sessionStorage.getItem('kontrol-preloader-played') === 'true';
+    const [isLoading, setIsLoading] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const isHomePage = window.location.pathname === '/' || window.location.pathname === '';
+        const alreadyPlayed = sessionStorage.getItem('kontrol-preloader-played') === 'true';
+        return isHomePage && !alreadyPlayed;
     });
 
     useEffect(() => {
-        // Run preloader on every fresh page load of the public website
-        delete document.documentElement.dataset.kontrolPublicReady;
-        setIsLoading(true);
-    }, []);
+        if (!isLoading) {
+            document.documentElement.dataset.kontrolPublicReady = 'true';
+            window.dispatchEvent(new Event('kontrol:public-ready'));
+        }
+    }, [isLoading]);
 
     useEffect(() => {
         const storedTheme = localStorage.getItem('theme') || 'dark';
@@ -100,7 +103,7 @@ export default function PublicLayout({ children }: Props) {
                 {isLoading && (
                     <BrandPreloader
                         key="preloader"
-                        skipToKontrol={skipPreloader}
+                        skipToKontrol={false}
                         onComplete={() => {
                             setIsLoading(false);
                             sessionStorage.setItem('kontrol-preloader-played', 'true');
