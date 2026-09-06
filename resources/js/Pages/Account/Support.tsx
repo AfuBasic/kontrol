@@ -1,6 +1,6 @@
 import { Head, usePage } from '@inertiajs/react';
 import { ArrowLeft, ChevronRight, Mail, Phone, Info, MessageSquareHeart, Star, ExternalLink } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
 import AdminLayout from '@/Layouts/AdminLayout';
