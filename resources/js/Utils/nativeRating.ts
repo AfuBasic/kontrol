@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 
 export const STORE_URLS = {
-    ios: 'https://apps.apple.com/us/app/access-kontrol/id6772562083?action=write-review',
+    ios: 'https://apps.apple.com/ng/app/access-kontrol/id6772562083?action=write-review',
     android: 'https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en',
     web: 'https://usekontrol.com/download-app',
 } as const;
