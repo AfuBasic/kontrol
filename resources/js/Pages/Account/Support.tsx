@@ -10,6 +10,7 @@ import SecurityLayout from '@/Layouts/SecurityLayout';
 import FeedbackModal from '@/Components/Feedback/FeedbackModal';
 import Toast from '@/Components/Toast';
 import { openNativeStoreReview } from '@/Utils/nativeRating';
+import { Capacitor } from '@capacitor/core';
 import type { SharedData } from '@/types';
 
 interface SupportDetails {
@@ -43,6 +44,21 @@ export default function Support({ support }: Props) {
 
     const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
     const [showSuccessToast, setShowSuccessToast] = useState(false);
+    const [isNative, setIsNative] = useState(false);
+    const [nativePlatform, setNativePlatform] = useState<'ios' | 'android' | null>(null);
+
+    useEffect(() => {
+        const native = Capacitor.isNativePlatform();
+        setIsNative(native);
+        if (native) {
+            const platform = Capacitor.getPlatform();
+            if (platform === 'ios') {
+                setNativePlatform('ios');
+            } else if (platform === 'android') {
+                setNativePlatform('android');
+            }
+        }
+    }, []);
 
     const handleBack = () => {
         if (typeof window !== 'undefined' && window.history.length > 1) {
@@ -200,36 +216,40 @@ export default function Support({ support }: Props) {
                     </section>
                 </div>
 
-                {/* Pillar 3: Native Store Rating (App Store / Play Store) */}
-                <div className="space-y-2.5">
-                    <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400 px-1">
-                        App Rating
-                    </h2>
-                    <section aria-label="App Rating">
-                        <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                            <button
-                                type="button"
-                                onClick={() => openNativeStoreReview()}
-                                className="group flex w-full min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
-                            >
-                                <div className="flex min-w-0 items-center gap-3.5">
-                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 transition-transform group-hover:scale-105 dark:bg-violet-500/20 dark:text-violet-400">
-                                        <Star className="h-5 w-5" strokeWidth={2.2} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <div className="text-sm font-semibold text-slate-900 dark:text-white">
-                                            Rate Kontrol on the App Store
+                {/* Pillar 3: Native Store Rating (App Store / Play Store) - Native Mobile Only */}
+                {isNative && (
+                    <div className="space-y-2.5">
+                        <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider dark:text-slate-400 px-1">
+                            App Rating
+                        </h2>
+                        <section aria-label="App Rating">
+                            <div className="overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                                <button
+                                    type="button"
+                                    onClick={() => openNativeStoreReview()}
+                                    className="group flex w-full min-h-[64px] items-center justify-between gap-3.5 px-4 py-3.5 text-left transition-colors active:bg-slate-50 sm:px-5 hover:bg-slate-50/70 dark:active:bg-slate-800/80 dark:hover:bg-slate-800/40"
+                                >
+                                    <div className="flex min-w-0 items-center gap-3.5">
+                                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 transition-transform group-hover:scale-105 dark:bg-violet-500/20 dark:text-violet-400">
+                                            <Star className="h-5 w-5" strokeWidth={2.2} />
                                         </div>
-                                        <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                                            Help other estates and residents discover Kontrol
-                                        </p>
+                                        <div className="min-w-0">
+                                            <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                {nativePlatform === 'android'
+                                                    ? 'Rate Kontrol on Google Play'
+                                                    : 'Rate Kontrol on the App Store'}
+                                            </div>
+                                            <p className="truncate text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                Help other estates and residents discover Kontrol
+                                            </p>
+                                        </div>
                                     </div>
-                                </div>
-                                <ExternalLink className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
-                            </button>
-                        </div>
-                    </section>
-                </div>
+                                    <ExternalLink className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                )}
 
                 {/* Restrained Supporting Guidance */}
                 <section aria-label="Support guidance">
