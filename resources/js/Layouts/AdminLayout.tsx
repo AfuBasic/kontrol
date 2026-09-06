@@ -492,11 +492,6 @@ export default function AdminLayout({ children, title: _title }: Props) {
             return false;
         }
 
-        // Feature Gating (Principal Engineer Pattern)
-        if (item.feature && featureFlags[item.feature] === false) {
-            return false;
-        }
-
         if (!item.permission) return true;
         if (isAdmin) return true;
         return userPermissions.includes(item.permission);
