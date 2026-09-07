@@ -1,6 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { index, update } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 interface PropertyOwner {
@@ -162,23 +163,21 @@ export default function Edit({ propertyOwner, zones = [] }: Props) {
 
                     {zones.length > 0 && (
                         <div>
-                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700 mb-0.5">
                                 Zone
                             </label>
-                            <p className="mt-0.5 text-xs text-gray-500">Assign this property owner to a zone, or leave them estate-wide.</p>
-                            <select
-                                id="zone_id"
+                            <p className="mb-2 text-xs text-gray-500">Assign this property owner to a zone, or leave them estate-wide.</p>
+                            <CustomSelect
                                 value={data.zone_id}
-                                onChange={(e) => setData('zone_id', e.target.value)}
-                                className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-[#1F6FDB] focus:ring-2 focus:ring-blue-50 focus:outline-none"
-                            >
-                                <option value="">Entire Estate</option>
-                                {zones.map((zone) => (
-                                    <option key={zone.id} value={zone.id}>
-                                        {zone.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setData('zone_id', String(val))}
+                                options={[
+                                    { value: '', label: 'Entire Estate' },
+                                    ...zones.map((zone) => ({
+                                        value: String(zone.id),
+                                        label: zone.name,
+                                    })),
+                                ]}
+                            />
                             {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
                         </div>
                     )}
