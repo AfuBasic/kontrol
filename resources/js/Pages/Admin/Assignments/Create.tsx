@@ -1,6 +1,6 @@
 import { ArrowLeftIcon, UserPlusIcon, TagIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { Globe, MapPin, Loader2 } from 'lucide-react';
+import { Globe, MapPin, Loader2, Sparkles } from 'lucide-react';
 import type { FormEventHandler } from 'react';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import { create as createUser } from '@/actions/App/Http/Controllers/Admin/UserController';
@@ -79,8 +79,8 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
 
                 {!isReadyToAssign ? (
                     <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-10 text-center shadow-sm ring-1 ring-slate-100/50">
-                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50">
-                            <span className="text-2xl">🌱</span>
+                        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600">
+                            <Sparkles className="h-7 w-7" />
                         </div>
                         <h2 className="text-xl font-black tracking-tight text-slate-900">Almost ready</h2>
                         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed font-medium text-slate-500">
