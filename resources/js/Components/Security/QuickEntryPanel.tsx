@@ -12,6 +12,7 @@ import {
     ShieldAlert,
     Sparkles,
     User,
+    X,
     Zap,
 } from 'lucide-react';
 import { QuickEntryStore, type ReservedTag } from '@/Resilience/OfflineStorage/QuickEntryStore';
@@ -398,8 +399,9 @@ export default function QuickEntryPanel({
                                 type="button"
                                 onClick={() => setLastIssued(null)}
                                 className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300"
+                                aria-label="Close"
                             >
-                                ✕
+                                <X className="h-4 w-4" />
                             </button>
                         </div>
 
