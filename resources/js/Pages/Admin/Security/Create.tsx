@@ -12,6 +12,7 @@ import {
 
 import type { InviteLink } from '../Components/InviteLinksTab';
 import InviteLinksTab from '../Components/InviteLinksTab';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
@@ -404,21 +405,17 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Operational Zone
                                                 </label>
-                                                <select
-                                                    id="zone_id"
+                                                <CustomSelect
                                                     value={data.zone_id}
-                                                    onChange={(e) => setData('zone_id', e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setData('zone_id', String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
                                                 {errors.zone_id && <p className="mt-1 text-xs text-red-600">{errors.zone_id}</p>}
                                             </motion.div>
                                         )}
@@ -527,22 +524,20 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 {/* Zone Assignment for Bulk */}
                                 {zones.length > 0 && (
                                     <div className="mt-4">
-                                        <label htmlFor="bulk_zone_id" className="block text-sm font-medium text-gray-700">
+                                        <label htmlFor="bulk_zone_id" className="block text-sm font-medium text-gray-700 mb-1.5">
                                             Zone Assignment <span className="text-gray-400">(optional)</span>
                                         </label>
-                                        <select
-                                            id="bulk_zone_id"
+                                        <CustomSelect
                                             value={selectedZone}
-                                            onChange={(e) => setSelectedZone(e.target.value)}
-                                            className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                        >
-                                            <option value="">None / Entire Estate</option>
-                                            {zones.map((zone) => (
-                                                <option key={zone.id} value={zone.id}>
-                                                    {zone.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onChange={(val) => setSelectedZone(String(val))}
+                                            options={[
+                                                { value: '', label: 'None / Entire Estate' },
+                                                ...zones.map((zone) => ({
+                                                    value: String(zone.id),
+                                                    label: zone.name,
+                                                })),
+                                            ]}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -644,22 +639,20 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 {/* Zone Assignment for Paste */}
                                 {zones.length > 0 && (
                                     <div className="mt-4">
-                                        <label htmlFor="paste_zone_id" className="block text-sm font-medium text-gray-700">
+                                        <label htmlFor="paste_zone_id" className="block text-sm font-medium text-gray-700 mb-1.5">
                                             Zone Assignment <span className="text-gray-400">(optional)</span>
                                         </label>
-                                        <select
-                                            id="paste_zone_id"
+                                        <CustomSelect
                                             value={selectedZone}
-                                            onChange={(e) => setSelectedZone(e.target.value)}
-                                            className="mt-1.5 block w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                        >
-                                            <option value="">None / Entire Estate</option>
-                                            {zones.map((zone) => (
-                                                <option key={zone.id} value={zone.id}>
-                                                    {zone.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onChange={(val) => setSelectedZone(String(val))}
+                                            options={[
+                                                { value: '', label: 'None / Entire Estate' },
+                                                ...zones.map((zone) => ({
+                                                    value: String(zone.id),
+                                                    label: zone.name,
+                                                })),
+                                            ]}
+                                        />
                                     </div>
                                 )}
                             </div>
