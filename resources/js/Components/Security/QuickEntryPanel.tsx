@@ -21,7 +21,13 @@ interface Organization {
     id: number;
     name: string;
     type: string;
-    operating_hours?: string | null;
+    operating_hours?: {
+        open?: string;
+        close?: string;
+        days?: string[];
+        [key: string]: any;
+    } | string | null;
+    hours_enforcement?: 'inherit' | 'off' | 'warn' | 'block';
 }
 
 interface QuickEntryPanelProps {
@@ -30,6 +36,85 @@ interface QuickEntryPanelProps {
     gateName: string;
     isOnline: boolean;
     requireVehicleInformation?: boolean;
+    estateHoursEnforcement?: 'off' | 'warn' | 'block';
+}
+
+function evaluateOrgHours(
+    org: Organization,
+    estateDefault: 'off' | 'warn' | 'block' = 'warn',
+): { withinHours: boolean; enforcement: 'off' | 'warn' | 'block'; message?: string } {
+    const enforcement =
+        org.hours_enforcement && org.hours_enforcement !== 'inherit'
+            ? org.hours_enforcement
+            : estateDefault;
+
+    if (enforcement === 'off' || !org.operating_hours) {
+        return { withinHours: true, enforcement };
+    }
+
+    const hours =
+        typeof org.operating_hours === 'string'
+            ? (() => {
+                  try {
+                      return JSON.parse(org.operating_hours);
+                  } catch {
+                      return null;
+                  }
+              })()
+            : org.operating_hours;
+
+    if (!hours) {
+        return { withinHours: true, enforcement };
+    }
+
+    const now = new Date();
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const currentDay = dayNames[now.getDay()];
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const currentTime = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    // Day-specific config
+    if (hours[currentDay]) {
+        const dayConfig = hours[currentDay];
+        if (dayConfig.closed) {
+            return {
+                withinHours: false,
+                enforcement,
+                message: `Closed on ${currentDay.charAt(0).toUpperCase() + currentDay.slice(1)}s`,
+            };
+        }
+        if (dayConfig.open && dayConfig.close) {
+            const within = currentTime >= dayConfig.open && currentTime <= dayConfig.close;
+            return {
+                withinHours: within,
+                enforcement,
+                message: within ? undefined : `Operating hours today: ${dayConfig.open} – ${dayConfig.close}`,
+            };
+        }
+    }
+
+    // General config
+    if (hours.open && hours.close) {
+        if (hours.days && Array.isArray(hours.days)) {
+            const lowerDays = hours.days.map((d: string) => d.toLowerCase());
+            if (!lowerDays.includes(currentDay)) {
+                return {
+                    withinHours: false,
+                    enforcement,
+                    message: `Not open on ${currentDay.charAt(0).toUpperCase() + currentDay.slice(1)}s`,
+                };
+            }
+        }
+        const within = currentTime >= hours.open && currentTime <= hours.close;
+        return {
+            withinHours: within,
+            enforcement,
+            message: within ? undefined : `Operating hours: ${hours.open} – ${hours.close}`,
+        };
+    }
+
+    return { withinHours: true, enforcement };
 }
 
 export default function QuickEntryPanel({
@@ -38,6 +123,7 @@ export default function QuickEntryPanel({
     gateName,
     isOnline,
     requireVehicleInformation = false,
+    estateHoursEnforcement = 'warn',
 }: QuickEntryPanelProps) {
     const [selectedOrgId, setSelectedOrgId] = useState<number | null>(
         organizations.length > 0 ? organizations[0].id : null,
@@ -52,6 +138,7 @@ export default function QuickEntryPanel({
     const [poolCount, setPoolCount] = useState<number>(0);
     const [reserving, setReserving] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [showWarnConfirmModal, setShowWarnConfirmModal] = useState(false);
 
     // Latest issued tag modal/banner state
     const [lastIssued, setLastIssued] = useState<{
@@ -62,6 +149,11 @@ export default function QuickEntryPanel({
     } | null>(null);
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    const selectedOrg = organizations.find((o) => o.id === selectedOrgId);
+    const hoursEvaluation = selectedOrg
+        ? evaluateOrgHours(selectedOrg, estateHoursEnforcement)
+        : { withinHours: true, enforcement: 'off' as const };
 
     // Update remaining pool count
     const updatePoolCount = async () => {
@@ -111,8 +203,8 @@ export default function QuickEntryPanel({
         }
     }, [poolCount, isOnline]);
 
-    const handleAssignEntry = async () => {
-        if (!selectedOrgId) {
+    const handleAssignEntry = async (skipHoursConfirm = false) => {
+        if (!selectedOrgId || !selectedOrg) {
             setErrorMessage('Please select a destination organization.');
             return;
         }
@@ -120,6 +212,21 @@ export default function QuickEntryPanel({
         if (requireVehicleInformation && hasVehicle && !plateNumber.trim()) {
             setErrorMessage('Vehicle license plate is required by estate policy.');
             return;
+        }
+
+        // Check hours enforcement
+        if (!hoursEvaluation.withinHours) {
+            if (hoursEvaluation.enforcement === 'block') {
+                setErrorMessage(
+                    `Entry blocked: ${selectedOrg.name} is currently outside operating hours (${hoursEvaluation.message || 'Closed'}).`,
+                );
+                return;
+            }
+
+            if (hoursEvaluation.enforcement === 'warn' && !skipHoursConfirm) {
+                setShowWarnConfirmModal(true);
+                return;
+            }
         }
 
         setSubmitting(true);
@@ -152,8 +259,7 @@ export default function QuickEntryPanel({
                 return;
             }
 
-            const chosenOrg = organizations.find((o) => o.id === selectedOrgId);
-            const nowIso = new Date().toISOString();
+            const chosenOrg = selectedOrg;
 
             const entryPayload = {
                 tag: tagItem.tag,
@@ -206,7 +312,7 @@ export default function QuickEntryPanel({
             verified_at: new Date().toISOString(),
         };
 
-        await QuickEntryStore.queueOfflineLog(offlineRecord);
+        // Sole queue via SyncEngine to avoid dual-queue desync
         await SyncEngine.enqueue({
             type: 'quick_entry_log',
             endpoint: '/security/quick-entry/sync',
@@ -370,12 +476,49 @@ export default function QuickEntryPanel({
                                     <span className="text-[10px] font-semibold text-slate-400 capitalize">
                                         {org.type.replace('_', ' ')}
                                     </span>
+                                    {org.operating_hours && (
+                                        <span className="mt-1 flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                                            <Clock className="h-2.5 w-2.5" />
+                                            {typeof org.operating_hours === 'object' && org.operating_hours?.open
+                                                ? `${org.operating_hours.open}–${org.operating_hours.close}`
+                                                : 'Hours set'}
+                                        </span>
+                                    )}
                                 </button>
                             );
                         })}
                     </div>
                 )}
             </div>
+
+            {/* Operating Hours Warning Banner */}
+            {selectedOrg && !hoursEvaluation.withinHours && (
+                <div
+                    className={`mt-4 flex w-full items-start gap-2.5 rounded-2xl p-3.5 text-xs font-bold ${
+                        hoursEvaluation.enforcement === 'block'
+                            ? 'border border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/40 dark:text-rose-300'
+                            : 'border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
+                    }`}
+                >
+                    <Clock
+                        className={`h-4 w-4 shrink-0 mt-0.5 ${
+                            hoursEvaluation.enforcement === 'block' ? 'text-rose-600' : 'text-amber-600'
+                        }`}
+                    />
+                    <div>
+                        <span className="block font-black">
+                            {hoursEvaluation.enforcement === 'block'
+                                ? 'Outside Operating Hours — Quick Entry Blocked'
+                                : 'Outside Operating Hours Notice'}
+                        </span>
+                        <span className="text-[11px] font-semibold opacity-90">
+                            {hoursEvaluation.message || `${selectedOrg.name} is currently closed.`}{' '}
+                            {hoursEvaluation.enforcement === 'warn' &&
+                                'You will be prompted to confirm before assigning a tag.'}
+                        </span>
+                    </div>
+                </div>
+            )}
 
             {/* Details Section (Collapsed in Rush Mode) */}
             {!rushMode && (
@@ -455,14 +598,27 @@ export default function QuickEntryPanel({
             <div className="mt-6 w-full">
                 <button
                     type="button"
-                    onClick={handleAssignEntry}
-                    disabled={submitting || organizations.length === 0}
-                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4.5 text-base font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50"
+                    onClick={() => handleAssignEntry(false)}
+                    disabled={
+                        submitting ||
+                        organizations.length === 0 ||
+                        (!hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block')
+                    }
+                    className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4.5 text-base font-black text-white shadow-xl transition-all active:scale-95 disabled:opacity-50 ${
+                        !hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block'
+                            ? 'bg-rose-600 shadow-rose-500/20 cursor-not-allowed'
+                            : 'bg-indigo-600 shadow-indigo-500/20 hover:bg-indigo-700'
+                    }`}
                 >
                     {submitting ? (
                         <>
                             <Loader2 className="h-5 w-5 animate-spin text-white" />
                             <span>Assigning Tag...</span>
+                        </>
+                    ) : !hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block' ? (
+                        <>
+                            <ShieldAlert className="h-5 w-5 text-white" />
+                            <span>Closed — Entry Blocked</span>
                         </>
                     ) : (
                         <>
@@ -472,9 +628,58 @@ export default function QuickEntryPanel({
                     )}
                 </button>
                 <p className="mt-2 text-center text-[11px] font-semibold text-slate-400">
-                    One tap assigns next available tag and logs entry
+                    {!hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block'
+                        ? 'Operating hours enforcement is strictly set to Block'
+                        : 'One tap assigns next available tag and logs entry'}
                 </p>
             </div>
+
+            {/* Warning Confirmation Modal */}
+            <AnimatePresence>
+                {showWarnConfirmModal && selectedOrg && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-slate-900"
+                        >
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
+                                <Clock className="h-6 w-6" />
+                            </div>
+                            <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">
+                                Outside Operating Hours
+                            </h3>
+                            <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                                <span className="font-bold text-slate-800 dark:text-slate-200">
+                                    {selectedOrg.name}
+                                </span>{' '}
+                                is currently operating outside its standard hours (
+                                {hoursEvaluation.message || 'Closed'}). Confirm that you wish to admit this visitor.
+                            </p>
+                            <div className="mt-6 flex gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowWarnConfirmModal(false)}
+                                    className="flex-1 rounded-xl border border-slate-200 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowWarnConfirmModal(false);
+                                        void handleAssignEntry(true);
+                                    }}
+                                    className="flex-1 rounded-xl bg-amber-600 py-3 text-xs font-black text-white hover:bg-amber-700 active:scale-95"
+                                >
+                                    Confirm Admit
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
