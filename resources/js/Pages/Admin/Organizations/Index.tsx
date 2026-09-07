@@ -341,7 +341,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         <>
             <Head title="Organizations" />
 
-            <div className="mx-auto max-w-5xl space-y-6 pb-20">
+            <div className="space-y-6 pb-20">
                 {/* Page Header */}
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
