@@ -568,324 +568,421 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 )}
             </div>
 
-            {/* Create / Edit Organization Modal */}
-            <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} maxWidth="lg">
-                <form onSubmit={handleSubmit} className="flex flex-col max-h-[90vh]">
-                    {/* Header with ONLY ONE close button */}
-                    <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            {/* Create / Edit Organization Dialog (Wide Two-Column Recomposition) */}
+            <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} maxWidth="4xl">
+                <form onSubmit={handleSubmit} className="flex flex-col">
+                    {/* Header */}
+                    <div className="flex items-start justify-between border-b border-slate-100 px-7 py-5">
                         <div>
-                            <h2 className="text-base font-bold text-slate-900">
+                            <h2 className="text-lg font-black tracking-tight text-slate-900">
                                 {editingOrg ? 'Edit Organization' : 'Add Organization'}
                             </h2>
-                            <p className="text-xs text-slate-500">
+                            <p className="mt-0.5 text-xs font-semibold text-slate-500">
                                 {editingOrg
-                                    ? 'Update details and operational parameters.'
-                                    : 'Set up an institution operating within the estate.'}
+                                    ? 'Update details, access policy, and operating schedules.'
+                                    : 'Set up a school, church, medical centre or facility operating within the estate.'}
                             </p>
                         </div>
                         <button
                             type="button"
                             onClick={() => setIsCreateModalOpen(false)}
                             aria-label="Close dialog"
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+                            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-5 w-5" />
                         </button>
                     </div>
 
-                    {/* Scrollable Form Body */}
-                    <div className="overflow-y-auto px-6 py-5 space-y-6 text-xs">
-                        {/* Section 1: Organization Identification */}
-                        <div className="space-y-3.5">
-                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                1. Organization
-                            </h3>
+                    {/* Two-Column Workspace Body */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[480px]">
+                        {/* LEFT COLUMN: User Decisions (7 cols) */}
+                        <div className="lg:col-span-7 p-7 space-y-6 overflow-y-auto max-h-[72vh]">
+                            {/* Section: Organization Details */}
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-black tracking-tight text-slate-900">
+                                    Organization Details
+                                </h3>
 
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-900">
-                                    Organization Name <span className="text-rose-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={form.data.name}
-                                    onChange={(e) => form.setData('name', e.target.value)}
-                                    placeholder="e.g. St Matthew's School, Grace Medical Centre"
-                                    className="mt-1 w-full rounded-xl border-slate-200 py-2.5 px-3 text-xs font-medium placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
-                                />
-                                {form.errors.name && (
-                                    <p className="mt-1 text-[11px] font-semibold text-rose-600">{form.errors.name}</p>
-                                )}
-                            </div>
-
-                            <div>
-                                <label className="block text-xs font-semibold text-slate-900">
-                                    Organization Type <span className="text-rose-500">*</span>
-                                </label>
-                                <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                                    {(Object.keys(TYPE_CONFIG) as Array<Organization['type']>).map((typeKey) => {
-                                        const cfg = TYPE_CONFIG[typeKey];
-                                        const isSelected = form.data.type === typeKey;
-                                        const TypeIcon = cfg.icon;
-
-                                        return (
-                                            <button
-                                                key={typeKey}
-                                                type="button"
-                                                onClick={() => handleTypeSelect(typeKey)}
-                                                className={`flex items-center gap-2 rounded-xl border p-2.5 text-left transition-all ${
-                                                    isSelected
-                                                        ? 'border-slate-900 bg-slate-900 text-white shadow-xs'
-                                                        : 'border-slate-200/80 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                <TypeIcon
-                                                    className={`h-4 w-4 shrink-0 ${
-                                                        isSelected ? 'text-white' : 'text-slate-500'
-                                                    }`}
-                                                />
-                                                <span className="text-xs font-semibold truncate">{cfg.label}</span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                <p className="mt-1.5 text-[11px] text-slate-500">
-                                    {currentTypeConfig.description}
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Section 2: Access Model */}
-                        <div className="space-y-3.5 pt-2 border-t border-slate-100">
-                            <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                2. Access Model
-                            </h3>
-
-                            {form.data.type === 'hospital' ? (
-                                <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3.5">
-                                    <div className="flex items-start gap-2.5">
-                                        <HeartPulse className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs font-bold text-rose-900">
-                                                Unrestricted Destination
-                                            </p>
-                                            <p className="mt-0.5 text-[11px] text-rose-700 leading-relaxed">
-                                                Patients and visitors cannot be denied entry solely due to operating hours
-                                                or missing organization credentials. Admissions are logged at Security for
-                                                audit.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <div className="rounded-xl border border-slate-200/70 bg-slate-50/50 p-3.5">
-                                        <p className="text-xs font-semibold text-slate-800">
-                                            {currentTypeConfig.defaultAccess}
-                                        </p>
-                                    </div>
-
-                                    {/* Policy outside operating hours */}
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-900">
-                                            Outside Operating Hours Policy
-                                        </label>
-                                        <select
-                                            value={form.data.hours_enforcement}
-                                            onChange={(e) =>
-                                                form.setData('hours_enforcement', e.target.value as any)
-                                            }
-                                            className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-semibold text-slate-700 focus:border-slate-800 focus:ring-slate-800"
-                                        >
-                                            <option value="inherit">Follow estate default policy</option>
-                                            <option value="warn">Allow security discretion with warning</option>
-                                            <option value="block">Strictly block admissions</option>
-                                            <option value="off">Off (informational only)</option>
-                                        </select>
-                                        <p className="mt-1 text-[11px] text-slate-400">
-                                            Determines how security terminals handle visitor arrivals outside normal operating hours.
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Quick Entry Contextual Card */}
-                            <div className="flex items-center justify-between rounded-xl border border-slate-200/70 p-3 bg-white">
-                                <div className="pr-4">
-                                    <span className="text-xs font-bold text-slate-900 block">
-                                        ⚡ Quick Entry Tag Admission
-                                    </span>
-                                    <span className="text-[11px] text-slate-500">
-                                        Allow security guards to quickly log and admit organization visitors with physical tags.
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() =>
-                                        form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)
-                                    }
-                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                        form.data.quick_entry_enabled ? 'bg-slate-900' : 'bg-slate-200'
-                                    }`}
-                                >
-                                    <span
-                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                            form.data.quick_entry_enabled ? 'translate-x-4' : 'translate-x-0'
-                                        }`}
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700">
+                                        Organization Name <span className="text-rose-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={form.data.name}
+                                        onChange={(e) => form.setData('name', e.target.value)}
+                                        placeholder="e.g. St Matthew's High School, Grace Medical Centre"
+                                        className="mt-1.5 w-full rounded-xl border-slate-200 py-2.5 px-3.5 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
                                     />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Section 3: Operating Hours (Only if not hospital) */}
-                        {form.data.type !== 'hospital' && (
-                            <div className="space-y-3.5 pt-2 border-t border-slate-100">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                                            3. Operating Schedule
-                                        </h3>
-                                        <p className="text-[11px] text-slate-500">
-                                            Security terminal uses this schedule as operational context.
-                                        </p>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => form.setData('has_hours', !form.data.has_hours)}
-                                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                            form.data.has_hours ? 'bg-slate-900' : 'bg-slate-200'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                                form.data.has_hours ? 'translate-x-4' : 'translate-x-0'
-                                            }`}
-                                        />
-                                    </button>
+                                    {form.errors.name && (
+                                        <p className="mt-1 text-[11px] font-bold text-rose-600">{form.errors.name}</p>
+                                    )}
                                 </div>
 
-                                {form.data.has_hours ? (
-                                    <div className="space-y-3 pt-1">
-                                        {/* Hours Range */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-[11px] font-semibold text-slate-700">
-                                                    Opening Time
-                                                </label>
-                                                <input
-                                                    type="time"
-                                                    value={form.data.open_time}
-                                                    onChange={(e) => form.setData('open_time', e.target.value)}
-                                                    className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-semibold focus:border-slate-800 focus:ring-slate-800"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[11px] font-semibold text-slate-700">
-                                                    Closing Time
-                                                </label>
-                                                <input
-                                                    type="time"
-                                                    value={form.data.close_time}
-                                                    onChange={(e) => form.setData('close_time', e.target.value)}
-                                                    className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-semibold focus:border-slate-800 focus:ring-slate-800"
-                                                />
-                                            </div>
-                                        </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-700 mb-2">
+                                        Organization Type <span className="text-rose-500">*</span>
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                        {(Object.keys(TYPE_CONFIG) as Array<Organization['type']>).map((typeKey) => {
+                                            const cfg = TYPE_CONFIG[typeKey];
+                                            const isSelected = form.data.type === typeKey;
+                                            const TypeIcon = cfg.icon;
 
-                                        {/* Days of Week */}
-                                        <div>
-                                            <div className="flex items-center justify-between mb-1.5">
-                                                <label className="block text-[11px] font-semibold text-slate-700">
-                                                    Operating Days
-                                                </label>
-                                                <div className="flex items-center gap-2 text-[10px] font-semibold text-slate-400">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setDaysPreset('weekdays')}
-                                                        className="hover:text-slate-800"
-                                                    >
-                                                        Weekdays
-                                                    </button>
-                                                    <span>·</span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setDaysPreset('daily')}
-                                                        className="hover:text-slate-800"
-                                                    >
-                                                        Every Day
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex flex-wrap gap-1.5">
-                                                {DAYS.map((d) => {
-                                                    const isSelected = form.data.selected_days.includes(d.key);
-                                                    return (
-                                                        <button
-                                                            key={d.key}
-                                                            type="button"
-                                                            onClick={() => toggleDay(d.key)}
-                                                            className={`rounded-lg px-2.5 py-1 text-[11px] font-bold transition-all ${
-                                                                isSelected
-                                                                    ? 'bg-slate-900 text-white'
-                                                                    : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50'
+                                            return (
+                                                <button
+                                                    key={typeKey}
+                                                    type="button"
+                                                    onClick={() => handleTypeSelect(typeKey)}
+                                                    className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
+                                                        isSelected
+                                                            ? 'border-slate-900 bg-slate-900 text-white shadow-xs ring-1 ring-slate-900'
+                                                            : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/70'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <TypeIcon
+                                                            className={`h-4 w-4 ${
+                                                                isSelected ? 'text-white' : 'text-slate-600'
                                                             }`}
-                                                        >
-                                                            {d.label}
-                                                        </button>
-                                                    );
-                                                })}
+                                                        />
+                                                        <span className="text-xs font-bold">{cfg.label}</span>
+                                                    </div>
+                                                    <span
+                                                        className={`mt-1 text-[10px] line-clamp-2 leading-relaxed ${
+                                                            isSelected ? 'text-slate-300' : 'text-slate-500'
+                                                        }`}
+                                                    >
+                                                        {cfg.description}
+                                                    </span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Access Configuration (Adaptive) */}
+                            <div className="space-y-4 pt-4 border-t border-slate-100">
+                                <h3 className="text-xs font-black tracking-tight text-slate-900">
+                                    Gate & Visitor Access
+                                </h3>
+
+                                {form.data.type === 'hospital' ? (
+                                    <div className="rounded-xl border border-rose-200/80 bg-rose-50/50 p-4">
+                                        <div className="flex items-start gap-3">
+                                            <HeartPulse className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                                            <div>
+                                                <h4 className="text-xs font-bold text-rose-950">
+                                                    Unrestricted Destination
+                                                </h4>
+                                                <p className="mt-1 text-[11px] text-rose-800 leading-relaxed font-medium">
+                                                    Medical emergencies, patients, and healthcare visitors are admitted without requiring pre-registered organization passes or time restrictions. Security records admissions for accountability.
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
                                 ) : (
-                                    <p className="text-[11px] text-slate-400 italic">
-                                        No specific operating schedule defined (operates 24/7 or per event).
-                                    </p>
+                                    <div className="space-y-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-700">
+                                                Outside Operating Hours Policy
+                                            </label>
+                                            <select
+                                                value={form.data.hours_enforcement}
+                                                onChange={(e) =>
+                                                    form.setData('hours_enforcement', e.target.value as any)
+                                                }
+                                                className="mt-1.5 w-full rounded-xl border-slate-200 bg-white py-2 px-3 text-xs font-semibold text-slate-700 focus:border-slate-800 focus:ring-slate-800"
+                                            >
+                                                <option value="inherit">Follow estate default policy</option>
+                                                <option value="warn">Warn security guard & require confirmation</option>
+                                                <option value="block">Strictly block visitors outside schedule</option>
+                                                <option value="off">Off (informational schedule only)</option>
+                                            </select>
+                                            <p className="mt-1 text-[10px] font-medium text-slate-400">
+                                                Determines how the security gate terminal behaves if someone arrives outside open hours.
+                                            </p>
+                                        </div>
+
+                                        <div className="flex items-center justify-between rounded-xl border border-slate-200/80 p-3.5 bg-slate-50/50">
+                                            <div className="pr-4">
+                                                <span className="text-xs font-bold text-slate-900 block">
+                                                    Quick Entry Tag Admission
+                                                </span>
+                                                <span className="text-[10px] text-slate-500 font-medium">
+                                                    Allow guards to admit organization visitors with quick physical tags without a resident code.
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)
+                                                }
+                                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                    form.data.quick_entry_enabled ? 'bg-slate-900' : 'bg-slate-200'
+                                                }`}
+                                            >
+                                                <span
+                                                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                                                        form.data.quick_entry_enabled ? 'translate-x-4' : 'translate-x-0'
+                                                    }`}
+                                                />
+                                            </button>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
-                        )}
 
-                        {/* Edit Mode Only: Active Status Toggle */}
-                        {editingOrg && (
-                            <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                                <div>
-                                    <span className="text-xs font-bold text-slate-900 block">Active Status</span>
-                                    <span className="text-[11px] text-slate-500">
-                                        Inactive organizations do not appear on security quick entry terminals.
-                                    </span>
+                            {/* Section: Operating Schedule (Hidden for Hospital) */}
+                            {form.data.type !== 'hospital' && (
+                                <div className="space-y-4 pt-4 border-t border-slate-100">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-xs font-black tracking-tight text-slate-900">
+                                                Operating Schedule
+                                            </h3>
+                                            <p className="text-[10px] font-medium text-slate-400">
+                                                Provide normal hours of operation used by security at the gates.
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => form.setData('has_hours', !form.data.has_hours)}
+                                            className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                form.data.has_hours ? 'bg-slate-900' : 'bg-slate-200'
+                                            }`}
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                                                    form.data.has_hours ? 'translate-x-4' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+
+                                    {form.data.has_hours ? (
+                                        <div className="space-y-3.5">
+                                            {/* Hours Pickers */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-slate-700">
+                                                        Opening Time
+                                                    </label>
+                                                    <input
+                                                        type="time"
+                                                        value={form.data.open_time}
+                                                        onChange={(e) => form.setData('open_time', e.target.value)}
+                                                        className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-bold text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[11px] font-bold text-slate-700">
+                                                        Closing Time
+                                                    </label>
+                                                    <input
+                                                        type="time"
+                                                        value={form.data.close_time}
+                                                        onChange={(e) => form.setData('close_time', e.target.value)}
+                                                        className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-bold text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Days Selector with Quick Presets */}
+                                            <div>
+                                                <div className="flex items-center justify-between mb-1.5">
+                                                    <label className="block text-[11px] font-bold text-slate-700">
+                                                        Operating Days
+                                                    </label>
+                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDaysPreset('weekdays')}
+                                                            className="hover:text-slate-800 transition-colors"
+                                                        >
+                                                            Weekdays
+                                                        </button>
+                                                        <span>·</span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setDaysPreset('daily')}
+                                                            className="hover:text-slate-800 transition-colors"
+                                                        >
+                                                            Every Day
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {DAYS.map((d) => {
+                                                        const isSelected = form.data.selected_days.includes(d.key);
+                                                        return (
+                                                            <button
+                                                                key={d.key}
+                                                                type="button"
+                                                                onClick={() => toggleDay(d.key)}
+                                                                className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-slate-900 text-white shadow-xs'
+                                                                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                {d.label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="rounded-xl border border-dashed border-slate-200 p-3 text-center">
+                                            <p className="text-xs font-medium text-slate-400">
+                                                No schedule defined — organization operates 24/7 or per special event.
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => form.setData('is_active', !form.data.is_active)}
-                                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                        form.data.is_active ? 'bg-emerald-600' : 'bg-slate-200'
-                                    }`}
-                                >
-                                    <span
-                                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                            form.data.is_active ? 'translate-x-4' : 'translate-x-0'
+                            )}
+
+                            {/* Edit Mode Only: Active Status Toggle */}
+                            {editingOrg && (
+                                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                                    <div>
+                                        <span className="text-xs font-bold text-slate-900 block">Active Status</span>
+                                        <span className="text-[10px] font-medium text-slate-500">
+                                            Deactivated organizations are hidden from security quick entry terminals.
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => form.setData('is_active', !form.data.is_active)}
+                                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                            form.data.is_active ? 'bg-emerald-600' : 'bg-slate-200'
                                         }`}
-                                    />
-                                </button>
+                                    >
+                                        <span
+                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                                                form.data.is_active ? 'translate-x-4' : 'translate-x-0'
+                                            }`}
+                                        />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* RIGHT COLUMN: Live Access Summary / Consequence Card (5 cols) */}
+                        <div className="lg:col-span-5 bg-slate-50/75 border-t lg:border-t-0 lg:border-l border-slate-100 p-7 flex flex-col justify-between">
+                            <div className="space-y-5">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                                        Live Access Summary
+                                    </span>
+                                    <h4 className="mt-1 text-base font-black text-slate-900 truncate">
+                                        {form.data.name.trim() || 'Untitled Organization'}
+                                    </h4>
+                                    <div className="mt-1 flex items-center gap-1.5">
+                                        <span
+                                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${currentTypeConfig.badgeColor}`}
+                                        >
+                                            {currentTypeConfig.label}
+                                        </span>
+                                        <span className="text-[11px] font-medium text-slate-500">
+                                            · {form.data.type === 'hospital' ? 'Unrestricted' : 'Managed Access'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-3 pt-2">
+                                    {/* Operational Model */}
+                                    <div className="rounded-xl border border-slate-200/70 bg-white p-3.5 shadow-2xs">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                            Access Model
+                                        </span>
+                                        <p className="mt-1 text-xs font-bold text-slate-800 leading-snug">
+                                            {form.data.type === 'hospital'
+                                                ? '24/7 Unrestricted Medical Access'
+                                                : currentTypeConfig.defaultAccess}
+                                        </p>
+                                    </div>
+
+                                    {/* Hours & Schedule Summary */}
+                                    <div className="rounded-xl border border-slate-200/70 bg-white p-3.5 shadow-2xs">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                            Gate Hours & Policy
+                                        </span>
+                                        <div className="mt-1 text-xs font-bold text-slate-800">
+                                            {form.data.type === 'hospital' ? (
+                                                <span className="text-emerald-700">Open 24/7 · Emergency Exempt</span>
+                                            ) : form.data.has_hours ? (
+                                                <div>
+                                                    <p>
+                                                        {formatTime(form.data.open_time)} – {formatTime(form.data.close_time)}
+                                                    </p>
+                                                    <p className="text-[10px] font-medium text-slate-500 mt-0.5">
+                                                        {form.data.selected_days.length === 7
+                                                            ? 'Every day of the week'
+                                                            : form.data.selected_days.length === 5 &&
+                                                                !form.data.selected_days.includes('saturday') &&
+                                                                !form.data.selected_days.includes('sunday')
+                                                              ? 'Monday to Friday (Weekdays)'
+                                                              : `${form.data.selected_days.length} active operating days`}
+                                                    </p>
+                                                    <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                                                        <span className="text-slate-500">Off-hours rule:</span>
+                                                        <span className="font-bold capitalize text-slate-700">
+                                                            {form.data.hours_enforcement === 'inherit'
+                                                                ? 'Estate default'
+                                                                : form.data.hours_enforcement}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-slate-500 font-medium">No specific hours set</span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Entry Status */}
+                                    <div className="rounded-xl border border-slate-200/70 bg-white p-3.5 shadow-2xs flex items-center justify-between">
+                                        <div>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                                                Quick Entry Tag
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-800">
+                                                {form.data.quick_entry_enabled ? 'Available at Gates' : 'Disabled'}
+                                            </span>
+                                        </div>
+                                        <span
+                                            className={`h-2.5 w-2.5 rounded-full ${
+                                                form.data.quick_entry_enabled ? 'bg-emerald-500' : 'bg-slate-300'
+                                            }`}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                        )}
+
+                            <div className="mt-6 pt-4 border-t border-slate-200/70 text-[11px] font-medium text-slate-500 leading-relaxed">
+                                Security gate officers will automatically see this configuration when processing admissions for this organization.
+                            </div>
+                        </div>
                     </div>
 
                     {/* Stable Action Footer */}
-                    <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-3.5 bg-slate-50/50">
+                    <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-7 py-4 bg-white">
                         <button
                             type="button"
                             onClick={() => setIsCreateModalOpen(false)}
-                            className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                            className="rounded-xl border border-slate-200 bg-white px-4.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={form.processing}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4.5 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-98"
+                            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-98"
                         >
                             {form.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                             {editingOrg ? 'Save Changes' : 'Create Organization'}
