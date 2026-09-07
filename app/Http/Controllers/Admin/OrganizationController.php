@@ -53,6 +53,7 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
             'operating_hours' => ['nullable', 'array'],
+            'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
         ]);
@@ -62,6 +63,7 @@ class OrganizationController extends Controller
             'name' => $validated['name'],
             'type' => $validated['type'],
             'operating_hours' => $validated['operating_hours'] ?? null,
+            'hours_enforcement' => $validated['hours_enforcement'] ?? 'inherit',
             'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
             'is_active' => $validated['is_active'] ?? true,
         ]);
@@ -84,6 +86,7 @@ class OrganizationController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
             'operating_hours' => ['nullable', 'array'],
+            'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
         ]);
