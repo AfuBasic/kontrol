@@ -78,6 +78,40 @@ it('allows guard to reserve a block of quick entry tags', function () {
     ]);
 });
 
+it('guarantees reserved tags do not collide with active allocations or active visitors', function () {
+    // 1. Create an active unexpired allocation with known tags
+    $knownTags = ['AAA1', 'BBB2', 'CCC3'];
+    QuickEntryAllocation::create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->guard->id,
+        'allocated_tags' => $knownTags,
+        'allocated_count' => count($knownTags),
+        'expires_at' => now()->addHours(6),
+    ]);
+
+    // 2. Create an active visitor inside estate with a known tag
+    $activeTag = 'VIS1';
+    app(RecordQuickEntryAction::class)->execute($this->estate->id, $this->guard, [
+        'tag' => $activeTag,
+        'organization_id' => $this->organization->id,
+    ]);
+
+    // 3. Request a new batch of tags
+    $response = $this->actingAs($this->guard)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->getJson(route('security.quick-entry.reserve', ['count' => 30]));
+
+    $response->assertOk();
+    $newTags = $response->json('data.tags');
+
+    // Verify all new tags are unique among themselves
+    expect(array_unique($newTags))->toHaveCount(count($newTags));
+
+    // Verify none of the new tags intersect with active allocated or inside tags
+    $collidingTags = array_intersect($newTags, array_merge($knownTags, [$activeTag]));
+    expect($collidingTags)->toBeEmpty();
+});
+
 it('allows guard to log a quick entry admission online', function () {
     $response = $this->actingAs($this->guard)
         ->withSession(['active_context_assignment_id' => $this->assignment->id])
