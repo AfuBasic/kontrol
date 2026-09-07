@@ -10,6 +10,7 @@ import {
     destroy as inviteLinkDestroy,
 } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerInviteLinkController';
 import AdminLayout from '@/Layouts/AdminLayout';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import type { InviteLink } from '../Components/InviteLinksTab';
 import InviteLinksTab from '../Components/InviteLinksTab';
 
@@ -424,21 +425,17 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Zone
                                                 </label>
-                                                <select
-                                                    id="zone_id"
+                                                <CustomSelect
                                                     value={data.zone_id}
-                                                    onChange={(e) => setData('zone_id', e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setData('zone_id', String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
                                                 {errors.zone_id && <p className="mt-1 text-xs text-red-600">{errors.zone_id}</p>}
                                             </motion.div>
                                         )}
@@ -597,21 +594,17 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Zone
                                                 </label>
-                                                <select
-                                                    id="bulk_zone_id"
+                                                <CustomSelect
                                                     value={selectedZone}
-                                                    onChange={(e) => setSelectedZone(e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setSelectedZone(String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
                                             </motion.div>
                                         )}
                                     </div>
@@ -765,21 +758,17 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Zone
                                                 </label>
-                                                <select
-                                                    id="paste_zone_id"
+                                                <CustomSelect
                                                     value={selectedZone}
-                                                    onChange={(e) => setSelectedZone(e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setSelectedZone(String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
                                             </motion.div>
                                         )}
                                     </div>
