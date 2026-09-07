@@ -4,6 +4,7 @@ namespace App\Actions\Security;
 
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
+use App\Models\EstateSettings;
 use App\Models\QuickEntryAllocation;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
@@ -51,6 +52,16 @@ class RecordQuickEntryAction
                 ]);
             }
 
+            $settings = EstateSettings::forEstate($estateId);
+            $enforcement = $organization->resolvedEnforcement($settings);
+            $withinHours = $organization->isWithinOperatingHours($timestamp);
+
+            if (! $withinHours && $enforcement === 'block') {
+                throw ValidationException::withMessages([
+                    'organization_id' => ['Quick Entry is not permitted outside operating hours for this organization.'],
+                ]);
+            }
+
             // If an allocation ID was provided, mark tag used on allocation if present
             if (! empty($data['allocation_id'])) {
                 $allocation = QuickEntryAllocation::where('estate_id', $estateId)
@@ -84,6 +95,7 @@ class RecordQuickEntryAction
                     'visitor_name' => $displayName,
                     'allocation_id' => $data['allocation_id'] ?? null,
                     'entry_point' => $entryPoint,
+                    'outside_hours' => ! $withinHours,
                 ],
             ]);
 
