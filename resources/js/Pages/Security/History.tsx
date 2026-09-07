@@ -33,6 +33,9 @@ type Log = {
     checked_out_at?: string | null;
     checked_out_at_human?: string | null;
     checkout_verifier_name?: string | null;
+    tag?: string | null;
+    is_quick_entry?: boolean;
+    outside_hours?: boolean;
     vehicle: {
         make: string;
         model: string;
@@ -86,6 +89,9 @@ export default function History({
     const paramTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
     const initialTab = paramTab === 'active' && checkoutEnabled ? 'active' : 'history';
     const [activeTab, setActiveTab] = useState<'active' | 'history'>(initialTab);
+    const [historyFilterTab, setHistoryFilterTab] = useState<'all' | 'visitor_pass' | 'quick_entry'>(
+        filters.tab === 'quick_entry' || filters.tab === 'visitor_pass' ? filters.tab : 'all',
+    );
 
     const [search, setSearch] = useState(filters.search || '');
     const [date, setDate] = useState(filters.date || '');
@@ -106,6 +112,24 @@ export default function History({
         }
     };
 
+    const handleSubTabChange = (subTab: 'all' | 'visitor_pass' | 'quick_entry') => {
+        setHistoryFilterTab(subTab);
+        router.get(
+            HistoryController.index.url(),
+            {
+                search: debouncedSearch,
+                date,
+                vehicle_plate: debouncedPlate,
+                host_id: hostId,
+                tab: subTab !== 'all' ? subTab : undefined,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
+    };
+
     useEffect(() => {
         if (debouncedSearch !== filters.search || debouncedPlate !== filters.vehicle_plate || date !== filters.date || hostId !== filters.host_id) {
             router.get(
@@ -115,7 +139,7 @@ export default function History({
                     date,
                     vehicle_plate: debouncedPlate,
                     host_id: hostId,
-                    tab: activeTab,
+                    tab: historyFilterTab !== 'all' ? historyFilterTab : activeTab,
                 },
                 {
                     preserveState: true,
@@ -130,6 +154,7 @@ export default function History({
         setDate('');
         setPlate('');
         setHostId('');
+        setHistoryFilterTab('all');
         router.get(HistoryController.index.url());
     };
 
@@ -189,6 +214,45 @@ export default function History({
                     </div>
                 )}
 
+                {/* History Sub-Filter: All | Visitor Passes | Quick Entry */}
+                {activeTab === 'history' && (
+                    <div className="mb-4 flex items-center gap-1.5 px-2">
+                        <button
+                            type="button"
+                            onClick={() => handleSubTabChange('all')}
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                historyFilterTab === 'all'
+                                    ? 'bg-slate-900 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            All Entries
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleSubTabChange('visitor_pass')}
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                historyFilterTab === 'visitor_pass'
+                                    ? 'bg-slate-900 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            Visitor Passes
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleSubTabChange('quick_entry')}
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                historyFilterTab === 'quick_entry'
+                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                            }`}
+                        >
+                            ⚡ Quick Entry
+                        </button>
+                    </div>
+                )}
+
                 {/* Search & Filters Toggle */}
                 <div className="mb-6 flex gap-3 px-2">
                     <div className="flex-1">
@@ -236,7 +300,21 @@ export default function History({
                                                 {log.host.address && <p className="text-xs font-semibold text-slate-400">{log.host.address}</p>}
                                             </div>
                                         </div>
-                                        <span className="rounded-full bg-slate-100 px-3 py-1 font-mono text-xs font-bold text-slate-600">#{log.code}</span>
+                                        <div className="flex flex-col items-end gap-1.5">
+                                            <span className="rounded-full bg-slate-100 px-3 py-1 font-mono text-xs font-bold text-slate-600">
+                                                {log.is_quick_entry ? `Tag #${log.code}` : `#${log.code}`}
+                                            </span>
+                                            {log.is_quick_entry && (
+                                                <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-black text-indigo-700 uppercase tracking-wider">
+                                                    Quick Entry
+                                                </span>
+                                            )}
+                                            {log.outside_hours && (
+                                                <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-black text-amber-700 uppercase tracking-wider">
+                                                    Outside Hours
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="mt-6 grid grid-cols-2 gap-3">
