@@ -52,7 +52,7 @@ export function MobileSelect({ label, icon: Icon, error, options, value, onChang
                 )}
                 <CustomSelect
                     value={value ?? ''}
-                    onChange={(val) => {
+                    onChange={(val: string | number) => {
                         onChange?.({ target: { value: String(val) } });
                     }}
                     options={options}
