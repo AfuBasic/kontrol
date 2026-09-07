@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { MapPin, Loader2, ShieldAlert, Building2 } from 'lucide-react';
 import type { FormEventHandler } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { index, update } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 
 type OptionRole = { id: number; name: string; estate_id: number };
@@ -216,18 +217,17 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                                 Target Zone <span className="text-red-500">*</span>
                                             </label>
                                             {zones.length > 0 ? (
-                                                <select
-                                                    value={data.zone_id}
-                                                    onChange={(e) => setData('zone_id', e.target.value)}
-                                                    className="mt-1 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
-                                                >
-                                                    <option value="">Select a zone...</option>
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <div className="mt-1">
+                                                    <CustomSelect
+                                                        value={data.zone_id}
+                                                        onChange={(val) => setData('zone_id', String(val))}
+                                                        placeholder="Select a zone..."
+                                                        options={zones.map((zone) => ({
+                                                            value: String(zone.id),
+                                                            label: zone.name,
+                                                        }))}
+                                                    />
+                                                </div>
                                             ) : (
                                                 <div className="mt-1 rounded-xl border border-amber-200 bg-amber-50 p-3">
                                                     <p className="text-xs text-amber-800">
