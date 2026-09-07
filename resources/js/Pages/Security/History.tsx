@@ -248,7 +248,7 @@ export default function History({
                                     : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
                             }`}
                         >
-                            <Zap className="h-3.5 w-3.5 fill-current text-amber-300" />
+                            <Zap className="h-3.5 w-3.5" />
                             <span>Quick Entry</span>
                         </button>
                     </div>
