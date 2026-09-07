@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import Modal from '@/Components/Modal';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { destroy, index, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import { useDebounce } from '@/Hooks/useDebounce';
 
@@ -409,20 +410,22 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <select
+                            <div className="flex items-center gap-2 min-w-[150px]">
+                                <CustomSelect
                                     value={selectedType}
-                                    onChange={(e) => handleTypeFilterChange(e.target.value)}
-                                    className="rounded-xl border-slate-200 bg-white py-2 pr-8 pl-3 text-xs font-semibold text-slate-700 focus:border-slate-800 focus:ring-slate-800"
-                                >
-                                    <option value="all">All Types</option>
-                                    <option value="school">School</option>
-                                    <option value="church">Church</option>
-                                    <option value="hospital">Hospital</option>
-                                    <option value="business">Business</option>
-                                    <option value="facility">Facility</option>
-                                    <option value="other">Other</option>
-                                </select>
+                                    onChange={(val) => handleTypeFilterChange(String(val))}
+                                    options={[
+                                        { value: 'all', label: 'All Types' },
+                                        { value: 'school', label: 'School' },
+                                        { value: 'church', label: 'Church' },
+                                        { value: 'hospital', label: 'Hospital' },
+                                        { value: 'business', label: 'Business' },
+                                        { value: 'facility', label: 'Facility' },
+                                        { value: 'other', label: 'Other' },
+                                    ]}
+                                    size="sm"
+                                    buttonClassName="h-10 text-xs font-semibold"
+                                />
                             </div>
                         </div>
 
@@ -594,7 +597,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 </h3>
 
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                                         Organization name <span className="text-rose-500">*</span>
                                     </label>
                                     <input
@@ -603,15 +606,15 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         value={form.data.name}
                                         onChange={(e) => form.setData('name', e.target.value)}
                                         placeholder="e.g. St Matthew's High School"
-                                        className="w-full rounded-lg border-slate-200 py-2 px-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal shadow-2xs transition-all focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
                                     />
                                     {form.errors.name && (
-                                        <p className="mt-1 text-xs text-rose-600">{form.errors.name}</p>
+                                        <p className="mt-1.5 text-xs font-medium text-rose-600">{form.errors.name}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-medium text-slate-700 mb-2">
+                                    <label className="block text-xs font-semibold text-slate-700 mb-2">
                                         Organization type <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="grid grid-cols-2 gap-2">
@@ -658,21 +661,20 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 ) : (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                                                Outside normal hours
-                                            </label>
-                                            <select
+                                            <CustomSelect
+                                                label="Outside normal hours"
                                                 value={form.data.hours_enforcement}
-                                                onChange={(e) =>
-                                                    form.setData('hours_enforcement', e.target.value as any)
+                                                onChange={(val) =>
+                                                    form.setData('hours_enforcement', val as any)
                                                 }
-                                                className="w-full rounded-lg border-slate-200 bg-white py-2 px-3 text-xs text-slate-700 focus:border-slate-800 focus:ring-slate-800"
-                                            >
-                                                <option value="inherit">Follow estate default policy</option>
-                                                <option value="warn">Warn security guard & require confirmation</option>
-                                                <option value="block">Strictly block visitors outside schedule</option>
-                                                <option value="off">Off (informational schedule only)</option>
-                                            </select>
+                                                options={[
+                                                    { value: 'inherit', label: 'Follow estate default policy' },
+                                                    { value: 'warn', label: 'Warn security guard & require confirmation' },
+                                                    { value: 'block', label: 'Strictly block visitors outside schedule' },
+                                                    { value: 'off', label: 'Off (informational schedule only)' },
+                                                ]}
+                                                size="sm"
+                                            />
                                         </div>
 
                                         <div className="flex items-center justify-between py-1">
@@ -787,25 +789,25 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             {/* Hours Pickers */}
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                                                         Opening time
                                                     </label>
                                                     <input
                                                         type="time"
                                                         value={form.data.open_time}
                                                         onChange={(e) => form.setData('open_time', e.target.value)}
-                                                        className="w-full rounded-lg border-slate-200 py-1.5 px-3 text-xs font-medium text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs transition-all focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
                                                         Closing time
                                                     </label>
                                                     <input
                                                         type="time"
                                                         value={form.data.close_time}
                                                         onChange={(e) => form.setData('close_time', e.target.value)}
-                                                        className="w-full rounded-lg border-slate-200 py-1.5 px-3 text-xs font-medium text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs transition-all focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
                                                     />
                                                 </div>
                                             </div>
