@@ -39,7 +39,7 @@ class VerifyController extends Controller
 
         $organizations = $estate->organizations()
             ->quickEntryEnabled()
-            ->select(['id', 'name', 'type', 'operating_hours'])
+            ->select(['id', 'name', 'type', 'operating_hours', 'hours_enforcement'])
             ->orderBy('name')
             ->get();
 
@@ -48,7 +48,8 @@ class VerifyController extends Controller
             'gateName' => $gateName,
             'accessCodesEnabled' => (bool) $settings->access_codes_enabled,
             'visitorCheckoutEnabled' => (bool) $settings->visitor_checkout_enabled,
-            'quickEntryEnabled' => (bool) ($settings->quick_entry_enabled ?? true),
+            'quickEntryEnabled' => (bool) $settings->quick_entry_enabled,
+            'quickEntryHoursEnforcement' => (string) ($settings->quick_entry_hours_enforcement ?: 'warn'),
             'requireVehicleInformation' => (bool) $settings->require_vehicle_information,
             'organizations' => $organizations,
         ]);
