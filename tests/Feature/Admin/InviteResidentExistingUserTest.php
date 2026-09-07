@@ -157,7 +157,7 @@ it('sends informational role update email to existing users when invited as resi
 });
 
 it('sends standard invitation email to new users without accounts when invited as resident', function () {
-    $newUser = User::factory()->create([
+    $newUser = User::factory()->unverified()->create([
         'name' => 'New User',
         'email' => 'new.user@example.com',
         'password' => null,
