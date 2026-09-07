@@ -10,7 +10,6 @@ import {
     Loader2,
     RefreshCw,
     ShieldAlert,
-    Sparkles,
     User,
     X,
     Zap,
@@ -120,8 +119,8 @@ function evaluateOrgHours(
 
 export default function QuickEntryPanel({
     organizations,
-    estateName,
-    gateName,
+    estateName: _estateName,
+    gateName: _gateName,
     isOnline,
     requireVehicleInformation = false,
     estateHoursEnforcement = 'warn',
@@ -281,7 +280,7 @@ export default function QuickEntryPanel({
                         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                         isOffline: false,
                     });
-                } catch (netErr) {
+                } catch (_netErr) {
                     // Fallback to offline queue
                     await queueOfflineEntry(entryPayload, tagItem.tag, chosenOrg?.name || 'Organization');
                 }
