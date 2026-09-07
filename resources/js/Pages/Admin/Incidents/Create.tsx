@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 import { useActiveContext } from '@/Hooks/useActiveContext';
 
@@ -283,20 +284,16 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     <label htmlFor="category" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                         Category
                                     </label>
-                                    <select
-                                        id="category"
+                                    <CustomSelect
                                         value={data.category}
-                                        onChange={(e) => setData('category', e.target.value)}
-                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
-                                        required
-                                    >
-                                        <option value="">Select Category</option>
-                                        {categories.map((cat) => (
-                                            <option key={cat.value} value={cat.value}>
-                                                {cat.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(val) => setData('category', String(val))}
+                                        placeholder="Select Category"
+                                        options={categories.map((cat) => ({
+                                            value: cat.value,
+                                            label: cat.label,
+                                        }))}
+                                        buttonClassName="py-3 px-4 text-xs font-bold"
+                                    />
                                     {errors.category && <span className="mt-1 block text-xs font-medium text-red-600">{errors.category}</span>}
                                 </div>
 
@@ -305,18 +302,17 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                         Priority
                                     </label>
-                                    <select
-                                        id="priority"
+                                    <CustomSelect
                                         value={data.priority}
-                                        onChange={(e) => setData('priority', e.target.value)}
-                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
-                                        required
-                                    >
-                                        <option value="low">Low</option>
-                                        <option value="medium">Medium</option>
-                                        <option value="high">High</option>
-                                        <option value="critical">Critical</option>
-                                    </select>
+                                        onChange={(val) => setData('priority', String(val))}
+                                        options={[
+                                            { value: 'low', label: 'Low' },
+                                            { value: 'medium', label: 'Medium' },
+                                            { value: 'high', label: 'High' },
+                                            { value: 'critical', label: 'Critical' },
+                                        ]}
+                                        buttonClassName="py-3 px-4 text-xs font-bold"
+                                    />
                                     {errors.priority && <span className="mt-1 block text-xs font-medium text-red-600">{errors.priority}</span>}
                                 </div>
                             </div>
@@ -350,19 +346,19 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                     >
                                         Assign To (Optional)
                                     </label>
-                                    <select
-                                        id="assigned_to"
+                                    <CustomSelect
                                         value={data.assigned_to}
-                                        onChange={(e) => setData('assigned_to', e.target.value)}
-                                        className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
-                                    >
-                                        <option value="">Unassigned</option>
-                                        {admins.map((adm) => (
-                                            <option key={adm.id} value={adm.id}>
-                                                {adm.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(val) => setData('assigned_to', String(val))}
+                                        placeholder="Unassigned"
+                                        options={[
+                                            { value: '', label: 'Unassigned' },
+                                            ...admins.map((adm) => ({
+                                                value: String(adm.id),
+                                                label: adm.name,
+                                            })),
+                                        ]}
+                                        buttonClassName="py-3 px-4 text-xs font-bold"
+                                    />
                                     {errors.assigned_to && <span className="mt-1 block text-xs font-medium text-red-600">{errors.assigned_to}</span>}
                                 </div>
 
@@ -380,19 +376,19 @@ export default function AdminIncidentCreate({ categories, admins, zones = [] }: 
                                                 {zoneName ?? zones[0]?.name ?? 'Your zone'}
                                             </div>
                                         ) : (
-                                            <select
-                                                id="zone_id"
+                                            <CustomSelect
                                                 value={data.zone_id}
-                                                onChange={(e) => setData('zone_id', e.target.value)}
-                                                className="focus:border-slate-850 focus:ring-slate-850 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-700 transition-all focus:ring-1 focus:outline-hidden"
-                                            >
-                                                <option value="">Entire estate</option>
-                                                {zones.map((zone) => (
-                                                    <option key={zone.id} value={zone.id}>
-                                                        {zone.name}
-                                                    </option>
-                                                ))}
-                                            </select>
+                                                onChange={(val) => setData('zone_id', String(val))}
+                                                placeholder="Entire estate"
+                                                options={[
+                                                    { value: '', label: 'Entire estate' },
+                                                    ...zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    })),
+                                                ]}
+                                                buttonClassName="py-3 px-4 text-xs font-bold"
+                                            />
                                         )}
                                         {errors.zone_id && <span className="mt-1 block text-xs font-medium text-red-600">{errors.zone_id}</span>}
                                         <p className="mt-1.5 text-[10px] font-semibold text-slate-400">
