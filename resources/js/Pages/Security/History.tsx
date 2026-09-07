@@ -1,6 +1,6 @@
 import { Head, router, InfiniteScroll } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, UserPlus, Loader2, MapPin, Phone } from 'lucide-react';
+import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, UserPlus, Loader2, MapPin, Phone, Zap } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import { MobileInput, MobileSelect } from '@/Components/MobileInputs';
@@ -242,13 +242,14 @@ export default function History({
                         <button
                             type="button"
                             onClick={() => handleSubTabChange('quick_entry')}
-                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
                                 historyFilterTab === 'quick_entry'
                                     ? 'bg-indigo-600 text-white shadow-xs'
                                     : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
                             }`}
                         >
-                            ⚡ Quick Entry
+                            <Zap className="h-3.5 w-3.5 fill-current text-amber-300" />
+                            <span>Quick Entry</span>
                         </button>
                     </div>
                 )}
