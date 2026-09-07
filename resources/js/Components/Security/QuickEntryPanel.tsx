@@ -1,0 +1,480 @@
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Building2,
+    Car,
+    CheckCircle2,
+    Clock,
+    Flame,
+    Loader2,
+    RefreshCw,
+    ShieldAlert,
+    Sparkles,
+    User,
+    Zap,
+} from 'lucide-react';
+import { QuickEntryStore, type ReservedTag } from '@/Resilience/OfflineStorage/QuickEntryStore';
+import { SyncEngine } from '@/Resilience/SyncEngine';
+
+interface Organization {
+    id: number;
+    name: string;
+    type: string;
+    operating_hours?: string | null;
+}
+
+interface QuickEntryPanelProps {
+    organizations: Organization[];
+    estateName: string;
+    gateName: string;
+    isOnline: boolean;
+    requireVehicleInformation?: boolean;
+}
+
+export default function QuickEntryPanel({
+    organizations,
+    estateName,
+    gateName,
+    isOnline,
+    requireVehicleInformation = false,
+}: QuickEntryPanelProps) {
+    const [selectedOrgId, setSelectedOrgId] = useState<number | null>(
+        organizations.length > 0 ? organizations[0].id : null,
+    );
+    const [visitorName, setVisitorName] = useState('');
+    const [hasVehicle, setHasVehicle] = useState(false);
+    const [plateNumber, setPlateNumber] = useState('');
+    const [vehicleMake, setVehicleMake] = useState('');
+    const [vehicleModel, setVehicleModel] = useState('');
+    const [rushMode, setRushMode] = useState(false);
+
+    const [poolCount, setPoolCount] = useState<number>(0);
+    const [reserving, setReserving] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+
+    // Latest issued tag modal/banner state
+    const [lastIssued, setLastIssued] = useState<{
+        tag: string;
+        orgName: string;
+        timestamp: string;
+        isOffline: boolean;
+    } | null>(null);
+
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // Update remaining pool count
+    const updatePoolCount = async () => {
+        const count = await QuickEntryStore.countRemainingTags();
+        setPoolCount(count);
+    };
+
+    useEffect(() => {
+        void updatePoolCount();
+    }, []);
+
+    // Reserve more tags from server
+    const reserveMoreTags = async () => {
+        if (!isOnline) {
+            setErrorMessage('Cannot reserve tags while offline. Please connect to internet.');
+            return;
+        }
+
+        setReserving(true);
+        setErrorMessage(null);
+        try {
+            const res = await axios.get('/security/quick-entry/reserve', {
+                params: { count: 50 },
+            });
+            if (res.data?.success && res.data.data?.tags) {
+                const allocationId = res.data.data.allocation_id;
+                const newItems: ReservedTag[] = res.data.data.tags.map((t: string) => ({
+                    tag: t,
+                    allocation_id: allocationId,
+                    created_at: new Date().toISOString(),
+                }));
+                await QuickEntryStore.addTags(newItems);
+                await updatePoolCount();
+            }
+        } catch (err: any) {
+            console.error('Failed to reserve tags:', err);
+            setErrorMessage(err.response?.data?.message || 'Failed to reserve tags from gate server.');
+        } finally {
+            setReserving(false);
+        }
+    };
+
+    // Auto-reserve if pool is low and online
+    useEffect(() => {
+        if (isOnline && poolCount < 10 && !reserving) {
+            void reserveMoreTags();
+        }
+    }, [poolCount, isOnline]);
+
+    const handleAssignEntry = async () => {
+        if (!selectedOrgId) {
+            setErrorMessage('Please select a destination organization.');
+            return;
+        }
+
+        if (requireVehicleInformation && hasVehicle && !plateNumber.trim()) {
+            setErrorMessage('Vehicle license plate is required by estate policy.');
+            return;
+        }
+
+        setSubmitting(true);
+        setErrorMessage(null);
+
+        try {
+            // Pick tag from local pre-allocated pool
+            let tagItem = await QuickEntryStore.getNextTag();
+
+            if (!tagItem && isOnline) {
+                // Try immediate reservation
+                const res = await axios.get('/security/quick-entry/reserve', {
+                    params: { count: 20 },
+                });
+                if (res.data?.success && res.data.data?.tags?.length > 0) {
+                    const allocationId = res.data.data.allocation_id;
+                    const items: ReservedTag[] = res.data.data.tags.map((t: string) => ({
+                        tag: t,
+                        allocation_id: allocationId,
+                        created_at: new Date().toISOString(),
+                    }));
+                    await QuickEntryStore.addTags(items);
+                    tagItem = await QuickEntryStore.getNextTag();
+                }
+            }
+
+            if (!tagItem) {
+                setErrorMessage('No quick entry tags available in gate pool! Please fetch tags or connect to network.');
+                setSubmitting(false);
+                return;
+            }
+
+            const chosenOrg = organizations.find((o) => o.id === selectedOrgId);
+            const nowIso = new Date().toISOString();
+
+            const entryPayload = {
+                tag: tagItem.tag,
+                organization_id: selectedOrgId,
+                visitor_name: visitorName.trim() || null,
+                vehicle_plate_number: hasVehicle && plateNumber.trim() ? plateNumber.trim().toUpperCase() : null,
+                vehicle_make: hasVehicle && vehicleMake.trim() ? vehicleMake.trim() : null,
+                vehicle_model: hasVehicle && vehicleModel.trim() ? vehicleModel.trim() : null,
+                allocation_id: tagItem.allocation_id,
+            };
+
+            if (isOnline) {
+                try {
+                    await axios.post('/security/quick-entry/log', entryPayload);
+                    setLastIssued({
+                        tag: tagItem.tag,
+                        orgName: chosenOrg?.name || 'Organization',
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        isOffline: false,
+                    });
+                } catch (netErr) {
+                    // Fallback to offline queue
+                    await queueOfflineEntry(entryPayload, tagItem.tag, chosenOrg?.name || 'Organization');
+                }
+            } else {
+                await queueOfflineEntry(entryPayload, tagItem.tag, chosenOrg?.name || 'Organization');
+            }
+
+            await updatePoolCount();
+
+            // Clear inputs unless rush mode
+            if (!rushMode) {
+                setVisitorName('');
+                setHasVehicle(false);
+                setPlateNumber('');
+                setVehicleMake('');
+                setVehicleModel('');
+            }
+        } catch (err: any) {
+            console.error('Quick Entry error:', err);
+            setErrorMessage(err.message || 'Error assigning Quick Entry pass.');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const queueOfflineEntry = async (entryPayload: any, tag: string, orgName: string) => {
+        const offlineRecord = {
+            ...entryPayload,
+            verified_at: new Date().toISOString(),
+        };
+
+        await QuickEntryStore.queueOfflineLog(offlineRecord);
+        await SyncEngine.enqueue({
+            type: 'quick_entry_log',
+            endpoint: '/security/quick-entry/sync',
+            method: 'POST',
+            payload: { logs: [offlineRecord] },
+            retryPolicyKey: 'quick_entry_log',
+        });
+
+        setLastIssued({
+            tag,
+            orgName,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            isOffline: true,
+        });
+    };
+
+    return (
+        <div className="flex w-full flex-col items-center">
+            {/* Rush Mode and Pool Status Banner */}
+            <div className="mb-4 flex w-full items-center justify-between gap-2">
+                <button
+                    type="button"
+                    onClick={() => setRushMode(!rushMode)}
+                    className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black transition-all active:scale-95 ${
+                        rushMode
+                            ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 ring-2 ring-amber-400'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
+                    }`}
+                >
+                    <Flame className={`h-3.5 w-3.5 ${rushMode ? 'fill-current text-slate-950' : 'text-amber-500'}`} />
+                    <span>{rushMode ? 'Rush Mode ON' : 'Rush Mode'}</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                    <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        Pool: <span className={poolCount <= 5 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>{poolCount} tags</span>
+                    </span>
+                    {isOnline && (
+                        <button
+                            type="button"
+                            onClick={reserveMoreTags}
+                            disabled={reserving}
+                            title="Reserve more gate tags"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 shadow-xs hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900"
+                        >
+                            <RefreshCw className={`h-3 w-3 ${reserving ? 'animate-spin text-indigo-600' : ''}`} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Success Card Modal / Banner when tag is issued */}
+            <AnimatePresence>
+                {lastIssued && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="mb-5 w-full rounded-2xl border-2 border-emerald-500/30 bg-emerald-50/90 p-4 shadow-lg backdrop-blur-sm dark:border-emerald-500/20 dark:bg-emerald-950/40"
+                    >
+                        <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-xs">
+                                    <CheckCircle2 className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-black tracking-wide text-emerald-900 uppercase dark:text-emerald-300">
+                                            Admitted Successfully
+                                        </span>
+                                        {lastIssued.isOffline && (
+                                            <span className="rounded-md bg-amber-200 px-1.5 py-0.5 text-[9px] font-black text-amber-900">
+                                                Offline Queued
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs font-semibold text-emerald-800/80 dark:text-emerald-400">
+                                        {lastIssued.orgName} · {lastIssued.timestamp}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setLastIssued(null)}
+                                className="rounded-lg p-1 text-emerald-700 hover:bg-emerald-100 dark:text-emerald-300"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="mt-3 flex flex-col items-center justify-center rounded-xl bg-white p-3 text-center shadow-xs dark:bg-slate-900">
+                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                Quick Entry Tag
+                            </span>
+                            <span className="mt-0.5 font-mono text-3xl font-black tracking-wider text-slate-900 dark:text-white">
+                                {lastIssued.tag}
+                            </span>
+                            <span className="mt-1 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                                Give or announce this 4-character tag to the visitor
+                            </span>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Error Banner */}
+            {errorMessage && (
+                <div className="mb-4 flex w-full items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">
+                    <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600" />
+                    <span>{errorMessage}</span>
+                </div>
+            )}
+
+            {/* Organization Selector */}
+            <div className="w-full">
+                <div className="mb-2 flex items-center justify-between">
+                    <label className="text-xs font-extrabold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                        1. Select Destination Organization
+                    </label>
+                    <span className="text-[10px] font-bold text-slate-400">
+                        {organizations.length} {organizations.length === 1 ? 'organization' : 'organizations'}
+                    </span>
+                </div>
+
+                {organizations.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-xs font-semibold text-slate-400">
+                        No organizations enabled for Quick Entry in this estate. Contact Estate Admin to add school, church, or clinic.
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                        {organizations.map((org) => {
+                            const isSelected = selectedOrgId === org.id;
+                            return (
+                                <button
+                                    key={org.id}
+                                    type="button"
+                                    onClick={() => setSelectedOrgId(org.id)}
+                                    className={`relative flex flex-col items-start rounded-2xl p-3.5 text-left transition-all active:scale-95 ${
+                                        isSelected
+                                            ? 'border-2 border-indigo-600 bg-indigo-50/70 shadow-md shadow-indigo-600/10 dark:border-indigo-500 dark:bg-indigo-950/40'
+                                            : 'border border-slate-200/80 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900'
+                                    }`}
+                                >
+                                    <div className="flex w-full items-center justify-between">
+                                        <div
+                                            className={`flex h-7 w-7 items-center justify-center rounded-xl ${
+                                                isSelected
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                                            }`}
+                                        >
+                                            <Building2 className="h-4 w-4" />
+                                        </div>
+                                        {isSelected && (
+                                            <span className="flex h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+                                        )}
+                                    </div>
+                                    <span className="mt-2 text-xs font-black text-slate-900 line-clamp-1 dark:text-white">
+                                        {org.name}
+                                    </span>
+                                    <span className="text-[10px] font-semibold text-slate-400 capitalize">
+                                        {org.type.replace('_', ' ')}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Details Section (Collapsed in Rush Mode) */}
+            {!rushMode && (
+                <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-4 w-full space-y-3"
+                >
+                    <div>
+                        <label className="mb-1.5 block text-xs font-extrabold tracking-wider text-slate-500 uppercase dark:text-slate-400">
+                            2. Visitor Name <span className="text-[10px] font-normal text-slate-400">(Optional)</span>
+                        </label>
+                        <div className="relative">
+                            <User className="absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                value={visitorName}
+                                onChange={(e) => setVisitorName(e.target.value)}
+                                placeholder="e.g. Parent, Patient, Guest"
+                                className="w-full rounded-2xl border border-slate-200 bg-white py-3 pr-4 pl-10 text-sm font-semibold text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Vehicle Toggle */}
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Car className="h-4 w-4 text-slate-500" />
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                    Arrived with Vehicle?
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setHasVehicle(!hasVehicle)}
+                                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                    hasVehicle ? 'bg-indigo-600' : 'bg-slate-200 dark:bg-slate-700'
+                                }`}
+                            >
+                                <span
+                                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                        hasVehicle ? 'translate-x-5' : 'translate-x-0'
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        {hasVehicle && (
+                            <div className="mt-3 grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <div className="col-span-2 sm:col-span-1">
+                                    <input
+                                        type="text"
+                                        value={plateNumber}
+                                        onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
+                                        placeholder="License Plate *"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-xs font-black tracking-wider text-slate-900 placeholder:text-slate-400 uppercase focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                    />
+                                </div>
+                                <div className="col-span-2 sm:col-span-1">
+                                    <input
+                                        type="text"
+                                        value={vehicleMake}
+                                        onChange={(e) => setVehicleMake(e.target.value)}
+                                        placeholder="Vehicle Make (Toyota...)"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Quick Admit Button */}
+            <div className="mt-6 w-full">
+                <button
+                    type="button"
+                    onClick={handleAssignEntry}
+                    disabled={submitting || organizations.length === 0}
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-4.5 text-base font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-95 disabled:opacity-50"
+                >
+                    {submitting ? (
+                        <>
+                            <Loader2 className="h-5 w-5 animate-spin text-white" />
+                            <span>Assigning Tag...</span>
+                        </>
+                    ) : (
+                        <>
+                            <Zap className="h-5 w-5 fill-current text-amber-300" />
+                            <span>Quick Admit & Assign Tag</span>
+                        </>
+                    )}
+                </button>
+                <p className="mt-2 text-center text-[11px] font-semibold text-slate-400">
+                    One tap assigns next available tag and logs entry
+                </p>
+            </div>
+        </div>
+    );
+}

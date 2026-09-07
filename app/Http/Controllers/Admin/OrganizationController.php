@@ -1,0 +1,111 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\EstateOrganization;
+use App\Services\EstateContextService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class OrganizationController extends Controller
+{
+    /**
+     * Display a listing of estate organizations.
+     */
+    public function index(Request $request): Response
+    {
+        $estate = app(EstateContextService::class)->getEstate();
+
+        $search = $request->input('search');
+        $type = $request->input('type');
+
+        $organizations = EstateOrganization::where('estate_id', $estate->id)
+            ->when($search, function ($query, $search) {
+                $query->where('name', 'like', "%{$search}%");
+            })
+            ->when($type && $type !== 'all', function ($query) use ($type) {
+                $query->where('type', $type);
+            })
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return Inertia::render('Admin/Organizations/Index', [
+            'organizations' => $organizations,
+            'filters' => [
+                'search' => $search,
+                'type' => $type ?? 'all',
+            ],
+        ]);
+    }
+
+    /**
+     * Store a newly created organization.
+     */
+    public function store(Request $request): RedirectResponse
+    {
+        $estate = app(EstateContextService::class)->getEstate();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
+            'operating_hours' => ['nullable', 'array'],
+            'quick_entry_enabled' => ['boolean'],
+            'is_active' => ['boolean'],
+        ]);
+
+        EstateOrganization::create([
+            'estate_id' => $estate->id,
+            'name' => $validated['name'],
+            'type' => $validated['type'],
+            'operating_hours' => $validated['operating_hours'] ?? null,
+            'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
+            'is_active' => $validated['is_active'] ?? true,
+        ]);
+
+        return back()->with('success', 'Organization created successfully.');
+    }
+
+    /**
+     * Update the specified organization.
+     */
+    public function update(Request $request, EstateOrganization $organization): RedirectResponse
+    {
+        $estate = app(EstateContextService::class)->getEstate();
+
+        if ($organization->estate_id !== $estate->id) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
+            'operating_hours' => ['nullable', 'array'],
+            'quick_entry_enabled' => ['boolean'],
+            'is_active' => ['boolean'],
+        ]);
+
+        $organization->update($validated);
+
+        return back()->with('success', 'Organization updated successfully.');
+    }
+
+    /**
+     * Remove the specified organization.
+     */
+    public function destroy(EstateOrganization $organization): RedirectResponse
+    {
+        $estate = app(EstateContextService::class)->getEstate();
+
+        if ($organization->estate_id !== $estate->id) {
+            abort(403);
+        }
+
+        $organization->delete();
+
+        return back()->with('success', 'Organization deleted successfully.');
+    }
+}

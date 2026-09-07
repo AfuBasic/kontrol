@@ -128,7 +128,10 @@ it('passes zones to the security create page', function () {
 });
 
 it('lists an existing user in security index after being invited as security', function () {
-    $existing = User::factory()->create(['email' => 'existing_security@example.com']);
+    $existing = User::factory()->unverified()->create([
+        'email' => 'existing_security@example.com',
+        'password' => null,
+    ]);
 
     $this->actingAs($this->admin)
         ->withSession(['active_context_assignment_id' => $this->adminAssignment->id])

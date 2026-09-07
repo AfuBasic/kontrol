@@ -115,6 +115,14 @@ class Estate extends Model
         return $this->hasMany(Zone::class);
     }
 
+    /**
+     * @return HasMany<EstateOrganization, $this>
+     */
+    public function organizations(): HasMany
+    {
+        return $this->hasMany(EstateOrganization::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

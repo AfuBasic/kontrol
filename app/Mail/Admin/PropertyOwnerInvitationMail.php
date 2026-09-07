@@ -26,7 +26,7 @@ class PropertyOwnerInvitationMail extends Mailable implements ShouldQueue
         public bool $isResend = false,
         ?bool $isExistingUser = null,
     ) {
-        $this->isExistingUser = $isExistingUser ?? (! is_null($this->user->password));
+        $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser($this->estate);
 
         if ($this->isExistingUser) {
             $this->invitationUrl = route('login');

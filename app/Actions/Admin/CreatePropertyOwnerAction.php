@@ -45,20 +45,27 @@ class CreatePropertyOwnerAction
                 : null;
             $scopeType = $zone ? AssignmentScope::Zone : AssignmentScope::Estate;
 
+            $isEstablished = $user->isEstablishedUser($estate);
+            $initialStatus = $isEstablished ? 'accepted' : 'pending';
+
             if (! $membership) {
                 $estate->users()->attach($user->id, [
-                    'status' => 'pending',
+                    'status' => $initialStatus,
                     'relationship_type' => 'property_owner',
                     'zone_id' => $zone?->id,
                     'created_via' => 'admin_invite',
+                    'accepted_at' => $isEstablished ? now() : null,
                 ]);
             } else {
+                $statusToSet = ($membership->status === 'accepted' || $isEstablished) ? 'accepted' : $membership->status;
                 DB::table('estate_users_membership')
                     ->where('id', $membership->id)
                     ->update([
+                        'status' => $statusToSet,
                         'relationship_type' => 'property_owner',
                         'zone_id' => $zone?->id,
                         'created_via' => 'admin_invite',
+                        'accepted_at' => $statusToSet === 'accepted' ? ($membership->accepted_at ?? now()) : null,
                     ]);
             }
 

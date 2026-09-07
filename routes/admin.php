@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\IncidentStatusController;
 use App\Http\Controllers\Admin\InviteLinkController;
 use App\Http\Controllers\Admin\InvoiceController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\OrganizationController;
 use App\Http\Controllers\Admin\PaymentCallbackController;
 use App\Http\Controllers\Admin\PaymentHistoryController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -71,6 +72,14 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
         Route::post('/', [ZoneController::class, 'store'])->name('store');
         Route::put('/{zone}', [ZoneController::class, 'update'])->name('update');
         Route::delete('/{zone}', [ZoneController::class, 'destroy'])->name('destroy');
+    });
+
+    // Organization Management (Quick Entry destinations: schools, churches, hospitals, etc.)
+    Route::prefix('organizations')->name('organizations.')->group(function (): void {
+        Route::get('/', [OrganizationController::class, 'index'])->name('index');
+        Route::post('/', [OrganizationController::class, 'store'])->name('store');
+        Route::put('/{organization}', [OrganizationController::class, 'update'])->name('update');
+        Route::delete('/{organization}', [OrganizationController::class, 'destroy'])->name('destroy');
     });
 
     // Estate Board

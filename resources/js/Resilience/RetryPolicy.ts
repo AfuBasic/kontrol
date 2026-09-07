@@ -26,6 +26,15 @@ export const RETRY_POLICIES = {
         autoRetry: true,
         ttlMs: 7 * 24 * 60 * 60_000,
     },
+    quick_entry_log: {
+        key: 'quick_entry_log',
+        strategy: 'exponential',
+        maxRetries: null,
+        initialDelayMs: 3_000,
+        maxDelayMs: 5 * 60_000,
+        autoRetry: true,
+        ttlMs: 7 * 24 * 60 * 60_000,
+    },
     visitor_pass: {
         key: 'visitor_pass',
         strategy: 'exponential',

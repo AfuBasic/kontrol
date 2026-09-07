@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, FileSpreadsheet, Link as LinkIcon, Mail, Upload, User, X } from 'lucide-react';
+import { CheckCircle, FileSpreadsheet, Link as LinkIcon, Loader2, Mail, Upload, User, X } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import {
     store as inviteLinkStore,
@@ -58,6 +58,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
     const [isProcessing, setIsProcessing] = useState(false);
     const [bulkError, setBulkError] = useState<string | null>(null);
     const [selectedZone, setSelectedZone] = useState<string>('');
+    const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
 
     const { auth } = usePage<any>().props;
 
@@ -173,6 +174,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
     const handleBulkSubmit = useCallback(() => {
         if (extractedEmails.length === 0) return;
 
+        setIsBulkSubmitting(true);
         router.post(
             bulkInvite.url(),
             {
@@ -187,6 +189,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                     setFileName(null);
                     setSelectedZone('');
                 },
+                onFinish: () => setIsBulkSubmitting(false),
             },
         );
     }, [extractedEmails, selectedZone, activeTab]);
@@ -491,8 +494,9 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                                    className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
+                                    {processing && <Loader2 className="h-4 w-4 animate-spin" />}
                                     {processing ? 'Sending Invitation...' : 'Send Invitation'}
                                 </button>
                             </div>
@@ -662,11 +666,13 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 <button
                                     type="button"
                                     onClick={handleBulkSubmit}
-                                    disabled={extractedEmails.length === 0}
-                                    className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={extractedEmails.length === 0 || isBulkSubmitting}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
-                                    {extractedEmails.length !== 1 ? 's' : ''}
+                                    {isBulkSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    {isBulkSubmitting
+                                        ? 'Sending Invitations...'
+                                        : `Send ${extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation${extractedEmails.length !== 1 ? 's' : ''}`}
                                 </button>
                             </div>
                         </motion.div>
@@ -828,11 +834,13 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                 <button
                                     type="button"
                                     onClick={handleBulkSubmit}
-                                    disabled={extractedEmails.length === 0}
-                                    className="rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                    disabled={extractedEmails.length === 0 || isBulkSubmitting}
+                                    className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    Send {extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation
-                                    {extractedEmails.length !== 1 ? 's' : ''}
+                                    {isBulkSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                                    {isBulkSubmitting
+                                        ? 'Sending Invitations...'
+                                        : `Send ${extractedEmails.length > 0 ? `${extractedEmails.length} ` : ''}Invitation${extractedEmails.length !== 1 ? 's' : ''}`}
                                 </button>
                             </div>
                         </motion.div>

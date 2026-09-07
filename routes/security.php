@@ -10,6 +10,7 @@ use App\Http\Controllers\Security\IncidentCommentController;
 use App\Http\Controllers\Security\IncidentController;
 use App\Http\Controllers\Security\NotificationController;
 use App\Http\Controllers\Security\ProfileController;
+use App\Http\Controllers\Security\QuickEntryController;
 use App\Http\Controllers\Security\VerifyController;
 use App\Http\Middleware\EnsureCheckpointSelected;
 use Illuminate\Support\Facades\Route;
@@ -43,6 +44,15 @@ Route::middleware('role:security')->group(function (): void {
         Route::post('/verify/decision', [VerifyController::class, 'decision'])->name('security.verify.decision');
         Route::get('/verify/sync', [VerifyController::class, 'syncData'])->name('security.verify.sync');
         Route::post('/verify/sync', [VerifyController::class, 'syncLogs'])->name('security.verify.sync-logs');
+
+        // Quick Entry (Gate Tool)
+        Route::prefix('quick-entry')->name('security.quick-entry.')->group(function (): void {
+            Route::get('/reserve', [QuickEntryController::class, 'reserve'])->name('reserve');
+            Route::post('/log', [QuickEntryController::class, 'store'])->name('store');
+            Route::post('/sync', [QuickEntryController::class, 'sync'])->name('sync');
+            Route::get('/lookup', [QuickEntryController::class, 'lookup'])->name('lookup');
+            Route::post('/checkout', [QuickEntryController::class, 'checkout'])->name('checkout');
+        });
 
         // Access History
         Route::get('/history', [HistoryController::class, 'index'])->name('security.history');
