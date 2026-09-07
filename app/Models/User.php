@@ -247,6 +247,36 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Determine if user already has established access to Kontrol
+     * (either password set, verified email, or active membership in an estate).
+     */
+    public function isEstablishedUser(?Estate $estate = null): bool
+    {
+        if (! is_null($this->password)) {
+            return true;
+        }
+
+        if ($this->hasVerifiedEmail()) {
+            return true;
+        }
+
+        if (! is_null($this->google_id)) {
+            return true;
+        }
+
+        if ($estate) {
+            return $this->estates()
+                ->where('estates.id', $estate->id)
+                ->wherePivot('status', 'accepted')
+                ->exists();
+        }
+
+        return $this->estates()
+            ->wherePivot('status', 'accepted')
+            ->exists();
+    }
+
+    /**
      * @return HasMany<AdministrativeAssignment, $this>
      */
     public function administrativeAssignments(): HasMany
