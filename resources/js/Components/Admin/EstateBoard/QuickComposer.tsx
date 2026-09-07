@@ -22,6 +22,7 @@ import {
 import { marked } from 'marked';
 import { create, store } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { useActiveContext } from '@/Hooks/useActiveContext';
 import { useEstateBoardAutoDraft } from '@/Hooks/useEstateBoardAutoDraft';
 import EstateBoardAiAssistant from '@/Components/Admin/EstateBoardAiAssistant';
@@ -307,33 +308,29 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                     {/* Selectors / Quick Toggles */}
                     <div className="flex flex-wrap items-center gap-1.5">
                         {/* Category Dropdown */}
-                        <div className="relative">
-                            <select
+                        <div className="w-36">
+                            <CustomSelect
+                                size="sm"
                                 value={data.category}
-                                onChange={(e) => setData('category', e.target.value as PostCategory)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                            >
-                                {CATEGORIES.map((cat) => (
-                                    <option key={cat.value} value={cat.value}>
-                                        {cat.label}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setData('category', val as PostCategory)}
+                                options={CATEGORIES.map((cat) => ({
+                                    value: cat.value,
+                                    label: cat.label,
+                                }))}
+                            />
                         </div>
 
                         {/* Audience Dropdown */}
-                        <div className="relative">
-                            <select
+                        <div className="w-36">
+                            <CustomSelect
+                                size="sm"
                                 value={data.audience}
-                                onChange={(e) => setData('audience', e.target.value as PostAudience)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                            >
-                                {AUDIENCES.map((aud) => (
-                                    <option key={aud.value} value={aud.value}>
-                                        {aud.label}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setData('audience', val as PostAudience)}
+                                options={AUDIENCES.map((aud) => ({
+                                    value: aud.value,
+                                    label: aud.label,
+                                }))}
+                            />
                         </div>
 
                         {/* Zone Targeting */}
@@ -342,22 +339,22 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                                 <span>Zone: {zoneName}</span>
                             </span>
                         ) : zones.length > 0 ? (
-                            <div className="relative">
-                                <select
+                            <div className="w-36">
+                                <CustomSelect
+                                    size="sm"
                                     value={data.zone_ids[0] || ''}
-                                    onChange={(e) => {
-                                        const val = e.target.value ? [parseInt(e.target.value, 10)] : [];
-                                        setData('zone_ids', val);
+                                    onChange={(val) => {
+                                        const res = val ? [parseInt(String(val), 10)] : [];
+                                        setData('zone_ids', res);
                                     }}
-                                    className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1.5 pr-6 text-xs font-bold text-slate-700 transition hover:bg-slate-100 focus:border-primary-500 focus:outline-hidden"
-                                >
-                                    <option value="">All Zones</option>
-                                    {zones.map((z) => (
-                                        <option key={z.id} value={z.id}>
-                                            Zone: {z.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    options={[
+                                        { value: '', label: 'All Zones' },
+                                        ...zones.map((z) => ({
+                                            value: z.id,
+                                            label: `Zone: ${z.name}`,
+                                        })),
+                                    ]}
+                                />
                             </div>
                         ) : null}
 
