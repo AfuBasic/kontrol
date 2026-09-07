@@ -510,7 +510,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             </div>
 
             {/* Create / Edit Modal */}
-            <Modal show={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} maxWidth="lg">
+            <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} maxWidth="lg">
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                         <div>
@@ -708,7 +708,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             </Modal>
 
             {/* Delete Confirmation Modal */}
-            <Modal show={Boolean(deletingOrg)} onClose={() => setDeletingOrg(null)} maxWidth="sm">
+            <Modal isOpen={Boolean(deletingOrg)} onClose={() => setDeletingOrg(null)} maxWidth="sm">
                 <div className="p-6 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-rose-600">
                         <AlertCircle className="h-6 w-6" />
