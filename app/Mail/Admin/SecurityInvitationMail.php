@@ -31,7 +31,8 @@ class SecurityInvitationMail extends Mailable implements ShouldQueue
         if ($this->user instanceof Invitation) {
             $token = $this->user->token;
             $this->userName = $this->user->email;
-            $this->isExistingUser = $isExistingUser ?? (User::where('email', strtolower(trim($this->user->email)))->whereNotNull('password')->exists());
+            $targetUser = User::where('email', strtolower(trim($this->user->email)))->first();
+            $this->isExistingUser = $isExistingUser ?? ($targetUser?->isEstablishedUser($this->estate) ?? false);
         } else {
             $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
                 ->where('email', strtolower(trim($this->user->email)))
@@ -41,7 +42,7 @@ class SecurityInvitationMail extends Mailable implements ShouldQueue
 
             $token = $invitation?->token ?? ($this->user->token ?? $this->user->id);
             $this->userName = $this->user->name;
-            $this->isExistingUser = $isExistingUser ?? (! is_null($this->user->password));
+            $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser($this->estate);
         }
 
         $this->invitationUrl = $this->isExistingUser
