@@ -41,6 +41,20 @@ interface QuickEntryPanelProps {
     estateHoursEnforcement?: 'off' | 'warn' | 'block';
 }
 
+/** Convert 24-hour time 'HH:mm' to friendly 12-hour format 'h:mm AM/PM' */
+function formatTime12h(timeStr?: string | null): string {
+    if (!timeStr) return '';
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    const h = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10);
+    if (isNaN(h)) return timeStr;
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h % 12 || 12;
+    const minStr = String(isNaN(m) ? 0 : m).padStart(2, '0');
+    return `${hour12}:${minStr} ${period}`;
+}
+
 function evaluateOrgHours(
     org: Organization,
     estateDefault: 'off' | 'warn' | 'block' = 'warn',
@@ -91,7 +105,7 @@ function evaluateOrgHours(
             return {
                 withinHours: within,
                 enforcement,
-                message: within ? undefined : `Operating hours today: ${dayConfig.open} – ${dayConfig.close}`,
+                message: within ? undefined : `Operating hours today: ${formatTime12h(dayConfig.open)} – ${formatTime12h(dayConfig.close)}`,
             };
         }
     }
@@ -112,7 +126,7 @@ function evaluateOrgHours(
         return {
             withinHours: within,
             enforcement,
-            message: within ? undefined : `Operating hours: ${hours.open} – ${hours.close}`,
+            message: within ? undefined : `Operating hours: ${formatTime12h(hours.open)} – ${formatTime12h(hours.close)}`,
         };
     }
 
@@ -483,8 +497,19 @@ export default function QuickEntryPanel({
                                         <span className="mt-1 flex items-center gap-1 text-[9px] font-bold text-slate-400">
                                             <Clock className="h-2.5 w-2.5" />
                                             {typeof org.operating_hours === 'object' && org.operating_hours?.open
-                                                ? `${org.operating_hours.open}–${org.operating_hours.close}`
-                                                : 'Hours set'}
+                                                ? `${formatTime12h(org.operating_hours.open)} – ${formatTime12h(org.operating_hours.close)}`
+                                                : typeof org.operating_hours === 'string'
+                                                  ? (() => {
+                                                        try {
+                                                            const parsed = JSON.parse(org.operating_hours);
+                                                            return parsed?.open
+                                                                ? `${formatTime12h(parsed.open)} – ${formatTime12h(parsed.close)}`
+                                                                : 'Hours set';
+                                                        } catch {
+                                                            return 'Hours set';
+                                                        }
+                                                    })()
+                                                  : 'Hours set'}
                                         </span>
                                     )}
                                 </button>
