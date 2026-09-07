@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Search, SlidersHorizontal, X } from 'lucide-react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { hasActiveVisitorFilters, type VisitorFilters } from './types';
 
 type Props = {
@@ -118,31 +119,29 @@ export default function ActivityFiltersBar({
                         </FilterField>
 
                         <FilterField label="Host">
-                            <select
+                            <CustomSelect
+                                size="sm"
                                 value={filters.host_id || ''}
-                                onChange={(e) => onFilterChange({ host_id: e.target.value || undefined })}
-                                className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-800 focus:border-primary-500 focus:outline-hidden"
-                            >
-                                <option value="">All hosts</option>
-                                {hosts.map((host) => (
-                                    <option key={host.id} value={host.id}>
-                                        {host.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => onFilterChange({ host_id: val || undefined })}
+                                options={[
+                                    { value: '', label: 'All hosts' },
+                                    ...hosts.map((host) => ({ value: host.id, label: host.name })),
+                                ]}
+                            />
                         </FilterField>
 
                         {checkoutEnabled && (
                             <FilterField label="Stay status">
-                                <select
+                                <CustomSelect
+                                    size="sm"
                                     value={filters.status || ''}
-                                    onChange={(e) => onFilterChange({ status: e.target.value || undefined })}
-                                    className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-800 focus:border-primary-500 focus:outline-hidden"
-                                >
-                                    <option value="">All</option>
-                                    <option value="inside">Still on property</option>
-                                    <option value="checked_out">Checked out</option>
-                                </select>
+                                    onChange={(val) => onFilterChange({ status: String(val) || undefined })}
+                                    options={[
+                                        { value: '', label: 'All' },
+                                        { value: 'inside', label: 'Still on property' },
+                                        { value: 'checked_out', label: 'Checked out' },
+                                    ]}
+                                />
                             </FilterField>
                         )}
 
