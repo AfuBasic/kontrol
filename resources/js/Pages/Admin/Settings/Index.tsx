@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowUp, Check, ChevronRight, CreditCard, Key, Pencil, Plus, Save, ShieldAlert, Trash2, X } from 'lucide-react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { update } from '@/actions/App/Http/Controllers/Admin/SettingsController';
 
 type SettingsProps = {
@@ -837,18 +838,17 @@ export default function Settings({ settings }: SettingsProps) {
                                                     Default Operating Hours Enforcement
                                                 </label>
                                                 <div className="mt-2 max-w-sm">
-                                                    <select
-                                                        id="hours_enforcement"
+                                                    <CustomSelect
                                                         value={data.quick_entry_hours_enforcement}
-                                                        onChange={(e) =>
-                                                            setData('quick_entry_hours_enforcement', e.target.value as any)
+                                                        onChange={(val) =>
+                                                            setData('quick_entry_hours_enforcement', val as any)
                                                         }
-                                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                                    >
-                                                        <option value="warn">Warn (Recommended) — Security confirms to admit</option>
-                                                        <option value="block">Block — Hard disallow outside operating hours</option>
-                                                        <option value="off">Off — Hours are informational only</option>
-                                                    </select>
+                                                        options={[
+                                                            { value: 'warn', label: 'Warn (Recommended)', description: 'Security confirms to admit' },
+                                                            { value: 'block', label: 'Block', description: 'Hard disallow entry outside operating hours' },
+                                                            { value: 'off', label: 'Off', description: 'Hours are informational only' },
+                                                        ]}
+                                                    />
                                                 </div>
                                                 <p className="mt-1.5 text-xs text-slate-400">
                                                     Individual organizations can override this setting (e.g. 24/7 hospitals set to Off).
@@ -887,25 +887,23 @@ export default function Settings({ settings }: SettingsProps) {
                                 onChange={(categories) => setData('incident_categories', categories)}
                             />
 
-                            {/* Default Incident Severity Select */}
-                            <div>
+                            <div className="max-w-xs">
                                 <label
                                     htmlFor="default_severity"
-                                    className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
+                                    className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400 mb-2"
                                 >
                                     Default Incident Severity
                                 </label>
-                                <select
-                                    id="default_severity"
+                                <CustomSelect
                                     value={data.default_incident_severity}
-                                    onChange={(e) => setData('default_incident_severity', e.target.value)}
-                                    className="mt-2 block w-full max-w-xs rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                >
-                                    <option value="Low">Low (Informational / Minor)</option>
-                                    <option value="Medium">Medium (Requires Review)</option>
-                                    <option value="High">High (Urgent Response Needed)</option>
-                                    <option value="Critical">Critical (Immediate Security Dispatch)</option>
-                                </select>
+                                    onChange={(val) => setData('default_incident_severity', String(val))}
+                                    options={[
+                                        { value: 'Low', label: 'Low (Informational / Minor)' },
+                                        { value: 'Medium', label: 'Medium (Requires Review)' },
+                                        { value: 'High', label: 'High (Urgent Response Needed)' },
+                                        { value: 'Critical', label: 'Critical (Immediate Security Dispatch)' },
+                                    ]}
+                                />
                             </div>
 
                             {/* Incident Evidence & Reporting Toggles */}
@@ -1078,21 +1076,20 @@ export default function Settings({ settings }: SettingsProps) {
                                     <div>
                                         <label
                                             htmlFor="reminder_freq"
-                                            className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
+                                            className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400 mb-2"
                                         >
                                             Reminder Frequency
                                         </label>
-                                        <select
-                                            id="reminder_freq"
+                                        <CustomSelect
                                             value={data.collection_reminder_frequency}
-                                            onChange={(e) => setData('collection_reminder_frequency', e.target.value)}
-                                            className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                                        >
-                                            <option value="daily">Daily</option>
-                                            <option value="3_days">Every 3 Days</option>
-                                            <option value="weekly">Weekly</option>
-                                            <option value="custom">Custom Interval</option>
-                                        </select>
+                                            onChange={(val) => setData('collection_reminder_frequency', String(val))}
+                                            options={[
+                                                { value: 'daily', label: 'Daily' },
+                                                { value: '3_days', label: 'Every 3 Days' },
+                                                { value: 'weekly', label: 'Weekly' },
+                                                { value: 'custom', label: 'Custom Interval' },
+                                            ]}
+                                        />
                                     </div>
 
                                     <div>
