@@ -2,6 +2,7 @@ import { Head, Link, useForm, router, usePage } from '@inertiajs/react';
 import { ArrowLeft, Copy, Share2, Clock, X, Loader2, CheckCircle2, Bell, BellRing, BellOff } from 'lucide-react';
 import { useRef, useState, useEffect } from 'react';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import PassCard from '@/Components/Resident/PassCard';
 import VisitReminderModal from '@/Components/Resident/VisitReminderModal';
 import ResidentLayout from '@/Layouts/ResidentLayout';
@@ -372,27 +373,24 @@ export default function CodeShow({
                             <form onSubmit={handleExtendPass} className="mt-4 space-y-4" noValidate>
                                 <div>
                                     <label className="mb-1.5 block text-xs font-semibold text-slate-700">Select Extension Duration</label>
-                                    <select
+                                    <CustomSelect
                                         value={selectedDuration}
-                                        onChange={(e) => setSelectedDuration(Number(e.target.value))}
+                                        onChange={(val) => setSelectedDuration(Number(val))}
                                         disabled={processing}
-                                        className="mt-1 block w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-semibold text-slate-900 shadow-xs focus:border-primary-500 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:outline-none disabled:opacity-50"
-                                    >
-                                        {durationOptions.length > 0 ? (
-                                            durationOptions.map((opt) => (
-                                                <option key={opt.minutes} value={opt.minutes}>
-                                                    +{opt.label}
-                                                </option>
-                                            ))
-                                        ) : (
-                                            <>
-                                                <option value={60}>+1 hour</option>
-                                                <option value={120}>+2 hours</option>
-                                                <option value={240}>+4 hours</option>
-                                                <option value={1440}>+1 day</option>
-                                            </>
-                                        )}
-                                    </select>
+                                        options={
+                                            durationOptions.length > 0
+                                                ? durationOptions.map((opt) => ({
+                                                      value: opt.minutes,
+                                                      label: `+${opt.label}`,
+                                                  }))
+                                                : [
+                                                      { value: 60, label: '+1 hour' },
+                                                      { value: 120, label: '+2 hours' },
+                                                      { value: 240, label: '+4 hours' },
+                                                      { value: 1440, label: '+1 day' },
+                                                  ]
+                                        }
+                                    />
                                 </div>
 
                                 <div className="flex gap-2.5 pt-2">
