@@ -659,7 +659,7 @@ export default function SecurityVerify() {
                                         : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                                 }`}
                             >
-                                <Zap className="h-3.5 w-3.5 fill-current text-amber-300" />
+                                <Zap className="h-3.5 w-3.5" />
                                 <span>Quick Entry</span>
                             </button>
 
