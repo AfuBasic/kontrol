@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2, X } from 'lucide-react';
 import React, { useRef, useState } from 'react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 
@@ -348,8 +348,9 @@ export default function Create({ categories }: Props) {
                                             type="button"
                                             onClick={handleRemoveAttachment}
                                             className="absolute top-2 right-2 rounded-full bg-slate-900/80 p-1.5 text-white transition hover:bg-slate-950"
+                                            aria-label="Remove attachment"
                                         >
-                                            ✕
+                                            <X className="h-3.5 w-3.5" />
                                         </button>
                                     </div>
                                 )}
