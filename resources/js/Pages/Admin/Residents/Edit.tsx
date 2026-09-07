@@ -2,6 +2,7 @@ import { Head, Link, useForm, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { index, update, destroy } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Resident = {
@@ -174,44 +175,40 @@ export default function EditResident({ resident, propertyOwners = [], zones = []
 
                     {/* Property Owner Delegation */}
                     <div>
-                        <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700 mb-1.5">
                             Property Owner <span className="font-normal text-gray-400">(optional delegation)</span>
                         </label>
-                        <select
-                            id="property_owner_id"
+                        <CustomSelect
                             value={data.property_owner_id}
-                            onChange={(e) => setData('property_owner_id', e.target.value)}
-                            className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none"
-                        >
-                            <option value="">None / Standard Resident</option>
-                            {propertyOwners.map((owner) => (
-                                <option key={owner.id} value={owner.id}>
-                                    {owner.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(val) => setData('property_owner_id', String(val))}
+                            options={[
+                                { value: '', label: 'None / Standard Resident' },
+                                ...propertyOwners.map((owner) => ({
+                                    value: String(owner.id),
+                                    label: owner.name,
+                                })),
+                            ]}
+                        />
                         {errors.property_owner_id && <p className="mt-1 text-sm text-red-600">{errors.property_owner_id}</p>}
                     </div>
 
                     {zones.length > 0 && (
                         <div>
-                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700">
+                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700 mb-0.5">
                                 Zone
                             </label>
-                            <p className="mt-0.5 text-xs text-gray-500">Assign this resident to a zone, or leave them estate-wide.</p>
-                            <select
-                                id="zone_id"
+                            <p className="mb-2 text-xs text-gray-500">Assign this resident to a zone, or leave them estate-wide.</p>
+                            <CustomSelect
                                 value={data.zone_id}
-                                onChange={(e) => setData('zone_id', e.target.value)}
-                                className="mt-1 block w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm transition-all focus:border-primary-500 focus:ring-2 focus:ring-primary-50 focus:outline-none"
-                            >
-                                <option value="">Entire Estate</option>
-                                {zones.map((zone) => (
-                                    <option key={zone.id} value={zone.id}>
-                                        {zone.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setData('zone_id', String(val))}
+                                options={[
+                                    { value: '', label: 'Entire Estate' },
+                                    ...zones.map((zone) => ({
+                                        value: String(zone.id),
+                                        label: zone.name,
+                                    })),
+                                ]}
+                            />
                             {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
                         </div>
                     )}
