@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OrganizationType;
 use App\Http\Controllers\Controller;
 use App\Models\EstateOrganization;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,7 +53,7 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
+            'type' => ['required', Rule::enum(OrganizationType::class)],
             'operating_hours' => ['nullable', 'array'],
             'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
@@ -84,7 +86,7 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
+            'type' => ['required', Rule::enum(OrganizationType::class)],
             'operating_hours' => ['nullable', 'array'],
             'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
