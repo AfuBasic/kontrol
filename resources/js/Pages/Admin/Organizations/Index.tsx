@@ -572,59 +572,49 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} maxWidth="4xl">
                 <form onSubmit={handleSubmit} className="flex flex-col">
                     {/* Header */}
-                    <div className="flex items-start justify-between border-b border-slate-100 px-7 py-5">
-                        <div>
-                            <h2 className="text-lg font-black tracking-tight text-slate-900">
-                                {editingOrg ? 'Edit Organization' : 'Add Organization'}
-                            </h2>
-                            <p className="mt-0.5 text-xs font-semibold text-slate-500">
-                                {editingOrg
-                                    ? 'Update details, access policy, and operating schedules.'
-                                    : 'Set up a school, church, medical centre or facility operating within the estate.'}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={() => setIsCreateModalOpen(false)}
-                            aria-label="Close dialog"
-                            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
+                    <div className="border-b border-slate-100 px-7 py-5 pr-14">
+                        <h2 className="text-lg font-bold text-slate-900">
+                            {editingOrg ? 'Edit Organization' : 'Add Organization'}
+                        </h2>
+                        <p className="mt-0.5 text-xs text-slate-500">
+                            {editingOrg
+                                ? 'Update details, access policy, and operating schedules.'
+                                : 'Set up a school, church, medical centre or facility operating within the estate.'}
+                        </p>
                     </div>
 
                     {/* Two-Column Workspace Body */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[480px]">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px]">
                         {/* LEFT COLUMN: User Decisions (7 cols) */}
-                        <div className="lg:col-span-7 p-7 space-y-6 overflow-y-auto max-h-[72vh]">
-                            {/* Section: Organization Details */}
+                        <div className="lg:col-span-7 p-7 space-y-7 overflow-y-auto max-h-[72vh]">
+                            {/* Section 1: Organization */}
                             <div className="space-y-4">
-                                <h3 className="text-xs font-black tracking-tight text-slate-900">
-                                    Organization Details
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Organization
                                 </h3>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700">
-                                        Organization Name <span className="text-rose-500">*</span>
+                                    <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                                        Organization name <span className="text-rose-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         required
                                         value={form.data.name}
                                         onChange={(e) => form.setData('name', e.target.value)}
-                                        placeholder="e.g. St Matthew's High School, Grace Medical Centre"
-                                        className="mt-1.5 w-full rounded-xl border-slate-200 py-2.5 px-3.5 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                        placeholder="e.g. St Matthew's High School"
+                                        className="w-full rounded-lg border-slate-200 py-2 px-3 text-xs text-slate-800 placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
                                     />
                                     {form.errors.name && (
-                                        <p className="mt-1 text-[11px] font-bold text-rose-600">{form.errors.name}</p>
+                                        <p className="mt-1 text-xs text-rose-600">{form.errors.name}</p>
                                     )}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 mb-2">
-                                        Organization Type <span className="text-rose-500">*</span>
+                                    <label className="block text-xs font-medium text-slate-700 mb-2">
+                                        Organization type <span className="text-rose-500">*</span>
                                     </label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    <div className="grid grid-cols-2 gap-2">
                                         {(Object.keys(TYPE_CONFIG) as Array<Organization['type']>).map((typeKey) => {
                                             const cfg = TYPE_CONFIG[typeKey];
                                             const isSelected = form.data.type === typeKey;
@@ -635,27 +625,18 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     key={typeKey}
                                                     type="button"
                                                     onClick={() => handleTypeSelect(typeKey)}
-                                                    className={`flex flex-col items-start p-3 rounded-xl border text-left transition-all ${
+                                                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-colors ${
                                                         isSelected
-                                                            ? 'border-slate-900 bg-slate-900 text-white shadow-xs ring-1 ring-slate-900'
-                                                            : 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 hover:bg-slate-50/70'
+                                                            ? 'border-slate-900 bg-slate-900 text-white'
+                                                            : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                                                     }`}
                                                 >
-                                                    <div className="flex items-center gap-2">
-                                                        <TypeIcon
-                                                            className={`h-4 w-4 ${
-                                                                isSelected ? 'text-white' : 'text-slate-600'
-                                                            }`}
-                                                        />
-                                                        <span className="text-xs font-bold">{cfg.label}</span>
-                                                    </div>
-                                                    <span
-                                                        className={`mt-1 text-[10px] line-clamp-2 leading-relaxed ${
-                                                            isSelected ? 'text-slate-300' : 'text-slate-500'
+                                                    <TypeIcon
+                                                        className={`h-4 w-4 shrink-0 ${
+                                                            isSelected ? 'text-white' : 'text-slate-500'
                                                         }`}
-                                                    >
-                                                        {cfg.description}
-                                                    </span>
+                                                    />
+                                                    <span className="text-xs font-medium truncate">{cfg.label}</span>
                                                 </button>
                                             );
                                         })}
@@ -663,60 +644,50 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 </div>
                             </div>
 
-                            {/* Section: Access Configuration (Adaptive) */}
-                            <div className="space-y-4 pt-4 border-t border-slate-100">
-                                <h3 className="text-xs font-black tracking-tight text-slate-900">
-                                    Gate & Visitor Access
+                            {/* Section 2: Access */}
+                            <div className="space-y-4 pt-5 border-t border-slate-100">
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Access
                                 </h3>
 
                                 {form.data.type === 'hospital' ? (
-                                    <div className="rounded-xl border border-rose-200/80 bg-rose-50/50 p-4">
-                                        <div className="flex items-start gap-3">
-                                            <HeartPulse className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
-                                            <div>
-                                                <h4 className="text-xs font-bold text-rose-950">
-                                                    Unrestricted Destination
-                                                </h4>
-                                                <p className="mt-1 text-[11px] text-rose-800 leading-relaxed font-medium">
-                                                    Medical emergencies, patients, and healthcare visitors are admitted without requiring pre-registered organization passes or time restrictions. Security records admissions for accountability.
-                                                </p>
-                                            </div>
-                                        </div>
+                                    <div className="rounded-lg bg-slate-50 p-3.5 text-xs text-slate-600 leading-relaxed">
+                                        <span className="font-semibold text-slate-900 block mb-0.5">Unrestricted destination</span>
+                                        Emergency and healthcare visitors are admitted 24/7 without credentials. Security logs arrivals for record keeping.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
                                         <div>
-                                            <label className="block text-xs font-bold text-slate-700">
-                                                Outside Operating Hours Policy
+                                            <label className="block text-xs font-medium text-slate-700 mb-1.5">
+                                                Outside normal hours
                                             </label>
                                             <select
                                                 value={form.data.hours_enforcement}
                                                 onChange={(e) =>
                                                     form.setData('hours_enforcement', e.target.value as any)
                                                 }
-                                                className="mt-1.5 w-full rounded-xl border-slate-200 bg-white py-2 px-3 text-xs font-semibold text-slate-700 focus:border-slate-800 focus:ring-slate-800"
+                                                className="w-full rounded-lg border-slate-200 bg-white py-2 px-3 text-xs text-slate-700 focus:border-slate-800 focus:ring-slate-800"
                                             >
                                                 <option value="inherit">Follow estate default policy</option>
                                                 <option value="warn">Warn security guard & require confirmation</option>
                                                 <option value="block">Strictly block visitors outside schedule</option>
                                                 <option value="off">Off (informational schedule only)</option>
                                             </select>
-                                            <p className="mt-1 text-[10px] font-medium text-slate-400">
-                                                Determines how the security gate terminal behaves if someone arrives outside open hours.
-                                            </p>
                                         </div>
 
-                                        <div className="flex items-center justify-between rounded-xl border border-slate-200/80 p-3.5 bg-slate-50/50">
-                                            <div className="pr-4">
-                                                <span className="text-xs font-bold text-slate-900 block">
-                                                    Quick Entry Tag Admission
+                                        <div className="flex items-center justify-between py-1">
+                                            <div>
+                                                <span className="text-xs font-medium text-slate-900 block">
+                                                    Quick Entry
                                                 </span>
-                                                <span className="text-[10px] text-slate-500 font-medium">
-                                                    Allow guards to admit organization visitors with quick physical tags without a resident code.
+                                                <span className="text-xs text-slate-500">
+                                                    Allow guards to admit visitors with quick physical tags without a resident code
                                                 </span>
                                             </div>
                                             <button
                                                 type="button"
+                                                role="switch"
+                                                aria-checked={form.data.quick_entry_enabled}
                                                 onClick={() =>
                                                     form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)
                                                 }
@@ -735,21 +706,23 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 )}
                             </div>
 
-                            {/* Section: Operating Schedule (Hidden for Hospital) */}
+                            {/* Section 3: Operating hours (Hidden for Hospital) */}
                             {form.data.type !== 'hospital' && (
-                                <div className="space-y-4 pt-4 border-t border-slate-100">
+                                <div className="space-y-4 pt-5 border-t border-slate-100">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <h3 className="text-xs font-black tracking-tight text-slate-900">
-                                                Operating Schedule
+                                            <h3 className="text-sm font-semibold text-slate-900">
+                                                Operating hours
                                             </h3>
-                                            <p className="text-[10px] font-medium text-slate-400">
-                                                Provide normal hours of operation used by security at the gates.
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                Set normal operational days and gate arrival window
                                             </p>
                                         </div>
 
                                         <button
                                             type="button"
+                                            role="switch"
+                                            aria-checked={form.data.has_hours}
                                             onClick={() => form.setData('has_hours', !form.data.has_hours)}
                                             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                                                 form.data.has_hours ? 'bg-slate-900' : 'bg-slate-200'
@@ -764,40 +737,14 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     </div>
 
                                     {form.data.has_hours ? (
-                                        <div className="space-y-3.5">
-                                            {/* Hours Pickers */}
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <div>
-                                                    <label className="block text-[11px] font-bold text-slate-700">
-                                                        Opening Time
-                                                    </label>
-                                                    <input
-                                                        type="time"
-                                                        value={form.data.open_time}
-                                                        onChange={(e) => form.setData('open_time', e.target.value)}
-                                                        className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-bold text-slate-800 focus:border-slate-800 focus:ring-slate-800"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[11px] font-bold text-slate-700">
-                                                        Closing Time
-                                                    </label>
-                                                    <input
-                                                        type="time"
-                                                        value={form.data.close_time}
-                                                        onChange={(e) => form.setData('close_time', e.target.value)}
-                                                        className="mt-1 w-full rounded-xl border-slate-200 py-2 px-3 text-xs font-bold text-slate-800 focus:border-slate-800 focus:ring-slate-800"
-                                                    />
-                                                </div>
-                                            </div>
-
+                                        <div className="space-y-4">
                                             {/* Days Selector with Quick Presets */}
                                             <div>
                                                 <div className="flex items-center justify-between mb-1.5">
-                                                    <label className="block text-[11px] font-bold text-slate-700">
-                                                        Operating Days
+                                                    <label className="block text-xs font-medium text-slate-700">
+                                                        Days
                                                     </label>
-                                                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                                                    <div className="flex items-center gap-2 text-xs text-slate-400">
                                                         <button
                                                             type="button"
                                                             onClick={() => setDaysPreset('weekdays')}
@@ -811,7 +758,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                             onClick={() => setDaysPreset('daily')}
                                                             className="hover:text-slate-800 transition-colors"
                                                         >
-                                                            Every Day
+                                                            Every day
                                                         </button>
                                                     </div>
                                                 </div>
@@ -824,9 +771,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                                 key={d.key}
                                                                 type="button"
                                                                 onClick={() => toggleDay(d.key)}
-                                                                className={`rounded-lg px-2.5 py-1.5 text-xs font-bold transition-all ${
+                                                                className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                                                                     isSelected
-                                                                        ? 'bg-slate-900 text-white shadow-xs'
+                                                                        ? 'bg-slate-900 text-white'
                                                                         : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                                                                 }`}
                                                             >
@@ -836,28 +783,54 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     })}
                                                 </div>
                                             </div>
+
+                                            {/* Hours Pickers */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                                                        Opening time
+                                                    </label>
+                                                    <input
+                                                        type="time"
+                                                        value={form.data.open_time}
+                                                        onChange={(e) => form.setData('open_time', e.target.value)}
+                                                        className="w-full rounded-lg border-slate-200 py-1.5 px-3 text-xs font-medium text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                                                        Closing time
+                                                    </label>
+                                                    <input
+                                                        type="time"
+                                                        value={form.data.close_time}
+                                                        onChange={(e) => form.setData('close_time', e.target.value)}
+                                                        className="w-full rounded-lg border-slate-200 py-1.5 px-3 text-xs font-medium text-slate-800 focus:border-slate-800 focus:ring-slate-800"
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     ) : (
-                                        <div className="rounded-xl border border-dashed border-slate-200 p-3 text-center">
-                                            <p className="text-xs font-medium text-slate-400">
-                                                No schedule defined — organization operates 24/7 or per special event.
-                                            </p>
-                                        </div>
+                                        <p className="text-xs text-slate-400">
+                                            No schedule set — operates 24/7 or per special event.
+                                        </p>
                                     )}
                                 </div>
                             )}
 
                             {/* Edit Mode Only: Active Status Toggle */}
                             {editingOrg && (
-                                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                                <div className="pt-5 border-t border-slate-100 flex items-center justify-between">
                                     <div>
-                                        <span className="text-xs font-bold text-slate-900 block">Active Status</span>
-                                        <span className="text-[10px] font-medium text-slate-500">
-                                            Deactivated organizations are hidden from security quick entry terminals.
+                                        <span className="text-xs font-medium text-slate-900 block">Active status</span>
+                                        <span className="text-xs text-slate-500">
+                                            Deactivated organizations are hidden from security terminals
                                         </span>
                                     </div>
                                     <button
                                         type="button"
+                                        role="switch"
+                                        aria-checked={form.data.is_active}
                                         onClick={() => form.setData('is_active', !form.data.is_active)}
                                         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                                             form.data.is_active ? 'bg-emerald-600' : 'bg-slate-200'
@@ -873,100 +846,81 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                             )}
                         </div>
 
-                        {/* RIGHT COLUMN: Live Access Summary / Consequence Card (5 cols) */}
-                        <div className="lg:col-span-5 bg-slate-50/75 border-t lg:border-t-0 lg:border-l border-slate-100 p-7 flex flex-col justify-between">
-                            <div className="space-y-5">
+                        {/* RIGHT COLUMN: Calm Live Summary (5 cols) */}
+                        <div className="lg:col-span-5 bg-slate-50 border-t lg:border-t-0 lg:border-l border-slate-100 p-7 flex flex-col justify-between">
+                            <div className="space-y-6">
                                 <div>
-                                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                                        Live Access Summary
+                                    <span className="text-xs font-semibold text-slate-400">
+                                        Access summary
                                     </span>
-                                    <h4 className="mt-1 text-base font-black text-slate-900 truncate">
-                                        {form.data.name.trim() || 'Untitled Organization'}
+                                    <h4 className="mt-1 text-base font-semibold text-slate-900 truncate">
+                                        {form.data.name.trim() || 'New organization'}
                                     </h4>
                                     <div className="mt-1 flex items-center gap-1.5">
-                                        <span
-                                            className={`inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold ${currentTypeConfig.badgeColor}`}
-                                        >
+                                        <span className="text-xs font-medium text-slate-700">
                                             {currentTypeConfig.label}
                                         </span>
-                                        <span className="text-[11px] font-medium text-slate-500">
-                                            · {form.data.type === 'hospital' ? 'Unrestricted' : 'Managed Access'}
+                                        <span className="text-xs text-slate-400">·</span>
+                                        <span className="text-xs text-slate-500">
+                                            {form.data.type === 'hospital' ? 'Unrestricted' : 'Managed Access'}
                                         </span>
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 pt-2">
-                                    {/* Operational Model */}
-                                    <div className="rounded-xl border border-slate-200/70 bg-white p-3.5 shadow-2xs">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                            Access Model
-                                        </span>
-                                        <p className="mt-1 text-xs font-bold text-slate-800 leading-snug">
+                                <div className="space-y-4 text-xs">
+                                    <div>
+                                        <span className="font-medium text-slate-400 block mb-0.5">Policy</span>
+                                        <p className="text-slate-700 leading-relaxed">
                                             {form.data.type === 'hospital'
                                                 ? '24/7 Unrestricted Medical Access'
-                                                : currentTypeConfig.defaultAccess}
+                                                : form.data.hours_enforcement === 'inherit'
+                                                  ? 'Follow estate default policy'
+                                                  : form.data.hours_enforcement === 'warn'
+                                                    ? 'Warn security guard & require confirmation'
+                                                    : form.data.hours_enforcement === 'block'
+                                                      ? 'Strictly block visitors outside schedule'
+                                                      : 'Off (informational schedule only)'}
                                         </p>
                                     </div>
 
-                                    {/* Hours & Schedule Summary */}
-                                    <div className="rounded-xl border border-slate-200/70 bg-white p-3.5 shadow-2xs">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                            Gate Hours & Policy
-                                        </span>
-                                        <div className="mt-1 text-xs font-bold text-slate-800">
-                                            {form.data.type === 'hospital' ? (
-                                                <span className="text-emerald-700">Open 24/7 · Emergency Exempt</span>
-                                            ) : form.data.has_hours ? (
-                                                <div>
-                                                    <p>
-                                                        {formatTime(form.data.open_time)} – {formatTime(form.data.close_time)}
-                                                    </p>
-                                                    <p className="text-[10px] font-medium text-slate-500 mt-0.5">
-                                                        {form.data.selected_days.length === 7
-                                                            ? 'Every day of the week'
-                                                            : form.data.selected_days.length === 5 &&
-                                                                !form.data.selected_days.includes('saturday') &&
-                                                                !form.data.selected_days.includes('sunday')
-                                                              ? 'Monday to Friday (Weekdays)'
-                                                              : `${form.data.selected_days.length} active operating days`}
-                                                    </p>
-                                                    <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                                                        <span className="text-slate-500">Off-hours rule:</span>
-                                                        <span className="font-bold capitalize text-slate-700">
-                                                            {form.data.hours_enforcement === 'inherit'
-                                                                ? 'Estate default'
-                                                                : form.data.hours_enforcement}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <span className="text-slate-500 font-medium">No specific hours set</span>
-                                            )}
-                                        </div>
+                                    <div>
+                                        <span className="font-medium text-slate-400 block mb-0.5">Operating hours</span>
+                                        {form.data.type === 'hospital' ? (
+                                            <p className="text-slate-700">Open 24/7 · Emergency exempt</p>
+                                        ) : form.data.has_hours ? (
+                                            <div>
+                                                <p className="text-slate-800 font-medium">
+                                                    {formatTime(form.data.open_time)} – {formatTime(form.data.close_time)}
+                                                </p>
+                                                <p className="text-slate-500 mt-0.5">
+                                                    {form.data.selected_days.length === 7
+                                                        ? 'Every day'
+                                                        : form.data.selected_days.length === 5 &&
+                                                            !form.data.selected_days.includes('saturday') &&
+                                                            !form.data.selected_days.includes('sunday')
+                                                          ? 'Monday to Friday'
+                                                          : `${form.data.selected_days.length} days / week`}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-slate-500">No schedule set (operates 24/7)</p>
+                                        )}
                                     </div>
 
-                                    {/* Quick Entry Status */}
-                                    <div className="rounded-xl border border-slate-200/70 bg-white p-3.5 shadow-2xs flex items-center justify-between">
-                                        <div>
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                                                Quick Entry Tag
-                                            </span>
-                                            <span className="text-xs font-bold text-slate-800">
-                                                {form.data.quick_entry_enabled ? 'Available at Gates' : 'Disabled'}
-                                            </span>
-                                        </div>
-                                        <span
-                                            className={`h-2.5 w-2.5 rounded-full ${
-                                                form.data.quick_entry_enabled ? 'bg-emerald-500' : 'bg-slate-300'
-                                            }`}
-                                        />
+                                    <div>
+                                        <span className="font-medium text-slate-400 block mb-0.5">Quick Entry</span>
+                                        <p className="text-slate-700">
+                                            {form.data.quick_entry_enabled
+                                                ? 'Enabled for gate tags'
+                                                : 'Disabled'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="mt-6 pt-4 border-t border-slate-200/70 text-[11px] font-medium text-slate-500 leading-relaxed">
-                                Security gate officers will automatically see this configuration when processing admissions for this organization.
-                            </div>
+                            <p className="mt-8 text-xs text-slate-400 leading-relaxed">
+                                Gate terminals use this policy when processing visitors arriving for this organization.
+                            </p>
                         </div>
                     </div>
 
