@@ -20,7 +20,7 @@ interface CustomSelectProps<T extends string | number = string | number> {
     size?: 'sm' | 'md' | 'lg';
 }
 
-export default function CustomSelect<T extends string | number = string | number>({
+export function CustomSelect<T extends string | number = string | number>({
     value,
     onChange,
     options,
@@ -100,3 +100,5 @@ export default function CustomSelect<T extends string | number = string | number
         </div>
     );
 }
+
+export default CustomSelect;
