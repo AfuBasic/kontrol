@@ -44,9 +44,12 @@ class CreateResidentAction
             $initiatedBy = Auth::id();
             $initiatedAt = now();
 
+            $isEstablished = $user->isEstablishedUser($estate);
+            $initialStatus = $isEstablished ? 'accepted' : 'pending';
+
             if (! $membership) {
                 $estate->users()->attach($user->id, [
-                    'status' => 'pending',
+                    'status' => $initialStatus,
                     'property_owner_id' => $data['property_owner_id'] ?? null,
                     'relationship_type' => 'resident',
                     'zone_id' => $data['zone_id'] ?? null,
@@ -56,14 +59,18 @@ class CreateResidentAction
                     'last_invited_by' => $initiatedBy,
                     'last_invited_at' => $initiatedAt,
                     'import_batch' => $importBatch,
+                    'accepted_at' => $isEstablished ? now() : null,
                 ]);
             } else {
+                $statusToSet = ($membership->status === 'accepted' || $isEstablished) ? 'accepted' : $membership->status;
                 $updateData = [
+                    'status' => $statusToSet,
                     'property_owner_id' => $data['property_owner_id'] ?? $membership->property_owner_id,
                     'relationship_type' => 'resident',
                     'zone_id' => $data['zone_id'] ?? $membership->zone_id,
                     'last_invited_by' => $initiatedBy,
                     'last_invited_at' => $initiatedAt,
+                    'accepted_at' => $statusToSet === 'accepted' ? ($membership->accepted_at ?? now()) : null,
                 ];
                 if (is_null($membership->created_via) || $membership->created_via === 'system') {
                     $updateData['created_via'] = $source;
