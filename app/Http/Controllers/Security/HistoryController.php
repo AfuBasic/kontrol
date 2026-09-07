@@ -62,6 +62,12 @@ class HistoryController extends Controller
                     $q->where('user_id', $hostId);
                 });
             })
+            ->when(($filters['tab'] ?? null) === 'quick_entry', function ($query) {
+                $query->whereNull('access_code_id')->where('meta->entry_type', 'quick_entry');
+            })
+            ->when(($filters['tab'] ?? null) === 'visitor_pass', function ($query) {
+                $query->whereNotNull('access_code_id');
+            })
             ->orderByDesc('verified_at')
             ->paginate(15)
             ->withQueryString()
@@ -75,6 +81,7 @@ class HistoryController extends Controller
                     'code' => $log->accessCode?->code ?? $tag,
                     'tag' => $tag,
                     'is_quick_entry' => $isQuickEntry,
+                    'outside_hours' => (bool) ($log->meta['outside_hours'] ?? false),
                     'visitor' => [
                         'name' => $isQuickEntry ? ($log->meta['visitor_name'] ?? "Visitor ({$orgName})") : ($log->accessCode?->visitor_name ?? 'N/A'),
                         'phone' => null,
