@@ -2,6 +2,7 @@ import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { index, update } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 interface Resident {
     id: number;
@@ -136,22 +137,20 @@ export default function Edit({ resident, properties }: Props) {
 
                         {/* Property assignment */}
                         <div>
-                            <label htmlFor="property_id" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
+                            <label htmlFor="property_id" className="block text-xs font-bold tracking-wider text-slate-700 uppercase mb-2">
                                 Assigned Property
                             </label>
-                            <select
-                                id="property_id"
+                            <CustomSelect
                                 value={data.property_id}
-                                onChange={(e) => setData('property_id', e.target.value)}
-                                className="focus:ring-indigo-555 mt-2 block w-full rounded-2xl border-slate-200 bg-white px-4 py-3 text-sm focus:border-indigo-500"
-                            >
-                                <option value="">None / Floating Resident</option>
-                                {properties.map((prop) => (
-                                    <option key={prop.id} value={prop.id}>
-                                        {prop.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setData('property_id', String(val))}
+                                options={[
+                                    { value: '', label: 'None / Floating Resident' },
+                                    ...properties.map((prop) => ({
+                                        value: String(prop.id),
+                                        label: prop.name,
+                                    })),
+                                ]}
+                            />
                             {errors.property_id && <p className="mt-1 text-xs font-bold text-rose-600">{errors.property_id}</p>}
                         </div>
                     </div>
