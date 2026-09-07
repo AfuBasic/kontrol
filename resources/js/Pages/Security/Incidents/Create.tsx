@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft, Paperclip, Send, Loader2 } from 'lucide-react';
 import React, { useRef, useState } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 type Props = {
     categories: Array<{ value: string; label: string }>;
@@ -267,20 +268,16 @@ export default function Create({ categories }: Props) {
                                 <label htmlFor="category" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                     Category
                                 </label>
-                                <select
-                                    id="category"
+                                <CustomSelect
                                     value={data.category}
-                                    onChange={(e) => setData('category', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 transition-all focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
-                                    required
-                                >
-                                    <option value="">Select Category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat.value} value={cat.value}>
-                                            {cat.label}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setData('category', String(val))}
+                                    placeholder="Select Category"
+                                    options={categories.map((cat) => ({
+                                        value: cat.value,
+                                        label: cat.label,
+                                    }))}
+                                    buttonClassName="py-3 px-4 text-xs font-bold"
+                                />
                                 {errors.category && <span className="mt-1 block text-xs font-medium text-red-600">{errors.category}</span>}
                             </div>
 
@@ -289,18 +286,17 @@ export default function Create({ categories }: Props) {
                                 <label htmlFor="priority" className="mb-1.5 block text-[10px] font-black tracking-wider text-slate-400 uppercase">
                                     Priority
                                 </label>
-                                <select
-                                    id="priority"
+                                <CustomSelect
                                     value={data.priority}
-                                    onChange={(e) => setData('priority', e.target.value)}
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 transition-all focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
-                                    required
-                                >
-                                    <option value="low">Low</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="high">High</option>
-                                    <option value="critical">Critical</option>
-                                </select>
+                                    onChange={(val) => setData('priority', String(val))}
+                                    options={[
+                                        { value: 'low', label: 'Low' },
+                                        { value: 'medium', label: 'Medium' },
+                                        { value: 'high', label: 'High' },
+                                        { value: 'critical', label: 'Critical' },
+                                    ]}
+                                    buttonClassName="py-3 px-4 text-xs font-bold"
+                                />
                                 {errors.priority && <span className="mt-1 block text-xs font-medium text-red-600">{errors.priority}</span>}
                             </div>
                         </div>
