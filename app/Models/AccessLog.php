@@ -10,15 +10,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 /**
  * @property int $id
  * @property int $estate_id
- * @property int $access_code_id
+ * @property int|null $access_code_id
  * @property int $verified_by
+ * @property CarbonImmutable|null $checked_out_at
+ * @property int|null $checked_out_by
  * @property array<array-key, mixed>|null $meta
  * @property CarbonImmutable $verified_at
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
- * @property-read AccessCode $accessCode
+ * @property-read AccessCode|null $accessCode
  * @property-read Estate $estate
  * @property-read User $verifier
+ * @property-read User|null $checkoutVerifier
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AccessLog newQuery()
