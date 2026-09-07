@@ -7,9 +7,11 @@ import {
     CheckCircle2,
     Clock,
     Flame,
+    Gauge,
     Loader2,
     RefreshCw,
     ShieldAlert,
+    Tag,
     User,
     X,
     Zap,
@@ -342,7 +344,7 @@ export default function QuickEntryPanel({
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
                     }`}
                 >
-                    <Flame className={`h-3.5 w-3.5 ${rushMode ? 'fill-current text-slate-950' : 'text-amber-500'}`} />
+                    <Gauge className={`h-3.5 w-3.5 ${rushMode ? 'text-slate-950' : 'text-slate-500'}`} />
                     <span>{rushMode ? 'Rush Mode ON' : 'Rush Mode'}</span>
                 </button>
 
@@ -623,7 +625,7 @@ export default function QuickEntryPanel({
                         </>
                     ) : (
                         <>
-                            <Zap className="h-5 w-5 fill-current text-amber-300" />
+                            <Tag className="h-5 w-5 text-white" />
                             <span>Quick Admit & Assign Tag</span>
                         </>
                     )}
