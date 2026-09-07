@@ -27,6 +27,7 @@ import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
 import { show as showResident } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import SearchInput from '@/Components/SearchInput';
 import AdminLayout from '@/Layouts/AdminLayout';
 
@@ -1273,15 +1274,15 @@ export default function ShowCollection({
                     </div>
                     <div>
                         <label className="mb-1.5 block text-[10px] font-black tracking-widest text-slate-400 uppercase">Payment Method</label>
-                        <select
+                        <CustomSelect
                             value={recordData.method}
-                            onChange={(e) => setRecordData({ ...recordData, method: e.target.value })}
-                            className="w-full rounded-2xl border border-slate-100 bg-slate-50 px-5 py-3.5 text-base font-bold shadow-sm transition-all focus:border-[#1F6FDB] focus:bg-white focus:ring-4 focus:ring-[#1F6FDB]/10 focus:outline-none"
-                        >
-                            <option value="bank_transfer">Bank Transfer</option>
-                            <option value="cash">Cash</option>
-                            <option value="other">Other</option>
-                        </select>
+                            onChange={(val) => setRecordData({ ...recordData, method: String(val) })}
+                            options={[
+                                { value: 'bank_transfer', label: 'Bank Transfer' },
+                                { value: 'cash', label: 'Cash' },
+                                { value: 'other', label: 'Other' },
+                            ]}
+                        />
                     </div>
                 </div>
             </ConfirmationModal>
