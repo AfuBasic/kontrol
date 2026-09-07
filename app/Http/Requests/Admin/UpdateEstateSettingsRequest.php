@@ -33,6 +33,8 @@ class UpdateEstateSettingsRequest extends FormRequest
             'require_vehicle_information' => ['required', 'boolean'],
             'allow_residents_to_extend_visitor_passes' => ['required', 'boolean'],
             'visitor_checkout_enabled' => ['required', 'boolean'],
+            'quick_entry_enabled' => ['required', 'boolean'],
+            'quick_entry_hours_enforcement' => ['nullable', 'string', 'in:off,warn,block'],
             'entry_point_checkout_enforced' => ['required', 'boolean'],
             'entry_points' => ['nullable', 'array'],
             'entry_points.*' => ['required', 'string', 'max:100'],

@@ -43,6 +43,8 @@ class SettingsController extends Controller
                 'require_vehicle_information' => (bool) $settings->require_vehicle_information,
                 'allow_residents_to_extend_visitor_passes' => (bool) $settings->allow_residents_to_extend_visitor_passes,
                 'visitor_checkout_enabled' => (bool) $settings->visitor_checkout_enabled,
+                'quick_entry_enabled' => (bool) $settings->quick_entry_enabled,
+                'quick_entry_hours_enforcement' => (string) ($settings->quick_entry_hours_enforcement ?: 'warn'),
                 'entry_point_checkout_enforced' => (bool) $settings->entry_point_checkout_enforced,
                 'entry_points' => $settings->entry_points ?: [],
 
