@@ -789,25 +789,45 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             {/* Hours Pickers */}
                                             <div className="grid grid-cols-2 gap-3">
                                                 <div>
-                                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                                        Opening time
-                                                    </label>
-                                                    <input
-                                                        type="time"
+                                                    <CustomSelect
+                                                        label="Opening time"
                                                         value={form.data.open_time}
-                                                        onChange={(e) => form.setData('open_time', e.target.value)}
-                                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs transition-all focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
+                                                        onChange={(val) => form.setData('open_time', String(val))}
+                                                        options={[
+                                                            { value: '06:00', label: '6:00 AM' },
+                                                            { value: '06:30', label: '6:30 AM' },
+                                                            { value: '07:00', label: '7:00 AM' },
+                                                            { value: '07:30', label: '7:30 AM' },
+                                                            { value: '08:00', label: '8:00 AM' },
+                                                            { value: '08:30', label: '8:30 AM' },
+                                                            { value: '09:00', label: '9:00 AM' },
+                                                            { value: '09:30', label: '9:30 AM' },
+                                                            { value: '10:00', label: '10:00 AM' },
+                                                            { value: '11:00', label: '11:00 AM' },
+                                                            { value: '12:00', label: '12:00 PM' },
+                                                        ]}
+                                                        size="sm"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                                        Closing time
-                                                    </label>
-                                                    <input
-                                                        type="time"
+                                                    <CustomSelect
+                                                        label="Closing time"
                                                         value={form.data.close_time}
-                                                        onChange={(e) => form.setData('close_time', e.target.value)}
-                                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-800 shadow-2xs transition-all focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
+                                                        onChange={(val) => form.setData('close_time', String(val))}
+                                                        options={[
+                                                            { value: '12:00', label: '12:00 PM' },
+                                                            { value: '13:00', label: '1:00 PM' },
+                                                            { value: '14:00', label: '2:00 PM' },
+                                                            { value: '15:00', label: '3:00 PM' },
+                                                            { value: '16:00', label: '4:00 PM' },
+                                                            { value: '17:00', label: '5:00 PM' },
+                                                            { value: '18:00', label: '6:00 PM' },
+                                                            { value: '19:00', label: '7:00 PM' },
+                                                            { value: '20:00', label: '8:00 PM' },
+                                                            { value: '21:00', label: '9:00 PM' },
+                                                            { value: '22:00', label: '10:00 PM' },
+                                                        ]}
+                                                        size="sm"
                                                     />
                                                 </div>
                                             </div>
