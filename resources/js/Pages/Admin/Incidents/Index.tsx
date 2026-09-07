@@ -1,7 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, SlidersHorizontal, CheckCircle2, Clock } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import CustomSelect from '@/Components/UI/CustomSelect';
@@ -271,7 +271,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             return {
                 label: breached ? 'SLA Breached' : 'SLA Met',
                 style: breached ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
-                indicator: breached ? '🔴' : '🟢',
+                dotColor: breached ? 'bg-red-500' : 'bg-emerald-500',
                 breached,
             };
         }
@@ -281,14 +281,14 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             return {
                 label: 'SLA Breached',
                 style: 'bg-rose-50 text-rose-700 border-rose-250 animate-pulse',
-                indicator: '🔴',
+                dotColor: 'bg-rose-500',
                 breached: true,
             };
         } else if (elapsed > warningLimit) {
             return {
                 label: 'SLA Warning',
                 style: 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse',
-                indicator: '🟠',
+                dotColor: 'bg-amber-500',
                 breached: false,
             };
         } else {
@@ -296,7 +296,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             return {
                 label: `${remainingHours}h remaining`,
                 style: 'bg-slate-50 text-slate-700 border-slate-200',
-                indicator: '🟢',
+                dotColor: 'bg-emerald-500',
                 breached: false,
             };
         }
@@ -513,7 +513,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                         className="flex flex-col gap-2.5 rounded-xl border border-red-100/70 bg-white p-3.5 shadow-xs sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div className="flex items-start gap-3">
-                                            <span className="mt-1 text-sm">{slaInfo.indicator}</span>
+                                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${slaInfo.dotColor}`} />
                                             <div>
                                                 <Link
                                                     href={`/admin/incidents/${incident.hashid}`}
@@ -552,7 +552,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                 ) : (
                     <div className="rounded-2xl border border-emerald-100 bg-emerald-50/20 p-4.5 shadow-xs">
                         <div className="flex items-center gap-2.5">
-                            <span className="text-base">🟢</span>
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                             <div>
                                 <h3 className="text-xs font-black tracking-wider text-emerald-900 uppercase">Excellent</h3>
                                 <p className="text-[11px] font-semibold text-emerald-800/80">No incidents currently require immediate attention.</p>
