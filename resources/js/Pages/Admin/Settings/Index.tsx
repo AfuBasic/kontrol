@@ -15,6 +15,8 @@ type SettingsProps = {
         require_vehicle_information: boolean;
         allow_residents_to_extend_visitor_passes: boolean;
         visitor_checkout_enabled: boolean;
+        quick_entry_enabled: boolean;
+        quick_entry_hours_enforcement: 'off' | 'warn' | 'block';
         entry_point_checkout_enforced: boolean;
         entry_points: string[];
 
@@ -402,6 +404,8 @@ export default function Settings({ settings }: SettingsProps) {
         require_vehicle_information: settings.require_vehicle_information,
         allow_residents_to_extend_visitor_passes: settings.allow_residents_to_extend_visitor_passes,
         visitor_checkout_enabled: settings.visitor_checkout_enabled,
+        quick_entry_enabled: settings.quick_entry_enabled ?? false,
+        quick_entry_hours_enforcement: settings.quick_entry_hours_enforcement || 'warn',
         entry_point_checkout_enforced: settings.entry_point_checkout_enforced,
         entry_points: settings.entry_points || [],
 
@@ -801,6 +805,57 @@ export default function Settings({ settings }: SettingsProps) {
                                             )}
                                         </div>
                                     )}
+
+                                    {/* Quick Entry & Operating Hours Enforcement Card */}
+                                    <div className="mt-4 rounded-xl border border-slate-200/80 bg-white p-4 dark:border-slate-800/80 dark:bg-slate-800/40">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div>
+                                                <span className="block text-sm font-medium text-slate-900 dark:text-white">
+                                                    Quick Entry for Organizations
+                                                </span>
+                                                <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+                                                    Enable rapid, tag-based access recording for high-volume institutions (schools, churches, hospitals).
+                                                </span>
+                                            </div>
+                                            <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={data.quick_entry_enabled}
+                                                    onChange={(e) => setData('quick_entry_enabled', e.target.checked)}
+                                                    className="peer sr-only"
+                                                />
+                                                <div className="peer h-6 w-11 rounded-full bg-slate-200 peer-checked:bg-slate-950 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:bg-slate-700 dark:peer-checked:bg-primary-500"></div>
+                                            </label>
+                                        </div>
+
+                                        {data.quick_entry_enabled && (
+                                            <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-700/60">
+                                                <label
+                                                    htmlFor="hours_enforcement"
+                                                    className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
+                                                >
+                                                    Default Operating Hours Enforcement
+                                                </label>
+                                                <div className="mt-2 max-w-sm">
+                                                    <select
+                                                        id="hours_enforcement"
+                                                        value={data.quick_entry_hours_enforcement}
+                                                        onChange={(e) =>
+                                                            setData('quick_entry_hours_enforcement', e.target.value as any)
+                                                        }
+                                                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                                    >
+                                                        <option value="warn">Warn (Recommended) — Security confirms to admit</option>
+                                                        <option value="block">Block — Hard disallow outside operating hours</option>
+                                                        <option value="off">Off — Hours are informational only</option>
+                                                    </select>
+                                                </div>
+                                                <p className="mt-1.5 text-xs text-slate-400">
+                                                    Individual organizations can override this setting (e.g. 24/7 hospitals set to Off).
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
