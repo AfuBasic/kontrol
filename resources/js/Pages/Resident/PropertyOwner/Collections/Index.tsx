@@ -3,6 +3,7 @@ import { Head, Link, router, WhenVisible } from '@inertiajs/react';
 import { motion, animate, useMotionValue } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { index, create, show } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 function AnimatedNumber({ value }: { value: number }) {
@@ -72,8 +73,7 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
         }
     }, [debouncedSearch, filters.search, status]);
 
-    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = e.target.value;
+    const handleStatusChange = (newStatus: string) => {
         setStatus(newStatus);
         router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
     };
@@ -215,21 +215,17 @@ export default function Index({ collections, totalUnfiltered, filters, hasSettle
                         />
                     </div>
                     <div className="w-full sm:w-48">
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                <FunnelIcon className="h-4.5 w-4.5 text-slate-400" />
-                            </div>
-                            <select
-                                value={status}
-                                onChange={handleStatusChange}
-                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="active">Active</option>
-                                <option value="draft">Draft</option>
-                                <option value="archived">Archived</option>
-                            </select>
-                        </div>
+                        <CustomSelect
+                            size="sm"
+                            value={status}
+                            onChange={(val) => handleStatusChange(String(val))}
+                            options={[
+                                { value: '', label: 'All Statuses' },
+                                { value: 'active', label: 'Active' },
+                                { value: 'draft', label: 'Draft' },
+                                { value: 'archived', label: 'Archived' },
+                            ]}
+                        />
                     </div>
                     {hasActiveFilters && (
                         <button
