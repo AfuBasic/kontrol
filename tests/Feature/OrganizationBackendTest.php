@@ -347,3 +347,42 @@ test('renew expiring credentials job auto-renews credentials expiring within 7 d
         ->and($newCredential->id)->not->toBe($expiringCredential->id)
         ->and($newCredential->expires_at->isAfter(now()->addMonths(5)))->toBeTrue();
 });
+
+test('organization portal routes render successfully for authorized organization admin', function () {
+    $this->actingAs($this->orgAdmin);
+    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
+
+    $this->get(route('org.dashboard'))->assertOk();
+    $this->get(route('org.access-list.index'))->assertOk();
+    $this->get(route('org.credentials.index'))->assertOk();
+    $this->get(route('org.arrivals.index'))->assertOk();
+    $this->get(route('org.public-windows.index'))->assertOk();
+    $this->get(route('org.settings.index'))->assertOk();
+});
+
+test('organization admin can confirm arrival via portal HTTP endpoint', function () {
+    $guard = User::factory()->create();
+    $quickEntry = app(RecordQuickEntryAction::class);
+
+    $log = $quickEntry->execute(
+        estateId: $this->estate->id,
+        verifiedBy: $guard,
+        data: [
+            'tag' => 'TAG-HTTP-1',
+            'organization_id' => $this->org->id,
+            'visitor_name' => 'Endpoint Visitor',
+        ]
+    );
+
+    $this->actingAs($this->orgAdmin);
+    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
+
+    $response = $this->post(route('org.arrivals.confirm', $log));
+    $response->assertRedirect()
+        ->assertSessionHas('success');
+
+    $log->refresh();
+    expect($log->confirmed_at)->not->toBeNull()
+        ->and($log->confirmed_by)->toBe($this->orgAdmin->id)
+        ->and($log->confirmationState(15))->toBe('CONFIRMED');
+});
