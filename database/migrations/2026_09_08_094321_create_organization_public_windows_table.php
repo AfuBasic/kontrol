@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('notes')->nullable();
             $table->timestamps();
 
-            $table->index(['organization_id', 'is_active', 'day_of_week']);
+            $table->index(['organization_id', 'is_active', 'day_of_week'], 'org_pub_windows_lookup_idx');
         });
     }
 
