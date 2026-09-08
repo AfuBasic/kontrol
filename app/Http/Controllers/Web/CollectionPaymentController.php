@@ -267,6 +267,9 @@ class CollectionPaymentController extends Controller
                 'base_amount' => $baseAmountNaira,
                 'kontrol_fee' => $fees['kontrol_fee'],
                 'paystack_fee' => $fees['paystack_fee'],
+                'subaccount' => $subaccount,
+                'bearer' => 'account',
+                'transaction_charge' => $fees['transaction_charge'],
             ]);
         } catch (\Exception $e) {
             $errorMessage = $e->getMessage();
@@ -829,6 +832,9 @@ class CollectionPaymentController extends Controller
                 'base_amount' => $baseAmount,
                 'kontrol_fee' => $fees['kontrol_fee'],
                 'paystack_fee' => $fees['paystack_fee'],
+                'subaccount' => $firstSubaccount,
+                'bearer' => 'account',
+                'transaction_charge' => $fees['transaction_charge'],
             ]);
         } catch (\Exception $e) {
             $errorMessage = $e->getMessage();
