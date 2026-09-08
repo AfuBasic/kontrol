@@ -161,7 +161,6 @@ it('allows estate admin to create an organization with an initial administrator'
         ->post(route('admin.organizations.store'), [
             'name' => 'Greenwood International School',
             'type' => 'school',
-            'admin_name' => 'Principal Sarah Johnson',
             'admin_email' => 'sarah.johnson@greenwood.edu',
             'admin_phone' => '+2348012345678',
             'hours_enforcement' => 'warn',
@@ -179,7 +178,7 @@ it('allows estate admin to create an organization with an initial administrator'
 
     $this->assertDatabaseHas('users', [
         'email' => 'sarah.johnson@greenwood.edu',
-        'name' => 'Principal Sarah Johnson',
+        'name' => 'Greenwood International School',
     ]);
 
     $org = EstateOrganization::where('name', 'Greenwood International School')->first();
@@ -210,7 +209,6 @@ it('allows estate admin to update an organization and assign or change administr
         ->put(route('admin.organizations.update', $org->id), [
             'name' => 'Legacy Faith Church',
             'type' => 'church',
-            'admin_name' => 'Pastor Daniel Craig',
             'admin_email' => 'pastor.daniel@legacyfaith.org',
             'admin_phone' => '+2348099887766',
         ]);
@@ -246,7 +244,6 @@ it('allows an already existing resident user to be assigned as organization admi
         ->post(route('admin.organizations.store'), [
             'name' => 'Estate Community Center',
             'type' => 'facility',
-            'admin_name' => 'John Resident',
             'admin_email' => 'resident.john@example.com',
             'admin_phone' => '+2348000000001',
             'hours_enforcement' => 'inherit',
