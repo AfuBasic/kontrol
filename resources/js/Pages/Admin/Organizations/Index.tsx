@@ -686,8 +686,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 {form.data.type === 'hospital' ? (
                                     <div className="rounded-lg border border-rose-100 bg-rose-50 p-3.5 text-xs leading-relaxed text-rose-800">
                                         <span className="mb-0.5 block font-semibold">Unrestricted medical destination</span>
-                                        Emergency and healthcare visitors are admitted 24/7 without credentials. Security logs arrivals for record
-                                        keeping. Arrival confirmation is never required.
+                                        Security logs visitor details and generates an entry tag immediately 24/7. Physical arrival confirmation is never required.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -709,8 +708,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     },
                                                     {
                                                         value: 'unrestricted',
-                                                        label: 'Unrestricted',
-                                                        description: 'Open 24/7 for patient care & emergencies',
+                                                        label: 'Unrestricted Entry',
+                                                        description: 'Guard issues an entry tag (no arrival confirmation required)',
                                                     },
                                                 ]}
                                                 size="sm"
