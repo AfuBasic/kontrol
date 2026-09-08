@@ -54,16 +54,30 @@ class OrganizationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(OrganizationType::class)],
+            'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
+            'arrival_confirmation_required' => ['boolean'],
+            'confirmation_window_minutes' => ['nullable', 'integer', 'between:5,120'],
+            'confirmation_escalation' => ['nullable', 'string', 'in:alert_only,flag_security'],
             'operating_hours' => ['nullable', 'array'],
             'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
         ]);
 
+        $policy = $validated['access_policy'] ?? match ($validated['type']) {
+            OrganizationType::Hospital->value => 'unrestricted',
+            OrganizationType::Church->value => 'public_window',
+            default => 'managed',
+        };
+
         EstateOrganization::create([
             'estate_id' => $estate->id,
             'name' => $validated['name'],
             'type' => $validated['type'],
+            'access_policy' => $policy,
+            'arrival_confirmation_required' => $policy === 'unrestricted' ? false : ($validated['arrival_confirmation_required'] ?? false),
+            'confirmation_window_minutes' => $validated['confirmation_window_minutes'] ?? 15,
+            'confirmation_escalation' => $validated['confirmation_escalation'] ?? 'alert_only',
             'operating_hours' => $validated['operating_hours'] ?? null,
             'hours_enforcement' => $validated['hours_enforcement'] ?? 'inherit',
             'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
@@ -87,11 +101,19 @@ class OrganizationController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', Rule::enum(OrganizationType::class)],
+            'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
+            'arrival_confirmation_required' => ['boolean'],
+            'confirmation_window_minutes' => ['nullable', 'integer', 'between:5,120'],
+            'confirmation_escalation' => ['nullable', 'string', 'in:alert_only,flag_security'],
             'operating_hours' => ['nullable', 'array'],
             'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
         ]);
+
+        if (isset($validated['access_policy']) && $validated['access_policy'] === 'unrestricted') {
+            $validated['arrival_confirmation_required'] = false;
+        }
 
         $organization->update($validated);
 
