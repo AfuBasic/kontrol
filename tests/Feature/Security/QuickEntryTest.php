@@ -9,6 +9,7 @@ use App\Models\EstateOrganization;
 use App\Models\EstateSettings;
 use App\Models\QuickEntryAllocation;
 use App\Models\User;
+use App\Services\Visitor\ActiveVisitService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -358,4 +359,46 @@ it('resolves enforcement from estate setting when organization enforcement is in
             'verified_at' => $saturday,
         ]);
     })->toThrow(ValidationException::class);
+});
+
+it('allows checkout of quick entry visitor directly through verify decision endpoint', function () {
+    $action = app(RecordQuickEntryAction::class);
+    $log = $action->execute($this->estate->id, $this->guard, [
+        'tag' => 'VD-CHK',
+        'organization_id' => $this->organization->id,
+        'visitor_name' => 'Quick Checkout Visitor',
+    ]);
+
+    expect($log->checked_out_at)->toBeNull();
+
+    $response = $this->actingAs($this->guard)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->postJson(route('security.verify.decision'), [
+            'decision' => 'checkout',
+            'code' => 'VD-CHK',
+            'access_log_id' => $log->id,
+        ]);
+
+    $response->assertOk()
+        ->assertJson([
+            'success' => true,
+        ]);
+
+    $log->refresh();
+    expect($log->checked_out_at)->not->toBeNull()
+        ->and($log->checked_out_by)->toBe($this->guard->id);
+});
+
+it('resolves truthful gate fallback correctly for single gate vs multiple gates', function () {
+    $activeVisitService = app(ActiveVisitService::class);
+
+    // Single configured gate in estate
+    $this->settings->update(['entry_points' => ['Main Gate']]);
+    expect($activeVisitService->resolveGateDisplay(null, $this->settings))->toBe('Main Gate');
+    expect($activeVisitService->resolveGateDisplay('North Gate', $this->settings))->toBe('North Gate');
+
+    // Multiple configured gates with unrecorded entry point
+    $this->settings->update(['entry_points' => ['Main Gate', 'North Gate']]);
+    expect($activeVisitService->resolveGateDisplay(null, $this->settings))->toBe('Gate not recorded');
+    expect($activeVisitService->resolveGateDisplay('North Gate', $this->settings))->toBe('North Gate');
 });
