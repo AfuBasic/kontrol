@@ -180,6 +180,16 @@ export default function SecurityActiveQueue({ activeVisits }: Props) {
                                                 Overstayed
                                             </span>
                                         )}
+                                        {(visit as any).confirmation_state === 'CONFIRMED' && (
+                                            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-emerald-700 uppercase ring-1 ring-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300">
+                                                Facility Confirmed
+                                            </span>
+                                        )}
+                                        {(visit as any).confirmation_state === 'OVERDUE' && (
+                                            <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-rose-700 uppercase ring-1 ring-rose-300/60 dark:bg-rose-950/40 dark:text-rose-300 animate-pulse">
+                                                Confirmation Overdue
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Destination / Organization */}
