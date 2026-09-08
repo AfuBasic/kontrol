@@ -7,17 +7,12 @@ use App\Enums\AccessCodeStatus;
 use App\Models\AccessCode;
 use App\Models\OrganizationAccessMember;
 use App\Models\User;
-use App\Services\AccessCodeService;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class IssueOrganizationCredentialAction
 {
-    public function __construct(
-        private AccessCodeService $accessCodeService,
-    ) {}
-
     /**
      * Issue an organization access credential for a member.
      */
@@ -44,7 +39,7 @@ class IssueOrganizationCredentialAction
                     'revoked_at' => now(),
                 ]);
 
-            $code = $this->accessCodeService->generateCode();
+            $code = AccessCode::generateCode();
 
             $expiry = $expiresAt ?? ($member->valid_until ? CarbonImmutable::instance($member->valid_until)->endOfDay() : now()->addMonths(6)->endOfDay());
 
