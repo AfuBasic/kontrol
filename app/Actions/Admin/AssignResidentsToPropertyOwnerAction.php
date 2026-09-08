@@ -47,10 +47,12 @@ class AssignResidentsToPropertyOwnerAction
                     'property_owner_id' => $propertyOwner->id,
                 ]);
 
-            UserProfile::whereIn('user_id', $validResidentIds)
-                ->update([
-                    'property_owner_id' => $propertyOwner->id,
-                ]);
+            foreach ($validResidentIds as $resId) {
+                UserProfile::updateOrCreate(
+                    ['user_id' => $resId],
+                    ['property_owner_id' => $propertyOwner->id]
+                );
+            }
 
             activity('people')
                 ->performedOn($propertyOwner)
