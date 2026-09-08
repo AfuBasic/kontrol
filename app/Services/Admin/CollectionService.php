@@ -195,6 +195,10 @@ class CollectionService
             }
         }
 
+        if ($collection->include_creator === false) {
+            return array_values(array_filter(array_unique($userIds), fn ($id) => (int) $id !== (int) $collection->created_by));
+        }
+
         if ($collection->include_creator) {
             $userIds[] = $collection->created_by;
 
