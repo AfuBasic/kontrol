@@ -11,23 +11,16 @@ import {
     Check,
     X,
     AlertCircle,
-    ChevronRight,
     School,
     Church,
     HeartPulse,
     Briefcase,
     Building,
-    SlidersHorizontal,
     Loader2,
-    Calendar,
-    ArrowRight,
-    MapPin,
-    AlertTriangle,
-    User as UserIcon,
     Mail,
     Phone,
 } from 'lucide-react';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import TextInput from '@/Components/UI/TextInput';
