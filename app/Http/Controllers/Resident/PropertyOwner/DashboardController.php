@@ -26,8 +26,12 @@ class DashboardController extends Controller
 
         // 1. Managed Residents
         $residentsCount = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
+            ->where(function ($q) use ($user, $estate) {
+                $q->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                    ->orWhereHas('profile', fn ($pq) => $pq->where('property_owner_id', $user->id))
+                    ->orWhereHas('profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $user->id));
+            })
             ->count();
 
         // 2. Outstanding Collections Count
@@ -35,7 +39,11 @@ class DashboardController extends Controller
             ->where('estate_id', $estate->id)
             ->whereIn('status', ['pending', 'overdue', 'grace', 'partial'])
             ->whereHas('collection', fn ($q) => $q->where('created_by', $user->id))
-            ->whereHas('user.profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            ->where(function ($cq) use ($user, $estate) {
+                $cq->whereHas('user.estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                    ->orWhereHas('user.profile', fn ($pq) => $pq->where('property_owner_id', $user->id))
+                    ->orWhereHas('user.profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $user->id));
+            })
             ->count();
 
         // 3. Properties Count
@@ -55,7 +63,11 @@ class DashboardController extends Controller
         $recentPayments = Payment::query()
             ->where('estate_id', $estate->id)
             ->whereHas('assignment.collection', fn ($q) => $q->where('created_by', $user->id))
-            ->whereHas('assignment.user.profile', fn ($q) => $q->where('property_owner_id', $user->id))
+            ->where(function ($pq) use ($user, $estate) {
+                $pq->whereHas('assignment.user.estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                    ->orWhereHas('assignment.user.profile', fn ($prq) => $prq->where('property_owner_id', $user->id))
+                    ->orWhereHas('assignment.user.profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $user->id));
+            })
             ->with(['assignment.user', 'assignment.collection'])
             ->latest()
             ->limit(5)
@@ -86,8 +98,12 @@ class DashboardController extends Controller
 
         // 7. Recent Activity (visitor logs of managed residents)
         $recentActivity = AccessLog::query()
-            ->whereHas('accessCode', function ($q) use ($user) {
-                $q->whereHas('user.profile', fn ($qp) => $qp->where('property_owner_id', $user->id));
+            ->whereHas('accessCode.user', function ($q) use ($user, $estate) {
+                $q->where(function ($uq) use ($user, $estate) {
+                    $uq->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                        ->orWhereHas('profile', fn ($pq) => $pq->where('property_owner_id', $user->id))
+                        ->orWhereHas('profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $user->id));
+                });
             })
             ->with(['accessCode.user'])
             ->latest()
