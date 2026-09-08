@@ -35,10 +35,10 @@ export interface Organization {
     estate_id: number;
     name: string;
     type: 'school' | 'church' | 'hospital' | 'business' | 'facility' | 'other';
-    access_policy?: 'unrestricted' | 'public_schedule' | 'credential_only';
+    access_policy?: 'unrestricted' | 'public_window' | 'managed';
     arrival_confirmation_required?: boolean;
     confirmation_window_minutes?: number;
-    confirmation_escalation?: 'none' | 'alert_security' | 'flag_dispatch';
+    confirmation_escalation?: 'alert_only' | 'flag_security';
     operating_hours: {
         open?: string;
         close?: string;
@@ -161,15 +161,16 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
     const [deletingOrg, setDeletingOrg] = useState<Organization | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Form state
     const form = useForm({
         name: '',
         type: 'school' as Organization['type'],
-        access_policy: 'public_schedule' as 'unrestricted' | 'public_schedule' | 'credential_only',
+        access_policy: 'managed' as 'unrestricted' | 'public_window' | 'managed',
         arrival_confirmation_required: false,
         confirmation_window_minutes: 30,
-        confirmation_escalation: 'alert_security' as 'none' | 'alert_security' | 'flag_dispatch',
+        confirmation_escalation: 'alert_only' as 'alert_only' | 'flag_security',
         has_hours: true,
         open_time: '07:30',
         close_time: '16:00',
@@ -217,10 +218,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.setData({
             name: '',
             type: 'school',
-            access_policy: 'public_schedule',
+            access_policy: 'managed',
             arrival_confirmation_required: false,
             confirmation_window_minutes: 30,
-            confirmation_escalation: 'alert_security',
+            confirmation_escalation: 'alert_only',
             has_hours: true,
             open_time: '07:30',
             close_time: '16:00',
@@ -240,10 +241,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.setData({
             name: org.name,
             type: org.type,
-            access_policy: (org.access_policy || (org.type === 'hospital' ? 'unrestricted' : 'public_schedule')) as any,
+            access_policy: (org.access_policy || (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
             arrival_confirmation_required: Boolean(org.arrival_confirmation_required),
             confirmation_window_minutes: org.confirmation_window_minutes ?? 30,
-            confirmation_escalation: (org.confirmation_escalation || 'alert_security') as any,
+            confirmation_escalation: (org.confirmation_escalation || 'alert_only') as any,
             has_hours: Boolean(hours && hours.open && hours.close),
             open_time: hours?.open || '08:00',
             close_time: hours?.close || '17:00',
@@ -271,7 +272,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             form.setData({
                 ...form.data,
                 type: newType,
-                access_policy: form.data.access_policy === 'unrestricted' ? 'public_schedule' : form.data.access_policy,
+                access_policy: form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
                 has_hours: true,
                 open_time: config.defaultHours.open,
                 close_time: config.defaultHours.close,
@@ -282,7 +283,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             form.setData({
                 ...form.data,
                 type: newType,
-                access_policy: form.data.access_policy === 'unrestricted' ? 'public_schedule' : form.data.access_policy,
+                access_policy: form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
             });
         }
     };
@@ -313,21 +314,24 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     : null,
         };
 
+        setIsSubmitting(true);
+
+        const options = {
+            onStart: () => setIsSubmitting(true),
+            onFinish: () => setIsSubmitting(false),
+            onError: () => setIsSubmitting(false),
+            onSuccess: () => {
+                setIsSubmitting(false);
+                setIsCreateModalOpen(false);
+                setEditingOrg(null);
+                form.reset();
+            },
+        };
+
         if (editingOrg) {
-            router.put(update.url(editingOrg.id), payload, {
-                onSuccess: () => {
-                    setIsCreateModalOpen(false);
-                    setEditingOrg(null);
-                    form.reset();
-                },
-            });
+            router.put(update.url(editingOrg.id), payload, options);
         } else {
-            router.post(store.url(), payload, {
-                onSuccess: () => {
-                    setIsCreateModalOpen(false);
-                    form.reset();
-                },
-            });
+            router.post(store.url(), payload, options);
         }
     };
 
@@ -550,10 +554,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                             </span>
                                                         )}
 
-                                                        {org.access_policy === 'credential_only' && (
+                                                        {org.access_policy === 'managed' && (
                                                             <span className="text-purple-700 font-medium flex items-center gap-1">
                                                                 <Shield className="h-3 w-3 text-purple-600" />
-                                                                Credential only
+                                                                Managed roster
                                                             </span>
                                                         )}
                                                     </div>
@@ -711,9 +715,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     form.setData('access_policy', val as any)
                                                 }
                                                 options={[
-                                                    { value: 'public_schedule', label: 'Public schedule (admit during operating hours / windows)' },
-                                                    { value: 'credential_only', label: 'Credential only (requires verified badge or QR)' },
-                                                    { value: 'unrestricted', label: 'Unrestricted (open 24/7, security logs arrival)' },
+                                                    { value: 'managed', label: 'Managed access (staff, students, members roster)' },
+                                                    { value: 'public_window', label: 'Public schedule (admit during operating hours / windows)' },
+                                                    { value: 'unrestricted', label: 'Unrestricted (open 24/7, emergency / patient access)' },
                                                 ]}
                                                 size="sm"
                                             />
@@ -829,9 +833,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                                     form.setData('confirmation_escalation', val as any)
                                                                 }
                                                                 options={[
-                                                                    { value: 'none', label: 'Informational only' },
-                                                                    { value: 'alert_security', label: 'Alert security terminal' },
-                                                                    { value: 'flag_dispatch', label: 'Flag patrol dispatch' },
+                                                                    { value: 'alert_only', label: 'Alert only (internal organization dashboard)' },
+                                                                    { value: 'flag_security', label: 'Flag security terminal (alert guard console)' },
                                                                 ]}
                                                                 size="sm"
                                                             />
@@ -1031,9 +1034,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         <p className="text-slate-700 leading-relaxed">
                                             {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
                                                 ? '24/7 Unrestricted Medical / Emergency Access'
-                                                : form.data.access_policy === 'credential_only'
-                                                  ? 'Credential Only (Badge / Pass Required)'
-                                                  : 'Public Schedule (Windows & Operating Hours)'}
+                                                : form.data.access_policy === 'public_window'
+                                                  ? 'Public Schedule (Windows & Operating Hours)'
+                                                  : 'Managed Access (Staff, Students & Member Roster)'}
                                         </p>
                                     </div>
 
@@ -1115,11 +1118,13 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                         </button>
                         <button
                             type="submit"
-                            disabled={form.processing}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-98"
+                            disabled={isSubmitting || form.processing}
+                            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-98 cursor-pointer disabled:cursor-not-allowed"
                         >
-                            {form.processing && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                            {editingOrg ? 'Save Changes' : 'Create Organization'}
+                            {(isSubmitting || form.processing) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                            {isSubmitting || form.processing
+                                ? (editingOrg ? 'Saving changes...' : 'Creating...')
+                                : (editingOrg ? 'Save Changes' : 'Create Organization')}
                         </button>
                     </div>
                 </form>
