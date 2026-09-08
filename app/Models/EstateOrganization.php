@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class EstateOrganization extends Model
 {
@@ -18,9 +19,13 @@ class EstateOrganization extends Model
         'estate_id',
         'name',
         'type',
+        'access_policy',
         'operating_hours',
         'hours_enforcement',
         'quick_entry_enabled',
+        'arrival_confirmation_required',
+        'confirmation_window_minutes',
+        'confirmation_escalation',
         'is_active',
     ];
 
@@ -33,6 +38,9 @@ class EstateOrganization extends Model
             'operating_hours' => 'array',
             'hours_enforcement' => 'string',
             'quick_entry_enabled' => 'boolean',
+            'arrival_confirmation_required' => 'boolean',
+            'confirmation_window_minutes' => 'integer',
+            'confirmation_escalation' => 'string',
             'is_active' => 'boolean',
         ];
     }
@@ -43,6 +51,38 @@ class EstateOrganization extends Model
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
+    }
+
+    /**
+     * @return HasMany<OrganizationMembership, $this>
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(OrganizationMembership::class, 'organization_id');
+    }
+
+    /**
+     * @return HasMany<OrganizationAccessMember, $this>
+     */
+    public function accessMembers(): HasMany
+    {
+        return $this->hasMany(OrganizationAccessMember::class, 'organization_id');
+    }
+
+    /**
+     * @return HasMany<OrganizationPublicWindow, $this>
+     */
+    public function publicWindows(): HasMany
+    {
+        return $this->hasMany(OrganizationPublicWindow::class, 'organization_id');
+    }
+
+    /**
+     * @return HasMany<AccessLog, $this>
+     */
+    public function accessLogs(): HasMany
+    {
+        return $this->hasMany(AccessLog::class, 'organization_id');
     }
 
     /**
@@ -112,6 +152,45 @@ class EstateOrganization extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Check if a given time is within any active public access window.
+     */
+    public function isWithinPublicWindow(?CarbonInterface $at = null): bool
+    {
+        if ($this->access_policy !== 'public_window') {
+            return false;
+        }
+
+        $time = $at ? $at->copy() : now();
+        $dayOfWeek = $time->dayOfWeek;
+
+        return $this->publicWindows()
+            ->where('is_active', true)
+            ->where('day_of_week', $dayOfWeek)
+            ->get()
+            ->contains(fn (OrganizationPublicWindow $window) => $window->isOpenAt($time));
+    }
+
+    /**
+     * Check if organization has unrestricted access policy (e.g. Hospital).
+     */
+    public function isUnrestricted(): bool
+    {
+        return $this->access_policy === 'unrestricted';
+    }
+
+    /**
+     * Check if organization requires arrival confirmation.
+     */
+    public function requiresArrivalConfirmation(): bool
+    {
+        if ($this->isUnrestricted()) {
+            return false;
+        }
+
+        return (bool) $this->arrival_confirmation_required;
     }
 
     /**
