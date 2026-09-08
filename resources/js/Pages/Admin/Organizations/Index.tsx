@@ -23,12 +23,31 @@ import {
     ArrowRight,
     MapPin,
     AlertTriangle,
+    User as UserIcon,
+    Mail,
+    Phone,
 } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import { destroy, index, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import { useDebounce } from '@/Hooks/useDebounce';
+
+export interface OrganizationMembershipItem {
+    id: number;
+    user_id: number;
+    organization_id: number;
+    role: string;
+    is_active: boolean;
+    user?: {
+        id: number;
+        name: string;
+        email: string;
+        profile?: {
+            phone?: string | null;
+        } | null;
+    } | null;
+}
 
 export interface Organization {
     id: number;
@@ -50,6 +69,7 @@ export interface Organization {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    memberships?: OrganizationMembershipItem[];
 }
 
 interface PaginatedOrganizations {
@@ -167,6 +187,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     const form = useForm({
         name: '',
         type: 'school' as Organization['type'],
+        admin_name: '',
+        admin_email: '',
+        admin_phone: '',
         access_policy: 'managed' as 'unrestricted' | 'public_window' | 'managed',
         arrival_confirmation_required: false,
         confirmation_window_minutes: 30,
@@ -218,6 +241,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.setData({
             name: '',
             type: 'school',
+            admin_name: '',
+            admin_email: '',
+            admin_phone: '',
             access_policy: 'managed',
             arrival_confirmation_required: false,
             confirmation_window_minutes: 30,
@@ -238,9 +264,14 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.clearErrors();
         setEditingOrg(org);
         const hours = org.operating_hours;
+        const primaryAdmin = org.memberships?.find((m) => m.role === 'admin' && m.is_active)?.user;
+
         form.setData({
             name: org.name,
             type: org.type,
+            admin_name: primaryAdmin?.name || '',
+            admin_email: primaryAdmin?.email || '',
+            admin_phone: primaryAdmin?.profile?.phone || '',
             access_policy: (org.access_policy ||
                 (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
             arrival_confirmation_required: Boolean(org.arrival_confirmation_required),
@@ -300,6 +331,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         const payload: Record<string, any> = {
             name: form.data.name,
             type: form.data.type,
+            admin_name: form.data.admin_name,
+            admin_email: form.data.admin_email,
+            admin_phone: form.data.admin_phone,
             access_policy: effectivePolicy,
             arrival_confirmation_required: effectivePolicy === 'unrestricted' ? false : form.data.arrival_confirmation_required,
             confirmation_window_minutes: form.data.confirmation_window_minutes,
@@ -486,6 +520,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     const IconComponent = config.icon;
                                     const hours = org.operating_hours;
                                     const hasHours = Boolean(hours?.open && hours?.close);
+                                    const primaryAdmin = org.memberships?.find((m) => m.role === 'admin' && m.is_active)?.user;
 
                                     return (
                                         <div
@@ -511,6 +546,12 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         {!org.is_active && (
                                                             <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
                                                                 Inactive
+                                                            </span>
+                                                        )}
+                                                        {primaryAdmin && (
+                                                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                                                                <UserIcon className="h-2.5 w-2.5 text-slate-400" />
+                                                                Admin: {primaryAdmin.name}
                                                             </span>
                                                         )}
                                                     </div>
@@ -675,6 +716,77 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 </button>
                                             );
                                         })}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section: Organization Administrator */}
+                            <div className="space-y-4 border-t border-slate-100 pt-5">
+                                <div>
+                                    <h3 className="text-sm font-semibold text-slate-900">Organization Administrator</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">
+                                        Assign the primary contact or lead administrator who manages this organization.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                            Admin Full Name
+                                        </label>
+                                        <div className="relative">
+                                            <UserIcon className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                value={form.data.admin_name}
+                                                onChange={(e) => form.setData('admin_name', e.target.value)}
+                                                placeholder="e.g. Dr. Samuel Adeyemi"
+                                                className="w-full rounded-xl border-slate-200 py-2 pr-3.5 pl-9 text-xs font-medium placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                            />
+                                        </div>
+                                        {form.errors.admin_name && (
+                                            <p className="mt-1.5 text-xs font-medium text-rose-600">{form.errors.admin_name}</p>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <div>
+                                            <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                                Admin Email Address
+                                            </label>
+                                            <div className="relative">
+                                                <Mail className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+                                                <input
+                                                    type="email"
+                                                    value={form.data.admin_email}
+                                                    onChange={(e) => form.setData('admin_email', e.target.value)}
+                                                    placeholder="e.g. admin@school.org"
+                                                    className="w-full rounded-xl border-slate-200 py-2 pr-3.5 pl-9 text-xs font-medium placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                                />
+                                            </div>
+                                            {form.errors.admin_email && (
+                                                <p className="mt-1.5 text-xs font-medium text-rose-600">{form.errors.admin_email}</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+                                                Admin Phone <span className="font-normal text-slate-400">(optional)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <Phone className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
+                                                <input
+                                                    type="tel"
+                                                    value={form.data.admin_phone}
+                                                    onChange={(e) => form.setData('admin_phone', e.target.value)}
+                                                    placeholder="e.g. +234 801 234 5678"
+                                                    className="w-full rounded-xl border-slate-200 py-2 pr-3.5 pl-9 text-xs font-medium placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
+                                                />
+                                            </div>
+                                            {form.errors.admin_phone && (
+                                                <p className="mt-1.5 text-xs font-medium text-rose-600">{form.errors.admin_phone}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1074,6 +1186,25 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                   ? `Required within ${form.data.confirmation_window_minutes}m`
                                                   : 'Disabled'}
                                         </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="mb-0.5 block font-medium text-slate-400">Primary Administrator</span>
+                                        {form.data.admin_name.trim() || form.data.admin_email.trim() ? (
+                                            <div>
+                                                <p className="font-medium text-slate-800">
+                                                    {form.data.admin_name.trim() || 'Admin (Name not set)'}
+                                                </p>
+                                                {form.data.admin_email.trim() && (
+                                                    <p className="text-slate-500">{form.data.admin_email.trim()}</p>
+                                                )}
+                                                {form.data.admin_phone.trim() && (
+                                                    <p className="text-slate-400">{form.data.admin_phone.trim()}</p>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <p className="text-slate-500">Not assigned (can be added later)</p>
+                                        )}
                                     </div>
 
                                     <div>
