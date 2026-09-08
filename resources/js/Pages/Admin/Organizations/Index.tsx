@@ -241,7 +241,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.setData({
             name: org.name,
             type: org.type,
-            access_policy: (org.access_policy || (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
+            access_policy: (org.access_policy ||
+                (org.type === 'hospital' ? 'unrestricted' : org.type === 'church' ? 'public_window' : 'managed')) as any,
             arrival_confirmation_required: Boolean(org.arrival_confirmation_required),
             confirmation_window_minutes: org.confirmation_window_minutes ?? 30,
             confirmation_escalation: (org.confirmation_escalation || 'alert_only') as any,
@@ -272,7 +273,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             form.setData({
                 ...form.data,
                 type: newType,
-                access_policy: form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
+                access_policy:
+                    form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
                 has_hours: true,
                 open_time: config.defaultHours.open,
                 close_time: config.defaultHours.close,
@@ -283,7 +285,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             form.setData({
                 ...form.data,
                 type: newType,
-                access_policy: form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
+                access_policy:
+                    form.data.access_policy === 'unrestricted' ? (newType === 'church' ? 'public_window' : 'managed') : form.data.access_policy,
             });
         }
     };
@@ -399,14 +402,14 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                 {/* Zero State (No records created yet) */}
                 {isZeroData ? (
-                    <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center sm:p-12 shadow-xs">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center shadow-xs sm:p-12">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
                             <Building2 className="h-6 w-6" />
                         </div>
                         <h3 className="mt-4 text-base font-bold text-slate-900">No organizations yet</h3>
                         <p className="mx-auto mt-2 max-w-md text-xs leading-relaxed text-slate-500">
-                            Add schools, churches, hospitals, or other organizations that operate within this estate.
-                            Organizations can manage recurring access while Security retains control of admission.
+                            Add schools, churches, hospitals, or other organizations that operate within this estate. Organizations can manage
+                            recurring access while Security retains control of admission.
                         </p>
                         <div className="mt-6">
                             <button
@@ -443,7 +446,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2 min-w-[150px]">
+                            <div className="flex min-w-[150px] items-center gap-2">
                                 <CustomSelect
                                     value={selectedType}
                                     onChange={(val) => handleTypeFilterChange(String(val))}
@@ -465,12 +468,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                         {/* No Search Results */}
                         {isSearchEmpty ? (
                             <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
-                                <p className="text-xs font-semibold text-slate-700">
-                                    No organizations match your filters.
-                                </p>
-                                <p className="mt-1 text-[11px] text-slate-400">
-                                    Try searching by a different name or clear current filter options.
-                                </p>
+                                <p className="text-xs font-semibold text-slate-700">No organizations match your filters.</p>
+                                <p className="mt-1 text-[11px] text-slate-400">Try searching by a different name or clear current filter options.</p>
                                 <button
                                     type="button"
                                     onClick={handleClearFilters}
@@ -481,7 +480,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                             </div>
                         ) : (
                             /* Organization Rows List */
-                            <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs divide-y divide-slate-100">
+                            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
                                 {organizations.data.map((org) => {
                                     const config = TYPE_CONFIG[org.type] || TYPE_CONFIG.other;
                                     const IconComponent = config.icon;
@@ -494,7 +493,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             className="group flex flex-col gap-3 p-4 transition-colors hover:bg-slate-50/60 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5"
                                         >
                                             {/* Organization Primary Info */}
-                                            <div className="flex items-start gap-3.5 min-w-0 sm:items-center">
+                                            <div className="flex min-w-0 items-start gap-3.5 sm:items-center">
                                                 <div
                                                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${config.color}`}
                                                 >
@@ -503,9 +502,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="font-bold text-slate-900 truncate">
-                                                            {org.name}
-                                                        </span>
+                                                        <span className="truncate font-bold text-slate-900">{org.name}</span>
                                                         <span
                                                             className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${config.badgeColor}`}
                                                         >
@@ -521,7 +518,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     {/* Operational Context Line */}
                                                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                                                         {org.type === 'hospital' ? (
-                                                            <span className="text-rose-700 font-medium flex items-center gap-1">
+                                                            <span className="flex items-center gap-1 font-medium text-rose-700">
                                                                 Unrestricted destination · 24/7 Access
                                                             </span>
                                                         ) : hasHours ? (
@@ -531,9 +528,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                                     {formatTime(hours?.open)} – {formatTime(hours?.close)}
                                                                 </span>
                                                                 {org.hours_enforcement === 'block' && (
-                                                                    <span className="text-rose-600 font-medium text-[11px] ml-1">
-                                                                        · Strict hours
-                                                                    </span>
+                                                                    <span className="ml-1 text-[11px] font-medium text-rose-600">· Strict hours</span>
                                                                 )}
                                                             </span>
                                                         ) : (
@@ -541,21 +536,21 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         )}
 
                                                         {org.quick_entry_enabled && (
-                                                            <span className="text-indigo-600 font-medium flex items-center gap-1">
+                                                            <span className="flex items-center gap-1 font-medium text-indigo-600">
                                                                 <Zap className="h-3 w-3 fill-indigo-500/20" />
                                                                 Quick Entry active
                                                             </span>
                                                         )}
 
                                                         {org.arrival_confirmation_required && (
-                                                            <span className="text-emerald-700 font-medium flex items-center gap-1">
+                                                            <span className="flex items-center gap-1 font-medium text-emerald-700">
                                                                 <Check className="h-3 w-3 text-emerald-600" />
                                                                 Confirmation ({org.confirmation_window_minutes ?? 30}m)
                                                             </span>
                                                         )}
 
                                                         {org.access_policy === 'managed' && (
-                                                            <span className="text-purple-700 font-medium flex items-center gap-1">
+                                                            <span className="flex items-center gap-1 font-medium text-purple-700">
                                                                 <Shield className="h-3 w-3 text-purple-600" />
                                                                 Managed roster
                                                             </span>
@@ -565,11 +560,11 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             </div>
 
                                             {/* Row Actions */}
-                                            <div className="flex items-center justify-end gap-2 shrink-0 pt-2 border-t border-slate-100 sm:border-0 sm:pt-0">
+                                            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-100 pt-2 sm:border-0 sm:pt-0">
                                                 <button
                                                     type="button"
                                                     onClick={() => openEditModal(org)}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 hover:text-slate-900"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5 text-slate-400" />
                                                     Edit
@@ -577,7 +572,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 <button
                                                     type="button"
                                                     onClick={() => setDeletingOrg(org)}
-                                                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                                                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
                                                     title="Delete organization"
                                                 >
                                                     <Trash2 className="h-3.5 w-3.5" />
@@ -623,9 +618,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 <form onSubmit={handleSubmit} className="flex flex-col">
                     {/* Header */}
                     <div className="border-b border-slate-100 px-7 py-5 pr-14">
-                        <h2 className="text-lg font-bold text-slate-900">
-                            {editingOrg ? 'Edit Organization' : 'Add Organization'}
-                        </h2>
+                        <h2 className="text-lg font-bold text-slate-900">{editingOrg ? 'Edit Organization' : 'Add Organization'}</h2>
                         <p className="mt-0.5 text-xs text-slate-500">
                             {editingOrg
                                 ? 'Update details, access policy, and operating schedules.'
@@ -634,17 +627,15 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     </div>
 
                     {/* Two-Column Workspace Body */}
-                    <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[460px]">
+                    <div className="grid min-h-[460px] grid-cols-1 lg:grid-cols-12">
                         {/* LEFT COLUMN: User Decisions (7 cols) */}
-                        <div className="lg:col-span-7 p-7 space-y-7 overflow-y-auto max-h-[72vh]">
+                        <div className="max-h-[72vh] space-y-7 overflow-y-auto p-7 lg:col-span-7">
                             {/* Section 1: Organization */}
                             <div className="space-y-4">
-                                <h3 className="text-sm font-semibold text-slate-900">
-                                    Organization
-                                </h3>
+                                <h3 className="text-sm font-semibold text-slate-900">Organization</h3>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">
                                         Organization name <span className="text-rose-500">*</span>
                                     </label>
                                     <input
@@ -653,15 +644,13 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         value={form.data.name}
                                         onChange={(e) => form.setData('name', e.target.value)}
                                         placeholder="e.g. St Matthew's High School"
-                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal shadow-2xs transition-all focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
+                                        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-800 shadow-2xs transition-all placeholder:font-normal placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     />
-                                    {form.errors.name && (
-                                        <p className="mt-1.5 text-xs font-medium text-rose-600">{form.errors.name}</p>
-                                    )}
+                                    {form.errors.name && <p className="mt-1.5 text-xs font-medium text-rose-600">{form.errors.name}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold text-slate-700 mb-2">
+                                    <label className="mb-2 block text-xs font-semibold text-slate-700">
                                         Organization type <span className="text-rose-500">*</span>
                                     </label>
                                     <div className="grid grid-cols-2 gap-2">
@@ -675,18 +664,14 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     key={typeKey}
                                                     type="button"
                                                     onClick={() => handleTypeSelect(typeKey)}
-                                                    className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+                                                    className={`flex items-center gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors ${
                                                         isSelected
                                                             ? 'border-slate-900 bg-slate-900 text-white'
                                                             : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                                                     }`}
                                                 >
-                                                    <TypeIcon
-                                                        className={`h-4 w-4 shrink-0 ${
-                                                            isSelected ? 'text-white' : 'text-slate-500'
-                                                        }`}
-                                                    />
-                                                    <span className="text-xs font-medium truncate">{cfg.label}</span>
+                                                    <TypeIcon className={`h-4 w-4 shrink-0 ${isSelected ? 'text-white' : 'text-slate-500'}`} />
+                                                    <span className="truncate text-xs font-medium">{cfg.label}</span>
                                                 </button>
                                             );
                                         })}
@@ -695,15 +680,14 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                             </div>
 
                             {/* Section 2: Access & Policy */}
-                            <div className="space-y-4 pt-5 border-t border-slate-100">
-                                <h3 className="text-sm font-semibold text-slate-900">
-                                    Access & Admission Policy
-                                </h3>
+                            <div className="space-y-4 border-t border-slate-100 pt-5">
+                                <h3 className="text-sm font-semibold text-slate-900">Access & Admission Policy</h3>
 
                                 {form.data.type === 'hospital' ? (
-                                    <div className="rounded-lg bg-rose-50 border border-rose-100 p-3.5 text-xs text-rose-800 leading-relaxed">
-                                        <span className="font-semibold block mb-0.5">Unrestricted medical destination</span>
-                                        Emergency and healthcare visitors are admitted 24/7 without credentials. Security logs arrivals for record keeping. Arrival confirmation is never required.
+                                    <div className="rounded-lg border border-rose-100 bg-rose-50 p-3.5 text-xs leading-relaxed text-rose-800">
+                                        <span className="mb-0.5 block font-semibold">Unrestricted medical destination</span>
+                                        Emergency and healthcare visitors are admitted 24/7 without credentials. Security logs arrivals for record
+                                        keeping. Arrival confirmation is never required.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -711,13 +695,23 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             <CustomSelect
                                                 label="Access Policy"
                                                 value={form.data.access_policy}
-                                                onChange={(val) =>
-                                                    form.setData('access_policy', val as any)
-                                                }
+                                                onChange={(val) => form.setData('access_policy', val as any)}
                                                 options={[
-                                                    { value: 'managed', label: 'Managed access (staff, students, members roster)' },
-                                                    { value: 'public_window', label: 'Public schedule (admit during operating hours / windows)' },
-                                                    { value: 'unrestricted', label: 'Unrestricted (open 24/7, emergency / patient access)' },
+                                                    {
+                                                        value: 'managed',
+                                                        label: 'Managed Access',
+                                                        description: 'Staff, students, and roster members admitted',
+                                                    },
+                                                    {
+                                                        value: 'public_window',
+                                                        label: 'Public Schedule',
+                                                        description: 'Admit visitors during defined operating hours & windows',
+                                                    },
+                                                    {
+                                                        value: 'unrestricted',
+                                                        label: 'Unrestricted',
+                                                        description: 'Open 24/7 for patient care & emergencies',
+                                                    },
                                                 ]}
                                                 size="sm"
                                             />
@@ -727,25 +721,37 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             <CustomSelect
                                                 label="Outside normal hours"
                                                 value={form.data.hours_enforcement}
-                                                onChange={(val) =>
-                                                    form.setData('hours_enforcement', val as any)
-                                                }
+                                                onChange={(val) => form.setData('hours_enforcement', val as any)}
                                                 options={[
-                                                    { value: 'inherit', label: 'Follow estate default policy' },
-                                                    { value: 'warn', label: 'Warn security guard & require confirmation' },
-                                                    { value: 'block', label: 'Strictly block visitors outside schedule' },
-                                                    { value: 'off', label: 'Off (informational schedule only)' },
+                                                    {
+                                                        value: 'inherit',
+                                                        label: 'Follow estate default',
+                                                        description: 'Inherit estate-wide policy outside schedule',
+                                                    },
+                                                    {
+                                                        value: 'warn',
+                                                        label: 'Warn & require confirmation',
+                                                        description: 'Notify guard and prompt for admission confirmation',
+                                                    },
+                                                    {
+                                                        value: 'block',
+                                                        label: 'Strictly block visitors',
+                                                        description: 'Disallow non-emergency entry outside schedule',
+                                                    },
+                                                    {
+                                                        value: 'off',
+                                                        label: 'Off (informational only)',
+                                                        description: 'Gate logging only without warnings or blocks',
+                                                    },
                                                 ]}
                                                 size="sm"
                                             />
                                         </div>
 
-                                        <div className="flex items-center justify-between py-1">
-                                            <div>
-                                                <span className="text-xs font-medium text-slate-900 block">
-                                                    Quick Entry
-                                                </span>
-                                                <span className="text-xs text-slate-500">
+                                        <div className="flex items-center justify-between gap-4 py-1">
+                                            <div className="flex-1 pr-2">
+                                                <span className="block text-xs font-medium text-slate-900">Quick Entry</span>
+                                                <span className="block text-xs text-slate-500 leading-relaxed">
                                                     Allow guards to admit visitors with quick physical tags without a resident code
                                                 </span>
                                             </div>
@@ -753,9 +759,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 type="button"
                                                 role="switch"
                                                 aria-checked={form.data.quick_entry_enabled}
-                                                onClick={() =>
-                                                    form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)
-                                                }
+                                                onClick={() => form.setData('quick_entry_enabled', !form.data.quick_entry_enabled)}
                                                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                                                     form.data.quick_entry_enabled ? 'bg-slate-900' : 'bg-slate-200'
                                                 }`}
@@ -770,13 +774,13 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                                         {/* Arrival Confirmation Settings (Progressive Disclosure) */}
                                         {form.data.access_policy !== 'unrestricted' && (
-                                            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <span className="text-xs font-semibold text-slate-900 block">
+                                            <div className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5">
+                                                <div className="flex items-center justify-between gap-4">
+                                                    <div className="flex-1 pr-2">
+                                                        <span className="block text-xs font-semibold text-slate-900">
                                                             Require Arrival Confirmation
                                                         </span>
-                                                        <span className="text-[11px] text-slate-500">
+                                                        <span className="block text-[11px] text-slate-500 leading-relaxed">
                                                             Organization admin verifies visitor reached premises (checkout is never blocked)
                                                         </span>
                                                     </div>
@@ -785,36 +789,27 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         role="switch"
                                                         aria-checked={form.data.arrival_confirmation_required}
                                                         onClick={() =>
-                                                            form.setData(
-                                                                'arrival_confirmation_required',
-                                                                !form.data.arrival_confirmation_required
-                                                            )
+                                                            form.setData('arrival_confirmation_required', !form.data.arrival_confirmation_required)
                                                         }
                                                         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                                                            form.data.arrival_confirmation_required
-                                                                ? 'bg-slate-900'
-                                                                : 'bg-slate-200'
+                                                            form.data.arrival_confirmation_required ? 'bg-slate-900' : 'bg-slate-200'
                                                         }`}
                                                     >
                                                         <span
                                                             className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
-                                                                form.data.arrival_confirmation_required
-                                                                    ? 'translate-x-4'
-                                                                    : 'translate-x-0'
+                                                                form.data.arrival_confirmation_required ? 'translate-x-4' : 'translate-x-0'
                                                             }`}
                                                         />
                                                     </button>
                                                 </div>
 
                                                 {form.data.arrival_confirmation_required && (
-                                                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
+                                                    <div className="grid grid-cols-2 gap-3 border-t border-slate-200/60 pt-2">
                                                         <div>
                                                             <CustomSelect
                                                                 label="Expected arrival window"
                                                                 value={String(form.data.confirmation_window_minutes)}
-                                                                onChange={(val) =>
-                                                                    form.setData('confirmation_window_minutes', Number(val))
-                                                                }
+                                                                onChange={(val) => form.setData('confirmation_window_minutes', Number(val))}
                                                                 options={[
                                                                     { value: '15', label: '15 minutes' },
                                                                     { value: '30', label: '30 minutes' },
@@ -829,12 +824,18 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                             <CustomSelect
                                                                 label="If overdue escalate to"
                                                                 value={form.data.confirmation_escalation}
-                                                                onChange={(val) =>
-                                                                    form.setData('confirmation_escalation', val as any)
-                                                                }
+                                                                onChange={(val) => form.setData('confirmation_escalation', val as any)}
                                                                 options={[
-                                                                    { value: 'alert_only', label: 'Alert only (internal organization dashboard)' },
-                                                                    { value: 'flag_security', label: 'Flag security terminal (alert guard console)' },
+                                                                    {
+                                                                        value: 'alert_only',
+                                                                        label: 'Alert only',
+                                                                        description: 'Internal organization dashboard alert',
+                                                                    },
+                                                                    {
+                                                                        value: 'flag_security',
+                                                                        label: 'Flag security terminal',
+                                                                        description: 'Highlight on guard console queue',
+                                                                    },
                                                                 ]}
                                                                 size="sm"
                                                             />
@@ -849,15 +850,11 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                             {/* Section 3: Operating hours (Hidden for Hospital) */}
                             {form.data.type !== 'hospital' && (
-                                <div className="space-y-4 pt-5 border-t border-slate-100">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h3 className="text-sm font-semibold text-slate-900">
-                                                Operating hours
-                                            </h3>
-                                            <p className="text-xs text-slate-500 mt-0.5">
-                                                Set normal operational days and gate arrival window
-                                            </p>
+                                <div className="space-y-4 border-t border-slate-100 pt-5">
+                                    <div className="flex items-center justify-between gap-4">
+                                        <div className="flex-1 pr-2">
+                                            <h3 className="text-sm font-semibold text-slate-900">Operating hours</h3>
+                                            <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">Set normal operational days and gate arrival window</p>
                                         </div>
 
                                         <button
@@ -881,15 +878,13 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         <div className="space-y-4">
                                             {/* Days Selector with Quick Presets */}
                                             <div>
-                                                <div className="flex items-center justify-between mb-1.5">
-                                                    <label className="block text-xs font-medium text-slate-700">
-                                                        Days
-                                                    </label>
+                                                <div className="mb-1.5 flex items-center justify-between">
+                                                    <label className="block text-xs font-medium text-slate-700">Days</label>
                                                     <div className="flex items-center gap-2 text-xs text-slate-400">
                                                         <button
                                                             type="button"
                                                             onClick={() => setDaysPreset('weekdays')}
-                                                            className="hover:text-slate-800 transition-colors"
+                                                            className="transition-colors hover:text-slate-800"
                                                         >
                                                             Weekdays
                                                         </button>
@@ -897,7 +892,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         <button
                                                             type="button"
                                                             onClick={() => setDaysPreset('daily')}
-                                                            className="hover:text-slate-800 transition-colors"
+                                                            className="transition-colors hover:text-slate-800"
                                                         >
                                                             Every day
                                                         </button>
@@ -915,7 +910,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                                 className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                                                                     isSelected
                                                                         ? 'bg-slate-900 text-white'
-                                                                        : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                                                                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                                                                 }`}
                                                             >
                                                                 {d.label}
@@ -972,21 +967,17 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-slate-400">
-                                            No schedule set — operates 24/7 or per special event.
-                                        </p>
+                                        <p className="text-xs text-slate-400">No schedule set — operates 24/7 or per special event.</p>
                                     )}
                                 </div>
                             )}
 
                             {/* Edit Mode Only: Active Status Toggle */}
                             {editingOrg && (
-                                <div className="pt-5 border-t border-slate-100 flex items-center justify-between">
-                                    <div>
-                                        <span className="text-xs font-medium text-slate-900 block">Active status</span>
-                                        <span className="text-xs text-slate-500">
-                                            Deactivated organizations are hidden from security terminals
-                                        </span>
+                                <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-5">
+                                    <div className="flex-1 pr-2">
+                                        <span className="block text-xs font-medium text-slate-900">Active status</span>
+                                        <span className="block text-xs text-slate-500 leading-relaxed">Deactivated organizations are hidden from security terminals</span>
                                     </div>
                                     <button
                                         type="button"
@@ -1008,19 +999,15 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                         </div>
 
                         {/* RIGHT COLUMN: Calm Live Summary (5 cols) */}
-                        <div className="lg:col-span-5 bg-slate-50 border-t lg:border-t-0 lg:border-l border-slate-100 p-7 flex flex-col justify-between">
+                        <div className="flex flex-col justify-between border-t border-slate-100 bg-slate-50 p-7 lg:col-span-5 lg:border-t-0 lg:border-l">
                             <div className="space-y-6">
                                 <div>
-                                    <span className="text-xs font-semibold text-slate-400">
-                                        Access summary
-                                    </span>
-                                    <h4 className="mt-1 text-base font-semibold text-slate-900 truncate">
+                                    <span className="text-xs font-semibold text-slate-400">Access summary</span>
+                                    <h4 className="mt-1 truncate text-base font-semibold text-slate-900">
                                         {form.data.name.trim() || 'New organization'}
                                     </h4>
                                     <div className="mt-1 flex items-center gap-1.5">
-                                        <span className="text-xs font-medium text-slate-700">
-                                            {currentTypeConfig.label}
-                                        </span>
+                                        <span className="text-xs font-medium text-slate-700">{currentTypeConfig.label}</span>
                                         <span className="text-xs text-slate-400">·</span>
                                         <span className="text-xs text-slate-500">
                                             {form.data.type === 'hospital' ? 'Unrestricted' : 'Managed Access'}
@@ -1030,8 +1017,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                                 <div className="space-y-4 text-xs">
                                     <div>
-                                        <span className="font-medium text-slate-400 block mb-0.5">Policy</span>
-                                        <p className="text-slate-700 leading-relaxed">
+                                        <span className="mb-0.5 block font-medium text-slate-400">Policy</span>
+                                        <p className="leading-relaxed text-slate-700">
                                             {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
                                                 ? '24/7 Unrestricted Medical / Emergency Access'
                                                 : form.data.access_policy === 'public_window'
@@ -1041,8 +1028,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     </div>
 
                                     <div>
-                                        <span className="font-medium text-slate-400 block mb-0.5">Outside Hours Rule</span>
-                                        <p className="text-slate-700 leading-relaxed">
+                                        <span className="mb-0.5 block font-medium text-slate-400">Outside Hours Rule</span>
+                                        <p className="leading-relaxed text-slate-700">
                                             {form.data.type === 'hospital'
                                                 ? 'Exempt (24/7)'
                                                 : form.data.hours_enforcement === 'inherit'
@@ -1056,15 +1043,15 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     </div>
 
                                     <div>
-                                        <span className="font-medium text-slate-400 block mb-0.5">Operating hours</span>
+                                        <span className="mb-0.5 block font-medium text-slate-400">Operating hours</span>
                                         {form.data.type === 'hospital' ? (
                                             <p className="text-slate-700">Open 24/7 · Emergency exempt</p>
                                         ) : form.data.has_hours ? (
                                             <div>
-                                                <p className="text-slate-800 font-medium">
+                                                <p className="font-medium text-slate-800">
                                                     {formatTime(form.data.open_time)} – {formatTime(form.data.close_time)}
                                                 </p>
-                                                <p className="text-slate-500 mt-0.5">
+                                                <p className="mt-0.5 text-slate-500">
                                                     {form.data.selected_days.length === 7
                                                         ? 'Every day'
                                                         : form.data.selected_days.length === 5 &&
@@ -1080,7 +1067,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     </div>
 
                                     <div>
-                                        <span className="font-medium text-slate-400 block mb-0.5">Arrival Confirmation</span>
+                                        <span className="mb-0.5 block font-medium text-slate-400">Arrival Confirmation</span>
                                         <p className="text-slate-700">
                                             {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
                                                 ? 'Not required'
@@ -1091,40 +1078,40 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     </div>
 
                                     <div>
-                                        <span className="font-medium text-slate-400 block mb-0.5">Quick Entry</span>
-                                        <p className="text-slate-700">
-                                            {form.data.quick_entry_enabled
-                                                ? 'Enabled for gate tags'
-                                                : 'Disabled'}
-                                        </p>
+                                        <span className="mb-0.5 block font-medium text-slate-400">Quick Entry</span>
+                                        <p className="text-slate-700">{form.data.quick_entry_enabled ? 'Enabled for gate tags' : 'Disabled'}</p>
                                     </div>
                                 </div>
                             </div>
 
-                            <p className="mt-8 text-xs text-slate-400 leading-relaxed">
+                            <p className="mt-8 text-xs leading-relaxed text-slate-400">
                                 Gate terminals use this policy when processing visitors arriving for this organization.
                             </p>
                         </div>
                     </div>
 
                     {/* Stable Action Footer */}
-                    <div className="flex items-center justify-end gap-3 border-t border-slate-100 px-7 py-4 bg-white">
+                    <div className="flex items-center justify-end gap-3 border-t border-slate-100 bg-white px-7 py-4">
                         <button
                             type="button"
                             onClick={() => setIsCreateModalOpen(false)}
-                            className="rounded-xl border border-slate-200 bg-white px-4.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                            className="rounded-xl border border-slate-200 bg-white px-4.5 py-2.5 text-xs font-bold text-slate-700 transition-colors hover:bg-slate-50"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={isSubmitting || form.processing}
-                            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50 transition-all active:scale-98 cursor-pointer disabled:cursor-not-allowed"
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-98 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             {(isSubmitting || form.processing) && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                             {isSubmitting || form.processing
-                                ? (editingOrg ? 'Saving changes...' : 'Creating...')
-                                : (editingOrg ? 'Save Changes' : 'Create Organization')}
+                                ? editingOrg
+                                    ? 'Saving changes...'
+                                    : 'Creating...'
+                                : editingOrg
+                                  ? 'Save Changes'
+                                  : 'Create Organization'}
                         </button>
                     </div>
                 </form>
@@ -1137,9 +1124,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                         <AlertCircle className="h-5 w-5" />
                     </div>
                     <h3 className="mt-3.5 text-base font-bold text-slate-900">Delete Organization?</h3>
-                    <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
-                        Are you sure you want to remove <span className="font-semibold text-slate-800">{deletingOrg?.name}</span>?
-                        All past visitor access logs and historical records will remain preserved.
+                    <p className="mt-1.5 text-xs leading-relaxed text-slate-500">
+                        Are you sure you want to remove <span className="font-semibold text-slate-800">{deletingOrg?.name}</span>? All past visitor
+                        access logs and historical records will remain preserved.
                     </p>
                     <div className="mt-6 flex justify-center gap-2.5">
                         <button
@@ -1152,7 +1139,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                         <button
                             type="button"
                             onClick={handleDelete}
-                            className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 transition-colors"
+                            className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-700"
                         >
                             Confirm Delete
                         </button>
@@ -1162,4 +1149,3 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         </>
     );
 }
-
