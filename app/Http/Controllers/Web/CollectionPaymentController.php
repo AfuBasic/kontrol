@@ -234,7 +234,13 @@ class CollectionPaymentController extends Controller
             ], 400);
         }
 
-        $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : ($assignment->user?->email ?? 'billing@kontrol.ng');
+        $payerEmail = $this->resolveValidPayerEmail($user?->email, $assignment->user?->email);
+
+        if (empty($payerEmail)) {
+            return response()->json([
+                'message' => 'Could not start transaction due to email issues: Your account does not have a valid email address. Please update your profile with a valid email address and try again.',
+            ], 422);
+        }
 
         try {
             $paystackInit = $paystackService->initializeTransaction(
@@ -263,13 +269,16 @@ class CollectionPaymentController extends Controller
                 'paystack_fee' => $fees['paystack_fee'],
             ]);
         } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
             Log::error('Failed to initialize collection payment with Paystack', [
-                'error' => $e->getMessage(),
+                'error' => $errorMessage,
                 'reference' => $payment->reference,
             ]);
 
+            $userMessage = $this->formatPaymentErrorMessage($errorMessage);
+
             return response()->json([
-                'message' => 'Failed to initialize payment gateway. Please try again.',
+                'message' => $userMessage,
             ], 500);
         }
     }
@@ -787,7 +796,13 @@ class CollectionPaymentController extends Controller
             ], 400);
         }
 
-        $payerEmail = filter_var($user?->email, FILTER_VALIDATE_EMAIL) ? $user->email : 'billing@kontrol.ng';
+        $payerEmail = $this->resolveValidPayerEmail($user?->email, $assignments->first()?->user?->email);
+
+        if (empty($payerEmail)) {
+            return response()->json([
+                'message' => 'Could not start transaction due to email issues: Your account does not have a valid email address. Please update your profile with a valid email address and try again.',
+            ], 422);
+        }
 
         try {
             $paystackInit = $paystackService->initializeTransaction(
@@ -816,13 +831,16 @@ class CollectionPaymentController extends Controller
                 'paystack_fee' => $fees['paystack_fee'],
             ]);
         } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
             Log::error('Failed to initialize bulk collection payment with Paystack', [
-                'error' => $e->getMessage(),
+                'error' => $errorMessage,
                 'reference' => $payment->reference,
             ]);
 
+            $userMessage = $this->formatPaymentErrorMessage($errorMessage);
+
             return response()->json([
-                'message' => 'Failed to initialize payment gateway. Please try again.',
+                'message' => $userMessage,
             ], 500);
         }
     }
@@ -925,5 +943,53 @@ class CollectionPaymentController extends Controller
             // IMPORTANT: transaction_charge sent via Paystack API must be an INTEGER IN KOBO
             'transaction_charge' => (int) round($transactionChargeNaira * 100),
         ];
+    }
+
+    /**
+     * Resolve a valid payer email for payment gateways.
+     */
+    private function resolveValidPayerEmail(?string $primaryEmail, ?string $fallbackEmail = null): ?string
+    {
+        $emails = array_filter([$primaryEmail, $fallbackEmail]);
+
+        foreach ($emails as $email) {
+            $email = trim((string) $email);
+            if (filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                // If it's a dummy test email like .test, or invalid domain format, reject or sanitize
+                $domain = substr(strrchr($email, '@'), 1);
+                if (! empty($domain) && ! str_ends_with($domain, '.test') && ! str_ends_with($domain, '.example')) {
+                    return $email;
+                }
+            }
+        }
+
+        // If primary email is technically formatted as an email (even test env), fallback to billing default in local test env
+        if (app()->environment('local', 'testing')) {
+            $first = reset($emails);
+            if ($first && filter_var($first, FILTER_VALIDATE_EMAIL)) {
+                return $first;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Format a user-friendly error message from payment gateway exception.
+     */
+    private function formatPaymentErrorMessage(string $errorMessage): string
+    {
+        $decoded = json_decode($errorMessage, true);
+        $message = is_array($decoded) && isset($decoded['message']) ? $decoded['message'] : $errorMessage;
+
+        if (stripos($message, 'email') !== false) {
+            return "Could not start transaction due to email issues: {$message}. Please check and update your email address in your profile.";
+        }
+
+        if (stripos($message, 'subaccount') !== false) {
+            return 'Could not start transaction: The estate or property owner settlement account is inactive or misconfigured. Please contact support.';
+        }
+
+        return 'Failed to initialize payment gateway: '.$message;
     }
 }
