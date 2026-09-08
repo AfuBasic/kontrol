@@ -154,3 +154,77 @@ it('forbids admin from managing an organization from another estate', function (
 
     $response->assertStatus(403);
 });
+
+it('allows estate admin to create an organization with an initial administrator', function () {
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->post(route('admin.organizations.store'), [
+            'name' => 'Greenwood International School',
+            'type' => 'school',
+            'admin_name' => 'Principal Sarah Johnson',
+            'admin_email' => 'sarah.johnson@greenwood.edu',
+            'admin_phone' => '+2348012345678',
+            'hours_enforcement' => 'warn',
+            'quick_entry_enabled' => true,
+            'is_active' => true,
+        ]);
+
+    $response->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseHas('estate_organizations', [
+        'estate_id' => $this->estate->id,
+        'name' => 'Greenwood International School',
+    ]);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'sarah.johnson@greenwood.edu',
+        'name' => 'Principal Sarah Johnson',
+    ]);
+
+    $org = EstateOrganization::where('name', 'Greenwood International School')->first();
+    $adminUser = User::where('email', 'sarah.johnson@greenwood.edu')->first();
+
+    $this->assertDatabaseHas('organization_memberships', [
+        'organization_id' => $org->id,
+        'user_id' => $adminUser->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $this->assertDatabaseHas('user_profiles', [
+        'user_id' => $adminUser->id,
+        'phone' => '+2348012345678',
+    ]);
+});
+
+it('allows estate admin to update an organization and assign or change administrator', function () {
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Legacy Faith Church',
+        'type' => 'church',
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->put(route('admin.organizations.update', $org->id), [
+            'name' => 'Legacy Faith Church',
+            'type' => 'church',
+            'admin_name' => 'Pastor Daniel Craig',
+            'admin_email' => 'pastor.daniel@legacyfaith.org',
+            'admin_phone' => '+2348099887766',
+        ]);
+
+    $response->assertRedirect()
+        ->assertSessionHas('success');
+
+    $adminUser = User::where('email', 'pastor.daniel@legacyfaith.org')->first();
+    expect($adminUser)->not->toBeNull();
+
+    $this->assertDatabaseHas('organization_memberships', [
+        'organization_id' => $org->id,
+        'user_id' => $adminUser->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+});
