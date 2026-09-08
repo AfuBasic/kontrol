@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Security;
 
+use App\Actions\Security\CheckoutQuickEntryAction;
 use App\Actions\Security\RecordCheckInAction;
 use App\Actions\Security\RecordCheckOutAction;
 use App\Actions\Security\ValidateAccessCodeAction;
@@ -28,6 +29,7 @@ class VerifyController extends Controller
         protected ValidateAccessCodeAction $validateAccessCodeAction,
         protected RecordCheckInAction $recordCheckInAction,
         protected RecordCheckOutAction $recordCheckOutAction,
+        protected CheckoutQuickEntryAction $checkoutQuickEntryAction,
     ) {}
 
     public function __invoke(Request $request): Response
@@ -177,11 +179,35 @@ class VerifyController extends Controller
 
         if ($request->input('decision') === 'checkout') {
             try {
-                $log = $this->recordCheckOutAction->execute(
-                    code: $request->input('code'),
-                    estateId: $estate->id,
-                    verifiedBy: $user
-                );
+                $code = (string) $request->input('code');
+                $accessLogId = $request->input('access_log_id');
+                $targetLog = null;
+
+                if ($accessLogId) {
+                    $targetLog = AccessLog::withoutGlobalScopes()
+                        ->where('estate_id', $estate->id)
+                        ->where('id', $accessLogId)
+                        ->first();
+                }
+
+                $isQuickEntry = ($targetLog && ($targetLog->meta['entry_type'] ?? null) === 'quick_entry')
+                    || ($targetLog && empty($targetLog->access_code_id))
+                    || (! AccessCode::query()->forEstate($estate->id)->where('code', $code)->exists() && ! str_starts_with($code, 'kontrol://pass/'));
+
+                if ($isQuickEntry) {
+                    $tag = $targetLog->meta['tag'] ?? $code;
+                    $log = $this->checkoutQuickEntryAction->execute(
+                        tag: $tag,
+                        estateId: $estate->id,
+                        verifiedBy: $user
+                    );
+                } else {
+                    $log = $this->recordCheckOutAction->execute(
+                        code: $code,
+                        estateId: $estate->id,
+                        verifiedBy: $user
+                    );
+                }
 
                 if ($request->wantsJson()) {
                     return response()->json([
