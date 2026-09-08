@@ -2,11 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\OrganizationType;
 use App\Http\Controllers\Controller;
 use App\Models\EstateOrganization;
+use App\Models\OrganizationMembership;
+use App\Models\User;
+use App\Models\UserProfile;
 use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +29,13 @@ class OrganizationController extends Controller
         $type = $request->input('type');
 
         $organizations = EstateOrganization::where('estate_id', $estate->id)
+            ->with([
+                'memberships' => function ($query) {
+                    $query->where('role', 'admin')
+                        ->where('is_active', true)
+                        ->with('user.profile');
+                },
+            ])
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
@@ -51,20 +64,72 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
+            'type' => ['required', Rule::enum(OrganizationType::class)],
+            'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
+            'arrival_confirmation_required' => ['boolean'],
+            'confirmation_window_minutes' => ['nullable', 'integer', 'between:5,120'],
+            'confirmation_escalation' => ['nullable', 'string', 'in:alert_only,flag_security'],
             'operating_hours' => ['nullable', 'array'],
+            'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
+            'admin_email' => ['nullable', 'email', 'max:255'],
+            'admin_phone' => ['nullable', 'string', 'max:50'],
         ]);
 
-        EstateOrganization::create([
-            'estate_id' => $estate->id,
-            'name' => $validated['name'],
-            'type' => $validated['type'],
-            'operating_hours' => $validated['operating_hours'] ?? null,
-            'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
-            'is_active' => $validated['is_active'] ?? true,
-        ]);
+        $policy = $validated['access_policy'] ?? match ($validated['type']) {
+            OrganizationType::Hospital->value => 'unrestricted',
+            OrganizationType::Church->value => 'public_window',
+            default => 'managed',
+        };
+
+        DB::transaction(function () use ($estate, $validated, $policy, $request) {
+            $org = EstateOrganization::create([
+                'estate_id' => $estate->id,
+                'name' => $validated['name'],
+                'type' => $validated['type'],
+                'access_policy' => $policy,
+                'arrival_confirmation_required' => $policy === 'unrestricted' ? false : ($validated['arrival_confirmation_required'] ?? false),
+                'confirmation_window_minutes' => $validated['confirmation_window_minutes'] ?? 15,
+                'confirmation_escalation' => $validated['confirmation_escalation'] ?? 'alert_only',
+                'operating_hours' => $validated['operating_hours'] ?? null,
+                'hours_enforcement' => $validated['hours_enforcement'] ?? 'inherit',
+                'quick_entry_enabled' => $validated['quick_entry_enabled'] ?? true,
+                'is_active' => $validated['is_active'] ?? true,
+            ]);
+
+            if (! empty($validated['admin_email'])) {
+                $email = strtolower(trim($validated['admin_email']));
+                $userName = trim($validated['name']) ?: explode('@', $email)[0];
+
+                $user = User::firstOrCreate(
+                    ['email' => $email],
+                    [
+                        'name' => $userName,
+                        'password' => null,
+                    ]
+                );
+
+                if (! empty($validated['admin_phone'])) {
+                    UserProfile::updateOrCreate(
+                        ['user_id' => $user->id],
+                        ['phone' => trim($validated['admin_phone'])]
+                    );
+                }
+
+                OrganizationMembership::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'organization_id' => $org->id,
+                    ],
+                    [
+                        'role' => 'admin',
+                        'is_active' => true,
+                        'invited_by' => $request->user()?->id,
+                    ]
+                );
+            }
+        });
 
         return back()->with('success', 'Organization created successfully.');
     }
@@ -82,13 +147,58 @@ class OrganizationController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:school,church,hospital,business,facility,other'],
+            'type' => ['required', Rule::enum(OrganizationType::class)],
+            'access_policy' => ['nullable', 'string', 'in:managed,public_window,unrestricted'],
+            'arrival_confirmation_required' => ['boolean'],
+            'confirmation_window_minutes' => ['nullable', 'integer', 'between:5,120'],
+            'confirmation_escalation' => ['nullable', 'string', 'in:alert_only,flag_security'],
             'operating_hours' => ['nullable', 'array'],
+            'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
+            'admin_email' => ['nullable', 'email', 'max:255'],
+            'admin_phone' => ['nullable', 'string', 'max:50'],
         ]);
 
-        $organization->update($validated);
+        if (isset($validated['access_policy']) && $validated['access_policy'] === 'unrestricted') {
+            $validated['arrival_confirmation_required'] = false;
+        }
+
+        DB::transaction(function () use ($organization, $validated, $request) {
+            $organization->update($validated);
+
+            if (! empty($validated['admin_email'])) {
+                $email = strtolower(trim($validated['admin_email']));
+                $userName = trim($organization->name) ?: explode('@', $email)[0];
+
+                $user = User::firstOrCreate(
+                    ['email' => $email],
+                    [
+                        'name' => $userName,
+                        'password' => null,
+                    ]
+                );
+
+                if (! empty($validated['admin_phone'])) {
+                    UserProfile::updateOrCreate(
+                        ['user_id' => $user->id],
+                        ['phone' => trim($validated['admin_phone'])]
+                    );
+                }
+
+                OrganizationMembership::updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'organization_id' => $organization->id,
+                    ],
+                    [
+                        'role' => 'admin',
+                        'is_active' => true,
+                        'invited_by' => $request->user()?->id,
+                    ]
+                );
+            }
+        });
 
         return back()->with('success', 'Organization updated successfully.');
     }

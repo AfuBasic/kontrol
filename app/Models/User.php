@@ -204,6 +204,24 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return HasMany<OrganizationMembership, $this>
+     */
+    public function organizationMemberships(): HasMany
+    {
+        return $this->hasMany(OrganizationMembership::class);
+    }
+
+    /**
+     * @return BelongsToMany<EstateOrganization, $this>
+     */
+    public function organizations(): BelongsToMany
+    {
+        return $this->belongsToMany(EstateOrganization::class, 'organization_memberships', 'user_id', 'organization_id')
+            ->withPivot(['role', 'is_active', 'invited_by'])
+            ->withTimestamps();
+    }
+
+    /**
      * @return BelongsToMany<Estate, $this>
      */
     public function estates(): BelongsToMany

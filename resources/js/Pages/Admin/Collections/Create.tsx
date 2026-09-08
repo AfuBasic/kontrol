@@ -4,6 +4,7 @@ import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, Check, 
 import { useState, useMemo } from 'react';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import MoneyInput from '@/Components/MoneyInput';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import AdminLayout from '@/Layouts/AdminLayout';
 
 type Resident = {
@@ -152,17 +153,14 @@ export default function CreateCollection({ residents = [], zones = [], context }
 
                             <div>
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Billing Type</label>
-                                <div className="relative">
-                                    <select
-                                        value={data.billing_type}
-                                        onChange={(e) => setData('billing_type', e.target.value as any)}
-                                        className="block w-full appearance-none rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
-                                    >
-                                        <option value="one_time">One-time Payment</option>
-                                        <option value="recurring">Recurring Bill</option>
-                                    </select>
-                                    <ChevronDown className="pointer-events-none absolute top-1/2 right-6 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                                </div>
+                                <CustomSelect
+                                    value={data.billing_type}
+                                    onChange={(val) => setData('billing_type', val as any)}
+                                    options={[
+                                        { value: 'one_time', label: 'One-time Payment' },
+                                        { value: 'recurring', label: 'Recurring Bill' },
+                                    ]}
+                                />
                             </div>
                         </div>
                     </div>
@@ -180,17 +178,14 @@ export default function CreateCollection({ residents = [], zones = [], context }
                             {data.billing_type === 'recurring' && (
                                 <div>
                                     <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Interval</label>
-                                    <div className="relative">
-                                        <select
-                                            value={data.recurring_interval}
-                                            onChange={(e) => setData('recurring_interval', e.target.value)}
-                                            className="block w-full appearance-none rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
-                                        >
-                                            <option value="monthly">Monthly</option>
-                                            <option value="yearly">Yearly</option>
-                                        </select>
-                                        <ChevronDown className="pointer-events-none absolute top-1/2 right-6 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                                    </div>
+                                    <CustomSelect
+                                        value={data.recurring_interval}
+                                        onChange={(val) => setData('recurring_interval', String(val))}
+                                        options={[
+                                            { value: 'monthly', label: 'Monthly' },
+                                            { value: 'yearly', label: 'Yearly' },
+                                        ]}
+                                    />
                                 </div>
                             )}
 
@@ -273,18 +268,22 @@ export default function CreateCollection({ residents = [], zones = [], context }
                                 </div>
                                 <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Target Audience</h2>
                             </div>
-                            <div className="relative w-full sm:w-auto">
-                                <select
+                            <div className="w-full sm:w-56">
+                                <CustomSelect
+                                    size="sm"
                                     value={data.applies_to}
-                                    onChange={(e) => setData('applies_to', e.target.value as any)}
-                                    className="w-full sm:w-auto appearance-none rounded-xl border-0 bg-slate-100 py-2.5 pr-10 pl-4 text-xs font-black tracking-widest text-slate-600 uppercase ring-1 ring-slate-200 focus:ring-2 focus:ring-[#1F6FDB]"
-                                >
-                                    {!isZoneScoped && <option value="all">Everyone</option>}
-                                    {!isZoneScoped && <option value="property_owner">Property Owners</option>}
-                                    <option value="zone">Specific Zones</option>
-                                    <option value="target">Specific List</option>
-                                </select>
-                                <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    onChange={(val) => setData('applies_to', val as any)}
+                                    options={[
+                                        ...(!isZoneScoped
+                                            ? [
+                                                  { value: 'all', label: 'Everyone' },
+                                                  { value: 'property_owner', label: 'Property Owners' },
+                                              ]
+                                            : []),
+                                        { value: 'zone', label: 'Specific Zones' },
+                                        { value: 'target', label: 'Specific List' },
+                                    ]}
+                                />
                             </div>
                         </div>
 

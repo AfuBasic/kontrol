@@ -11,6 +11,7 @@ import {
 import { bulkInvite, index, store } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 import type { InviteLink } from '../Components/InviteLinksTab';
 import InviteLinksTab from '../Components/InviteLinksTab';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 type TabType = 'single' | 'bulk' | 'paste' | 'invite_link';
 
@@ -369,43 +370,39 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
 
                                 {/* Property Owner Delegation */}
                                 <div>
-                                    <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Property Owner <span className="text-gray-400">(optional delegation)</span>
                                     </label>
-                                    <select
-                                        id="property_owner_id"
+                                    <CustomSelect
                                         value={data.property_owner_id}
-                                        onChange={(e) => setData('property_owner_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                    >
-                                        <option value="">None / Standard Resident</option>
-                                        {propertyOwners.map((owner) => (
-                                            <option key={owner.id} value={owner.id}>
-                                                {owner.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(val) => setData('property_owner_id', String(val))}
+                                        options={[
+                                            { value: '', label: 'None / Standard Resident' },
+                                            ...propertyOwners.map((owner) => ({
+                                                value: String(owner.id),
+                                                label: owner.name,
+                                            })),
+                                        ]}
+                                    />
                                     {errors.property_owner_id && <p className="mt-1 text-sm text-red-600">{errors.property_owner_id}</p>}
                                 </div>
 
                                 {/* Property Assignment */}
                                 <div>
-                                    <label htmlFor="property_id" className="block text-sm font-medium text-gray-700">
+                                    <label htmlFor="property_id" className="block text-sm font-medium text-gray-700 mb-1.5">
                                         Property Assignment <span className="text-gray-400">(optional)</span>
                                     </label>
-                                    <select
-                                        id="property_id"
+                                    <CustomSelect
                                         value={data.property_id}
-                                        onChange={(e) => setData('property_id', e.target.value)}
-                                        className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                    >
-                                        <option value="">None</option>
-                                        {properties.map((prop) => (
-                                            <option key={prop.id} value={prop.id}>
-                                                {prop.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        onChange={(val) => setData('property_id', String(val))}
+                                        options={[
+                                            { value: '', label: 'None' },
+                                            ...properties.map((prop) => ({
+                                                value: String(prop.id),
+                                                label: prop.name,
+                                            })),
+                                        ]}
+                                    />
                                     {errors.property_id && <p className="mt-1 text-sm text-red-600">{errors.property_id}</p>}
                                 </div>
 
@@ -462,24 +459,20 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Zone
                                                 </label>
-                                                <select
-                                                    id="zone_id"
+                                                <CustomSelect
                                                     value={data.zone_id}
-                                                    onChange={(e) => setData('zone_id', e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setData('zone_id', String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
+                                                {errors.zone_id && <p className="mt-1 text-xs text-red-600">{errors.zone_id}</p>}
                                             </motion.div>
                                         )}
-                                        {errors.zone_id && <p className="mt-1 text-sm text-red-600">{errors.zone_id}</p>}
                                     </div>
                                 )}
                             </div>
@@ -635,21 +628,17 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Zone
                                                 </label>
-                                                <select
-                                                    id="bulk_zone_id"
+                                                <CustomSelect
                                                     value={selectedZone}
-                                                    onChange={(e) => setSelectedZone(e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setSelectedZone(String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
                                             </motion.div>
                                         )}
                                     </div>
@@ -803,21 +792,17 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700">
+                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
                                                     Select Zone
                                                 </label>
-                                                <select
-                                                    id="paste_zone_id"
+                                                <CustomSelect
                                                     value={selectedZone}
-                                                    onChange={(e) => setSelectedZone(e.target.value)}
-                                                    className="mt-1.5 block w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm focus:border-[#1F6FDB] focus:ring-1 focus:ring-[#1F6FDB] focus:outline-none"
-                                                >
-                                                    {zones.map((zone) => (
-                                                        <option key={zone.id} value={zone.id}>
-                                                            {zone.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                    onChange={(val) => setSelectedZone(String(val))}
+                                                    options={zones.map((zone) => ({
+                                                        value: String(zone.id),
+                                                        label: zone.name,
+                                                    }))}
+                                                />
                                             </motion.div>
                                         )}
                                     </div>

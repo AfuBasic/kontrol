@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { recordOfflinePayment } from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 interface RecordableAssignment {
     id: number;
@@ -75,24 +76,24 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, assignments
                     <>
                         <div>
                             <label className="mb-1.5 block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Assignment</label>
-                            <select
+                            <CustomSelect
                                 value={assignmentId}
-                                onChange={(e) => {
-                                    setAssignmentId(e.target.value);
-                                    const assignment = assignments.find((a) => a.id === Number(e.target.value));
+                                onChange={(val) => {
+                                    setAssignmentId(String(val));
+                                    const assignment = assignments.find((a) => a.id === Number(val));
                                     if (assignment) {
                                         setAmount(String(assignment.remaining));
                                     }
                                 }}
-                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                            >
-                                <option value="">Select resident & collection…</option>
-                                {assignments.map((a) => (
-                                    <option key={a.id} value={a.id}>
-                                        {a.resident_name} - {a.collection_name} (₦{a.remaining.toLocaleString()} due)
-                                    </option>
-                                ))}
-                            </select>
+                                placeholder="Select resident & collection…"
+                                options={[
+                                    { value: '', label: 'Select resident & collection…' },
+                                    ...assignments.map((a) => ({
+                                        value: String(a.id),
+                                        label: `${a.resident_name} - ${a.collection_name} (₦${a.remaining.toLocaleString()} due)`,
+                                    })),
+                                ]}
+                            />
                         </div>
                         <div>
                             <label className="mb-1.5 block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Amount (NGN)</label>
@@ -109,16 +110,16 @@ export default function RecordOfflinePaymentModal({ isOpen, onClose, assignments
                         </div>
                         <div>
                             <label className="mb-1.5 block text-[10px] font-bold tracking-widest text-slate-400 uppercase">Payment Method</label>
-                            <select
+                            <CustomSelect
                                 value={method}
-                                onChange={(e) => setMethod(e.target.value)}
-                                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
-                            >
-                                <option value="bank_transfer">Bank Transfer</option>
-                                <option value="cash">Cash</option>
-                                <option value="offline">Offline</option>
-                                <option value="manual">Manual</option>
-                            </select>
+                                onChange={(val) => setMethod(String(val))}
+                                options={[
+                                    { value: 'bank_transfer', label: 'Bank Transfer' },
+                                    { value: 'cash', label: 'Cash' },
+                                    { value: 'offline', label: 'Offline' },
+                                    { value: 'manual', label: 'Manual' },
+                                ]}
+                            />
                         </div>
                     </>
                 )}

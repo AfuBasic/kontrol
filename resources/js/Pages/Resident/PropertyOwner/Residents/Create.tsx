@@ -12,6 +12,7 @@ import {
     destroyInviteLink,
 } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import ResidentLayout from '@/Layouts/ResidentLayout';
 import type { SharedData } from '@/types';
 
@@ -315,22 +316,20 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
 
                             {/* Property Assignment */}
                             <div>
-                                <label htmlFor="property_id" className="block text-sm font-semibold text-slate-700">
+                                <label htmlFor="property_id" className="block text-sm font-semibold text-slate-700 mb-1.5">
                                     Property Assignment <span className="font-normal text-slate-400">(optional)</span>
                                 </label>
-                                <select
-                                    id="property_id"
+                                <CustomSelect
                                     value={data.property_id}
-                                    onChange={(e) => setData('property_id', e.target.value)}
-                                    className="mt-1.5 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-50 focus:outline-none"
-                                >
-                                    <option value="">None</option>
-                                    {properties.map((prop) => (
-                                        <option key={prop.id} value={prop.id}>
-                                            {prop.name}
-                                        </option>
-                                    ))}
-                                </select>
+                                    onChange={(val) => setData('property_id', String(val))}
+                                    options={[
+                                        { value: '', label: 'None' },
+                                        ...properties.map((prop) => ({
+                                            value: String(prop.id),
+                                            label: prop.name,
+                                        })),
+                                    ]}
+                                />
                                 {errors.property_id && <p className="mt-1 text-sm text-rose-600">{errors.property_id}</p>}
                             </div>
 

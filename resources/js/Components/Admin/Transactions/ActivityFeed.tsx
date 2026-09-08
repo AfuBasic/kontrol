@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertCircle, ArrowUpRight, PenLine, RefreshCcw, CornerDownRight, FileText, Gift } from 'lucide-react';
+import { AlertCircle, ArrowUpRight, PenLine, RefreshCcw, CornerDownRight, FileText, Gift, CheckCircle2, XCircle, Tag, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 interface ActivityEntry {
@@ -163,7 +163,7 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
                                                     {/* Headline & Details */}
                                                     <div>
                                                         <span
-                                                            className={`text-[9px] font-black tracking-widest uppercase ${
+                                                            className={`inline-flex items-center gap-1.5 text-[9px] font-black tracking-widest uppercase ${
                                                                 isFailed
                                                                     ? 'text-rose-500'
                                                                     : isRefund
@@ -175,15 +175,32 @@ export default function ActivityFeed({ entries, loading, onSelect }: Props) {
                                                                           : 'text-emerald-600'
                                                             }`}
                                                         >
-                                                            {isFailed
-                                                                ? '🔴 Payment Failed'
-                                                                : isRefund
-                                                                  ? '↩ Refund Issued'
-                                                                  : isCoupon
-                                                                    ? '🏷 Coupon Applied'
-                                                                    : isAdjust
-                                                                      ? '✍ Manual Adjustment'
-                                                                      : '🟢 Payment Received'}
+                                                            {isFailed ? (
+                                                                <>
+                                                                    <XCircle className="h-3 w-3 shrink-0 text-rose-500" />
+                                                                    <span>Payment Failed</span>
+                                                                </>
+                                                            ) : isRefund ? (
+                                                                <>
+                                                                    <RotateCcw className="h-3 w-3 shrink-0 text-violet-600" />
+                                                                    <span>Refund Issued</span>
+                                                                </>
+                                                            ) : isCoupon ? (
+                                                                <>
+                                                                    <Tag className="h-3 w-3 shrink-0 text-amber-600" />
+                                                                    <span>Coupon Applied</span>
+                                                                </>
+                                                            ) : isAdjust ? (
+                                                                <>
+                                                                    <PenLine className="h-3 w-3 shrink-0 text-blue-600" />
+                                                                    <span>Manual Adjustment</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" />
+                                                                    <span>Payment Received</span>
+                                                                </>
+                                                            )}
                                                         </span>
                                                         <h4 className="mt-0.5 text-sm leading-tight font-extrabold text-slate-800">
                                                             {entry.resident_name || 'System Action'}

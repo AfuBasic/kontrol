@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { Search, X, Pin, FileText } from 'lucide-react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 import { index as boardIndex } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 import type { CursorPaginatedPosts, PostCategory } from '@/types';
@@ -172,44 +173,44 @@ export default function EstateBoardIndex({ posts, metrics, filters, zones = [] }
                     {/* Audience, Status & Category Filter Controls */}
                     <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
                         {/* Status Filter */}
-                        <div className="relative">
-                            <select
+                        <div className="w-32">
+                            <CustomSelect
+                                size="sm"
                                 value={filters.status || 'all'}
-                                onChange={(e) => setFilter('status', e.target.value)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:border-primary-500 focus:outline-hidden"
-                            >
-                                <option value="all">All Posts</option>
-                                <option value="published">Published</option>
-                                <option value="draft">Drafts</option>
-                            </select>
+                                onChange={(val) => setFilter('status', String(val))}
+                                options={[
+                                    { value: 'all', label: 'All Posts' },
+                                    { value: 'published', label: 'Published' },
+                                    { value: 'draft', label: 'Drafts' },
+                                ]}
+                            />
                         </div>
 
                         {/* Category Dropdown */}
-                        <div className="relative">
-                            <select
+                        <div className="w-36">
+                            <CustomSelect
+                                size="sm"
                                 value={filters.category || 'all'}
-                                onChange={(e) => setFilter('category', e.target.value)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:border-primary-500 focus:outline-hidden"
-                            >
-                                {CATEGORIES.map((cat) => (
-                                    <option key={cat.value} value={cat.value}>
-                                        {cat.label}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setFilter('category', String(val))}
+                                options={CATEGORIES.map((cat) => ({
+                                    value: cat.value,
+                                    label: cat.label,
+                                }))}
+                            />
                         </div>
 
                         {/* Audience Filter */}
-                        <div className="relative">
-                            <select
+                        <div className="w-36">
+                            <CustomSelect
+                                size="sm"
                                 value={filters.audience || 'all'}
-                                onChange={(e) => setFilter('audience', e.target.value)}
-                                className="cursor-pointer appearance-none rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-2xs focus:border-primary-500 focus:outline-hidden"
-                            >
-                                <option value="all">All Audiences</option>
-                                <option value="residents">Residents Only</option>
-                                <option value="security">Security Only</option>
-                            </select>
+                                onChange={(val) => setFilter('audience', String(val))}
+                                options={[
+                                    { value: 'all', label: 'All Audiences' },
+                                    { value: 'residents', label: 'Residents Only' },
+                                    { value: 'security', label: 'Security Only' },
+                                ]}
+                            />
                         </div>
 
                         {/* Priority / Important Filter */}

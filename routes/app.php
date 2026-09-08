@@ -66,3 +66,10 @@ Route::prefix('partner')->group(base_path('routes/partners.php'));
 |--------------------------------------------------------------------------
 */
 require base_path('routes/zeus.php');
+
+/*
+|--------------------------------------------------------------------------
+| Organization Routes
+|--------------------------------------------------------------------------
+*/
+require base_path('routes/organization.php');

@@ -12,6 +12,7 @@ import {
 import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Fragment, useState, useEffect, useRef } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 type Transaction = {
     id: number;
@@ -226,18 +227,18 @@ export default function BillingPage({ overview, transactions, filters }: Props) 
                                         className="w-full rounded-xl border border-gray-200 py-2 pr-4 pl-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none sm:w-64"
                                     />
                                 </div>
-                                <div className="relative">
-                                    <FunnelIcon className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
-                                    <select
+                                <div className="w-44">
+                                    <CustomSelect
+                                        size="sm"
                                         value={status}
-                                        onChange={(e) => setStatus(e.target.value)}
-                                        className="w-full appearance-none rounded-xl border border-gray-200 py-2 pr-10 pl-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                                    >
-                                        <option value="">All Statuses</option>
-                                        <option value="success">Success</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="failed">Failed</option>
-                                    </select>
+                                        onChange={(val) => setStatus(String(val))}
+                                        options={[
+                                            { value: '', label: 'All Statuses' },
+                                            { value: 'success', label: 'Success' },
+                                            { value: 'pending', label: 'Pending' },
+                                            { value: 'failed', label: 'Failed' },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </div>

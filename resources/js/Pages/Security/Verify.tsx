@@ -24,7 +24,13 @@ interface Organization {
     id: number;
     name: string;
     type: string;
-    operating_hours?: string | null;
+    operating_hours?: {
+        open?: string;
+        close?: string;
+        days?: string[];
+        [key: string]: any;
+    } | string | null;
+    hours_enforcement?: 'inherit' | 'off' | 'warn' | 'block';
 }
 
 interface PageProps {
@@ -33,6 +39,7 @@ interface PageProps {
     accessCodesEnabled?: boolean;
     visitorCheckoutEnabled?: boolean;
     quickEntryEnabled?: boolean;
+    quickEntryHoursEnforcement?: 'off' | 'warn' | 'block';
     requireVehicleInformation?: boolean;
     organizations?: Organization[];
     flash?: {
@@ -67,6 +74,7 @@ export default function SecurityVerify() {
         accessCodesEnabled = true,
         visitorCheckoutEnabled = true,
         quickEntryEnabled = true,
+        quickEntryHoursEnforcement = 'warn',
         requireVehicleInformation = false,
         organizations = [],
     } = usePage<PageProps>().props;
@@ -651,7 +659,7 @@ export default function SecurityVerify() {
                                         : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'
                                 }`}
                             >
-                                <Zap className="h-3.5 w-3.5 fill-current text-amber-300" />
+                                <Zap className="h-3.5 w-3.5" />
                                 <span>Quick Entry</span>
                             </button>
 
@@ -748,6 +756,7 @@ export default function SecurityVerify() {
                                 gateName={gateName}
                                 isOnline={isOnline}
                                 requireVehicleInformation={requireVehicleInformation}
+                                estateHoursEnforcement={quickEntryHoursEnforcement}
                             />
                         </motion.div>
                     ) : verifyMode === 'quick_checkout' ? (

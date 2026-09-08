@@ -22,6 +22,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { properties, residents, create, makeResident } from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import PropertyOwnerCard from '@/Components/Admin/PropertyOwners/PropertyOwnerCard';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -407,41 +408,44 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                         {/* Dropdowns filters */}
                         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                             <div>
-                                <select
+                                <CustomSelect
+                                    size="sm"
                                     value={status}
-                                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                                >
-                                    <option value="">All Statuses</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="pending">Pending</option>
-                                </select>
+                                    onChange={(val) => handleFilterChange('status', String(val))}
+                                    options={[
+                                        { value: '', label: 'All Statuses' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'inactive', label: 'Inactive' },
+                                        { value: 'pending', label: 'Pending' },
+                                    ]}
+                                />
                             </div>
 
                             <div>
-                                <select
+                                <CustomSelect
+                                    size="sm"
                                     value={property}
-                                    onChange={(e) => handleFilterChange('property', e.target.value)}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                                >
-                                    <option value="">Properties Owned</option>
-                                    <option value="has_properties">Has Assigned Properties</option>
-                                    <option value="no_properties">No Properties Assigned</option>
-                                </select>
+                                    onChange={(val) => handleFilterChange('property', String(val))}
+                                    options={[
+                                        { value: '', label: 'Properties Owned' },
+                                        { value: 'has_properties', label: 'Has Assigned Properties' },
+                                        { value: 'no_properties', label: 'No Properties Assigned' },
+                                    ]}
+                                />
                             </div>
 
                             <div>
-                                <select
+                                <CustomSelect
+                                    size="sm"
                                     value={sort}
-                                    onChange={(e) => handleFilterChange('sort', e.target.value)}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                                >
-                                    <option value="">Sort By</option>
-                                    <option value="name">Name</option>
-                                    <option value="date_joined">Date Joined</option>
-                                    <option value="properties_count">Properties Count</option>
-                                </select>
+                                    onChange={(val) => handleFilterChange('sort', String(val))}
+                                    options={[
+                                        { value: '', label: 'Sort By' },
+                                        { value: 'name', label: 'Name' },
+                                        { value: 'date_joined', label: 'Date Joined' },
+                                        { value: 'properties_count', label: 'Properties Count' },
+                                    ]}
+                                />
                             </div>
 
                             <div className="col-span-2 sm:col-span-1">
@@ -1056,22 +1060,20 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                 Assign {selectedIds.length} selected property owner{selectedIds.length === 1 ? '' : 's'} to a zone, or keep them
                                 estate-wide.
                             </p>
-                            <label htmlFor="bulk_po_zone_id" className="mt-5 block text-xs font-black tracking-wider text-slate-700 uppercase">
+                            <label htmlFor="bulk_po_zone_id" className="mt-5 block text-xs font-black tracking-wider text-slate-700 uppercase mb-1.5">
                                 Zone
                             </label>
-                            <select
-                                id="bulk_po_zone_id"
+                            <CustomSelect
                                 value={selectedZoneId}
-                                onChange={(e) => setSelectedZoneId(e.target.value)}
-                                className="mt-1.5 block w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-slate-800 focus:ring-slate-800"
-                            >
-                                <option value="">Entire Estate</option>
-                                {zones.map((zone) => (
-                                    <option key={zone.id} value={zone.id}>
-                                        {zone.name}
-                                    </option>
-                                ))}
-                            </select>
+                                onChange={(val) => setSelectedZoneId(String(val))}
+                                options={[
+                                    { value: '', label: 'Entire Estate' },
+                                    ...zones.map((zone) => ({
+                                        value: String(zone.id),
+                                        label: zone.name,
+                                    })),
+                                ]}
+                            />
                             <div className="mt-6 flex justify-end gap-2.5">
                                 <button
                                     type="button"

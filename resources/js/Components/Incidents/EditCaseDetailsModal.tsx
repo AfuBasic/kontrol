@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Edit3, Eye, Lock, Shield, Sliders, Tag, UserCheck, X } from 'lucide-react';
 import type { Incident, IncidentCategory, IncidentPriority } from '@/types/incidents';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 interface AdminUser {
     id: number;
@@ -92,16 +93,16 @@ export default function EditCaseDetailsModal({
                         <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
                             Priority Level
                         </label>
-                        <select
+                        <CustomSelect
                             value={priority}
-                            onChange={(e) => setPriority(e.target.value as IncidentPriority)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
-                        </select>
+                            onChange={(val) => setPriority(val as IncidentPriority)}
+                            options={[
+                                { value: 'low', label: 'Low' },
+                                { value: 'medium', label: 'Medium' },
+                                { value: 'high', label: 'High' },
+                                { value: 'critical', label: 'Critical' },
+                            ]}
+                        />
                     </div>
 
                     {/* Assignee */}
@@ -109,18 +110,17 @@ export default function EditCaseDetailsModal({
                         <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
                             Assigned Admin / Handler
                         </label>
-                        <select
+                        <CustomSelect
                             value={assignedTo}
-                            onChange={(e) => setAssignedTo(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                        >
-                            <option value="">Unassigned</option>
-                            {admins.map((adm) => (
-                                <option key={adm.id} value={adm.id}>
-                                    {adm.name}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(val) => setAssignedTo(String(val))}
+                            options={[
+                                { value: '', label: 'Unassigned' },
+                                ...admins.map((adm) => ({
+                                    value: String(adm.id),
+                                    label: adm.name,
+                                })),
+                            ]}
+                        />
                     </div>
 
                     {/* Category */}
@@ -128,17 +128,14 @@ export default function EditCaseDetailsModal({
                         <label className="mb-1.5 block text-xs font-bold text-slate-700 dark:text-slate-300">
                             Category
                         </label>
-                        <select
+                        <CustomSelect
                             value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 text-xs sm:text-sm font-bold text-slate-900 focus:border-indigo-500 focus:outline-none dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-                        >
-                            {categories.map((cat) => (
-                                <option key={cat.value} value={cat.value}>
-                                    {cat.label}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={(val) => setCategory(String(val))}
+                            options={categories.map((cat) => ({
+                                value: cat.value,
+                                label: cat.label,
+                            }))}
+                        />
                     </div>
 
                     {/* Visibility / Privacy */}

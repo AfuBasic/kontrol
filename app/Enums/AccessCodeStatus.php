@@ -9,6 +9,7 @@ enum AccessCodeStatus: string
     case Used = 'used';
     case Expired = 'expired';
     case Revoked = 'revoked';
+    case Superseded = 'superseded';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum AccessCodeStatus: string
             self::Used => 'Used',
             self::Expired => 'Expired',
             self::Revoked => 'Revoked',
+            self::Superseded => 'Superseded',
         };
     }
 
@@ -29,6 +31,7 @@ enum AccessCodeStatus: string
             self::Used => 'blue',
             self::Expired => 'gray',
             self::Revoked => 'red',
+            self::Superseded => 'zinc',
         };
     }
 }

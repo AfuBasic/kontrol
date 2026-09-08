@@ -144,20 +144,31 @@ class CollectionService
 
         if ($collection->applies_to === 'all') {
             if ($isPropertyOwner) {
-                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id))
-                    ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $creator->id))
-                    ->active()
+                $userIds = User::whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.status', '!=', 'rejected'))
+                    ->where(function ($q) use ($creator, $estate) {
+                        $q->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $creator->id))
+                            ->orWhereHas('profile', fn ($pq) => $pq->where('property_owner_id', $creator->id))
+                            ->orWhereHas('profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $creator->id));
+                    })
+                    ->whereNull('users.suspended_at')
                     ->pluck('users.id')
                     ->toArray();
             } else {
-                $userIds = User::withRole(['resident', 'property_owner'], $estate->id)
-                    ->active()
+                $userIds = User::forEstate($estate->id)
+                    ->where(function ($q) use ($estate) {
+                        $q->withRole(['resident', 'property_owner'], $estate->id)
+                            ->orWhereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->whereIn('estate_users_membership.relationship_type', ['resident', 'property_owner']));
+                    })
+                    ->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.status', '!=', 'rejected'))
+                    ->whereNull('users.suspended_at')
                     ->pluck('users.id')
                     ->toArray();
             }
         } elseif ($collection->applies_to === 'property_owner') {
-            $userIds = User::withRole('property_owner', $estate->id)
-                ->active()
+            $userIds = User::forEstate($estate->id)
+                ->withRole('property_owner', $estate->id)
+                ->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.status', '!=', 'rejected'))
+                ->whereNull('users.suspended_at')
                 ->pluck('users.id')
                 ->toArray();
         } elseif ($collection->applies_to === 'zone') {
@@ -173,7 +184,7 @@ class CollectionService
                     $userIds[] = $target->target_id;
                 } elseif ($target->target_type === Property::class || $target->target_type === 'property' || $target->target_type === 'App\Models\Property') {
                     $propertyResidentIds = User::whereHas('profile', fn ($q) => $q->where('property_id', $target->target_id))
-                        ->active()
+                        ->whereNull('users.suspended_at')
                         ->pluck('id')
                         ->toArray();
                     $userIds = array_merge($userIds, $propertyResidentIds);
@@ -184,9 +195,38 @@ class CollectionService
             }
         }
 
+        if ($collection->include_creator === false) {
+            return array_values(array_filter(array_unique($userIds), fn ($id) => (int) $id !== (int) $collection->created_by));
+        }
+
         if ($collection->include_creator) {
             $userIds[] = $collection->created_by;
 
+            return array_values(array_unique($userIds));
+        }
+
+        // If applies_to is 'all' and creator is legitimately an active resident/member in the estate, don't strip them
+        $creatorIsResident = false;
+        if ($creator) {
+            $creatorIsResident = $creator->estates()
+                ->where('estates.id', $estate->id)
+                ->where('estate_users_membership.status', '!=', 'rejected')
+                ->where(function ($q) use ($estate, $creator) {
+                    $q->where('estate_users_membership.relationship_type', 'resident')
+                        ->orWhereExists(function ($sq) use ($estate, $creator) {
+                            $sq->select(DB::raw(1))
+                                ->from('model_has_roles')
+                                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                                ->where('model_has_roles.model_id', $creator->id)
+                                ->where('model_has_roles.model_type', User::class)
+                                ->where('model_has_roles.estate_id', $estate->id)
+                                ->where('roles.name', 'resident');
+                        });
+                })
+                ->exists();
+        }
+
+        if ($collection->applies_to === 'all' && $creatorIsResident) {
             return array_values(array_unique($userIds));
         }
 

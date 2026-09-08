@@ -4,6 +4,7 @@ namespace App\Actions\Security;
 
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
+use App\Models\EstateSettings;
 use App\Models\QuickEntryAllocation;
 use App\Models\User;
 use App\Services\Security\CheckpointClaimService;
@@ -51,6 +52,16 @@ class RecordQuickEntryAction
                 ]);
             }
 
+            $settings = EstateSettings::forEstate($estateId);
+            $enforcement = $organization->resolvedEnforcement($settings);
+            $withinHours = $organization->isWithinOperatingHours($timestamp);
+
+            if (! $withinHours && $enforcement === 'block') {
+                throw ValidationException::withMessages([
+                    'organization_id' => ['Quick Entry is not permitted outside operating hours for this organization.'],
+                ]);
+            }
+
             // If an allocation ID was provided, mark tag used on allocation if present
             if (! empty($data['allocation_id'])) {
                 $allocation = QuickEntryAllocation::where('estate_id', $estateId)
@@ -68,6 +79,7 @@ class RecordQuickEntryAction
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,
+                'organization_id' => $organization->id,
                 'entry_point' => $entryPoint,
                 'access_code_id' => null,
                 'verified_by' => $verifiedBy->id,
@@ -81,9 +93,11 @@ class RecordQuickEntryAction
                     'organization_id' => $organization->id,
                     'organization_name' => $organization->name,
                     'organization_type' => $organization->type,
+                    'admission_basis' => $organization->access_policy === 'public_window' ? 'public_window' : ($organization->isUnrestricted() ? 'unrestricted' : 'quick_entry'),
                     'visitor_name' => $displayName,
                     'allocation_id' => $data['allocation_id'] ?? null,
                     'entry_point' => $entryPoint,
+                    'outside_hours' => ! $withinHours,
                 ],
             ]);
 

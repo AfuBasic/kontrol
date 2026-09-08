@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle, Copy, Link as LinkIcon, Plus, Power, RefreshCw, Share2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { copyTextToClipboard } from '@/Utils/clipboard';
 
 export interface InviteLink {
@@ -254,18 +255,17 @@ export default function InviteLinksTab({ inviteLinks, zones, urls, estateName }:
                                 {zones.length > 0 && (
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-gray-700">Zone Scope</label>
-                                        <select
+                                        <CustomSelect
                                             value={settings.zone_id}
-                                            onChange={(e) => setSettings({ ...settings, zone_id: e.target.value })}
-                                            className="block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-1 focus:ring-slate-900"
-                                        >
-                                            <option value="">Entire Estate</option>
-                                            {zones.map((zone) => (
-                                                <option key={zone.id} value={zone.id}>
-                                                    {zone.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            onChange={(val) => setSettings({ ...settings, zone_id: String(val) })}
+                                            options={[
+                                                { value: '', label: 'Entire Estate' },
+                                                ...zones.map((zone) => ({
+                                                    value: String(zone.id),
+                                                    label: zone.name,
+                                                })),
+                                            ]}
+                                        />
                                     </div>
                                 )}
 

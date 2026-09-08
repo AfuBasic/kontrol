@@ -17,6 +17,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
 import { suspend, destroy, edit, create, index, resendInvitation } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/ResidentController';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 interface Resident {
@@ -62,8 +63,7 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
         }
     }, [debouncedSearch, filters.search, status]);
 
-    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newStatus = e.target.value;
+    const handleStatusChange = (newStatus: string) => {
         setStatus(newStatus);
         router.get(index.url(), { search, status: newStatus }, { preserveState: true, preserveScroll: true, replace: true });
     };
@@ -132,21 +132,17 @@ export default function Index({ residents, totalUnfiltered, filters }: Props) {
                         />
                     </div>
                     <div className="w-full sm:w-48">
-                        <div className="relative">
-                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                                <FunnelIcon className="h-4.5 w-4.5 text-slate-400" />
-                            </div>
-                            <select
-                                value={status}
-                                onChange={handleStatusChange}
-                                className="block w-full rounded-2xl border border-slate-200 bg-white py-3 pr-8 pl-10 text-sm font-semibold text-slate-900 shadow-xs focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="accepted">Accepted</option>
-                                <option value="pending">Pending</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
+                        <CustomSelect
+                            size="sm"
+                            value={status}
+                            onChange={(val) => handleStatusChange(String(val))}
+                            options={[
+                                { value: '', label: 'All Statuses' },
+                                { value: 'accepted', label: 'Accepted' },
+                                { value: 'pending', label: 'Pending' },
+                                { value: 'rejected', label: 'Rejected' },
+                            ]}
+                        />
                     </div>
                     {hasActiveFilters && (
                         <button

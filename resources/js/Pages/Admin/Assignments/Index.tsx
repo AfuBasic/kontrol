@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { activate, create, deactivate, destroy, edit, index } from '@/actions/App/Http/Controllers/Admin/AdministrativeAssignmentController';
 import AuthorityEmptyState from '@/Components/Admin/Assignments/AuthorityEmptyState';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -164,25 +165,31 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
 
                             {/* Dropdowns filters */}
                             <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                                <select
-                                    value={scopeType}
-                                    onChange={(e) => applyFilter('scope_type', e.target.value)}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden sm:w-40"
-                                >
-                                    <option value="">All coverage</option>
-                                    <option value="estate">Estate-wide</option>
-                                    <option value="zone">Zone-specific</option>
-                                </select>
+                                <div className="w-full sm:w-40">
+                                    <CustomSelect
+                                        size="sm"
+                                        value={scopeType}
+                                        onChange={(val) => applyFilter('scope_type', String(val))}
+                                        options={[
+                                            { value: '', label: 'All coverage' },
+                                            { value: 'estate', label: 'Estate-wide' },
+                                            { value: 'zone', label: 'Zone-specific' },
+                                        ]}
+                                    />
+                                </div>
 
-                                <select
-                                    value={status}
-                                    onChange={(e) => applyFilter('status', e.target.value)}
-                                    className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden sm:w-40"
-                                >
-                                    <option value="">All statuses</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
+                                <div className="w-full sm:w-40">
+                                    <CustomSelect
+                                        size="sm"
+                                        value={status}
+                                        onChange={(val) => applyFilter('status', String(val))}
+                                        options={[
+                                            { value: '', label: 'All statuses' },
+                                            { value: 'active', label: 'Active' },
+                                            { value: 'inactive', label: 'Inactive' },
+                                        ]}
+                                    />
+                                </div>
 
                                 <button
                                     onClick={clearFilters}

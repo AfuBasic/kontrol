@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { AlertTriangle, Building2, Loader2, Users } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import Modal from '@/Components/Modal';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import AdminLayout from '@/Layouts/AdminLayout';
 import ZoneEmptyState from '@/Components/Admin/Zones/ZoneEmptyState';
 import { destroy, store, update } from '@/actions/App/Http/Controllers/Admin/ZoneController';
@@ -164,16 +165,17 @@ export default function ZonesIndex({ zones }: Props) {
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <select
+                            <div className="flex items-center gap-2 w-48">
+                                <CustomSelect
+                                    size="sm"
                                     value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
-                                    className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs focus:border-slate-800 focus:outline-hidden"
-                                >
-                                    <option value="all">All Zones ({zones.length})</option>
-                                    <option value="active">Active Only ({totalActive})</option>
-                                    <option value="inactive">Inactive Only ({zones.length - totalActive})</option>
-                                </select>
+                                    onChange={(val) => setStatusFilter(val as 'all' | 'active' | 'inactive')}
+                                    options={[
+                                        { value: 'all', label: `All Zones (${zones.length})` },
+                                        { value: 'active', label: `Active Only (${totalActive})` },
+                                        { value: 'inactive', label: `Inactive Only (${zones.length - totalActive})` },
+                                    ]}
+                                />
                             </div>
                         </div>
 

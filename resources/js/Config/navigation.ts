@@ -23,6 +23,7 @@ import * as CollectionController from '@/actions/App/Http/Controllers/Admin/Coll
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
 import * as EstateBoardController from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
+import * as OrganizationController from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import * as IncidentController from '@/actions/App/Http/Controllers/Admin/IncidentController';
 import * as PropertyOwnerController from '@/actions/App/Http/Controllers/Admin/PropertyOwnerController';
 import * as ResidentController from '@/actions/App/Http/Controllers/Admin/ResidentController';
@@ -95,6 +96,14 @@ export const baseNav: NavItem[] = [
         group: 'Estate',
         description: 'Manage estate zones and areas',
         keywords: ['areas', 'blocks', 'phases', 'add zone', 'create zone', 'new zone'],
+    },
+    {
+        name: 'Organizations',
+        href: OrganizationController.index.url(),
+        icon: BuildingOfficeIcon,
+        group: 'Estate',
+        description: 'Manage schools, churches, hospitals & institutions',
+        keywords: ['organizations', 'schools', 'churches', 'hospitals', 'quick entry', 'institutions'],
     },
     {
         name: 'Announcements',

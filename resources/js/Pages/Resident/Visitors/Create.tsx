@@ -2,6 +2,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { AlertCircle, Calendar as CalendarIcon, ChevronLeft, Clock, Minus, Phone, Plus, ShieldCheck, User, Users, X, Zap, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import * as AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
 import { useNetworkQuality } from '@/Hooks/useNetworkQuality';
 import AnimatedLayout from '@/Layouts/AnimatedLayout';
@@ -558,23 +559,18 @@ const CreateAccessCode = () => {
                                                     {/* Hour Selection */}
                                                     <div className="flex min-w-0 flex-col gap-1">
                                                         <label className="text-[9px] font-black tracking-widest text-slate-400 uppercase">Hour</label>
-                                                        <div className="relative w-full">
-                                                            <select
-                                                                value={scheduleHour}
-                                                                onChange={(e) => {
-                                                                    const h = e.target.value;
-                                                                    setScheduleHour(h);
-                                                                    updateStartsAt(scheduleDate, h, scheduleMinute, scheduleAmpm);
-                                                                }}
-                                                                className="w-full min-w-0 appearance-none rounded-2xl bg-slate-50 px-3 py-3.5 font-bold text-slate-900 ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-slate-900"
-                                                            >
-                                                                {Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => (
-                                                                    <option key={h} value={h}>
-                                                                        {h}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
+                                                        <CustomSelect
+                                                            value={scheduleHour}
+                                                            onChange={(val) => {
+                                                                const h = String(val);
+                                                                setScheduleHour(h);
+                                                                updateStartsAt(scheduleDate, h, scheduleMinute, scheduleAmpm);
+                                                            }}
+                                                            options={Array.from({ length: 12 }, (_, i) => String(i + 1)).map((h) => ({
+                                                                value: h,
+                                                                label: h,
+                                                            }))}
+                                                        />
                                                     </div>
 
                                                     {/* Minute Selection */}
@@ -582,23 +578,18 @@ const CreateAccessCode = () => {
                                                         <label className="text-[9px] font-black tracking-widest text-slate-400 uppercase">
                                                             Minute
                                                         </label>
-                                                        <div className="relative w-full">
-                                                            <select
-                                                                value={scheduleMinute}
-                                                                onChange={(e) => {
-                                                                    const m = e.target.value;
-                                                                    setScheduleMinute(m);
-                                                                    updateStartsAt(scheduleDate, scheduleHour, m, scheduleAmpm);
-                                                                }}
-                                                                className="w-full min-w-0 appearance-none rounded-2xl bg-slate-50 px-3 py-3.5 font-bold text-slate-900 ring-1 ring-slate-200 outline-none focus:ring-2 focus:ring-slate-900"
-                                                            >
-                                                                {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => (
-                                                                    <option key={m} value={m}>
-                                                                        {m}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
+                                                        <CustomSelect
+                                                            value={scheduleMinute}
+                                                            onChange={(val) => {
+                                                                const m = String(val);
+                                                                setScheduleMinute(m);
+                                                                updateStartsAt(scheduleDate, scheduleHour, m, scheduleAmpm);
+                                                            }}
+                                                            options={Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => ({
+                                                                value: m,
+                                                                label: m,
+                                                            }))}
+                                                        />
                                                     </div>
 
                                                     {/* AM / PM Toggle segments */}

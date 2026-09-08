@@ -1,6 +1,6 @@
 import { Head, router, InfiniteScroll } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, UserPlus, Loader2, MapPin, Phone } from 'lucide-react';
+import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, UserPlus, Loader2, MapPin, Phone, Zap, Building2, Tag, ChevronRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import { MobileInput, MobileSelect } from '@/Components/MobileInputs';
@@ -26,18 +26,35 @@ type Log = {
     purpose: string;
     verified_at: string;
     verified_at_human: string;
+    verified_at_time?: string | null;
     verifier_name: string;
     gate?: string | null;
     entry_point?: string | null;
     exit_point?: string | null;
     checked_out_at?: string | null;
     checked_out_at_human?: string | null;
+    checked_out_at_time?: string | null;
     checkout_verifier_name?: string | null;
+    tag?: string | null;
+    is_quick_entry?: boolean;
+    entry_type?: string;
+    entry_type_label?: string;
+    destination_name?: string;
+    duration_minutes?: number | null;
+    outside_hours?: boolean;
     vehicle: {
         make: string;
         model: string;
         plate: string;
     } | null;
+};
+
+const formatStayDuration = (minutes: number, _log?: Log) => {
+    if (minutes < 1) return '< 1 min';
+    if (minutes < 60) return `${minutes}m`;
+    const hrs = Math.floor(minutes / 60);
+    const remainingMins = minutes % 60;
+    return remainingMins > 0 ? `${hrs}h ${remainingMins}m` : `${hrs}h`;
 };
 
 type Host = {
@@ -86,6 +103,9 @@ export default function History({
     const paramTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
     const initialTab = paramTab === 'active' && checkoutEnabled ? 'active' : 'history';
     const [activeTab, setActiveTab] = useState<'active' | 'history'>(initialTab);
+    const [historyFilterTab, setHistoryFilterTab] = useState<'all' | 'visitor_pass' | 'quick_entry'>(
+        filters.tab === 'quick_entry' || filters.tab === 'visitor_pass' ? filters.tab : 'all',
+    );
 
     const [search, setSearch] = useState(filters.search || '');
     const [date, setDate] = useState(filters.date || '');
@@ -106,6 +126,24 @@ export default function History({
         }
     };
 
+    const handleSubTabChange = (subTab: 'all' | 'visitor_pass' | 'quick_entry') => {
+        setHistoryFilterTab(subTab);
+        router.get(
+            HistoryController.index.url(),
+            {
+                search: debouncedSearch,
+                date,
+                vehicle_plate: debouncedPlate,
+                host_id: hostId,
+                tab: subTab !== 'all' ? subTab : undefined,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
+    };
+
     useEffect(() => {
         if (debouncedSearch !== filters.search || debouncedPlate !== filters.vehicle_plate || date !== filters.date || hostId !== filters.host_id) {
             router.get(
@@ -115,7 +153,7 @@ export default function History({
                     date,
                     vehicle_plate: debouncedPlate,
                     host_id: hostId,
-                    tab: activeTab,
+                    tab: historyFilterTab !== 'all' ? historyFilterTab : activeTab,
                 },
                 {
                     preserveState: true,
@@ -130,6 +168,7 @@ export default function History({
         setDate('');
         setPlate('');
         setHostId('');
+        setHistoryFilterTab('all');
         router.get(HistoryController.index.url());
     };
 
@@ -189,6 +228,46 @@ export default function History({
                     </div>
                 )}
 
+                {/* History Sub-Filter: All | Visitor Passes | Quick Entry */}
+                {activeTab === 'history' && (
+                    <div className="mb-4 flex items-center gap-1.5 px-2">
+                        <button
+                            type="button"
+                            onClick={() => handleSubTabChange('all')}
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                historyFilterTab === 'all'
+                                    ? 'bg-slate-900 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            All Entries
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleSubTabChange('visitor_pass')}
+                            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                historyFilterTab === 'visitor_pass'
+                                    ? 'bg-slate-900 text-white shadow-xs'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            }`}
+                        >
+                            Visitor Passes
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleSubTabChange('quick_entry')}
+                            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                                historyFilterTab === 'quick_entry'
+                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                    : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                            }`}
+                        >
+                            <Zap className="h-3.5 w-3.5" />
+                            <span>Quick Entry</span>
+                        </button>
+                    </div>
+                )}
+
                 {/* Search & Filters Toggle */}
                 <div className="mb-6 flex gap-3 px-2">
                     <div className="flex-1">
@@ -218,91 +297,177 @@ export default function History({
                                 </div>
                             }
                         >
-                            {logs.data.map((log) => (
-                                <div
-                                    key={log.id}
-                                    onClick={() => setSelectedLog(log)}
-                                    className="group relative overflow-hidden rounded-[2.25rem] bg-white p-6 shadow-xs ring-1 ring-slate-200 transition-all active:scale-[0.98] active:bg-slate-50"
-                                >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 text-indigo-600 shadow-inner ring-1 ring-slate-100">
-                                                <User className="h-7 w-7" />
-                                            </div>
-                                            <div>
-                                                <h3 className="text-lg leading-tight font-bold text-slate-900">{log.visitor.name}</h3>
-                                                <p className="mt-0.5 text-xs font-semibold text-slate-500">Host: {log.host.name}</p>
-                                                {log.host.unit && <p className="text-xs font-semibold text-slate-400">Unit: {log.host.unit}</p>}
-                                                {log.host.address && <p className="text-xs font-semibold text-slate-400">{log.host.address}</p>}
-                                            </div>
-                                        </div>
-                                        <span className="rounded-full bg-slate-100 px-3 py-1 font-mono text-xs font-bold text-slate-600">#{log.code}</span>
-                                    </div>
+                            {logs.data.map((log) => {
+                                const isQuick = Boolean(log.is_quick_entry);
+                                const isOrgCred = log.entry_type === 'organization_credential';
+                                const destination = log.destination_name || log.host.name;
+                                const isCheckedOut = Boolean(log.checked_out_at);
+                                const isRedundantPurpose =
+                                    !log.purpose ||
+                                    log.purpose === 'Quick Entry' ||
+                                    log.purpose === `Visit to ${destination}` ||
+                                    log.purpose.toLowerCase() === destination.toLowerCase();
 
-                                    <div className="mt-6 grid grid-cols-2 gap-3">
-                                        <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                                            <Calendar className="h-4 w-4 text-slate-400" />
-                                            <div>
-                                                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Check-In</p>
-                                                <p className="text-xs font-bold text-slate-700">{log.verified_at}</p>
-                                            </div>
-                                        </div>
+                                return (
+                                    <div
+                                        key={log.id}
+                                        onClick={() => setSelectedLog(log)}
+                                        className="group relative flex flex-col rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs transition-all active:scale-[0.99] active:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
+                                    >
+                                        {/* TOP ROW: Visitor + Destination vs Status (CHECKED OUT / INSIDE) */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-baseline gap-2 flex-wrap">
+                                                    <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
+                                                        {log.visitor.name}
+                                                    </h3>
+                                                    {log.outside_hours && (
+                                                        <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase ring-1 ring-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300">
+                                                            Outside Hours
+                                                        </span>
+                                                    )}
+                                                </div>
 
-                                        <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                                            <Clock className="h-4 w-4 text-slate-400" />
-                                            <div>
-                                                <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Type</p>
-                                                <p className="text-xs font-bold text-slate-700">{formatVisitorType(log.visitor.type)}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Checkout Record Info */}
-                                    {log.checked_out_at && (
-                                        <div className="mt-3 grid grid-cols-2 gap-3">
-                                            <div className="flex items-center gap-2 rounded-xl bg-emerald-50/60 p-3 ring-1 ring-emerald-100">
-                                                <Clock className="h-4 w-4 text-emerald-600" />
-                                                <div>
-                                                    <p className="text-[10px] font-black tracking-widest text-emerald-600 uppercase">Check-Out</p>
-                                                    <p className="text-xs font-bold text-emerald-950">{log.checked_out_at}</p>
+                                                {/* Destination / Organization */}
+                                                <div className="mt-0.5 flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                                    {isQuick || isOrgCred ? (
+                                                        <Building2 className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                                    ) : (
+                                                        <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                                    )}
+                                                    <span className="truncate">{destination}</span>
+                                                    {log.host.unit && !isQuick && (
+                                                        <span className="text-slate-400">· Unit {log.host.unit}</span>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
-                                                <ShieldCheck className="h-4 w-4 text-slate-400" />
-                                                <div>
-                                                    <p className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Exit Gate</p>
-                                                    <p className="text-xs font-bold text-slate-700">{log.exit_point || log.gate || 'Main Entrance'}</p>
+                                            {/* Status: CHECKED OUT (or INSIDE if pending) */}
+                                            <div className="shrink-0 text-right">
+                                                {isCheckedOut ? (
+                                                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-2.5 py-1 text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-300 dark:ring-slate-700">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
+                                                        <span className="text-xs font-black tracking-wider">CHECKED OUT</span>
+                                                    </div>
+                                                ) : (
+                                                    <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-emerald-800 ring-1 ring-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800/50">
+                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
+                                                        <span className="text-xs font-black tracking-wider">INSIDE</span>
+                                                    </div>
+                                                )}
+                                                <div className="mt-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                                                    {isCheckedOut
+                                                        ? `${log.checked_out_at_time || log.checked_out_at}`
+                                                        : `Since ${log.verified_at_time || log.verified_at}`}
                                                 </div>
                                             </div>
                                         </div>
-                                    )}
 
-                                    {log.vehicle && (
-                                        <div className="mt-3 flex items-center gap-2 rounded-xl bg-indigo-50/50 p-3 ring-1 ring-indigo-100/50">
-                                            <Car className="h-4 w-4 text-indigo-600" />
-                                            <div className="flex-1">
-                                                <p className="text-[10px] font-black tracking-widest text-indigo-400 uppercase">Vehicle Details</p>
-                                                <p className="text-xs font-bold text-indigo-950">
-                                                    {log.vehicle.make} {log.vehicle.model} ·{' '}
-                                                    <span className="font-mono text-indigo-700">{log.vehicle.plate}</span>
+                                        {/* MIDDLE: Operational Dual Gate & Time Facts */}
+                                        <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl bg-slate-50/80 p-2.5 dark:bg-slate-800/50">
+                                            <div>
+                                                <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                                                    Entry Gate & Time
+                                                </span>
+                                                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                                    {log.entry_point || log.gate || 'Gate not recorded'}
                                                 </p>
+                                                <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                    {log.verified_at_time || log.verified_at}
+                                                </span>
+                                            </div>
+
+                                            <div>
+                                                <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                                                    {isCheckedOut ? 'Exit Gate & Time' : 'Gate Status'}
+                                                </span>
+                                                {isCheckedOut ? (
+                                                    <>
+                                                        <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                                            {log.exit_point || log.entry_point || 'Main Entrance'}
+                                                        </p>
+                                                        <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                            {log.checked_out_at_time || log.checked_out_at}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <p className="mt-0.5 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                                                        Currently Inside
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            <div className="col-span-2 sm:col-span-1">
+                                                <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">
+                                                    {isCheckedOut && log.duration_minutes !== null && log.duration_minutes !== undefined ? 'Duration' : 'Entry Type'}
+                                                </span>
+                                                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100">
+                                                    {isCheckedOut && log.duration_minutes !== null && log.duration_minutes !== undefined
+                                                        ? formatStayDuration(log.duration_minutes, log)
+                                                        : (log.entry_type_label || (isQuick ? 'Quick Entry' : 'Visitor Pass'))}
+                                                </p>
+                                                {isCheckedOut && (
+                                                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                                                        {log.entry_type_label || (isQuick ? 'Quick Entry' : 'Visitor Pass')}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                    )}
 
-                                    <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Purpose</span>
-                                            <span className="text-[10px] font-bold text-slate-600">{log.purpose}</span>
+                                        {/* LOWER: Guard, Identifier, Vehicle, Purpose */}
+                                        <div className="mt-3 flex flex-wrap items-center justify-between gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                                {log.tag ? (
+                                                    <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
+                                                        <Tag className="h-3 w-3" />
+                                                        <span>Visitor Tag #{log.tag}</span>
+                                                    </span>
+                                                ) : log.code ? (
+                                                    <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                                        <span>Pass #{log.code}</span>
+                                                    </span>
+                                                ) : null}
+
+                                                {log.vehicle && (
+                                                    <span className="inline-flex items-center gap-1 font-semibold text-slate-700 dark:text-slate-300">
+                                                        <Car className="h-3 w-3 text-slate-400" />
+                                                        <span>{log.vehicle.plate}</span>
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="text-[11px] text-slate-400">
+                                                Guard: <span className="font-semibold text-slate-600 dark:text-slate-300">{log.verifier_name}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-black tracking-widest text-slate-400 uppercase">Guard</span>
-                                            <span className="text-[10px] font-bold text-slate-600">{log.verifier_name}</span>
+
+                                        {!isRedundantPurpose && (
+                                            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 italic">
+                                                "{log.purpose}"
+                                            </p>
+                                        )}
+
+                                        {/* BOTTOM: Secondary View Details trigger */}
+                                        <div className="mt-3.5 flex items-center justify-between border-t border-slate-100 pt-2.5 dark:border-slate-800">
+                                            <span className="text-[11px] text-slate-400">
+                                                {log.verified_at}
+                                            </span>
+
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedLog(log);
+                                                }}
+                                                className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                                            >
+                                                <span>View Audit Details</span>
+                                                <ChevronRight className="h-3 w-3" />
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </InfiniteScroll>
                     ) : (
                         <div className="flex flex-col items-center justify-center rounded-[2.25rem] bg-slate-50 py-24 ring-1 ring-slate-100">

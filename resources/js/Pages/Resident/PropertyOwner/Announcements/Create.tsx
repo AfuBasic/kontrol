@@ -2,6 +2,7 @@ import { ArrowLeftIcon, UserIcon, BuildingOfficeIcon, MagnifyingGlassIcon, XMark
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { index, store } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
 
 interface TargetItem {
@@ -132,18 +133,16 @@ export default function Create({ residents, properties }: Props) {
 
                     {/* Target Audience */}
                     <div>
-                        <label htmlFor="applies_to" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
-                            Target Audience
-                        </label>
-                        <select
-                            id="applies_to"
+                        <CustomSelect
+                            label="Target Audience"
                             value={data.applies_to}
-                            onChange={(e) => setData('applies_to', e.target.value as 'all' | 'target')}
-                            className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                        >
-                            <option value="all">All My Residents</option>
-                            <option value="target">Specific Targets</option>
-                        </select>
+                            onChange={(val) => setData('applies_to', val as 'all' | 'target')}
+                            options={[
+                                { value: 'all', label: 'All My Residents' },
+                                { value: 'target', label: 'Specific Targets' },
+                            ]}
+                            buttonClassName="rounded-2xl py-3 px-4 text-sm font-bold bg-slate-50 border-slate-200"
+                        />
                         {errors.applies_to && <p className="mt-1 text-xs font-bold text-rose-600">{errors.applies_to}</p>}
                     </div>
 

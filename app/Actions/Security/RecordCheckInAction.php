@@ -104,6 +104,7 @@ class RecordCheckInAction
             // Create Access Log
             $log = AccessLog::create([
                 'estate_id' => $estateId,
+                'organization_id' => $accessCode->organization_id,
                 'entry_point' => $entryPoint,
                 'access_code_id' => $accessCode->id,
                 'verified_by' => $verifiedBy->id,
@@ -114,6 +115,8 @@ class RecordCheckInAction
                 'meta' => [
                     'visitor_name' => $accessCode->visitor_name,
                     'host_id' => $accessCode->user_id,
+                    'organization_id' => $accessCode->organization_id,
+                    'admission_basis' => $accessCode->organization_id ? 'credential' : 'pass',
                     'enforced_single_use' => $forceSingleUse,
                     'original_type' => $accessCode->type,
                     'verification_method' => $verificationMethod,
@@ -121,11 +124,11 @@ class RecordCheckInAction
                 ],
             ]);
 
-            // Notify Resident
-            $accessCode->user->notify(new VisitorArrivedNotification($accessCode));
-
-            // Broadcast real-time notification
-            VisitorArrivedBroadcast::dispatch($accessCode->user, $accessCode);
+            // Notify Resident if present
+            if ($accessCode->user) {
+                $accessCode->user->notify(new VisitorArrivedNotification($accessCode));
+                VisitorArrivedBroadcast::dispatch($accessCode->user, $accessCode);
+            }
 
             return $log;
         });

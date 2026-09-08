@@ -29,6 +29,7 @@ class CheckoutQuickEntryAction
             $log = AccessLog::withoutGlobalScopes()
                 ->where('estate_id', $estateId)
                 ->whereNull('access_code_id')
+                ->where('meta->entry_type', 'quick_entry')
                 ->where('meta->tag', $normalizedTag)
                 ->whereNull('checked_out_at')
                 ->latest('verified_at')

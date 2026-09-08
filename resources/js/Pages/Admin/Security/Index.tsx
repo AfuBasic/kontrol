@@ -9,6 +9,7 @@ import SecurityActions from '@/Components/Admin/SecurityActions';
 import SectionErrorBoundary from '@/Components/SectionErrorBoundary';
 import { TableRowSkeleton } from '@/Components/Skeletons';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
@@ -265,16 +266,19 @@ export default function SecurityPersonnel({
 
                         {/* Status dropdown */}
                         <div className="flex gap-2 sm:w-80">
-                            <select
-                                value={status}
-                                onChange={(e) => handleFilterChange('status', e.target.value)}
-                                className="w-full rounded-xl border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] font-bold text-slate-700 focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All Statuses</option>
-                                <option value="active">Active</option>
-                                <option value="pending">Pending</option>
-                                <option value="suspended">Suspended</option>
-                            </select>
+                            <div className="w-full">
+                                <CustomSelect
+                                    size="sm"
+                                    value={status}
+                                    onChange={(val) => handleFilterChange('status', String(val))}
+                                    options={[
+                                        { value: '', label: 'All Statuses' },
+                                        { value: 'active', label: 'Active' },
+                                        { value: 'pending', label: 'Pending' },
+                                        { value: 'suspended', label: 'Suspended' },
+                                    ]}
+                                />
+                            </div>
 
                             <button
                                 onClick={clearFilters}

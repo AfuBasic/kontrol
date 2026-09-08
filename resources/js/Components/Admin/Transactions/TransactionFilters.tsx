@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { RotateCcw, Search } from 'lucide-react';
 import { useState } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 import * as TransactionController from '@/actions/App/Http/Controllers/Admin/TransactionController';
 
@@ -89,46 +90,51 @@ export default function TransactionFilters({ filters, filterOptions }: Props) {
                         className={`${selectClass} pl-10`}
                     />
                 </div>
-                <select value={localFilters.resident_id} onChange={(e) => update('resident_id', e.target.value)} className={selectClass}>
-                    <option value="">All Residents</option>
-                    {filterOptions.residents.map((r) => (
-                        <option key={r.id} value={r.id}>
-                            {r.name}
-                        </option>
-                    ))}
-                </select>
-                <select value={localFilters.collection_id} onChange={(e) => update('collection_id', e.target.value)} className={selectClass}>
-                    <option value="">All Collections</option>
-                    {filterOptions.collections.map((c) => (
-                        <option key={c.id} value={c.id}>
-                            {c.name}
-                        </option>
-                    ))}
-                </select>
-                <select value={localFilters.type} onChange={(e) => update('type', e.target.value)} className={selectClass}>
-                    <option value="">All Types</option>
-                    {filterOptions.types.map((t) => (
-                        <option key={t.value} value={t.value}>
-                            {t.label}
-                        </option>
-                    ))}
-                </select>
-                <select value={localFilters.status} onChange={(e) => update('status', e.target.value)} className={selectClass}>
-                    <option value="">All Statuses</option>
-                    {filterOptions.statuses.map((s) => (
-                        <option key={s.value} value={s.value}>
-                            {s.label}
-                        </option>
-                    ))}
-                </select>
-                <select value={localFilters.payment_method} onChange={(e) => update('payment_method', e.target.value)} className={selectClass}>
-                    <option value="">All Methods</option>
-                    {filterOptions.payment_methods.map((m) => (
-                        <option key={m.value} value={m.value}>
-                            {m.label}
-                        </option>
-                    ))}
-                </select>
+                <CustomSelect
+                    size="sm"
+                    value={localFilters.resident_id}
+                    onChange={(val) => update('resident_id', String(val))}
+                    options={[
+                        { value: '', label: 'All Residents' },
+                        ...filterOptions.residents.map((r) => ({ value: String(r.id), label: r.name })),
+                    ]}
+                />
+                <CustomSelect
+                    size="sm"
+                    value={localFilters.collection_id}
+                    onChange={(val) => update('collection_id', String(val))}
+                    options={[
+                        { value: '', label: 'All Collections' },
+                        ...filterOptions.collections.map((c) => ({ value: String(c.id), label: c.name })),
+                    ]}
+                />
+                <CustomSelect
+                    size="sm"
+                    value={localFilters.type}
+                    onChange={(val) => update('type', String(val))}
+                    options={[
+                        { value: '', label: 'All Types' },
+                        ...filterOptions.types.map((t) => ({ value: t.value, label: t.label })),
+                    ]}
+                />
+                <CustomSelect
+                    size="sm"
+                    value={localFilters.status}
+                    onChange={(val) => update('status', String(val))}
+                    options={[
+                        { value: '', label: 'All Statuses' },
+                        ...filterOptions.statuses.map((s) => ({ value: s.value, label: s.label })),
+                    ]}
+                />
+                <CustomSelect
+                    size="sm"
+                    value={localFilters.payment_method}
+                    onChange={(val) => update('payment_method', String(val))}
+                    options={[
+                        { value: '', label: 'All Methods' },
+                        ...filterOptions.payment_methods.map((m) => ({ value: m.value, label: m.label })),
+                    ]}
+                />
                 <input type="date" value={localFilters.date_from} onChange={(e) => update('date_from', e.target.value)} className={selectClass} />
                 <input type="date" value={localFilters.date_to} onChange={(e) => update('date_to', e.target.value)} className={selectClass} />
                 <input

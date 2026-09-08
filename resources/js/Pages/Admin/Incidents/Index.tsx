@@ -1,9 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, SlidersHorizontal } from 'lucide-react';
+import { AlertTriangle, Eye, MessageSquare, Search, ThumbsUp, Plus, X, Grid, List, User, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { bulk_destroy } from '@/routes/admin/incidents';
 type AdminUser = {
     id: number;
@@ -270,7 +271,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             return {
                 label: breached ? 'SLA Breached' : 'SLA Met',
                 style: breached ? 'bg-red-50 text-red-700 border-red-200/50' : 'bg-emerald-50 text-emerald-700 border-emerald-200/50',
-                indicator: breached ? '🔴' : '🟢',
+                dotColor: breached ? 'bg-red-500' : 'bg-emerald-500',
                 breached,
             };
         }
@@ -280,14 +281,14 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             return {
                 label: 'SLA Breached',
                 style: 'bg-rose-50 text-rose-700 border-rose-250 animate-pulse',
-                indicator: '🔴',
+                dotColor: 'bg-rose-500',
                 breached: true,
             };
         } else if (elapsed > warningLimit) {
             return {
                 label: 'SLA Warning',
                 style: 'bg-amber-50 text-amber-700 border-amber-250 animate-pulse',
-                indicator: '🟠',
+                dotColor: 'bg-amber-500',
                 breached: false,
             };
         } else {
@@ -295,7 +296,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
             return {
                 label: `${remainingHours}h remaining`,
                 style: 'bg-slate-50 text-slate-700 border-slate-200',
-                indicator: '🟢',
+                dotColor: 'bg-emerald-500',
                 breached: false,
             };
         }
@@ -512,7 +513,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                         className="flex flex-col gap-2.5 rounded-xl border border-red-100/70 bg-white p-3.5 shadow-xs sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div className="flex items-start gap-3">
-                                            <span className="mt-1 text-sm">{slaInfo.indicator}</span>
+                                            <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${slaInfo.dotColor}`} />
                                             <div>
                                                 <Link
                                                     href={`/admin/incidents/${incident.hashid}`}
@@ -551,7 +552,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                 ) : (
                     <div className="rounded-2xl border border-emerald-100 bg-emerald-50/20 p-4.5 shadow-xs">
                         <div className="flex items-center gap-2.5">
-                            <span className="text-base">🟢</span>
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                             <div>
                                 <h3 className="text-xs font-black tracking-wider text-emerald-900 uppercase">Excellent</h3>
                                 <p className="text-[11px] font-semibold text-emerald-800/80">No incidents currently require immediate attention.</p>
@@ -592,103 +593,109 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                             </div>
 
                             {/* Status */}
-                            <select
-                                value={status}
-                                onChange={(e) => {
-                                    setStatus(e.target.value);
-                                    applyFilters({ status: e.target.value || undefined });
-                                }}
-                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All Statuses</option>
-                                {statuses.map((s) => (
-                                    <option key={s.value} value={s.value}>
-                                        {s.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="w-36">
+                                <CustomSelect
+                                    size="sm"
+                                    value={status}
+                                    onChange={(val) => {
+                                        setStatus(String(val));
+                                        applyFilters({ status: String(val) || undefined });
+                                    }}
+                                    options={[
+                                        { value: '', label: 'All Statuses' },
+                                        ...statuses.map((s) => ({ value: s.value, label: s.label })),
+                                    ]}
+                                />
+                            </div>
 
                             {/* Priority */}
-                            <select
-                                value={priority}
-                                onChange={(e) => {
-                                    setPriority(e.target.value);
-                                    applyFilters({ priority: e.target.value || undefined });
-                                }}
-                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All Priorities</option>
-                                <option value="critical">Critical</option>
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                            </select>
+                            <div className="w-36">
+                                <CustomSelect
+                                    size="sm"
+                                    value={priority}
+                                    onChange={(val) => {
+                                        setPriority(String(val));
+                                        applyFilters({ priority: String(val) || undefined });
+                                    }}
+                                    options={[
+                                        { value: '', label: 'All Priorities' },
+                                        { value: 'critical', label: 'Critical' },
+                                        { value: 'high', label: 'High' },
+                                        { value: 'medium', label: 'Medium' },
+                                        { value: 'low', label: 'Low' },
+                                    ]}
+                                />
+                            </div>
 
                             {/* Category */}
-                            <select
-                                value={category}
-                                onChange={(e) => {
-                                    setCategory(e.target.value);
-                                    applyFilters({ category: e.target.value || undefined });
-                                }}
-                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All Categories</option>
-                                {categories.map((c) => (
-                                    <option key={c.value} value={c.value}>
-                                        {c.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="w-40">
+                                <CustomSelect
+                                    size="sm"
+                                    value={category}
+                                    onChange={(val) => {
+                                        setCategory(String(val));
+                                        applyFilters({ category: String(val) || undefined });
+                                    }}
+                                    options={[
+                                        { value: '', label: 'All Categories' },
+                                        ...categories.map((c) => ({ value: c.value, label: c.label })),
+                                    ]}
+                                />
+                            </div>
 
                             {/* Assignee */}
-                            <select
-                                value={assigneeId}
-                                onChange={(e) => {
-                                    setAssigneeId(e.target.value);
-                                    applyFilters({ assignee_id: e.target.value || undefined });
-                                }}
-                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All Assignees</option>
-                                {admins.map((adm) => (
-                                    <option key={adm.id} value={adm.id}>
-                                        {adm.name}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="w-40">
+                                <CustomSelect
+                                    size="sm"
+                                    value={assigneeId}
+                                    onChange={(val) => {
+                                        setAssigneeId(String(val));
+                                        applyFilters({ assignee_id: String(val) || undefined });
+                                    }}
+                                    options={[
+                                        { value: '', label: 'All Assignees' },
+                                        ...admins.map((adm) => ({ value: String(adm.id), label: adm.name })),
+                                    ]}
+                                />
+                            </div>
 
                             {/* SLA Status */}
-                            <select
-                                value={slaStatus}
-                                onChange={(e) => {
-                                    setSlaStatus(e.target.value);
-                                    applyFilters({ sla_status: e.target.value || undefined });
-                                }}
-                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All SLA Statuses</option>
-                                <option value="compliant">SLA Compliant</option>
-                                <option value="warning">SLA Warning</option>
-                                <option value="breached">SLA Breached</option>
-                            </select>
+                            <div className="w-40">
+                                <CustomSelect
+                                    size="sm"
+                                    value={slaStatus}
+                                    onChange={(val) => {
+                                        setSlaStatus(String(val));
+                                        applyFilters({ sla_status: String(val) || undefined });
+                                    }}
+                                    options={[
+                                        { value: '', label: 'All SLA Statuses' },
+                                        { value: 'compliant', label: 'SLA Compliant' },
+                                        { value: 'warning', label: 'SLA Warning' },
+                                        { value: 'breached', label: 'SLA Breached' },
+                                    ]}
+                                />
+                            </div>
 
                             {/* Source */}
-                            <select
-                                value={source}
-                                onChange={(e) => {
-                                    setSource(e.target.value);
-                                    applyFilters({ source: e.target.value || undefined });
-                                }}
-                                className="text-slate-655 rounded-xl border-slate-200 bg-slate-50/50 px-3 py-1.5 text-[10px] font-bold focus:border-slate-800 focus:outline-hidden"
-                            >
-                                <option value="">All Sources</option>
-                                <option value="resident_report">Resident Reports</option>
-                                <option value="security_report">Security Reports</option>
-                                <option value="estate_management">Estate Management</option>
-                                <option value="system_generated">System Generated</option>
-                                <option value="inspection">Inspection</option>
-                            </select>
+                            <div className="w-36">
+                                <CustomSelect
+                                    size="sm"
+                                    value={source}
+                                    onChange={(val) => {
+                                        setSource(String(val));
+                                        applyFilters({ source: String(val) || undefined });
+                                    }}
+                                    options={[
+                                        { value: '', label: 'All Sources' },
+                                        { value: 'resident_report', label: 'Resident Reports' },
+                                        { value: 'security_report', label: 'Security Reports' },
+                                        { value: 'estate_management', label: 'Estate Management' },
+                                        { value: 'system_generated', label: 'System Generated' },
+                                        { value: 'inspection', label: 'Inspection' },
+                                    ]}
+                                />
+                            </div>
 
                             {hasActiveFilters && (
                                 <button

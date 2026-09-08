@@ -82,12 +82,14 @@ class AccessCode extends Model
 
     protected $fillable = [
         'estate_id',
+        'organization_id',
+        'organization_member_id',
         'user_id',
         'code',
         'pass_uuid',
         'qr_token',
         'qr_image_path',
-        'type', // single_use, long_lived
+        'type', // single_use, long_lived, organization
         'source', // web, telegram
         'visitor_name',
         'visitor_phone',
@@ -172,6 +174,22 @@ class AccessCode extends Model
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
+    }
+
+    /**
+     * @return BelongsTo<EstateOrganization, $this>
+     */
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(EstateOrganization::class, 'organization_id');
+    }
+
+    /**
+     * @return BelongsTo<OrganizationAccessMember, $this>
+     */
+    public function organizationMember(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationAccessMember::class, 'organization_member_id');
     }
 
     /**

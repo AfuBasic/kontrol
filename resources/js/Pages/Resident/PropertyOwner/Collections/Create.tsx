@@ -17,6 +17,7 @@ import { useState, useMemo } from 'react';
 import { index, store } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
 import { index as settlementIndex } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/SettlementController';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 interface TargetItem {
     type: 'user' | 'property';
@@ -476,20 +477,19 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         <div>
                                             <label
                                                 htmlFor="recurring_interval"
-                                                className="block text-xs font-bold tracking-wider text-slate-700 uppercase"
+                                                className="block text-xs font-bold tracking-wider text-slate-700 uppercase mb-2"
                                             >
                                                 Billing Interval
                                             </label>
-                                            <select
-                                                id="recurring_interval"
+                                            <CustomSelect
                                                 value={data.recurring_interval}
-                                                onChange={(e) => setData('recurring_interval', e.target.value as 'monthly' | 'weekly' | 'yearly')}
-                                                className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                                            >
-                                                <option value="weekly">Weekly</option>
-                                                <option value="monthly">Monthly</option>
-                                                <option value="yearly">Yearly</option>
-                                            </select>
+                                                onChange={(val) => setData('recurring_interval', val as 'monthly' | 'weekly' | 'yearly')}
+                                                options={[
+                                                    { value: 'weekly', label: 'Weekly' },
+                                                    { value: 'monthly', label: 'Monthly' },
+                                                    { value: 'yearly', label: 'Yearly' },
+                                                ]}
+                                            />
                                             {errors.recurring_interval && (
                                                 <p className="mt-1 text-xs font-bold text-rose-600">{errors.recurring_interval}</p>
                                             )}
@@ -599,18 +599,17 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
 
                             {/* Target Audience */}
                             <div>
-                                <label htmlFor="applies_to" className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
+                                <label htmlFor="applies_to" className="block text-xs font-bold tracking-wider text-slate-700 uppercase mb-2">
                                     Target Audience
                                 </label>
-                                <select
-                                    id="applies_to"
+                                <CustomSelect
                                     value={data.applies_to}
-                                    onChange={(e) => setData('applies_to', e.target.value as 'all' | 'target')}
-                                    className="mt-2 block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none"
-                                >
-                                    <option value="all">All My Residents</option>
-                                    <option value="target">Specific Targets</option>
-                                </select>
+                                    onChange={(val) => setData('applies_to', val as 'all' | 'target')}
+                                    options={[
+                                        { value: 'all', label: 'All My Residents' },
+                                        { value: 'target', label: 'Specific Targets' },
+                                    ]}
+                                />
                                 {errors.applies_to && <p className="mt-1 text-xs font-bold text-rose-600">{errors.applies_to}</p>}
                             </div>
 

@@ -4,6 +4,7 @@ namespace App\Actions\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -45,6 +46,13 @@ class AssignResidentsToPropertyOwnerAction
                 ->update([
                     'property_owner_id' => $propertyOwner->id,
                 ]);
+
+            foreach ($validResidentIds as $resId) {
+                UserProfile::updateOrCreate(
+                    ['user_id' => $resId],
+                    ['property_owner_id' => $propertyOwner->id]
+                );
+            }
 
             activity('people')
                 ->performedOn($propertyOwner)

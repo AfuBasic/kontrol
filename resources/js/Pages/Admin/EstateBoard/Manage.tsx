@@ -3,6 +3,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
 import { Edit, Eye, Filter, Globe, Image as ImageIcon, MessageCircle, Plus, Search, Shield, Trash2, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 
 import { create, edit, index, show, destroy } from '@/actions/App/Http/Controllers/Admin/EstateBoardController';
 
@@ -354,29 +355,35 @@ export default function ManagePosts({ posts }: Props) {
                         {/* Status Filter */}
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-700">Status:</span>
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                            >
-                                <option value="all">All</option>
-                                <option value="published">Published</option>
-                                <option value="draft">Draft</option>
-                            </select>
+                            <div className="w-32">
+                                <CustomSelect
+                                    size="sm"
+                                    value={statusFilter}
+                                    onChange={(val) => setStatusFilter(val as FilterStatus)}
+                                    options={[
+                                        { value: 'all', label: 'All' },
+                                        { value: 'published', label: 'Published' },
+                                        { value: 'draft', label: 'Draft' },
+                                    ]}
+                                />
+                            </div>
                         </div>
 
                         {/* Audience Filter */}
                         <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-700">Audience:</span>
-                            <select
-                                value={audienceFilter}
-                                onChange={(e) => setAudienceFilter(e.target.value as FilterAudience)}
-                                className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-primary-500 focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                            >
-                                <option value="all">All Audiences</option>
-                                <option value="residents">Residents Only</option>
-                                <option value="security">Security Only</option>
-                            </select>
+                            <div className="w-40">
+                                <CustomSelect
+                                    size="sm"
+                                    value={audienceFilter}
+                                    onChange={(val) => setAudienceFilter(val as FilterAudience)}
+                                    options={[
+                                        { value: 'all', label: 'All Audiences' },
+                                        { value: 'residents', label: 'Residents Only' },
+                                        { value: 'security', label: 'Security Only' },
+                                    ]}
+                                />
+                            </div>
                         </div>
 
                         {hasActiveFilters && (

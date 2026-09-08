@@ -15,6 +15,7 @@ import {
 } from 'date-fns';
 import { ChevronLeft, ChevronRight, Clock, Plus, Search, User, Copy, Check, X, Info, Calendar as CalendarIcon } from 'lucide-react';
 import React, { useEffect, useState, useMemo } from 'react';
+import CustomSelect from '@/Components/UI/CustomSelect';
 import { getPurposeColorStyle } from '@/Utils/calendarTheme';
 
 export type VisitorCalendarEvent = {
@@ -332,18 +333,18 @@ export default function VisitorCalendar({
 
             {/* ─── Admin Host Filter ─── */}
             {isAdmin && hosts.length > 0 && (
-                <select
+                <CustomSelect
+                    size="sm"
                     value={selectedHostId}
-                    onChange={(e) => setSelectedHostId(e.target.value)}
-                    className="w-full rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 shadow-2xs focus:ring-0"
-                >
-                    <option value="All">All Resident Hosts</option>
-                    {hosts.map((host) => (
-                        <option key={host.id} value={host.id}>
-                            {host.name}
-                        </option>
-                    ))}
-                </select>
+                    onChange={(val) => setSelectedHostId(String(val))}
+                    options={[
+                        { value: 'All', label: 'All Resident Hosts' },
+                        ...hosts.map((host) => ({
+                            value: String(host.id),
+                            label: host.name,
+                        })),
+                    ]}
+                />
             )}
 
             {/* ─── View Toggle (Month / Agenda) - plain text, not pills ─── */}

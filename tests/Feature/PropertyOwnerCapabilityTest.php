@@ -18,6 +18,7 @@ use App\Services\PaystackService;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -741,6 +742,18 @@ test('payment routing dynamically switches subaccounts and prevents bulk mismatc
     ]);
 
     $this->actingAs($resident);
+
+    Http::fake([
+        'api.paystack.co/transaction/initialize' => Http::response([
+            'status' => true,
+            'message' => 'Authorization URL created',
+            'data' => [
+                'authorization_url' => 'https://checkout.paystack.com/mock',
+                'access_code' => 'mock_access_code',
+                'reference' => 'mock_ref',
+            ],
+        ], 200),
+    ]);
 
     // 6. Test Single Payment Routing for Landlord Bill
     $response = $this->postJson(url("/billing/collection/{$ownerAssignment->id}/initiate"));
