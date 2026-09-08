@@ -37,13 +37,21 @@ class ResidentController extends Controller
         $user = auth()->user();
 
         $totalUnfiltered = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
+            ->where(function ($q) use ($user, $estate) {
+                $q->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                    ->orWhereHas('profile', fn ($pq) => $pq->where('property_owner_id', $user->id))
+                    ->orWhereHas('profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $user->id));
+            })
             ->count();
 
         $query = User::query()
-            ->whereHas('profile', fn ($q) => $q->where('property_owner_id', $user->id))
             ->forEstate($estate->id)
+            ->where(function ($q) use ($user, $estate) {
+                $q->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $user->id))
+                    ->orWhereHas('profile', fn ($pq) => $pq->where('property_owner_id', $user->id))
+                    ->orWhereHas('profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->where('property_owner_id', $user->id));
+            })
             ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
             ->latest();
 
@@ -115,7 +123,7 @@ class ResidentController extends Controller
         $estate = $this->estateContext->getEstate();
 
         // Ensure this resident is managed by the Property Owner
-        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+        abort_unless($this->isManagedResident($resident, $user, $estate->id), 403);
 
         $properties = Property::query()
             ->where('estate_id', $estate->id)
@@ -145,9 +153,10 @@ class ResidentController extends Controller
     public function update(Request $request, User $resident): RedirectResponse
     {
         $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
 
         // Ensure this resident is managed by the Property Owner
-        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+        abort_unless($this->isManagedResident($resident, $user, $estate->id), 403);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -195,7 +204,6 @@ class ResidentController extends Controller
         $resident->update($updateData);
 
         if ($emailChanged) {
-            $estate = $this->estateContext->getEstate();
             event(new ResidentCreated($resident, $estate, true));
         }
 
@@ -204,6 +212,7 @@ class ResidentController extends Controller
             'unit_number' => $validated['unit_number'] ?? null,
             'address' => $validated['address'] ?? null,
             'property_id' => $validated['property_id'] ?? null,
+            'property_owner_id' => $user->id,
         ]);
 
         return redirect()
@@ -217,9 +226,10 @@ class ResidentController extends Controller
     public function suspend(User $resident): RedirectResponse
     {
         $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
 
         // Ensure this resident is managed by the Property Owner
-        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+        abort_unless($this->isManagedResident($resident, $user, $estate->id), 403);
 
         if ($resident->suspended_at) {
             $resident->update(['suspended_at' => null]);
@@ -241,7 +251,7 @@ class ResidentController extends Controller
         $estate = $this->estateContext->getEstate();
 
         // Ensure this resident is managed by the Property Owner
-        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+        abort_unless($this->isManagedResident($resident, $user, $estate->id), 403);
 
         // Ensure the resident is not already accepted in the estate
         $status = $resident->estates()
@@ -265,16 +275,16 @@ class ResidentController extends Controller
     public function destroy(User $resident): RedirectResponse
     {
         $user = auth()->user();
+        $estate = $this->estateContext->getEstate();
 
         // Ensure this resident is managed by the Property Owner
-        abort_if($resident->profile?->property_owner_id !== $user->id, 403);
+        abort_unless($this->isManagedResident($resident, $user, $estate->id), 403);
 
         $resident->profile()->update([
             'property_owner_id' => null,
             'property_id' => null,
         ]);
 
-        $estate = $this->estateContext->getEstate();
         $resident->estates()->updateExistingPivot($estate->id, [
             'property_owner_id' => null,
         ]);
@@ -518,5 +528,30 @@ class ResidentController extends Controller
         $link->delete();
 
         return redirect()->route('resident.property-owner.residents.index')->with('success', 'Invite link deleted successfully.');
+    }
+
+    /**
+     * Determine if a resident is managed by the given property owner in this estate.
+     */
+    private function isManagedResident(User $resident, User $propertyOwner, int $estateId): bool
+    {
+        if ($resident->profile?->property_owner_id === $propertyOwner->id) {
+            return true;
+        }
+
+        $membership = $resident->estates()
+            ->where('estates.id', $estateId)
+            ->first()
+            ?->pivot;
+
+        if ($membership && (int) $membership->property_owner_id === $propertyOwner->id) {
+            return true;
+        }
+
+        if ($resident->profile?->property && (int) $resident->profile->property->property_owner_id === $propertyOwner->id && (int) $resident->profile->property->estate_id === $estateId) {
+            return true;
+        }
+
+        return false;
     }
 }
