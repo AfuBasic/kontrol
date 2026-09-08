@@ -35,6 +35,10 @@ export interface Organization {
     estate_id: number;
     name: string;
     type: 'school' | 'church' | 'hospital' | 'business' | 'facility' | 'other';
+    access_policy?: 'unrestricted' | 'public_schedule' | 'credential_only';
+    arrival_confirmation_required?: boolean;
+    confirmation_window_minutes?: number;
+    confirmation_escalation?: 'none' | 'alert_security' | 'flag_dispatch';
     operating_hours: {
         open?: string;
         close?: string;
@@ -162,6 +166,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     const form = useForm({
         name: '',
         type: 'school' as Organization['type'],
+        access_policy: 'public_schedule' as 'unrestricted' | 'public_schedule' | 'credential_only',
+        arrival_confirmation_required: false,
+        confirmation_window_minutes: 30,
+        confirmation_escalation: 'alert_security' as 'none' | 'alert_security' | 'flag_dispatch',
         has_hours: true,
         open_time: '07:30',
         close_time: '16:00',
@@ -209,6 +217,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.setData({
             name: '',
             type: 'school',
+            access_policy: 'public_schedule',
+            arrival_confirmation_required: false,
+            confirmation_window_minutes: 30,
+            confirmation_escalation: 'alert_security',
             has_hours: true,
             open_time: '07:30',
             close_time: '16:00',
@@ -228,6 +240,10 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         form.setData({
             name: org.name,
             type: org.type,
+            access_policy: (org.access_policy || (org.type === 'hospital' ? 'unrestricted' : 'public_schedule')) as any,
+            arrival_confirmation_required: Boolean(org.arrival_confirmation_required),
+            confirmation_window_minutes: org.confirmation_window_minutes ?? 30,
+            confirmation_escalation: (org.confirmation_escalation || 'alert_security') as any,
             has_hours: Boolean(hours && hours.open && hours.close),
             open_time: hours?.open || '08:00',
             close_time: hours?.close || '17:00',
@@ -245,6 +261,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             form.setData({
                 ...form.data,
                 type: newType,
+                access_policy: 'unrestricted',
+                arrival_confirmation_required: false,
                 has_hours: false,
                 hours_enforcement: 'off',
                 quick_entry_enabled: true,
@@ -253,6 +271,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             form.setData({
                 ...form.data,
                 type: newType,
+                access_policy: form.data.access_policy === 'unrestricted' ? 'public_schedule' : form.data.access_policy,
                 has_hours: true,
                 open_time: config.defaultHours.open,
                 close_time: config.defaultHours.close,
@@ -260,7 +279,11 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 hours_enforcement: 'inherit',
             });
         } else {
-            form.setData('type', newType);
+            form.setData({
+                ...form.data,
+                type: newType,
+                access_policy: form.data.access_policy === 'unrestricted' ? 'public_schedule' : form.data.access_policy,
+            });
         }
     };
 
@@ -268,9 +291,15 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         e.preventDefault();
 
         const isHospital = form.data.type === 'hospital';
+        const effectivePolicy = isHospital ? 'unrestricted' : form.data.access_policy;
+
         const payload: Record<string, any> = {
             name: form.data.name,
             type: form.data.type,
+            access_policy: effectivePolicy,
+            arrival_confirmation_required: effectivePolicy === 'unrestricted' ? false : form.data.arrival_confirmation_required,
+            confirmation_window_minutes: form.data.confirmation_window_minutes,
+            confirmation_escalation: form.data.confirmation_escalation,
             hours_enforcement: isHospital ? 'off' : form.data.hours_enforcement,
             quick_entry_enabled: form.data.quick_entry_enabled,
             is_active: form.data.is_active,
@@ -513,6 +542,20 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                                 Quick Entry active
                                                             </span>
                                                         )}
+
+                                                        {org.arrival_confirmation_required && (
+                                                            <span className="text-emerald-700 font-medium flex items-center gap-1">
+                                                                <Check className="h-3 w-3 text-emerald-600" />
+                                                                Confirmation ({org.confirmation_window_minutes ?? 30}m)
+                                                            </span>
+                                                        )}
+
+                                                        {org.access_policy === 'credential_only' && (
+                                                            <span className="text-purple-700 font-medium flex items-center gap-1">
+                                                                <Shield className="h-3 w-3 text-purple-600" />
+                                                                Credential only
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -647,19 +690,35 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 </div>
                             </div>
 
-                            {/* Section 2: Access */}
+                            {/* Section 2: Access & Policy */}
                             <div className="space-y-4 pt-5 border-t border-slate-100">
                                 <h3 className="text-sm font-semibold text-slate-900">
-                                    Access
+                                    Access & Admission Policy
                                 </h3>
 
                                 {form.data.type === 'hospital' ? (
-                                    <div className="rounded-lg bg-slate-50 p-3.5 text-xs text-slate-600 leading-relaxed">
-                                        <span className="font-semibold text-slate-900 block mb-0.5">Unrestricted destination</span>
-                                        Emergency and healthcare visitors are admitted 24/7 without credentials. Security logs arrivals for record keeping.
+                                    <div className="rounded-lg bg-rose-50 border border-rose-100 p-3.5 text-xs text-rose-800 leading-relaxed">
+                                        <span className="font-semibold block mb-0.5">Unrestricted medical destination</span>
+                                        Emergency and healthcare visitors are admitted 24/7 without credentials. Security logs arrivals for record keeping. Arrival confirmation is never required.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
+                                        <div>
+                                            <CustomSelect
+                                                label="Access Policy"
+                                                value={form.data.access_policy}
+                                                onChange={(val) =>
+                                                    form.setData('access_policy', val as any)
+                                                }
+                                                options={[
+                                                    { value: 'public_schedule', label: 'Public schedule (admit during operating hours / windows)' },
+                                                    { value: 'credential_only', label: 'Credential only (requires verified badge or QR)' },
+                                                    { value: 'unrestricted', label: 'Unrestricted (open 24/7, security logs arrival)' },
+                                                ]}
+                                                size="sm"
+                                            />
+                                        </div>
+
                                         <div>
                                             <CustomSelect
                                                 label="Outside normal hours"
@@ -704,6 +763,83 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 />
                                             </button>
                                         </div>
+
+                                        {/* Arrival Confirmation Settings (Progressive Disclosure) */}
+                                        {form.data.access_policy !== 'unrestricted' && (
+                                            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3.5 space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <span className="text-xs font-semibold text-slate-900 block">
+                                                            Require Arrival Confirmation
+                                                        </span>
+                                                        <span className="text-[11px] text-slate-500">
+                                                            Organization admin verifies visitor reached premises (checkout is never blocked)
+                                                        </span>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={form.data.arrival_confirmation_required}
+                                                        onClick={() =>
+                                                            form.setData(
+                                                                'arrival_confirmation_required',
+                                                                !form.data.arrival_confirmation_required
+                                                            )
+                                                        }
+                                                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                                                            form.data.arrival_confirmation_required
+                                                                ? 'bg-slate-900'
+                                                                : 'bg-slate-200'
+                                                        }`}
+                                                    >
+                                                        <span
+                                                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs transition duration-200 ease-in-out ${
+                                                                form.data.arrival_confirmation_required
+                                                                    ? 'translate-x-4'
+                                                                    : 'translate-x-0'
+                                                            }`}
+                                                        />
+                                                    </button>
+                                                </div>
+
+                                                {form.data.arrival_confirmation_required && (
+                                                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
+                                                        <div>
+                                                            <CustomSelect
+                                                                label="Expected arrival window"
+                                                                value={String(form.data.confirmation_window_minutes)}
+                                                                onChange={(val) =>
+                                                                    form.setData('confirmation_window_minutes', Number(val))
+                                                                }
+                                                                options={[
+                                                                    { value: '15', label: '15 minutes' },
+                                                                    { value: '30', label: '30 minutes' },
+                                                                    { value: '45', label: '45 minutes' },
+                                                                    { value: '60', label: '60 minutes' },
+                                                                    { value: '120', label: '2 hours' },
+                                                                ]}
+                                                                size="sm"
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <CustomSelect
+                                                                label="If overdue escalate to"
+                                                                value={form.data.confirmation_escalation}
+                                                                onChange={(val) =>
+                                                                    form.setData('confirmation_escalation', val as any)
+                                                                }
+                                                                options={[
+                                                                    { value: 'none', label: 'Informational only' },
+                                                                    { value: 'alert_security', label: 'Alert security terminal' },
+                                                                    { value: 'flag_dispatch', label: 'Flag patrol dispatch' },
+                                                                ]}
+                                                                size="sm"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -893,8 +1029,19 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     <div>
                                         <span className="font-medium text-slate-400 block mb-0.5">Policy</span>
                                         <p className="text-slate-700 leading-relaxed">
+                                            {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
+                                                ? '24/7 Unrestricted Medical / Emergency Access'
+                                                : form.data.access_policy === 'credential_only'
+                                                  ? 'Credential Only (Badge / Pass Required)'
+                                                  : 'Public Schedule (Windows & Operating Hours)'}
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <span className="font-medium text-slate-400 block mb-0.5">Outside Hours Rule</span>
+                                        <p className="text-slate-700 leading-relaxed">
                                             {form.data.type === 'hospital'
-                                                ? '24/7 Unrestricted Medical Access'
+                                                ? 'Exempt (24/7)'
                                                 : form.data.hours_enforcement === 'inherit'
                                                   ? 'Follow estate default policy'
                                                   : form.data.hours_enforcement === 'warn'
@@ -927,6 +1074,17 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         ) : (
                                             <p className="text-slate-500">No schedule set (operates 24/7)</p>
                                         )}
+                                    </div>
+
+                                    <div>
+                                        <span className="font-medium text-slate-400 block mb-0.5">Arrival Confirmation</span>
+                                        <p className="text-slate-700">
+                                            {form.data.type === 'hospital' || form.data.access_policy === 'unrestricted'
+                                                ? 'Not required'
+                                                : form.data.arrival_confirmation_required
+                                                  ? `Required within ${form.data.confirmation_window_minutes}m`
+                                                  : 'Disabled'}
+                                        </p>
                                     </div>
 
                                     <div>
