@@ -79,6 +79,7 @@ class RecordQuickEntryAction
 
             $log = AccessLog::create([
                 'estate_id' => $estateId,
+                'organization_id' => $organization->id,
                 'entry_point' => $entryPoint,
                 'access_code_id' => null,
                 'verified_by' => $verifiedBy->id,
@@ -92,6 +93,7 @@ class RecordQuickEntryAction
                     'organization_id' => $organization->id,
                     'organization_name' => $organization->name,
                     'organization_type' => $organization->type,
+                    'admission_basis' => $organization->access_policy === 'public_window' ? 'public_window' : ($organization->isUnrestricted() ? 'unrestricted' : 'quick_entry'),
                     'visitor_name' => $displayName,
                     'allocation_id' => $data['allocation_id'] ?? null,
                     'entry_point' => $entryPoint,
