@@ -162,13 +162,12 @@ class NotificationContextService
         if ($assignment) {
             $estateId = $assignment->estate_id;
             $zoneId = $assignment->zone_id;
-            $assignmentId = $assignment->id;
             $targetRole = $assignment->role?->name ?? $targetRole;
         }
 
         return [
             'estate_id' => $estateId,
-            'administrative_assignment_id' => $assignmentId,
+            'administrative_assignment_id' => $assignment?->id,
             'zone_id' => $zoneId,
             'target_role' => $targetRole,
         ];
