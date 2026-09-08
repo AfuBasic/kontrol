@@ -228,3 +228,51 @@ it('allows estate admin to update an organization and assign or change administr
         'is_active' => true,
     ]);
 });
+
+it('allows an already existing resident user to be assigned as organization admin', function () {
+    $existingResident = User::factory()->create([
+        'email' => 'resident.john@example.com',
+        'name' => 'John Resident',
+    ]);
+
+    EstateMembership::create([
+        'user_id' => $existingResident->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'accepted',
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->post(route('admin.organizations.store'), [
+            'name' => 'Estate Community Center',
+            'type' => 'facility',
+            'admin_name' => 'John Resident',
+            'admin_email' => 'resident.john@example.com',
+            'admin_phone' => '+2348000000001',
+            'hours_enforcement' => 'inherit',
+            'quick_entry_enabled' => true,
+            'is_active' => true,
+        ]);
+
+    $response->assertRedirect()
+        ->assertSessionHas('success');
+
+    // Make sure no duplicate user was created
+    expect(User::where('email', 'resident.john@example.com')->count())->toBe(1);
+
+    $org = EstateOrganization::where('name', 'Estate Community Center')->first();
+
+    // Resident retains estate membership AND gains organization membership
+    $this->assertDatabaseHas('estate_users_membership', [
+        'user_id' => $existingResident->id,
+        'estate_id' => $this->estate->id,
+        'status' => 'accepted',
+    ]);
+
+    $this->assertDatabaseHas('organization_memberships', [
+        'organization_id' => $org->id,
+        'user_id' => $existingResident->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+});
