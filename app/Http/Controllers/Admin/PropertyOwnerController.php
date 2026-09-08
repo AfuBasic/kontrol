@@ -54,7 +54,11 @@ class PropertyOwnerController extends Controller
             ])
             ->withCount([
                 'properties' => fn ($q) => $q->where('estate_id', $estate->id),
-                'managedResidents',
+                'managedResidents' => fn ($q) => $q->forEstate($estate->id)->where(function ($sq) use ($estate) {
+                    $sq->whereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->whereColumn('estate_users_membership.property_owner_id', 'users.id'))
+                        ->orWhereHas('profile', fn ($pq) => $pq->whereColumn('user_profiles.property_owner_id', 'users.id'))
+                        ->orWhereHas('profile.property', fn ($prq) => $prq->where('estate_id', $estate->id)->whereColumn('properties.property_owner_id', 'users.id'));
+                }),
             ])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -410,8 +414,12 @@ class PropertyOwnerController extends Controller
                 'name' => $propertyOwner->name,
             ],
             'residents' => Inertia::defer(fn () => User::query()
-                ->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $propertyOwner->id))
                 ->forEstate($estate->id)
+                ->where(function ($query) use ($estate, $propertyOwner) {
+                    $query->whereHas('estates', fn ($q) => $q->where('estates.id', $estate->id)->where('estate_users_membership.property_owner_id', $propertyOwner->id))
+                        ->orWhereHas('profile', fn ($q) => $q->where('property_owner_id', $propertyOwner->id))
+                        ->orWhereHas('profile.property', fn ($q) => $q->where('estate_id', $estate->id)->where('property_owner_id', $propertyOwner->id));
+                })
                 ->with(['profile.property', 'estates' => fn ($q) => $q->where('estates.id', $estate->id)])
                 ->orderBy('name')
                 ->get()
