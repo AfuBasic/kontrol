@@ -4,6 +4,7 @@ namespace App\Actions\Admin;
 
 use App\Models\Estate;
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -42,6 +43,11 @@ class AssignResidentsToPropertyOwnerAction
             DB::table('estate_users_membership')
                 ->whereIn('user_id', $validResidentIds)
                 ->where('estate_id', $estate->id)
+                ->update([
+                    'property_owner_id' => $propertyOwner->id,
+                ]);
+
+            UserProfile::whereIn('user_id', $validResidentIds)
                 ->update([
                     'property_owner_id' => $propertyOwner->id,
                 ]);
