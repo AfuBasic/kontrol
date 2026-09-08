@@ -73,7 +73,6 @@ class OrganizationController extends Controller
             'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
-            'admin_name' => ['nullable', 'string', 'max:255'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'admin_phone' => ['nullable', 'string', 'max:50'],
         ]);
@@ -101,12 +100,12 @@ class OrganizationController extends Controller
 
             if (! empty($validated['admin_email'])) {
                 $email = strtolower(trim($validated['admin_email']));
-                $name = ! empty($validated['admin_name']) ? trim($validated['admin_name']) : explode('@', $email)[0];
+                $userName = trim($validated['name']) ?: explode('@', $email)[0];
 
                 $user = User::firstOrCreate(
                     ['email' => $email],
                     [
-                        'name' => $name,
+                        'name' => $userName,
                         'password' => null,
                     ]
                 );
@@ -157,7 +156,6 @@ class OrganizationController extends Controller
             'hours_enforcement' => ['nullable', 'string', 'in:inherit,off,warn,block'],
             'quick_entry_enabled' => ['boolean'],
             'is_active' => ['boolean'],
-            'admin_name' => ['nullable', 'string', 'max:255'],
             'admin_email' => ['nullable', 'email', 'max:255'],
             'admin_phone' => ['nullable', 'string', 'max:50'],
         ]);
@@ -171,12 +169,12 @@ class OrganizationController extends Controller
 
             if (! empty($validated['admin_email'])) {
                 $email = strtolower(trim($validated['admin_email']));
-                $name = ! empty($validated['admin_name']) ? trim($validated['admin_name']) : explode('@', $email)[0];
+                $userName = trim($organization->name) ?: explode('@', $email)[0];
 
                 $user = User::firstOrCreate(
                     ['email' => $email],
                     [
-                        'name' => $name,
+                        'name' => $userName,
                         'password' => null,
                     ]
                 );
