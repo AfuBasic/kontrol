@@ -156,7 +156,7 @@ class ActiveVisitService
 
         return $query->orderBy('verified_at', 'asc') // Oldest first for security queue
             ->get()
-            ->map(fn (AccessLog $log) => $this->transformActiveVisit($log, $enforceSameGate, $currentGate));
+            ->map(fn (AccessLog $log) => $this->transformActiveVisit($log, $enforceSameGate, $currentGate, $settings));
     }
 
     /**
@@ -172,6 +172,28 @@ class ActiveVisitService
     }
 
     /**
+     * Resolve the display name of an entry gate truthfully based on estate configuration.
+     *
+     * - If entryPoint is recorded, display it directly.
+     * - If entryPoint is null and the estate has exactly 1 configured gate, return that gate name.
+     * - If entryPoint is null and the estate has multiple gates (or none), return 'Gate not recorded'.
+     */
+    public function resolveGateDisplay(?string $entryPoint, ?EstateSettings $settings): string
+    {
+        $trimmed = trim((string) $entryPoint);
+        if ($trimmed !== '') {
+            return $trimmed;
+        }
+
+        $configuredGates = array_values(array_filter($settings?->entry_points ?? []));
+        if (count($configuredGates) === 1) {
+            return (string) $configuredGates[0];
+        }
+
+        return 'Gate not recorded';
+    }
+
+    /**
      * Transform an AccessLog into a unified active visit shape.
      *
      * @return array<string, mixed>
@@ -179,13 +201,17 @@ class ActiveVisitService
     public function transformActiveVisit(
         AccessLog $log,
         bool $enforceSameGate = false,
-        ?string $currentGuardGate = null
+        ?string $currentGuardGate = null,
+        ?EstateSettings $settings = null
     ): array {
         $code = $log->accessCode;
         $user = $code?->user;
         $profile = $user?->profile;
 
-        $entryPoint = $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance';
+        $rawEntryPoint = $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? null;
+        $estateSettings = $settings ?? EstateSettings::forEstate($log->estate_id);
+        $resolvedGate = $this->resolveGateDisplay($rawEntryPoint, $estateSettings);
+
         $verifiedAt = $log->verified_at;
         $now = Carbon::now();
 
@@ -199,19 +225,50 @@ class ActiveVisitService
         $canCheckout = true;
         $checkoutConstraint = null;
 
-        if ($enforceSameGate && $entryPoint) {
+        // Gate checkout enforcement:
+        // If same-gate is enforced and this log has an entry gate recorded
+        if ($enforceSameGate && $rawEntryPoint) {
             if (! $currentGuardGate) {
                 $canCheckout = false;
-                $checkoutConstraint = "Requires operating at '{$entryPoint}'. Please claim this checkpoint.";
-            } elseif (strcasecmp(trim($entryPoint), trim($currentGuardGate)) !== 0) {
+                $checkoutConstraint = "Must check out at {$resolvedGate}";
+            } elseif (strcasecmp(trim($rawEntryPoint), trim($currentGuardGate)) !== 0) {
                 $canCheckout = false;
-                $checkoutConstraint = "Can only check out from '{$entryPoint}'. You are at '{$currentGuardGate}'.";
+                $checkoutConstraint = "Must check out at {$resolvedGate}";
             }
         }
 
-        $isQuickEntry = ($log->meta['entry_type'] ?? null) === 'quick_entry';
+        $metaEntryType = $log->meta['entry_type'] ?? null;
+        $isQuickEntry = $metaEntryType === 'quick_entry';
         $tag = $log->meta['tag'] ?? null;
         $orgName = $log->meta['organization_name'] ?? null;
+
+        // Determine clear entry type display label and slug
+        if ($isQuickEntry) {
+            $entryTypeSlug = 'quick_entry';
+            $entryTypeLabel = 'Quick Entry';
+        } elseif ($code && $code->type === 'organization') {
+            $entryTypeSlug = 'organization_credential';
+            $entryTypeLabel = 'Organization Access';
+        } else {
+            $entryTypeSlug = 'visitor_pass';
+            $entryTypeLabel = 'Visitor Pass';
+        }
+
+        // Clean visitor name (avoid "Unknown User" / "Guest Visitor")
+        $rawVisitorName = $isQuickEntry ? ($log->meta['visitor_name'] ?? null) : ($code?->visitor_name ?? null);
+        if ($isQuickEntry && (! $rawVisitorName || $rawVisitorName === "Visitor ({$orgName})")) {
+            $visitorName = 'Walk-in visitor';
+            $hasCapturedIdentity = false;
+        } elseif (! empty($rawVisitorName)) {
+            $visitorName = $rawVisitorName;
+            $hasCapturedIdentity = true;
+        } else {
+            $visitorName = 'Walk-in visitor';
+            $hasCapturedIdentity = false;
+        }
+
+        // Destination presentation
+        $destinationName = $isQuickEntry ? $orgName : ($user?->name ?? 'Resident');
 
         return [
             'id' => $log->id,
@@ -219,15 +276,19 @@ class ActiveVisitService
             'code' => $code?->code ?? $tag,
             'tag' => $tag,
             'is_quick_entry' => $isQuickEntry,
+            'entry_type' => $entryTypeSlug,
+            'entry_type_label' => $entryTypeLabel,
             'pass_uuid' => $code?->pass_uuid,
+            'has_captured_identity' => $hasCapturedIdentity,
+            'destination_name' => $destinationName,
             'visitor' => [
-                'name' => $isQuickEntry ? ($log->meta['visitor_name'] ?? "Visitor ({$orgName})") : ($code?->visitor_name ?? 'Visitor'),
+                'name' => $visitorName,
                 'phone' => $code?->visitor_phone,
                 'type' => $isQuickEntry ? 'quick_entry' : $code?->type,
             ],
             'host' => [
                 'id' => $user?->id,
-                'name' => $isQuickEntry ? $orgName : ($user?->name ?? 'Resident'),
+                'name' => $destinationName,
                 'unit' => $profile?->unit_number,
                 'address' => $profile?->address,
             ],
@@ -236,11 +297,13 @@ class ActiveVisitService
             'verified_at_iso' => $verifiedAt ? $verifiedAt->toIso8601String() : null,
             'verified_at_time' => $verifiedAt ? $verifiedAt->format('g:i A') : null,
             'verified_at_human' => $verifiedAt ? $verifiedAt->diffForHumans() : null,
-            'verifier_name' => $log->verifier?->name ?? 'Security',
-            'entry_point' => $entryPoint,
-            'gate' => $entryPoint,
+            'verifier_name' => $log->verifier?->name ?? 'Security Guard',
+            'entry_point' => $resolvedGate,
+            'raw_entry_point' => $rawEntryPoint,
+            'gate' => $resolvedGate,
             'duration_minutes' => $durationMinutes,
             'is_overstayed' => $isOverstayed,
+            'outside_hours' => (bool) ($log->meta['outside_hours'] ?? false),
             'code_expires_at' => $code?->expires_at?->format('M j, Y g:i A'),
             'code_expires_at_iso' => $code?->expires_at?->toIso8601String(),
             'code_type' => $code?->type,
