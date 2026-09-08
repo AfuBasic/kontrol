@@ -17,6 +17,15 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
     Http::fake([
+        'api.paystack.co/transaction/initialize' => Http::response([
+            'status' => true,
+            'message' => 'Authorization URL created',
+            'data' => [
+                'authorization_url' => 'https://checkout.paystack.com/mock',
+                'access_code' => 'mock_access_code',
+                'reference' => 'mock_ref',
+            ],
+        ], 200),
         'api.paystack.co/*' => Http::response([
             'status' => false,
             'message' => 'Transaction reference not found',
