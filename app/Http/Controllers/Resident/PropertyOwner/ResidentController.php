@@ -274,6 +274,11 @@ class ResidentController extends Controller
             'property_id' => null,
         ]);
 
+        $estate = $this->estateContext->getEstate();
+        $resident->estates()->updateExistingPivot($estate->id, [
+            'property_owner_id' => null,
+        ]);
+
         return redirect()
             ->route('resident.property-owner.residents.index')
             ->with('success', 'Resident delegation removed successfully.');
@@ -344,6 +349,7 @@ class ResidentController extends Controller
             $estate->users()->attach($resident->id, [
                 'status' => 'pending',
                 'created_via' => 'property_owner_invite',
+                'property_owner_id' => $user->id,
                 'initiated_by' => $user->id,
                 'initiated_at' => now(),
                 'last_invited_by' => $user->id,
