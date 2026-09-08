@@ -43,11 +43,14 @@ class AccessLog extends Model
 
     protected $fillable = [
         'estate_id',
+        'organization_id',
         'zone_id',
         'entry_point',
         'access_code_id',
         'verified_by',
         'verified_at',
+        'confirmed_at',
+        'confirmed_by',
         'vehicle_make',
         'vehicle_model',
         'vehicle_plate_number',
@@ -58,6 +61,7 @@ class AccessLog extends Model
 
     protected $casts = [
         'verified_at' => 'datetime',
+        'confirmed_at' => 'datetime',
         'checked_out_at' => 'datetime',
         'meta' => 'array',
     ];
@@ -65,6 +69,11 @@ class AccessLog extends Model
     public function estate(): BelongsTo
     {
         return $this->belongsTo(Estate::class);
+    }
+
+    public function organization(): BelongsTo
+    {
+        return $this->belongsTo(EstateOrganization::class, 'organization_id');
     }
 
     public function accessCode(): BelongsTo
@@ -77,8 +86,42 @@ class AccessLog extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
     public function checkoutVerifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'checked_out_by');
+    }
+
+    /**
+     * Compute derived confirmation state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE'.
+     */
+    public function confirmationState(?int $windowMinutes = null): string
+    {
+        if (! $this->organization_id) {
+            return 'NOT_REQUIRED';
+        }
+
+        if ($this->confirmed_at) {
+            return 'CONFIRMED';
+        }
+
+        // If organization relationship is loaded or exists, check policy
+        $org = $this->organization;
+        if ($org && (! $org->arrival_confirmation_required || $org->isUnrestricted())) {
+            return 'NOT_REQUIRED';
+        }
+
+        $window = $windowMinutes ?? ($org?->confirmation_window_minutes ?? 15);
+        $entryTime = $this->verified_at ?? $this->created_at;
+
+        if ($entryTime && $entryTime->copy()->addMinutes($window)->isPast()) {
+            return 'OVERDUE';
+        }
+
+        return 'PENDING';
     }
 }
