@@ -18,7 +18,7 @@ return new class extends Migration
 
             $table->boolean('arrival_confirmation_required')
                 ->default(false)
-                ->after('outside_hours_action');
+                ->after('quick_entry_enabled');
 
             $table->unsignedInteger('confirmation_window_minutes')
                 ->default(15)
