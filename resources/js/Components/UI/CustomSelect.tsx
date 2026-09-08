@@ -63,13 +63,13 @@ export function CustomSelect<T extends string | number = string | number>({
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <ListboxOptions className="absolute z-50 mt-1.5 max-h-60 w-full overflow-auto rounded-xl border border-slate-100 bg-white p-1 text-xs shadow-xl ring-1 ring-black/5 focus:outline-hidden">
+                        <ListboxOptions className="absolute z-50 mt-1.5 max-h-60 w-full min-w-[220px] overflow-auto rounded-xl border border-slate-100 bg-white p-1 text-xs shadow-xl ring-1 ring-black/5 focus:outline-hidden">
                             {options.map((option) => (
                                 <ListboxOption
                                     key={String(option.value)}
                                     value={option.value}
                                     className={({ active, selected }) =>
-                                        `relative flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 select-none transition-colors ${
+                                        `relative flex cursor-pointer items-start justify-between rounded-lg px-3 py-2 select-none transition-colors ${
                                             active
                                                 ? 'bg-slate-50 text-slate-900'
                                                 : 'text-slate-700'
@@ -78,16 +78,16 @@ export function CustomSelect<T extends string | number = string | number>({
                                 >
                                     {({ selected }) => (
                                         <>
-                                            <div className="flex flex-col">
-                                                <span className="truncate">{option.label}</span>
+                                            <div className="flex flex-col pr-2">
+                                                <span className="leading-snug">{option.label}</span>
                                                 {option.description && (
-                                                    <span className="text-[10px] text-slate-400 font-normal mt-0.5">
+                                                    <span className="text-[11px] text-slate-500 font-normal mt-0.5 leading-snug">
                                                         {option.description}
                                                     </span>
                                                 )}
                                             </div>
                                             {selected && (
-                                                <Check className="h-3.5 w-3.5 shrink-0 text-slate-900 ml-2" aria-hidden="true" />
+                                                <Check className="h-3.5 w-3.5 shrink-0 text-slate-900 mt-0.5" aria-hidden="true" />
                                             )}
                                         </>
                                     )}
