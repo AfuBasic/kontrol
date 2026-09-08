@@ -72,16 +72,17 @@ class ArrivalController extends Controller
         ]);
     }
 
-    public function confirm(Request $request, AccessLog $log): RedirectResponse
+    public function confirm(Request $request, int|string $log): RedirectResponse
     {
         /** @var EstateOrganization $organization */
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
 
-        if ($log->organization_id !== $organization->id) {
-            abort(403, 'Unauthorized access log.');
-        }
+        /** @var AccessLog $accessLog */
+        $accessLog = AccessLog::withoutZoneIsolation()
+            ->where('organization_id', $organization->id)
+            ->findOrFail($log);
 
-        $this->confirmAction->execute($log, $request->user());
+        $this->confirmAction->execute($accessLog, $request->user());
 
         return back()->with('success', 'Arrival confirmed successfully.');
     }
