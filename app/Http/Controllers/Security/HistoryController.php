@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Security;
 
 use App\Http\Controllers\Controller;
 use App\Models\AccessLog;
+use App\Models\EstateSettings;
 use App\Models\User;
 use App\Services\EstateContextService;
 use App\Services\Visitor\ActiveVisitService;
@@ -25,6 +26,7 @@ class HistoryController extends Controller
     {
         $user = auth()->user();
         $estate = $this->estateContext->getEstate();
+        $settings = EstateSettings::forEstate($estate->id);
 
         $filters = $request->only(['search', 'date', 'vehicle_plate', 'host_id', 'tab']);
 
@@ -38,7 +40,7 @@ class HistoryController extends Controller
 
         $logs = AccessLog::query()
             ->where('estate_id', $estate->id)
-            ->with(['accessCode.user.profile', 'verifier:id,name'])
+            ->with(['accessCode.user.profile', 'verifier:id,name', 'checkoutVerifier:id,name'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('accessCode', function ($sq) use ($search) {
@@ -71,38 +73,85 @@ class HistoryController extends Controller
             ->orderByDesc('verified_at')
             ->paginate(15)
             ->withQueryString()
-            ->through(function ($log) {
+            ->through(function ($log) use ($settings) {
                 $isQuickEntry = ($log->meta['entry_type'] ?? null) === 'quick_entry';
                 $tag = $log->meta['tag'] ?? null;
                 $orgName = $log->meta['organization_name'] ?? null;
+                $code = $log->accessCode;
+
+                if ($isQuickEntry) {
+                    $entryTypeSlug = 'quick_entry';
+                    $entryTypeLabel = 'Quick Entry';
+                } elseif ($code && $code->type === 'organization') {
+                    $entryTypeSlug = 'organization_credential';
+                    $entryTypeLabel = 'Organization Access';
+                } else {
+                    $entryTypeSlug = 'visitor_pass';
+                    $entryTypeLabel = 'Visitor Pass';
+                }
+
+                $rawEntryPoint = $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? null;
+                $entryGate = $this->activeVisitService->resolveGateDisplay($rawEntryPoint, $settings);
+
+                $rawExitPoint = $log->meta['exit_point'] ?? null;
+                $exitGate = $log->checked_out_at
+                    ? $this->activeVisitService->resolveGateDisplay($rawExitPoint ?: $rawEntryPoint, $settings)
+                    : null;
+
+                $rawVisitorName = $isQuickEntry ? ($log->meta['visitor_name'] ?? null) : ($code?->visitor_name ?? null);
+                if ($isQuickEntry && (! $rawVisitorName || $rawVisitorName === "Visitor ({$orgName})")) {
+                    $visitorName = 'Walk-in visitor';
+                    $hasCapturedIdentity = false;
+                } elseif (! empty($rawVisitorName)) {
+                    $visitorName = $rawVisitorName;
+                    $hasCapturedIdentity = true;
+                } else {
+                    $visitorName = 'Walk-in visitor';
+                    $hasCapturedIdentity = false;
+                }
+
+                $destinationName = $isQuickEntry ? $orgName : ($code?->user?->name ?? 'N/A');
+
+                $durationMinutes = $log->checked_out_at && $log->verified_at
+                    ? (int) $log->checked_out_at->diffInMinutes($log->verified_at)
+                    : null;
 
                 return [
                     'id' => $log->id,
-                    'code' => $log->accessCode?->code ?? $tag,
+                    'code' => $code?->code ?? $tag,
                     'tag' => $tag,
                     'is_quick_entry' => $isQuickEntry,
+                    'entry_type' => $entryTypeSlug,
+                    'entry_type_label' => $entryTypeLabel,
+                    'has_captured_identity' => $hasCapturedIdentity,
+                    'destination_name' => $destinationName,
                     'outside_hours' => (bool) ($log->meta['outside_hours'] ?? false),
                     'visitor' => [
-                        'name' => $isQuickEntry ? ($log->meta['visitor_name'] ?? "Visitor ({$orgName})") : ($log->accessCode?->visitor_name ?? 'N/A'),
-                        'phone' => null,
-                        'type' => $isQuickEntry ? 'quick_entry' : $log->accessCode?->type,
+                        'name' => $visitorName,
+                        'phone' => $code?->visitor_phone,
+                        'type' => $isQuickEntry ? 'quick_entry' : $code?->type,
                     ],
                     'host' => [
-                        'id' => $log->accessCode?->user_id,
-                        'name' => $isQuickEntry ? $orgName : ($log->accessCode?->user?->name ?? 'N/A'),
-                        'unit' => $log->accessCode?->user?->profile?->unit_number,
-                        'address' => $log->accessCode?->user?->profile?->address,
+                        'id' => $code?->user_id,
+                        'name' => $destinationName,
+                        'unit' => $code?->user?->profile?->unit_number,
+                        'address' => $code?->user?->profile?->address,
                     ],
-                    'purpose' => $isQuickEntry ? ($orgName ? "Visit to {$orgName}" : 'Quick Entry') : $log->accessCode?->purpose,
+                    'purpose' => $isQuickEntry ? ($orgName ? "Visit to {$orgName}" : 'Quick Entry') : $code?->purpose,
                     'verified_at' => $log->verified_at->format('M j, Y g:i A'),
+                    'verified_at_time' => $log->verified_at->format('g:i A'),
                     'verified_at_human' => $log->verified_at->diffForHumans(),
-                    'verifier_name' => $log->verifier?->name ?? 'System',
+                    'verifier_name' => $log->verifier?->name ?? 'Security Guard',
                     'checked_out_at' => $log->checked_out_at?->format('M j, Y g:i A'),
+                    'checked_out_at_time' => $log->checked_out_at?->format('g:i A'),
                     'checked_out_at_human' => $log->checked_out_at?->diffForHumans(),
                     'checkout_verifier_name' => $log->checkoutVerifier?->name,
-                    'entry_point' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
-                    'exit_point' => $log->checked_out_at ? ($log->meta['exit_point'] ?? $log->entry_point ?? 'Main Entrance') : null,
-                    'gate' => $log->entry_point ?? $log->meta['entry_point'] ?? $log->meta['gate'] ?? 'Main Entrance',
+                    'duration_minutes' => $durationMinutes,
+                    'entry_point' => $entryGate,
+                    'raw_entry_point' => $rawEntryPoint,
+                    'exit_point' => $exitGate,
+                    'raw_exit_point' => $rawExitPoint,
+                    'gate' => $entryGate,
                     'vehicle' => $log->vehicle_make ? [
                         'make' => $log->vehicle_make,
                         'model' => $log->vehicle_model,
