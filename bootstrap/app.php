@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckEstateFeature;
+use App\Http\Middleware\EnsureOrganizationMembership;
 use App\Http\Middleware\EnsureResidentSubscriptionActive;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -138,6 +139,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check-estate-feature' => CheckEstateFeature::class,
             'validate-estate' => ValidateEstateContext::class,
             'zeus.impersonation' => ResolveImpersonationContext::class,
+            'org.membership' => EnsureOrganizationMembership::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
