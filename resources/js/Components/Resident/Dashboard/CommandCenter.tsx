@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
-import { Plus, Users, Activity } from 'lucide-react';
+import { Plus, Users, Activity, ShieldAlert } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import SosButton from '@/Components/SosButton';
 
 interface Props {
     totalScheduled?: number;
@@ -8,6 +9,13 @@ interface Props {
     lastActivity?: string;
     onAction?: () => void;
     canGenerate?: boolean;
+    activeSos?: {
+        id: number;
+        status: string;
+        triggered_at: string;
+        acknowledged_at?: string | null;
+    } | null;
+    canTriggerSos?: boolean;
 }
 
 function CountUpNumber({ value }: { value: number }) {
@@ -44,6 +52,8 @@ export default function CommandCenter({
     lastActivity,
     onAction,
     canGenerate = true,
+    activeSos = null,
+    canTriggerSos = true,
 }: Props) {
     const displayScheduled = typeof totalScheduled === 'number' ? totalScheduled : expectedToday;
     const hasData = displayScheduled > 0;
@@ -53,13 +63,24 @@ export default function CommandCenter({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="group relative overflow-hidden rounded-[38px] bg-slate-950 p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)]"
+            className={`group relative overflow-hidden rounded-[38px] p-8 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.4)] ${
+                activeSos ? 'bg-slate-950 ring-1 ring-rose-500/30' : 'bg-slate-950'
+            }`}
         >
             {/* Advanced Layering & Texture */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden">
                 {/* Mesh Gradients */}
-                <div className="absolute -top-[20%] -right-[10%] h-[80%] w-[80%] animate-pulse rounded-full bg-indigo-600/30 blur-[100px]" />
-                <div className="absolute -bottom-[20%] -left-[10%] h-[70%] w-[70%] rounded-full bg-blue-500/20 blur-[80px]" />
+                {activeSos ? (
+                    <>
+                        <div className="absolute -top-[20%] -right-[10%] h-[80%] w-[80%] animate-pulse rounded-full bg-rose-600/25 blur-[100px]" />
+                        <div className="absolute -bottom-[20%] -left-[10%] h-[70%] w-[70%] rounded-full bg-amber-600/15 blur-[80px]" />
+                    </>
+                ) : (
+                    <>
+                        <div className="absolute -top-[20%] -right-[10%] h-[80%] w-[80%] animate-pulse rounded-full bg-indigo-600/30 blur-[100px]" />
+                        <div className="absolute -bottom-[20%] -left-[10%] h-[70%] w-[70%] rounded-full bg-blue-500/20 blur-[80px]" />
+                    </>
+                )}
 
                 {/* Grain Texture Overlay */}
                 <div
@@ -84,18 +105,38 @@ export default function CommandCenter({
             </div>
 
             <div className="relative z-10">
-                <div className="mb-10 flex items-start justify-between">
-                    <div className="max-w-[70%]">
+                <div className="mb-8 flex items-start justify-between">
+                    <div className="max-w-[75%]">
                         <div className="mb-3 flex items-center gap-2">
-                            <div className="relative flex h-2 w-2">
-                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
-                            </div>
-                            <span className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase">Command Center</span>
+                            {activeSos ? (
+                                <>
+                                    <div className="relative flex h-2 w-2">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]"></span>
+                                    </div>
+                                    <span className="text-[10px] font-black tracking-[0.2em] text-rose-400 uppercase">Active SOS</span>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="relative flex h-2 w-2">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)]"></span>
+                                    </div>
+                                    <span className="text-[10px] font-black tracking-[0.2em] text-white/40 uppercase">Command Center</span>
+                                </>
+                            )}
                         </div>
 
                         <h2 className="text-3xl leading-[1.1] font-extrabold tracking-tight text-white">
-                            {!hasData ? (
+                            {activeSos ? (
+                                <span className="text-rose-200">
+                                    {activeSos.acknowledged_at ? (
+                                        <>Security <span className="text-white">Acknowledged</span></>
+                                    ) : (
+                                        <>Emergency <span className="text-white">Alert Sent</span></>
+                                    )}
+                                </span>
+                            ) : !hasData ? (
                                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                                     You're <span className="text-white/40 italic">all clear</span> for now
                                 </motion.span>
@@ -106,20 +147,37 @@ export default function CommandCenter({
                             )}
                         </h2>
 
-                        <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-white/30">
-                            <Activity className="h-3 w-3" />
-                            {lastActivity ? `Last activity: ${lastActivity}` : 'Gate is currently quiet'}
+                        <p className="mt-3 flex items-center gap-1.5 text-xs font-bold text-white/40">
+                            {activeSos ? (
+                                <>
+                                    <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
+                                    <span className="text-rose-300/80">
+                                        {activeSos.acknowledged_at
+                                            ? 'Responder assigned & responding'
+                                            : 'Security has been notified'}
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <Activity className="h-3 w-3 text-white/30" />
+                                    <span>{lastActivity ? `Last activity: ${lastActivity}` : 'Gate is currently quiet'}</span>
+                                </>
+                            )}
                         </p>
                     </div>
 
                     <div className="flex flex-col gap-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 shadow-inner ring-1 ring-white/10 backdrop-blur-md">
-                            <Users className="h-5 w-5 text-indigo-400" />
+                            {activeSos ? (
+                                <ShieldAlert className="h-5 w-5 text-rose-400" />
+                            ) : (
+                                <Users className="h-5 w-5 text-indigo-400" />
+                            )}
                         </div>
                     </div>
                 </div>
 
-                <div className={`mb-10 grid grid-cols-1 ${canGenerate ? 'sm:grid-cols-2' : ''} items-stretch gap-4`}>
+                <div className={`mb-6 grid grid-cols-1 ${canGenerate ? 'sm:grid-cols-2' : ''} items-stretch gap-4`}>
                     {/* Expected Today Card with gradient & glowing effect */}
                     <div className="relative flex flex-col justify-center overflow-hidden rounded-[24px] bg-linear-to-br from-indigo-500/10 via-indigo-600/5 to-transparent p-5 ring-1 ring-indigo-500/20 backdrop-blur-md transition-all hover:ring-indigo-500/40">
                         {/* Corner Glow */}
@@ -150,6 +208,13 @@ export default function CommandCenter({
                         </motion.button>
                     )}
                 </div>
+
+                {/* Contextual Emergency SOS Entry Point */}
+                {canTriggerSos && (
+                    <div className="flex items-center justify-center pt-2 border-t border-white/5">
+                        <SosButton variant="command-center" />
+                    </div>
+                )}
             </div>
         </motion.div>
     );
