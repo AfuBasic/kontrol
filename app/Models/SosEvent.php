@@ -64,4 +64,19 @@ class SosEvent extends Model
     {
         return $this->belongsTo(User::class, 'acknowledged_by');
     }
+
+    /**
+     * Resolve the SOS event without waiting on request context.
+     * The controller explicitly validates estate and user authorization.
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        $query = static::withoutGlobalScopes();
+
+        if ($field) {
+            return $query->where($field, $value)->firstOrFail();
+        }
+
+        return $query->whereKey($value)->firstOrFail();
+    }
 }
