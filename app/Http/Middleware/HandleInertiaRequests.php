@@ -8,6 +8,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Coupon;
 use App\Models\Estate;
 use App\Models\Invoice;
+use App\Models\SosEvent;
 use App\Models\ZeusNotification;
 use App\Services\Notifications\NotificationContextService;
 use App\Services\Platform\AndroidMigrationService;
@@ -174,6 +175,14 @@ class HandleInertiaRequests extends Middleware
                     'property_owner_id' => $estate ? $user->getPropertyOwnerForEstate($estate)?->id : null,
                     'household_parent_name' => ($estate && $user->isHouseholdMember())
                         ? $user->householdOf()->where('estate_id', $estate->id)->first()?->primaryResident?->name
+                        : null,
+                    'active_sos' => ($estate && $user->contextHasRole(['resident', 'household_member', 'property_owner']))
+                        ? SosEvent::where('user_id', $user->id)
+                            ->where('estate_id', $estate->id)
+                            ->whereIn('status', ['initiated', 'processing', 'acknowledged'])
+                            ->where('created_at', '>=', now()->subHours(12))
+                            ->latest()
+                            ->first(['id', 'status', 'triggered_at', 'acknowledged_at'])
                         : null,
                     'unread_notifications_count' => $contextUnreadCount,
                     'has_active_coupons' => $estate ? (function () use ($user, $estate) {

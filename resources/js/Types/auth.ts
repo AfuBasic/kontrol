@@ -59,6 +59,12 @@ export type User = {
     estate_name?: string | null;
     property_owner_id?: number | null;
     household_parent_name?: string | null;
+    active_sos?: {
+        id: number;
+        status: string;
+        triggered_at: string;
+        acknowledged_at?: string | null;
+    } | null;
     notifications?: {
         id: string;
         data: Record<string, unknown>;

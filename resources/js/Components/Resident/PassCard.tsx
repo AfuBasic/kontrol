@@ -51,13 +51,15 @@ export default function PassCard({ pass, qrUrl }: Props) {
             return `Long-term access · Until ${formatRelativeDate(pass.expires_at)}`;
         }
 
-        const startTimeStr = pass.arrival_time
-            ?? (pass.starts_at
+        const startTimeStr =
+            pass.arrival_time ??
+            (pass.starts_at
                 ? new Date(pass.starts_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
                 : null);
 
-        const endTimeStr = pass.expires_time
-            ?? (pass.expires_at
+        const endTimeStr =
+            pass.expires_time ??
+            (pass.expires_at
                 ? new Date(pass.expires_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()
                 : null);
 
@@ -106,9 +108,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 <div className="flex min-w-0 items-center gap-3">
                     <VisitorAvatar category={category} name={displayName} size="md" />
                     <div className="min-w-0 text-left">
-                        <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-900'}`}>
-                            {displayName}
-                        </h2>
+                        <h2 className={`truncate text-base font-bold ${isEvent ? 'text-white' : 'text-slate-900'}`}>{displayName}</h2>
                         {pass.purpose && <p className="truncate text-xs font-medium text-slate-400">{pass.purpose}</p>}
                     </div>
                 </div>
@@ -176,7 +176,10 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-slate-200 bg-white dark:bg-slate-950" />
 
                 <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
-                <div className={`font-mono text-2xl font-black tracking-[0.2em] ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>
+                <div
+                    data-selectable="true"
+                    className={`selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}
+                >
                     {pass.code}
                 </div>
             </div>

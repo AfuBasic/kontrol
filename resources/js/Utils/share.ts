@@ -195,11 +195,17 @@ Your access code is: ${accessCode.code}`;
     try {
         const canShare = await Share.canShare();
         if (canShare.value) {
+            // NOTE for iOS UIActivityViewController / Snapchat / Instagram:
+            // Passing both `text` and `files` (image) simultaneously causes apps like Snapchat
+            // to open a blank screen or fail its share extension.
+            // When an image ticket is available (nativeFileUri), share ONLY the image file
+            // (the ticket already contains the code, QR, date, host, and location visually).
+            // Only provide `text` when image generation was unavailable.
             await Share.share({
                 title: title,
-                text: text,
+                text: nativeFileUri ? undefined : text,
                 dialogTitle: 'Share Visitor Pass',
-                files: nativeFileUri ? [nativeFileUri] : [],
+                files: nativeFileUri ? [nativeFileUri] : undefined,
             });
             return { success: true, method: 'share' };
         }

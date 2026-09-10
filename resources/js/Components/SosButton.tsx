@@ -9,11 +9,18 @@ import * as SosController from '@/actions/App/Http/Controllers/Resident/SosContr
 import type { SharedData } from '@/types';
 
 interface Props {
-    variant?: 'floating' | 'header' | 'sidebar' | 'mobile-menu';
+    variant?: 'header' | 'command-center' | 'sidebar' | 'mobile-menu';
+    className?: string;
 }
 
-export default function SosButton({ variant = 'floating' }: Props) {
+export default function SosButton({ variant = 'header', className = '' }: Props) {
     const { props } = usePage<SharedData>();
+    const activeSos = props.auth?.user?.active_sos as {
+        id: number;
+        status: string;
+        triggered_at: string;
+        acknowledged_at?: string | null;
+    } | null | undefined;
     const sosSuccessData = props.flash?.sos_success as { id: string; time: string; has_emergency_contacts: boolean } | null;
 
     const [isHolding, setIsHolding] = useState(false);
@@ -21,6 +28,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
     const [countdown, setCountdown] = useState<number | null>(null);
     const [isSending, setIsSending] = useState(false);
     const [isSent, setIsSent] = useState(false);
+    const [isStatusOpen, setIsStatusOpen] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const [_autoCloseSeconds, _setAutoCloseSeconds] = useState(10);
@@ -37,6 +45,12 @@ export default function SosButton({ variant = 'floating' }: Props) {
     }, []);
 
     const handleStartHold = async () => {
+        if (activeSos) {
+            // If already active, tapping/holding opens the status sheet instead
+            setIsStatusOpen(true);
+            return;
+        }
+
         setIsHolding(true);
         setHoldProgress(0);
         holdStartTimeRef.current = Date.now();
@@ -140,107 +154,207 @@ export default function SosButton({ variant = 'floating' }: Props) {
         );
     };
 
-    const buttonClass =
-        variant === 'floating'
-            ? 'relative flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-white shadow-2xl ring-4 ring-red-100 transition-colors active:bg-red-700 touch-none'
-            : 'relative flex h-11 w-11 items-center justify-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-100 transition-colors active:bg-red-100 touch-none';
-
-    const iconSize = variant === 'floating' ? 'h-8 w-8' : 'h-5 w-5';
-    const radius = variant === 'floating' ? 30 : 20;
-    const center = variant === 'floating' ? 32 : 22;
-    const svgSize = variant === 'floating' ? 64 : 44;
+    // Progress circle SVG parameters for hold indicator
+    const radius = variant === 'header' ? 16 : 14;
+    const center = variant === 'header' ? 18 : 16;
+    const svgSize = variant === 'header' ? 36 : 32;
     const circumference = 2 * Math.PI * radius;
 
-    const TriggerButton = (
-        <div className="relative flex items-center justify-center">
-            <motion.button
-                layoutId="sos-button-morph"
+    const renderHoldRing = (strokeColor: string, bgColor: string) => (
+        <AnimatePresence>
+            {isHolding && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
+                >
+                    <svg className="h-full w-full -rotate-90 p-0.5" viewBox={`0 0 ${svgSize} ${svgSize}`}>
+                        <circle
+                            cx={center}
+                            cy={center}
+                            r={radius}
+                            fill="transparent"
+                            stroke={bgColor}
+                            strokeWidth="3"
+                        />
+                        <motion.circle
+                            cx={center}
+                            cy={center}
+                            r={radius}
+                            fill="transparent"
+                            stroke={strokeColor}
+                            strokeWidth="3"
+                            strokeDasharray={circumference}
+                            strokeDashoffset={circumference - (circumference * holdProgress) / 100}
+                            strokeLinecap="round"
+                        />
+                    </svg>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+
+    let TriggerButton: React.ReactNode = null;
+
+    if (variant === 'header') {
+        TriggerButton = (
+            <div className="relative flex items-center justify-center">
+                <button
+                    type="button"
+                    aria-label={activeSos ? 'Active Emergency SOS - View Status' : 'Emergency SOS - Hold to activate'}
+                    onPointerDown={handleStartHold}
+                    onPointerUp={handleEndHold}
+                    onPointerCancel={handleEndHold}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-all select-none active:scale-95 touch-none ${
+                        activeSos
+                            ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100'
+                            : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                    } ${className}`}
+                >
+                    {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
+                    <ShieldAlert
+                        className={`h-5 w-5 relative z-20 ${activeSos ? 'text-rose-600 animate-pulse' : 'text-slate-500'}`}
+                        strokeWidth={2}
+                    />
+                    {activeSos && (
+                        <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-600"></span>
+                        </span>
+                    )}
+                </button>
+
+                {/* Compact Hold Indicator for Header */}
+                <AnimatePresence>
+                    {isHolding && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 rounded-lg bg-slate-900 px-2.5 py-1 text-[10px] font-black tracking-wider whitespace-nowrap text-white uppercase shadow-xl ring-1 ring-white/10 z-50"
+                        >
+                            HOLD FOR SOS
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    } else if (variant === 'command-center') {
+        TriggerButton = (
+            <div className="relative flex flex-col items-center">
+                <button
+                    type="button"
+                    aria-label={activeSos ? 'Active Emergency SOS - View Status' : 'Emergency SOS - Hold to activate'}
+                    onPointerDown={handleStartHold}
+                    onPointerUp={handleEndHold}
+                    onPointerCancel={handleEndHold}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className={`group relative flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all select-none active:scale-98 touch-none ${
+                        activeSos
+                            ? 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/20'
+                            : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                    } ${className}`}
+                >
+                    <div className="relative flex h-5 w-5 items-center justify-center">
+                        {renderHoldRing('rgb(244, 63, 94)', 'rgba(255, 255, 255, 0.15)')}
+                        <ShieldAlert
+                            className={`h-4 w-4 relative z-20 ${
+                                activeSos ? 'text-rose-400' : 'text-white/40 group-hover:text-white/80 transition-colors'
+                            }`}
+                            strokeWidth={2}
+                        />
+                    </div>
+                    <span className="tracking-tight">
+                        {activeSos ? 'Active Emergency SOS' : 'Emergency SOS'}
+                    </span>
+                    {activeSos && (
+                        <span className="ml-1 rounded-full bg-rose-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-300">
+                            Live
+                        </span>
+                    )}
+                </button>
+
+                {/* Hold Hint for Command Center */}
+                <AnimatePresence>
+                    {isHolding && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 rounded-md bg-white/10 px-2 py-0.5 text-[9px] font-black tracking-wider whitespace-nowrap text-white uppercase backdrop-blur-md z-30"
+                        >
+                            KEEP HOLDING...
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+        );
+    } else if (variant === 'mobile-menu') {
+        TriggerButton = (
+            <button
+                type="button"
+                aria-label={activeSos ? 'Active Emergency SOS - View Status' : 'Emergency SOS - Hold to activate'}
                 onPointerDown={handleStartHold}
                 onPointerUp={handleEndHold}
                 onPointerCancel={handleEndHold}
                 onContextMenu={(e) => e.preventDefault()}
-                whileTap={{ scale: 0.92 }}
-                className={`${buttonClass} overflow-hidden`}
+                className={`relative flex w-full flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all select-none active:scale-95 touch-none hover:bg-slate-50 ${className}`}
             >
-                {/* Hold Progress Circle Overlay */}
-                <AnimatePresence>
-                    {isHolding && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="pointer-events-none absolute inset-0 z-10"
-                        >
-                            <svg className="h-full w-full -rotate-90 p-1" viewBox={`0 0 ${svgSize} ${svgSize}`}>
-                                <circle
-                                    cx={center}
-                                    cy={center}
-                                    r={radius}
-                                    fill="transparent"
-                                    stroke={variant === 'floating' ? 'rgba(255,255,255,0.2)' : 'rgba(220,38,38,0.1)'}
-                                    strokeWidth={variant === 'floating' ? '6' : '4'}
-                                />
-                                <motion.circle
-                                    cx={center}
-                                    cy={center}
-                                    r={radius}
-                                    fill="transparent"
-                                    stroke={variant === 'floating' ? 'white' : 'rgb(220,38,38)'}
-                                    strokeWidth={variant === 'floating' ? '6' : '4'}
-                                    strokeDasharray={circumference}
-                                    strokeDashoffset={circumference - (circumference * holdProgress) / 100}
-                                    strokeLinecap="round"
-                                />
-                            </svg>
-                        </motion.div>
+                <div
+                    className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${
+                        activeSos ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200' : 'bg-slate-50 text-slate-500'
+                    }`}
+                >
+                    {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
+                    <ShieldAlert
+                        className={`h-6 w-6 relative z-20 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`}
+                        strokeWidth={2}
+                    />
+                    {activeSos && (
+                        <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-600"></span>
+                        </span>
                     )}
-                </AnimatePresence>
-
-                <ShieldAlert className={`${iconSize} relative z-20`} strokeWidth={2.5} />
-            </motion.button>
-        </div>
-    );
+                </div>
+                <span className="text-[10px] leading-tight font-bold text-slate-600">
+                    {activeSos ? 'Active SOS' : 'Emergency SOS'}
+                </span>
+            </button>
+        );
+    } else {
+        // sidebar (PO desktop sidebar navigation)
+        TriggerButton = (
+            <button
+                type="button"
+                aria-label={activeSos ? 'Active Emergency SOS - View Status' : 'Emergency SOS - Hold to activate'}
+                onPointerDown={handleStartHold}
+                onPointerUp={handleEndHold}
+                onPointerCancel={handleEndHold}
+                onContextMenu={(e) => e.preventDefault()}
+                className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all select-none active:scale-95 touch-none w-full ${
+                    activeSos
+                        ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'
+                        : 'text-slate-600 hover:bg-slate-50'
+                } ${className}`}
+            >
+                <div className="relative flex h-6 w-6 items-center justify-center">
+                    {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
+                    <ShieldAlert
+                        className={`h-5 w-5 relative z-20 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`}
+                        strokeWidth={2}
+                    />
+                </div>
+                <span>{activeSos ? 'Active Emergency SOS' : 'Emergency SOS'}</span>
+            </button>
+        );
+    }
 
     return (
         <>
-            {/* Trigger placement */}
-            {variant === 'floating' ? (
-                <div className="fixed right-6 bottom-24 z-40">
-                    {TriggerButton}
-
-                    {/* Hold Label */}
-                    <AnimatePresence>
-                        {isHolding && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute -top-10 left-1/2 -translate-x-1/2 rounded-lg bg-black px-3 py-1 text-[10px] font-bold tracking-tighter whitespace-nowrap text-white uppercase"
-                            >
-                                Hold for SOS
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            ) : (
-                <div className="relative">
-                    {TriggerButton}
-                    {/* Compact Hold Label */}
-                    <AnimatePresence>
-                        {isHolding && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0 }}
-                                className="absolute top-14 left-1/2 -translate-x-1/2 rounded-lg bg-slate-900 px-3 py-1.5 text-[10px] font-black tracking-widest whitespace-nowrap text-white uppercase shadow-xl ring-1 ring-white/10"
-                            >
-                                HOLD TO TRIGGER
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            )}
-
+            {TriggerButton}
             {mounted &&
                 createPortal(
                     <AnimatePresence>
@@ -268,8 +382,8 @@ export default function SosButton({ variant = 'floating' }: Props) {
                             </motion.div>
                         )}
 
-                        {/* Sending / Sent Overlay */}
-                        {(isSending || isSent || error) && (
+                        {/* Sending / Sent / Status Overlay */}
+                        {(isSending || isSent || isStatusOpen || error) && (
                             <motion.div
                                 layoutId="sos-button-morph"
                                 className={`fixed inset-0 z-[1000] flex flex-col items-center justify-center p-6 backdrop-blur-md ${
@@ -289,23 +403,29 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                     </div>
                                 )}
 
-                                {isSent && (
+                                {(isSent || isStatusOpen) && (
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="relative flex h-full w-full flex-col items-center bg-[#F7F9FC] p-6 text-[#111827]"
+                                        className="relative flex h-full w-full flex-col items-center bg-[#F7F9FC] p-6 text-[#111827] overflow-y-auto"
                                     >
                                         {/* Top Area (Status Icon + Message) */}
                                         <div className="mt-8 flex flex-col items-center">
                                             <div className="relative mb-6">
-                                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-[#10B981]/20"></div>
-                                                <div className="relative flex h-24 w-24 items-center justify-center rounded-full bg-[#10B981] text-white shadow-lg">
-                                                    <Check className="h-12 w-12" strokeWidth={3} />
+                                                <div className={`absolute inset-0 scale-150 animate-pulse rounded-full ${activeSos?.acknowledged_at ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}></div>
+                                                <div className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg ${activeSos?.acknowledged_at ? 'bg-emerald-600' : 'bg-rose-600'}`}>
+                                                    {activeSos?.acknowledged_at ? <Check className="h-12 w-12" strokeWidth={3} /> : <ShieldAlert className="h-12 w-12" strokeWidth={2.5} />}
                                                 </div>
                                             </div>
-                                            <h2 className="text-3xl font-black tracking-tight text-[#111827]">SOS Sent</h2>
+                                            <h2 className="text-3xl font-black tracking-tight text-[#111827]">
+                                                {activeSos?.acknowledged_at ? 'SOS Acknowledged' : 'SOS Active'}
+                                            </h2>
                                             <div className="mt-2 text-center font-medium text-[#6B7280]">
-                                                <p>Security has been notified.</p>
+                                                <p>
+                                                    {activeSos?.acknowledged_at
+                                                        ? 'Security has acknowledged your alert and is responding.'
+                                                        : 'Security has been notified and alerted.'}
+                                                </p>
                                                 {sosSuccessData?.has_emergency_contacts ? (
                                                     <p>Emergency contacts are being alerted.</p>
                                                 ) : (
@@ -323,20 +443,24 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                     <Hash className="h-5 w-5" />
                                                     <span className="text-sm font-semibold">Event ID</span>
                                                 </div>
-                                                <span className="font-mono font-bold text-[#111827]">{sosSuccessData?.id || '#----'}</span>
+                                                <span className="font-mono font-bold text-[#111827]">
+                                                    {sosSuccessData?.id || (activeSos?.id ? `#${activeSos.id}` : '#----')}
+                                                </span>
                                             </div>
                                             <div className="flex items-center justify-between p-4">
                                                 <div className="flex items-center gap-3 text-[#6B7280]">
                                                     <Clock className="h-5 w-5" />
-                                                    <span className="text-sm font-semibold">Time</span>
+                                                    <span className="text-sm font-semibold">Status</span>
                                                 </div>
-                                                <span className="text-sm font-bold text-[#111827]">{sosSuccessData?.time || '--:--'}</span>
+                                                <span className="text-sm font-bold capitalize text-[#111827]">
+                                                    {activeSos?.status || 'Active'}
+                                                </span>
                                             </div>
                                         </div>
 
                                         {/* Timeline */}
                                         <div className="mt-10 w-full max-w-sm">
-                                            <h3 className="mb-6 text-lg font-black text-[#111827]">What happens next</h3>
+                                            <h3 className="mb-6 text-lg font-black text-[#111827]">Response Timeline</h3>
 
                                             <div className="space-y-8">
                                                 {/* Step 1 */}
@@ -349,7 +473,7 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-[#111827]">Security notified</p>
-                                                        <p className="text-sm text-[#6B7280]">Alert sent to security team</p>
+                                                        <p className="text-sm text-[#6B7280]">Emergency alert dispatched</p>
                                                     </div>
                                                 </div>
 
@@ -357,47 +481,55 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                 <div className="flex gap-4">
                                                     <div className="relative flex flex-col items-center">
                                                         <div
-                                                            className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${sosSuccessData?.has_emergency_contacts ? 'bg-[#F59E0B]' : 'bg-[#E5E7EB] text-[#6B7280]'}`}
+                                                            className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${
+                                                                activeSos?.acknowledged_at
+                                                                    ? 'bg-[#10B981]'
+                                                                    : 'bg-[#F59E0B]'
+                                                            }`}
                                                         >
-                                                            {sosSuccessData?.has_emergency_contacts ? (
-                                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                                            {activeSos?.acknowledged_at ? (
+                                                                <Check className="h-5 w-5" />
                                                             ) : (
-                                                                <Users className="h-5 w-5" />
+                                                                <Loader2 className="h-5 w-5 animate-spin" />
                                                             )}
                                                         </div>
                                                         <div className="absolute top-8 bottom-[-32px] w-0.5 bg-[#E5E7EB]"></div>
                                                     </div>
                                                     <div>
-                                                        <p
-                                                            className={`font-bold ${sosSuccessData?.has_emergency_contacts ? 'text-[#111827]' : 'text-[#6B7280]'}`}
-                                                        >
-                                                            {sosSuccessData?.has_emergency_contacts
-                                                                ? 'Emergency contacts alerted'
-                                                                : 'No emergency contacts'}
+                                                        <p className="font-bold text-[#111827]">
+                                                            {activeSos?.acknowledged_at
+                                                                ? 'Security Acknowledged'
+                                                                : 'Awaiting Acknowledgment'}
                                                         </p>
                                                         <p className="text-sm text-[#6B7280]">
-                                                            {sosSuccessData?.has_emergency_contacts
-                                                                ? 'Sending alerts to your contacts'
-                                                                : 'Setup contacts to alert them in future'}
+                                                            {activeSos?.acknowledged_at
+                                                                ? 'Responder assigned & on the way'
+                                                                : 'Security team currently being reached'}
                                                         </p>
                                                     </div>
                                                 </div>
 
                                                 {/* Step 3 */}
                                                 <div className="flex gap-4">
-                                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E5E7EB] text-[#6B7280]">
+                                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${
+                                                        activeSos?.acknowledged_at ? 'bg-indigo-600' : 'bg-[#E5E7EB] text-[#6B7280]'
+                                                    }`}>
                                                         <Shield className="h-5 w-5" />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-[#111827]">Stay calm, help is on the way</p>
-                                                        <p className="text-sm text-[#6B7280]">We've got you covered</p>
+                                                        <p className="font-bold text-[#111827]">On-Site Assistance</p>
+                                                        <p className="text-sm text-[#6B7280]">
+                                                            {activeSos?.acknowledged_at
+                                                                ? 'Help is on the way to your unit'
+                                                                : 'Responders will verify your location'}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Footer Message */}
-                                        <div className="mt-auto mb-8 w-full max-w-sm">
+                                        <div className="mt-auto mb-8 w-full max-w-sm pt-6">
                                             {!sosSuccessData?.has_emergency_contacts && (
                                                 <Link
                                                     href={ProfileController.edit.url({ query: { open: 'emergency_management' } })}
@@ -416,18 +548,14 @@ export default function SosButton({ variant = 'floating' }: Props) {
                                                 </Link>
                                             )}
 
-                                            <div className="mb-8 flex items-center gap-3 rounded-xl bg-[#10B981]/10 p-4 text-[#10B981]">
-                                                <Shield className="h-6 w-6" />
-                                                <p className="text-sm font-bold">You're in safe hands. Help is on the way.</p>
-                                            </div>
-
-                                            {/* <p className="mb-4 text-center text-sm font-medium text-[#6B7280]">Closing in {autoCloseSeconds}...</p> */}
-
                                             <button
-                                                onClick={() => setIsSent(false)}
-                                                className="w-full rounded-xl border-2 border-[#10B981] py-4 text-lg font-black text-[#10B981] active:scale-[0.98]"
+                                                onClick={() => {
+                                                    setIsSent(false);
+                                                    setIsStatusOpen(false);
+                                                }}
+                                                className="w-full rounded-xl border-2 border-slate-900 bg-slate-900 py-4 text-base font-bold text-white shadow-lg active:scale-[0.98]"
                                             >
-                                                Close
+                                                Dismiss Status
                                             </button>
                                         </div>
                                     </motion.div>

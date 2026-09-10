@@ -128,6 +128,19 @@ export default function Home({
 
     const attentionItems: any[] = [];
 
+    const activeSos = auth?.user?.active_sos;
+    if (activeSos) {
+        attentionItems.push({
+            type: 'active_sos',
+            title: activeSos.acknowledged_at ? 'SOS Alert Acknowledged' : 'Active Emergency SOS Alert',
+            desc: activeSos.acknowledged_at
+                ? 'Security has acknowledged your emergency alert and is currently responding.'
+                : 'Security has been notified. Responders are being dispatched.',
+            href: undefined,
+            color: 'border-rose-200 bg-rose-50/70 text-rose-800 ring-1 ring-rose-300/50',
+        });
+    }
+
     if (hasPaymentCollection && duesCount > 0) {
         attentionItems.push({
             type: 'dues',
@@ -254,6 +267,10 @@ export default function Home({
                     lastActivity={activity[0]?.message}
                     onAction={() => router.visit('/resident/visitors/create')}
                     canGenerate={hasAccessCodeGen}
+                    activeSos={activeSos}
+                    canTriggerSos={Boolean(
+                        auth?.user?.roles?.some((role: string) => ['resident', 'household_member', 'property_owner'].includes(role)),
+                    )}
                 />
 
                 {/* SECTION 1: ATTENTION CENTER */}
