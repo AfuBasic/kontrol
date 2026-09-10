@@ -291,8 +291,41 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                 </AnimatePresence>
             </div>
         );
+    } else if (variant === 'mobile-menu') {
+        TriggerButton = (
+            <button
+                type="button"
+                aria-label={activeSos ? 'Active Emergency SOS - View Status' : 'Emergency SOS - Hold to activate'}
+                onPointerDown={handleStartHold}
+                onPointerUp={handleEndHold}
+                onPointerCancel={handleEndHold}
+                onContextMenu={(e) => e.preventDefault()}
+                className={`relative flex w-full flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all select-none active:scale-95 touch-none hover:bg-slate-50 ${className}`}
+            >
+                <div
+                    className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${
+                        activeSos ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200' : 'bg-slate-50 text-slate-500'
+                    }`}
+                >
+                    {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
+                    <ShieldAlert
+                        className={`h-6 w-6 relative z-20 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`}
+                        strokeWidth={2}
+                    />
+                    {activeSos && (
+                        <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-600"></span>
+                        </span>
+                    )}
+                </div>
+                <span className="text-[10px] leading-tight font-bold text-slate-600">
+                    {activeSos ? 'Active SOS' : 'Emergency SOS'}
+                </span>
+            </button>
+        );
     } else {
-        // sidebar / mobile-menu
+        // sidebar (PO desktop sidebar navigation)
         TriggerButton = (
             <button
                 type="button"
