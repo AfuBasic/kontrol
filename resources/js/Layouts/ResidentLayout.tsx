@@ -861,11 +861,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                             <div className="grid grid-cols-3 gap-4">
                                 {(isPropertyOwner ? poSidebarItems.filter((item) => item.name !== 'Collect Dues') : residentMoreItems).map((item) => {
                                     if (item.name === 'SOS') {
-                                        return (
-                                            <div key={item.name} className="flex flex-col items-center gap-1.5">
-                                                <SosButton variant="mobile-menu" />
-                                            </div>
-                                        );
+                                        return <SosButton key={item.name} variant="mobile-menu" />;
                                     }
 
                                     const currentPathname = currentPath.split('?')[0];
