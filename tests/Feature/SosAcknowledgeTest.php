@@ -34,7 +34,8 @@ beforeEach(function () {
 
 test('resident cannot acknowledge an SOS alert', function () {
     $response = $this->actingAs($this->resident)
-        ->post(route('security.sos.acknowledge', $this->sosEvent));
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->post(route('security.sos.acknowledge', ['sosEvent' => $this->sosEvent->id]));
 
     $response->assertForbidden();
 });
@@ -48,7 +49,7 @@ test('security guard in a different estate cannot acknowledge an SOS alert', fun
     $guard->estates()->attach($otherEstate->id, ['status' => 'accepted']);
 
     $securityRole = Role::where('name', 'security')->first();
-    AdministrativeAssignment::create([
+    $assignment = AdministrativeAssignment::create([
         'user_id' => $guard->id,
         'estate_id' => $otherEstate->id,
         'role_id' => $securityRole->id,
@@ -57,7 +58,9 @@ test('security guard in a different estate cannot acknowledge an SOS alert', fun
     ]);
 
     $response = $this->actingAs($guard)
-        ->post(route('security.sos.acknowledge', $this->sosEvent));
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->withSession(['active_context_assignment_id' => $assignment->id])
+        ->post(route('security.sos.acknowledge', ['sosEvent' => $this->sosEvent->id]));
 
     $response->assertForbidden();
 });
@@ -72,7 +75,7 @@ test('security guard in same estate can acknowledge an SOS alert', function () {
     $guard->estates()->attach($this->estate->id, ['status' => 'accepted']);
 
     $securityRole = Role::where('name', 'security')->first();
-    AdministrativeAssignment::create([
+    $assignment = AdministrativeAssignment::create([
         'user_id' => $guard->id,
         'estate_id' => $this->estate->id,
         'role_id' => $securityRole->id,
@@ -81,8 +84,10 @@ test('security guard in same estate can acknowledge an SOS alert', function () {
     ]);
 
     $response = $this->actingAs($guard)
+        ->withHeaders(['X-Capacitor-App' => 'true'])
+        ->withSession(['active_context_assignment_id' => $assignment->id])
         ->from(route('security.home'))
-        ->post(route('security.sos.acknowledge', $this->sosEvent));
+        ->post(route('security.sos.acknowledge', ['sosEvent' => $this->sosEvent->id]));
 
     $response->assertRedirect(route('security.home'));
     $response->assertSessionHas('success', 'SOS alert acknowledged');

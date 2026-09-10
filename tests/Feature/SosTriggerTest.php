@@ -26,7 +26,7 @@ beforeEach(function () {
 });
 
 test('unauthenticated users cannot trigger an SOS alert', function () {
-    $response = $this->post(route('resident.sos.trigger'));
+    $response = $this->post('/resident/sos/trigger');
 
     $response->assertRedirect(route('login'));
 });
@@ -43,10 +43,10 @@ test('resident can trigger an SOS alert', function () {
     ]);
 
     $response = $this->actingAs($this->resident)
-        ->from(route('resident.home'))
-        ->post(route('resident.sos.trigger'));
+        ->from('/resident/home')
+        ->post('/resident/sos/trigger');
 
-    $response->assertRedirect(route('resident.home'));
+    $response->assertRedirect('/resident/home');
     $response->assertSessionHas('sos_success');
 
     $flash = session('sos_success');
@@ -75,16 +75,16 @@ test('sos trigger is rate limited to 1 attempt per 60 seconds', function () {
 
     // First attempt succeeds
     $this->actingAs($this->resident)
-        ->from(route('resident.home'))
-        ->post(route('resident.sos.trigger'))
-        ->assertRedirect(route('resident.home'))
+        ->from('/resident/home')
+        ->post('/resident/sos/trigger')
+        ->assertRedirect('/resident/home')
         ->assertSessionHas('sos_success');
 
     // Second immediate attempt gets rate limited
     $this->actingAs($this->resident)
-        ->from(route('resident.home'))
-        ->post(route('resident.sos.trigger'))
-        ->assertRedirect(route('resident.home'))
+        ->from('/resident/home')
+        ->post('/resident/sos/trigger')
+        ->assertRedirect('/resident/home')
         ->assertSessionHasErrors(['error' => 'Please wait before triggering another SOS.']);
 });
 
@@ -102,20 +102,22 @@ test('household member can trigger an SOS alert and references primary resident 
     $memberUser = User::factory()->create();
     setPermissionsTeamId($this->estate->id);
     $memberUser->assignRole('household_member');
-    $memberUser->estates()->attach($this->estate->id, ['status' => 'accepted']);
+    $memberUser->estates()->attach($this->estate->id, [
+        'status' => 'accepted',
+        'relationship_type' => 'household_member',
+    ]);
 
     HouseholdMember::create([
-        'user_id' => $this->resident->id,
-        'member_user_id' => $memberUser->id,
-        'name' => 'Child Doe',
-        'relationship' => 'child',
+        'estate_id' => $this->estate->id,
+        'primary_resident_id' => $this->resident->id,
+        'household_member_id' => $memberUser->id,
     ]);
 
     $response = $this->actingAs($memberUser)
-        ->from(route('resident.home'))
-        ->post(route('resident.sos.trigger'));
+        ->from('/resident/home')
+        ->post('/resident/sos/trigger');
 
-    $response->assertRedirect(route('resident.home'));
+    $response->assertRedirect('/resident/home');
     $response->assertSessionHas('sos_success');
 
     $flash = session('sos_success');
