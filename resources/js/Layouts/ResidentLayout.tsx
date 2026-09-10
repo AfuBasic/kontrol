@@ -28,15 +28,6 @@ import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import * as NotificationController from '@/actions/App/Http/Controllers/Resident/NotificationController';
 
-
-
-
-
-
-
-
-
-
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import { useResidentConfirmation } from '@/Components/ConfirmationProvider';
@@ -126,30 +117,39 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
         const userChannel = window.Echo.private(`App.Models.User.${auth.user.id}`);
 
-        userChannel.notification((notification: { id?: string; message?: string; estate_id?: number | null; target_role?: string | null; type?: string; [key: string]: unknown }) => {
-            // Filter by role context
-            const allowedRoles = ['resident', 'property_owner', 'household_member'];
-            
-            if (notification.target_role && !allowedRoles.includes(notification.target_role)) {
-                return;
-            }
+        userChannel.notification(
+            (notification: {
+                id?: string;
+                message?: string;
+                estate_id?: number | null;
+                target_role?: string | null;
+                type?: string;
+                [key: string]: unknown;
+            }) => {
+                // Filter by role context
+                const allowedRoles = ['resident', 'property_owner', 'household_member'];
 
-            // Filter by estate context
-            if (notification.estate_id && notification.estate_id !== auth.user?.current_estate_id) {
-                return;
-            }
+                if (notification.target_role && !allowedRoles.includes(notification.target_role)) {
+                    return;
+                }
 
-            // Update unread count
-            setUnreadCount((prev) => prev + 1);
+                // Filter by estate context
+                if (notification.estate_id && notification.estate_id !== auth.user?.current_estate_id) {
+                    return;
+                }
 
-            // Show toast
-            setToastMessage(notification.message || 'New notification received');
-            setToastType((notification.type as 'success' | 'error' | 'info') || 'info');
-            setShowToast(true);
+                // Update unread count
+                setUnreadCount((prev) => prev + 1);
 
-            // Reload auth data to keep state in sync
-            router.reload({ only: ['auth'] });
-        });
+                // Show toast
+                setToastMessage(notification.message || 'New notification received');
+                setToastType((notification.type as 'success' | 'error' | 'info') || 'info');
+                setShowToast(true);
+
+                // Reload auth data to keep state in sync
+                router.reload({ only: ['auth'] });
+            },
+        );
 
         // Listen for real-time incident broadcasts scoped to user's context/estate/zone
         const estateId = auth.user.current_estate_id;
@@ -658,7 +658,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     className={`relative mx-auto w-full flex-1 ${
                         hideHeader && hideNav
                             ? 'max-w-none p-0'
-                            : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-24' : 'pb-6'} ${
+                            : `${!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' ? 'pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]'} ${
                                   isPropertyOwner ? 'max-w-4xl px-3 md:px-8' : 'max-w-lg sm:max-w-xl md:max-w-4xl lg:max-w-5xl'
                               } ${
                                   !hideHeader && (!isPropertyOwner || Capacitor.isNativePlatform())
@@ -677,7 +677,10 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
                 {/* Bottom Navigation for normal Residents */}
                 {!isPropertyOwner && !hideNav && component !== 'Resident/Billing/Index' && (
-                    <div data-mobile-bottom-nav className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-6 transition-opacity duration-150">
+                    <div
+                        data-mobile-bottom-nav
+                        className="pointer-events-none fixed inset-x-0 bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] z-40 px-6 transition-opacity duration-150"
+                    >
                         <motion.nav
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
