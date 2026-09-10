@@ -397,6 +397,9 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
 
     const hasAccessCodes = useFeature('access-code-generation');
     const isPropertyOwner = auth?.user?.roles?.includes('property_owner') ?? false;
+    const canTriggerSos = Boolean(
+        auth?.user?.roles?.some((role: string) => ['resident', 'household_member', 'property_owner'].includes(role)),
+    );
     const [moreMenuOpen, setMoreMenuOpen] = useState(false);
     const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
     const [loggingOut, setLoggingOut] = useState(false);
@@ -632,10 +635,13 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <div className="hidden sm:block">
                                         <ContextSwitcher variant="light" />
                                     </div>
+                                    {canTriggerSos && (
+                                        <SosButton variant="header" />
+                                    )}
                                     <Link
                                         href="/resident/activity?tab=notifications"
                                         className="relative rounded-xl p-2 text-slate-500 transition-all hover:bg-slate-50 active:scale-95"
@@ -981,8 +987,6 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {!isPropertyOwner && <SosButton variant="floating" />}
 
             <PwaInstallModal />
         </div>
