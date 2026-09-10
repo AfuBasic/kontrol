@@ -5,6 +5,7 @@ use App\Jobs\ProcessSOSAlert;
 use App\Models\EmergencyContact;
 use App\Models\Estate;
 use App\Models\HouseholdMember;
+use App\Models\SosEvent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -128,4 +129,36 @@ test('household member can trigger an SOS alert and references primary resident 
         'estate_id' => $this->estate->id,
         'status' => 'initiated',
     ]);
+});
+
+test('active_sos prop is shared to resident when active SOS event exists', function () {
+    $sosEvent = SosEvent::create([
+        'user_id' => $this->resident->id,
+        'estate_id' => $this->estate->id,
+        'triggered_at' => now(),
+        'status' => 'initiated',
+    ]);
+
+    $response = $this->actingAs($this->resident)->get('/resident/home');
+
+    $response->assertOk();
+    $auth = $response->viewData('page')['props']['auth'];
+    expect($auth['user']['active_sos'])->not->toBeNull()
+        ->and($auth['user']['active_sos']['id'])->toBe($sosEvent->id)
+        ->and($auth['user']['active_sos']['status'])->toBe('initiated');
+});
+
+test('active_sos prop is null when SOS event is completed or cancelled', function () {
+    SosEvent::create([
+        'user_id' => $this->resident->id,
+        'estate_id' => $this->estate->id,
+        'triggered_at' => now()->subMinutes(10),
+        'status' => 'completed',
+    ]);
+
+    $response = $this->actingAs($this->resident)->get('/resident/home');
+
+    $response->assertOk();
+    $auth = $response->viewData('page')['props']['auth'];
+    expect($auth['user']['active_sos'])->toBeNull();
 });
