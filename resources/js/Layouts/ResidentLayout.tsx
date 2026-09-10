@@ -22,6 +22,7 @@ import {
     Phone,
     Ticket,
     HelpCircle,
+    ShieldAlert,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -431,6 +432,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         ...(!isHouseholdMember ? [{ name: 'Incidents', href: '/resident/incidents', icon: ClipboardList }] : []),
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
         ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/coupons', icon: Ticket }] : []),
+        { name: 'SOS', href: '#sos', icon: ShieldAlert },
         { name: 'Profile', href: '/resident/profile', icon: User },
         { name: 'Help & Support', href: '/account/support', icon: HelpCircle },
     ];
@@ -506,6 +508,7 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
         ...(useFeature('estate-contacts') ? [{ name: 'Contacts & Hotline', href: '/resident/contacts', icon: Phone }] : []),
         ...(auth?.user?.has_active_coupons ? [{ name: 'Offers & Coupons', href: '/resident/coupons', icon: Ticket }] : []),
         { name: 'My Family', href: '/resident/household', icon: UserCheck },
+        { name: 'SOS', href: '#sos', icon: ShieldAlert },
         { name: 'Profile', href: '/resident/profile', icon: User },
         { name: 'Help & Support', href: '/account/support', icon: HelpCircle },
     ];
@@ -975,6 +978,8 @@ export default function ResidentLayout({ children, hideHeader = false, hideNav =
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {!isPropertyOwner && <SosButton variant="floating" />}
 
             <PwaInstallModal />
         </div>
