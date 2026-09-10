@@ -22,13 +22,7 @@ type Props = {
     allowExtendPasses?: boolean;
 };
 
-export default function CodeShow({
-    accessCode,
-    availableReminderOptions = [],
-    usageLogs,
-    durationOptions = [],
-    allowExtendPasses = true,
-}: Props) {
+export default function CodeShow({ accessCode, availableReminderOptions = [], usageLogs, durationOptions = [], allowExtendPasses = true }: Props) {
     const { flash } = usePage<{ flash?: { success?: string; error?: string } }>().props;
     const { confirm } = useResidentConfirmation();
     const [copied, setCopied] = useState(false);
@@ -150,7 +144,7 @@ export default function CodeShow({
         <>
             <Head title="Visitor Pass Details" />
 
-            <div className="mx-auto max-w-lg space-y-4 px-4 py-3 pb-20">
+            <div className="mx-auto max-w-lg space-y-4 px-4 py-3 pb-[calc(2rem+env(safe-area-inset-bottom,0px))]">
                 {/* Toast / Feedback Notification Banner */}
                 {successBanner && (
                     <div className="animate-in fade-in slide-in-from-top-2 flex items-center gap-2 rounded-xl bg-emerald-500 p-3 text-xs font-bold text-white shadow-lg">
@@ -248,21 +242,21 @@ export default function CodeShow({
                                     </p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
+                            <div className="flex shrink-0 items-center gap-1.5">
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setIsPostCreationPrompt(false);
                                         setIsReminderModalOpen(true);
                                     }}
-                                    className="rounded-lg px-2 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100/80 active:scale-95 transition"
+                                    className="rounded-lg px-2 py-1 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100/80 active:scale-95"
                                 >
                                     Change
                                 </button>
                                 <button
                                     type="button"
                                     onClick={handleRemoveReminder}
-                                    className="rounded-lg p-1 text-indigo-400 hover:bg-indigo-100 hover:text-rose-600 active:scale-95 transition"
+                                    className="rounded-lg p-1 text-indigo-400 transition hover:bg-indigo-100 hover:text-rose-600 active:scale-95"
                                     title="Remove reminder"
                                 >
                                     <BellOff className="h-4 w-4" />
