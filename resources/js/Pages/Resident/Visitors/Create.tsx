@@ -1,6 +1,20 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, Calendar as CalendarIcon, ChevronLeft, Clock, Minus, Phone, Plus, ShieldCheck, User, Users, X, Zap, CheckCircle2 } from 'lucide-react';
+import {
+    AlertCircle,
+    Calendar as CalendarIcon,
+    ChevronLeft,
+    Clock,
+    Minus,
+    Phone,
+    Plus,
+    ShieldCheck,
+    User,
+    Users,
+    X,
+    Zap,
+    CheckCircle2,
+} from 'lucide-react';
 import { useState } from 'react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import * as AccessCodeController from '@/actions/App/Http/Controllers/Resident/AccessCodeController';
@@ -116,9 +130,7 @@ const CreateAccessCode = () => {
 
     // Custom duration states
     const [isCustomDuration, setIsCustomDuration] = useState(false);
-    const [customDurationMinutes, setCustomDurationMinutes] = useState(
-        durationConstraints?.min ?? 60,
-    );
+    const [customDurationMinutes, setCustomDurationMinutes] = useState(durationConstraints?.min ?? 60);
 
     const minDuration = durationConstraints?.min ?? 15;
     const maxDuration = durationConstraints?.max ?? 10080;
@@ -146,10 +158,7 @@ const CreateAccessCode = () => {
         return expiry.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
     };
 
-    const effectiveDuration = isCustomDuration
-        ? customDurationMinutes
-        : form.data.duration_minutes;
-
+    const effectiveDuration = isCustomDuration ? customDurationMinutes : form.data.duration_minutes;
 
     const updateStartsAt = (dateStr: string, hr: string, min: string, ampm: string) => {
         if (!dateStr) {
@@ -358,7 +367,7 @@ const CreateAccessCode = () => {
                 </div>
 
                 {/* Steps Content */}
-                <div className="relative z-10 flex-1 px-6 pb-40">
+                <div className="relative z-10 flex-1 px-6 pb-[calc(11rem+env(safe-area-inset-bottom,0px))]">
                     <AnimatePresence mode="wait">
                         {step === 'type' && (
                             <motion.div
@@ -585,10 +594,12 @@ const CreateAccessCode = () => {
                                                                 setScheduleMinute(m);
                                                                 updateStartsAt(scheduleDate, scheduleHour, m, scheduleAmpm);
                                                             }}
-                                                            options={Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => ({
-                                                                value: m,
-                                                                label: m,
-                                                            }))}
+                                                            options={Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map(
+                                                                (m) => ({
+                                                                    value: m,
+                                                                    label: m,
+                                                                }),
+                                                            )}
                                                         />
                                                     </div>
 
@@ -653,8 +664,7 @@ const CreateAccessCode = () => {
 
                                             <div className="grid grid-cols-2 gap-3">
                                                 {durationOptions?.map((d) => {
-                                                    const isSelected =
-                                                        !isCustomDuration && form.data.duration_minutes === d.minutes;
+                                                    const isSelected = !isCustomDuration && form.data.duration_minutes === d.minutes;
                                                     const expiry = computeExpiryLabel(d.minutes);
                                                     return (
                                                         <button
@@ -708,13 +718,11 @@ const CreateAccessCode = () => {
                                                         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                                         className="overflow-hidden"
                                                     >
-                                                        <div className="rounded-2xl bg-slate-900/5 border border-slate-200 p-4 space-y-3">
+                                                        <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-900/5 p-4">
                                                             <div className="flex items-center justify-between gap-3">
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() =>
-                                                                        adjustCustomDuration(-durationStepSize(customDurationMinutes))
-                                                                    }
+                                                                    onClick={() => adjustCustomDuration(-durationStepSize(customDurationMinutes))}
                                                                     disabled={customDurationMinutes <= minDuration}
                                                                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition active:scale-95 disabled:opacity-30"
                                                                 >
@@ -722,13 +730,13 @@ const CreateAccessCode = () => {
                                                                 </button>
 
                                                                 <div className="flex-1 text-center">
-                                                                    <p className="text-lg font-black text-slate-900 leading-none">
+                                                                    <p className="text-lg leading-none font-black text-slate-900">
                                                                         {formatDurationLabel(customDurationMinutes)}
                                                                     </p>
                                                                     {(() => {
                                                                         const expiry = computeExpiryLabel(customDurationMinutes);
                                                                         return expiry ? (
-                                                                            <p className="text-[10px] font-semibold text-slate-500 mt-0.5">
+                                                                            <p className="mt-0.5 text-[10px] font-semibold text-slate-500">
                                                                                 expires at {expiry}
                                                                             </p>
                                                                         ) : null;
@@ -737,9 +745,7 @@ const CreateAccessCode = () => {
 
                                                                 <button
                                                                     type="button"
-                                                                    onClick={() =>
-                                                                        adjustCustomDuration(durationStepSize(customDurationMinutes))
-                                                                    }
+                                                                    onClick={() => adjustCustomDuration(durationStepSize(customDurationMinutes))}
                                                                     disabled={customDurationMinutes >= maxDuration}
                                                                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-700 shadow-sm ring-1 ring-slate-200 transition active:scale-95 disabled:opacity-30"
                                                                 >
