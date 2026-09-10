@@ -19,6 +19,13 @@
     </script>
     <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <script>
+        try {
+            if (navigator.userAgent.includes('KontrolApp') || document.cookie.includes('is_native_app=true')) {
+                document.documentElement.classList.add('is-native-app');
+            }
+        } catch (_) { }
+    </script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title inertia>{{ config('app.name', 'Kontrol') }}</title>
