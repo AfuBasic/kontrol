@@ -236,4 +236,39 @@ class OrganizationController extends Controller
 
         return back()->with('success', 'Organization deleted successfully.');
     }
+
+    /**
+     * Resend an invitation to the primary admin of the organization.
+     */
+    public function resendInvitation(EstateOrganization $organization): RedirectResponse
+    {
+        $estate = app(EstateContextService::class)->getEstate();
+
+        if ($organization->estate_id !== $estate->id) {
+            abort(403);
+        }
+
+        $adminMembership = $organization->memberships()
+            ->where('role', 'admin')
+            ->where('is_active', true)
+            ->with('user')
+            ->first();
+
+        if (! $adminMembership || ! $adminMembership->user) {
+            return back()->withErrors(['error' => 'No active administrator found for this organization to send an invitation to.']);
+        }
+
+        $user = $adminMembership->user;
+
+        Mail::to($user->email)->send(
+            new OrganizationInvitationMail(
+                $user,
+                $organization,
+                'admin',
+                isExistingUser: $user->isEstablishedUser()
+            )
+        );
+
+        return back()->with('success', "Invitation resent successfully to {$user->email}.");
+    }
 }
