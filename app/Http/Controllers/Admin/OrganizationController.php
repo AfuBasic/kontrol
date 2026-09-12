@@ -135,7 +135,7 @@ class OrganizationController extends Controller
 
                 if ($membership->wasRecentlyCreated) {
                     Mail::to($user->email)->send(
-                        new OrganizationInvitationMail($user, $org, 'admin', $wasNewUser)
+                        new OrganizationInvitationMail($user, $org, 'admin', isExistingUser: ! $wasNewUser)
                     );
                 }
             }
@@ -212,7 +212,7 @@ class OrganizationController extends Controller
 
                 if ($membership->wasRecentlyCreated) {
                     Mail::to($user->email)->send(
-                        new OrganizationInvitationMail($user, $organization, 'admin', $wasNewUser)
+                        new OrganizationInvitationMail($user, $organization, 'admin', isExistingUser: ! $wasNewUser)
                     );
                 }
             }
