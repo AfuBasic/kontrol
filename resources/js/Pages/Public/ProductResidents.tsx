@@ -230,7 +230,7 @@ export default function ProductResidents() {
                         </h2>
 
                         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-                            Once your estate is onboarded, download the app to activate your resident account and enjoy hassle-free living.
+                            Already on a Kontrol estate? Download and activate your resident account in minutes.
                         </p>
 
                         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -263,9 +263,9 @@ export default function ProductResidents() {
 
                         <div className="mt-12">
                             <p className="text-sm text-slate-400">
-                                Is your estate not yet on Kontrol?{' '}
+                                Not on a Kontrol estate yet?{' '}
                                 <Link href="/apply" className="font-semibold text-blue-400 hover:underline">
-                                    Tell your estate manager or apply on their behalf &rarr;
+                                    Share this with your estate manager and ask them to apply &rarr;
                                 </Link>
                             </p>
                         </div>
