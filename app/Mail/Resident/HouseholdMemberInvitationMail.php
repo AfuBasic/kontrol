@@ -20,36 +20,47 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
 
     public string $invitationUrl;
 
+    public bool $isExistingUser;
+
     public function __construct(
         public User $user,
         public Estate $estate,
         public User $primaryResident,
         public ?Invitation $invitation = null,
+        ?bool $isExistingUser = null,
     ) {
-        $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
-            ->where('email', strtolower(trim($this->user->email)))
-            ->where('estate_id', $this->estate->id)
-            ->latest()
-            ->first();
+        $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser($this->estate);
 
-        if (! $invitation) {
-            $role = Role::where('name', 'household_member')->where('guard_name', 'web')->whereNull('estate_id')->first();
-            $invitation = app(CreateInvitationAction::class)->execute(
-                email: $this->user->email,
-                estate: $this->estate,
-                relationshipType: 'household_member',
-                role: $role,
-                zoneId: $this->primaryResident->profile?->zone_id ?? $this->primaryResident->estateMembershipFor($this->estate->id)?->zone_id,
-                createdBy: $this->primaryResident,
-            );
+        if ($this->isExistingUser) {
+            $this->invitationUrl = route('login');
+        } else {
+            $invitation = $this->invitation ?? Invitation::withoutGlobalScopes()
+                ->where('email', strtolower(trim($this->user->email)))
+                ->where('estate_id', $this->estate->id)
+                ->latest()
+                ->first();
+
+            if (! $invitation) {
+                $role = Role::where('name', 'household_member')->where('guard_name', 'web')->whereNull('estate_id')->first();
+                $invitation = app(CreateInvitationAction::class)->execute(
+                    email: $this->user->email,
+                    estate: $this->estate,
+                    relationshipType: 'household_member',
+                    role: $role,
+                    zoneId: $this->primaryResident->profile?->zone_id ?? $this->primaryResident->estateMembershipFor($this->estate->id)?->zone_id,
+                    createdBy: $this->primaryResident,
+                );
+            }
+
+            $this->invitationUrl = route('invitations.show', ['token' => $invitation->token]);
         }
-
-        $this->invitationUrl = route('invitations.show', ['token' => $invitation->token]);
     }
 
     public function envelope(): Envelope
     {
-        $subject = "You've been invited to join {$this->estate->name}";
+        $subject = $this->isExistingUser
+            ? "New role added: Household Member at {$this->estate->name}"
+            : "You've been invited to join {$this->estate->name}";
 
         return new Envelope(subject: $subject);
     }
@@ -63,6 +74,7 @@ class HouseholdMemberInvitationMail extends Mailable implements ShouldQueue
                 'userName' => $this->user->name,
                 'primaryResidentName' => $this->primaryResident->name,
                 'invitationUrl' => $this->invitationUrl,
+                'isExistingUser' => $this->isExistingUser,
             ],
         );
     }

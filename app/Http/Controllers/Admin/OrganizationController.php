@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\OrganizationType;
 use App\Http\Controllers\Controller;
+use App\Mail\Organization\OrganizationInvitationMail;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationMembership;
 use App\Models\User;
@@ -12,6 +13,7 @@ use App\Services\EstateContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -110,6 +112,8 @@ class OrganizationController extends Controller
                     ]
                 );
 
+                $wasNewUser = $user->wasRecentlyCreated;
+
                 if (! empty($validated['admin_phone'])) {
                     UserProfile::updateOrCreate(
                         ['user_id' => $user->id],
@@ -117,7 +121,7 @@ class OrganizationController extends Controller
                     );
                 }
 
-                OrganizationMembership::updateOrCreate(
+                $membership = OrganizationMembership::updateOrCreate(
                     [
                         'user_id' => $user->id,
                         'organization_id' => $org->id,
@@ -128,6 +132,12 @@ class OrganizationController extends Controller
                         'invited_by' => $request->user()?->id,
                     ]
                 );
+
+                if ($membership->wasRecentlyCreated) {
+                    Mail::to($user->email)->send(
+                        new OrganizationInvitationMail($user, $org, 'admin', isExistingUser: ! $wasNewUser)
+                    );
+                }
             }
         });
 
@@ -179,6 +189,8 @@ class OrganizationController extends Controller
                     ]
                 );
 
+                $wasNewUser = $user->wasRecentlyCreated;
+
                 if (! empty($validated['admin_phone'])) {
                     UserProfile::updateOrCreate(
                         ['user_id' => $user->id],
@@ -186,7 +198,7 @@ class OrganizationController extends Controller
                     );
                 }
 
-                OrganizationMembership::updateOrCreate(
+                $membership = OrganizationMembership::updateOrCreate(
                     [
                         'user_id' => $user->id,
                         'organization_id' => $organization->id,
@@ -197,6 +209,12 @@ class OrganizationController extends Controller
                         'invited_by' => $request->user()?->id,
                     ]
                 );
+
+                if ($membership->wasRecentlyCreated) {
+                    Mail::to($user->email)->send(
+                        new OrganizationInvitationMail($user, $organization, 'admin', isExistingUser: ! $wasNewUser)
+                    );
+                }
             }
         });
 

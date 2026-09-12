@@ -7,6 +7,7 @@ use App\Models\EstateOrganization;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -272,4 +273,84 @@ it('allows an already existing resident user to be assigned as organization admi
         'role' => 'admin',
         'is_active' => true,
     ]);
+});
+
+it('sends OrganizationInvitationMail when creating an organization with an admin', function () {
+    Mail::fake();
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->post(route('admin.organizations.store'), [
+            'name' => 'Apex Healthcare',
+            'type' => 'hospital',
+            'admin_email' => 'dr.smith@apex.com',
+            'quick_entry_enabled' => true,
+            'is_active' => true,
+        ]);
+
+    $response->assertRedirect()->assertSessionHas('success');
+
+    Mail::assertQueued(App\Mail\Organization\OrganizationInvitationMail::class, function ($mail) {
+        return $mail->hasTo('dr.smith@apex.com')
+            && $mail->role === 'admin'
+            && $mail->isExistingUser === false;
+    });
+});
+
+it('sends OrganizationInvitationMail with role added info when admin is an existing user', function () {
+    Mail::fake();
+
+    $existing = User::factory()->create([
+        'email' => 'existing.doctor@apex.com',
+        'name' => 'Dr. Existing',
+        'password' => bcrypt('secret123'),
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->post(route('admin.organizations.store'), [
+            'name' => 'Apex Clinic',
+            'type' => 'hospital',
+            'admin_email' => 'existing.doctor@apex.com',
+            'quick_entry_enabled' => true,
+            'is_active' => true,
+        ]);
+
+    $response->assertRedirect()->assertSessionHas('success');
+
+    Mail::assertQueued(App\Mail\Organization\OrganizationInvitationMail::class, function ($mail) {
+        return $mail->hasTo('existing.doctor@apex.com')
+            && $mail->role === 'admin'
+            && $mail->isExistingUser === true;
+    });
+});
+
+it('does not re-send OrganizationInvitationMail on update if admin membership already existed', function () {
+    Mail::fake();
+
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Existing Org',
+        'type' => 'business',
+    ]);
+
+    $adminUser = User::factory()->create(['email' => 'org.admin@example.com']);
+    \App\Models\OrganizationMembership::create([
+        'organization_id' => $org->id,
+        'user_id' => $adminUser->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->put(route('admin.organizations.update', $org->id), [
+            'name' => 'Updated Org Name',
+            'type' => 'business',
+            'admin_email' => 'org.admin@example.com',
+        ]);
+
+    $response->assertRedirect()->assertSessionHas('success');
+
+    Mail::assertNothingSent();
 });

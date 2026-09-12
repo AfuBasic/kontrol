@@ -5,6 +5,8 @@ namespace App\Notifications\Resident;
 use App\Channels\TelegramChannel;
 use App\Models\AccessCode;
 use App\Models\VisitorPassReminder;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -51,29 +53,44 @@ class VisitorPassReminderNotification extends Notification implements ShouldQueu
      */
     public function toArray(object $notifiable): array
     {
-        $visitorName = $this->accessCode->visitor_name ?? 'Your visitor';
+        $rawName = trim((string) ($this->accessCode->visitor_name ?? ''));
+        $hasName = $rawName !== '';
+
+        $title = $hasName
+            ? "{$rawName} is arriving soon"
+            : 'Your visitor is arriving soon';
+
         $tz = config('app.timezone', 'Africa/Lagos');
-        $startTime = $this->accessCode->starts_at
-            ? $this->accessCode->starts_at->timezone($tz)->format('g:i A')
-            : 'soon';
+        $startsAt = $this->accessCode->starts_at
+            ? CarbonImmutable::instance($this->accessCode->starts_at)->setTimezone($tz)
+            : null;
 
-        $offsetMinutes = $this->reminder->reminder_offset_minutes;
-        $offsetText = match ($offsetMinutes) {
-            1440 => '24 hours',
-            720 => '12 hours',
-            360 => '6 hours',
-            120 => '2 hours',
-            60 => '1 hour',
-            default => "{$offsetMinutes} minutes",
-        };
+        $now = CarbonImmutable::now($tz);
 
-        $message = "{$visitorName}'s pass becomes valid at {$startTime} today (in {$offsetText}).";
+        if ($startsAt) {
+            $startTime = $startsAt->format('g:i A');
+            if ($startsAt->isSameDay($now)) {
+                $dayPhrase = 'today';
+            } elseif ($startsAt->isSameDay($now->addDay())) {
+                $dayPhrase = 'tomorrow';
+            } else {
+                $dayPhrase = 'on '.$startsAt->format('l');
+            }
+
+            $message = $hasName
+                ? "Just a reminder — you're expecting {$rawName} at {$startTime} {$dayPhrase}."
+                : "Just a reminder — you're expecting your visitor at {$startTime} {$dayPhrase}.";
+        } else {
+            $message = $hasName
+                ? "Just a reminder — you're expecting {$rawName} soon."
+                : "Just a reminder — you're expecting your visitor soon.";
+        }
 
         return [
-            'title' => 'Visitor arriving soon',
+            'title' => $title,
             'message' => $message,
             'access_code_id' => $this->accessCode->id,
-            'visitor_name' => $visitorName,
+            'visitor_name' => $hasName ? $rawName : null,
             'type' => 'visitor_reminder',
             'target_role' => 'resident',
             'action_url' => "/resident/visitors/{$this->accessCode->id}",

@@ -15,9 +15,9 @@ it('ships the cinematic hero copy in the public home bundle', function () {
     $css = file_get_contents(resource_path('css/app.css'));
 
     expect($source)
-        ->toContain('The Operating System')
-        ->toContain('For Modern Estates')
-        ->toContain('Get Started Free')
+        ->toContain('Your Estate,')
+        ->toContain('Fully Coordinated.')
+        ->toContain('Apply for Your Estate')
         ->toContain('<CinematicHero />')
         ->toContain('href={apply.url()}')
         ->toContain('kontrol-hero-sequence-started');

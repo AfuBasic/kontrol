@@ -4,6 +4,7 @@ namespace App\Actions\Invitation;
 
 use App\Actions\Admin\CreateAdministrativeAssignmentAction;
 use App\Enums\AssignmentScope;
+use App\Mail\Resident\WelcomeMail;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\Invitation;
@@ -14,6 +15,7 @@ use App\Notifications\Resident\HouseholdMemberInvitationAcceptedNotification;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Models\Role;
 
 class AcceptInvitationAction
@@ -32,6 +34,9 @@ class AcceptInvitationAction
         if (strtolower($user->email) !== strtolower($invitation->email)) {
             throw new Exception('This invitation belongs to a different email address.');
         }
+
+        // Determine if the user was already established prior to accepting this invitation
+        $wasNewUser = ! $user->isEstablishedUser();
 
         DB::transaction(function () use ($invitation, $user) {
             $estateId = $invitation->estate_id;
@@ -140,5 +145,10 @@ class AcceptInvitationAction
                 $invitation->createdBy->notify(new HouseholdMemberInvitationAcceptedNotification($user, $estate));
             }
         });
+
+        // 5. Send Welcome Email if this user was newly onboarded to Kontrol
+        if ($wasNewUser) {
+            Mail::to($user->email)->send(new WelcomeMail($user));
+        }
     }
 }

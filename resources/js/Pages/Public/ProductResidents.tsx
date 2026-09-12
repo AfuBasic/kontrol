@@ -1,16 +1,32 @@
 import { Head, Link } from '@inertiajs/react';
-import { Smartphone, QrCode, CreditCard, Bell, Users, ArrowRight, Apple, KeyRound } from 'lucide-react';
+import { Smartphone, QrCode, CreditCard, Bell, Users, ArrowRight, KeyRound } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 
 export default function ProductResidents() {
     return (
         <PublicLayout>
             <Head>
-                <title>Kontrol for Residents — Smooth Gate Access and Effortless Living</title>
+                <title>Kontrol for Residents: Smooth Gate Access and Effortless Living</title>
                 <meta
                     name="description"
-                    content="Experience seamless living in your estate. Generate visitor passes, pay service dues, manage household members, and receive verified announcements right from your phone."
+                    content="Generate visitor passes, pay dues, and stay updated on your estate, all from the Kontrol app. Available on iOS and Android."
                 />
+                <meta property="og:title" content="Kontrol for Residents: Smooth Gate Access and Effortless Living" />
+                <meta
+                    property="og:description"
+                    content="Generate visitor passes, pay dues, and stay updated on your estate, all from the Kontrol app. Available on iOS and Android."
+                />
+                <meta property="og:url" content="https://usekontrol.com/product/residents" />
+                <meta property="og:type" content="website" />
+                <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Kontrol for Residents: Smooth Gate Access and Effortless Living" />
+                <meta
+                    name="twitter:description"
+                    content="Generate visitor passes, pay dues, and stay updated on your estate, all from the Kontrol app. Available on iOS and Android."
+                />
+                <meta name="twitter:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <link rel="canonical" href="https://usekontrol.com/product/residents" />
             </Head>
 
             <div className="overflow-hidden">
@@ -33,7 +49,7 @@ export default function ProductResidents() {
                         </div>
 
                         <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-                            Estate living, effortless at your fingertips.
+                            Visitors, payments, and estate updates. All from your phone.
                         </h1>
 
                         <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
@@ -214,7 +230,7 @@ export default function ProductResidents() {
                         </h2>
 
                         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
-                            Once your estate is onboarded, download the app to activate your resident account and enjoy hassle-free living.
+                            Already on a Kontrol estate? Download and activate your resident account in minutes.
                         </p>
 
                         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -224,7 +240,7 @@ export default function ProductResidents() {
                                 rel="noopener noreferrer"
                                 className="flex min-w-[200px] items-center gap-3 rounded-2xl bg-white px-6 py-3.5 text-slate-950 shadow-xl transition-all duration-300 hover:bg-slate-100 hover:scale-105"
                             >
-                                <Apple className="h-7 w-7" />
+                                <img src="/assets/images/apple-store.svg" alt="Apple App Store" className="h-7 w-7 text-slate-950" />
                                 <div className="text-left">
                                     <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600">Download on the</p>
                                     <p className="text-base font-bold">App Store</p>
@@ -247,9 +263,9 @@ export default function ProductResidents() {
 
                         <div className="mt-12">
                             <p className="text-sm text-slate-400">
-                                Is your estate not yet on Kontrol?{' '}
+                                Not on a Kontrol estate yet?{' '}
                                 <Link href="/apply" className="font-semibold text-blue-400 hover:underline">
-                                    Tell your estate manager or apply on their behalf &rarr;
+                                    Share this with your estate manager and ask them to apply &rarr;
                                 </Link>
                             </p>
                         </div>

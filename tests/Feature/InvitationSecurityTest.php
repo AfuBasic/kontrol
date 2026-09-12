@@ -5,6 +5,7 @@ use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Invitation\AcceptInvitationAction;
+use App\Mail\Resident\WelcomeMail;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
@@ -83,7 +84,7 @@ test('invited property owner has pending membership status and cannot log in', f
     $response->assertSessionHasErrors('email');
 });
 
-test('inviting a user that already exists in another estate dispatches invitation event and sets pending membership', function () {
+test('inviting an established user from another estate dispatches invitation event and sets accepted membership', function () {
     Mail::fake();
     $estate1 = Estate::factory()->create();
     $estate2 = Estate::factory()->create();
@@ -104,7 +105,7 @@ test('inviting a user that already exists in another estate dispatches invitatio
         ->where('estate_id', $estate2->id)
         ->value('status');
 
-    expect($membershipStatus)->toBe('pending');
+    expect($membershipStatus)->toBe('accepted');
 });
 
 test('first time invited resident can accept invitation and activate membership', function () {
@@ -131,6 +132,10 @@ test('first time invited resident can accept invitation and activate membership'
 
     expect($status)->toBe('accepted');
     expect($invitation->fresh()->status)->toBe('accepted');
+
+    Mail::assertQueued(WelcomeMail::class, function ($mail) use ($user) {
+        return $mail->hasTo($user->email);
+    });
 });
 
 test('bulk invited residents have pending invitation status', function () {

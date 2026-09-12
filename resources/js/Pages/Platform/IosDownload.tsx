@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Smartphone, Apple, Shield } from 'lucide-react';
+import { Smartphone, Shield } from 'lucide-react';
 import React from 'react';
 
 interface Props {
@@ -76,7 +76,7 @@ export default function IosDownload({ appStoreUrl }: Props) {
                             rel="noopener noreferrer"
                             className="hover:bg-slate-750 flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-700 bg-slate-800 py-4 text-sm font-extrabold text-white transition-all active:scale-95"
                         >
-                            <Apple className="h-5 w-5 fill-current" />
+                            <img src="/assets/images/apple-store.svg" alt="App Store" className="h-5 w-5 brightness-0 invert" />
                             <span>Download on App Store</span>
                         </a>
                     </div>

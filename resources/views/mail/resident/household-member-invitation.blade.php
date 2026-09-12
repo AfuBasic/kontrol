@@ -4,6 +4,9 @@
     @if($passwordReset ?? false)
         <div class="badge" style="background-color: #fff1f2; color: #9f1239;">Security</div>
         <h1>Reset your password</h1>
+    @elseif($isExistingUser ?? false)
+        <div class="badge" style="background-color: #fefcf1; color: #92400e; border: 1px solid #fde68a;">Role Added</div>
+        <h1>New Role Added</h1>
     @else
         <div class="badge" style="background-color: #f0fdf4; color: #166534;">Community</div>
         <h1>Welcome to the household</h1>
@@ -13,6 +16,8 @@
     
     @if($passwordReset ?? false)
         <p><span class="bold">{{ $primaryResidentName }}</span> has requested a password reset for your household account at <span class="bold">{{ $estateName }}</span>.</p>
+    @elseif($isExistingUser ?? false)
+        <p><span class="bold">{{ $primaryResidentName }}</span> has added you as a <span class="bold">Household Member</span> at <span class="bold">{{ $estateName }}</span> on your existing Kontrol account.</p>
     @else
         <p><span class="bold">{{ $primaryResidentName }}</span> has added you as a household member at <span class="bold">{{ $estateName }}</span> on Kontrol.</p>
     @endif
@@ -43,15 +48,27 @@
     @endif
     
     <div class="button-container">
-        <a href="{{ $invitationUrl }}" class="button shadow">{{ ($passwordReset ?? false) ? 'Login to your account' : 'Accept Invitation' }}</a>
+        <a href="{{ $invitationUrl }}" class="button shadow">
+            @if($passwordReset ?? false)
+                Login to your account
+            @elseif($isExistingUser ?? false)
+                Go to Dashboard
+            @else
+                Accept Invitation
+            @endif
+        </a>
     </div>
     
-    <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
-        <strong>Link Validity</strong><br>
-        This link will expire in 72 hours. Please accept your invitation within this timeframe.
-    </div>
-    
-    <div class="divider"></div>
-    
-    <p style="font-size: 14px; color: #64748b;">If you're having trouble, copy and paste this link: <br> <span style="font-size: 12px; color: #6366f1;">{{ $invitationUrl }}</span></p>
+    @if(!($isExistingUser ?? false))
+        <div style="background-color: #f0f9ff; border-radius: 12px; padding: 20px; font-size: 14px; color: #0369a1; border: 1px solid #bae6fd;">
+            <strong>Link Validity</strong><br>
+            This link will expire in 72 hours. Please accept your invitation within this timeframe.
+        </div>
+        
+        <div class="divider"></div>
+        
+        <p style="font-size: 14px; color: #64748b;">If you're having trouble, copy and paste this link: <br> <span style="font-size: 12px; color: #6366f1;">{{ $invitationUrl }}</span></p>
+    @else
+        <p style="font-size: 14px; color: #64748b;">You can log in using your existing credentials to access the household features for this estate.</p>
+    @endif
 @endsection

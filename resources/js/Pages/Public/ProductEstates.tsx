@@ -13,6 +13,22 @@ export default function ProductEstates() {
                     name="description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
                 />
+                <meta property="og:title" content="Kontrol for Estates — Complete Operating System for Gated Communities" />
+                <meta
+                    property="og:description"
+                    content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
+                />
+                <meta property="og:url" content="https://usekontrol.com/product/estates" />
+                <meta property="og:type" content="website" />
+                <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Kontrol for Estates — Complete Operating System for Gated Communities" />
+                <meta
+                    name="twitter:description"
+                    content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
+                />
+                <meta name="twitter:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <link rel="canonical" href="https://usekontrol.com/product/estates" />
             </Head>
 
             <div className="overflow-hidden">
@@ -35,7 +51,7 @@ export default function ProductEstates() {
                         </div>
 
                         <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-                            The command center your estate has been missing.
+                            Everything that makes your estate run — finally in one place.
                         </h1>
 
                         <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
