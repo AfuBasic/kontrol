@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Smartphone, Apple, Play, ArrowLeft, Shield, LogOut } from 'lucide-react';
+import { Smartphone, Play, ArrowLeft, Shield, LogOut } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import Header from '@/Components/Public/Header';
 
@@ -131,7 +131,7 @@ export default function DownloadApp({ autologinToken }: Props) {
                                 rel="noopener noreferrer"
                                 className="hover:bg-slate-850 flex items-center justify-center gap-3 rounded-2xl border border-transparent bg-slate-900 py-4 text-sm font-extrabold text-white shadow-lg transition-all dark:bg-white dark:text-slate-950 dark:hover:bg-slate-100"
                             >
-                                <Apple className="h-5 w-5 fill-current text-white dark:text-slate-950" />
+                                <img src="/assets/images/apple-store.svg" alt="App Store" className="h-5 w-5 brightness-0 invert dark:brightness-0 dark:invert-0" />
                                 <div className="text-left leading-tight">
                                     <div className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase dark:text-slate-500">
                                         Download for
