@@ -79,6 +79,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
         Route::get('/', [OrganizationController::class, 'index'])->name('index');
         Route::post('/', [OrganizationController::class, 'store'])->name('store');
         Route::put('/{organization}', [OrganizationController::class, 'update'])->name('update');
+        Route::post('/{organization}/resend-invitation', [OrganizationController::class, 'resendInvitation'])->name('resend-invitation');
         Route::delete('/{organization}', [OrganizationController::class, 'destroy'])->name('destroy');
     });
 
