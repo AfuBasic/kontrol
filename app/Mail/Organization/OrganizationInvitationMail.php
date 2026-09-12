@@ -27,7 +27,10 @@ class OrganizationInvitationMail extends Mailable implements ShouldQueue
         public string $role = 'member',
         ?bool $isExistingUser = null,
     ) {
-        $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser();
+        // An existing user must have established credentials (password or google_id) and verified email
+        // so they can actually log in on their own. Otherwise they need a magic login invitation link.
+        $hasCredentials = ! is_null($this->user->password) || ! is_null($this->user->google_id);
+        $this->isExistingUser = $isExistingUser ?? ($hasCredentials && $this->user->hasVerifiedEmail());
 
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';
