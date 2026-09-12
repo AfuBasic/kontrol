@@ -5,6 +5,7 @@ use App\Actions\Admin\BulkInviteResidentsAction;
 use App\Actions\Admin\CreatePropertyOwnerAction;
 use App\Actions\Admin\CreateResidentAction;
 use App\Actions\Invitation\AcceptInvitationAction;
+use App\Mail\Resident\WelcomeMail;
 use App\Models\Estate;
 use App\Models\Invitation;
 use App\Models\User;
@@ -131,6 +132,10 @@ test('first time invited resident can accept invitation and activate membership'
 
     expect($status)->toBe('accepted');
     expect($invitation->fresh()->status)->toBe('accepted');
+
+    Mail::assertQueued(WelcomeMail::class, function ($mail) use ($user) {
+        return $mail->hasTo($user->email);
+    });
 });
 
 test('bulk invited residents have pending invitation status', function () {
