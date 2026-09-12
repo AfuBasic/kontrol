@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Mail\Organization\OrganizationInvitationMail;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationMembership;
 use App\Models\User;
 use App\Services\OrganizationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -104,10 +106,16 @@ class SettingsController extends Controller
             return back()->withErrors(['email' => 'User with this email is not registered on Kontrol.']);
         }
 
-        OrganizationMembership::updateOrCreate(
+        $membershipRecord = OrganizationMembership::updateOrCreate(
             ['user_id' => $user->id, 'organization_id' => $organization->id],
             ['role' => $validated['role'], 'is_active' => true, 'invited_by' => $request->user()->id]
         );
+
+        if ($membershipRecord->wasRecentlyCreated) {
+            Mail::to($user->email)->send(
+                new OrganizationInvitationMail($user, $organization, $validated['role'])
+            );
+        }
 
         return back()->with('success', "Staff access granted to {$user->name}.");
     }
