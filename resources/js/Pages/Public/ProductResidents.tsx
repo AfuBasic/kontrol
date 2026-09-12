@@ -1,29 +1,29 @@
 import { Head, Link } from '@inertiajs/react';
-import { Smartphone, QrCode, CreditCard, Bell, Users, ArrowRight, Apple, KeyRound } from 'lucide-react';
+import { Smartphone, QrCode, CreditCard, Bell, Users, ArrowRight, KeyRound } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 
 export default function ProductResidents() {
     return (
         <PublicLayout>
             <Head>
-                <title>Kontrol for Residents — Smooth Gate Access and Effortless Living</title>
+                <title>Kontrol for Residents: Smooth Gate Access and Effortless Living</title>
                 <meta
                     name="description"
-                    content="Generate visitor passes, pay dues, and stay updated on your estate — all from the Kontrol app. Available on iOS and Android."
+                    content="Generate visitor passes, pay dues, and stay updated on your estate, all from the Kontrol app. Available on iOS and Android."
                 />
-                <meta property="og:title" content="Kontrol for Residents — Smooth Gate Access and Effortless Living" />
+                <meta property="og:title" content="Kontrol for Residents: Smooth Gate Access and Effortless Living" />
                 <meta
                     property="og:description"
-                    content="Generate visitor passes, pay dues, and stay updated on your estate — all from the Kontrol app. Available on iOS and Android."
+                    content="Generate visitor passes, pay dues, and stay updated on your estate, all from the Kontrol app. Available on iOS and Android."
                 />
                 <meta property="og:url" content="https://usekontrol.com/product/residents" />
                 <meta property="og:type" content="website" />
                 <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Kontrol for Residents — Smooth Gate Access and Effortless Living" />
+                <meta name="twitter:title" content="Kontrol for Residents: Smooth Gate Access and Effortless Living" />
                 <meta
                     name="twitter:description"
-                    content="Generate visitor passes, pay dues, and stay updated on your estate — all from the Kontrol app. Available on iOS and Android."
+                    content="Generate visitor passes, pay dues, and stay updated on your estate, all from the Kontrol app. Available on iOS and Android."
                 />
                 <meta name="twitter:image" content="https://usekontrol.com/assets/images/app-icon.png" />
                 <link rel="canonical" href="https://usekontrol.com/product/residents" />
@@ -240,7 +240,7 @@ export default function ProductResidents() {
                                 rel="noopener noreferrer"
                                 className="flex min-w-[200px] items-center gap-3 rounded-2xl bg-white px-6 py-3.5 text-slate-950 shadow-xl transition-all duration-300 hover:bg-slate-100 hover:scale-105"
                             >
-                                <Apple className="h-7 w-7" />
+                                <img src="/assets/images/apple-store.svg" alt="Apple App Store" className="h-7 w-7 text-slate-950" />
                                 <div className="text-left">
                                     <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600">Download on the</p>
                                     <p className="text-base font-bold">App Store</p>
