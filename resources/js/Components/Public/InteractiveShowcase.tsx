@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from '@inertiajs/react';
 import { Fingerprint, Users, Bell, Shield, QrCode, CheckCircle, Send, Smartphone, CreditCard, TrendingUp } from 'lucide-react';
 import InteractiveTilt from './InteractiveTilt';
 
@@ -116,7 +117,7 @@ export default function InteractiveShowcase() {
             <div className="mx-auto mb-16 max-w-3xl text-center sm:mb-24">
                 <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white">Everything your estate needs. One platform.</h2>
                 <p className="mt-6 text-xl text-slate-600 dark:text-slate-400">
-                    Interact with the capabilities below to see how Kontrol coordinates operations on the ground.
+                    Tap a feature below and see it working. This is the actual product.
                 </p>
             </div>
 
@@ -246,8 +247,63 @@ export default function InteractiveShowcase() {
                         </div>
                     </InteractiveTilt>
 
+                    {/* Contextual Micro-CTA */}
+                    <div className="mt-6 text-center">
+                        <AnimatePresence mode="wait">
+                            <motion.p
+                                key={`micro-cta-${activeFeature.id}`}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -6 }}
+                                transition={{ duration: 0.2 }}
+                                className="text-sm text-slate-500 dark:text-slate-400"
+                            >
+                                {activeFeature.id === 'access' && (
+                                    <>
+                                        Ready to manage visitors?{' '}
+                                        <Link href="/product/residents#download" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Download the app &rarr;
+                                        </Link>
+                                    </>
+                                )}
+                                {activeFeature.id === 'collections' && (
+                                    <>
+                                        Want this for your estate?{' '}
+                                        <Link href="/apply" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Apply here &rarr;
+                                        </Link>
+                                    </>
+                                )}
+                                {activeFeature.id === 'household' && (
+                                    <>
+                                        Your household, your rules.{' '}
+                                        <Link href="/product/residents#download" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Download the app &rarr;
+                                        </Link>
+                                    </>
+                                )}
+                                {activeFeature.id === 'announcements' && (
+                                    <>
+                                        Bring Kontrol to your estate.{' '}
+                                        <Link href="/apply" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Apply here &rarr;
+                                        </Link>
+                                    </>
+                                )}
+                                {activeFeature.id === 'security' && (
+                                    <>
+                                        Want this for your estate?{' '}
+                                        <Link href="/apply" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                            Apply here &rarr;
+                                        </Link>
+                                    </>
+                                )}
+                            </motion.p>
+                        </AnimatePresence>
+                    </div>
+
                     {/* Active feature text description for mobile view only */}
-                    <div className="mx-auto mt-8 block max-w-sm px-4 text-center lg:hidden">
+                    <div className="mx-auto mt-6 block max-w-sm px-4 text-center lg:hidden">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={`mobile-desc-${activeFeature.id}`}
