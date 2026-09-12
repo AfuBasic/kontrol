@@ -9,8 +9,24 @@ export default function ProductResidents() {
                 <title>Kontrol for Residents — Smooth Gate Access and Effortless Living</title>
                 <meta
                     name="description"
-                    content="Experience seamless living in your estate. Generate visitor passes, pay service dues, manage household members, and receive verified announcements right from your phone."
+                    content="Generate visitor passes, pay dues, and stay updated on your estate — all from the Kontrol app. Available on iOS and Android."
                 />
+                <meta property="og:title" content="Kontrol for Residents — Smooth Gate Access and Effortless Living" />
+                <meta
+                    property="og:description"
+                    content="Generate visitor passes, pay dues, and stay updated on your estate — all from the Kontrol app. Available on iOS and Android."
+                />
+                <meta property="og:url" content="https://usekontrol.com/product/residents" />
+                <meta property="og:type" content="website" />
+                <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Kontrol for Residents — Smooth Gate Access and Effortless Living" />
+                <meta
+                    name="twitter:description"
+                    content="Generate visitor passes, pay dues, and stay updated on your estate — all from the Kontrol app. Available on iOS and Android."
+                />
+                <meta name="twitter:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <link rel="canonical" href="https://usekontrol.com/product/residents" />
             </Head>
 
             <div className="overflow-hidden">
@@ -33,7 +49,7 @@ export default function ProductResidents() {
                         </div>
 
                         <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-                            Estate living, effortless at your fingertips.
+                            Visitors, payments, and estate updates. All from your phone.
                         </h1>
 
                         <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
