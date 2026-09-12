@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { ShieldCheck, Zap, MessageSquare } from 'lucide-react';
 import PublicLayout from '@/Layouts/PublicLayout';
 import { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
@@ -7,7 +6,6 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { apply } from '@/routes/public';
 
-import InteractiveTilt from '@/Components/Public/InteractiveTilt';
 import MagneticButton from '@/Components/Public/MagneticButton';
 import InteractiveShowcase from '@/Components/Public/InteractiveShowcase';
 import CinematicHero from '@/Components/Public/CinematicHero';
@@ -202,62 +200,81 @@ export default function Home() {
                             </p>
 
                             <div className="kontrol-hero-reveal kontrol-hero-reveal-cta gsap-hero-stagger-item mt-10 flex flex-col items-center">
-                                <MagneticButton>
+                                <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+                                    <MagneticButton>
+                                        <Link
+                                            href={apply.url()}
+                                            prefetch="click"
+                                            className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#07101d] shadow-[0_18px_50px_rgba(2,8,23,0.28),0_0_34px_rgba(31,111,219,0.24)] transition duration-300 hover:bg-white/92 hover:shadow-[0_22px_64px_rgba(2,8,23,0.34),0_0_44px_rgba(31,111,219,0.34)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none motion-reduce:transition-none"
+                                        >
+                                            Apply for Your Estate
+                                        </Link>
+                                    </MagneticButton>
+
                                     <Link
-                                        href={apply.url()}
-                                        prefetch="click"
-                                        className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#07101d] shadow-[0_18px_50px_rgba(2,8,23,0.28),0_0_34px_rgba(31,111,219,0.24)] transition duration-300 hover:bg-white/92 hover:shadow-[0_22px_64px_rgba(2,8,23,0.34),0_0_44px_rgba(31,111,219,0.34)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none motion-reduce:transition-none"
+                                        href="/product/residents#download"
+                                        className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/20 bg-white/5 px-8 text-base font-semibold text-white backdrop-blur-sm transition duration-300 hover:border-white/40 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none"
                                     >
-                                        Get Started Free
+                                        Download the App &darr;
                                     </Link>
-                                </MagneticButton>
-                                <span className="mt-3 text-xs text-slate-400">
-                                    First 30 days free · No credit card required
+                                </div>
+                                <span className="mt-4 text-xs text-slate-400">
+                                    Already a resident? Your estate needs to be on Kontrol first.
                                 </span>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                {/* THE PROBLEM SECTION - HIGH CONTRAST */}
+                {/* PERSONA SPLIT SECTION - TWO AUDIENCES */}
                 <section className="bg-white pt-24 pb-20 sm:pt-32 sm:pb-28 dark:bg-slate-950">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <div className="mx-auto max-w-4xl text-center">
-                            <h2 className="gsap-fade-up text-4xl leading-tight font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl dark:text-white">
-                                Stop running your estate on spreadsheets and phone calls.
-                            </h2>
-                        </div>
+                        <div className="gsap-stagger-section mx-auto grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-2">
+                            {/* Card 1: Estate Managers */}
+                            <div className="flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-slate-50/50 p-8 sm:p-10 transition-all duration-300 hover:border-blue-500/30 dark:border-slate-800/80 dark:bg-slate-900/30 dark:hover:border-blue-500/30">
+                                <div>
+                                    <span className="inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                        For Estate Managers
+                                    </span>
+                                    <h3 className="mt-6 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+                                        Manage gate access, dues, announcements, and your full estate — from one dashboard.
+                                    </h3>
+                                    <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+                                        Eliminate gate bottlenecks, automate fee collection, and maintain complete real-time visibility over your entire community operations.
+                                    </p>
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-800/60">
+                                    <Link
+                                        href="/product/estates"
+                                        className="inline-flex items-center font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                    >
+                                        Explore the Platform &rarr;
+                                    </Link>
+                                </div>
+                            </div>
 
-                        <div className="gsap-stagger-section mx-auto mt-24 grid max-w-lg grid-cols-1 gap-12 sm:max-w-none sm:grid-cols-3">
-                            {[
-                                {
-                                    icon: ShieldCheck,
-                                    title: 'No more gate bottlenecks.',
-                                    desc: 'Residents generate secure passes. Security simply scans them. Fast, secure, and fully logged.',
-                                },
-                                {
-                                    icon: Zap,
-                                    title: 'Instant Due Collections.',
-                                    desc: 'Automated billing, instant receipts, and complete transparency for all estate finances.',
-                                },
-                                {
-                                    icon: MessageSquare,
-                                    title: 'Organized Communication.',
-                                    desc: 'Move away from chaotic WhatsApp groups. Send targeted announcements and track complaints directly.',
-                                },
-                            ].map((item, index) => (
-                                <InteractiveTilt key={index} maxRotation={5} className="h-full">
-                                    <div className="group flex h-full flex-col items-center rounded-3xl border border-slate-100 bg-slate-50/30 p-8 text-center backdrop-blur-sm transition-all duration-300 hover:border-blue-500/20 dark:border-slate-800/40 dark:bg-slate-900/10 dark:hover:border-blue-500/30">
-                                        <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-slate-100 ring-1 ring-blue-500/0 ring-slate-200/50 transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-50 group-hover:ring-blue-500/20 dark:bg-slate-900 dark:group-hover:bg-blue-950/30">
-                                            <item.icon className="h-10 w-10 text-slate-600 transition-colors duration-300 group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400" />
-                                        </div>
-                                        <h3 className="mb-4 text-2xl font-bold text-slate-900 transition-colors duration-300 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
-                                            {item.title}
-                                        </h3>
-                                        <p className="text-lg leading-relaxed text-slate-600 dark:text-slate-400">{item.desc}</p>
-                                    </div>
-                                </InteractiveTilt>
-                            ))}
+                            {/* Card 2: Residents */}
+                            <div className="flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-slate-50/50 p-8 sm:p-10 transition-all duration-300 hover:border-cyan-500/30 dark:border-slate-800/80 dark:bg-slate-900/30 dark:hover:border-cyan-500/30">
+                                <div>
+                                    <span className="inline-flex items-center rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3.5 py-1 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+                                        For Residents
+                                    </span>
+                                    <h3 className="mt-6 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+                                        Generate visitor passes, pay dues, and stay connected to your estate — all from your phone.
+                                    </h3>
+                                    <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
+                                        No more calls from security when your guests arrive. Grant instant gate passes, settle estate invoices, and receive updates directly on your mobile device.
+                                    </p>
+                                </div>
+                                <div className="mt-8 pt-6 border-t border-slate-200/60 dark:border-slate-800/60">
+                                    <Link
+                                        href="/product/residents#download"
+                                        className="inline-flex items-center font-semibold text-cyan-700 transition-colors hover:text-cyan-800 dark:text-cyan-300 dark:hover:text-cyan-200"
+                                    >
+                                        Download the App &rarr;
+                                    </Link>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
