@@ -34,6 +34,10 @@ class ContextController extends Controller
         $assignments = $contextManager->getValidAssignments($user);
 
         if ($assignments->isEmpty()) {
+            if ($user->organizationMemberships()->where('is_active', true)->exists()) {
+                return redirect()->route('org.dashboard');
+            }
+
             $hasPending = EstateMembership::where('user_id', $user->id)
                 ->where('status', 'pending')
                 ->exists();
