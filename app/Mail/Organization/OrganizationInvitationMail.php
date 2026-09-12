@@ -40,7 +40,7 @@ class OrganizationInvitationMail extends Mailable implements ShouldQueue
             // Generate a 72-hour magic login link to let new user access their account
             $this->actionUrl = app(GenerateMagicLoginUrlAction::class)->execute(
                 user: $user,
-                destination: route('organization.dashboard', [], false),
+                destination: route('org.dashboard', [], false),
                 ttlMinutes: 72 * 60
             );
 
