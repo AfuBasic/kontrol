@@ -153,11 +153,27 @@ export default function Home() {
     return (
         <PublicLayout>
             <Head>
-                <title>Modern Estate Access Control - Kontrol</title>
+                <title>Kontrol — Your Estate, Fully Coordinated</title>
                 <meta
                     name="description"
-                    content="Kontrol is the operating system for your estate, managing access control, automated collections, incident reports and announcements with seamless design."
+                    content="Kontrol coordinates everything that keeps your estate running — visitor access, dues, announcements, and security — from one platform your whole community uses."
                 />
+                <meta property="og:title" content="Kontrol — Your Estate, Fully Coordinated" />
+                <meta
+                    property="og:description"
+                    content="Kontrol coordinates everything that keeps your estate running — visitor access, dues, announcements, and security — from one platform your whole community uses."
+                />
+                <meta property="og:url" content="https://usekontrol.com" />
+                <meta property="og:type" content="website" />
+                <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Kontrol — Your Estate, Fully Coordinated" />
+                <meta
+                    name="twitter:description"
+                    content="Kontrol coordinates everything that keeps your estate running — visitor access, dues, announcements, and security — from one platform your whole community uses."
+                />
+                <meta name="twitter:image" content="https://usekontrol.com/assets/images/app-icon.png" />
+                <link rel="canonical" href="https://usekontrol.com" />
             </Head>
 
             <div ref={containerRef} className="overflow-hidden">
@@ -174,15 +190,15 @@ export default function Home() {
                         <div className="flex max-w-5xl flex-col items-center">
                             <h1 className="kontrol-hero-reveal kontrol-hero-reveal-headline flex flex-col items-center text-5xl leading-[0.96] font-semibold tracking-normal text-white drop-shadow-[0_16px_40px_rgba(0,0,0,0.42)] sm:text-7xl lg:text-8xl">
                                 <span className="block overflow-hidden py-1.5">
-                                    <span className="gsap-hero-title-line block">The Operating System</span>
+                                    <span className="gsap-hero-title-line block">Your Estate,</span>
                                 </span>
                                 <span className="block overflow-hidden py-1.5">
-                                    <span className="gsap-hero-title-line block text-white">For Modern Estates</span>
+                                    <span className="gsap-hero-title-line block text-white">Fully Coordinated.</span>
                                 </span>
                             </h1>
 
                             <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg font-normal text-slate-100/95 sm:text-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
-                                Manage gate access, service charges, and resident communication — from one platform your whole community uses.
+                                From visitors at the gate to dues in the bank — Kontrol keeps your estate running without the chaos.
                             </p>
 
                             <div className="kontrol-hero-reveal kontrol-hero-reveal-cta gsap-hero-stagger-item mt-10 flex flex-col items-center">
@@ -197,9 +213,6 @@ export default function Home() {
                                 </MagneticButton>
                                 <span className="mt-3 text-xs text-slate-400">
                                     First 30 days free · No credit card required
-                                </span>
-                                <span className="mt-1 text-xs text-slate-500">
-                                    For estate managers and HOAs. Residents download the app separately.
                                 </span>
                             </div>
                         </div>
@@ -269,7 +282,7 @@ export default function Home() {
                             Every estate deserves better than WhatsApp and spreadsheets.
                         </h2>
                         <p className="mx-auto mt-8 max-w-2xl text-xl text-slate-300 sm:text-2xl">
-                            We're currently onboarding a select cohort of forward-thinking estates. Apply today to secure a 30-day free trial with hands-on setup support.
+                            We work directly with your estate management to configure and launch your platform in days — not weeks. Apply to get your estate on Kontrol today.
                         </p>
                         <div className="mt-14 flex justify-center">
                             <MagneticButton>
