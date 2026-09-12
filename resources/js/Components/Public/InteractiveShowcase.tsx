@@ -114,7 +114,7 @@ export default function InteractiveShowcase() {
     return (
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
             <div className="mx-auto mb-16 max-w-3xl text-center sm:mb-24">
-                <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white">Experience Kontrol.</h2>
+                <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white">Everything your estate needs. One platform.</h2>
                 <p className="mt-6 text-xl text-slate-600 dark:text-slate-400">
                     Interact with the capabilities below to see how Kontrol coordinates operations on the ground.
                 </p>
