@@ -5,7 +5,9 @@ use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
+use App\Models\EstateOrganization;
 use App\Models\MagicLoginToken;
+use App\Models\OrganizationMembership;
 use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -331,4 +333,52 @@ test('multi-context user opening magic login for resident billing bypasses conte
 
     $response->assertRedirect('/resident/billing');
     expect(session('active_context_assignment_id'))->toBe($residentAssignment->id);
+});
+
+test('Organization member without administrative assignments redirects to org dashboard via magic link', function () {
+    $user = User::factory()->create(['email_verified_at' => null]);
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estateA->id,
+        'name' => 'Apex Healthcare',
+        'type' => 'hospital',
+    ]);
+
+    OrganizationMembership::create([
+        'organization_id' => $org->id,
+        'user_id' => $user->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    MagicLoginToken::create([
+        'user_id' => $user->id,
+        'token' => 'org-admin-token',
+        'expires_at' => now()->addMinutes(60),
+        'destination_url' => route('org.dashboard', [], false),
+    ]);
+
+    $response = $this->get(URL::signedRoute('auth.magic-login', ['token' => 'org-admin-token']));
+
+    $response->assertRedirect(route('org.dashboard', [], false));
+    expect($user->fresh()->email_verified_at)->not->toBeNull();
+});
+
+test('Organization member visiting context picker redirects directly to org dashboard', function () {
+    $user = User::factory()->create();
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estateA->id,
+        'name' => 'Summit College',
+        'type' => 'school',
+    ]);
+
+    OrganizationMembership::create([
+        'organization_id' => $org->id,
+        'user_id' => $user->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($user)->get(route('context.select'));
+
+    $response->assertRedirect(route('org.dashboard'));
 });
