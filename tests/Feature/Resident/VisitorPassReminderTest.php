@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\VisitorPassReminder;
 use App\Notifications\Resident\VisitorPassReminderNotification;
 use App\Services\Resident\VisitorPassReminderService;
+use Carbon\CarbonImmutable;
 use Database\Seeders\FeatureSeeder;
 use Database\Seeders\PlanSeeder;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -366,4 +367,221 @@ test('send visitor pass reminders job delivers notifications and marks reminders
 
     $futureReminder->refresh();
     expect($futureReminder->status)->toBe(VisitorPassReminderStatus::Scheduled);
+});
+
+test('visitor reminder notification formats copy for named visitor arriving today', function () {
+    $estate = Estate::factory()->create();
+    $user = createTestResident($estate);
+
+    $tz = config('app.timezone', 'Africa/Lagos');
+    $startsAt = CarbonImmutable::now($tz)->startOfDay()->addHours(10); // 10:00 AM today
+
+    $pass = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => 'NAMED01',
+        'type' => 'single_use',
+        'visitor_name' => 'Damilola',
+        'status' => AccessCodeStatus::Scheduled,
+        'starts_at' => $startsAt,
+    ]);
+
+    $reminder = VisitorPassReminder::create([
+        'access_code_id' => $pass->id,
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'reminder_offset_minutes' => 60,
+        'scheduled_for' => $startsAt->subMinutes(60),
+        'status' => VisitorPassReminderStatus::Scheduled,
+    ]);
+
+    $notification = new VisitorPassReminderNotification($reminder, $pass);
+    $payload = $notification->toArray($user);
+
+    expect($payload['title'])->toBe('Damilola is arriving soon');
+    expect($payload['message'])->toBe("Just a reminder — you're expecting Damilola at 10:00 AM today.");
+    expect($payload['visitor_name'])->toBe('Damilola');
+    expect($payload['action_url'])->toBe("/resident/visitors/{$pass->id}");
+    expect($payload)->not->toHaveKey('code');
+    expect($payload)->not->toHaveKey('qr_token');
+});
+
+test('visitor reminder notification formats copy for visitor arriving tomorrow', function () {
+    $estate = Estate::factory()->create();
+    $user = createTestResident($estate);
+
+    $tz = config('app.timezone', 'Africa/Lagos');
+    $startsAt = CarbonImmutable::now($tz)->addDay()->startOfDay()->addHours(10); // 10:00 AM tomorrow
+
+    $pass = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => 'TMR001',
+        'type' => 'single_use',
+        'visitor_name' => 'Damilola',
+        'status' => AccessCodeStatus::Scheduled,
+        'starts_at' => $startsAt,
+    ]);
+
+    $reminder = VisitorPassReminder::create([
+        'access_code_id' => $pass->id,
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'reminder_offset_minutes' => 1440,
+        'scheduled_for' => $startsAt->subMinutes(1440),
+        'status' => VisitorPassReminderStatus::Scheduled,
+    ]);
+
+    $notification = new VisitorPassReminderNotification($reminder, $pass);
+    $payload = $notification->toArray($user);
+
+    expect($payload['title'])->toBe('Damilola is arriving soon');
+    expect($payload['message'])->toBe("Just a reminder — you're expecting Damilola at 10:00 AM tomorrow.");
+});
+
+test('visitor reminder notification uses safe fallback when visitor name is missing or blank', function () {
+    $estate = Estate::factory()->create();
+    $user = createTestResident($estate);
+
+    $tz = config('app.timezone', 'Africa/Lagos');
+    $startsAt = CarbonImmutable::now($tz)->startOfDay()->addHours(14); // 2:00 PM today
+
+    $pass = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => 'NONAME1',
+        'type' => 'single_use',
+        'visitor_name' => null,
+        'status' => AccessCodeStatus::Scheduled,
+        'starts_at' => $startsAt,
+    ]);
+
+    $reminder = VisitorPassReminder::create([
+        'access_code_id' => $pass->id,
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'reminder_offset_minutes' => 60,
+        'scheduled_for' => $startsAt->subMinutes(60),
+        'status' => VisitorPassReminderStatus::Scheduled,
+    ]);
+
+    $notification = new VisitorPassReminderNotification($reminder, $pass);
+    $payload = $notification->toArray($user);
+
+    expect($payload['title'])->toBe('Your visitor is arriving soon');
+    expect($payload['message'])->toBe("Just a reminder — you're expecting your visitor at 2:00 PM today.");
+    expect($payload['visitor_name'])->toBeNull();
+
+    // Blank string name fallback
+    $pass->visitor_name = '   ';
+    $notification2 = new VisitorPassReminderNotification($reminder, $pass);
+    $payload2 = $notification2->toArray($user);
+
+    expect($payload2['title'])->toBe('Your visitor is arriving soon');
+    expect($payload2['message'])->toBe("Just a reminder — you're expecting your visitor at 2:00 PM today.");
+    expect($payload2['visitor_name'])->toBeNull();
+});
+
+test('visitor reminder respects authoritative estate timezone across midnight boundary', function () {
+    $estate = Estate::factory()->create();
+    $user = createTestResident($estate);
+
+    // 23:30 UTC today is 00:30 tomorrow in Africa/Lagos (UTC+1)
+    // Current time in estate timezone (Africa/Lagos) is 11:30 PM (23:30) on 2026-06-15
+    $lagosNow = CarbonImmutable::parse('2026-06-15 23:30:00', 'Africa/Lagos');
+    CarbonImmutable::setTestNow($lagosNow);
+
+    // Visitor arrives 1 hour later, at 12:30 AM (00:30) on 2026-06-16 (tomorrow)
+    $lagosStartsAt = $lagosNow->addHour();
+
+    $pass = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => 'TZ001',
+        'type' => 'single_use',
+        'visitor_name' => 'Folake',
+        'status' => AccessCodeStatus::Scheduled,
+        'starts_at' => $lagosStartsAt,
+    ]);
+
+    $reminder = VisitorPassReminder::create([
+        'access_code_id' => $pass->id,
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'reminder_offset_minutes' => 60,
+        'scheduled_for' => $lagosStartsAt->subMinutes(60),
+        'status' => VisitorPassReminderStatus::Scheduled,
+    ]);
+
+    $notification = new VisitorPassReminderNotification($reminder, $pass);
+    $payload = $notification->toArray($user);
+
+    expect($payload['title'])->toBe('Folake is arriving soon');
+    expect($payload['message'])->toBe("Just a reminder — you're expecting Folake at 12:30 AM tomorrow.");
+
+    CarbonImmutable::setTestNow();
+});
+
+test('cancelled or revoked pass reminder is not dispatched by reminder job', function () {
+    Notification::fake();
+
+    $estate = Estate::factory()->create();
+    $user = createTestResident($estate);
+
+    $pass = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user->id,
+        'code' => 'RVK999',
+        'type' => 'single_use',
+        'visitor_name' => 'Damilola',
+        'status' => AccessCodeStatus::Revoked,
+        'revoked_at' => now(),
+        'starts_at' => now()->addHours(2),
+    ]);
+
+    $reminder = VisitorPassReminder::create([
+        'access_code_id' => $pass->id,
+        'user_id' => $user->id,
+        'estate_id' => $estate->id,
+        'reminder_offset_minutes' => 60,
+        'scheduled_for' => now()->subMinute(),
+        'status' => VisitorPassReminderStatus::Scheduled,
+    ]);
+
+    $job = new SendVisitorPassRemindersJob;
+    $job->handle(app(VisitorPassReminderService::class));
+
+    Notification::assertNothingSent();
+
+    $reminder->refresh();
+    expect($reminder->status)->toBe(VisitorPassReminderStatus::Cancelled);
+});
+
+test('resident cannot view access code show page of another resident', function () {
+    $estate = Estate::factory()->create();
+    $user1 = createTestResident($estate);
+    $user2 = createTestResident($estate);
+
+    $pass = AccessCode::create([
+        'estate_id' => $estate->id,
+        'user_id' => $user1->id,
+        'code' => 'AUTH001',
+        'type' => 'single_use',
+        'visitor_name' => 'Damilola',
+        'status' => AccessCodeStatus::Active,
+        'starts_at' => now(),
+        'expires_at' => now()->addHours(2),
+    ]);
+
+    // Authorized resident can access
+    $this->actingAs($user1)
+        ->withSession(['estate_id' => $estate->id])
+        ->get(route('resident.visitors.show', $pass))
+        ->assertOk();
+
+    // Unauthorized resident is denied (404 as per AccessCodeService::getCode scoping)
+    $this->actingAs($user2)
+        ->withSession(['estate_id' => $estate->id])
+        ->get(route('resident.visitors.show', $pass))
+        ->assertNotFound();
 });
