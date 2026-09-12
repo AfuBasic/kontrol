@@ -19,29 +19,42 @@ class AdminInvitationMail extends Mailable implements ShouldQueue
 
     public string $invitationUrl;
 
+    public bool $isExistingUser;
+
     public function __construct(
         public User $user,
         public Estate $estate,
+        ?bool $isExistingUser = null,
     ) {
-        $appDomain = config('domains.app');
-        $scheme = app()->environment('local') ? 'http' : 'https';
+        $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser($this->estate);
 
-        URL::forceRootUrl("{$scheme}://{$appDomain}");
+        if ($this->isExistingUser) {
+            $this->invitationUrl = route('login');
+        } else {
+            $appDomain = config('domains.app');
+            $scheme = app()->environment('local') ? 'http' : 'https';
 
-        // Generate a 72-hour magic login link to let them access their account
-        $this->invitationUrl = app(GenerateMagicLoginUrlAction::class)->execute(
-            user: $user,
-            destination: route('admin.dashboard', [], false),
-            ttlMinutes: 72 * 60
-        );
+            URL::forceRootUrl("{$scheme}://{$appDomain}");
 
-        URL::forceRootUrl(null);
+            // Generate a 72-hour magic login link to let them access their account
+            $this->invitationUrl = app(GenerateMagicLoginUrlAction::class)->execute(
+                user: $user,
+                destination: route('admin.dashboard', [], false),
+                ttlMinutes: 72 * 60
+            );
+
+            URL::forceRootUrl(null);
+        }
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->isExistingUser
+            ? "New role added: Administrator at {$this->estate->name}"
+            : "You've been added to {$this->estate->name} as an Administrator";
+
         return new Envelope(
-            subject: "You've been added to {$this->estate->name} as an Administrator",
+            subject: $subject,
         );
     }
 
@@ -54,6 +67,7 @@ class AdminInvitationMail extends Mailable implements ShouldQueue
                 'userName' => $this->user->name,
                 'roleName' => 'Administrator',
                 'invitationUrl' => $this->invitationUrl,
+                'isExistingUser' => $this->isExistingUser,
             ],
         );
     }
