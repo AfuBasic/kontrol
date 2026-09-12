@@ -55,6 +55,11 @@ class AuthenticateUser
             return;
         }
 
+        // Organization members (businesses, schools, etc.) are not attached to estates directly.
+        if ($user->organizationMemberships()->where('is_active', true)->exists()) {
+            return;
+        }
+
         $memberships = $user->estates()->get();
 
         if ($memberships->isEmpty()) {
