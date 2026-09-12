@@ -5,6 +5,7 @@ use App\Actions\Invitation\AcceptInvitationAction;
 use App\Actions\Invitation\CreateInvitationAction;
 use App\Auth\ContextManager;
 use App\Enums\AssignmentScope;
+use App\Mail\Resident\WelcomeMail;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateMembership;
@@ -13,6 +14,7 @@ use App\Models\User;
 use App\Models\Zone;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -54,6 +56,8 @@ beforeEach(function () {
 });
 
 test('1. Existing user accepting invitation does not create another User and 2. Existing membership remains untouched and 3. New estate membership is created exactly once', function () {
+    Mail::fake();
+
     $invitation = app(CreateInvitationAction::class)->execute(
         email: 'john.doe@example.com',
         estate: $this->estateB,
@@ -76,6 +80,9 @@ test('1. Existing user accepting invitation does not create another User and 2. 
     expect($membershipB->count())->toBe(1);
     expect($membershipB->first()->status)->toBe('accepted');
     expect($membershipB->first()->relationship_type)->toBe('property_owner');
+
+    // Existing user should not receive a WelcomeMail
+    Mail::assertNotQueued(WelcomeMail::class);
 });
 
 test('4. Duplicate acceptance does not create duplicate membership', function () {
