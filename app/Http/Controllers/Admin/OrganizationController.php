@@ -265,7 +265,6 @@ class OrganizationController extends Controller
                 $user,
                 $organization,
                 'admin',
-                isExistingUser: $user->isEstablishedUser()
             )
         );
 
