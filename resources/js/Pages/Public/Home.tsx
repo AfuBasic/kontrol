@@ -184,9 +184,15 @@ export default function Home() {
                         <CinematicHero />
                     </div>
 
+                    {/* Hero Text Readability Scrim Overlay */}
+                    <div
+                        className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-b from-[#07101d]/60 via-[#07101d]/40 to-[#07101d]/85"
+                        aria-hidden="true"
+                    />
+
                     <div className="relative z-10 mx-auto flex min-h-[calc(100svh-5rem)] w-full max-w-6xl items-center justify-center px-6 text-center text-white sm:px-8">
                         <div className="flex max-w-5xl flex-col items-center">
-                            <h1 className="kontrol-hero-reveal kontrol-hero-reveal-headline flex flex-col items-center text-5xl leading-[0.96] font-semibold tracking-normal text-white drop-shadow-[0_16px_40px_rgba(0,0,0,0.42)] sm:text-7xl lg:text-8xl">
+                            <h1 className="kontrol-hero-reveal kontrol-hero-reveal-headline flex flex-col items-center text-5xl leading-[0.96] font-semibold tracking-normal text-white drop-shadow-[0_8px_32px_rgba(0,0,0,0.85)] sm:text-7xl lg:text-8xl">
                                 <span className="block overflow-hidden py-1.5">
                                     <span className="gsap-hero-title-line block">Your Estate,</span>
                                 </span>
@@ -195,7 +201,7 @@ export default function Home() {
                                 </span>
                             </h1>
 
-                            <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg font-normal text-slate-100/95 sm:text-xl drop-shadow-[0_2px_12px_rgba(0,0,0,0.85)]">
+                            <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg font-medium text-white sm:text-xl drop-shadow-[0_2px_16px_rgba(0,0,0,0.95)]">
                                 From visitors at the gate to dues in the bank — Kontrol keeps your estate running without the chaos.
                             </p>
 
@@ -205,7 +211,7 @@ export default function Home() {
                                         <Link
                                             href={apply.url()}
                                             prefetch="click"
-                                            className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#07101d] shadow-[0_18px_50px_rgba(2,8,23,0.28),0_0_34px_rgba(31,111,219,0.24)] transition duration-300 hover:bg-white/92 hover:shadow-[0_22px_64px_rgba(2,8,23,0.34),0_0_44px_rgba(31,111,219,0.34)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none motion-reduce:transition-none"
+                                            className="inline-flex min-h-14 items-center justify-center rounded-full bg-white px-8 text-base font-semibold text-[#07101d] shadow-[0_18px_50px_rgba(2,8,23,0.38),0_0_34px_rgba(31,111,219,0.3)] transition duration-300 hover:bg-white/95 hover:shadow-[0_22px_64px_rgba(2,8,23,0.45),0_0_44px_rgba(31,111,219,0.4)] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none motion-reduce:transition-none"
                                         >
                                             Apply for Your Estate
                                         </Link>
@@ -213,12 +219,12 @@ export default function Home() {
 
                                     <Link
                                         href="/product/residents#download"
-                                        className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/20 bg-white/5 px-8 text-base font-semibold text-white backdrop-blur-sm transition duration-300 hover:border-white/40 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none"
+                                        className="inline-flex min-h-14 items-center justify-center rounded-full border border-white/30 bg-slate-900/60 px-8 text-base font-semibold text-white shadow-[0_8px_24px_rgba(0,0,0,0.35)] backdrop-blur-md transition duration-300 hover:border-white/60 hover:bg-slate-900/80 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#07101d] focus-visible:outline-none"
                                     >
                                         Download the App &darr;
                                     </Link>
                                 </div>
-                                <span className="mt-4 text-xs text-slate-400">
+                                <span className="mt-4 text-xs font-medium text-slate-300 drop-shadow-[0_1px_8px_rgba(0,0,0,0.9)]">
                                     Already a resident? Your estate needs to be on Kontrol first.
                                 </span>
                             </div>
