@@ -19,12 +19,13 @@ import {
     Loader2,
     Mail,
     Phone,
+    Send,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import TextInput from '@/Components/UI/TextInput';
-import { destroy, index, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
+import { destroy, index, resendInvitation, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 export interface OrganizationMembershipItem {
@@ -175,7 +176,24 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
     const [deletingOrg, setDeletingOrg] = useState<Organization | null>(null);
+    const [resendingInviteId, setResendingInviteId] = useState<number | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleResendInvite = (org: Organization) => {
+        if (resendingInviteId !== null) return;
+
+        setResendingInviteId(org.id);
+        router.post(
+            resendInvitation.url(org.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setResendingInviteId(null);
+                },
+            },
+        );
+    };
 
     // Form state
     const form = useForm({
@@ -592,6 +610,22 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                                             {/* Row Actions */}
                                             <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-100 pt-2 sm:border-0 sm:pt-0">
+                                                {primaryAdmin && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleResendInvite(org)}
+                                                        disabled={resendingInviteId === org.id}
+                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+                                                        title={`Resend invitation email to ${primaryAdmin.email}`}
+                                                    >
+                                                        {resendingInviteId === org.id ? (
+                                                            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                                                        ) : (
+                                                            <Send className="h-3.5 w-3.5 text-slate-400" />
+                                                        )}
+                                                        <span>Resend Invite</span>
+                                                    </button>
+                                                )}
                                                 <button
                                                     type="button"
                                                     onClick={() => openEditModal(org)}
