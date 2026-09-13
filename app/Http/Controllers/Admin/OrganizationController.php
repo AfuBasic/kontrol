@@ -112,8 +112,6 @@ class OrganizationController extends Controller
                     ]
                 );
 
-                $wasNewUser = $user->wasRecentlyCreated;
-
                 if (! empty($validated['admin_phone'])) {
                     UserProfile::updateOrCreate(
                         ['user_id' => $user->id],
@@ -134,8 +132,11 @@ class OrganizationController extends Controller
                 );
 
                 if ($membership->wasRecentlyCreated) {
+                    // Pass null so OrganizationInvitationMail resolves from actual credentials.
+                    // wasRecentlyCreated is unreliable: a user record may exist from a prior
+                    // deleted org with no password yet set.
                     Mail::to($user->email)->send(
-                        new OrganizationInvitationMail($user, $org, 'admin', isExistingUser: ! $wasNewUser)
+                        new OrganizationInvitationMail($user, $org, 'admin')
                     );
                 }
             }
@@ -189,8 +190,6 @@ class OrganizationController extends Controller
                     ]
                 );
 
-                $wasNewUser = $user->wasRecentlyCreated;
-
                 if (! empty($validated['admin_phone'])) {
                     UserProfile::updateOrCreate(
                         ['user_id' => $user->id],
@@ -211,8 +210,11 @@ class OrganizationController extends Controller
                 );
 
                 if ($membership->wasRecentlyCreated) {
+                    // Pass null so OrganizationInvitationMail resolves from actual credentials.
+                    // wasRecentlyCreated is unreliable: a user record may exist from a prior
+                    // deleted org with no password yet set.
                     Mail::to($user->email)->send(
-                        new OrganizationInvitationMail($user, $organization, 'admin', isExistingUser: ! $wasNewUser)
+                        new OrganizationInvitationMail($user, $organization, 'admin')
                     );
                 }
             }
