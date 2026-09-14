@@ -1072,7 +1072,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-slate-400">No schedule set — operates 24/7 or per special event.</p>
+                                        <p className="text-xs text-slate-400">No schedule set - operates 24/7 or per special event.</p>
                                     )}
                                 </div>
                             )}
