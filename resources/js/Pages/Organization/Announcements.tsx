@@ -1,7 +1,10 @@
 import { Head } from '@inertiajs/react';
-import { ArrowRight, X } from 'lucide-react';
-import React, { useState } from 'react';
+import { Bell, ImageIcon, Megaphone, ShieldAlert } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
+import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import type { PostMedia } from '@/types';
 
 interface Post {
     id: number;
@@ -12,6 +15,7 @@ interface Post {
     published_at: string | null;
     published_at_human: string;
     author_name: string;
+    media?: PostMedia[];
 }
 
 interface PaginatedPosts {
@@ -36,142 +40,209 @@ interface Props {
     posts: PaginatedPosts;
 }
 
-export default function Announcements({ organization, membership, posts }: Props) {
-    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+export default function Announcements({ organization, posts }: Props) {
+    const [selectedPostId, setSelectedPostId] = useState<number | null>(posts.data[0]?.id ?? null);
 
-    // Format rich text or plain text into properly spaced paragraphs
-    const formatBody = (text: string) => {
-        // Strip html tags if simple markup or decode html entities
-        const clean = text
-            .replace(/<p[^>]*>/gi, '')
-            .replace(/<\/p>/gi, '\n\n')
-            .replace(/<br\s*[\/]?>/gi, '\n')
+    const selectedPost = useMemo(() => posts.data.find((post) => post.id === selectedPostId) ?? posts.data[0] ?? null, [posts.data, selectedPostId]);
+
+    const stripHtml = (html: string) =>
+        html
+            .replace(/<style[^>]*>.*?<\/style>/gis, ' ')
+            .replace(/<script[^>]*>.*?<\/script>/gis, ' ')
             .replace(/<[^>]*>/g, ' ')
             .replace(/&nbsp;/g, ' ')
+            .replace(/\s+/g, ' ')
             .trim();
 
-        return clean;
+    const categoryLabel = (value: string) =>
+        value
+            .split('_')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ');
+
+    const formatDate = (isoString: string | null) => {
+        if (!isoString) {
+            return 'Recently';
+        }
+
+        return new Date(isoString).toLocaleDateString('en-NG', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+        });
     };
 
-    const formatDateHeader = (isoString?: string | null) => {
-        if (!isoString) return 'RECENT';
-        try {
-            const d = new Date(isoString);
-            return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' }).toUpperCase();
-        } catch {
-            return 'RECENT';
+    const priorityTone = (priority: string) => {
+        if (priority === 'critical') {
+            return 'bg-rose-50 text-rose-700 ring-rose-100';
         }
+
+        if (priority === 'important') {
+            return 'bg-amber-50 text-amber-700 ring-amber-100';
+        }
+
+        return 'bg-[#eaf2ff] text-[#0b4aa2] ring-[#bfdbfe]';
     };
+
+    const firstImageFor = (post: Post) => post.media?.find((item) => item.mime_type?.startsWith('image/')) ?? post.media?.[0] ?? null;
 
     return (
-        <OrganizationLayout title="Announcements">
+        <OrganizationLayout title="Announcements" contentClassName="max-w-[92rem]">
             <Head title={`${organization.name} - Announcements`} />
 
-            <div className="space-y-8 max-w-3xl">
-                {/* Header */}
-                <div>
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                        Announcements
-                    </h1>
-                    <p className="text-sm font-semibold text-slate-400 mt-1">
-                        Updates from {organization.estate_name || 'Golden Heights'}
-                    </p>
-                </div>
+            <div className="space-y-5">
+                <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="max-w-2xl">
+                            <p className="text-sm font-black text-[#0b4aa2]">Estate communication</p>
+                            <h1 className="mt-1.5 text-2xl font-black text-slate-950 sm:mt-2 sm:text-4xl">Updates for {organization.name}</h1>
+                            <p className="mt-3 text-sm leading-6 font-semibold text-slate-500 sm:text-base">
+                                Notices from {organization.estate_name || 'the estate'} collected in one reading space.
+                            </p>
+                        </div>
 
-                {/* Editorial Announcements Feed */}
-                {posts.data.length === 0 ? (
-                    <div className="py-6 space-y-1">
-                        <p className="text-base sm:text-lg font-bold text-slate-800">No announcements yet.</p>
-                        <p className="text-sm text-slate-500">
-                            Estate bulletins and notices published by the management office will appear here.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-slate-200/70 space-y-8">
-                        {posts.data.map((post) => {
-                            const dateLabel = formatDateHeader(post.published_at);
-                            const excerpt = formatBody(post.body);
-
-                            return (
-                                <article
-                                    key={post.id}
-                                    className="pt-8 first:pt-0 space-y-3"
-                                >
-                                    {/* Date & Author */}
-                                    <div className="flex items-center gap-3 text-xs font-black tracking-widest text-slate-400 uppercase">
-                                        <span>{dateLabel}</span>
-                                        <span>·</span>
-                                        <span className="text-slate-500 font-bold">{post.author_name}</span>
-                                    </div>
-
-                                    {/* Title */}
-                                    {post.title && (
-                                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
-                                            {post.title}
-                                        </h2>
-                                    )}
-
-                                    {/* Body Excerpt */}
-                                    <p className="text-sm sm:text-base text-slate-600 leading-relaxed line-clamp-3">
-                                        {excerpt}
-                                    </p>
-
-                                    {/* Read Action */}
-                                    <div className="pt-1">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedPost(post)}
-                                            className="inline-flex items-center gap-1.5 text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
-                                        >
-                                            <span>Read announcement</span>
-                                            <ArrowRight className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                </article>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Modal Detail Dialog */}
-                {selectedPost && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-                        <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
-                            <div className="flex items-center justify-between text-xs font-bold text-slate-400 pb-3 border-b border-slate-100">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-slate-800">{selectedPost.author_name}</span>
-                                    <span>·</span>
-                                    <span>{selectedPost.published_at_human}</span>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedPost(null)}
-                                    className="p-1 text-slate-400 hover:text-slate-800 rounded-lg"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-
-                            {selectedPost.title && (
-                                <h3 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
-                                    {selectedPost.title}
-                                </h3>
-                            )}
-
-                            <div className="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap pt-2">
-                                {formatBody(selectedPost.body)}
-                            </div>
-
-                            <div className="pt-6 border-t border-slate-100 flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedPost(null)}
-                                    className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm transition-colors"
-                                >
-                                    Done
-                                </button>
-                            </div>
+                        <div className="rounded-[1.5rem] bg-[#0f172a] p-4 text-white lg:min-w-48">
+                            <p className="text-3xl font-black">{posts.total}</p>
+                            <p className="mt-1 text-xs font-bold text-slate-300">Published notices</p>
                         </div>
                     </div>
+                </section>
+
+                {posts.data.length === 0 ? (
+                    <section className="overflow-hidden rounded-[1.5rem] bg-white shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem]">
+                        <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_15rem] sm:gap-6 sm:p-8">
+                            <div>
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf2ff] text-[#0b4aa2]">
+                                    <Megaphone className="h-6 w-6" />
+                                </div>
+                                <h2 className="mt-5 text-2xl font-black tracking-tight text-slate-950">No estate updates yet.</h2>
+                                <p className="mt-3 max-w-xl text-sm leading-6 font-semibold text-slate-500">
+                                    Announcements, security reminders, meeting notes, and estate bulletins will appear here when management publishes
+                                    them.
+                                </p>
+                            </div>
+                            <div className="rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100">
+                                <p className="text-sm font-black text-slate-950">Quiet inbox</p>
+                                <p className="mt-2 text-sm leading-6 font-semibold text-slate-500">
+                                    A quiet page means there is nothing new for this organization to act on.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                ) : (
+                    <section className="grid gap-4 lg:grid-cols-[minmax(20rem,0.72fr)_minmax(0,1fr)]">
+                        <div className="rounded-[1.5rem] bg-white p-3 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-4">
+                            <div className="space-y-2">
+                                {posts.data.map((post) => {
+                                    const selected = selectedPost?.id === post.id;
+                                    const preview = stripHtml(post.body);
+                                    const image = firstImageFor(post);
+
+                                    return (
+                                        <button
+                                            key={post.id}
+                                            type="button"
+                                            onClick={() => setSelectedPostId(post.id)}
+                                            className={`w-full rounded-[1.5rem] p-3 text-left transition sm:p-4 ${
+                                                selected
+                                                    ? 'bg-[#0f172a] text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]'
+                                                    : 'bg-slate-50 text-slate-950 ring-1 ring-slate-100 hover:bg-white hover:shadow-[0_12px_30px_rgba(15,23,42,0.07)]'
+                                            }`}
+                                        >
+                                            {image && (
+                                                <div className="mb-3 aspect-[16/8] overflow-hidden rounded-[1.1rem] bg-slate-200">
+                                                    <img src={image.url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                                                </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between gap-3">
+                                                <span
+                                                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ring-1 ${
+                                                        selected ? 'bg-white/10 text-slate-200 ring-white/10' : priorityTone(post.priority)
+                                                    }`}
+                                                >
+                                                    {categoryLabel(post.category)}
+                                                </span>
+                                                <span className={`text-xs font-bold ${selected ? 'text-slate-300' : 'text-slate-500'}`}>
+                                                    {formatDate(post.published_at)}
+                                                </span>
+                                            </div>
+
+                                            <h2
+                                                className={`mt-3 line-clamp-2 text-lg leading-tight font-black break-words ${
+                                                    selected ? 'text-white' : 'text-slate-950'
+                                                }`}
+                                            >
+                                                {post.title || 'Untitled announcement'}
+                                            </h2>
+                                            {preview && (
+                                                <p
+                                                    className={`mt-2 line-clamp-2 text-sm leading-6 font-semibold ${
+                                                        selected ? 'text-slate-300' : 'text-slate-500'
+                                                    }`}
+                                                >
+                                                    {preview}
+                                                </p>
+                                            )}
+
+                                            <div
+                                                className={`mt-3 flex items-center justify-between text-xs font-black ${
+                                                    selected ? 'text-slate-300' : 'text-slate-500'
+                                                }`}
+                                            >
+                                                <span>{post.author_name}</span>
+                                                {post.media && post.media.length > 0 && (
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <ImageIcon className="h-3.5 w-3.5" />
+                                                        {post.media.length}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {selectedPost && (
+                            <article className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-8">
+                                <div className="flex flex-col gap-5 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
+                                    <div className="min-w-0">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <span
+                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ring-1 ${priorityTone(
+                                                    selectedPost.priority,
+                                                )}`}
+                                            >
+                                                {selectedPost.priority === 'critical' ? (
+                                                    <ShieldAlert className="h-3.5 w-3.5" />
+                                                ) : (
+                                                    <Bell className="h-3.5 w-3.5" />
+                                                )}
+                                                {categoryLabel(selectedPost.category)}
+                                            </span>
+                                            <span className="text-xs font-bold text-slate-500">{selectedPost.published_at_human}</span>
+                                        </div>
+
+                                        <h2 className="mt-4 text-2xl leading-tight font-black break-words text-slate-950 sm:text-5xl">
+                                            {selectedPost.title || 'Untitled announcement'}
+                                        </h2>
+                                        <p className="mt-4 text-sm font-black text-slate-500">From {selectedPost.author_name}</p>
+                                    </div>
+                                </div>
+
+                                {selectedPost.media && selectedPost.media.length > 0 && (
+                                    <div className="border-b border-slate-100 py-6">
+                                        <AnnouncementAttachments media={selectedPost.media} />
+                                    </div>
+                                )}
+
+                                <div className="pt-6">
+                                    <AnnouncementProse html={selectedPost.body} className="prose-p:mb-4 prose-p:text-base prose-p:leading-8" />
+                                </div>
+                            </article>
+                        )}
+                    </section>
                 )}
             </div>
         </OrganizationLayout>

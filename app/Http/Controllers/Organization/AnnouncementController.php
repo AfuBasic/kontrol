@@ -28,7 +28,7 @@ class AnnouncementController extends Controller
             ->where('estate_id', $organization->estate_id)
             ->where('status', EstateBoardPostStatus::Published)
             ->whereIn('audience', [EstateBoardPostAudience::All])
-            ->with(['author:id,name'])
+            ->with(['author:id,name', 'media'])
             ->latest('published_at')
             ->paginate(15)
             ->through(fn (EstateBoardPost $post) => [
@@ -40,6 +40,14 @@ class AnnouncementController extends Controller
                 'published_at' => $post->published_at?->toISOString(),
                 'published_at_human' => $post->published_at?->diffForHumans() ?? $post->created_at?->diffForHumans(),
                 'author_name' => $post->author?->name ?? 'Estate Office',
+                'media' => $post->media->map(fn ($media) => [
+                    'id' => $media->id,
+                    'url' => $media->url,
+                    'mime_type' => $media->mime_type,
+                    'width' => $media->width,
+                    'height' => $media->height,
+                    'sort_order' => $media->sort_order,
+                ])->values(),
             ]);
 
         return Inertia::render('Organization/Announcements', [

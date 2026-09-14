@@ -6,9 +6,13 @@ use App\Actions\Organization\RenewOrganizationCredentialAction;
 use App\Actions\Security\RecordQuickEntryAction;
 use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
+use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostStatus;
 use App\Jobs\RenewExpiringOrganizationCredentials;
 use App\Models\AccessCode;
 use App\Models\Estate;
+use App\Models\EstateBoardPost;
+use App\Models\EstateBoardPostMedia;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationAccessMember;
 use App\Models\OrganizationMembership;
@@ -21,6 +25,7 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Session;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -360,6 +365,42 @@ test('organization portal routes render successfully for authorized organization
     $this->get(route('org.payments.index'))->assertOk();
     $this->get(route('org.announcements.index'))->assertOk();
     $this->get(route('org.settings.index'))->assertOk();
+});
+
+test('organization announcements include media previews', function () {
+    $post = EstateBoardPost::factory()->published()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->orgAdmin->id,
+        'audience' => EstateBoardPostAudience::All,
+        'status' => EstateBoardPostStatus::Published,
+        'title' => 'Water service update',
+        'body' => '<p>First paragraph.</p><p>Second paragraph.</p>',
+    ]);
+
+    EstateBoardPostMedia::create([
+        'estate_board_post_id' => $post->id,
+        'estate_id' => $this->estate->id,
+        'disk' => 'public',
+        'path' => 'announcements/water.jpg',
+        'url' => '/storage/announcements/water.jpg',
+        'mime_type' => 'image/jpeg',
+        'size_bytes' => 12345,
+        'width' => 1200,
+        'height' => 800,
+        'hash' => str_repeat('a', 64),
+        'sort_order' => 0,
+    ]);
+
+    $this->actingAs($this->orgAdmin);
+    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
+
+    $this->get(route('org.announcements.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('posts.data.0.media.0.url', '/storage/announcements/water.jpg')
+            ->where('posts.data.0.media.0.mime_type', 'image/jpeg')
+            ->where('posts.data.0.media.0.width', 1200));
 });
 
 test('organization admin can confirm arrival via portal HTTP endpoint', function () {
