@@ -118,7 +118,7 @@ export default function ArrivalHistory({ organization, membership, logs, filters
                                                         {log.tag}
                                                     </span>
                                                 ) : (
-                                                    <span className="text-zinc-500">—</span>
+                                                    <span className="text-zinc-500">-</span>
                                                 )}
                                             </td>
                                             <td className="py-3.5 px-4 capitalize text-zinc-400">
