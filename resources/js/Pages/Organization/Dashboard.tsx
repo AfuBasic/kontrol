@@ -127,9 +127,16 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                         <div className="pointer-events-none absolute -top-24 -right-24 h-96 w-96 rounded-full bg-blue-500/10 blur-3xl" />
                         <div className="relative flex h-full flex-col justify-between gap-7 sm:gap-10">
                             <div className="space-y-5">
-                                <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-slate-200 ring-1 ring-white/15 backdrop-blur-sm">
-                                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.2)]" />
-                                    <span>{operatingState.label}</span>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-slate-200 ring-1 ring-white/15 backdrop-blur-sm">
+                                        <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.2)]" />
+                                        <span>{operatingState.label}</span>
+                                    </div>
+                                    {organization.estate_name && (
+                                        <span className="inline-flex items-center rounded-full bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-300 ring-1 ring-white/10 backdrop-blur-sm">
+                                            {organization.estate_name}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="max-w-2xl space-y-3">
