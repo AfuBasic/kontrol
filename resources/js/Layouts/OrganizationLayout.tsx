@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { motion } from 'framer-motion';
 import {
     Home,
     KeyRound,
@@ -6,9 +7,8 @@ import {
     Megaphone,
     User,
     LogOut,
-    Menu,
-    X,
-    Building2,
+    Bell,
+    ChevronDown,
 } from 'lucide-react';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
@@ -20,7 +20,7 @@ interface Props {
 interface NavItem {
     name: string;
     href: string;
-    icon: React.ComponentType<{ className?: string }>;
+    icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
     exact?: boolean;
 }
 
@@ -34,9 +34,9 @@ export default function OrganizationLayout({ children, title }: Props) {
     const auth = props.auth || {};
     const user = auth.user || {};
 
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-    // Force light theme to match Kontrol resident design language
+    // Force light theme in Organization area to match Kontrol resident design language
     useEffect(() => {
         const html = document.documentElement;
         html.classList.remove('dark');
@@ -88,191 +88,183 @@ export default function OrganizationLayout({ children, title }: Props) {
         return url.startsWith(item.href);
     };
 
+    const userFirstName = user.name ? user.name.split(' ')[0] : 'Account';
+
     return (
-        <div className="min-h-screen bg-stone-50 text-slate-900 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white pb-16 lg:pb-0">
-            {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-40 h-16 border-b border-stone-200/80 bg-white/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between shadow-xs">
-                <div className="flex items-center gap-3">
-                    <button
-                        type="button"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                        className="lg:hidden p-2 rounded-xl text-stone-600 hover:text-slate-900 hover:bg-stone-100 focus:outline-none transition-colors"
-                        aria-label="Toggle navigation menu"
-                    >
-                        {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                    </button>
+        <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+            {/* Horizontal Product Header */}
+            <header className="sticky top-0 z-40 h-16 border-b border-slate-100 bg-white/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between">
+                <div className="flex items-center gap-6 sm:gap-8">
+                    {/* Brand & Organization Context */}
+                    <div className="flex items-center gap-3">
+                        <Link href="/org" className="flex items-center gap-2 group">
+                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-7 w-auto object-contain" />
+                            <span className="text-lg font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                Kontrol
+                            </span>
+                        </Link>
 
-                    <Link href="/org" className="flex items-center gap-2.5 group">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center text-white font-bold shadow-xs text-sm">
-                            {organization.name ? organization.name.charAt(0).toUpperCase() : 'O'}
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="font-semibold text-sm leading-tight text-slate-900 group-hover:text-indigo-600 transition-colors flex items-center gap-1.5">
+                        <div className="h-4 w-px bg-slate-200" />
+
+                        <div className="flex items-baseline gap-1.5 min-w-0">
+                            <span className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-[120px] sm:max-w-[180px]">
                                 {organization.name || 'Organization'}
-                                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200">
-                                    {organization.type || 'Facility'}
+                            </span>
+                            {organization.estate_name && (
+                                <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate max-w-[100px] sm:max-w-[150px] hidden xs:inline">
+                                    · {organization.estate_name}
                                 </span>
-                            </span>
-                            <span className="text-xs text-stone-500 leading-none mt-0.5">
-                                {organization.estate_name || 'Estate Community'}
-                            </span>
+                            )}
                         </div>
-                    </Link>
-                </div>
-
-                {/* Right controls */}
-                <div className="flex items-center gap-3">
-                    <div className="hidden sm:flex flex-col text-right">
-                        <span className="text-xs font-semibold text-slate-800">{user.name}</span>
-                        <span className="text-[11px] text-stone-500 capitalize">{membership.role || 'Member'}</span>
                     </div>
 
-                    <Link
-                        href="/logout"
-                        method="post"
-                        as="button"
-                        className="p-2 rounded-xl text-stone-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                        title="Sign Out"
-                    >
-                        <LogOut className="w-4 h-4" />
-                    </Link>
-                </div>
-            </header>
-
-            <div className="flex-1 flex overflow-hidden">
-                {/* Desktop Sidebar */}
-                <aside className="hidden lg:flex w-64 flex-col border-r border-stone-200/80 bg-white p-4 space-y-1 shrink-0">
-                    <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
-                        Menu
-                    </div>
-                    <nav className="space-y-1">
+                    {/* Desktop Horizontal Navigation */}
+                    <nav className="hidden md:flex items-center gap-1">
                         {navItems.map((item) => {
                             const active = isActive(item);
-                            const Icon = item.icon;
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
+                                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                                         active
-                                            ? 'bg-indigo-50 text-indigo-700 font-semibold ring-1 ring-indigo-200/60 shadow-xs'
-                                            : 'text-stone-600 hover:text-slate-900 hover:bg-stone-50'
+                                            ? 'bg-slate-900 text-white shadow-xs'
+                                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
                                     }`}
                                 >
-                                    <Icon
-                                        className={`w-4 h-4 ${
-                                            active ? 'text-indigo-600' : 'text-stone-400'
-                                        }`}
-                                    />
                                     {item.name}
                                 </Link>
                             );
                         })}
                     </nav>
+                </div>
 
-                    <div className="mt-auto pt-4 border-t border-stone-100">
-                        <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200/60 text-xs space-y-1">
-                            <div className="flex items-center gap-1.5 text-slate-700 font-medium">
-                                <Building2 className="w-3.5 h-3.5 text-indigo-600" />
-                                <span className="truncate">{organization.estate_name || 'Estate Portal'}</span>
-                            </div>
-                            <p className="text-[11px] text-stone-500">
-                                Organization Participant
-                            </p>
-                        </div>
-                    </div>
-                </aside>
-
-                {/* Mobile Drawer */}
-                {mobileMenuOpen && (
-                    <div
-                        className="fixed inset-0 z-50 lg:hidden flex"
-                        role="dialog"
-                        aria-modal="true"
+                {/* Right controls: Notifications & User / Account Dropdown */}
+                <div className="flex items-center gap-3">
+                    <Link
+                        href="/org/announcements"
+                        className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100/70 transition-colors"
+                        title="Announcements & Bulletins"
                     >
-                        <div
-                            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
-                            onClick={() => setMobileMenuOpen(false)}
-                        />
-                        <div className="relative flex flex-col w-full max-w-xs bg-white border-r border-stone-200 p-5 space-y-4 shadow-xl">
-                            <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-                                <span className="font-semibold text-sm text-slate-900">Navigation</span>
-                                <button
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="p-1 rounded-lg text-stone-400 hover:text-slate-800"
-                                >
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <nav className="space-y-1.5">
-                                {navItems.map((item) => {
-                                    const active = isActive(item);
-                                    const Icon = item.icon;
-                                    return (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            onClick={() => setMobileMenuOpen(false)}
-                                            className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-colors ${
-                                                active
-                                                    ? 'bg-indigo-50 text-indigo-700 font-semibold ring-1 ring-indigo-200/60'
-                                                    : 'text-stone-600 hover:text-slate-900 hover:bg-stone-50'
-                                            }`}
-                                        >
-                                            <Icon
-                                                className={`w-5 h-5 ${
-                                                    active ? 'text-indigo-600' : 'text-stone-400'
-                                                }`}
-                                            />
-                                            {item.name}
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
-                        </div>
-                    </div>
-                )}
+                        <Bell className="h-5 w-5 text-slate-500" />
+                    </Link>
 
-                {/* Main Content Area */}
-                <main className="flex-1 overflow-y-auto bg-stone-50 p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-5xl mx-auto space-y-6">
-                        {props.flash?.success && (
-                            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
-                                <span>{props.flash.success}</span>
-                            </div>
-                        )}
-                        {props.flash?.error && (
-                            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
-                                <span>{props.flash.error}</span>
-                            </div>
-                        )}
-
-                        {children}
-                    </div>
-                </main>
-            </div>
-
-            {/* Mobile Bottom Navigation Bar */}
-            <nav className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-stone-200/80 lg:hidden flex items-center justify-around px-2 py-1.5 shadow-lg">
-                {navItems.map((item) => {
-                    const active = isActive(item);
-                    const Icon = item.icon;
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex flex-col items-center justify-center py-1 px-3 rounded-xl text-[11px] font-medium transition-colors ${
-                                active
-                                    ? 'text-indigo-600 font-semibold'
-                                    : 'text-stone-500 hover:text-slate-800'
-                            }`}
+                    {/* Desktop User Dropdown */}
+                    <div className="relative hidden sm:block">
+                        <button
+                            type="button"
+                            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                            className="flex items-center gap-2 rounded-full py-1 pl-2 pr-3 hover:bg-slate-100/70 transition-colors"
                         >
-                            <Icon className={`w-5 h-5 ${active ? 'text-indigo-600' : 'text-stone-400'}`} />
-                            <span className="mt-1">{item.name}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
+                            <div className="h-7 w-7 rounded-full bg-indigo-50 font-bold text-indigo-600 ring-1 ring-indigo-100 flex items-center justify-center text-xs">
+                                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <span className="text-xs font-bold text-slate-800 max-w-[120px] truncate">
+                                {userFirstName}
+                            </span>
+                            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                        </button>
+
+                        {userDropdownOpen && (
+                            <>
+                                <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setUserDropdownOpen(false)}
+                                />
+                                <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 z-50 text-xs">
+                                    <div className="px-3 py-2 border-b border-slate-100">
+                                        <p className="font-bold text-slate-900 truncate">{user.name}</p>
+                                        <p className="text-slate-400 truncate">{user.email}</p>
+                                    </div>
+                                    <div className="py-1">
+                                        <Link
+                                            href="/org/settings"
+                                            onClick={() => setUserDropdownOpen(false)}
+                                            className="block px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium"
+                                        >
+                                            Profile & Team
+                                        </Link>
+                                        <Link
+                                            href="/logout"
+                                            method="post"
+                                            as="button"
+                                            className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-medium flex items-center justify-between"
+                                        >
+                                            <span>Sign out</span>
+                                            <LogOut className="w-3.5 h-3.5" />
+                                        </Link>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </header>
+
+            {/* Main Content Area */}
+            <main className="flex-1 px-4 sm:px-8 py-6 sm:py-8 pb-28 md:pb-12">
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {props.flash?.success && (
+                        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+                            <span>{props.flash.success}</span>
+                        </div>
+                    )}
+                    {props.flash?.error && (
+                        <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+                            <span>{props.flash.error}</span>
+                        </div>
+                    )}
+
+                    {children}
+                </div>
+            </main>
+
+            {/* Mobile Floating Bottom Navigation (matches Resident shell) */}
+            <div
+                data-mobile-bottom-nav
+                className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-4 transition-opacity duration-150 md:hidden"
+            >
+                <motion.nav
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="pointer-events-auto mx-auto max-w-sm rounded-[32px] bg-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-2xl px-2 py-1.5"
+                >
+                    <div className="flex items-center justify-around">
+                        {navItems.map((item) => {
+                            const active = isActive(item);
+                            const Icon = item.icon;
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className="group relative flex flex-1 flex-col items-center gap-0.5 py-1"
+                                >
+                                    <div
+                                        className={`rounded-xl p-1.5 transition-all ${
+                                            active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'
+                                        }`}
+                                    >
+                                        <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
+                                    </div>
+                                    <span
+                                        className={`text-[10px] tracking-tight transition-colors ${
+                                            active ? 'font-bold text-slate-900' : 'font-medium text-slate-400'
+                                        }`}
+                                    >
+                                        {item.name === 'Announcements' ? 'News' : item.name}
+                                    </span>
+                                    {active && (
+                                        <motion.div
+                                            layoutId="orgNavIndicator"
+                                            className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
+                                        />
+                                    )}
+                                </Link>
+                            );
+                        })}
+                    </div>
+                </motion.nav>
+            </div>
         </div>
     );
 }
