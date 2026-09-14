@@ -1,22 +1,24 @@
 <?php
 
 use App\Http\Controllers\Organization\AccessMemberController;
+use App\Http\Controllers\Organization\AnnouncementController;
 use App\Http\Controllers\Organization\ArrivalController;
 use App\Http\Controllers\Organization\ContextController;
 use App\Http\Controllers\Organization\CredentialController;
 use App\Http\Controllers\Organization\DashboardController;
+use App\Http\Controllers\Organization\PaymentController;
 use App\Http\Controllers\Organization\PublicWindowController;
 use App\Http\Controllers\Organization\SettingsController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->group(function () {
-    // Dashboard
+    // 1. Home
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Context switching
     Route::post('/switch/{organization}', [ContextController::class, 'switchOrganization'])->name('context.switch');
 
-    // Access List (Members)
+    // 2. Access Hub: People (Access List)
     Route::prefix('access-list')->name('access-list.')->group(function () {
         Route::get('/', [AccessMemberController::class, 'index'])->name('index');
         Route::post('/', [AccessMemberController::class, 'store'])->name('store');
@@ -25,7 +27,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::post('/{member}/activate', [AccessMemberController::class, 'activate'])->name('activate');
     });
 
-    // Credentials
+    // Access: Credentials (issue/renew/revoke actions)
     Route::prefix('credentials')->name('credentials.')->group(function () {
         Route::get('/', [CredentialController::class, 'index'])->name('index');
         Route::post('/issue/{member}', [CredentialController::class, 'issue'])->name('issue');
@@ -33,14 +35,14 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::post('/{credential}/revoke', [CredentialController::class, 'revoke'])->name('revoke');
     });
 
-    // Arrivals & History
+    // Access: Arrivals & History
     Route::prefix('arrivals')->name('arrivals.')->group(function () {
         Route::get('/', [ArrivalController::class, 'index'])->name('index');
         Route::get('/history', [ArrivalController::class, 'history'])->name('history');
         Route::post('/{log}/confirm', [ArrivalController::class, 'confirm'])->name('confirm');
     });
 
-    // Public Access Windows
+    // Access: Public Access Windows (for Public Window policies e.g. Churches)
     Route::prefix('public-windows')->name('public-windows.')->group(function () {
         Route::get('/', [PublicWindowController::class, 'index'])->name('index');
         Route::post('/', [PublicWindowController::class, 'store'])->name('store');
@@ -48,7 +50,13 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::delete('/{window}', [PublicWindowController::class, 'destroy'])->name('destroy');
     });
 
-    // Settings & Staff
+    // 3. Payments
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+
+    // 4. Announcements
+    Route::get('/announcements', [AnnouncementController::class, 'index'])->name('announcements.index');
+
+    // 5. Profile & Settings (Team & Preferences)
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::patch('/confirmation-policy', [SettingsController::class, 'updateConfirmationPolicy'])->name('confirmation-policy.update');
