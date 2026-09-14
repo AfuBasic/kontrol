@@ -907,7 +907,7 @@ export default function EstateShow({
                                         </option>
                                         {partners.map((partner) => (
                                             <option key={partner.id} value={partner.id}>
-                                                {partner.name} ({partner.commission_rate}%){partner.email ? ` — ${partner.email}` : ''}
+                                                {partner.name} ({partner.commission_rate}%){partner.email ? ` - ${partner.email}` : ''}
                                             </option>
                                         ))}
                                     </select>
