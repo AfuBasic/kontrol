@@ -167,7 +167,7 @@ export default function AccessList({ organization, membership, members, filters 
                                                 {member.name}
                                             </td>
                                             <td className="py-3.5 px-4 font-mono text-zinc-400">
-                                                {member.identifier || '—'}
+                                                {member.identifier || '-'}
                                             </td>
                                             <td className="py-3.5 px-4">
                                                 <span className="capitalize px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
