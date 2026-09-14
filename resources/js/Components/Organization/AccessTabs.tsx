@@ -40,7 +40,7 @@ export default function AccessTabs({
             ? [
                   {
                       id: 'public_windows',
-                      label: 'Public Times',
+                      label: 'Public access times',
                       href: '/org/public-windows',
                       icon: Calendar,
                   },
@@ -49,32 +49,33 @@ export default function AccessTabs({
     ];
 
     return (
-        <div className="flex items-center gap-1.5 p-1 bg-stone-100/80 rounded-2xl border border-stone-200/60 overflow-x-auto">
+        <div className="flex items-center gap-6 border-b border-slate-200/80 pb-px overflow-x-auto text-sm">
             {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
-                const Icon = tab.icon;
                 return (
                     <Link
                         key={tab.id}
                         href={tab.href}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all duration-150 ${
+                        className={`relative pb-3 font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
                             isActive
-                                ? 'bg-white text-indigo-700 shadow-xs ring-1 ring-stone-200/80 font-semibold'
-                                : 'text-stone-600 hover:text-slate-900 hover:bg-white/50'
+                                ? 'text-slate-900'
+                                : 'text-slate-400 hover:text-slate-600'
                         }`}
                     >
-                        <Icon className={`w-4 h-4 ${isActive ? 'text-indigo-600' : 'text-stone-400'}`} />
                         <span>{tab.label}</span>
                         {tab.badge && (
                             <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                                className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                                     tab.badgeVariant === 'warning'
-                                        ? 'bg-amber-100 text-amber-800'
-                                        : 'bg-stone-200 text-stone-700'
+                                        ? 'bg-amber-100 text-amber-900'
+                                        : 'bg-slate-100 text-slate-600'
                                 }`}
                             >
                                 {tab.badge}
                             </span>
+                        )}
+                        {isActive && (
+                            <span className="absolute inset-x-0 bottom-0 h-0.5 bg-slate-900 rounded-full" />
                         )}
                     </Link>
                 );
