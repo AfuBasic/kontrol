@@ -244,7 +244,7 @@ export default function VisitReminderModal({
                                 </div>
                             </button>
 
-                            {/* Custom Stepper — expands inline */}
+                            {/* Custom Stepper - expands inline */}
                             <AnimatePresence>
                                 {isCustomSelected && (
                                     <motion.div
