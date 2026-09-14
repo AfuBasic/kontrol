@@ -31,6 +31,24 @@ class AccessMemberController extends Controller
         $members = $this->memberService->listMembers($organization, $filters);
         $arrivals = $this->arrivalService->getActiveArrivals($organization);
         $metrics = $this->arrivalService->getMetrics($organization);
+        $logs = $this->arrivalService->getArrivalHistory($organization, $request->only(['search', 'date', 'status']));
+
+        $windows = $organization->access_policy === 'public_window'
+            ? $organization->publicWindows()
+                ->orderBy('day_of_week')
+                ->orderBy('start_time')
+                ->get()
+                ->map(fn ($w) => [
+                    'id' => $w->id,
+                    'name' => $w->name,
+                    'day_of_week' => $w->day_of_week,
+                    'start_time' => substr($w->start_time, 0, 5),
+                    'end_time' => substr($w->end_time, 0, 5),
+                    'is_active' => $w->is_active,
+                    'notes' => $w->notes,
+                    'is_open_now' => $w->isOpenAt(),
+                ])
+            : [];
 
         return Inertia::render('Organization/AccessList', [
             'organization' => [
@@ -48,6 +66,8 @@ class AccessMemberController extends Controller
             'members' => $members,
             'arrivals' => $arrivals,
             'metrics' => $metrics,
+            'logs' => $logs,
+            'windows' => $windows,
             'filters' => $filters,
             'initialTab' => $request->query('tab', 'people'),
         ]);
