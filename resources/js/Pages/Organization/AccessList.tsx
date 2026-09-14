@@ -1,5 +1,25 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, Check, ChevronRight, Clock, Copy, MapPin, Plus, Radio, Search, ShieldCheck, UserCheck, Users, X } from 'lucide-react';
+import {
+    AlertTriangle,
+    Calendar,
+    CalendarClock,
+    Check,
+    CheckCircle2,
+    ChevronRight,
+    Clock,
+    Copy,
+    DoorOpen,
+    History,
+    MapPin,
+    Plus,
+    Radio,
+    Search,
+    ShieldCheck,
+    Trash2,
+    UserCheck,
+    Users,
+    X,
+} from 'lucide-react';
 import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -64,6 +84,40 @@ interface Metrics {
     confirmation_required: boolean;
 }
 
+interface HistoryLog {
+    id: number;
+    tag: string | null;
+    visitor_name: string;
+    admission_basis: string;
+    vehicle_plate_number: string | null;
+    entry_point: string | null;
+    verified_at: string | null;
+    verified_at_human: string | null;
+    checked_out_at: string | null;
+    checked_out_at_human: string | null;
+    confirmed_at: string | null;
+    confirmation_state: string;
+}
+
+interface PaginatedLogs {
+    data: HistoryLog[];
+    current_page: number;
+    last_page: number;
+    total: number;
+    links: Array<{ url: string | null; label: string; active: boolean }>;
+}
+
+interface PublicWindowItem {
+    id: number;
+    name: string;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    is_active: boolean;
+    notes: string | null;
+    is_open_now: boolean;
+}
+
 interface Props {
     organization: {
         id: number;
@@ -80,6 +134,8 @@ interface Props {
     members: PaginatedMembers;
     arrivals?: Arrival[];
     metrics?: Metrics;
+    logs?: PaginatedLogs;
+    windows?: PublicWindowItem[];
     filters: {
         search?: string;
         category?: string;
@@ -91,22 +147,57 @@ interface Props {
 
 const categoryOptions = ['all', 'staff', 'parent', 'student', 'member', 'contractor', 'visitor'];
 const statusOptions = ['all', 'active', 'suspended'];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-export default function AccessList({ organization, membership, members, arrivals = [], metrics, filters, initialTab = 'people' }: Props) {
+export default function AccessList({
+    organization,
+    membership,
+    members,
+    arrivals = [],
+    metrics,
+    logs,
+    windows = [],
+    filters,
+    initialTab = 'people',
+}: Props) {
     const [activeTab, setActiveTab] = useState<'people' | 'arrivals' | 'history' | 'public_windows'>(initialTab);
     const [createModalOpen, setCreateModalOpen] = useState(false);
+    const [createWindowModalOpen, setCreateWindowModalOpen] = useState(false);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
     const [category, setCategory] = useState(filters.category ?? 'all');
     const [status, setStatus] = useState(filters.status ?? 'all');
 
-    const { data, setData, post, processing, errors, reset } = useForm({
+    const {
+        data: memberData,
+        setData: setMemberData,
+        post: postMember,
+        processing: processingMember,
+        errors: memberErrors,
+        reset: resetMember,
+    } = useForm({
         name: '',
         identifier: '',
         category: 'staff',
         valid_from: new Date().toISOString().split('T')[0],
         valid_until: '',
         issue_credential: true,
+    });
+
+    const {
+        data: windowData,
+        setData: setWindowData,
+        post: postWindow,
+        processing: processingWindow,
+        errors: windowErrors,
+        reset: resetWindow,
+    } = useForm({
+        name: '',
+        day_of_week: 0,
+        start_time: '08:00',
+        end_time: '12:00',
+        is_active: true,
+        notes: '',
     });
 
     const hasPublicWindows = organization.access_policy === 'public_window';
@@ -140,23 +231,51 @@ export default function AccessList({ organization, membership, members, arrivals
         return parts.join(' · ');
     };
 
+    const formatDay = (isoString: string | null) => {
+        if (!isoString) {
+            return 'Earlier';
+        }
+
+        return new Date(isoString).toLocaleDateString('en-NG', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+        });
+    };
+
+    const formatTime = (isoString: string | null) => {
+        if (!isoString) {
+            return '--:--';
+        }
+
+        return new Date(isoString).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
+    const groupedLogs = (logs?.data ?? []).reduce<Record<string, HistoryLog[]>>((groups, log) => {
+        const key = formatDay(log.verified_at);
+        groups[key] = groups[key] || [];
+        groups[key].push(log);
+
+        return groups;
+    }, {});
+
     const handleConfirmArrival = (id: number) => {
         router.post(`/org/arrivals/${id}/confirm`, {}, { preserveScroll: true });
     };
 
     const handleTabChange = (nextTab: 'people' | 'arrivals' | 'history' | 'public_windows') => {
-        if (nextTab === 'history') {
-            router.get('/org/arrivals/history');
-            return;
-        }
-        if (nextTab === 'public_windows') {
-            router.get('/org/public-windows');
-            return;
-        }
-
         setActiveTab(nextTab);
-        const url = nextTab === 'arrivals' ? '/org/access-list?tab=arrivals' : '/org/access-list';
+        const url = nextTab === 'people' ? '/org/access-list' : `/org/access-list?tab=${nextTab}`;
         window.history.replaceState(null, '', url);
+    };
+
+    const handleDeleteWindow = (id: number) => {
+        if (confirm('Delete this public access time?')) {
+            router.delete(`/org/public-windows/${id}`, { preserveScroll: true });
+        }
     };
 
     const applyFilters = (next?: { search?: string; category?: string; status?: string }) => {
@@ -181,13 +300,24 @@ export default function AccessList({ organization, membership, members, arrivals
         );
     };
 
-    const handleCreate = (e: React.FormEvent) => {
+    const handleCreateMember = (e: React.FormEvent) => {
         e.preventDefault();
 
-        post('/org/access-list', {
+        postMember('/org/access-list', {
             onSuccess: () => {
                 setCreateModalOpen(false);
-                reset();
+                resetMember();
+            },
+        });
+    };
+
+    const handleCreateWindow = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        postWindow('/org/public-windows', {
+            onSuccess: () => {
+                setCreateWindowModalOpen(false);
+                resetWindow();
             },
         });
     };
@@ -203,22 +333,35 @@ export default function AccessList({ organization, membership, members, arrivals
             <Head title={`${organization.name} - Access`} />
 
             <div className="space-y-4 sm:space-y-5">
-                {/* Native Mobile Header: Page Title + Compact Action */}
+                {/* Native Mobile Header: Page Title + Contextual Add Action */}
                 <div className="flex items-center justify-between gap-3 pt-1">
                     <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Access</h1>
                     {membership.is_admin && (
-                        <button
-                            type="button"
-                            onClick={() => setCreateModalOpen(true)}
-                            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
-                        >
-                            <Plus className="h-4 w-4" strokeWidth={2.25} />
-                            <span>Add</span>
-                        </button>
+                        <div>
+                            {activeTab === 'public_windows' ? (
+                                <button
+                                    type="button"
+                                    onClick={() => setCreateWindowModalOpen(true)}
+                                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
+                                >
+                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                    <span>Add time</span>
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setCreateModalOpen(true)}
+                                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
+                                >
+                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                    <span>Add</span>
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
 
-                {/* Internal Navigation: People, Arrivals, History */}
+                {/* Internal Navigation: People, Arrivals, History, Public times */}
                 <AccessTabs
                     activeTab={activeTab}
                     hasPublicWindows={hasPublicWindows}
@@ -528,6 +671,173 @@ export default function AccessList({ organization, membership, members, arrivals
                     </>
                 )}
 
+                {/* Tab Panel: History */}
+                {activeTab === 'history' && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1 text-xs font-medium text-slate-500">
+                            <span>
+                                {logs?.total ?? 0} {(logs?.total ?? 0) === 1 ? 'RECORDED VISIT' : 'RECORDED VISITS'}
+                            </span>
+                        </div>
+
+                        {!logs || logs.data.length === 0 ? (
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center sm:p-10">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                                    <Clock className="h-6 w-6" strokeWidth={1.75} />
+                                </div>
+                                <h2 className="mt-4 text-lg font-semibold text-slate-900">No visits recorded yet</h2>
+                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                                    Once security logs arrivals and checkouts for {organization.name}, they will appear here as a chronological timeline.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {Object.entries(groupedLogs).map(([date, dayLogs]) => (
+                                    <div key={date} className="space-y-2.5">
+                                        <div className="flex items-center justify-between px-1">
+                                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{date}</span>
+                                            <span className="text-xs text-slate-400">
+                                                {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
+                                            </span>
+                                        </div>
+
+                                        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+                                            {dayLogs.map((log) => {
+                                                const isHere = !log.checked_out_at;
+                                                const confirmed = Boolean(log.confirmed_at);
+
+                                                return (
+                                                    <div
+                                                        key={log.id}
+                                                        className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
+                                                    >
+                                                        <div className="flex min-w-0 items-center gap-3">
+                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                                                                {initialsFor(log.visitor_name)}
+                                                            </div>
+
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="truncate text-sm font-semibold text-slate-900">
+                                                                        {log.visitor_name}
+                                                                    </span>
+                                                                    {log.tag && (
+                                                                        <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                                                                            {log.tag}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                                    <span>{log.admission_basis}</span>
+                                                                    <span> · {log.entry_point || 'Gate'}</span>
+                                                                    {log.vehicle_plate_number && (
+                                                                        <span> · {log.vehicle_plate_number.toUpperCase()}</span>
+                                                                    )}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex shrink-0 items-center gap-2">
+                                                            <div className="text-right">
+                                                                <div className="flex items-center justify-end gap-1.5">
+                                                                    <span
+                                                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                                                            isHere
+                                                                                ? 'bg-emerald-50 text-emerald-700'
+                                                                                : 'bg-slate-100 text-slate-600'
+                                                                        }`}
+                                                                    >
+                                                                        {isHere ? 'Inside' : 'Departed'}
+                                                                    </span>
+                                                                    {confirmed && (
+                                                                        <span className="inline-flex items-center rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">
+                                                                            Confirmed
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                                <p className="mt-0.5 text-[11px] text-slate-400">
+                                                                    {formatTime(log.verified_at)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Tab Panel: Public Times (Windows) */}
+                {activeTab === 'public_windows' && hasPublicWindows && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1 text-xs font-medium text-slate-500">
+                            <span>
+                                {windows.length} {windows.length === 1 ? 'ACTIVE WINDOW' : 'ACTIVE WINDOWS'}
+                            </span>
+                        </div>
+
+                        {windows.length === 0 ? (
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center sm:p-10">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                                    <CalendarClock className="h-6 w-6" strokeWidth={1.75} />
+                                </div>
+                                <h2 className="mt-4 text-lg font-semibold text-slate-900">No public access times</h2>
+                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                                    Define regular weekly windows when the estate gate should admit visitors without individual codes.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+                                {windows.map((window) => (
+                                    <div
+                                        key={window.id}
+                                        className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3.5 transition hover:bg-slate-50/70 sm:px-4"
+                                    >
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+                                                <DoorOpen className="h-5 w-5" strokeWidth={1.75} />
+                                            </div>
+
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="truncate text-sm font-semibold text-slate-900">
+                                                        {window.name}
+                                                    </span>
+                                                    {window.is_open_now && (
+                                                        <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                                                            Open now
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                    <span>{DAYS[window.day_of_week]}s</span>
+                                                    <span> · {window.start_time} - {window.end_time}</span>
+                                                    {window.notes ? ` · ${window.notes}` : ''}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {membership.is_admin && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteWindow(window.id)}
+                                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                title="Delete window"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Add Someone Sheet / Modal */}
                 {createModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
@@ -546,24 +856,24 @@ export default function AccessList({ organization, membership, members, arrivals
                                 </button>
                             </div>
 
-                            <form noValidate onSubmit={handleCreate} className="space-y-4 pt-4">
+                            <form noValidate onSubmit={handleCreateMember} className="space-y-4 pt-4">
                                 <div>
                                     <label className="text-xs font-semibold text-slate-800">Full name</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. Janet Adebayo"
-                                        value={data.name}
-                                        onChange={(event) => setData('name', event.target.value)}
+                                        value={memberData.name}
+                                        onChange={(event) => setMemberData('name', event.target.value)}
                                         className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     />
-                                    {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name}</p>}
+                                    {memberErrors.name && <p className="mt-1 text-xs text-rose-600">{memberErrors.name}</p>}
                                 </div>
 
                                 <div>
                                     <label className="text-xs font-semibold text-slate-800">Relationship</label>
                                     <select
-                                        value={data.category}
-                                        onChange={(event) => setData('category', event.target.value)}
+                                        value={memberData.category}
+                                        onChange={(event) => setMemberData('category', event.target.value)}
                                         className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 capitalize focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     >
                                         <option value="staff">Staff</option>
@@ -573,7 +883,7 @@ export default function AccessList({ organization, membership, members, arrivals
                                         <option value="contractor">Contractor</option>
                                         <option value="visitor">Regular visitor</option>
                                     </select>
-                                    {errors.category && <p className="mt-1 text-xs text-rose-600">{errors.category}</p>}
+                                    {memberErrors.category && <p className="mt-1 text-xs text-rose-600">{memberErrors.category}</p>}
                                 </div>
 
                                 <div>
@@ -581,18 +891,18 @@ export default function AccessList({ organization, membership, members, arrivals
                                     <input
                                         type="text"
                                         placeholder="e.g. STU-2026-042"
-                                        value={data.identifier}
-                                        onChange={(event) => setData('identifier', event.target.value)}
+                                        value={memberData.identifier}
+                                        onChange={(event) => setMemberData('identifier', event.target.value)}
                                         className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     />
-                                    {errors.identifier && <p className="mt-1 text-xs text-rose-600">{errors.identifier}</p>}
+                                    {memberErrors.identifier && <p className="mt-1 text-xs text-rose-600">{memberErrors.identifier}</p>}
                                 </div>
 
                                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
                                     <input
                                         type="checkbox"
-                                        checked={data.issue_credential}
-                                        onChange={(event) => setData('issue_credential', event.target.checked)}
+                                        checked={memberData.issue_credential}
+                                        onChange={(event) => setMemberData('issue_credential', event.target.checked)}
                                         className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                     />
                                     <span>
@@ -613,10 +923,113 @@ export default function AccessList({ organization, membership, members, arrivals
                                     </button>
                                     <button
                                         type="submit"
-                                        disabled={processing}
+                                        disabled={processingMember}
                                         className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50"
                                     >
-                                        {processing ? 'Adding...' : 'Add person'}
+                                        {processingMember ? 'Adding...' : 'Add person'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Add Public Time Sheet / Modal */}
+                {createWindowModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
+                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 text-sm shadow-xl sm:p-6">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3.5">
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-950">Add public access time</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">Schedule gate access without individual codes.</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setCreateWindowModalOpen(false)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <form noValidate onSubmit={handleCreateWindow} className="space-y-4 pt-4">
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-800">Window name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Sunday Morning Service"
+                                        value={windowData.name}
+                                        onChange={(event) => setWindowData('name', event.target.value)}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                    />
+                                    {windowErrors.name && <p className="mt-1 text-xs text-rose-600">{windowErrors.name}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-800">Day of week</label>
+                                    <select
+                                        value={windowData.day_of_week}
+                                        onChange={(event) => setWindowData('day_of_week', parseInt(event.target.value, 10))}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                    >
+                                        {DAYS.map((day, index) => (
+                                            <option key={day} value={index}>
+                                                {day}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {windowErrors.day_of_week && <p className="mt-1 text-xs text-rose-600">{windowErrors.day_of_week}</p>}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800">Start time</label>
+                                        <input
+                                            type="time"
+                                            value={windowData.start_time}
+                                            onChange={(event) => setWindowData('start_time', event.target.value)}
+                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                        />
+                                        {windowErrors.start_time && <p className="mt-1 text-xs text-rose-600">{windowErrors.start_time}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800">End time</label>
+                                        <input
+                                            type="time"
+                                            value={windowData.end_time}
+                                            onChange={(event) => setWindowData('end_time', event.target.value)}
+                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                        />
+                                        {windowErrors.end_time && <p className="mt-1 text-xs text-rose-600">{windowErrors.end_time}</p>}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-xs font-semibold text-slate-800">Notes (optional)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Open to congregation members"
+                                        value={windowData.notes}
+                                        onChange={(event) => setWindowData('notes', event.target.value)}
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                    />
+                                    {windowErrors.notes && <p className="mt-1 text-xs text-rose-600">{windowErrors.notes}</p>}
+                                </div>
+
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCreateWindowModalOpen(false)}
+                                        className="rounded-xl px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processingWindow}
+                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50"
+                                    >
+                                        {processingWindow ? 'Saving...' : 'Add time'}
                                     </button>
                                 </div>
                             </form>
