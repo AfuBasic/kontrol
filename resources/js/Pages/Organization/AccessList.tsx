@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Check, ChevronRight, Copy, Filter, KeyRound, Plus, Search, ShieldCheck, Users, X } from 'lucide-react';
+import { Check, ChevronRight, Copy, Plus, Search, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -122,283 +122,222 @@ export default function AccessList({ organization, membership, members, filters 
     };
 
     return (
-        <OrganizationLayout title="Access - People" contentClassName="max-w-[92rem]">
+        <OrganizationLayout title="Access" contentClassName="max-w-4xl pb-28 sm:pb-12">
             <Head title={`${organization.name} - Access`} />
 
-            <div className="space-y-5">
-                <section className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
-                    <div className="min-w-0 rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
-                        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-                            <div className="max-w-2xl min-w-0">
-                                <p className="text-sm font-black text-[#0b4aa2]">Access workspace</p>
-                                <h1 className="mt-1.5 max-w-full text-2xl font-black text-slate-950 sm:mt-2 sm:text-4xl">
-                                    People allowed into {organization.name}
-                                </h1>
-                                <p className="mt-3 text-sm leading-6 font-semibold text-slate-500 sm:text-base">
-                                    A directory of staff, members, contractors, and recurring visitors tied to your organization.
-                                </p>
-                            </div>
+            <div className="space-y-4 sm:space-y-5">
+                {/* Native Mobile Header: Page Title + Compact Action */}
+                <div className="flex items-center justify-between gap-3 pt-1">
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Access</h1>
+                    {membership.is_admin && (
+                        <button
+                            type="button"
+                            onClick={() => setCreateModalOpen(true)}
+                            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
+                        >
+                            <Plus className="h-4 w-4" strokeWidth={2.25} />
+                            <span>Add</span>
+                        </button>
+                    )}
+                </div>
 
-                            {membership.is_admin && (
+                {/* Internal Navigation: People, Arrivals, History */}
+                <AccessTabs activeTab="people" hasPublicWindows={hasPublicWindows} />
+
+                {/* Content Section: Directory or Empty State */}
+                {members.total === 0 && !search && category === 'all' && status === 'all' ? (
+                    /* Clean native empty state */
+                    <div className="rounded-2xl border border-slate-200/70 bg-white p-6 sm:p-10 text-center">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                            <Users className="h-6 w-6" strokeWidth={1.75} />
+                        </div>
+                        <h2 className="mt-4 text-lg font-semibold text-slate-900 sm:text-xl">No one has been added yet</h2>
+                        <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                            Add staff, parents, contractors, or anyone who regularly needs access to {organization.name}.
+                        </p>
+                        {membership.is_admin && (
+                            <div className="mt-6">
                                 <button
                                     type="button"
                                     onClick={() => setCreateModalOpen(true)}
-                                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#0f172a] px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.20)] active:scale-[0.99]"
+                                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 active:scale-[0.98]"
                                 >
-                                    <Plus className="h-4 w-4" />
-                                    Add person
+                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                    <span>Add someone</span>
                                 </button>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    /* Directory with search, filters, and list */
+                    <div className="space-y-3.5">
+                        {/* Native Search Field - No heavy outer wrapper */}
+                        <div className="relative">
+                            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(event) => {
+                                    setSearch(event.target.value);
+                                    applyFilters({ search: event.target.value });
+                                }}
+                                placeholder="Search by name or ID"
+                                className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Streamlined Quick Filters */}
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {[
+                                { id: 'all', label: 'All' },
+                                { id: 'staff', label: 'Staff' },
+                                { id: 'parent', label: 'Parents' },
+                                { id: 'contractor', label: 'Contractors' },
+                                { id: 'student', label: 'Students' },
+                                { id: 'visitor', label: 'Visitors' },
+                            ].map((tab) => {
+                                const isSelected = category === tab.id;
+                                return (
+                                    <button
+                                        key={tab.id}
+                                        type="button"
+                                        onClick={() => {
+                                            const nextCategory = isSelected ? 'all' : tab.id;
+                                            setCategory(nextCategory);
+                                            applyFilters({ category: nextCategory });
+                                        }}
+                                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                                            isSelected
+                                                ? 'bg-slate-900 text-white'
+                                                : 'border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        {tab.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Quiet Directory Count */}
+                        <div className="flex items-center justify-between px-1 pt-1 text-xs font-medium text-slate-500">
+                            <span>
+                                {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
+                                {activeMembers > 0 && ` · ${activeMembers} active`}
+                            </span>
+                            {suspendedMembers > 0 && (
+                                <span className="text-rose-600">{suspendedMembers} suspended</span>
                             )}
                         </div>
 
-                        <div className="mt-6">
-                            <AccessTabs activeTab="people" hasPublicWindows={hasPublicWindows} />
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
-                        <div className="rounded-[1.5rem] bg-[#0f172a] p-4 text-white shadow-[0_18px_45px_rgba(15,23,42,0.15)]">
-                            <p className="text-2xl font-black">{members.total}</p>
-                            <p className="mt-1 text-xs font-bold text-slate-300">People</p>
-                        </div>
-                        <div className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/80">
-                            <p className="text-2xl font-black text-emerald-700">{activeMembers}</p>
-                            <p className="mt-1 text-xs font-bold text-slate-500">Active</p>
-                        </div>
-                        <div className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_45px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/80">
-                            <p className="text-2xl font-black text-slate-950">{credentialedMembers}</p>
-                            <p className="mt-1 text-xs font-bold text-slate-500">With codes</p>
-                        </div>
-                    </div>
-                </section>
-
-                <section className="grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)]">
-                    <aside className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.06)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-5">
-                        <form
-                            noValidate
-                            className="space-y-4"
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                applyFilters();
-                            }}
-                        >
-                            <div>
-                                <label className="text-sm font-black text-slate-950">Find someone</label>
-                                <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl bg-slate-50 px-3 ring-1 ring-slate-200/80 focus-within:ring-2 focus-within:ring-[#0b4aa2]/30">
-                                    <Search className="h-4 w-4 shrink-0 text-slate-400" />
-                                    <input
-                                        type="search"
-                                        value={search}
-                                        onChange={(event) => setSearch(event.target.value)}
-                                        placeholder="Name or ID"
-                                        className="min-w-0 flex-1 border-0 bg-transparent p-0 text-sm font-bold text-slate-950 placeholder:text-slate-400 focus:ring-0"
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-black text-slate-950">Relationship</label>
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {categoryOptions.map((option) => (
-                                        <button
-                                            key={option}
-                                            type="button"
-                                            onClick={() => {
-                                                setCategory(option);
-                                                applyFilters({ category: option });
-                                            }}
-                                            className={`rounded-full px-3 py-2 text-xs font-black capitalize transition ${
-                                                category === option
-                                                    ? 'bg-[#0f172a] text-white'
-                                                    : 'bg-slate-50 text-slate-600 ring-1 ring-slate-200/80'
-                                            }`}
-                                        >
-                                            {option}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="text-sm font-black text-slate-950">State</label>
-                                <div className="mt-2 grid grid-cols-2 gap-2">
-                                    {statusOptions.map((option) => (
-                                        <button
-                                            key={option}
-                                            type="button"
-                                            onClick={() => {
-                                                setStatus(option);
-                                                applyFilters({ status: option });
-                                            }}
-                                            className={`rounded-2xl px-3 py-2.5 text-xs font-black capitalize transition ${
-                                                status === option
-                                                    ? 'bg-[#eaf2ff] text-[#0b4aa2] ring-1 ring-[#bfdbfe]'
-                                                    : 'bg-slate-50 text-slate-600 ring-1 ring-slate-200/80'
-                                            }`}
-                                        >
-                                            {option}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <button
-                                type="submit"
-                                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0f172a] px-4 text-sm font-black text-white"
-                            >
-                                <Filter className="h-4 w-4" />
-                                Apply search
-                            </button>
-                        </form>
-
-                        {suspendedMembers > 0 && (
-                            <p className="mt-4 rounded-2xl bg-rose-50 px-3 py-2 text-xs leading-5 font-bold text-rose-700">
-                                {suspendedMembers} {suspendedMembers === 1 ? 'person is' : 'people are'} suspended.
-                            </p>
-                        )}
-                    </aside>
-
-                    <div className="rounded-[1.5rem] bg-white shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem]">
+                        {/* People Directory List: Clean Rows with subtle dividers */}
                         {members.data.length === 0 ? (
-                            <div className="grid gap-6 p-6 sm:grid-cols-[1fr_12rem] sm:p-8">
-                                <div>
-                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf2ff] text-[#0b4aa2]">
-                                        <Users className="h-6 w-6" />
-                                    </div>
-                                    <h2 className="mt-5 text-2xl font-black tracking-tight text-slate-950">Build a clear access list.</h2>
-                                    <p className="mt-3 max-w-xl text-sm leading-6 font-semibold text-slate-500">
-                                        Start with the people who regularly come to {organization.name}. Kontrol will keep their access state and
-                                        active code visible here.
-                                    </p>
-                                </div>
-                                {membership.is_admin && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setCreateModalOpen(true)}
-                                        className="inline-flex min-h-12 items-center justify-center gap-2 self-end rounded-2xl bg-[#0f172a] px-5 py-3 text-sm font-black text-white"
-                                    >
-                                        <Plus className="h-4 w-4" />
-                                        Add first person
-                                    </button>
-                                )}
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center text-sm text-slate-500">
+                                No matching people found. Try clearing your search or filter.
                             </div>
                         ) : (
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
                                 {members.data.map((member) => (
-                                    <article
+                                    <div
                                         key={member.id}
-                                        className="grid gap-4 p-4 transition hover:bg-slate-50/70 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,0.55fr)] sm:p-5"
+                                        className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
                                     >
-                                        <div className="flex min-w-0 gap-3">
-                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-sm font-black text-slate-700">
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            {/* Avatar Initials */}
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
                                                 {initialsFor(member.name)}
                                             </div>
+
+                                            {/* Identity & Status */}
                                             <div className="min-w-0">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <h2 className="truncate text-base font-black text-slate-950">{member.name}</h2>
-                                                    <span
-                                                        className={`rounded-full px-2 py-1 text-[11px] font-black ${
-                                                            member.status === 'suspended'
-                                                                ? 'bg-rose-50 text-rose-700'
-                                                                : member.is_valid_now
-                                                                  ? 'bg-emerald-50 text-emerald-700'
-                                                                  : 'bg-amber-50 text-amber-700'
-                                                        }`}
-                                                    >
-                                                        {member.status === 'suspended'
-                                                            ? 'Suspended'
-                                                            : member.is_valid_now
-                                                              ? 'Allowed'
-                                                              : 'Not active yet'}
+                                                <div className="flex items-center gap-2">
+                                                    <span className="truncate text-sm font-semibold text-slate-900">
+                                                        {member.name}
                                                     </span>
+                                                    {member.status === 'suspended' ? (
+                                                        <span className="inline-flex shrink-0 items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+                                                            Suspended
+                                                        </span>
+                                                    ) : !member.is_valid_now ? (
+                                                        <span className="inline-flex shrink-0 items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                                                            Pending
+                                                        </span>
+                                                    ) : null}
                                                 </div>
-                                                <p className="mt-1 text-sm font-bold text-slate-500 capitalize">
-                                                    {member.category}
-                                                    {member.identifier ? ` - ${member.identifier}` : ''}
-                                                </p>
-                                                <p className="mt-2 text-xs font-semibold text-slate-400">
-                                                    Valid {member.valid_from || 'now'} to {member.valid_until || 'until revoked'}
+                                                <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                    <span className="capitalize">{member.category}</span>
+                                                    {member.identifier ? ` · ${member.identifier}` : ''}
+                                                    {member.valid_until ? ` · Until ${member.valid_until}` : ' · Ongoing'}
                                                 </p>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between gap-3 rounded-[1.25rem] bg-slate-50 px-3 py-3 sm:bg-transparent sm:px-0 sm:py-0">
+                                        {/* Right Action Affordance: Code & Chevron */}
+                                        <div className="flex shrink-0 items-center gap-2">
                                             {member.active_credential ? (
-                                                <div className="min-w-0">
-                                                    <p className="flex items-center gap-1.5 text-xs font-black text-slate-500">
-                                                        <KeyRound className="h-3.5 w-3.5" />
-                                                        Active code
-                                                    </p>
-                                                    <div className="mt-1 flex items-center gap-2">
-                                                        <span className="rounded-xl bg-white px-3 py-1.5 font-mono text-sm font-black tracking-wide text-slate-950 ring-1 ring-slate-200">
-                                                            {member.active_credential.code}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => copyCode(member.active_credential!.code, member.active_credential!.id)}
-                                                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-500 ring-1 ring-slate-200 transition hover:text-slate-900"
-                                                            title="Copy access code"
-                                                        >
-                                                            {copiedCodeId === member.active_credential.id ? (
-                                                                <Check className="h-4 w-4 text-emerald-600" />
-                                                            ) : (
-                                                                <Copy className="h-4 w-4" />
-                                                            )}
-                                                        </button>
-                                                    </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="rounded-lg bg-slate-50 px-2 py-1 font-mono text-xs font-semibold tracking-wide text-slate-900 ring-1 ring-slate-200/80">
+                                                        {member.active_credential.code}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => copyCode(member.active_credential!.code, member.active_credential!.id)}
+                                                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                                        title="Copy code"
+                                                    >
+                                                        {copiedCodeId === member.active_credential.id ? (
+                                                            <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                                        ) : (
+                                                            <Copy className="h-3.5 w-3.5" />
+                                                        )}
+                                                    </button>
                                                 </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                                                    <ShieldCheck className="h-4 w-4" />
-                                                    No active code
-                                                </div>
-                                            )}
-
-                                            <ChevronRight className="h-5 w-5 text-slate-300" />
+                                            ) : null}
+                                            <ChevronRight className="h-4 w-4 text-slate-300" />
                                         </div>
-                                    </article>
+                                    </div>
                                 ))}
                             </div>
                         )}
                     </div>
-                </section>
+                )}
 
+                {/* Add Someone Sheet / Modal */}
                 {createModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-sm sm:items-center sm:p-4">
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[2rem] bg-white p-5 text-sm shadow-2xl sm:p-6">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
+                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 text-sm shadow-xl sm:p-6">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3.5">
                                 <div>
-                                    <h3 className="text-lg font-black text-slate-950">Add someone</h3>
-                                    <p className="mt-1 text-sm font-semibold text-slate-500">Create access for {organization.name}.</p>
+                                    <h3 className="text-base font-semibold text-slate-950">Add someone</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">Create access for {organization.name}.</p>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={() => setCreateModalOpen(false)}
-                                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-500"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                 >
-                                    <X className="h-5 w-5" />
+                                    <X className="h-4 w-4" />
                                 </button>
                             </div>
 
-                            <form noValidate onSubmit={handleCreate} className="space-y-4 pt-5">
+                            <form noValidate onSubmit={handleCreate} className="space-y-4 pt-4">
                                 <div>
-                                    <label className="text-sm font-black text-slate-950">Full name</label>
+                                    <label className="text-xs font-semibold text-slate-800">Full name</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. Janet Adebayo"
                                         value={data.name}
                                         onChange={(event) => setData('name', event.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     />
-                                    {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
+                                    {errors.name && <p className="mt-1 text-xs text-rose-600">{errors.name}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="text-sm font-black text-slate-950">Relationship</label>
+                                    <label className="text-xs font-semibold text-slate-800">Relationship</label>
                                     <select
                                         value={data.category}
                                         onChange={(event) => setData('category', event.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 capitalize focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 capitalize focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     >
                                         <option value="staff">Staff</option>
                                         <option value="parent">Parent</option>
@@ -407,48 +346,48 @@ export default function AccessList({ organization, membership, members, filters 
                                         <option value="contractor">Contractor</option>
                                         <option value="visitor">Regular visitor</option>
                                     </select>
-                                    {errors.category && <p className="mt-1 text-xs font-bold text-rose-600">{errors.category}</p>}
+                                    {errors.category && <p className="mt-1 text-xs text-rose-600">{errors.category}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="text-sm font-black text-slate-950">ID number</label>
+                                    <label className="text-xs font-semibold text-slate-800">ID number (optional)</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. STU-2026-042"
                                         value={data.identifier}
                                         onChange={(event) => setData('identifier', event.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     />
-                                    {errors.identifier && <p className="mt-1 text-xs font-bold text-rose-600">{errors.identifier}</p>}
+                                    {errors.identifier && <p className="mt-1 text-xs text-rose-600">{errors.identifier}</p>}
                                 </div>
 
-                                <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-slate-50 p-4">
+                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
                                     <input
                                         type="checkbox"
                                         checked={data.issue_credential}
                                         onChange={(event) => setData('issue_credential', event.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#0b4aa2] focus:ring-[#0b4aa2]"
+                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                     />
                                     <span>
-                                        <span className="block text-sm font-black text-slate-950">Issue an access code now</span>
-                                        <span className="mt-1 block text-xs leading-5 font-semibold text-slate-500">
+                                        <span className="block text-xs font-semibold text-slate-900">Issue an access code now</span>
+                                        <span className="mt-0.5 block text-xs leading-4 text-slate-500">
                                             The code can be copied from this directory after the person is added.
                                         </span>
                                     </span>
                                 </label>
 
-                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
                                     <button
                                         type="button"
                                         onClick={() => setCreateModalOpen(false)}
-                                        className="rounded-2xl px-4 py-2.5 text-sm font-black text-slate-500"
+                                        className="rounded-xl px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="rounded-2xl bg-[#0f172a] px-5 py-2.5 text-sm font-black text-white disabled:opacity-50"
+                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50"
                                     >
                                         {processing ? 'Adding...' : 'Add person'}
                                     </button>
