@@ -7,6 +7,7 @@ interface Props {
     hasPublicWindows?: boolean;
     pendingCount?: number;
     activeCount?: number;
+    onTabChange?: (tab: 'people' | 'arrivals' | 'history' | 'public_windows') => void;
 }
 
 interface AccessTab {
@@ -20,7 +21,7 @@ interface AccessTab {
     badgeVariant?: 'warning' | 'neutral';
 }
 
-export default function AccessTabs({ activeTab, hasPublicWindows = false, pendingCount = 0, activeCount = 0 }: Props) {
+export default function AccessTabs({ activeTab, hasPublicWindows = false, pendingCount = 0, activeCount = 0, onTabChange }: Props) {
     const tabs: AccessTab[] = [
         {
             id: 'people',
@@ -68,17 +69,8 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.id;
                     const Icon = tab.icon;
-                    return (
-                        <Link
-                            key={tab.id}
-                            href={tab.href}
-                            aria-current={isActive ? 'page' : undefined}
-                            className={`relative flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all sm:flex-none sm:text-sm ${
-                                isActive
-                                    ? 'bg-white text-slate-950 font-semibold shadow-xs ring-1 ring-slate-900/5'
-                                    : 'text-slate-600 hover:text-slate-950'
-                            }`}
-                        >
+                    const content = (
+                        <>
                             <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.25 : 1.75} />
                             <span>{tab.label}</span>
                             {tab.badge && (
@@ -97,6 +89,39 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                                     {tab.badge}
                                 </span>
                             )}
+                        </>
+                    );
+
+                    const tabClassName = `relative flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all sm:flex-none sm:text-sm ${
+                        isActive
+                            ? 'bg-white text-slate-950 font-semibold shadow-xs ring-1 ring-slate-900/5'
+                            : 'text-slate-600 hover:text-slate-950'
+                    }`;
+
+                    if (onTabChange) {
+                        return (
+                            <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => onTabChange(tab.id)}
+                                aria-current={isActive ? 'page' : undefined}
+                                className={tabClassName}
+                            >
+                                {content}
+                            </button>
+                        );
+                    }
+
+                    return (
+                        <Link
+                            key={tab.id}
+                            href={tab.href}
+                            prefetch
+                            preserveScroll
+                            aria-current={isActive ? 'page' : undefined}
+                            className={tabClassName}
+                        >
+                            {content}
                         </Link>
                     );
                 })}
