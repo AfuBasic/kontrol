@@ -20,12 +20,16 @@ import {
     Mail,
     Phone,
     Send,
+    MoreHorizontal,
+    ExternalLink,
+    Power,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import TextInput from '@/Components/UI/TextInput';
 import { destroy, index, resendInvitation, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
+import { switchOrganization } from '@/actions/App/Http/Controllers/Organization/ContextController';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 export interface OrganizationMembershipItem {
@@ -38,10 +42,20 @@ export interface OrganizationMembershipItem {
         id: number;
         name: string;
         email: string;
+        email_verified_at?: string | null;
+        google_id?: string | null;
         profile?: {
             phone?: string | null;
         } | null;
     } | null;
+}
+
+export interface PublicWindowItem {
+    id: number;
+    day_of_week: number;
+    start_time: string;
+    end_time: string;
+    is_active: boolean;
 }
 
 export interface Organization {
@@ -65,6 +79,8 @@ export interface Organization {
     created_at: string;
     updated_at: string;
     memberships?: OrganizationMembershipItem[];
+    public_windows?: PublicWindowItem[];
+    access_members_count?: number;
 }
 
 interface PaginatedOrganizations {
@@ -81,8 +97,37 @@ interface Props {
     filters: {
         search?: string | null;
         type?: string | null;
+        status?: string | null;
     };
 }
+
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const isInvitationPending = (user?: { email_verified_at?: string | null; google_id?: string | null } | null) =>
+    Boolean(user && user.email_verified_at === null && user.google_id === null);
+
+const buildOperationalDetail = (org: Organization): string => {
+    const count = org.access_members_count ?? 0;
+
+    if (org.type === 'hospital' || org.access_policy === 'unrestricted') {
+        return 'Unrestricted destination · Verification not required';
+    }
+
+    if (org.access_policy === 'public_window') {
+        const nextWindow = org.public_windows?.[0];
+        const nextStr = nextWindow
+            ? `Next: ${DAY_LABELS[nextWindow.day_of_week]} ${formatTime(nextWindow.start_time)}`
+            : 'No windows configured';
+        return `Public schedule · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
+    }
+
+    let line = `Managed access · ${count} member${count !== 1 ? 's' : ''}`;
+    if (org.quick_entry_enabled) line += ' · Quick Entry';
+    if (org.arrival_confirmation_required) {
+        line += ` · Confirmation ${org.confirmation_window_minutes ?? 30}m`;
+    }
+    return line;
+};
 
 const TYPE_CONFIG = {
     school: {
@@ -170,7 +215,21 @@ function formatTime(timeStr?: string | null): string {
 export default function OrganizationsIndex({ organizations, filters }: Props) {
     const [searchQuery, setSearchQuery] = useState(filters.search || '');
     const [selectedType, setSelectedType] = useState(filters.type || 'all');
+    const [selectedStatus, setSelectedStatus] = useState(filters.status || 'all');
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
     const debouncedSearch = useDebounce(searchQuery, 300);
+
+    // Close overflow menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (!target.closest('[data-overflow-menu]')) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     // Modal & Action states
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -181,6 +240,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
     const handleResendInvite = (org: Organization) => {
         if (resendingInviteId !== null) return;
+        setOpenMenuId(null);
 
         setResendingInviteId(org.id);
         router.post(
@@ -192,6 +252,31 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     setResendingInviteId(null);
                 },
             },
+        );
+    };
+
+    const handleViewDashboard = (org: Organization) => {
+        setOpenMenuId(null);
+        router.post(switchOrganization.url(org.id), {}, { preserveScroll: false });
+    };
+
+    const handleToggleActive = (org: Organization) => {
+        setOpenMenuId(null);
+        router.put(
+            update.url(org.id),
+            {
+                name: org.name,
+                type: org.type,
+                access_policy: org.access_policy ?? 'managed',
+                arrival_confirmation_required: org.arrival_confirmation_required ?? false,
+                confirmation_window_minutes: org.confirmation_window_minutes ?? 30,
+                confirmation_escalation: org.confirmation_escalation ?? 'alert_only',
+                hours_enforcement: org.hours_enforcement ?? 'inherit',
+                quick_entry_enabled: org.quick_entry_enabled ?? true,
+                operating_hours: org.operating_hours,
+                is_active: !org.is_active,
+            },
+            { preserveScroll: true },
         );
     };
 
@@ -222,6 +307,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 {
                     search: debouncedSearch || undefined,
                     type: selectedType !== 'all' ? selectedType : undefined,
+                    status: selectedStatus !== 'all' ? selectedStatus : undefined,
                 },
                 { preserveState: true, replace: true },
             );
@@ -235,6 +321,20 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
             {
                 search: searchQuery || undefined,
                 type: type !== 'all' ? type : undefined,
+                status: selectedStatus !== 'all' ? selectedStatus : undefined,
+            },
+            { preserveState: true, replace: true },
+        );
+    };
+
+    const handleStatusFilterChange = (status: string) => {
+        setSelectedStatus(status);
+        router.get(
+            index.url(),
+            {
+                search: searchQuery || undefined,
+                type: selectedType !== 'all' ? selectedType : undefined,
+                status: status !== 'all' ? status : undefined,
             },
             { preserveState: true, replace: true },
         );
@@ -243,6 +343,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
     const handleClearFilters = () => {
         setSearchQuery('');
         setSelectedType('all');
+        setSelectedStatus('all');
         router.get(index.url(), {}, { preserveState: true, replace: true });
     };
 
@@ -410,7 +511,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
         }
     };
 
-    const isFiltered = Boolean(searchQuery || (selectedType && selectedType !== 'all'));
+    const isFiltered = Boolean(searchQuery || (selectedType && selectedType !== 'all') || (selectedStatus && selectedStatus !== 'all'));
     const isZeroData = organizations.total === 0 && !isFiltered;
     const isSearchEmpty = organizations.total === 0 && isFiltered;
 
@@ -466,45 +567,70 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                     </div>
                 ) : (
                     <>
-                        {/* Compact Utility Row (Search & Filter) */}
-                        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
-                            <div className="relative flex-1">
-                                <Search className="pointer-events-none absolute top-2.5 left-3.5 h-4 w-4 text-slate-400" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search organizations..."
-                                    className="w-full rounded-xl border-slate-200 py-2 pr-4 pl-9 text-xs font-semibold placeholder:text-slate-400 focus:border-slate-800 focus:ring-slate-800"
-                                />
-                                {searchQuery && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute top-2.5 right-3 text-slate-400 hover:text-slate-600"
-                                    >
-                                        <X className="h-3.5 w-3.5" />
-                                    </button>
-                                )}
+                        {/* Operational Utility Bar (Search & Filters) */}
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+                                <div className="relative flex-1">
+                                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search organizations..."
+                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-9 text-xs font-semibold text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
+                                    />
+                                    {searchQuery && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSearchQuery('')}
+                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                        >
+                                            <X className="h-3.5 w-3.5" />
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+                                    <div className="min-w-[140px] flex-1 sm:flex-initial">
+                                        <CustomSelect
+                                            value={selectedType}
+                                            onChange={(val) => handleTypeFilterChange(String(val))}
+                                            options={[
+                                                { value: 'all', label: 'All Types' },
+                                                { value: 'school', label: 'School' },
+                                                { value: 'church', label: 'Church' },
+                                                { value: 'hospital', label: 'Hospital' },
+                                                { value: 'business', label: 'Business' },
+                                                { value: 'facility', label: 'Facility' },
+                                                { value: 'other', label: 'Other' },
+                                            ]}
+                                            size="sm"
+                                            buttonClassName="h-10 text-xs font-semibold bg-white border border-slate-200 shadow-xs"
+                                        />
+                                    </div>
+
+                                    <div className="min-w-[130px] flex-1 sm:flex-initial">
+                                        <CustomSelect
+                                            value={selectedStatus}
+                                            onChange={(val) => handleStatusFilterChange(String(val))}
+                                            options={[
+                                                { value: 'all', label: 'All Statuses' },
+                                                { value: 'active', label: 'Active' },
+                                                { value: 'inactive', label: 'Inactive' },
+                                            ]}
+                                            size="sm"
+                                            buttonClassName="h-10 text-xs font-semibold bg-white border border-slate-200 shadow-xs"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex min-w-[150px] items-center gap-2">
-                                <CustomSelect
-                                    value={selectedType}
-                                    onChange={(val) => handleTypeFilterChange(String(val))}
-                                    options={[
-                                        { value: 'all', label: 'All Types' },
-                                        { value: 'school', label: 'School' },
-                                        { value: 'church', label: 'Church' },
-                                        { value: 'hospital', label: 'Hospital' },
-                                        { value: 'business', label: 'Business' },
-                                        { value: 'facility', label: 'Facility' },
-                                        { value: 'other', label: 'Other' },
-                                    ]}
-                                    size="sm"
-                                    buttonClassName="h-10 text-xs font-semibold"
-                                />
-                            </div>
+                            {/* Result Counter when filtering */}
+                            {isFiltered && !isSearchEmpty && (
+                                <p className="text-[11px] font-medium text-slate-500">
+                                    Showing {organizations.total} organization{organizations.total !== 1 ? 's' : ''}
+                                </p>
+                            )}
                         </div>
 
                         {/* No Search Results */}
@@ -521,129 +647,157 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 </button>
                             </div>
                         ) : (
-                            /* Organization Rows List */
-                            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+                            /* Operational Directory Row List */
+                            <div className="divide-y divide-slate-100 overflow-visible rounded-2xl border border-slate-200/80 bg-white shadow-xs">
                                 {organizations.data.map((org) => {
                                     const config = TYPE_CONFIG[org.type] || TYPE_CONFIG.other;
                                     const IconComponent = config.icon;
-                                    const hours = org.operating_hours;
-                                    const hasHours = Boolean(hours?.open && hours?.close);
                                     const primaryAdmin = org.memberships?.find((m) => m.role === 'admin' && m.is_active)?.user;
+                                    const hasPendingInvitation = isInvitationPending(primaryAdmin);
 
                                     return (
-                                        <div
+                                        <article
                                             key={org.id}
-                                            className="group flex flex-col gap-3 p-4 transition-colors hover:bg-slate-50/60 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5"
+                                            className="group relative flex items-start gap-4 p-4.5 transition-colors hover:bg-slate-50/70 sm:px-5"
                                         >
-                                            {/* Organization Primary Info */}
-                                            <div className="flex min-w-0 items-start gap-3.5 sm:items-center">
-                                                <div
-                                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border ${config.color}`}
-                                                >
-                                                    <IconComponent className="h-4 w-4" />
-                                                </div>
+                                            {/* Organization Type Icon */}
+                                            <div
+                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${config.color} mt-0.5`}
+                                            >
+                                                <IconComponent className="h-4.5 w-4.5" />
+                                            </div>
 
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        <span className="truncate font-bold text-slate-900">{org.name}</span>
+                                            {/* Central Operational Details */}
+                                            <div className="min-w-0 flex-1">
+                                                {/* Header: Name, Type, Status */}
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <h3 className="truncate text-sm font-bold text-slate-900">{org.name}</h3>
+                                                            <span
+                                                                className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${config.badgeColor}`}
+                                                            >
+                                                                {config.label}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Status indicator */}
+                                                    <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
                                                         <span
-                                                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${config.badgeColor}`}
+                                                            className={`h-2 w-2 rounded-full ${org.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                                        />
+                                                        <span
+                                                            className={`text-[11px] font-semibold ${
+                                                                org.is_active ? 'text-emerald-700' : 'text-slate-400'
+                                                            }`}
                                                         >
-                                                            {config.label}
+                                                            {org.is_active ? 'Active' : 'Inactive'}
                                                         </span>
-                                                        {!org.is_active && (
-                                                            <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500">
-                                                                Inactive
-                                                            </span>
-                                                        )}
-                                                        {primaryAdmin && (
-                                                            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                                                                <Mail className="h-2.5 w-2.5 text-slate-400" />
-                                                                {primaryAdmin.email}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Operational Context Line */}
-                                                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                                                        {org.type === 'hospital' ? (
-                                                            <span className="flex items-center gap-1 font-medium text-rose-700">
-                                                                Unrestricted destination · 24/7 Access
-                                                            </span>
-                                                        ) : hasHours ? (
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="h-3 w-3 text-slate-400" />
-                                                                <span>
-                                                                    {formatTime(hours?.open)} – {formatTime(hours?.close)}
-                                                                </span>
-                                                                {org.hours_enforcement === 'block' && (
-                                                                    <span className="ml-1 text-[11px] font-medium text-rose-600">· Strict hours</span>
-                                                                )}
-                                                            </span>
-                                                        ) : (
-                                                            <span>Standard access schedule</span>
-                                                        )}
-
-                                                        {org.quick_entry_enabled && (
-                                                            <span className="flex items-center gap-1 font-medium text-indigo-600">
-                                                                <Zap className="h-3 w-3 fill-indigo-500/20" />
-                                                                Quick Entry active
-                                                            </span>
-                                                        )}
-
-                                                        {org.arrival_confirmation_required && (
-                                                            <span className="flex items-center gap-1 font-medium text-emerald-700">
-                                                                <Check className="h-3 w-3 text-emerald-600" />
-                                                                Confirmation ({org.confirmation_window_minutes ?? 30}m)
-                                                            </span>
-                                                        )}
-
-                                                        {org.access_policy === 'managed' && (
-                                                            <span className="flex items-center gap-1 font-medium text-purple-700">
-                                                                <Shield className="h-3 w-3 text-purple-600" />
-                                                                Managed roster
-                                                            </span>
-                                                        )}
                                                     </div>
                                                 </div>
+
+                                                {/* Single Policy-Aware Prose Operational Detail */}
+                                                <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                                                    {buildOperationalDetail(org)}
+                                                </p>
+
+                                                {/* Admin Information & Invitation Pending indicator */}
+                                                {primaryAdmin && (
+                                                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                                                        <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
+                                                            <Mail className="h-3 w-3 text-slate-400" />
+                                                            {primaryAdmin.email}
+                                                        </span>
+                                                        {hasPendingInvitation && (
+                                                            <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200/60">
+                                                                Invitation pending
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
-                                            {/* Row Actions */}
-                                            <div className="flex shrink-0 items-center justify-end gap-2 border-t border-slate-100 pt-2 sm:border-0 sm:pt-0">
-                                                {primaryAdmin && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleResendInvite(org)}
-                                                        disabled={resendingInviteId === org.id}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
-                                                        title={`Resend invitation email to ${primaryAdmin.email}`}
-                                                    >
-                                                        {resendingInviteId === org.id ? (
-                                                            <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
-                                                        ) : (
-                                                            <Send className="h-3.5 w-3.5 text-slate-400" />
+                                            {/* Overflow Actions Menu */}
+                                            <div
+                                                className="relative shrink-0 self-center"
+                                                data-overflow-menu
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setOpenMenuId(openMenuId === org.id ? null : org.id)}
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+                                                    title="Organization actions"
+                                                >
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </button>
+
+                                                {openMenuId === org.id && (
+                                                    <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleViewDashboard(org)}
+                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                        >
+                                                            <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
+                                                            View Dashboard
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setOpenMenuId(null);
+                                                                openEditModal(org);
+                                                            }}
+                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                        >
+                                                            <Pencil className="h-3.5 w-3.5 text-slate-400" />
+                                                            Edit
+                                                        </button>
+
+                                                        {primaryAdmin && hasPendingInvitation && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleResendInvite(org)}
+                                                                disabled={resendingInviteId === org.id}
+                                                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 disabled:opacity-50"
+                                                            >
+                                                                {resendingInviteId === org.id ? (
+                                                                    <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-600" />
+                                                                ) : (
+                                                                    <Send className="h-3.5 w-3.5 text-slate-400" />
+                                                                )}
+                                                                Resend Invitation
+                                                            </button>
                                                         )}
-                                                        <span>Resend Invite</span>
-                                                    </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleToggleActive(org)}
+                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                                                        >
+                                                            <Power className="h-3.5 w-3.5 text-slate-400" />
+                                                            {org.is_active ? 'Deactivate' : 'Activate'}
+                                                        </button>
+
+                                                        <div className="my-1 border-t border-slate-100" />
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setOpenMenuId(null);
+                                                                setDeletingOrg(org);
+                                                            }}
+                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                        >
+                                                            <Trash2 className="h-3.5 w-3.5 text-rose-500" />
+                                                            Delete
+                                                        </button>
+                                                    </div>
                                                 )}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => openEditModal(org)}
-                                                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 hover:text-slate-900"
-                                                >
-                                                    <Pencil className="h-3.5 w-3.5 text-slate-400" />
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setDeletingOrg(org)}
-                                                    className="inline-flex h-7.5 w-7.5 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
-                                                    title="Delete organization"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
                                             </div>
-                                        </div>
+                                        </article>
                                     );
                                 })}
                             </div>
