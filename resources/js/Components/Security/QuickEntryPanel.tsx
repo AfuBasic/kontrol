@@ -536,7 +536,7 @@ export default function QuickEntryPanel({
                     <div>
                         <span className="block font-black">
                             {hoursEvaluation.enforcement === 'block'
-                                ? 'Outside Operating Hours — Quick Entry Blocked'
+                                ? 'Outside Operating Hours - Quick Entry Blocked'
                                 : 'Outside Operating Hours Notice'}
                         </span>
                         <span className="text-[11px] font-semibold opacity-90">
@@ -646,7 +646,7 @@ export default function QuickEntryPanel({
                     ) : !hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block' ? (
                         <>
                             <ShieldAlert className="h-5 w-5 text-white" />
-                            <span>Closed — Entry Blocked</span>
+                            <span>Closed - Entry Blocked</span>
                         </>
                     ) : (
                         <>
