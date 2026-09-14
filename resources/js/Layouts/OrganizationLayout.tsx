@@ -1,12 +1,16 @@
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Bell, ChevronDown, CreditCard, Home, KeyRound, LogOut, Megaphone, User } from 'lucide-react';
 import React, { type ReactNode, useEffect, useState } from 'react';
+import PullToRefresh from '@/Components/PullToRefresh';
 
 interface Props {
     children: ReactNode;
     title?: string;
     contentClassName?: string;
+    onRefresh?: () => void;
 }
 
 interface NavItem {
@@ -16,7 +20,7 @@ interface NavItem {
     exact?: boolean;
 }
 
-export default function OrganizationLayout({ children, title: _title, contentClassName = 'max-w-7xl' }: Props) {
+export default function OrganizationLayout({ children, title: _title, contentClassName = 'max-w-7xl', onRefresh }: Props) {
     const page = usePage();
     const { url } = page;
     const props = page.props as any;
@@ -27,12 +31,19 @@ export default function OrganizationLayout({ children, title: _title, contentCla
 
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-    // Force light theme in Organization area to match Kontrol resident design language
+    // Force light theme and ensure status bar icons are dark in Organization area
     useEffect(() => {
         const html = document.documentElement;
         html.classList.remove('dark');
         html.classList.add('light');
         html.style.colorScheme = 'light';
+
+        if (Capacitor.isNativePlatform()) {
+            StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+            if (Capacitor.getPlatform() === 'android') {
+                StatusBar.setBackgroundColor({ color: '#00000000' }).catch(() => {});
+            }
+        }
     }, []);
 
     const navItems: NavItem[] = [
@@ -187,20 +198,22 @@ export default function OrganizationLayout({ children, title: _title, contentCla
             </header>
 
             <main className="w-full flex-1 px-3 py-5 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-7 lg:px-10 lg:pb-12">
-                <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
-                    {props.flash?.success && (
-                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xs sm:text-sm">
-                            <span>{props.flash.success}</span>
-                        </div>
-                    )}
-                    {props.flash?.error && (
-                        <div className="flex items-center justify-between rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-900 shadow-xs sm:text-sm">
-                            <span>{props.flash.error}</span>
-                        </div>
-                    )}
+                <PullToRefresh onRefresh={onRefresh}>
+                    <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
+                        {props.flash?.success && (
+                            <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xs sm:text-sm">
+                                <span>{props.flash.success}</span>
+                            </div>
+                        )}
+                        {props.flash?.error && (
+                            <div className="flex items-center justify-between rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-900 shadow-xs sm:text-sm">
+                                <span>{props.flash.error}</span>
+                            </div>
+                        )}
 
-                    {children}
-                </div>
+                        {children}
+                    </div>
+                </PullToRefresh>
             </main>
 
             <div
