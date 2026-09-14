@@ -8,12 +8,12 @@ export default function ProductEstates() {
     return (
         <PublicLayout>
             <Head>
-                <title>Kontrol for Estates — Complete Operating System for Gated Communities</title>
+                <title>Kontrol for Estates: Complete Operating System for Gated Communities</title>
                 <meta
                     name="description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
                 />
-                <meta property="og:title" content="Kontrol for Estates — Complete Operating System for Gated Communities" />
+                <meta property="og:title" content="Kontrol for Estates: Complete Operating System for Gated Communities" />
                 <meta
                     property="og:description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
@@ -22,7 +22,7 @@ export default function ProductEstates() {
                 <meta property="og:type" content="website" />
                 <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Kontrol for Estates — Complete Operating System for Gated Communities" />
+                <meta name="twitter:title" content="Kontrol for Estates: Complete Operating System for Gated Communities" />
                 <meta
                     name="twitter:description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
@@ -51,7 +51,7 @@ export default function ProductEstates() {
                         </div>
 
                         <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-                            Everything that makes your estate run — finally in one place.
+                            Everything that makes your estate run, finally in one place.
                         </h1>
 
                         <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
@@ -88,7 +88,7 @@ export default function ProductEstates() {
                                 Why estate management breaks down
                             </h2>
                             <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-                                Most estates don't fail due to lack of effort — they fail because their tools don't talk to each other.
+                                Most estates don't fail due to lack of effort - they fail because their tools don't talk to each other.
                             </p>
                         </div>
 
