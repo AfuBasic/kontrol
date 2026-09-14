@@ -140,7 +140,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
 
                                 <div className="text-xs text-zinc-300 flex items-center gap-1.5 font-mono">
                                     <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                                    <span>{window.start_time} — {window.end_time}</span>
+                                    <span>{window.start_time} - {window.end_time}</span>
                                 </div>
 
                                 {window.notes && (
