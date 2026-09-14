@@ -21,7 +21,6 @@ import {
     Phone,
     Send,
     MoreHorizontal,
-    ExternalLink,
     Power,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -29,7 +28,6 @@ import Modal from '@/Components/Modal';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import TextInput from '@/Components/UI/TextInput';
 import { destroy, index, resendInvitation, store, update } from '@/actions/App/Http/Controllers/Admin/OrganizationController';
-import { switchOrganization } from '@/actions/App/Http/Controllers/Organization/ContextController';
 import { useDebounce } from '@/Hooks/useDebounce';
 
 export interface OrganizationMembershipItem {
@@ -253,11 +251,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                 },
             },
         );
-    };
-
-    const handleViewDashboard = (org: Organization) => {
-        setOpenMenuId(null);
-        router.post(switchOrganization.url(org.id), {}, { preserveScroll: false });
     };
 
     const handleToggleActive = (org: Organization) => {
@@ -616,6 +609,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             options={[
                                                 { value: 'all', label: 'All Statuses' },
                                                 { value: 'active', label: 'Active' },
+                                                { value: 'pending', label: 'Pending' },
                                                 { value: 'inactive', label: 'Inactive' },
                                             ]}
                                             size="sm"
@@ -682,17 +676,27 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         </div>
                                                     </div>
 
-                                                    {/* Status indicator */}
+                                                    {/* Three-State Status indicator */}
                                                     <div className="flex shrink-0 items-center gap-1.5 pt-0.5">
                                                         <span
-                                                            className={`h-2 w-2 rounded-full ${org.is_active ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                                                            className={`h-2 w-2 rounded-full ${
+                                                                hasPendingInvitation
+                                                                    ? 'bg-amber-500'
+                                                                    : org.is_active
+                                                                      ? 'bg-emerald-500'
+                                                                      : 'bg-slate-300'
+                                                            }`}
                                                         />
                                                         <span
                                                             className={`text-[11px] font-semibold ${
-                                                                org.is_active ? 'text-emerald-700' : 'text-slate-400'
+                                                                hasPendingInvitation
+                                                                    ? 'text-amber-700'
+                                                                    : org.is_active
+                                                                      ? 'text-emerald-700'
+                                                                      : 'text-slate-400'
                                                             }`}
                                                         >
-                                                            {org.is_active ? 'Active' : 'Inactive'}
+                                                            {hasPendingInvitation ? 'Pending' : org.is_active ? 'Active' : 'Inactive'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -702,18 +706,13 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                     {buildOperationalDetail(org)}
                                                 </p>
 
-                                                {/* Admin Information & Invitation Pending indicator */}
+                                                {/* Admin Information */}
                                                 {primaryAdmin && (
                                                     <div className="mt-2 flex flex-wrap items-center gap-2">
                                                         <span className="inline-flex items-center gap-1 text-[11px] text-slate-400">
                                                             <Mail className="h-3 w-3 text-slate-400" />
                                                             {primaryAdmin.email}
                                                         </span>
-                                                        {hasPendingInvitation && (
-                                                            <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200/60">
-                                                                Invitation pending
-                                                            </span>
-                                                        )}
                                                     </div>
                                                 )}
                                             </div>
@@ -735,15 +734,6 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
 
                                                 {openMenuId === org.id && (
                                                     <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleViewDashboard(org)}
-                                                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-                                                        >
-                                                            <ExternalLink className="h-3.5 w-3.5 text-slate-400" />
-                                                            View Dashboard
-                                                        </button>
-
                                                         <button
                                                             type="button"
                                                             onClick={() => {
