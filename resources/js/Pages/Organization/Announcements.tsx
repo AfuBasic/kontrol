@@ -136,7 +136,7 @@ export default function Announcements({ organization, membership, posts, unread_
                             return (
                                 <Link
                                     key={post.id}
-                                    href={`/org/announcements/${post.id}`}
+                                    href={`/org/announcements/${post.hashid || post.id}`}
                                     className={`group block p-4 sm:p-5 transition-colors duration-150 ${
                                         isUnread ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/40 hover:bg-white'
                                     }`}

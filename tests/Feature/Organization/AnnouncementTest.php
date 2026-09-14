@@ -100,7 +100,7 @@ test('viewing an announcement marks it as read and renders detail page', functio
 
     $response = $this->actingAs($this->user)
         ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
-        ->get(route('org.announcements.show', ['post' => $post->id]));
+        ->get(route('org.announcements.show', $post));
 
     $response->assertOk()
         ->assertInertia(fn (Assert $page) => $page
