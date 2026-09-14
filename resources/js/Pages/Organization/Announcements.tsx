@@ -1,8 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import { Bell, ChevronRight, ImageIcon, Sparkles } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import { AlertCircle, Building2, Check, ChevronRight, FileText, Image as ImageIcon, Share2 } from 'lucide-react';
+import React, { useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { PostMedia } from '@/types';
+import { extractAnnouncementPreview } from '@/Utils/announcementPreview';
 
 interface Post {
     id: number;
@@ -15,7 +16,9 @@ interface Post {
     read_at: string | null;
     published_at: string | null;
     published_at_human: string;
-    author_name: string;
+    publisher_name: string;
+    publisher_role: string;
+    author_name: string | null;
     media_count: number;
     media?: PostMedia[];
 }
@@ -35,6 +38,10 @@ interface Props {
         type: string;
         estate_name?: string;
     };
+    estate?: {
+        id: number;
+        name: string;
+    };
     membership: {
         role: string;
         is_admin: boolean;
@@ -43,27 +50,31 @@ interface Props {
     posts: PaginatedPosts;
 }
 
-const CATEGORY_STYLES: Record<string, { label: string; tone: string }> = {
-    general: { label: 'Update', tone: 'text-slate-600 bg-slate-100' },
-    meeting: { label: 'Meeting', tone: 'text-blue-700 bg-blue-50/90' },
-    maintenance: { label: 'Maintenance', tone: 'text-amber-800 bg-amber-50/90' },
-    security: { label: 'Security', tone: 'text-rose-700 bg-rose-50/90' },
-    event: { label: 'Event', tone: 'text-purple-700 bg-purple-50/90' },
+const CATEGORY_META: Record<string, { label: string; tone: string }> = {
+    general: { label: 'Notice', tone: 'text-slate-600 bg-slate-100' },
+    meeting: { label: 'Meeting', tone: 'text-sky-700 bg-sky-50' },
+    maintenance: { label: 'Maintenance', tone: 'text-amber-700 bg-amber-50' },
+    security: { label: 'Security', tone: 'text-rose-700 bg-rose-50' },
+    event: { label: 'Community Event', tone: 'text-indigo-700 bg-indigo-50' },
 };
 
-function formatRelativeDate(isoString: string | null): string {
-    if (!isoString) return 'Recently';
+function formatFeedTimestamp(isoString: string | null, humanFallback: string): string {
+    if (!isoString) return humanFallback || 'Recently';
 
     const date = new Date(isoString);
     const now = new Date();
+    const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffSeconds < 60) return 'Just now';
+    if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m`;
+    if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h`;
+
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
     const diffDays = Math.round((startOfToday.getTime() - startOfDate.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
-    if (diffDays > 1 && diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 7) return `${diffDays}d`;
 
     return date.toLocaleDateString('en-GB', {
         day: 'numeric',
@@ -72,146 +83,268 @@ function formatRelativeDate(isoString: string | null): string {
     });
 }
 
-function stripHtml(html: string): string {
-    return html
-        .replace(/<style[^>]*>.*?<\/style>/gis, ' ')
-        .replace(/<script[^>]*>.*?<\/script>/gis, ' ')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-}
-
-export default function Announcements({ organization, membership, posts, unread_count = 0 }: Props) {
-    const estateName = organization.estate_name || 'the estate';
-
-    // Group posts subtly if there are multiple, or keep a unified list
+export default function Announcements({ organization, estate, posts }: Props) {
+    const estateName = estate?.name || organization.estate_name || 'Golden Heights';
     const items = posts.data;
 
+    const [copiedId, setCopiedId] = useState<number | null>(null);
+
+    const handleQuickShare = async (e: React.MouseEvent, post: Post) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const postUrl = `${window.location.origin}/org/announcements/${post.hashid || post.id}`;
+        const shareData = {
+            title: post.title || 'Estate Announcement',
+            text: `${post.publisher_name}: ${post.title || ''}`,
+            url: postUrl,
+        };
+
+        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+            try {
+                await navigator.share(shareData);
+            } catch {
+                // Cancel
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(postUrl);
+                setCopiedId(post.id);
+                setTimeout(() => setCopiedId(null), 2000);
+            } catch {
+                // Fallback
+            }
+        }
+    };
+
     return (
-        <OrganizationLayout title="Announcements" contentClassName="max-w-2xl">
-            <Head title={`Announcements - ${organization.name}`} />
+        <OrganizationLayout title="Announcements" contentClassName="max-w-xl px-0 sm:px-4">
+            <Head title={`Announcements - ${estateName}`} />
 
-            <div className="space-y-5 pb-20 text-left">
-                {/* Clean, Restrained Page Header */}
-                <div className="space-y-1 pt-1">
-                    <div className="flex items-center justify-between gap-3">
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Announcements</h1>
-                        {unread_count > 0 && (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">
-                                <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
-                                {unread_count} new
-                            </span>
-                        )}
-                    </div>
-                    <p className="text-sm font-normal text-slate-500 leading-relaxed">
-                        Updates, notices and important information from {estateName}.
+            <div className="text-left">
+                {/* 1. Restrained Stream Header: Clean and unobtrusive, users reach content immediately */}
+                <header className="px-4 py-3 sm:px-1 sm:py-4 border-b border-slate-100 sm:border-b-0">
+                    <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
+                        Announcements
+                    </h1>
+                    <p className="text-xs font-medium text-slate-500">
+                        {estateName}
                     </p>
-                </div>
+                </header>
 
-                {/* Feed or Quiet Empty State */}
+                {/* 2. Stream Feed or Quiet Empty State */}
                 {items.length === 0 ? (
-                    <div className="rounded-2xl border border-slate-200/80 bg-white p-8 text-center sm:p-12">
-                        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
-                            <Bell className="h-5 w-5" />
+                    <div className="px-4 py-16 text-center sm:py-20">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                            <Building2 className="h-6 w-6 stroke-[1.5]" />
                         </div>
-                        <h2 className="mt-4 text-base font-semibold text-slate-900">You're all caught up</h2>
-                        <p className="mt-1.5 mx-auto max-w-sm text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
-                            There aren't any estate announcements yet. New updates published by {estateName} will appear here.
+                        <h2 className="mt-4 text-base font-semibold text-slate-900">
+                            You're all caught up
+                        </h2>
+                        <p className="mt-1 mx-auto max-w-xs text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
+                            There aren't any estate updates yet. New announcements from {estateName} will appear here.
                         </p>
                     </div>
                 ) : (
-                    <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+                    <div className="divide-y divide-slate-100/90 sm:space-y-4 sm:divide-y-0">
                         {items.map((post) => {
                             const isUnread = !post.is_read;
-                            const isUrgent = post.priority === 'critical' || post.priority === 'important';
-                            const preview = stripHtml(post.body);
-                            const category = CATEGORY_STYLES[post.category] || {
+                            const isCritical = post.priority === 'critical';
+                            const isImportant = post.priority === 'important';
+                            const preview = extractAnnouncementPreview(post.body, 240);
+                            const category = CATEGORY_META[post.category] || {
                                 label: post.category ? post.category.charAt(0).toUpperCase() + post.category.slice(1) : 'Notice',
                                 tone: 'text-slate-600 bg-slate-100',
                             };
-                            const dateLabel = formatRelativeDate(post.published_at);
-                            const firstImage = post.media?.find((m) => m.mime_type?.startsWith('image/')) ?? post.media?.[0] ?? null;
+                            const timeLabel = formatFeedTimestamp(post.published_at, post.published_at_human);
+
+                            // Media preview handling
+                            const images = post.media?.filter((m) => m.mime_type?.startsWith('image/')) || [];
+                            const nonImageMedia = post.media?.filter((m) => !m.mime_type?.startsWith('image/')) || [];
+                            const postDetailUrl = `/org/announcements/${post.hashid || post.id}`;
 
                             return (
-                                <Link
+                                <article
                                     key={post.id}
-                                    href={`/org/announcements/${post.hashid || post.id}`}
-                                    className={`group block p-4 sm:p-5 transition-colors duration-150 ${
-                                        isUnread ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/40 hover:bg-white'
+                                    className={`relative transition-colors duration-150 sm:rounded-2xl sm:border sm:border-slate-200/70 sm:shadow-xs ${
+                                        isUnread ? 'bg-white' : 'bg-slate-50/40 sm:bg-white'
                                     }`}
                                 >
-                                    {/* Top Metadata Row: Category, Priority, Date, Read State */}
-                                    <div className="flex items-center justify-between gap-2 text-xs">
-                                        <div className="flex items-center gap-2">
-                                            {/* Unread Accent Indicator */}
-                                            {isUnread && (
-                                                <span
-                                                    className="h-2 w-2 shrink-0 rounded-full bg-blue-600"
-                                                    title="Unread notice"
-                                                    aria-label="Unread notice"
-                                                />
+                                    {/* Critical / Security Semantic Header */}
+                                    {isCritical && (
+                                        <div className="flex items-center gap-2 border-b border-rose-100 bg-rose-50/80 px-4 py-2 text-[11px] font-semibold text-rose-800 sm:rounded-t-2xl sm:px-5">
+                                            <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
+                                            <span>Urgent Estate Advisory</span>
+                                        </div>
+                                    )}
+
+                                    {/* Main Feed Content Container */}
+                                    <div className="p-4 sm:p-5">
+                                        {/* Publisher Identity Header */}
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex items-center gap-3">
+                                                {/* Estate Avatar / Monogram */}
+                                                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold tracking-wide text-white shadow-xs">
+                                                    <span>{estateName.charAt(0).toUpperCase()}</span>
+                                                    {isUnread && (
+                                                        <span
+                                                            className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-white"
+                                                            title="Unread notice"
+                                                            aria-label="Unread notice"
+                                                        />
+                                                    )}
+                                                </div>
+
+                                                {/* Publisher Name, Provenance & Timestamp */}
+                                                <div className="min-w-0 flex-1 text-left">
+                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                        <span className="text-sm font-semibold text-slate-900 truncate">
+                                                            {post.publisher_name || estateName}
+                                                        </span>
+                                                        {isImportant && !isCritical && (
+                                                            <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.2 text-[10px] font-medium text-amber-800">
+                                                                Important
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center gap-1 text-xs text-slate-500 font-normal">
+                                                        <span>{post.publisher_role}</span>
+                                                        <span>·</span>
+                                                        <time dateTime={post.published_at || undefined} className="text-slate-400">
+                                                            {timeLabel}
+                                                        </time>
+                                                        {post.author_name && (
+                                                            <>
+                                                                <span className="hidden xs:inline text-slate-300">·</span>
+                                                                <span className="hidden xs:inline text-slate-400 truncate max-w-[120px]">
+                                                                    by {post.author_name}
+                                                                </span>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Share Button Affordance */}
+                                            <button
+                                                type="button"
+                                                onClick={(e) => handleQuickShare(e, post)}
+                                                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 active:scale-95"
+                                                title="Share notice"
+                                                aria-label="Share notice"
+                                            >
+                                                {copiedId === post.id ? (
+                                                    <Check className="h-4 w-4 text-emerald-600" />
+                                                ) : (
+                                                    <Share2 className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        {/* Announcement Title & Prose Area */}
+                                        <div className="mt-3.5">
+                                            {post.title && (
+                                                <h2 className="text-base font-semibold leading-snug tracking-tight text-slate-950 sm:text-lg">
+                                                    <Link
+                                                        href={postDetailUrl}
+                                                        className="hover:text-blue-700 hover:underline underline-offset-2 transition-colors"
+                                                    >
+                                                        {post.title}
+                                                    </Link>
+                                                </h2>
                                             )}
 
-                                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold ${category.tone}`}>
+                                            {/* Preview Excerpt */}
+                                            {preview && (
+                                                <div className="mt-2 text-sm font-normal leading-relaxed text-slate-700 sm:text-[15px]">
+                                                    <p className="whitespace-pre-line line-clamp-3">
+                                                        {preview}
+                                                    </p>
+                                                    <Link
+                                                        href={postDetailUrl}
+                                                        className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                                                    >
+                                                        <span>Read full notice</span>
+                                                        <ChevronRight className="h-3 w-3 stroke-[2.5]" />
+                                                    </Link>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Optional Media (Integrated directly into the feed item) */}
+                                        {images.length > 0 && (
+                                            <div className="mt-3.5 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+                                                <Link href={postDetailUrl} className="block group">
+                                                    {images.length === 1 ? (
+                                                        <div className="aspect-16/9 sm:aspect-2/1 w-full overflow-hidden bg-slate-100">
+                                                            <img
+                                                                src={images[0].url}
+                                                                alt={post.title || 'Notice attachment'}
+                                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                                                loading="lazy"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="grid grid-cols-2 gap-1 bg-slate-100">
+                                                            {images.slice(0, 2).map((img, idx) => (
+                                                                <div key={img.id || idx} className="relative aspect-4/3 overflow-hidden bg-slate-200">
+                                                                    <img
+                                                                        src={img.url}
+                                                                        alt={post.title || 'Notice attachment'}
+                                                                        className="h-full w-full object-cover"
+                                                                        loading="lazy"
+                                                                    />
+                                                                    {idx === 1 && images.length > 2 && (
+                                                                        <div className="absolute inset-0 flex items-center justify-center bg-slate-950/50 text-xs font-semibold text-white backdrop-blur-xs">
+                                                                            +{images.length - 2} more
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </Link>
+                                            </div>
+                                        )}
+
+                                        {/* Document Attachments indicator if any */}
+                                        {nonImageMedia.length > 0 && (
+                                            <Link
+                                                href={postDetailUrl}
+                                                className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                            >
+                                                <FileText className="h-4 w-4 text-slate-400 shrink-0" />
+                                                <span className="truncate">
+                                                    {nonImageMedia.length} document attachment{nonImageMedia.length > 1 ? 's' : ''} available
+                                                </span>
+                                                <ChevronRight className="h-3 w-3 text-slate-400 ml-auto shrink-0" />
+                                            </Link>
+                                        )}
+
+                                        {/* Bottom Metadata: Category label & tap affordance */}
+                                        <div className="mt-3.5 flex items-center justify-between pt-2 border-t border-slate-50 text-xs">
+                                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${category.tone}`}>
                                                 {category.label}
                                             </span>
 
-                                            {isUrgent && (
-                                                <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                                                    Urgent
-                                                </span>
-                                            )}
+                                            <Link
+                                                href={postDetailUrl}
+                                                className="text-[11px] font-medium text-slate-400 hover:text-slate-700 transition-colors"
+                                            >
+                                                View details
+                                            </Link>
                                         </div>
-
-                                        <span className="text-[11px] font-normal text-slate-600 tabular-nums">
-                                            {dateLabel}
-                                        </span>
                                     </div>
-
-                                    {/* Title: Intentional emphasis without excessive 4-line heavy bolding */}
-                                    <h2
-                                        className={`mt-2.5 text-base sm:text-lg leading-snug break-words transition-colors ${
-                                            isUnread
-                                                ? 'font-bold text-slate-900 group-hover:text-blue-700'
-                                                : 'font-medium text-slate-700 group-hover:text-slate-900'
-                                        }`}
-                                    >
-                                        {post.title || 'Untitled notice'}
-                                    </h2>
-
-                                    {/* Short restrained preview excerpt */}
-                                    {preview && (
-                                        <p className="mt-1.5 line-clamp-2 text-xs sm:text-sm font-normal leading-relaxed text-slate-600">
-                                            {preview}
-                                        </p>
-                                    )}
-
-                                    {/* Footer: Author, media indicator, open arrow affordance */}
-                                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-600">
-                                        <div className="flex items-center gap-2 truncate">
-                                            <span className="truncate font-medium text-slate-700">{post.author_name}</span>
-                                            {post.media_count > 0 && (
-                                                <span className="inline-flex items-center gap-1 text-[11px] font-normal text-slate-600">
-                                                    <ImageIcon className="h-3 w-3" />
-                                                    <span>{post.media_count}</span>
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <span className="inline-flex items-center gap-1 text-slate-600 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:text-slate-900">
-                                            <ChevronRight className="h-4 w-4" />
-                                        </span>
-                                    </div>
-                                </Link>
+                                </article>
                             );
                         })}
                     </div>
                 )}
 
-                {/* Pagination Controls if >15 notices */}
+                {/* 3. Pagination Controls if > 15 posts */}
                 {posts.last_page > 1 && (
-                    <div className="flex items-center justify-between gap-2 pt-2 text-xs font-medium text-slate-600">
+                    <div className="mt-6 flex items-center justify-between gap-2 px-4 py-3 text-xs font-medium text-slate-500 sm:px-0">
                         <span>
                             Page {posts.current_page} of {posts.last_page}
                         </span>
@@ -238,3 +371,4 @@ export default function Announcements({ organization, membership, posts, unread_
         </OrganizationLayout>
     );
 }
+
