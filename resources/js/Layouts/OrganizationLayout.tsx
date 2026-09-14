@@ -99,23 +99,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                     <div className="flex min-w-0 items-center gap-3 sm:gap-5">
                         <Link href="/org" className="group flex shrink-0 items-center gap-2.5">
                             <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
-                            <span className="hidden text-lg font-black tracking-tight text-[#0b4aa2] min-[360px]:inline">Kontrol</span>
-                        </Link>
-
-                        <div className="hidden h-6 w-px bg-slate-200 sm:block" />
-
-                        <Link
-                            href="/org/settings"
-                            className="min-w-0 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-2 transition-colors hover:bg-slate-100"
-                        >
-                            <span className="block max-w-[9.5rem] truncate text-sm leading-none font-bold text-slate-900 sm:max-w-[16rem]">
-                                {organization.name || 'Organization'}
-                            </span>
-                            {organization.estate_name && (
-                                <span className="mt-1 block max-w-[9.5rem] truncate text-[11px] leading-none font-normal text-slate-500 sm:max-w-[16rem]">
-                                    {organization.estate_name}
-                                </span>
-                            )}
+                            <span className="text-lg font-black tracking-tight text-[#0b4aa2]">Kontrol</span>
                         </Link>
                     </div>
 
