@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationAccessMember;
 use App\Services\Organization\AccessMemberService;
+use App\Services\Organization\ArrivalService;
 use App\Services\OrganizationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class AccessMemberController extends Controller
     public function __construct(
         private OrganizationContextService $contextService,
         private AccessMemberService $memberService,
+        private ArrivalService $arrivalService,
     ) {}
 
     public function index(Request $request): Response
@@ -25,21 +27,29 @@ class AccessMemberController extends Controller
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
         $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
 
-        $filters = $request->only(['search', 'category', 'status']);
+        $filters = $request->only(['search', 'category', 'status', 'tab']);
         $members = $this->memberService->listMembers($organization, $filters);
+        $arrivals = $this->arrivalService->getActiveArrivals($organization);
+        $metrics = $this->arrivalService->getMetrics($organization);
 
         return Inertia::render('Organization/AccessList', [
             'organization' => [
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'access_policy' => $organization->access_policy,
+                'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
+                'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
+                'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
             ],
             'membership' => [
                 'role' => $membership->role,
                 'is_admin' => $membership->isAdmin(),
             ],
             'members' => $members,
+            'arrivals' => $arrivals,
+            'metrics' => $metrics,
             'filters' => $filters,
+            'initialTab' => $request->query('tab', 'people'),
         ]);
     }
 
