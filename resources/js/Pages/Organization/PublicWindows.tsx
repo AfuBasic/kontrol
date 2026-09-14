@@ -1,9 +1,5 @@
-import { Head, useForm, router } from '@inertiajs/react';
-import {
-    Plus,
-    Trash2,
-    X,
-} from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { CalendarClock, Clock, DoorOpen, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -32,15 +28,7 @@ interface Props {
     windows: PublicWindow[];
 }
 
-const DAYS = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function PublicWindows({ organization, membership, windows }: Props) {
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -54,8 +42,9 @@ export default function PublicWindows({ organization, membership, windows }: Pro
         notes: '',
     });
 
-    const handleCreate = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleCreate = (event: React.FormEvent) => {
+        event.preventDefault();
+
         post('/org/public-windows', {
             onSuccess: () => {
                 setCreateModalOpen(false);
@@ -71,181 +60,190 @@ export default function PublicWindows({ organization, membership, windows }: Pro
     };
 
     return (
-        <OrganizationLayout title="Access - Public Times">
+        <OrganizationLayout title="Access - Public Times" contentClassName="max-w-[86rem]">
             <Head title={`${organization.name} - Public Access Times`} />
 
-            <div className="space-y-6 max-w-3xl">
-                {/* Header */}
-                <div className="flex items-baseline justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                            Public access times
-                        </h1>
-                        <p className="text-sm font-semibold text-slate-400 mt-1">
-                            Times when visitors can enter without individual access codes.
-                        </p>
-                    </div>
+            <div className="space-y-5">
+                <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="max-w-2xl">
+                            <p className="text-sm font-black text-[#0b4aa2]">Public access policy</p>
+                            <h1 className="mt-1.5 text-2xl font-black text-slate-950 sm:mt-2 sm:text-4xl">
+                                Times visitors can enter without individual codes
+                            </h1>
+                            <p className="mt-3 text-sm leading-6 font-semibold text-slate-500 sm:text-base">
+                                Use this for services, clinic hours, school runs, or other predictable access windows.
+                            </p>
+                        </div>
 
-                    {membership.is_admin && (
-                        <button
-                            type="button"
-                            onClick={() => setCreateModalOpen(true)}
-                            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Add schedule</span>
-                        </button>
-                    )}
-                </div>
-
-                {/* Sub Navigation */}
-                <AccessTabs
-                    activeTab="public_windows"
-                    hasPublicWindows={true}
-                />
-
-                {/* Editorial List */}
-                {windows.length === 0 ? (
-                    <div className="py-6 space-y-1">
-                        <p className="text-base sm:text-lg font-bold text-slate-800">
-                            No public access schedules yet.
-                        </p>
-                        <p className="text-sm text-slate-500">
-                            Add weekly service times or open hours when attendees can visit without individual passes.
-                        </p>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-slate-100">
-                        {windows.map((w) => (
-                            <div
-                                key={w.id}
-                                className="py-4 flex items-center justify-between gap-4"
+                        {membership.is_admin && (
+                            <button
+                                type="button"
+                                onClick={() => setCreateModalOpen(true)}
+                                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#0f172a] px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.20)]"
                             >
-                                <div className="space-y-0.5">
-                                    <div className="flex items-baseline gap-2 flex-wrap">
-                                        <p className="font-bold text-base text-slate-900">
-                                            {w.name}
-                                        </p>
-                                        <span className="text-xs font-semibold text-slate-500">
-                                            · {DAYS[w.day_of_week]}s, {w.start_time} – {w.end_time}
-                                        </span>
-                                        {w.is_open_now && (
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">
-                                                Open now
-                                            </span>
-                                        )}
+                                <Plus className="h-4 w-4" />
+                                Add time
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="mt-6">
+                        <AccessTabs activeTab="public_windows" hasPublicWindows={true} />
+                    </div>
+                </section>
+
+                {windows.length === 0 ? (
+                    <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-8">
+                        <div className="flex max-w-2xl gap-4">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#eaf2ff] text-[#0b4aa2]">
+                                <CalendarClock className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black tracking-tight text-slate-950">No public access times yet.</h2>
+                                <p className="mt-3 text-sm leading-6 font-semibold text-slate-500">
+                                    Add the regular windows when the estate gate should expect visitors for {organization.name}.
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+                ) : (
+                    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {windows.map((window) => (
+                            <article
+                                key={window.id}
+                                className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-5"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-700 ring-1 ring-slate-100">
+                                        <DoorOpen className="h-6 w-6" />
                                     </div>
-                                    {w.notes && (
-                                        <p className="text-xs text-slate-400">{w.notes}</p>
+                                    {window.is_open_now && (
+                                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700 ring-1 ring-emerald-100">
+                                            Open now
+                                        </span>
                                     )}
                                 </div>
+
+                                <h2 className="mt-5 text-xl font-black tracking-tight text-slate-950">{window.name}</h2>
+                                <p className="mt-3 flex items-center gap-2 text-sm font-bold text-slate-600">
+                                    <Clock className="h-4 w-4 text-slate-400" />
+                                    {DAYS[window.day_of_week]}s, {window.start_time} to {window.end_time}
+                                </p>
+                                {window.notes && <p className="mt-3 text-sm leading-6 font-semibold text-slate-500">{window.notes}</p>}
 
                                 {membership.is_admin && (
                                     <button
                                         type="button"
-                                        onClick={() => handleDelete(w.id)}
-                                        className="text-xs font-semibold text-slate-400 hover:text-rose-600 transition-colors p-1"
+                                        onClick={() => handleDelete(window.id)}
+                                        className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-2xl bg-rose-50 px-3 text-xs font-black text-rose-700 ring-1 ring-rose-100"
                                     >
+                                        <Trash2 className="h-4 w-4" />
                                         Remove
                                     </button>
                                 )}
-                            </div>
+                            </article>
                         ))}
-                    </div>
+                    </section>
                 )}
 
-                {/* Create Modal */}
                 {createModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-                        <div className="w-full max-w-md bg-white rounded-3xl p-6 space-y-4 shadow-xl text-sm">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                                <h3 className="text-base font-bold text-slate-900">Add public access schedule</h3>
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-sm sm:items-center sm:p-4">
+                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[2rem] bg-white p-5 text-sm shadow-2xl sm:p-6">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                                <div>
+                                    <h3 className="text-lg font-black text-slate-950">Add public time</h3>
+                                    <p className="mt-1 text-sm font-semibold text-slate-500">
+                                        Tell security when this destination is open to the public.
+                                    </p>
+                                </div>
                                 <button
+                                    type="button"
                                     onClick={() => setCreateModalOpen(false)}
-                                    className="p-1 rounded-lg text-slate-400 hover:text-slate-800"
+                                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-500"
                                 >
-                                    <X className="w-5 h-5" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreate} className="space-y-4">
+                            <form noValidate onSubmit={handleCreate} className="space-y-4 pt-5">
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">Schedule Name</label>
+                                    <label className="text-sm font-black text-slate-950">Schedule name</label>
                                     <input
                                         type="text"
-                                        required
-                                        placeholder="e.g. Sunday Service"
+                                        placeholder="e.g. Sunday service"
                                         value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                                        onChange={(event) => setData('name', event.target.value)}
+                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
                                     />
+                                    {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">Day of the Week</label>
+                                    <label className="text-sm font-black text-slate-950">Day</label>
                                     <select
                                         value={data.day_of_week}
-                                        onChange={(e) => setData('day_of_week', parseInt(e.target.value, 10))}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                                        onChange={(event) => setData('day_of_week', parseInt(event.target.value, 10))}
+                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
                                     >
-                                        {DAYS.map((day, idx) => (
-                                            <option key={day} value={idx}>
+                                        {DAYS.map((day, index) => (
+                                            <option key={day} value={index}>
                                                 {day}
                                             </option>
                                         ))}
                                     </select>
+                                    {errors.day_of_week && <p className="mt-1 text-xs font-bold text-rose-600">{errors.day_of_week}</p>}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">Start Time</label>
+                                        <label className="text-sm font-black text-slate-950">Start</label>
                                         <input
                                             type="time"
-                                            required
                                             value={data.start_time}
-                                            onChange={(e) => setData('start_time', e.target.value)}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                                            onChange={(event) => setData('start_time', event.target.value)}
+                                            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
                                         />
+                                        {errors.start_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.start_time}</p>}
                                     </div>
                                     <div>
-                                        <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">End Time</label>
+                                        <label className="text-sm font-black text-slate-950">End</label>
                                         <input
                                             type="time"
-                                            required
                                             value={data.end_time}
-                                            onChange={(e) => setData('end_time', e.target.value)}
-                                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                                            onChange={(event) => setData('end_time', event.target.value)}
+                                            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
                                         />
+                                        {errors.end_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.end_time}</p>}
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">
-                                        Notes <span className="text-slate-400 normal-case font-normal">(Optional)</span>
-                                    </label>
+                                    <label className="text-sm font-black text-slate-950">Notes</label>
                                     <input
                                         type="text"
-                                        placeholder="e.g. Open to all congregation members"
+                                        placeholder="e.g. Open to congregation members"
                                         value={data.notes}
-                                        onChange={(e) => setData('notes', e.target.value)}
-                                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm"
+                                        onChange={(event) => setData('notes', event.target.value)}
+                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
                                     />
+                                    {errors.notes && <p className="mt-1 text-xs font-bold text-rose-600">{errors.notes}</p>}
                                 </div>
 
-                                <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setCreateModalOpen(false)}
-                                        className="px-4 py-2 rounded-xl text-slate-500 hover:text-slate-900 font-bold text-xs"
+                                        className="rounded-2xl px-4 py-2.5 text-sm font-black text-slate-500"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={processing}
-                                        className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-xs transition-colors disabled:opacity-50"
+                                        className="rounded-2xl bg-[#0f172a] px-5 py-2.5 text-sm font-black text-white disabled:opacity-50"
                                     >
-                                        {processing ? 'Saving...' : 'Add schedule'}
+                                        {processing ? 'Saving...' : 'Add time'}
                                     </button>
                                 </div>
                             </form>
