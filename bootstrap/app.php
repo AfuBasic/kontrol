@@ -145,10 +145,6 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         Integration::handles($exceptions);
 
-        $exceptions->render(function (TokenMismatchException $e, Request $request) {
-            return back()->with('error', 'Your session expired. Please try again.');
-        });
-
         $exceptions->reportable(function (Throwable $e) {
             // Ignore noise: standard auth, validation, CSRF, and 4xx client errors
             if ($e instanceof AuthenticationException
@@ -202,7 +198,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ? $e->getStatusCode()
                 : 500;
 
-            if (in_array($statusCode, [500, 503, 404, 403, 419])) {
+            if (in_array($statusCode, [500, 503, 404, 403])) {
                 return Inertia::render('Error', [
                     'status' => $statusCode,
                     'errorDetails' => [
