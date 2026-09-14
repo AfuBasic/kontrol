@@ -61,42 +61,43 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
     ];
 
     return (
-        <nav
-            aria-label="Access workspace tabs"
-            className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0"
-        >
-            <div className="inline-flex min-w-full items-center gap-1 rounded-2xl bg-slate-100/90 p-1 sm:min-w-0">
-                {tabs.map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    const Icon = tab.icon;
-                    const content = (
-                        <>
-                            <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={isActive ? 2 : 1.75} />
-                            <span className="truncate">{tab.label}</span>
-                            {tab.badge && (
-                                <span
-                                    aria-label={tab.badgeLabel}
-                                    className={`ml-0.5 min-w-4 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none ${
-                                        tab.badgeVariant === 'warning'
-                                            ? isActive
-                                                ? 'bg-amber-100 text-amber-900'
-                                                : 'bg-amber-100/80 text-amber-900'
-                                            : isActive
-                                              ? 'bg-slate-100 text-slate-700'
-                                              : 'bg-slate-200/80 text-slate-700'
-                                    }`}
-                                >
-                                    {tab.badge}
-                                </span>
-                            )}
-                        </>
-                    );
+        <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+            <nav
+                aria-label="Access workspace tabs"
+                className="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
+                <div className="inline-flex w-max items-center gap-1.5 rounded-2xl bg-slate-100/90 p-1">
+                    {tabs.map((tab) => {
+                        const isActive = activeTab === tab.id;
+                        const Icon = tab.icon;
+                        const content = (
+                            <>
+                                <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={isActive ? 2 : 1.75} />
+                                <span className="whitespace-nowrap">{tab.label}</span>
+                                {tab.badge && (
+                                    <span
+                                        aria-label={tab.badgeLabel}
+                                        className={`ml-0.5 min-w-4 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none ${
+                                            tab.badgeVariant === 'warning'
+                                                ? isActive
+                                                    ? 'bg-amber-100 text-amber-900'
+                                                    : 'bg-amber-100/80 text-amber-900'
+                                                : isActive
+                                                  ? 'bg-slate-100 text-slate-700'
+                                                  : 'bg-slate-200/80 text-slate-700'
+                                        }`}
+                                    >
+                                        {tab.badge}
+                                    </span>
+                                )}
+                            </>
+                        );
 
-                    const tabClassName = `relative flex min-h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-medium tracking-tight whitespace-nowrap transition-all sm:min-h-10 sm:flex-none sm:px-4 sm:py-2 sm:text-sm ${
-                        isActive
-                            ? 'bg-white text-slate-950 font-semibold shadow-xs ring-1 ring-slate-900/5'
-                            : 'text-slate-500 hover:text-slate-900'
-                    }`;
+                        const tabClassName = `relative flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium tracking-tight whitespace-nowrap transition-all sm:min-h-10 sm:px-4 sm:text-sm ${
+                            isActive
+                                ? 'bg-white text-slate-950 font-semibold shadow-xs ring-1 ring-slate-900/5'
+                                : 'text-slate-500 hover:text-slate-900'
+                        }`;
 
                     if (onTabChange) {
                         return (
@@ -127,5 +128,6 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                 })}
             </div>
         </nav>
+        </div>
     );
 }
