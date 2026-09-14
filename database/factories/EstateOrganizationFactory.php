@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class EstateOrganizationFactory extends Factory
 {
-
     /**
      * Define the model's default state.
      *
