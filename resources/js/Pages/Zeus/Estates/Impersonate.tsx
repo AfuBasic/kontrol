@@ -82,7 +82,7 @@ export default function Impersonate({ estate, admins }: Props) {
 
     return (
         <ZeusLayout>
-            <Head title={`Impersonate Estate Admin — ${estate.name}`} />
+            <Head title={`Impersonate Estate Admin - ${estate.name}`} />
 
             {/* Back Link */}
             <Link
@@ -107,7 +107,7 @@ export default function Impersonate({ estate, admins }: Props) {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                                    Support Mode — Impersonate Estate Admin
+                                    Support Mode - Impersonate Estate Admin
                                 </h1>
                                 <span
                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ring-1 ring-inset ${
