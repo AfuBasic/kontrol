@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Check, ChevronRight, ImageIcon, Share2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check, ChevronRight, FileText, Share2 } from 'lucide-react';
 import React, { useState } from 'react';
 import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
 import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
@@ -16,7 +16,9 @@ interface DetailPost {
     is_read?: boolean;
     published_at: string | null;
     published_at_human: string;
-    author_name: string;
+    publisher_name: string;
+    publisher_role: string;
+    author_name: string | null;
     media?: PostMedia[];
 }
 
@@ -27,6 +29,10 @@ interface Props {
         type: string;
         estate_name?: string;
     };
+    estate?: {
+        id: number;
+        name: string;
+    };
     membership: {
         role: string;
         is_admin: boolean;
@@ -34,23 +40,25 @@ interface Props {
     post: DetailPost;
 }
 
-const CATEGORY_STYLES: Record<string, { label: string; tone: string }> = {
-    general: { label: 'Update', tone: 'text-slate-600 bg-slate-100' },
-    meeting: { label: 'Meeting', tone: 'text-blue-700 bg-blue-50/90' },
-    maintenance: { label: 'Maintenance', tone: 'text-amber-800 bg-amber-50/90' },
-    security: { label: 'Security', tone: 'text-rose-700 bg-rose-50/90' },
-    event: { label: 'Event', tone: 'text-purple-700 bg-purple-50/90' },
+const CATEGORY_META: Record<string, { label: string; tone: string }> = {
+    general: { label: 'Notice', tone: 'text-slate-600 bg-slate-100' },
+    meeting: { label: 'Meeting', tone: 'text-sky-700 bg-sky-50' },
+    maintenance: { label: 'Maintenance', tone: 'text-amber-700 bg-amber-50' },
+    security: { label: 'Security', tone: 'text-rose-700 bg-rose-50' },
+    event: { label: 'Community Event', tone: 'text-indigo-700 bg-indigo-50' },
 };
 
-export default function AnnouncementDetail({ organization, post }: Props) {
+export default function AnnouncementDetail({ organization, estate, post }: Props) {
+    const estateName = estate?.name || organization.estate_name || 'Golden Heights';
     const [copied, setCopied] = useState(false);
 
-    const category = CATEGORY_STYLES[post.category] || {
+    const category = CATEGORY_META[post.category] || {
         label: post.category ? post.category.charAt(0).toUpperCase() + post.category.slice(1) : 'Notice',
         tone: 'text-slate-600 bg-slate-100',
     };
 
-    const isUrgent = post.priority === 'critical' || post.priority === 'important';
+    const isCritical = post.priority === 'critical';
+    const isImportant = post.priority === 'important';
 
     const formattedDate = post.published_at
         ? new Date(post.published_at).toLocaleDateString('en-GB', {
@@ -63,7 +71,7 @@ export default function AnnouncementDetail({ organization, post }: Props) {
     const handleShare = async () => {
         const shareData = {
             title: post.title || 'Estate Announcement',
-            text: `Notice from ${post.author_name}: ${post.title || ''}`,
+            text: `${post.publisher_name || estateName}: ${post.title || ''}`,
             url: window.location.href,
         };
 
@@ -85,29 +93,29 @@ export default function AnnouncementDetail({ organization, post }: Props) {
     };
 
     return (
-        <OrganizationLayout title="Announcement" contentClassName="max-w-2xl">
-            <Head title={`${post.title || 'Announcement'} - ${organization.name}`} />
+        <OrganizationLayout title="Announcement" contentClassName="max-w-2xl px-4">
+            <Head title={`${post.title || 'Announcement'} - ${estateName}`} />
 
-            <div className="space-y-6 pb-20">
-                {/* Back Link & Contextual Action */}
-                <div className="flex items-center justify-between gap-3 pt-1">
+            <div className="space-y-6 pb-24 text-left">
+                {/* 1. Subtle Navigation Bar: Back link + Share */}
+                <div className="flex items-center justify-between gap-3 pt-2">
                     <Link
                         href="/org/announcements"
-                        className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 transition-colors hover:text-slate-900 active:scale-95"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-900 active:scale-95"
                     >
-                        <ArrowLeft className="h-4 w-4" />
+                        <ArrowLeft className="h-4 w-4 stroke-[2.2]" />
                         <span>Announcements</span>
                     </Link>
 
                     <button
                         type="button"
                         onClick={handleShare}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 shadow-xs transition-colors hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-xs transition-colors hover:bg-slate-50 hover:text-slate-900 active:scale-95"
                     >
                         {copied ? (
                             <>
                                 <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                <span className="text-emerald-700">Copied</span>
+                                <span className="text-emerald-700">Link Copied</span>
                             </>
                         ) : (
                             <>
@@ -118,44 +126,69 @@ export default function AnnouncementDetail({ organization, post }: Props) {
                     </button>
                 </div>
 
-                {/* Editorial Reading Surface */}
-                <article className="space-y-6 text-left">
-                    {/* Meta Header */}
-                    <div className="space-y-3">
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold ${category.tone}`}>
+                {/* 2. Critical Alert Banner if applicable */}
+                {isCritical && (
+                    <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-800">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+                        <span>Urgent Estate Advisory</span>
+                    </div>
+                )}
+
+                {/* 3. The Article itself is the reading surface (No enclosing giant card) */}
+                <article className="space-y-6">
+                    {/* Publisher Header Block */}
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold tracking-wide text-white shadow-xs">
+                            {estateName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-slate-900">
+                                    {post.publisher_name || estateName}
+                                </span>
+                                {isImportant && !isCritical && (
+                                    <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+                                        Important
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                                <span>{post.publisher_role}</span>
+                                <span>·</span>
+                                <time dateTime={post.published_at || undefined}>
+                                    {formattedDate} ({post.published_at_human})
+                                </time>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Metadata & Title */}
+                    <div className="space-y-2 border-t border-slate-100 pt-5">
+                        <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${category.tone}`}>
                                 {category.label}
                             </span>
-                            {isUrgent && (
-                                <span className="inline-flex items-center rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                                    Urgent Notice
+                            {post.author_name && (
+                                <span className="text-xs text-slate-400">
+                                    Posted by {post.author_name}
                                 </span>
                             )}
-                            <span className="text-slate-300">·</span>
-                            <time className="text-slate-500 font-normal">{formattedDate}</time>
                         </div>
 
-                        {/* Title - comfortable scale, not oversized */}
-                        <h1 className="text-xl font-bold tracking-tight text-slate-950 sm:text-2xl lg:text-3xl leading-snug [overflow-wrap:anywhere] break-words">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl leading-snug [overflow-wrap:anywhere] break-words">
                             {post.title || 'Untitled notice'}
                         </h1>
-
-                        {/* Author & Timestamp */}
-                        <div className="flex items-center gap-2 pt-1 text-xs text-slate-500">
-                            <span className="font-medium text-slate-800">{post.author_name}</span>
-                            <span>·</span>
-                            <span>{post.published_at_human}</span>
-                        </div>
                     </div>
-
-                    <div className="h-px w-full bg-slate-100" />
 
                     {/* Clean Prose Body */}
-                    <div className="text-slate-800">
-                        <AnnouncementProse html={post.body} className="prose-p:text-sm sm:prose-p:text-base prose-p:leading-7 prose-p:text-slate-700" />
+                    <div className="text-slate-800 pt-1">
+                        <AnnouncementProse
+                            html={post.body}
+                            className="prose-p:text-base prose-p:leading-7 prose-p:text-slate-700 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900"
+                        />
                     </div>
 
-                    {/* Media Attachments */}
+                    {/* Media Attachments & Lightbox */}
                     {post.media && post.media.length > 0 && (
                         <div className="border-t border-slate-100 pt-6">
                             <AnnouncementAttachments media={post.media} />
@@ -166,3 +199,4 @@ export default function AnnouncementDetail({ organization, post }: Props) {
         </OrganizationLayout>
     );
 }
+
