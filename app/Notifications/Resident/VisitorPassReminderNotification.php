@@ -6,7 +6,6 @@ use App\Channels\TelegramChannel;
 use App\Models\AccessCode;
 use App\Models\VisitorPassReminder;
 use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -78,12 +77,12 @@ class VisitorPassReminderNotification extends Notification implements ShouldQueu
             }
 
             $message = $hasName
-                ? "Just a reminder — you're expecting {$rawName} at {$startTime} {$dayPhrase}."
-                : "Just a reminder — you're expecting your visitor at {$startTime} {$dayPhrase}.";
+                ? "Just a reminder: you're expecting {$rawName} at {$startTime} {$dayPhrase}."
+                : "Just a reminder: you're expecting your visitor at {$startTime} {$dayPhrase}.";
         } else {
             $message = $hasName
-                ? "Just a reminder — you're expecting {$rawName} soon."
-                : "Just a reminder — you're expecting your visitor soon.";
+                ? "Just a reminder: you're expecting {$rawName} soon."
+                : "Just a reminder: you're expecting your visitor soon.";
         }
 
         return [
