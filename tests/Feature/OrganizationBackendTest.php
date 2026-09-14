@@ -357,6 +357,8 @@ test('organization portal routes render successfully for authorized organization
     $this->get(route('org.credentials.index'))->assertOk();
     $this->get(route('org.arrivals.index'))->assertOk();
     $this->get(route('org.public-windows.index'))->assertOk();
+    $this->get(route('org.payments.index'))->assertOk();
+    $this->get(route('org.announcements.index'))->assertOk();
     $this->get(route('org.settings.index'))->assertOk();
 });
 
