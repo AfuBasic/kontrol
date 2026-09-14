@@ -134,7 +134,7 @@ function formatCommission(rate: string | number, type: string): string {
 }
 
 function formatDate(isoString: string | null | undefined): string {
-    if (!isoString) return '—';
+    if (!isoString) return '-';
     try {
         return new Date(isoString).toLocaleDateString('en-NG', {
             year: 'numeric',
@@ -596,7 +596,7 @@ export default function PartnerShow({
                                                             {formatDate(earning.settled_at)}
                                                         </td>
                                                         <td className="px-6 py-4 text-right font-mono text-xs text-[#9297A8]">
-                                                            {earning.payment_reference_masked || '—'}
+                                                            {earning.payment_reference_masked || '-'}
                                                         </td>
                                                     </tr>
                                                 ))
