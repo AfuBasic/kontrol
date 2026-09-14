@@ -1,20 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import {
-    Home,
-    KeyRound,
-    CreditCard,
-    Megaphone,
-    User,
-    LogOut,
-    Bell,
-    ChevronDown,
-} from 'lucide-react';
+import { Bell, ChevronDown, CreditCard, Home, KeyRound, LogOut, Megaphone, User } from 'lucide-react';
 import React, { type ReactNode, useEffect, useState } from 'react';
 
 interface Props {
     children: ReactNode;
     title?: string;
+    contentClassName?: string;
 }
 
 interface NavItem {
@@ -24,13 +16,12 @@ interface NavItem {
     exact?: boolean;
 }
 
-export default function OrganizationLayout({ children, title }: Props) {
+export default function OrganizationLayout({ children, title: _title, contentClassName = 'max-w-7xl' }: Props) {
     const page = usePage();
     const { url } = page;
     const props = page.props as any;
 
     const organization = props.organization || {};
-    const membership = props.membership || { role: 'member', is_admin: false };
     const auth = props.auth || {};
     const user = auth.user || {};
 
@@ -91,126 +82,119 @@ export default function OrganizationLayout({ children, title }: Props) {
     const userFirstName = user.name ? user.name.split(' ')[0] : 'Account';
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
-            {/* Horizontal Product Header */}
-            <header className="sticky top-0 z-40 h-16 border-b border-slate-100 bg-white/95 backdrop-blur-md px-4 sm:px-8 flex items-center justify-between">
-                <div className="flex items-center gap-6 sm:gap-8">
-                    {/* Brand & Organization Context */}
-                    <div className="flex items-center gap-3">
-                        <Link href="/org" className="flex items-center gap-2 group">
-                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-7 w-auto object-contain" />
-                            <span className="text-lg font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors">
-                                Kontrol
-                            </span>
+        <div className="flex min-h-screen flex-col bg-[#f6f8fb] font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
+            <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/[0.92] px-3 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur-xl sm:px-6 lg:px-10">
+                <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+                        <Link href="/org" className="group flex shrink-0 items-center gap-2.5">
+                            <img src="/assets/images/icon.png" alt="Kontrol" className="h-8 w-auto object-contain" />
+                            <span className="hidden text-lg font-black tracking-tight text-[#0b4aa2] min-[360px]:inline">Kontrol</span>
                         </Link>
 
-                        <div className="h-4 w-px bg-slate-200" />
+                        <div className="hidden h-6 w-px bg-slate-200 sm:block" />
 
-                        <div className="flex items-baseline gap-1.5 min-w-0">
-                            <span className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-[120px] sm:max-w-[180px]">
+                        <Link
+                            href="/org/settings"
+                            className="min-w-0 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-2 transition-colors hover:bg-slate-100"
+                        >
+                            <span className="block max-w-[9.5rem] truncate text-sm leading-none font-black text-slate-950 sm:max-w-[16rem]">
                                 {organization.name || 'Organization'}
                             </span>
                             {organization.estate_name && (
-                                <span className="text-[11px] sm:text-xs text-slate-400 font-medium truncate max-w-[100px] sm:max-w-[150px] hidden xs:inline">
-                                    · {organization.estate_name}
+                                <span className="mt-1 block max-w-[9.5rem] truncate text-[11px] leading-none font-semibold text-slate-500 sm:max-w-[16rem]">
+                                    {organization.estate_name}
                                 </span>
                             )}
-                        </div>
+                        </Link>
                     </div>
 
-                    {/* Desktop Horizontal Navigation */}
-                    <nav className="hidden md:flex items-center gap-1">
+                    <nav className="hidden items-center gap-1 rounded-full bg-slate-100/80 p-1 lg:flex">
                         {navItems.map((item) => {
                             const active = isActive(item);
+                            const Icon = item.icon;
+
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                                    className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-black transition-all ${
                                         active
-                                            ? 'bg-slate-900 text-white shadow-xs'
-                                            : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70'
+                                            ? 'bg-white text-[#0b4aa2] shadow-[0_6px_18px_rgba(15,23,42,0.08)]'
+                                            : 'text-slate-500 hover:bg-white/60 hover:text-slate-900'
                                     }`}
                                 >
-                                    {item.name}
+                                    <Icon className="h-4 w-4" strokeWidth={active ? 2.6 : 2.1} />
+                                    <span>{item.name === 'Announcements' ? 'News' : item.name}</span>
                                 </Link>
                             );
                         })}
                     </nav>
-                </div>
 
-                {/* Right controls: Notifications & User / Account Dropdown */}
-                <div className="flex items-center gap-3">
-                    <Link
-                        href="/org/announcements"
-                        className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100/70 transition-colors"
-                        title="Announcements & Bulletins"
-                    >
-                        <Bell className="h-5 w-5 text-slate-500" />
-                    </Link>
-
-                    {/* Desktop User Dropdown */}
-                    <div className="relative hidden sm:block">
-                        <button
-                            type="button"
-                            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                            className="flex items-center gap-2 rounded-full py-1 pl-2 pr-3 hover:bg-slate-100/70 transition-colors"
+                    <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+                        <Link
+                            href="/org/announcements"
+                            className="relative rounded-2xl p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                            title="Announcements & Bulletins"
                         >
-                            <div className="h-7 w-7 rounded-full bg-indigo-50 font-bold text-indigo-600 ring-1 ring-indigo-100 flex items-center justify-center text-xs">
-                                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                            </div>
-                            <span className="text-xs font-bold text-slate-800 max-w-[120px] truncate">
-                                {userFirstName}
-                            </span>
-                            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                        </button>
+                            <Bell className="h-5 w-5 text-slate-500" />
+                        </Link>
 
-                        {userDropdownOpen && (
-                            <>
-                                <div
-                                    className="fixed inset-0 z-40"
-                                    onClick={() => setUserDropdownOpen(false)}
-                                />
-                                <div className="absolute right-0 mt-2 w-52 rounded-2xl bg-white p-2 shadow-xl ring-1 ring-black/5 z-50 text-xs">
-                                    <div className="px-3 py-2 border-b border-slate-100">
-                                        <p className="font-bold text-slate-900 truncate">{user.name}</p>
-                                        <p className="text-slate-400 truncate">{user.email}</p>
-                                    </div>
-                                    <div className="py-1">
-                                        <Link
-                                            href="/org/settings"
-                                            onClick={() => setUserDropdownOpen(false)}
-                                            className="block px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium"
-                                        >
-                                            Profile & Team
-                                        </Link>
-                                        <Link
-                                            href="/logout"
-                                            method="post"
-                                            as="button"
-                                            className="w-full text-left px-3 py-2 rounded-xl text-rose-600 hover:bg-rose-50 font-medium flex items-center justify-between"
-                                        >
-                                            <span>Sign out</span>
-                                            <LogOut className="w-3.5 h-3.5" />
-                                        </Link>
-                                    </div>
+                        <div className="relative hidden sm:block">
+                            <button
+                                type="button"
+                                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                className="flex items-center gap-2 rounded-2xl py-1.5 pr-3 pl-1.5 transition-colors hover:bg-slate-100"
+                            >
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dbeafe] text-xs font-black text-[#0b4aa2] ring-1 ring-[#bfdbfe]">
+                                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                 </div>
-                            </>
-                        )}
+                                <span className="max-w-[120px] truncate text-xs font-black text-slate-800">{userFirstName}</span>
+                                <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                            </button>
+
+                            {userDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setUserDropdownOpen(false)} />
+                                    <div className="absolute right-0 z-50 mt-2 w-56 rounded-3xl bg-white p-2 text-xs shadow-[0_24px_70px_rgba(15,23,42,0.18)] ring-1 ring-black/5">
+                                        <div className="border-b border-slate-100 px-3 py-2.5">
+                                            <p className="truncate font-bold text-slate-900">{user.name}</p>
+                                            <p className="truncate text-slate-400">{user.email}</p>
+                                        </div>
+                                        <div className="py-1">
+                                            <Link
+                                                href="/org/settings"
+                                                onClick={() => setUserDropdownOpen(false)}
+                                                className="block rounded-2xl px-3 py-2.5 font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                            >
+                                                Profile & Team
+                                            </Link>
+                                            <Link
+                                                href="/logout"
+                                                method="post"
+                                                as="button"
+                                                className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left font-bold text-rose-600 hover:bg-rose-50"
+                                            >
+                                                <span>Sign out</span>
+                                                <LogOut className="h-3.5 w-3.5" />
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
             </header>
 
-            {/* Main Content Area */}
-            <main className="flex-1 px-4 sm:px-8 py-6 sm:py-8 pb-28 md:pb-12">
-                <div className="max-w-4xl mx-auto space-y-6">
+            <main className="w-full flex-1 px-3 py-5 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-7 lg:px-10 lg:pb-12">
+                <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
                     {props.flash?.success && (
-                        <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-900 shadow-xs sm:text-sm">
                             <span>{props.flash.success}</span>
                         </div>
                     )}
                     {props.flash?.error && (
-                        <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200/80 text-rose-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+                        <div className="flex items-center justify-between rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-900 shadow-xs sm:text-sm">
                             <span>{props.flash.error}</span>
                         </div>
                     )}
@@ -219,17 +203,16 @@ export default function OrganizationLayout({ children, title }: Props) {
                 </div>
             </main>
 
-            {/* Mobile Floating Bottom Navigation (matches Resident shell) */}
             <div
                 data-mobile-bottom-nav
-                className="pointer-events-none fixed inset-x-0 bottom-6 z-40 px-4 transition-opacity duration-150 md:hidden"
+                className="pointer-events-none fixed inset-x-0 bottom-[calc(0.8rem+env(safe-area-inset-bottom,0px))] z-40 px-3 transition-opacity duration-150 lg:hidden"
             >
                 <motion.nav
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="pointer-events-auto mx-auto max-w-sm rounded-[32px] bg-white/90 shadow-[0_8px_32px_rgba(0,0,0,0.08)] ring-1 ring-black/5 backdrop-blur-2xl px-2 py-1.5"
+                    className="pointer-events-auto mx-auto w-full max-w-[26rem] rounded-[26px] border border-white/70 bg-white/[0.94] px-1.5 py-1.5 shadow-[0_16px_50px_rgba(15,23,42,0.16)] ring-1 ring-slate-900/5 backdrop-blur-xl"
                 >
-                    <div className="flex items-center justify-around">
+                    <div className="grid grid-cols-5 items-center gap-1">
                         {navItems.map((item) => {
                             const active = isActive(item);
                             const Icon = item.icon;
@@ -237,28 +220,19 @@ export default function OrganizationLayout({ children, title }: Props) {
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className="group relative flex flex-1 flex-col items-center gap-0.5 py-1"
+                                    className={`group relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[20px] px-1 py-1.5 transition-all active:scale-95 ${
+                                        active ? 'bg-[#eaf2ff] text-[#0b4aa2]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                    }`}
                                 >
-                                    <div
-                                        className={`rounded-xl p-1.5 transition-all ${
-                                            active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600'
-                                        }`}
-                                    >
-                                        <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
-                                    </div>
+                                    {active && <span className="absolute top-1.5 h-1 w-6 rounded-full bg-[#2f80ed]" />}
+                                    <Icon className="mt-1 h-5 w-5 transition-colors" strokeWidth={active ? 2.6 : 2.1} />
                                     <span
-                                        className={`text-[10px] tracking-tight transition-colors ${
-                                            active ? 'font-bold text-slate-900' : 'font-medium text-slate-400'
+                                        className={`max-w-full truncate text-[10px] leading-tight tracking-tight transition-colors ${
+                                            active ? 'font-black text-slate-950' : 'font-bold text-slate-500'
                                         }`}
                                     >
                                         {item.name === 'Announcements' ? 'News' : item.name}
                                     </span>
-                                    {active && (
-                                        <motion.div
-                                            layoutId="orgNavIndicator"
-                                            className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-600"
-                                        />
-                                    )}
                                 </Link>
                             );
                         })}
