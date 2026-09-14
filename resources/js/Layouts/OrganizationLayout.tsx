@@ -224,8 +224,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                         active ? 'bg-[#eaf2ff] text-[#0b4aa2]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                                     }`}
                                 >
-                                    {active && <span className="absolute top-1.5 h-1 w-6 rounded-full bg-[#2f80ed]" />}
-                                    <Icon className="mt-1 h-5 w-5 transition-colors" strokeWidth={active ? 2.6 : 2.1} />
+                                    <Icon className="h-5 w-5 transition-colors" strokeWidth={active ? 2.6 : 2.1} />
                                     <span
                                         className={`max-w-full truncate text-[10px] leading-tight tracking-tight transition-colors ${
                                             active ? 'font-black text-slate-950' : 'font-bold text-slate-500'
