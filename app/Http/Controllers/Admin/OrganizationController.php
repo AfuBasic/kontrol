@@ -29,6 +29,7 @@ class OrganizationController extends Controller
 
         $search = $request->input('search');
         $type = $request->input('type');
+        $status = $request->input('status');
 
         $organizations = EstateOrganization::where('estate_id', $estate->id)
             ->with([
@@ -37,12 +38,21 @@ class OrganizationController extends Controller
                         ->where('is_active', true)
                         ->with('user.profile');
                 },
+                'publicWindows' => function ($query) {
+                    $query->where('is_active', true)
+                        ->orderBy('day_of_week')
+                        ->orderBy('start_time');
+                },
             ])
+            ->withCount('accessMembers')
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->when($type && $type !== 'all', function ($query) use ($type) {
                 $query->where('type', $type);
+            })
+            ->when($status && $status !== 'all', function ($query) use ($status) {
+                $query->where('is_active', $status === 'active');
             })
             ->latest()
             ->paginate(15)
@@ -53,6 +63,7 @@ class OrganizationController extends Controller
             'filters' => [
                 'search' => $search,
                 'type' => $type ?? 'all',
+                'status' => $status ?? 'all',
             ],
         ]);
     }
