@@ -48,9 +48,9 @@ class HistoryController extends Controller
                             ->orWhere('visitor_name', 'like', "%{$search}%")
                             ->orWhere('visitor_phone', 'like', "%{$search}%");
                     })
-                    ->orWhere('meta->tag', 'like', "%{$search}%")
-                    ->orWhere('meta->visitor_name', 'like', "%{$search}%")
-                    ->orWhere('meta->organization_name', 'like', "%{$search}%");
+                        ->orWhere('meta->tag', 'like', "%{$search}%")
+                        ->orWhere('meta->visitor_name', 'like', "%{$search}%")
+                        ->orWhere('meta->organization_name', 'like', "%{$search}%");
                 });
             })
             ->when($filters['date'] ?? null, function ($query, $date) {
