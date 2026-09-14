@@ -94,7 +94,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f6f8fb] font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
-            <header className="sticky top-0 z-40 border-b border-slate-200/70 bg-white/[0.92] px-3 pt-[env(safe-area-inset-top,0px)] shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur-xl sm:px-6 lg:px-10">
+            <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200/70 bg-white/[0.94] px-3 pt-[var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))] shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur-xl sm:px-6 lg:px-10">
                 <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3 sm:gap-5">
                         <Link href="/org" className="group flex shrink-0 items-center gap-2.5">
@@ -181,7 +181,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                 </div>
             </header>
 
-            <main className="w-full flex-1 px-3 py-5 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-7 lg:px-10 lg:pb-12">
+            <main className="w-full flex-1 px-3 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:px-10 lg:pb-12">
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
                         {props.flash?.success && (
