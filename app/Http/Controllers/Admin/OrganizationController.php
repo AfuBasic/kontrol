@@ -51,8 +51,29 @@ class OrganizationController extends Controller
             ->when($type && $type !== 'all', function ($query) use ($type) {
                 $query->where('type', $type);
             })
-            ->when($status && $status !== 'all', function ($query) use ($status) {
-                $query->where('is_active', $status === 'active');
+            ->when($status === 'pending', function ($query) {
+                $query->whereHas('memberships', function ($mQuery) {
+                    $mQuery->where('role', 'admin')
+                        ->where('is_active', true)
+                        ->whereHas('user', function ($uQuery) {
+                            $uQuery->whereNull('email_verified_at')
+                                ->whereNull('google_id');
+                        });
+                });
+            })
+            ->when($status === 'active', function ($query) {
+                $query->where('is_active', true)
+                    ->whereDoesntHave('memberships', function ($mQuery) {
+                        $mQuery->where('role', 'admin')
+                            ->where('is_active', true)
+                            ->whereHas('user', function ($uQuery) {
+                                $uQuery->whereNull('email_verified_at')
+                                    ->whereNull('google_id');
+                            });
+                    });
+            })
+            ->when($status === 'inactive', function ($query) {
+                $query->where('is_active', false);
             })
             ->latest()
             ->paginate(15)
