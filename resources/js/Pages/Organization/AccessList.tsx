@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { Check, ChevronRight, Copy, Plus, Search, Users, X } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, Clock, Copy, MapPin, Plus, Radio, Search, ShieldCheck, UserCheck, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -31,28 +31,69 @@ interface PaginatedMembers {
     links: Array<{ url: string | null; label: string; active: boolean }>;
 }
 
+interface Arrival {
+    id: number;
+    tag: string | null;
+    visitor_name: string;
+    admission_basis: string;
+    vehicle_plate_number: string | null;
+    vehicle_make: string | null;
+    vehicle_model: string | null;
+    entry_point: string | null;
+    verified_at: string | null;
+    verified_at_human: string | null;
+    confirmed_at: string | null;
+    confirmed_at_human: string | null;
+    confirmation_state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE';
+    is_overdue: boolean;
+    verified_by: { id: number; name: string } | null;
+    confirmed_by: { id: number; name: string } | null;
+    member: {
+        id: number;
+        name: string;
+        identifier: string | null;
+        category: string;
+    } | null;
+}
+
+interface Metrics {
+    currently_inside: number;
+    pending_confirmation: number;
+    overdue_confirmation: number;
+    confirmed: number;
+    confirmation_required: boolean;
+}
+
 interface Props {
     organization: {
         id: number;
         name: string;
         access_policy: string;
+        arrival_confirmation_required?: boolean;
+        confirmation_window_minutes?: number;
+        confirmation_escalation?: string;
     };
     membership: {
         role: string;
         is_admin: boolean;
     };
     members: PaginatedMembers;
+    arrivals?: Arrival[];
+    metrics?: Metrics;
     filters: {
         search?: string;
         category?: string;
         status?: string;
+        tab?: string;
     };
+    initialTab?: 'people' | 'arrivals' | 'history' | 'public_windows';
 }
 
 const categoryOptions = ['all', 'staff', 'parent', 'student', 'member', 'contractor', 'visitor'];
 const statusOptions = ['all', 'active', 'suspended'];
 
-export default function AccessList({ organization, membership, members, filters }: Props) {
+export default function AccessList({ organization, membership, members, arrivals = [], metrics, filters, initialTab = 'people' }: Props) {
+    const [activeTab, setActiveTab] = useState<'people' | 'arrivals' | 'history' | 'public_windows'>(initialTab);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
@@ -71,7 +112,14 @@ export default function AccessList({ organization, membership, members, filters 
     const hasPublicWindows = organization.access_policy === 'public_window';
     const activeMembers = members.data.filter((member) => member.status === 'active').length;
     const suspendedMembers = members.data.filter((member) => member.status === 'suspended').length;
-    const credentialedMembers = members.data.filter((member) => member.active_credential).length;
+
+    const pendingArrivals = arrivals.filter(
+        (arrival) => arrival.confirmation_state === 'PENDING' || arrival.confirmation_state === 'OVERDUE',
+    );
+    const confirmedArrivals = arrivals.filter(
+        (arrival) => arrival.confirmation_state !== 'PENDING' && arrival.confirmation_state !== 'OVERDUE',
+    );
+    const pendingTotal = (metrics?.pending_confirmation ?? 0) + (metrics?.overdue_confirmation ?? 0);
 
     const initialsFor = (name: string) =>
         name
@@ -81,6 +129,35 @@ export default function AccessList({ organization, membership, members, filters 
             .map((part) => part[0])
             .join('')
             .toUpperCase();
+
+    const arrivalDetailLine = (arrival: Arrival) => {
+        const parts = [
+            arrival.entry_point || 'Gate',
+            arrival.verified_at_human ? `arrived ${arrival.verified_at_human}` : 'arrived recently',
+            arrival.vehicle_plate_number ? arrival.vehicle_plate_number.toUpperCase() : null,
+        ].filter(Boolean);
+
+        return parts.join(' · ');
+    };
+
+    const handleConfirmArrival = (id: number) => {
+        router.post(`/org/arrivals/${id}/confirm`, {}, { preserveScroll: true });
+    };
+
+    const handleTabChange = (nextTab: 'people' | 'arrivals' | 'history' | 'public_windows') => {
+        if (nextTab === 'history') {
+            router.get('/org/arrivals/history');
+            return;
+        }
+        if (nextTab === 'public_windows') {
+            router.get('/org/public-windows');
+            return;
+        }
+
+        setActiveTab(nextTab);
+        const url = nextTab === 'arrivals' ? '/org/access-list?tab=arrivals' : '/org/access-list';
+        window.history.replaceState(null, '', url);
+    };
 
     const applyFilters = (next?: { search?: string; category?: string; status?: string }) => {
         const query = {
@@ -142,163 +219,313 @@ export default function AccessList({ organization, membership, members, filters 
                 </div>
 
                 {/* Internal Navigation: People, Arrivals, History */}
-                <AccessTabs activeTab="people" hasPublicWindows={hasPublicWindows} />
+                <AccessTabs
+                    activeTab={activeTab}
+                    hasPublicWindows={hasPublicWindows}
+                    pendingCount={pendingTotal}
+                    activeCount={arrivals.length}
+                    onTabChange={handleTabChange}
+                />
 
-                {/* Content Section: Directory or Empty State */}
-                {members.total === 0 && !search && category === 'all' && status === 'all' ? (
-                    /* Clean native empty state */
-                    <div className="rounded-2xl border border-slate-200/70 bg-white p-6 sm:p-10 text-center">
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                            <Users className="h-6 w-6" strokeWidth={1.75} />
-                        </div>
-                        <h2 className="mt-4 text-lg font-semibold text-slate-900 sm:text-xl">No one has been added yet</h2>
-                        <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
-                            Add staff, parents, contractors, or anyone who regularly needs access to {organization.name}.
-                        </p>
-                        {membership.is_admin && (
-                            <div className="mt-6">
-                                <button
-                                    type="button"
-                                    onClick={() => setCreateModalOpen(true)}
-                                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 active:scale-[0.98]"
-                                >
-                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
-                                    <span>Add someone</span>
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    /* Directory with search, filters, and list */
-                    <div className="space-y-3.5">
-                        {/* Native Search Field - No heavy outer wrapper */}
-                        <div className="relative">
-                            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="search"
-                                value={search}
-                                onChange={(event) => {
-                                    setSearch(event.target.value);
-                                    applyFilters({ search: event.target.value });
-                                }}
-                                placeholder="Search by name or ID"
-                                className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                            />
-                        </div>
-
-                        {/* Streamlined Quick Filters */}
-                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                            {[
-                                { id: 'all', label: 'All' },
-                                { id: 'staff', label: 'Staff' },
-                                { id: 'parent', label: 'Parents' },
-                                { id: 'contractor', label: 'Contractors' },
-                                { id: 'student', label: 'Students' },
-                                { id: 'visitor', label: 'Visitors' },
-                            ].map((tab) => {
-                                const isSelected = category === tab.id;
-                                return (
-                                    <button
-                                        key={tab.id}
-                                        type="button"
-                                        onClick={() => {
-                                            const nextCategory = isSelected ? 'all' : tab.id;
-                                            setCategory(nextCategory);
-                                            applyFilters({ category: nextCategory });
-                                        }}
-                                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                                            isSelected
-                                                ? 'bg-slate-900 text-white'
-                                                : 'border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                    >
-                                        {tab.label}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        {/* Quiet Directory Count */}
-                        <div className="flex items-center justify-between px-1 pt-1 text-xs font-medium text-slate-500">
+                {/* Tab Panel: Arrivals */}
+                {activeTab === 'arrivals' && (
+                    <div className="space-y-4">
+                        {/* Quiet Arrivals Summary */}
+                        <div className="flex items-center justify-between px-1 text-xs font-medium text-slate-500">
                             <span>
-                                {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
-                                {activeMembers > 0 && ` · ${activeMembers} active`}
+                                {arrivals.length} {arrivals.length === 1 ? 'VISITOR HERE' : 'VISITORS HERE'}
+                                {pendingTotal > 0 && ` · ${pendingTotal} need confirmation`}
                             </span>
-                            {suspendedMembers > 0 && (
-                                <span className="text-rose-600">{suspendedMembers} suspended</span>
-                            )}
                         </div>
 
-                        {/* People Directory List: Clean Rows with subtle dividers */}
-                        {members.data.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center text-sm text-slate-500">
-                                No matching people found. Try clearing your search or filter.
+                        {arrivals.length === 0 ? (
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 sm:p-10 text-center">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                                    <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
+                                </div>
+                                <h2 className="mt-4 text-lg font-semibold text-slate-900">No active arrivals</h2>
+                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                                    Security has not checked anyone in for {organization.name}. When someone arrives at the gate, they will appear here.
+                                </p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                {members.data.map((member) => (
-                                    <div
-                                        key={member.id}
-                                        className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
-                                    >
-                                        <div className="flex min-w-0 items-center gap-3">
-                                            {/* Avatar Initials */}
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
-                                                {initialsFor(member.name)}
-                                            </div>
-
-                                            {/* Identity & Status */}
-                                            <div className="min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="truncate text-sm font-semibold text-slate-900">
-                                                        {member.name}
-                                                    </span>
-                                                    {member.status === 'suspended' ? (
-                                                        <span className="inline-flex shrink-0 items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
-                                                            Suspended
-                                                        </span>
-                                                    ) : !member.is_valid_now ? (
-                                                        <span className="inline-flex shrink-0 items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                                                            Pending
-                                                        </span>
-                                                    ) : null}
-                                                </div>
-                                                <p className="mt-0.5 truncate text-xs text-slate-500">
-                                                    <span className="capitalize">{member.category}</span>
-                                                    {member.identifier ? ` · ${member.identifier}` : ''}
-                                                    {member.valid_until ? ` · Until ${member.valid_until}` : ' · Ongoing'}
-                                                </p>
-                                            </div>
+                            <div className="space-y-4">
+                                {/* Needs confirmation section */}
+                                {pendingArrivals.length > 0 && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-1.5 px-1 text-xs font-semibold text-amber-800">
+                                            <AlertTriangle className="h-3.5 w-3.5" />
+                                            <span>Needs confirmation ({pendingArrivals.length})</span>
                                         </div>
 
-                                        {/* Right Action Affordance: Code & Chevron */}
-                                        <div className="flex shrink-0 items-center gap-2">
-                                            {member.active_credential ? (
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="rounded-lg bg-slate-50 px-2 py-1 font-mono text-xs font-semibold tracking-wide text-slate-900 ring-1 ring-slate-200/80">
-                                                        {member.active_credential.code}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => copyCode(member.active_credential!.code, member.active_credential!.id)}
-                                                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                                        title="Copy code"
+                                        <div className="divide-y divide-amber-100 overflow-hidden rounded-2xl border border-amber-200/90 bg-amber-50/40">
+                                            {pendingArrivals.map((arrival) => {
+                                                const isOverdue = arrival.confirmation_state === 'OVERDUE';
+                                                return (
+                                                    <div
+                                                        key={arrival.id}
+                                                        className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4"
                                                     >
-                                                        {copiedCodeId === member.active_credential.id ? (
-                                                            <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                                        ) : (
-                                                            <Copy className="h-3.5 w-3.5" />
-                                                        )}
-                                                    </button>
-                                                </div>
-                                            ) : null}
-                                            <ChevronRight className="h-4 w-4 text-slate-300" />
+                                                        <div className="flex min-w-0 items-center gap-3">
+                                                            <div
+                                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                                                                    isOverdue
+                                                                        ? 'bg-rose-100 text-rose-800'
+                                                                        : 'bg-amber-100 text-amber-900'
+                                                                }`}
+                                                            >
+                                                                {initialsFor(arrival.visitor_name)}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="truncate text-sm font-semibold text-slate-900">
+                                                                        {arrival.visitor_name}
+                                                                    </span>
+                                                                    <span
+                                                                        className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
+                                                                            isOverdue
+                                                                                ? 'bg-rose-100 text-rose-800'
+                                                                                : 'bg-amber-100 text-amber-800'
+                                                                        }`}
+                                                                    >
+                                                                        {isOverdue ? 'Overdue' : 'Waiting'}
+                                                                    </span>
+                                                                </div>
+                                                                <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                                    {arrival.member?.category || arrival.admission_basis} · {arrivalDetailLine(arrival)}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleConfirmArrival(arrival.id)}
+                                                            className="inline-flex min-h-9 items-center justify-center gap-1.5 self-start rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:self-auto"
+                                                        >
+                                                            <Check className="h-3.5 w-3.5" />
+                                                            <span>Confirm arrival</span>
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                ))}
+                                )}
+
+                                {/* Currently here / cleared section */}
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-1.5 px-1 text-xs font-semibold text-slate-700">
+                                        <Radio className="h-3.5 w-3.5 text-slate-500" />
+                                        <span>Currently here ({confirmedArrivals.length})</span>
+                                    </div>
+
+                                    {confirmedArrivals.length === 0 ? (
+                                        <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center text-xs text-slate-500">
+                                            No cleared arrivals yet. Pending visitors will move here once confirmed.
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+                                            {confirmedArrivals.map((arrival) => (
+                                                <div
+                                                    key={arrival.id}
+                                                    className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
+                                                >
+                                                    <div className="flex min-w-0 items-center gap-3">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                                                            {initialsFor(arrival.visitor_name)}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="truncate text-sm font-semibold text-slate-900">
+                                                                    {arrival.visitor_name}
+                                                                </span>
+                                                                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                                                                    <UserCheck className="h-3 w-3" />
+                                                                    Cleared
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                                {arrival.member?.name ? `${arrival.member.name} · ` : ''}
+                                                                {arrival.admission_basis} · {arrivalDetailLine(arrival)}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
+                                                        <span className="inline-flex items-center gap-1">
+                                                            <Clock className="h-3.5 w-3.5" />
+                                                            {arrival.verified_at_human || 'recently'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
+                )}
+
+                {/* Tab Panel: People */}
+                {activeTab === 'people' && (
+                    <>
+                        {members.total === 0 && !search && category === 'all' && status === 'all' ? (
+                            /* Clean native empty state */
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 sm:p-10 text-center">
+                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
+                                    <Users className="h-6 w-6" strokeWidth={1.75} />
+                                </div>
+                                <h2 className="mt-4 text-lg font-semibold text-slate-900 sm:text-xl">No one has been added yet</h2>
+                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                                    Add staff, parents, contractors, or anyone who regularly needs access to {organization.name}.
+                                </p>
+                                {membership.is_admin && (
+                                    <div className="mt-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => setCreateModalOpen(true)}
+                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 active:scale-[0.98]"
+                                        >
+                                            <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                            <span>Add someone</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            /* Directory with search, filters, and list */
+                            <div className="space-y-3.5">
+                                {/* Native Search Field - No heavy outer wrapper */}
+                                <div className="relative">
+                                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                        type="search"
+                                        value={search}
+                                        onChange={(event) => {
+                                            setSearch(event.target.value);
+                                            applyFilters({ search: event.target.value });
+                                        }}
+                                        placeholder="Search by name or ID"
+                                        className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                    />
+                                </div>
+
+                                {/* Streamlined Quick Filters */}
+                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                                    {[
+                                        { id: 'all', label: 'All' },
+                                        { id: 'staff', label: 'Staff' },
+                                        { id: 'parent', label: 'Parents' },
+                                        { id: 'contractor', label: 'Contractors' },
+                                        { id: 'student', label: 'Students' },
+                                        { id: 'visitor', label: 'Visitors' },
+                                    ].map((tab) => {
+                                        const isSelected = category === tab.id;
+                                        return (
+                                            <button
+                                                key={tab.id}
+                                                type="button"
+                                                onClick={() => {
+                                                    const nextCategory = isSelected ? 'all' : tab.id;
+                                                    setCategory(nextCategory);
+                                                    applyFilters({ category: nextCategory });
+                                                }}
+                                                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                                                    isSelected
+                                                        ? 'bg-slate-900 text-white'
+                                                        : 'border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50'
+                                                }`}
+                                            >
+                                                {tab.label}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Quiet Directory Count */}
+                                <div className="flex items-center justify-between px-1 pt-1 text-xs font-medium text-slate-500">
+                                    <span>
+                                        {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
+                                        {activeMembers > 0 && ` · ${activeMembers} active`}
+                                    </span>
+                                    {suspendedMembers > 0 && (
+                                        <span className="text-rose-600">{suspendedMembers} suspended</span>
+                                    )}
+                                </div>
+
+                                {/* People Directory List: Clean Rows with subtle dividers */}
+                                {members.data.length === 0 ? (
+                                    <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center text-sm text-slate-500">
+                                        No matching people found. Try clearing your search or filter.
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+                                        {members.data.map((member) => (
+                                            <div
+                                                key={member.id}
+                                                className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
+                                            >
+                                                <div className="flex min-w-0 items-center gap-3">
+                                                    {/* Avatar Initials */}
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
+                                                        {initialsFor(member.name)}
+                                                    </div>
+
+                                                    {/* Identity & Status */}
+                                                    <div className="min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="truncate text-sm font-semibold text-slate-900">
+                                                                {member.name}
+                                                            </span>
+                                                            {member.status === 'suspended' ? (
+                                                                <span className="inline-flex shrink-0 items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+                                                                    Suspended
+                                                                </span>
+                                                            ) : !member.is_valid_now ? (
+                                                                <span className="inline-flex shrink-0 items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
+                                                                    Pending
+                                                                </span>
+                                                            ) : null}
+                                                        </div>
+                                                        <p className="mt-0.5 truncate text-xs text-slate-500">
+                                                            <span className="capitalize">{member.category}</span>
+                                                            {member.identifier ? ` · ${member.identifier}` : ''}
+                                                            {member.valid_until ? ` · Until ${member.valid_until}` : ' · Ongoing'}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Right Action Affordance: Code & Chevron */}
+                                                <div className="flex shrink-0 items-center gap-2">
+                                                    {member.active_credential ? (
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="rounded-lg bg-slate-50 px-2 py-1 font-mono text-xs font-semibold tracking-wide text-slate-900 ring-1 ring-slate-200/80">
+                                                                {member.active_credential.code}
+                                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => copyCode(member.active_credential!.code, member.active_credential!.id)}
+                                                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                                                title="Copy code"
+                                                            >
+                                                                {copiedCodeId === member.active_credential.id ? (
+                                                                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                                                ) : (
+                                                                    <Copy className="h-3.5 w-3.5" />
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    ) : null}
+                                                    <ChevronRight className="h-4 w-4 text-slate-300" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Add Someone Sheet / Modal */}
