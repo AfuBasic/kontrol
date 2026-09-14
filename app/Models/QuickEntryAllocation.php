@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\QuickEntryAllocationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuickEntryAllocation extends Model
 {
-    /** @use HasFactory<\Database\Factories\QuickEntryAllocationFactory> */
+    /** @use HasFactory<QuickEntryAllocationFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -59,4 +60,3 @@ class QuickEntryAllocation extends Model
         return $this->expires_at !== null && $this->expires_at->isPast();
     }
 }
-
