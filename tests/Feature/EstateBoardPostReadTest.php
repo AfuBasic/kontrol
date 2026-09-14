@@ -176,4 +176,3 @@ it('exposes resident-specific is_read and unread_count on the resident feed', fu
             ->where('posts.data.0.is_read', false)
         );
 });
-
