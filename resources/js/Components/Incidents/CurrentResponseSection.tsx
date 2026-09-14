@@ -46,7 +46,7 @@ const STATE_CONFIG: Record<IncidentStatus, StateDetails> = {
     },
     acknowledged: {
         badgeLabel: 'Acknowledged',
-        title: 'Acknowledged — Ready for Action',
+        title: 'Acknowledged - Ready for Action',
         description:
             'Management has acknowledged the report. When maintenance personnel or security begins field work, begin resolution to mark this case in progress.',
         icon: Clock,
@@ -68,7 +68,7 @@ const STATE_CONFIG: Record<IncidentStatus, StateDetails> = {
     },
     solved: {
         badgeLabel: 'Resolved by Management',
-        title: 'Resolved — Awaiting Reporter Confirmation',
+        title: 'Resolved - Awaiting Reporter Confirmation',
         description:
             'Estate management marked this issue as resolved. The original reporter has been notified to verify the fix and close the case.',
         icon: CheckCircle2,
