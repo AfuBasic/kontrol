@@ -65,7 +65,9 @@ class AnnouncementController extends Controller
                 'read_at' => $post->read_at ? (string) $post->read_at : null,
                 'published_at' => $post->published_at?->toISOString(),
                 'published_at_human' => $post->published_at?->diffForHumans() ?? $post->created_at?->diffForHumans(),
-                'author_name' => $post->author?->name ?? ($organization->estate?->name ?? 'Estate Office'),
+                'publisher_name' => $organization->estate?->name ?? 'Estate Management',
+                'publisher_role' => 'Estate Management',
+                'author_name' => $post->author?->name,
                 'media_count' => $post->media->count(),
                 'media' => $post->media->map(fn ($media) => [
                     'id' => $media->id,
@@ -82,7 +84,11 @@ class AnnouncementController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'type' => $organization->type,
-                'estate_name' => $organization->estate?->name,
+                'estate_name' => $organization->estate?->name ?? 'Estate',
+            ],
+            'estate' => [
+                'id' => $organization->estate_id,
+                'name' => $organization->estate?->name ?? 'Estate',
             ],
             'membership' => [
                 'role' => $membership->role,
@@ -119,7 +125,11 @@ class AnnouncementController extends Controller
                 'id' => $organization->id,
                 'name' => $organization->name,
                 'type' => $organization->type,
-                'estate_name' => $organization->estate?->name,
+                'estate_name' => $organization->estate?->name ?? 'Estate',
+            ],
+            'estate' => [
+                'id' => $organization->estate_id,
+                'name' => $organization->estate?->name ?? 'Estate',
             ],
             'membership' => [
                 'role' => $membership->role,
@@ -135,7 +145,9 @@ class AnnouncementController extends Controller
                 'is_read' => true,
                 'published_at' => $post->published_at?->toISOString(),
                 'published_at_human' => $post->published_at?->diffForHumans() ?? $post->created_at?->diffForHumans(),
-                'author_name' => $post->author?->name ?? ($organization->estate?->name ?? 'Estate Office'),
+                'publisher_name' => $organization->estate?->name ?? 'Estate Management',
+                'publisher_role' => 'Estate Management',
+                'author_name' => $post->author?->name,
                 'media' => $post->media->map(fn ($media) => [
                     'id' => $media->id,
                     'url' => $media->url,
