@@ -38,13 +38,13 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     // Access: Arrivals & History
     Route::prefix('arrivals')->name('arrivals.')->group(function () {
         Route::get('/', fn () => redirect()->route('org.access-list.index', ['tab' => 'arrivals']))->name('index');
-        Route::get('/history', [ArrivalController::class, 'history'])->name('history');
+        Route::get('/history', fn () => redirect()->route('org.access-list.index', ['tab' => 'history']))->name('history');
         Route::post('/{log}/confirm', [ArrivalController::class, 'confirm'])->name('confirm');
     });
 
     // Access: Public Access Windows (for Public Window policies e.g. Churches)
     Route::prefix('public-windows')->name('public-windows.')->group(function () {
-        Route::get('/', [PublicWindowController::class, 'index'])->name('index');
+        Route::get('/', fn () => redirect()->route('org.access-list.index', ['tab' => 'public_windows']))->name('index');
         Route::post('/', [PublicWindowController::class, 'store'])->name('store');
         Route::patch('/{window}', [PublicWindowController::class, 'update'])->name('update');
         Route::delete('/{window}', [PublicWindowController::class, 'destroy'])->name('destroy');
