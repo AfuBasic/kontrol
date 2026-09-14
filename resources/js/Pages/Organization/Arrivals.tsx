@@ -1,14 +1,7 @@
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import {
     Clock,
-    CheckCircle2,
-    AlertCircle,
-    Car,
-    User,
     Check,
-    Search,
-    Shield,
-    History,
     AlertTriangle,
 } from 'lucide-react';
 import React from 'react';
@@ -81,20 +74,20 @@ export default function Arrivals({ organization, membership, arrivals, metrics, 
         <OrganizationLayout title="Access - Arrivals">
             <Head title={`${organization.name} - Arrivals`} />
 
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-3xl">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                            Access
-                        </h1>
-                        <p className="text-sm text-stone-500 mt-0.5">
-                            Real-time visitors and active arrivals for {organization.name}.
-                        </p>
-                    </div>
+                <div>
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+                        Arrivals
+                    </h1>
+                    <p className="text-sm font-semibold text-slate-500 mt-1">
+                        {arrivals.length === 0
+                            ? 'No one is currently here'
+                            : `${arrivals.length} ${arrivals.length === 1 ? 'person is' : 'people are'} currently here`}
+                    </p>
                 </div>
 
-                {/* Unified Access Tabs */}
+                {/* Sub Navigation */}
                 <AccessTabs
                     activeTab="arrivals"
                     hasPublicWindows={hasPublicWindows}
@@ -102,138 +95,87 @@ export default function Arrivals({ organization, membership, arrivals, metrics, 
                     activeCount={arrivals.length}
                 />
 
-                {/* Human Operational Summary */}
-                <div className="flex items-center justify-between p-4 rounded-2xl bg-white border border-stone-200/80 shadow-xs">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold text-base">
-                            {arrivals.length}
-                        </div>
-                        <div>
-                            <h2 className="text-sm font-bold text-slate-900">
-                                {arrivals.length === 0
-                                    ? 'No one is currently checked in'
-                                    : arrivals.length === 1
-                                    ? '1 person is currently here'
-                                    : `${arrivals.length} people are currently here`}
-                            </h2>
-                            <p className="text-xs text-stone-500">
-                                Admitted through estate security gates
-                            </p>
-                        </div>
+                {/* Editorial Arrivals Flow */}
+                {arrivals.length === 0 ? (
+                    <div className="py-6 space-y-1">
+                        <p className="text-base sm:text-lg font-bold text-slate-800">
+                            It’s quiet right now.
+                        </p>
+                        <p className="text-sm text-slate-500">
+                            No one is currently checked in for {organization.name}.
+                        </p>
                     </div>
-
-                    {pendingTotal > 0 && (
-                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                            {pendingTotal} need confirmation
-                        </span>
-                    )}
-                </div>
-
-                {/* Arrivals List */}
-                <div className="space-y-3">
-                    {arrivals.length === 0 ? (
-                        <div className="rounded-3xl bg-white border border-stone-200/80 p-8 sm:p-12 text-center shadow-xs">
-                            <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-400 mx-auto flex items-center justify-center mb-3">
-                                <Clock className="w-6 h-6" />
-                            </div>
-                            <h3 className="text-base font-bold text-slate-900">It's quiet right now</h3>
-                            <p className="text-sm text-stone-500 max-w-sm mx-auto mt-1">
-                                No one is currently checked in at the gate for {organization.name}.
-                            </p>
-                        </div>
-                    ) : (
-                        arrivals.map((arrival) => {
+                ) : (
+                    <div className="space-y-4">
+                        {arrivals.map((arrival) => {
                             const needsConfirmation =
                                 arrival.confirmation_state === 'PENDING' ||
                                 arrival.confirmation_state === 'OVERDUE';
                             const isOverdue = arrival.confirmation_state === 'OVERDUE';
 
-                            return (
+                            // Needs confirmation earns card containment; already confirmed uses clean list styling
+                            return needsConfirmation ? (
                                 <div
                                     key={arrival.id}
-                                    className={`rounded-2xl bg-white border p-4 sm:p-5 shadow-xs transition-all space-y-3 ${
+                                    className={`rounded-3xl border p-5 shadow-xs transition-all space-y-3 ${
                                         isOverdue
-                                            ? 'border-amber-300 ring-1 ring-amber-200/60'
-                                            : 'border-stone-200/80'
+                                            ? 'border-amber-300 bg-amber-50/70 ring-1 ring-amber-200/60'
+                                            : 'border-slate-200 bg-white'
                                     }`}
                                 >
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                        <div className="flex items-start gap-3.5">
-                                            <div
-                                                className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shrink-0 mt-0.5 ${
-                                                    needsConfirmation
-                                                        ? 'bg-amber-100 text-amber-800'
-                                                        : 'bg-emerald-100 text-emerald-800'
-                                                }`}
-                                            >
-                                                {arrival.visitor_name.charAt(0).toUpperCase()}
+                                        <div>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="font-bold text-base text-slate-900">
+                                                    {arrival.visitor_name}
+                                                </h3>
+                                                {arrival.tag && (
+                                                    <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">
+                                                        {arrival.tag}
+                                                    </span>
+                                                )}
                                             </div>
-                                            <div>
-                                                <div className="flex items-center gap-2 flex-wrap">
-                                                    <h3 className="font-bold text-sm sm:text-base text-slate-900">
-                                                        {arrival.visitor_name}
-                                                    </h3>
-                                                    {arrival.tag && (
-                                                        <span className="font-mono text-[11px] font-bold px-2 py-0.5 rounded bg-stone-100 text-slate-700 border border-stone-200">
-                                                            {arrival.tag}
-                                                        </span>
-                                                    )}
-                                                    {arrival.member && (
-                                                        <span className="text-[11px] capitalize px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-medium">
-                                                            {arrival.member.category}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-stone-500 mt-1 flex items-center gap-2 flex-wrap">
-                                                    <span>Arrived {arrival.verified_at_human || 'recently'}</span>
-                                                    <span>•</span>
-                                                    <span>{arrival.entry_point || 'Main Gate'}</span>
-                                                    {arrival.vehicle_plate_number && (
-                                                        <>
-                                                            <span>•</span>
-                                                            <span className="font-mono text-slate-700 font-medium">
-                                                                {arrival.vehicle_plate_number}
-                                                            </span>
-                                                        </>
-                                                    )}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {/* Confirmation Action or Status */}
-                                        <div className="flex items-center gap-2 self-start sm:self-auto pt-1 sm:pt-0">
-                                            {needsConfirmation ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleConfirm(arrival.id)}
-                                                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-800 hover:bg-amber-900 text-white text-xs sm:text-sm font-semibold transition-colors shadow-xs"
-                                                >
-                                                    <Check className="w-4 h-4" />
-                                                    <span>Confirm arrival</span>
-                                                </button>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-semibold border border-emerald-200">
-                                                    <CheckCircle2 className="w-3.5 h-3.5" />
-                                                    <span>Arrival confirmed</span>
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* Operational note if overdue */}
-                                    {isOverdue && (
-                                        <div className="pt-2 border-t border-amber-100 flex items-center gap-2 text-xs text-amber-800 bg-amber-50/70 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 p-3 rounded-b-2xl">
-                                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                                            <span>
-                                                This visitor was admitted over {organization.confirmation_window_minutes || 15} minutes ago and needs attention.
+                                            <p className="text-xs text-slate-500 mt-0.5">
+                                                Arrived {arrival.verified_at_human || 'recently'} · {arrival.entry_point || 'Main Gate'}
+                                                {arrival.vehicle_plate_number && ` · ${arrival.vehicle_plate_number}`}
+                                            </p>
+                                            <span className="inline-block mt-2 text-xs font-bold text-amber-800">
+                                                Waiting for confirmation
                                             </span>
                                         </div>
-                                    )}
+
+                                        <button
+                                            type="button"
+                                            onClick={() => handleConfirm(arrival.id)}
+                                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-colors self-start sm:self-auto shadow-xs"
+                                        >
+                                            <Check className="w-3.5 h-3.5" />
+                                            <span>Confirm arrival</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div
+                                    key={arrival.id}
+                                    className="py-3.5 border-b border-slate-100 flex items-center justify-between gap-4"
+                                >
+                                    <div>
+                                        <p className="font-bold text-sm sm:text-base text-slate-900">
+                                            {arrival.visitor_name}
+                                        </p>
+                                        <p className="text-xs text-slate-400 mt-0.5">
+                                            Arrived {arrival.verified_at_human || 'recently'} · {arrival.entry_point || 'Main Gate'}
+                                        </p>
+                                    </div>
+
+                                    <span className="text-xs font-bold text-emerald-600">
+                                        Confirmed
+                                    </span>
                                 </div>
                             );
-                        })
-                    )}
-                </div>
+                        })}
+                    </div>
+                )}
             </div>
         </OrganizationLayout>
     );
