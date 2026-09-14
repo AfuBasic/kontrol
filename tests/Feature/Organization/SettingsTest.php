@@ -5,6 +5,7 @@ use App\Models\Estate;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationMembership;
 use App\Models\User;
+use App\Services\OrganizationContextService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 
@@ -42,7 +43,7 @@ test('organization admin can invite existing user as staff and dispatches invita
     ]);
 
     $response = $this->actingAs($this->adminUser)
-        ->withSession([\App\Services\OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
         ->post(route('org.settings.staff.invite'), [
             'email' => 'jackie@stjude.com',
             'role' => 'member',
