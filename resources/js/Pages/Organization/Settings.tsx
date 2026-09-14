@@ -1,15 +1,5 @@
 import { Head, useForm, router, usePage, Link } from '@inertiajs/react';
-import {
-    ChevronRight,
-    Users,
-    Clock,
-    Building2,
-    HelpCircle,
-    Shield,
-    Trash2,
-    X,
-    LogOut,
-} from 'lucide-react';
+import { ChevronRight, LogOut, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
@@ -84,20 +74,16 @@ export default function Settings({ organization, membership, staff }: Props) {
         <OrganizationLayout title="Profile">
             <Head title={`${organization.name} - Profile`} />
 
-            <div className="space-y-8 max-w-xl">
+            <div className="max-w-xl space-y-8">
                 {/* 1. Profile Header (Resident-style avatar & identity) */}
                 <div className="flex items-center gap-4 py-2">
-                    <div className="h-16 w-16 rounded-[24px] bg-slate-900 text-white flex items-center justify-center font-black text-2xl shadow-md">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-900 text-2xl font-black text-white shadow-md">
                         {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
                     </div>
                     <div className="min-w-0">
-                        <h1 className="text-xl sm:text-2xl font-black text-slate-900 truncate">
-                            {user.name || 'Account'}
-                        </h1>
-                        <p className="text-xs font-semibold text-slate-400 truncate">
-                            {user.email}
-                        </p>
-                        <div className="flex items-center gap-1.5 mt-1 text-xs font-bold text-slate-500">
+                        <h1 className="truncate text-xl font-black text-slate-900 sm:text-2xl">{user.name || 'Account'}</h1>
+                        <p className="truncate text-xs font-semibold text-slate-400">{user.email}</p>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-500">
                             <span>{organization.name}</span>
                             <span>·</span>
                             <span className="capitalize">{membership.role || 'Member'}</span>
@@ -107,20 +93,18 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* 2. ACCOUNT SECTION */}
                 <section className="space-y-3">
-                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                        Account
-                    </h2>
-                    <div className="overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80 divide-y divide-slate-50">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Account</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
                         <Link
                             href="/resident/profile"
-                            className="flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors group"
+                            className="group flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Personal information</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </Link>
                         <Link
                             href="/resident/activity?tab=notifications"
-                            className="flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors group"
+                            className="group flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Notifications</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
@@ -130,14 +114,12 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* 3. ORGANIZATION SECTION */}
                 <section className="space-y-3">
-                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                        {organization.name}
-                    </h2>
-                    <div className="overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80 divide-y divide-slate-50">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">{organization.name}</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
                         <button
                             type="button"
                             onClick={() => setActiveModal('details')}
-                            className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors group text-left"
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Organization details</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
@@ -146,7 +128,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                         <button
                             type="button"
                             onClick={() => setActiveModal('team')}
-                            className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors group text-left"
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Team</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
@@ -156,7 +138,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <button
                                 type="button"
                                 onClick={() => setActiveModal('preferences')}
-                                className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors group text-left"
+                                className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                             >
                                 <span className="text-sm font-bold text-slate-900">Arrival preferences</span>
                                 <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
@@ -167,14 +149,12 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* 4. KONTROL SECTION */}
                 <section className="space-y-3">
-                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                        Kontrol
-                    </h2>
-                    <div className="overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80 divide-y divide-slate-50">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Kontrol</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
                         <button
                             type="button"
                             onClick={() => setActiveModal('help')}
-                            className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-slate-50 transition-colors group text-left"
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Help & Support</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
@@ -184,7 +164,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                             href="/logout"
                             method="post"
                             as="button"
-                            className="w-full flex items-center justify-between p-4 sm:p-5 hover:bg-rose-50/50 transition-colors text-left"
+                            className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-rose-50/50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-rose-600">Sign out</span>
                             <LogOut className="h-4 w-4 text-rose-400" />
@@ -194,41 +174,41 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* FOCUSED MODAL: ORGANIZATION DETAILS */}
                 {activeModal === 'details' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-                        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl text-sm">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+                        <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <h3 className="text-base font-bold text-slate-900">Organization Details</h3>
                                 <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="w-5 h-5" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
 
                             <div className="space-y-3 py-2 text-xs sm:text-sm">
                                 <div>
-                                    <span className="text-slate-400 text-xs uppercase font-bold">Name</span>
-                                    <p className="font-bold text-slate-900 mt-0.5">{organization.name}</p>
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Name</span>
+                                    <p className="mt-0.5 font-bold text-slate-900">{organization.name}</p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 text-xs uppercase font-bold">Estate</span>
-                                    <p className="font-bold text-slate-900 mt-0.5">{organization.estate_name || 'Estate'}</p>
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Estate</span>
+                                    <p className="mt-0.5 font-bold text-slate-900">{organization.estate_name || 'Estate'}</p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 text-xs uppercase font-bold">Category</span>
-                                    <p className="font-bold text-slate-900 capitalize mt-0.5">{organization.type}</p>
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Category</span>
+                                    <p className="mt-0.5 font-bold text-slate-900 capitalize">{organization.type}</p>
                                 </div>
                                 <div>
-                                    <span className="text-slate-400 text-xs uppercase font-bold">Policy Setup</span>
-                                    <p className="font-bold text-slate-900 mt-0.5">
+                                    <span className="text-xs font-bold text-slate-400 uppercase">Policy Setup</span>
+                                    <p className="mt-0.5 font-bold text-slate-900">
                                         {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="pt-4 border-t border-slate-100 flex justify-end">
+                            <div className="flex justify-end border-t border-slate-100 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setActiveModal(null)}
-                                    className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
+                                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
                                 >
                                     Close
                                 </button>
@@ -239,31 +219,31 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* FOCUSED MODAL: TEAM */}
                 {activeModal === 'team' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-                        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl text-sm max-h-[85vh] overflow-y-auto">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+                        <div className="max-h-[85vh] w-full max-w-md space-y-4 overflow-y-auto rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <h3 className="text-base font-bold text-slate-900">Team Members</h3>
                                 <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="w-5 h-5" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
 
                             {membership.is_admin && (
-                                <form onSubmit={handleInviteStaff} className="space-y-2 pt-1 pb-3 border-b border-slate-100">
+                                <form noValidate onSubmit={handleInviteStaff} className="space-y-2 border-b border-slate-100 pt-1 pb-3">
                                     <span className="text-xs font-bold text-slate-700">Invite someone</span>
                                     <div className="flex gap-2">
                                         <input
-                                            type="email"
-                                            required
+                                            type="text"
+                                            inputMode="email"
                                             placeholder="colleague@example.com"
                                             value={inviteForm.data.email}
                                             onChange={(e) => inviteForm.setData('email', e.target.value)}
-                                            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 text-xs focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                                            className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                         />
                                         <select
                                             value={inviteForm.data.role}
                                             onChange={(e) => inviteForm.setData('role', e.target.value)}
-                                            className="px-2 py-2 rounded-xl border border-slate-200 text-xs capitalize focus:outline-none"
+                                            className="rounded-xl border border-slate-200 px-2 py-2 text-xs capitalize focus:outline-none"
                                         >
                                             <option value="member">Staff</option>
                                             <option value="admin">Admin</option>
@@ -273,7 +253,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                                         <button
                                             type="submit"
                                             disabled={inviteForm.processing}
-                                            className="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold disabled:opacity-50"
+                                            className="rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white disabled:opacity-50"
                                         >
                                             {inviteForm.processing ? 'Inviting...' : 'Invite'}
                                         </button>
@@ -283,13 +263,13 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                             <div className="divide-y divide-slate-100 py-1">
                                 {staff.map((member) => (
-                                    <div key={member.id} className="py-2.5 flex items-center justify-between gap-3">
+                                    <div key={member.id} className="flex items-center justify-between gap-3 py-2.5">
                                         <div>
-                                            <p className="font-bold text-slate-900 text-xs sm:text-sm">{member.name}</p>
+                                            <p className="text-xs font-bold text-slate-900 sm:text-sm">{member.name}</p>
                                             <p className="text-xs text-slate-400">{member.email}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="text-[10px] font-bold capitalize px-2 py-0.5 rounded bg-slate-100 text-slate-600">
+                                            <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 capitalize">
                                                 {member.role}
                                             </span>
                                             {membership.is_admin && member.user_id !== user.id && (
@@ -299,7 +279,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                                                     className="p-1 text-slate-400 hover:text-rose-600"
                                                     title="Remove"
                                                 >
-                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                    <Trash2 className="h-3.5 w-3.5" />
                                                 </button>
                                             )}
                                         </div>
@@ -307,11 +287,11 @@ export default function Settings({ organization, membership, staff }: Props) {
                                 ))}
                             </div>
 
-                            <div className="pt-3 border-t border-slate-100 flex justify-end">
+                            <div className="flex justify-end border-t border-slate-100 pt-3">
                                 <button
                                     type="button"
                                     onClick={() => setActiveModal(null)}
-                                    className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
+                                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
                                 >
                                     Done
                                 </button>
@@ -322,45 +302,39 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
                 {activeModal === 'preferences' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-                        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl text-sm">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+                        <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <h3 className="text-base font-bold text-slate-900">Arrival Preferences</h3>
                                 <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="w-5 h-5" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
 
                             <form onSubmit={handleUpdatePolicy} className="space-y-4 pt-1 text-xs sm:text-sm">
-                                <label className="flex items-start gap-3 cursor-pointer">
+                                <label className="flex cursor-pointer items-start gap-3">
                                     <input
                                         type="checkbox"
                                         checked={policyForm.data.arrival_confirmation_required}
-                                        onChange={(e) =>
-                                            policyForm.setData('arrival_confirmation_required', e.target.checked)
-                                        }
-                                        className="mt-1 w-4 h-4 rounded text-slate-900 focus:ring-slate-900 border-slate-300"
+                                        onChange={(e) => policyForm.setData('arrival_confirmation_required', e.target.checked)}
+                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                                     />
                                     <div>
                                         <span className="font-bold text-slate-900">Confirm visitor arrivals</span>
-                                        <p className="text-xs text-slate-500 mt-0.5">
-                                            Ask team to confirm when visitors reach your reception desk.
-                                        </p>
+                                        <p className="mt-0.5 text-xs text-slate-500">Ask team to confirm when visitors reach your reception desk.</p>
                                     </div>
                                 </label>
 
                                 {policyForm.data.arrival_confirmation_required && (
                                     <div className="space-y-3 pt-2">
                                         <div>
-                                            <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">
+                                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                                 How long should we wait?
                                             </label>
                                             <select
                                                 value={policyForm.data.confirmation_window_minutes}
-                                                onChange={(e) =>
-                                                    policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))
-                                                }
-                                                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none"
+                                                onChange={(e) => policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))}
+                                                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs focus:outline-none"
                                             >
                                                 <option value={10}>10 minutes</option>
                                                 <option value={15}>15 minutes</option>
@@ -371,15 +345,13 @@ export default function Settings({ organization, membership, staff }: Props) {
                                         </div>
 
                                         <div>
-                                            <label className="block text-slate-700 font-bold mb-1 text-xs uppercase tracking-wider">
+                                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                                 If unconfirmed
                                             </label>
                                             <select
                                                 value={policyForm.data.confirmation_escalation}
-                                                onChange={(e) =>
-                                                    policyForm.setData('confirmation_escalation', e.target.value)
-                                                }
-                                                className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none"
+                                                onChange={(e) => policyForm.setData('confirmation_escalation', e.target.value)}
+                                                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs focus:outline-none"
                                             >
                                                 <option value="alert_only">Highlight on dashboard only</option>
                                                 <option value="flag_security">Flag for security gate</option>
@@ -388,18 +360,18 @@ export default function Settings({ organization, membership, staff }: Props) {
                                     </div>
                                 )}
 
-                                <div className="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setActiveModal(null)}
-                                        className="px-4 py-2 rounded-xl text-slate-500 font-bold text-xs"
+                                        className="rounded-xl px-4 py-2 text-xs font-bold text-slate-500"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={policyForm.processing}
-                                        className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
+                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
                                     >
                                         {policyForm.processing ? 'Saving...' : 'Save'}
                                     </button>
@@ -411,33 +383,34 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                 {/* FOCUSED MODAL: HELP & SUPPORT */}
                 {activeModal === 'help' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
-                        <div className="w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 space-y-4 shadow-xl text-sm">
-                            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+                        <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                 <h3 className="text-base font-bold text-slate-900">Help & Support</h3>
                                 <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="w-5 h-5" />
+                                    <X className="h-5 w-5" />
                                 </button>
                             </div>
 
-                            <p className="text-slate-600 text-xs sm:text-sm">
-                                For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office or Kontrol support.
+                            <p className="text-xs text-slate-600 sm:text-sm">
+                                For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office
+                                or Kontrol support.
                             </p>
 
-                            <div className="py-2 space-y-2 text-xs">
+                            <div className="space-y-2 py-2 text-xs">
                                 <a
                                     href="mailto:support@kontrol.app"
-                                    className="block p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 font-bold text-slate-900 transition-colors"
+                                    className="block rounded-2xl bg-slate-50 p-3 font-bold text-slate-900 transition-colors hover:bg-slate-100"
                                 >
                                     Email Kontrol Support (support@kontrol.app)
                                 </a>
                             </div>
 
-                            <div className="pt-3 border-t border-slate-100 flex justify-end">
+                            <div className="flex justify-end border-t border-slate-100 pt-3">
                                 <button
                                     type="button"
                                     onClick={() => setActiveModal(null)}
-                                    className="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs"
+                                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
                                 >
                                     Close
                                 </button>
