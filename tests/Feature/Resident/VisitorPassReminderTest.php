@@ -399,7 +399,7 @@ test('visitor reminder notification formats copy for named visitor arriving toda
     $payload = $notification->toArray($user);
 
     expect($payload['title'])->toBe('Damilola is arriving soon');
-    expect($payload['message'])->toBe("Just a reminder — you're expecting Damilola at 10:00 AM today.");
+    expect($payload['message'])->toBe("Just a reminder: you're expecting Damilola at 10:00 AM today.");
     expect($payload['visitor_name'])->toBe('Damilola');
     expect($payload['action_url'])->toBe("/resident/visitors/{$pass->id}");
     expect($payload)->not->toHaveKey('code');
@@ -436,7 +436,7 @@ test('visitor reminder notification formats copy for visitor arriving tomorrow',
     $payload = $notification->toArray($user);
 
     expect($payload['title'])->toBe('Damilola is arriving soon');
-    expect($payload['message'])->toBe("Just a reminder — you're expecting Damilola at 10:00 AM tomorrow.");
+    expect($payload['message'])->toBe("Just a reminder: you're expecting Damilola at 10:00 AM tomorrow.");
 });
 
 test('visitor reminder notification uses safe fallback when visitor name is missing or blank', function () {
@@ -469,7 +469,7 @@ test('visitor reminder notification uses safe fallback when visitor name is miss
     $payload = $notification->toArray($user);
 
     expect($payload['title'])->toBe('Your visitor is arriving soon');
-    expect($payload['message'])->toBe("Just a reminder — you're expecting your visitor at 2:00 PM today.");
+    expect($payload['message'])->toBe("Just a reminder: you're expecting your visitor at 2:00 PM today.");
     expect($payload['visitor_name'])->toBeNull();
 
     // Blank string name fallback
@@ -478,7 +478,7 @@ test('visitor reminder notification uses safe fallback when visitor name is miss
     $payload2 = $notification2->toArray($user);
 
     expect($payload2['title'])->toBe('Your visitor is arriving soon');
-    expect($payload2['message'])->toBe("Just a reminder — you're expecting your visitor at 2:00 PM today.");
+    expect($payload2['message'])->toBe("Just a reminder: you're expecting your visitor at 2:00 PM today.");
     expect($payload2['visitor_name'])->toBeNull();
 });
 
@@ -517,7 +517,7 @@ test('visitor reminder respects authoritative estate timezone across midnight bo
     $payload = $notification->toArray($user);
 
     expect($payload['title'])->toBe('Folake is arriving soon');
-    expect($payload['message'])->toBe("Just a reminder — you're expecting Folake at 12:30 AM tomorrow.");
+    expect($payload['message'])->toBe("Just a reminder: you're expecting Folake at 12:30 AM tomorrow.");
 
     CarbonImmutable::setTestNow();
 });
