@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Http\Controllers\Controller;
+use App\Models\AccessLog;
 use App\Models\EstateOrganization;
+use App\Models\Scopes\ZoneScope;
 use App\Services\Organization\ArrivalService;
 use App\Services\OrganizationContextService;
 use Illuminate\Http\Request;
@@ -24,7 +26,50 @@ class DashboardController extends Controller
         $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
 
         $metrics = $this->arrivalService->getMetrics($organization);
-        $recentArrivals = $this->arrivalService->getActiveArrivals($organization)->take(10)->values();
+        $activeArrivals = $this->arrivalService->getActiveArrivals($organization);
+
+        // Filter arrivals that need confirmation
+        $pendingArrivals = $activeArrivals
+            ->filter(fn (array $arr) => in_array($arr['confirmation_state'], ['PENDING', 'OVERDUE'], true))
+            ->values();
+
+        // Recent activity feed: latest 8 logs (entries/exits) formatted with human action messages
+        $recentLogs = AccessLog::withoutGlobalScope(ZoneScope::class)
+            ->where('organization_id', $organization->id)
+            ->with(['accessCode.organizationMember'])
+            ->latest('verified_at')
+            ->take(8)
+            ->get();
+
+        $recentActivity = $recentLogs->map(function (AccessLog $log) {
+            $visitorName = $log->meta['visitor_name'] ?? 'Visitor';
+            $memberName = $log->accessCode?->organizationMember?->name;
+            $displayName = $memberName ?: $visitorName;
+            $gate = $log->entry_point ?: 'Main Gate';
+
+            if ($log->checked_out_at) {
+                $description = "{$displayName} departed";
+                $timestamp = $log->checked_out_at->diffForHumans();
+                $type = 'checkout';
+            } elseif ($log->confirmed_at) {
+                $description = "{$displayName}'s arrival was confirmed";
+                $timestamp = $log->confirmed_at->diffForHumans();
+                $type = 'confirmed';
+            } else {
+                $description = "{$displayName} arrived via {$gate}";
+                $timestamp = $log->verified_at ? $log->verified_at->diffForHumans() : 'Just now';
+                $type = 'arrival';
+            }
+
+            return [
+                'id' => $log->id,
+                'name' => $displayName,
+                'description' => $description,
+                'time_human' => $timestamp,
+                'type' => $type,
+                'is_active' => is_null($log->checked_out_at),
+            ];
+        });
 
         return Inertia::render('Organization/Dashboard', [
             'organization' => [
@@ -42,7 +87,9 @@ class DashboardController extends Controller
                 'is_admin' => $membership->isAdmin(),
             ],
             'metrics' => $metrics,
-            'recent_arrivals' => $recentArrivals,
+            'recent_arrivals' => $activeArrivals->take(10)->values(),
+            'pending_arrivals' => $pendingArrivals,
+            'recent_activity' => $recentActivity,
         ]);
     }
 }
