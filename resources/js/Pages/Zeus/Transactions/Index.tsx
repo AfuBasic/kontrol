@@ -614,7 +614,7 @@ function TransactionDetailModal({
                         </div>
                     </div>
 
-                    {/* Error Banner — failed/pending only */}
+                    {/* Error Banner - failed/pending only */}
                     {hasError && (
                         <div className="mx-6 mt-6 flex items-start gap-3 rounded-2xl bg-rose-50 px-5 py-4 ring-1 ring-rose-200 dark:bg-rose-500/10 dark:ring-rose-500/20">
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
@@ -632,7 +632,7 @@ function TransactionDetailModal({
                     )}
 
                     <div className="space-y-8 px-8 py-8">
-                        {/* Section 1 — Payment Details */}
+                        {/* Section 1 - Payment Details */}
                         <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
                             <SectionHeading>Payment Details</SectionHeading>
                             <div className="grid grid-cols-2 gap-x-8 gap-y-6">
@@ -661,7 +661,7 @@ function TransactionDetailModal({
                             </div>
                         </div>
 
-                        {/* Section 2 — Who Paid */}
+                        {/* Section 2 - Who Paid */}
                         <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
                             <SectionHeading>Who Paid</SectionHeading>
                             <div className="grid grid-cols-2 gap-x-8 gap-y-6">
@@ -672,7 +672,7 @@ function TransactionDetailModal({
                                 />
                                 <DetailRow
                                     label="Payer Email"
-                                    value={payer?.email || transaction.customer_email || <span className="text-slate-400">—</span>}
+                                    value={payer?.email || transaction.customer_email || <span className="text-slate-400">-</span>}
                                     icon={User}
                                 />
                                 {payer?.id && (
@@ -681,7 +681,7 @@ function TransactionDetailModal({
                             </div>
                         </div>
 
-                        {/* Section 3 — What They Paid For */}
+                        {/* Section 3 - What They Paid For */}
                         {inv && (
                             <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-6 dark:border-slate-800/50 dark:bg-slate-800/20">
                                 <SectionHeading>What They Paid For</SectionHeading>
@@ -750,7 +750,7 @@ function TransactionDetailModal({
                             </div>
                         )}
 
-                        {/* Section 4 — Raw Metadata (collapsed) */}
+                        {/* Section 4 - Raw Metadata (collapsed) */}
                         <div className="rounded-3xl border border-slate-100 dark:border-slate-800/50">
                             <button
                                 onClick={() => setMetaOpen((o) => !o)}
