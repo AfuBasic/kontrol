@@ -97,11 +97,11 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                             href="/org/settings"
                             className="min-w-0 rounded-2xl border border-slate-200/80 bg-slate-50/80 px-3 py-2 transition-colors hover:bg-slate-100"
                         >
-                            <span className="block max-w-[9.5rem] truncate text-sm leading-none font-black text-slate-950 sm:max-w-[16rem]">
+                            <span className="block max-w-[9.5rem] truncate text-sm leading-none font-bold text-slate-900 sm:max-w-[16rem]">
                                 {organization.name || 'Organization'}
                             </span>
                             {organization.estate_name && (
-                                <span className="mt-1 block max-w-[9.5rem] truncate text-[11px] leading-none font-semibold text-slate-500 sm:max-w-[16rem]">
+                                <span className="mt-1 block max-w-[9.5rem] truncate text-[11px] leading-none font-normal text-slate-500 sm:max-w-[16rem]">
                                     {organization.estate_name}
                                 </span>
                             )}
@@ -117,13 +117,13 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-black transition-all ${
+                                    className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-semibold transition-all ${
                                         active
                                             ? 'bg-white text-[#0b4aa2] shadow-[0_6px_18px_rgba(15,23,42,0.08)]'
                                             : 'text-slate-500 hover:bg-white/60 hover:text-slate-900'
                                     }`}
                                 >
-                                    <Icon className="h-4 w-4" strokeWidth={active ? 2.6 : 2.1} />
+                                    <Icon className="h-4 w-4" strokeWidth={active ? 2.4 : 1.9} />
                                     <span>{item.name === 'Announcements' ? 'News' : item.name}</span>
                                 </Link>
                             );
@@ -145,10 +145,10 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                                 className="flex items-center gap-2 rounded-2xl py-1.5 pr-3 pl-1.5 transition-colors hover:bg-slate-100"
                             >
-                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dbeafe] text-xs font-black text-[#0b4aa2] ring-1 ring-[#bfdbfe]">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#dbeafe] text-xs font-bold text-[#0b4aa2] ring-1 ring-[#bfdbfe]">
                                     {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                 </div>
-                                <span className="max-w-[120px] truncate text-xs font-black text-slate-800">{userFirstName}</span>
+                                <span className="max-w-[120px] truncate text-xs font-semibold text-slate-800">{userFirstName}</span>
                                 <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                             </button>
 
@@ -157,14 +157,14 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                     <div className="fixed inset-0 z-40" onClick={() => setUserDropdownOpen(false)} />
                                     <div className="absolute right-0 z-50 mt-2 w-56 rounded-3xl bg-white p-2 text-xs shadow-[0_24px_70px_rgba(15,23,42,0.18)] ring-1 ring-black/5">
                                         <div className="border-b border-slate-100 px-3 py-2.5">
-                                            <p className="truncate font-bold text-slate-900">{user.name}</p>
-                                            <p className="truncate text-slate-400">{user.email}</p>
+                                            <p className="truncate font-semibold text-slate-900">{user.name}</p>
+                                            <p className="truncate font-normal text-slate-400">{user.email}</p>
                                         </div>
                                         <div className="py-1">
                                             <Link
                                                 href="/org/settings"
                                                 onClick={() => setUserDropdownOpen(false)}
-                                                className="block rounded-2xl px-3 py-2.5 font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                                                className="block rounded-2xl px-3 py-2.5 font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                                             >
                                                 Profile & Team
                                             </Link>
@@ -172,7 +172,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                                 href="/logout"
                                                 method="post"
                                                 as="button"
-                                                className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left font-bold text-rose-600 hover:bg-rose-50"
+                                                className="flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left font-medium text-rose-600 hover:bg-rose-50"
                                             >
                                                 <span>Sign out</span>
                                                 <LogOut className="h-3.5 w-3.5" />
@@ -189,12 +189,12 @@ export default function OrganizationLayout({ children, title: _title, contentCla
             <main className="w-full flex-1 px-3 py-5 pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:py-7 lg:px-10 lg:pb-12">
                 <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
                     {props.flash?.success && (
-                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-900 shadow-xs sm:text-sm">
+                        <div className="flex items-center justify-between rounded-2xl border border-emerald-200/80 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-900 shadow-xs sm:text-sm">
                             <span>{props.flash.success}</span>
                         </div>
                     )}
                     {props.flash?.error && (
-                        <div className="flex items-center justify-between rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-900 shadow-xs sm:text-sm">
+                        <div className="flex items-center justify-between rounded-2xl border border-rose-200/80 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-900 shadow-xs sm:text-sm">
                             <span>{props.flash.error}</span>
                         </div>
                     )}
@@ -224,10 +224,10 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                         active ? 'bg-[#eaf2ff] text-[#0b4aa2]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
                                     }`}
                                 >
-                                    <Icon className="h-5 w-5 transition-colors" strokeWidth={active ? 2.6 : 2.1} />
+                                    <Icon className="h-5 w-5 transition-colors" strokeWidth={active ? 2.4 : 1.9} />
                                     <span
                                         className={`max-w-full truncate text-[10px] leading-tight tracking-tight transition-colors ${
-                                            active ? 'font-black text-slate-950' : 'font-bold text-slate-500'
+                                            active ? 'font-bold text-[#082f6e]' : 'font-medium text-slate-500'
                                         }`}
                                     >
                                         {item.name === 'Announcements' ? 'News' : item.name}
