@@ -32,7 +32,7 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
         {
             id: 'arrivals',
             label: 'Arrivals',
-            mobileLabel: 'Here',
+            mobileLabel: 'Arrivals',
             href: '/org/arrivals',
             icon: Clock,
             badge: pendingCount > 0 ? `${pendingCount}` : activeCount > 0 ? `${activeCount}` : undefined,
@@ -42,7 +42,7 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
         {
             id: 'history',
             label: 'History',
-            mobileLabel: 'Log',
+            mobileLabel: 'History',
             href: '/org/arrivals/history',
             icon: History,
         },
@@ -51,7 +51,7 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                   {
                       id: 'public_windows' as const,
                       label: 'Public times',
-                      mobileLabel: 'Times',
+                      mobileLabel: 'Public times',
                       href: '/org/public-windows',
                       icon: Calendar,
                   },
@@ -62,9 +62,9 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
     return (
         <nav
             aria-label="Access workspace"
-            className="-mx-3 overflow-x-auto px-3 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden"
+            className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-            <div className="grid min-w-full auto-cols-fr grid-flow-col items-center gap-1 rounded-[1.45rem] bg-white/75 p-1 text-xs shadow-[0_10px_30px_rgba(15,23,42,0.05)] ring-1 ring-slate-200/80 backdrop-blur sm:inline-flex sm:min-w-0 sm:text-sm">
+            <div className="flex items-center gap-1 rounded-2xl bg-slate-100/90 p-1 text-xs sm:text-sm">
                 {tabs.map((tab) => {
                     const isActive = activeTab === tab.id;
                     const Icon = tab.icon;
@@ -73,26 +73,25 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                             key={tab.id}
                             href={tab.href}
                             aria-current={isActive ? 'page' : undefined}
-                            className={`relative flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[1.1rem] px-1.5 py-2.5 font-black whitespace-nowrap transition-all sm:flex-none sm:gap-2 sm:px-4 ${
+                            className={`relative flex min-h-10 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-medium whitespace-nowrap transition-all sm:flex-none sm:text-sm ${
                                 isActive
-                                    ? 'bg-[#0f172a] text-white shadow-[0_10px_24px_rgba(15,23,42,0.16)]'
-                                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                                    ? 'bg-white text-slate-950 font-semibold shadow-xs ring-1 ring-slate-900/5'
+                                    : 'text-slate-600 hover:text-slate-950'
                             }`}
                         >
-                            <Icon className="h-4 w-4" strokeWidth={isActive ? 2.5 : 2} />
-                            <span className="sm:hidden">{tab.mobileLabel}</span>
-                            <span className="hidden sm:inline">{tab.label}</span>
+                            <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.25 : 1.75} />
+                            <span>{tab.label}</span>
                             {tab.badge && (
                                 <span
                                     aria-label={tab.badgeLabel}
-                                    className={`min-w-5 rounded-full px-1.5 py-0.5 text-center text-[10px] font-black ${
+                                    className={`min-w-4 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none ${
                                         tab.badgeVariant === 'warning'
                                             ? isActive
-                                                ? 'bg-amber-300 text-amber-950'
-                                                : 'bg-amber-100 text-amber-900'
+                                                ? 'bg-amber-100 text-amber-900'
+                                                : 'bg-amber-100/80 text-amber-900'
                                             : isActive
-                                              ? 'bg-white/20 text-white'
-                                              : 'bg-slate-100 text-slate-600'
+                                              ? 'bg-slate-100 text-slate-700'
+                                              : 'bg-slate-200/80 text-slate-700'
                                     }`}
                                 >
                                     {tab.badge}
