@@ -1,6 +1,19 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircle, Building2, ChevronRight, FileText, MessageSquare } from 'lucide-react';
+import {
+    AlertCircle,
+    ArrowDown,
+    Building2,
+    Check,
+    ChevronDown,
+    ChevronRight,
+    FileText,
+    MessageSquare,
+    Search,
+    SlidersHorizontal,
+    X,
+} from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import MobileSheet from '@/Components/MobileSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { PostMedia } from '@/types';
 import { extractAnnouncementPreview } from '@/Utils/announcementPreview';
@@ -67,7 +80,7 @@ const CATEGORY_META: Record<string, { label: string; tone: string }> = {
 };
 
 const CATEGORIES = [
-    { value: 'all', label: 'All' },
+    { value: 'all', label: 'All Categories' },
     { value: 'general', label: 'Notices' },
     { value: 'maintenance', label: 'Maintenance' },
     { value: 'security', label: 'Security' },
@@ -75,10 +88,10 @@ const CATEGORIES = [
     { value: 'event', label: 'Events' },
 ];
 
-const READ_STATUSES: { value: 'all' | 'unread' | 'read'; label: string }[] = [
-    { value: 'all', label: 'All Status' },
-    { value: 'unread', label: 'Unread' },
-    { value: 'read', label: 'Read' },
+const READ_STATUSES: { value: 'all' | 'unread' | 'read'; label: string; description: string }[] = [
+    { value: 'all', label: 'All announcements', description: 'Show both read and unread notices' },
+    { value: 'unread', label: 'Unread only', description: 'Show updates you have not opened yet' },
+    { value: 'read', label: 'Read only', description: 'Show previously viewed updates' },
 ];
 
 function formatFeedTimestamp(publishedAt: string | null, humanFallback: string): string {
@@ -110,11 +123,21 @@ export default function Announcements({
     const [items, setItems] = useState<Post[]>(posts.data);
     const [nextPageUrl, setNextPageUrl] = useState<string | null>(posts.next_page_url);
 
+    // Filter states
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category || 'all');
     const [selectedReadStatus, setSelectedReadStatus] = useState<'all' | 'unread' | 'read'>(filters.read_status || 'all');
     const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>(filters.sort || 'latest');
 
+    // UI overlays
+    const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+    const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+
+    // Sheet draft states (to allow deliberate "Show results" apply)
+    const [draftCategory, setDraftCategory] = useState(selectedCategory);
+    const [draftReadStatus, setDraftReadStatus] = useState(selectedReadStatus);
+
+    const sortMenuRef = useRef<HTMLDivElement>(null);
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
@@ -124,7 +147,20 @@ export default function Announcements({
         setNextPageUrl(posts.next_page_url);
     }, [posts]);
 
-    // Handle filter application
+    // Close sort menu on click outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (sortMenuRef.current && !sortMenuRef.current.contains(e.target as Node)) {
+                setIsSortMenuOpen(false);
+            }
+        };
+        if (isSortMenuOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isSortMenuOpen]);
+
+    // Apply filters through Inertia (backend authoritative)
     const applyFilters = (
         newSearch: string,
         newCategory: string,
@@ -153,25 +189,56 @@ export default function Announcements({
         }
     };
 
-    const handleCategoryChange = (category: string) => {
-        setSelectedCategory(category);
-        applyFilters(search, category, selectedReadStatus, sortOrder);
-    };
-
-    const handleReadStatusChange = (status: 'all' | 'unread' | 'read') => {
-        setSelectedReadStatus(status);
-        applyFilters(search, selectedCategory, status, sortOrder);
-    };
-
-    const handleSortToggle = () => {
-        const nextSort = sortOrder === 'latest' ? 'oldest' : 'latest';
-        setSortOrder(nextSort);
-        applyFilters(search, selectedCategory, selectedReadStatus, nextSort);
-    };
-
     const handleClearSearch = () => {
         setSearch('');
         applyFilters('', selectedCategory, selectedReadStatus, sortOrder);
+    };
+
+    // Quick filter: Toggle Unread state directly from toolbar
+    const handleQuickUnreadToggle = () => {
+        const nextStatus = selectedReadStatus === 'unread' ? 'all' : 'unread';
+        setSelectedReadStatus(nextStatus);
+        setDraftReadStatus(nextStatus);
+        applyFilters(search, selectedCategory, nextStatus, sortOrder);
+    };
+
+    // Open Bottom Sheet with fresh draft state
+    const openFilterSheet = () => {
+        setDraftCategory(selectedCategory);
+        setDraftReadStatus(selectedReadStatus);
+        setIsFilterSheetOpen(true);
+    };
+
+    // Apply choices from Bottom Sheet
+    const handleApplySheetFilters = () => {
+        setSelectedCategory(draftCategory);
+        setSelectedReadStatus(draftReadStatus);
+        setIsFilterSheetOpen(false);
+        applyFilters(search, draftCategory, draftReadStatus, sortOrder);
+    };
+
+    // Reset within Bottom Sheet
+    const handleResetSheetFilters = () => {
+        setDraftCategory('all');
+        setDraftReadStatus('all');
+    };
+
+    // Clear all filters from toolbar/empty state
+    const handleClearAll = () => {
+        setSearch('');
+        setSelectedCategory('all');
+        setSelectedReadStatus('all');
+        setDraftCategory('all');
+        setDraftReadStatus('all');
+        setSortOrder('latest');
+        applyFilters('', 'all', 'all', 'latest');
+    };
+
+    // Handle Sort change from menu
+    const handleSelectSort = (newSort: 'latest' | 'oldest') => {
+        setSortOrder(newSort);
+        setIsSortMenuOpen(false);
+        applyFilters(search, selectedCategory, selectedReadStatus, newSort);
     };
 
     const loadMore = useCallback(() => {
@@ -218,12 +285,18 @@ export default function Announcements({
         return () => observer.disconnect();
     }, [loadMore]);
 
+    // Active sheet filter count (excluding default 'all')
+    const activeSheetFilterCount =
+        (selectedCategory !== 'all' ? 1 : 0) + (selectedReadStatus === 'read' ? 1 : 0);
+
     const hasActiveFilters = Boolean(
         filters.search ||
             (filters.category && filters.category !== 'all') ||
             (filters.read_status && filters.read_status !== 'all') ||
             (filters.sort && filters.sort !== 'latest'),
     );
+
+    const isUnreadQuickActive = selectedReadStatus === 'unread';
 
     return (
         <OrganizationLayout title="Announcements" contentClassName="max-w-xl px-3 sm:px-4">
@@ -242,107 +315,176 @@ export default function Announcements({
                     </div>
 
                     {unread_count > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 border border-blue-100">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 border border-blue-100">
                             <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
                             {unread_count} new
                         </span>
                     )}
                 </header>
 
-                {/* 2. Search and Filter Bar */}
-                <div className="mb-4 space-y-2.5">
-                    <div className="flex items-center gap-2">
-                        <div className="relative flex-1">
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                onKeyDown={handleSearchKeyDown}
-                                placeholder="Search updates..."
-                                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                            <svg
-                                className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth={2}
+                {/* 2. Mobile Search & Filter Toolbar */}
+                <div className="mb-3 space-y-2">
+                    {/* Search Field */}
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            onKeyDown={handleSearchKeyDown}
+                            placeholder="Search updates..."
+                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={handleClearSearch}
+                                className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                title="Clear search"
+                                aria-label="Clear search"
                             >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
-                            {search && (
-                                <button
-                                    type="button"
-                                    onClick={handleClearSearch}
-                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                                    title="Clear search"
-                                >
-                                    <span className="text-xs font-bold leading-none">✕</span>
-                                </button>
-                            )}
-                        </div>
+                                <X className="h-3.5 w-3.5" />
+                            </button>
+                        )}
+                    </div>
 
+                    {/* Controls Row: Quick Filter [Unread] + [Filter] + [Sort] */}
+                    <div className="flex items-center gap-2">
+                        {/* Quick Filter: Unread toggle */}
                         <button
                             type="button"
-                            onClick={handleSortToggle}
-                            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
-                                sortOrder === 'oldest'
-                                    ? 'border-blue-200 bg-blue-50 text-blue-700'
+                            onClick={handleQuickUnreadToggle}
+                            aria-pressed={isUnreadQuickActive}
+                            className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors ${
+                                isUnreadQuickActive
+                                    ? 'bg-blue-600 text-white shadow-xs'
+                                    : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                            }`}
+                        >
+                            <span className={`h-1.5 w-1.5 rounded-full ${isUnreadQuickActive ? 'bg-white' : 'bg-blue-600'}`} />
+                            <span>Unread</span>
+                        </button>
+
+                        {/* Filter Button (Opens Sheet) */}
+                        <button
+                            type="button"
+                            onClick={openFilterSheet}
+                            className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                                activeSheetFilterCount > 0
+                                    ? 'border-blue-300 bg-blue-50/80 text-blue-700'
                                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                             }`}
-                            title={`Sorted by ${sortOrder === 'latest' ? 'newest first' : 'oldest first'}. Click to toggle.`}
+                            aria-label={`Open filters${activeSheetFilterCount > 0 ? `, ${activeSheetFilterCount} active` : ''}`}
                         >
-                            <span>{sortOrder === 'latest' ? 'Newest' : 'Oldest'}</span>
-                            <span className="text-slate-400 text-[10px]">⇅</span>
+                            <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
+                            <span>Filter</span>
+                            {activeSheetFilterCount > 0 && (
+                                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white leading-none">
+                                    {activeSheetFilterCount}
+                                </span>
+                            )}
                         </button>
-                    </div>
 
-                    {/* Read / Unread Status Filter & Category Chips */}
-                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                        {/* Status Chips */}
-                        <div className="flex items-center gap-1 shrink-0 pr-1.5 border-r border-slate-200">
-                            {READ_STATUSES.map((status) => {
-                                const isSelected = selectedReadStatus === status.value;
-                                return (
+                        {/* Sort Dropdown Anchor */}
+                        <div className="relative ml-auto" ref={sortMenuRef}>
+                            <button
+                                type="button"
+                                onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
+                                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                aria-haspopup="true"
+                                aria-expanded={isSortMenuOpen}
+                            >
+                                <ArrowDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${sortOrder === 'oldest' ? 'rotate-180' : ''}`} />
+                                <span>{sortOrder === 'latest' ? 'Newest' : 'Oldest'}</span>
+                                <ChevronDown className="h-3 w-3 text-slate-400" />
+                            </button>
+
+                            {/* Sort Menu Popover */}
+                            {isSortMenuOpen && (
+                                <div className="absolute right-0 top-full mt-1.5 w-40 z-30 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
                                     <button
-                                        key={status.value}
                                         type="button"
-                                        onClick={() => handleReadStatusChange(status.value)}
-                                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                                            isSelected
-                                                ? 'bg-blue-600 text-white'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-                                        }`}
+                                        onClick={() => handleSelectSort('latest')}
+                                        className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 transition-colors"
                                     >
-                                        {status.label}
+                                        <span>Newest first</span>
+                                        {sortOrder === 'latest' && <Check className="h-3.5 w-3.5 text-blue-600" />}
                                     </button>
-                                );
-                            })}
+                                    <button
+                                        type="button"
+                                        onClick={() => handleSelectSort('oldest')}
+                                        className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 transition-colors"
+                                    >
+                                        <span>Oldest first</span>
+                                        {sortOrder === 'oldest' && <Check className="h-3.5 w-3.5 text-blue-600" />}
+                                    </button>
+                                </div>
+                            )}
                         </div>
-
-                        {/* Category Filter Pills */}
-                        {CATEGORIES.map((cat) => {
-                            const isSelected = selectedCategory === cat.value;
-                            return (
-                                <button
-                                    key={cat.value}
-                                    type="button"
-                                    onClick={() => handleCategoryChange(cat.value)}
-                                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
-                                        isSelected
-                                            ? 'bg-slate-900 text-white'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-                                    }`}
-                                >
-                                    {cat.label}
-                                </button>
-                            );
-                        })}
                     </div>
+
+                    {/* Active Filter Removable Summary Chips (Only when filters are active) */}
+                    {hasActiveFilters && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                            {search && (
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700">
+                                    <span>"{search}"</span>
+                                    <button
+                                        type="button"
+                                        onClick={handleClearSearch}
+                                        className="text-slate-400 hover:text-slate-700"
+                                        aria-label="Remove search filter"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </span>
+                            )}
+
+                            {selectedCategory !== 'all' && (
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700">
+                                    <span>{CATEGORY_META[selectedCategory]?.label || selectedCategory}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedCategory('all');
+                                            setDraftCategory('all');
+                                            applyFilters(search, 'all', selectedReadStatus, sortOrder);
+                                        }}
+                                        className="text-slate-400 hover:text-slate-700"
+                                        aria-label="Remove category filter"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </span>
+                            )}
+
+                            {selectedReadStatus === 'read' && (
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-700">
+                                    <span>Read only</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setSelectedReadStatus('all');
+                                            setDraftReadStatus('all');
+                                            applyFilters(search, selectedCategory, 'all', sortOrder);
+                                        }}
+                                        className="text-slate-400 hover:text-slate-700"
+                                        aria-label="Remove read filter"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                </span>
+                            )}
+
+                            <button
+                                type="button"
+                                onClick={handleClearAll}
+                                className="text-[11px] font-medium text-blue-600 hover:text-blue-800 ml-1"
+                            >
+                                Reset all
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* 3. Community Stream Feed or Empty State */}
@@ -352,26 +494,20 @@ export default function Announcements({
                             <Building2 className="h-6 w-6 stroke-[1.5]" />
                         </div>
                         <h2 className="mt-4 text-base font-semibold text-slate-900">
-                            {hasActiveFilters ? 'No updates match your filters' : "You're all caught up"}
+                            {hasActiveFilters ? 'No matching updates' : "You're all caught up"}
                         </h2>
                         <p className="mt-1 mx-auto max-w-xs text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
                             {hasActiveFilters
-                                ? 'Try adjusting your search terms, read status, or filter category to find what you are looking for.'
+                                ? 'Try changing your search terms or filter criteria to find what you are looking for.'
                                 : `There aren't any estate updates yet. New announcements from ${estateName} will appear here.`}
                         </p>
                         {hasActiveFilters && (
                             <button
                                 type="button"
-                                onClick={() => {
-                                    setSearch('');
-                                    setSelectedCategory('all');
-                                    setSelectedReadStatus('all');
-                                    setSortOrder('latest');
-                                    applyFilters('', 'all', 'all', 'latest');
-                                }}
-                                className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
+                                onClick={handleClearAll}
+                                className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
                             >
-                                Reset filters
+                                Clear filters
                             </button>
                         )}
                     </div>
@@ -566,6 +702,98 @@ export default function Announcements({
                     </div>
                 )}
             </div>
+
+            {/* Mobile Filter Sheet */}
+            <MobileSheet
+                isOpen={isFilterSheetOpen}
+                onClose={() => setIsFilterSheetOpen(false)}
+                title="Filter updates"
+            >
+                <div className="space-y-6 pt-1">
+                    {/* Status Group */}
+                    <div>
+                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                            Read Status
+                        </label>
+                        <div className="mt-2.5 space-y-1.5">
+                            {READ_STATUSES.map((status) => {
+                                const isSelected = draftReadStatus === status.value;
+                                return (
+                                    <button
+                                        key={status.value}
+                                        type="button"
+                                        onClick={() => setDraftReadStatus(status.value)}
+                                        className={`w-full min-h-[44px] flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors ${
+                                            isSelected
+                                                ? 'bg-blue-50 text-blue-900 ring-1 ring-blue-200'
+                                                : 'bg-slate-50 text-slate-800 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <div>
+                                            <p className="text-xs font-semibold">{status.label}</p>
+                                            <p className="text-[11px] text-slate-500 font-normal">{status.description}</p>
+                                        </div>
+                                        <div
+                                            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                                                isSelected
+                                                    ? 'border-blue-600 bg-blue-600 text-white'
+                                                    : 'border-slate-300 bg-white'
+                                            }`}
+                                        >
+                                            {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Category Group */}
+                    <div>
+                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                            Category
+                        </label>
+                        <div className="mt-2.5 grid grid-cols-2 gap-2">
+                            {CATEGORIES.map((cat) => {
+                                const isSelected = draftCategory === cat.value;
+                                return (
+                                    <button
+                                        key={cat.value}
+                                        type="button"
+                                        onClick={() => setDraftCategory(cat.value)}
+                                        className={`min-h-[44px] flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-colors ${
+                                            isSelected
+                                                ? 'bg-blue-50 text-blue-900 ring-1 ring-blue-200 font-semibold'
+                                                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                                        }`}
+                                    >
+                                        <span className="truncate">{cat.label}</span>
+                                        {isSelected && <Check className="h-3.5 w-3.5 text-blue-600 shrink-0 ml-1" />}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* Sheet Footer Action Buttons */}
+                    <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                        <button
+                            type="button"
+                            onClick={handleResetSheetFilters}
+                            className="min-h-[44px] flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                        >
+                            Reset
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleApplySheetFilters}
+                            className="min-h-[44px] flex-1 rounded-xl bg-blue-600 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition-colors"
+                        >
+                            Show results
+                        </button>
+                    </div>
+                </div>
+            </MobileSheet>
         </OrganizationLayout>
     );
 }
