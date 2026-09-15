@@ -327,8 +327,8 @@ it('resolves target user IDs for organization audience and includes them in all'
         'is_active' => true,
     ]);
     $orgAdmin2 = User::factory()->create();
-    EstateOrganizationMembership::create([
-        'estate_organization_id' => $org2->id,
+    OrganizationMembership::create([
+        'organization_id' => $org2->id,
         'user_id' => $orgAdmin2->id,
         'role' => 'admin',
         'is_active' => true,
