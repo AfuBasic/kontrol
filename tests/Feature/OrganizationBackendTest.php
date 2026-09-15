@@ -360,8 +360,8 @@ test('organization portal routes render successfully for authorized organization
     $this->get(route('org.dashboard'))->assertOk();
     $this->get(route('org.access-list.index'))->assertOk();
     $this->get(route('org.credentials.index'))->assertOk();
-    $this->get(route('org.arrivals.index'))->assertOk();
-    $this->get(route('org.public-windows.index'))->assertOk();
+    $this->get(route('org.arrivals.index'))->assertRedirect(route('org.access-list.index', ['tab' => 'arrivals']));
+    $this->get(route('org.public-windows.index'))->assertRedirect(route('org.access-list.index', ['tab' => 'public_windows']));
     $this->get(route('org.payments.index'))->assertOk();
     $this->get(route('org.announcements.index'))->assertOk();
     $this->get(route('org.settings.index'))->assertOk();
@@ -428,4 +428,55 @@ test('organization admin can confirm arrival via portal HTTP endpoint', function
     expect($log->confirmed_at)->not->toBeNull()
         ->and($log->confirmed_by)->toBe($this->orgAdmin->id)
         ->and($log->confirmationState(15))->toBe('CONFIRMED');
+});
+
+test('organization announcements can be searched, filtered by category, and sorted', function () {
+    $this->actingAs($this->orgAdmin);
+    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
+
+    $post1 = EstateBoardPost::factory()->published()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->orgAdmin->id,
+        'title' => 'Security Gate Firmware Maintenance',
+        'body' => 'Notice regarding gate sensor update',
+        'category' => 'security',
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => now()->subDays(2),
+    ]);
+
+    $post2 = EstateBoardPost::factory()->published()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->orgAdmin->id,
+        'title' => 'Annual General Meeting',
+        'body' => 'Upcoming AGM schedule',
+        'category' => 'meeting',
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => now()->subDay(),
+    ]);
+
+    // Test search filter
+    $this->get(route('org.announcements.index', ['search' => 'Security Gate']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.search', 'Security Gate')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post1->id));
+
+    // Test category filter
+    $this->get(route('org.announcements.index', ['category' => 'meeting']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.category', 'meeting')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post2->id));
+
+    // Test sorting oldest first
+    $this->get(route('org.announcements.index', ['sort' => 'oldest']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.sort', 'oldest')
+            ->where('posts.data.0.id', $post1->id));
 });
