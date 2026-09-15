@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, Check, User, ChevronDown, MapPin } from 'lucide-react';
+import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, Check, User, ChevronDown, MapPin, Building2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { index, store } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import MoneyInput from '@/Components/MoneyInput';
@@ -19,15 +19,22 @@ type ZoneOption = {
     name: string;
 };
 
+type OrganizationOption = {
+    id: number;
+    name: string;
+    type: string;
+};
+
 type Props = {
     residents: Resident[];
     zones: ZoneOption[];
+    organizations?: OrganizationOption[];
     context?: {
         is_zone_scoped?: boolean;
     };
 };
 
-export default function CreateCollection({ residents = [], zones = [], context }: Props) {
+export default function CreateCollection({ residents = [], zones = [], organizations = [], context }: Props) {
     const isZoneScoped = context?.is_zone_scoped ?? false;
 
     const { data, setData, post, processing, errors } = useForm({
@@ -44,9 +51,29 @@ export default function CreateCollection({ residents = [], zones = [], context }
         applies_to: isZoneScoped ? 'zone' : 'all',
         targets: [] as number[],
         zones: isZoneScoped && zones[0] ? [zones[0].id] : ([] as number[]),
+        organizations: [] as number[],
     });
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [orgSearchQuery, setOrgSearchQuery] = useState('');
+
+    const filteredOrganizations = useMemo(() => {
+        return (organizations || []).filter((org) =>
+            org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()) ||
+            (org.type && org.type.toLowerCase().includes(orgSearchQuery.toLowerCase()))
+        );
+    }, [organizations, orgSearchQuery]);
+
+    const toggleOrganization = (id: number) => {
+        const current = [...(data.organizations || [])];
+        const index = current.indexOf(id);
+        if (index > -1) {
+            current.splice(index, 1);
+        } else {
+            current.push(id);
+        }
+        setData('organizations', current);
+    };
 
     const filteredResidents = useMemo(() => {
         return (residents || []).filter(
@@ -467,6 +494,147 @@ export default function CreateCollection({ residents = [], zones = [], context }
                                         </div>
                                     </div>
                                 </motion.div>
+                            ) : data.applies_to === 'organization' ? (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    {organizations.length === 0 ? (
+                                        <div className="rounded-3xl bg-amber-50 p-8 text-center ring-1 ring-amber-100">
+                                            <p className="text-sm font-bold text-amber-800">
+                                                No active organizations found in this estate. Register organizations first to target them for collections.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="relative mb-6">
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6">
+                                                    <Search className="h-4 w-4 text-slate-400" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={orgSearchQuery}
+                                                    onChange={(e) => setOrgSearchQuery(e.target.value)}
+                                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-6 pl-14 text-sm text-slate-900 ring-1 ring-slate-200 focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                                    placeholder="Search organizations by name or type..."
+                                                />
+                                            </div>
+
+                                            <div className="max-h-[400px] overflow-y-auto rounded-3xl border border-slate-100 bg-slate-50/50 p-4">
+                                                <div className="grid gap-3">
+                                                    {filteredOrganizations.map((org) => {
+                                                        const isSelected = (data.organizations || []).includes(org.id);
+                                                        return (
+                                                            <button
+                                                                key={org.id}
+                                                                type="button"
+                                                                onClick={() => toggleOrganization(org.id)}
+                                                                className={`flex items-center justify-between rounded-2xl p-4 transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-white text-[#1F6FDB] shadow-sm ring-1 ring-[#1F6FDB]/30'
+                                                                        : 'text-slate-600 hover:bg-white hover:shadow-sm'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <div
+                                                                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}
+                                                                    >
+                                                                        <Building2 className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
+                                                                    </div>
+                                                                    <div className="text-left">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="text-sm font-black tracking-tight">{org.name}</p>
+                                                                            {org.type && (
+                                                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
+                                                                                    {org.type}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                {isSelected && (
+                                                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                                                                        <CheckCircle2 className="h-6 w-6 text-blue-500" />
+                                                                    </motion.div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2">
+                                                <p className="text-xs font-bold text-slate-500">
+                                                    {(data.organizations || []).length === 0
+                                                        ? 'All organizations will be billed (or choose specific ones below)'
+                                                        : `${(data.organizations || []).length} of ${organizations.length} organizations selected`}
+                                                </p>
+                                                <div className="flex flex-wrap gap-2 sm:gap-3">
+                                                    <AnimatePresence mode="popLayout">
+                                                        {/* Search-specific Select All */}
+                                                        {orgSearchQuery &&
+                                                            filteredOrganizations.length > 0 &&
+                                                            !filteredOrganizations.every((o) => (data.organizations || []).includes(o.id)) && (
+                                                                <motion.button
+                                                                    key="select-matches-org"
+                                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                                    animate={{ opacity: 1, scale: 1 }}
+                                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const newOrgs = Array.from(
+                                                                            new Set([...(data.organizations || []), ...filteredOrganizations.map((o) => o.id)]),
+                                                                        );
+                                                                        setData('organizations', newOrgs);
+                                                                    }}
+                                                                    className="rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-blue-100"
+                                                                >
+                                                                    Select {filteredOrganizations.length} Matches
+                                                                </motion.button>
+                                                            )}
+
+                                                        {/* Global Select All */}
+                                                        {(data.organizations || []).length < (organizations || []).length && !orgSearchQuery && (
+                                                            <motion.button
+                                                                key="select-all-org"
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setData(
+                                                                        'organizations',
+                                                                        (organizations || []).map((o) => o.id),
+                                                                    )
+                                                                }
+                                                                className="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-slate-200"
+                                                            >
+                                                                Select All ({(organizations || []).length})
+                                                            </motion.button>
+                                                        )}
+
+                                                        {/* Global Unselect All */}
+                                                        {(data.organizations || []).length > 0 && (
+                                                            <motion.button
+                                                                key="unselect-all-org"
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                                type="button"
+                                                                onClick={() => setData('organizations', [])}
+                                                                className="rounded-lg bg-rose-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-rose-500 uppercase transition-colors hover:bg-rose-100"
+                                                            >
+                                                                Unselect All
+                                                            </motion.button>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </motion.div>
                             ) : (
                                 <motion.div
                                     initial={{ opacity: 0 }}
@@ -474,11 +642,9 @@ export default function CreateCollection({ residents = [], zones = [], context }
                                     className="rounded-2xl sm:rounded-3xl bg-blue-50/50 p-6 sm:p-8 text-center ring-1 ring-blue-100"
                                 >
                                     <p className="text-xs sm:text-sm font-bold text-blue-700">
-                                        {data.applies_to === 'organization'
-                                            ? 'This collection will apply to all active estate organizations.'
-                                            : data.applies_to === 'property_owner'
-                                              ? 'This collection will apply to all current and future property owners of the estate.'
-                                              : 'This collection will apply to everyone: all current and future residents and organizations in the estate.'}
+                                        {data.applies_to === 'property_owner'
+                                            ? 'This collection will apply to all current and future property owners of the estate.'
+                                            : 'This collection will apply to everyone: all current and future residents and organizations in the estate.'}
                                     </p>
                                 </motion.div>
                             )}
