@@ -13,6 +13,7 @@ use App\Models\AccessCode;
 use App\Models\Estate;
 use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostMedia;
+use App\Models\EstateBoardPostRead;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationAccessMember;
 use App\Models\OrganizationMembership;
@@ -472,11 +473,27 @@ test('organization announcements can be searched, filtered by category, and sort
             ->has('posts.data', 1)
             ->where('posts.data.0.id', $post2->id));
 
-    // Test sorting oldest first
-    $this->get(route('org.announcements.index', ['sort' => 'oldest']))
+    // Mark post1 as read by orgAdmin
+    EstateBoardPostRead::create([
+        'estate_board_post_id' => $post1->id,
+        'user_id' => $this->orgAdmin->id,
+    ]);
+
+    // Test unread filter
+    $this->get(route('org.announcements.index', ['read_status' => 'unread']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Organization/Announcements')
-            ->where('filters.sort', 'oldest')
+            ->where('filters.read_status', 'unread')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post2->id));
+
+    // Test read filter
+    $this->get(route('org.announcements.index', ['read_status' => 'read']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.read_status', 'read')
+            ->has('posts.data', 1)
             ->where('posts.data.0.id', $post1->id));
 });
