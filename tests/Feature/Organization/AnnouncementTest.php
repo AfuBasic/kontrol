@@ -147,3 +147,45 @@ test('organization user cannot view announcement from another estate', function 
 
     $response->assertNotFound();
 });
+
+test('organization user can post and delete comments on estate announcements', function () {
+    $estateAuthor = User::factory()->create();
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $estateAuthor->id,
+        'title' => 'Community Clean-up Exercise',
+        'body' => 'Notice for the community...',
+        'status' => EstateBoardPostStatus::Published,
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => now(),
+    ]);
+
+    // 1. Post a comment
+    $response = $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->post(route('org.announcements.comments.store', $post), [
+            'body' => 'Our business unit will contribute volunteers and materials.',
+        ]);
+
+    $response->assertRedirect();
+
+    $this->assertDatabaseHas('estate_board_comments', [
+        'estate_board_post_id' => $post->id,
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->user->id,
+        'body' => 'Our business unit will contribute volunteers and materials.',
+    ]);
+
+    $comment = \App\Models\EstateBoardComment::where('estate_board_post_id', $post->id)->first();
+
+    // 2. Delete the comment
+    $deleteResponse = $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->delete(route('org.announcements.comments.destroy', $comment));
+
+    $deleteResponse->assertRedirect();
+    $this->assertSoftDeleted('estate_board_comments', [
+        'id' => $comment->id,
+    ]);
+});
+
