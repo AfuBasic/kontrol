@@ -46,6 +46,7 @@ class AnnouncementController extends Controller
 
         $search = $request->string('search')->trim()->toString();
         $category = $request->string('category')->trim()->toString();
+        $readStatus = $request->string('read_status')->trim()->toString() ?: 'all';
         $sort = $request->string('sort')->trim()->toString() ?: 'latest';
 
         $postsQuery = (clone $baseQuery)
@@ -57,6 +58,12 @@ class AnnouncementController extends Controller
             })
             ->when($category !== '' && $category !== 'all', function ($q) use ($category) {
                 $q->where('category', $category);
+            })
+            ->when($user && $readStatus === 'unread', function ($q) use ($user) {
+                $q->whereDoesntHave('reads', fn ($sub) => $sub->where('user_id', $user->id));
+            })
+            ->when($user && $readStatus === 'read', function ($q) use ($user) {
+                $q->whereHas('reads', fn ($sub) => $sub->where('user_id', $user->id));
             })
             ->with(['author:id,name', 'media'])
             ->withCount('comments')
@@ -126,6 +133,7 @@ class AnnouncementController extends Controller
             'filters' => [
                 'search' => $search,
                 'category' => $category ?: 'all',
+                'read_status' => $readStatus,
                 'sort' => $sort,
             ],
             'posts' => $posts,
