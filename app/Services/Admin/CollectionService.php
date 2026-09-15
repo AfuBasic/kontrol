@@ -154,7 +154,7 @@ class CollectionService
                     ->pluck('users.id')
                     ->toArray();
             } else {
-                $userIds = User::forEstate($estate->id)
+                $residentAndOwnerIds = User::forEstate($estate->id)
                     ->where(function ($q) use ($estate) {
                         $q->withRole(['resident', 'property_owner'], $estate->id)
                             ->orWhereHas('estates', fn ($eq) => $eq->where('estates.id', $estate->id)->whereIn('estate_users_membership.relationship_type', ['resident', 'property_owner']));
@@ -163,7 +163,27 @@ class CollectionService
                     ->whereNull('users.suspended_at')
                     ->pluck('users.id')
                     ->toArray();
+
+                $orgAdminIds = User::whereHas('organizationMemberships', function ($q) use ($estate) {
+                    $q->where('role', 'admin')
+                        ->where('is_active', true)
+                        ->whereHas('organization', fn ($oq) => $oq->where('estate_id', $estate->id)->where('is_active', true));
+                })
+                    ->whereNull('users.suspended_at')
+                    ->pluck('users.id')
+                    ->toArray();
+
+                $userIds = array_values(array_unique(array_merge($residentAndOwnerIds, $orgAdminIds)));
             }
+        } elseif ($collection->applies_to === 'organization') {
+            $userIds = User::whereHas('organizationMemberships', function ($q) use ($estate) {
+                $q->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->whereHas('organization', fn ($oq) => $oq->where('estate_id', $estate->id)->where('is_active', true));
+            })
+                ->whereNull('users.suspended_at')
+                ->pluck('users.id')
+                ->toArray();
         } elseif ($collection->applies_to === 'property_owner') {
             $userIds = User::forEstate($estate->id)
                 ->withRole('property_owner', $estate->id)
