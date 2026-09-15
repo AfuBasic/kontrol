@@ -52,6 +52,7 @@ interface Props {
     filters?: {
         search?: string;
         category?: string;
+        read_status?: 'all' | 'unread' | 'read';
         sort?: 'latest' | 'oldest';
     };
     posts: CursorPaginatedPosts;
@@ -72,6 +73,12 @@ const CATEGORIES = [
     { value: 'security', label: 'Security' },
     { value: 'meeting', label: 'Meetings' },
     { value: 'event', label: 'Events' },
+];
+
+const READ_STATUSES: { value: 'all' | 'unread' | 'read'; label: string }[] = [
+    { value: 'all', label: 'All Status' },
+    { value: 'unread', label: 'Unread' },
+    { value: 'read', label: 'Read' },
 ];
 
 function formatFeedTimestamp(publishedAt: string | null, humanFallback: string): string {
@@ -105,6 +112,7 @@ export default function Announcements({
 
     const [search, setSearch] = useState(filters.search || '');
     const [selectedCategory, setSelectedCategory] = useState(filters.category || 'all');
+    const [selectedReadStatus, setSelectedReadStatus] = useState<'all' | 'unread' | 'read'>(filters.read_status || 'all');
     const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>(filters.sort || 'latest');
 
     const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -117,12 +125,18 @@ export default function Announcements({
     }, [posts]);
 
     // Handle filter application
-    const applyFilters = (newSearch: string, newCategory: string, newSort: 'latest' | 'oldest') => {
+    const applyFilters = (
+        newSearch: string,
+        newCategory: string,
+        newReadStatus: 'all' | 'unread' | 'read',
+        newSort: 'latest' | 'oldest',
+    ) => {
         router.get(
             '/org/announcements',
             {
                 search: newSearch || undefined,
                 category: newCategory !== 'all' ? newCategory : undefined,
+                read_status: newReadStatus !== 'all' ? newReadStatus : undefined,
                 sort: newSort !== 'latest' ? newSort : undefined,
             },
             {
@@ -135,24 +149,29 @@ export default function Announcements({
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
-            applyFilters(search, selectedCategory, sortOrder);
+            applyFilters(search, selectedCategory, selectedReadStatus, sortOrder);
         }
     };
 
     const handleCategoryChange = (category: string) => {
         setSelectedCategory(category);
-        applyFilters(search, category, sortOrder);
+        applyFilters(search, category, selectedReadStatus, sortOrder);
+    };
+
+    const handleReadStatusChange = (status: 'all' | 'unread' | 'read') => {
+        setSelectedReadStatus(status);
+        applyFilters(search, selectedCategory, status, sortOrder);
     };
 
     const handleSortToggle = () => {
         const nextSort = sortOrder === 'latest' ? 'oldest' : 'latest';
         setSortOrder(nextSort);
-        applyFilters(search, selectedCategory, nextSort);
+        applyFilters(search, selectedCategory, selectedReadStatus, nextSort);
     };
 
     const handleClearSearch = () => {
         setSearch('');
-        applyFilters('', selectedCategory, sortOrder);
+        applyFilters('', selectedCategory, selectedReadStatus, sortOrder);
     };
 
     const loadMore = useCallback(() => {
@@ -199,7 +218,12 @@ export default function Announcements({
         return () => observer.disconnect();
     }, [loadMore]);
 
-    const hasActiveFilters = Boolean(filters.search || (filters.category && filters.category !== 'all') || (filters.sort && filters.sort !== 'latest'));
+    const hasActiveFilters = Boolean(
+        filters.search ||
+            (filters.category && filters.category !== 'all') ||
+            (filters.read_status && filters.read_status !== 'all') ||
+            (filters.sort && filters.sort !== 'latest'),
+    );
 
     return (
         <OrganizationLayout title="Announcements" contentClassName="max-w-xl px-3 sm:px-4">
@@ -277,8 +301,30 @@ export default function Announcements({
                         </button>
                     </div>
 
-                    {/* Category Filter Pills */}
+                    {/* Read / Unread Status Filter & Category Chips */}
                     <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                        {/* Status Chips */}
+                        <div className="flex items-center gap-1 shrink-0 pr-1.5 border-r border-slate-200">
+                            {READ_STATUSES.map((status) => {
+                                const isSelected = selectedReadStatus === status.value;
+                                return (
+                                    <button
+                                        key={status.value}
+                                        type="button"
+                                        onClick={() => handleReadStatusChange(status.value)}
+                                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
+                                            isSelected
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                                        }`}
+                                    >
+                                        {status.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* Category Filter Pills */}
                         {CATEGORIES.map((cat) => {
                             const isSelected = selectedCategory === cat.value;
                             return (
@@ -286,7 +332,7 @@ export default function Announcements({
                                     key={cat.value}
                                     type="button"
                                     onClick={() => handleCategoryChange(cat.value)}
-                                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
                                         isSelected
                                             ? 'bg-slate-900 text-white'
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
@@ -310,7 +356,7 @@ export default function Announcements({
                         </h2>
                         <p className="mt-1 mx-auto max-w-xs text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
                             {hasActiveFilters
-                                ? 'Try adjusting your search terms or filter category to find what you are looking for.'
+                                ? 'Try adjusting your search terms, read status, or filter category to find what you are looking for.'
                                 : `There aren't any estate updates yet. New announcements from ${estateName} will appear here.`}
                         </p>
                         {hasActiveFilters && (
@@ -319,8 +365,9 @@ export default function Announcements({
                                 onClick={() => {
                                     setSearch('');
                                     setSelectedCategory('all');
+                                    setSelectedReadStatus('all');
                                     setSortOrder('latest');
-                                    applyFilters('', 'all', 'latest');
+                                    applyFilters('', 'all', 'all', 'latest');
                                 }}
                                 className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
                             >
