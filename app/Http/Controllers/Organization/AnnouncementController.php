@@ -3,13 +3,11 @@
 namespace App\Http\Controllers\Organization;
 
 use App\Actions\EstateBoard\AddCommentAction;
-use App\Actions\EstateBoard\DeleteCommentAction;
 use App\Actions\EstateBoard\RecordPostReadAction;
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Organization\StoreAnnouncementCommentRequest;
-use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostRead;
 use App\Models\EstateOrganization;
@@ -193,31 +191,5 @@ class AnnouncementController extends Controller
         $action->execute($request->validated(), $post, $organization->estate);
 
         return back()->with('success', 'Comment added.');
-    }
-
-    /**
-     * Delete an announcement comment.
-     */
-    public function destroyComment(Request $request, EstateBoardComment $comment, DeleteCommentAction $action): RedirectResponse
-    {
-        /** @var EstateOrganization $organization */
-        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
-        $user = $request->user();
-
-        abort_unless(
-            $comment->estate_id === $organization->estate_id,
-            404
-        );
-
-        // User can delete their own comment or if they are an organization admin
-        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
-        abort_unless(
-            $comment->user_id === $user->id || $membership->isAdmin(),
-            403
-        );
-
-        $action->execute($comment);
-
-        return back()->with('success', 'Comment deleted.');
     }
 }
