@@ -53,10 +53,12 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     // 3. Payments
     Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
 
-    // 4. Announcements
+    // 4. Announcements & Discussions
     Route::prefix('announcements')->name('announcements.')->group(function () {
         Route::get('/', [AnnouncementController::class, 'index'])->name('index');
         Route::get('/{post}', [AnnouncementController::class, 'show'])->name('show');
+        Route::post('/{post}/comments', [AnnouncementController::class, 'storeComment'])->name('comments.store');
+        Route::delete('/comments/{comment}', [AnnouncementController::class, 'destroyComment'])->name('comments.destroy');
     });
 
     // 5. Profile & Settings (Team & Preferences)
