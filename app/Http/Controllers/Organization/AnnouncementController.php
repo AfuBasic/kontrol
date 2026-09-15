@@ -8,7 +8,7 @@ use App\Actions\EstateBoard\RecordPostReadAction;
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\EstateBoard\StoreCommentRequest;
+use App\Http\Requests\Organization\StoreAnnouncementCommentRequest;
 use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostRead;
@@ -178,7 +178,7 @@ class AnnouncementController extends Controller
     /**
      * Store a comment on an announcement.
      */
-    public function storeComment(StoreCommentRequest $request, EstateBoardPost $post, AddCommentAction $action): RedirectResponse
+    public function storeComment(StoreAnnouncementCommentRequest $request, EstateBoardPost $post, AddCommentAction $action): RedirectResponse
     {
         /** @var EstateOrganization $organization */
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
