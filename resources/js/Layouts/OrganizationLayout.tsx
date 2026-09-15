@@ -11,6 +11,7 @@ interface Props {
     title?: string;
     contentClassName?: string;
     onRefresh?: () => void;
+    hideBottomNav?: boolean;
 }
 
 interface NavItem {
@@ -20,7 +21,13 @@ interface NavItem {
     exact?: boolean;
 }
 
-export default function OrganizationLayout({ children, title: _title, contentClassName = 'max-w-7xl', onRefresh }: Props) {
+export default function OrganizationLayout({
+    children,
+    title: _title,
+    contentClassName = 'max-w-7xl',
+    onRefresh,
+    hideBottomNav = false,
+}: Props) {
     const page = usePage();
     const { url } = page;
     const props = page.props as any;
@@ -181,7 +188,11 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                 </div>
             </header>
 
-            <main className="w-full flex-1 px-3 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))] sm:px-6 sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:px-10 lg:pb-12">
+            <main className={`w-full flex-1 px-3 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
+                hideBottomNav
+                    ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]'
+                    : 'pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))]'
+            } sm:px-6 sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:px-10 lg:pb-12`}>
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
                         {props.flash?.success && (
@@ -200,15 +211,16 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                 </PullToRefresh>
             </main>
 
-            <div
-                data-mobile-bottom-nav
-                className="pointer-events-none fixed inset-x-0 bottom-[calc(0.8rem+env(safe-area-inset-bottom,0px))] z-40 px-3 transition-opacity duration-150 lg:hidden"
-            >
-                <motion.nav
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="pointer-events-auto mx-auto w-full max-w-[26rem] rounded-[26px] border border-white/70 bg-white/[0.94] px-1.5 py-1.5 shadow-[0_16px_50px_rgba(15,23,42,0.16)] ring-1 ring-slate-900/5 backdrop-blur-xl"
+            {!hideBottomNav && (
+                <div
+                    data-mobile-bottom-nav
+                    className="pointer-events-none fixed inset-x-0 bottom-[calc(0.8rem+env(safe-area-inset-bottom,0px))] z-40 px-3 transition-opacity duration-150 lg:hidden"
                 >
+                    <motion.nav
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="pointer-events-auto mx-auto w-full max-w-[26rem] rounded-[26px] border border-white/70 bg-white/[0.94] px-1.5 py-1.5 shadow-[0_16px_50px_rgba(15,23,42,0.16)] ring-1 ring-slate-900/5 backdrop-blur-xl"
+                    >
                     <div className="grid grid-cols-5 items-center gap-1">
                         {navItems.map((item) => {
                             const active = isActive(item);
@@ -235,6 +247,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                     </div>
                 </motion.nav>
             </div>
+            )}
         </div>
     );
 }
