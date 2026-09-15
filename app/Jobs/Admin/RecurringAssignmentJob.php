@@ -155,11 +155,31 @@ class RecurringAssignmentJob implements ShouldQueue
                     ->pluck('users.id')
                     ->toArray();
             } else {
-                $userIds = User::query()
+                $residentIds = User::query()
                     ->withRole('resident', $collection->estate_id)
                     ->pluck('users.id')
                     ->toArray();
+
+                $orgAdminIds = User::whereHas('organizationMemberships', function ($q) use ($collection) {
+                    $q->where('role', 'admin')
+                        ->where('is_active', true)
+                        ->whereHas('organization', fn ($oq) => $oq->where('estate_id', $collection->estate_id)->where('is_active', true));
+                })
+                    ->whereNull('users.suspended_at')
+                    ->pluck('users.id')
+                    ->toArray();
+
+                $userIds = array_values(array_unique(array_merge($residentIds, $orgAdminIds)));
             }
+        } elseif ($collection->applies_to === 'organization') {
+            $userIds = User::whereHas('organizationMemberships', function ($q) use ($collection) {
+                $q->where('role', 'admin')
+                    ->where('is_active', true)
+                    ->whereHas('organization', fn ($oq) => $oq->where('estate_id', $collection->estate_id)->where('is_active', true));
+            })
+                ->whereNull('users.suspended_at')
+                ->pluck('users.id')
+                ->toArray();
         } elseif ($collection->applies_to === 'zone') {
             $zoneIds = $collection->targets
                 ->filter(fn ($target) => $this->isZoneTarget($target->target_type))
