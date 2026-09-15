@@ -45,6 +45,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
     const commentPage = comments ?? { data: [], next_page_url: null as string | null };
 
     const { data, setData, post: submitComment, processing, reset, errors } = useForm({ body: '' });
+    const [replyProcessing, setReplyProcessing] = useState(false);
 
     const handleDelete = () => {
         confirm({
@@ -90,6 +91,26 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
             preserveScroll: true,
             onSuccess: () => reset(),
         });
+    }
+
+    function handleReplySubmit(body: string, parentId: number, onSuccess: () => void) {
+        setReplyProcessing(true);
+        router.post(
+            storeComment.url({ post: post.hashid as any }),
+            {
+                body,
+                parent_id: parentId,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    onSuccess();
+                },
+                onFinish: () => {
+                    setReplyProcessing(false);
+                },
+            },
+        );
     }
 
     function handleDeleteComment(commentId: number) {
@@ -201,6 +222,9 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                                 onCommentBodyChange={(val) => setData('body', val)}
                                 onSubmitComment={handleSubmitComment}
                                 onDeleteComment={handleDeleteComment}
+                                canReply={true}
+                                onReplySubmit={handleReplySubmit}
+                                replyProcessing={replyProcessing}
                                 processing={processing}
                                 error={errors.body}
                                 canDeleteGlobal={true}
