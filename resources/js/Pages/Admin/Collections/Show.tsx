@@ -46,7 +46,7 @@ type Collection = {
     due_at: string | null;
     due_day: number;
     grace_days: number;
-    applies_to: 'all' | 'target' | 'property_owner' | 'zone';
+    applies_to: 'all' | 'target' | 'property_owner' | 'zone' | 'organization';
     targets_count?: number;
     created_at: string;
 };
@@ -280,12 +280,14 @@ function ConfigDrawer({ collection, open, onClose }: { collection: Collection; o
                                     label: 'Applies To',
                                     value:
                                         collection.applies_to === 'all'
-                                            ? 'All residents'
-                                            : collection.applies_to === 'property_owner'
-                                              ? 'Property owners'
-                                              : collection.applies_to === 'zone'
-                                                ? `${collection.targets_count} zone${collection.targets_count === 1 ? '' : 's'}`
-                                                : `${collection.targets_count} specific residents`,
+                                            ? 'Everyone (Residents & Organizations)'
+                                            : collection.applies_to === 'organization'
+                                              ? 'Organizations'
+                                              : collection.applies_to === 'property_owner'
+                                                ? 'Property owners'
+                                                : collection.applies_to === 'zone'
+                                                  ? `${collection.targets_count} zone${collection.targets_count === 1 ? '' : 's'}`
+                                                  : `${collection.targets_count} specific residents`,
                                 },
                                 {
                                     label: 'Created',
