@@ -1,11 +1,11 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 import React, { useCallback, useEffect, useRef } from 'react';
 import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
 import AnnouncementDiscussion from '@/Components/EstateBoard/AnnouncementDiscussion';
 import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
-import type { CursorPaginatedComments, PostMedia, SharedData } from '@/types';
+import type { CursorPaginatedComments, PostMedia } from '@/types';
 
 interface DetailPost {
     id: number;
@@ -53,7 +53,6 @@ const CATEGORY_META: Record<string, { label: string; tone: string }> = {
 
 export default function AnnouncementDetail({ organization, estate, membership, post, comments }: Props) {
     const estateName = estate?.name || organization.estate_name || 'Golden Heights';
-    const { auth } = usePage<SharedData>().props;
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
@@ -126,12 +125,6 @@ export default function AnnouncementDetail({ organization, estate, membership, p
         submitComment(`/org/announcements/${post.hashid || post.id}/comments`, {
             preserveScroll: true,
             onSuccess: () => reset(),
-        });
-    }
-
-    function handleDeleteComment(commentId: number) {
-        router.delete(`/org/announcements/comments/${commentId}`, {
-            preserveScroll: true,
         });
     }
 
@@ -223,11 +216,9 @@ export default function AnnouncementDetail({ organization, estate, membership, p
                         commentBody={data.body}
                         onCommentBodyChange={(val) => setData('body', val)}
                         onSubmitComment={handleSubmitComment}
-                        onDeleteComment={handleDeleteComment}
+                        canDeleteComments={false}
                         processing={processing}
                         error={errors.body}
-                        currentUserId={auth?.user?.id}
-                        canDeleteGlobal={membership.is_admin}
                         nextPageUrl={comments?.next_page_url}
                         loadMoreRef={loadMoreRef}
                     />
@@ -236,3 +227,4 @@ export default function AnnouncementDetail({ organization, estate, membership, p
         </OrganizationLayout>
     );
 }
+
