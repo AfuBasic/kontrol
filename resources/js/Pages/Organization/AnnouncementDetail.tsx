@@ -168,9 +168,7 @@ export default function AnnouncementDetail({ organization, estate, membership, p
                         </div>
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-slate-900">
-                                    {post.publisher_name || estateName}
-                                </span>
+                                <span className="text-sm font-semibold text-slate-900">{post.publisher_name || estateName}</span>
                                 {isImportant && !isCritical && (
                                     <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
                                         Important
@@ -193,20 +191,16 @@ export default function AnnouncementDetail({ organization, estate, membership, p
                             <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${category.tone}`}>
                                 {category.label}
                             </span>
-                            {post.author_name && (
-                                <span className="text-xs text-slate-400">
-                                    Posted by {post.author_name}
-                                </span>
-                            )}
+                            {post.author_name && <span className="text-xs text-slate-400">Posted by {post.author_name}</span>}
                         </div>
 
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl leading-snug [overflow-wrap:anywhere] break-words">
+                        <h1 className="text-2xl leading-snug font-bold tracking-tight [overflow-wrap:anywhere] break-words text-slate-950 sm:text-3xl">
                             {post.title || 'Untitled notice'}
                         </h1>
                     </div>
 
                     {/* Clean Prose Body */}
-                    <div className="text-slate-800 pt-1">
+                    <div className="pt-1 text-slate-800">
                         <AnnouncementProse
                             html={post.body}
                             className="prose-p:text-base prose-p:leading-7 prose-p:text-slate-700 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900"
@@ -242,5 +236,3 @@ export default function AnnouncementDetail({ organization, estate, membership, p
         </OrganizationLayout>
     );
 }
-
-
