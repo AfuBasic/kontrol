@@ -320,4 +320,32 @@ it('resolves target user IDs for organization audience and includes them in all'
     $targetIdsForAll = app(CollectionService::class)->resolveTargetUserIds($allCollection);
     expect($targetIdsForAll)->toContain($resident->id)
         ->and($targetIdsForAll)->toContain($orgAdmin->id);
+
+    // 3. Target specific organizations only
+    $org2 = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'is_active' => true,
+    ]);
+    $orgAdmin2 = User::factory()->create();
+    EstateOrganizationMembership::create([
+        'estate_organization_id' => $org2->id,
+        'user_id' => $orgAdmin2->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $specificOrgCollection = app(CollectionService::class)->createCollection($this->estate, [
+        'name' => 'Specific Commercial Levy',
+        'amount' => 50000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addMonth()->toDateString(),
+        'applies_to' => 'organization',
+        'organizations' => [$org->id],
+    ]);
+
+    $targetIdsForSpecificOrg = app(CollectionService::class)->resolveTargetUserIds($specificOrgCollection);
+    expect($targetIdsForSpecificOrg)->toContain($orgAdmin->id)
+        ->and($targetIdsForSpecificOrg)->not->toContain($orgAdmin2->id)
+        ->and($targetIdsForSpecificOrg)->not->toContain($resident->id);
 });
