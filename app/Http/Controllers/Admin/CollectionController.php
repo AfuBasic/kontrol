@@ -621,7 +621,7 @@ class CollectionController extends Controller
             'applies_to' => [
                 'required',
                 'string',
-                'in:all,target,property_owner,zone',
+                'in:all,target,property_owner,zone,organization',
                 function ($attribute, $value, $fail) use ($context) {
                     if ($context?->isZoneScoped() && ! in_array($value, ['target', 'zone'], true)) {
                         $fail('Zone-scoped administrators can only target their active zone or selected residents in that zone.');
