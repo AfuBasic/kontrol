@@ -327,7 +327,8 @@ class EstateBoardService
                 'replies' => fn ($q) => $q->with('author:id,name,email')->latest()->limit(3),
             ])
             ->withCount('replies')
-            ->oldest()
+            ->latest('created_at')
+            ->latest('id')
             ->cursorPaginate($perPage);
     }
 

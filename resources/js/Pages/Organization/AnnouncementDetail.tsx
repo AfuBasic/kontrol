@@ -1,6 +1,7 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { AlertTriangle, ArrowLeft, Building2 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef } from 'react';
+import { index as announcementsIndex, storeComment } from '@/actions/App/Http/Controllers/Organization/AnnouncementController';
 import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
 import AnnouncementDiscussion from '@/Components/EstateBoard/AnnouncementDiscussion';
 import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
@@ -14,9 +15,9 @@ interface DetailPost {
     body: string;
     category: string;
     priority: string;
-    is_read?: boolean;
     published_at: string | null;
-    published_at_human: string;
+    published_at_label: string;
+    published_at_timezone: string;
     publisher_name: string;
     publisher_role: string;
     author_name: string | null;
@@ -44,47 +45,29 @@ interface Props {
 }
 
 const CATEGORY_META: Record<string, { label: string; tone: string }> = {
-    general: { label: 'Notice', tone: 'text-slate-600 bg-slate-100' },
-    meeting: { label: 'Meeting', tone: 'text-sky-700 bg-sky-50' },
-    maintenance: { label: 'Maintenance', tone: 'text-amber-700 bg-amber-50' },
-    security: { label: 'Security', tone: 'text-rose-700 bg-rose-50' },
-    event: { label: 'Community Event', tone: 'text-indigo-700 bg-indigo-50' },
+    general: { label: 'Estate update', tone: 'text-slate-600' },
+    meeting: { label: 'Meeting', tone: 'text-sky-700' },
+    maintenance: { label: 'Maintenance', tone: 'text-amber-700' },
+    security: { label: 'Security', tone: 'text-rose-700' },
+    event: { label: 'Community event', tone: 'text-indigo-700' },
 };
 
-export default function AnnouncementDetail({ organization, estate, membership, post, comments }: Props) {
-    const estateName = estate?.name || organization.estate_name || 'Golden Heights';
+export default function AnnouncementDetail({ organization, estate, post, comments }: Props) {
+    const estateName = estate?.name || organization.estate_name || 'Estate';
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
-
     const category = CATEGORY_META[post.category] || {
-        label: post.category ? post.category.charAt(0).toUpperCase() + post.category.slice(1) : 'Notice',
-        tone: 'text-slate-600 bg-slate-100',
+        label: post.category ? post.category.charAt(0).toUpperCase() + post.category.slice(1) : 'Estate update',
+        tone: 'text-slate-600',
     };
-
     const isCritical = post.priority === 'critical';
     const isImportant = post.priority === 'important';
-
-    const formattedDate = post.published_at
-        ? new Date(post.published_at).toLocaleDateString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-          })
-        : 'Recently';
-
-    const {
-        data,
-        setData,
-        post: submitComment,
-        processing,
-        reset,
-        errors,
-    } = useForm({
-        body: '',
-    });
+    const { data, setData, post: submitComment, processing, reset, errors } = useForm({ body: '' });
 
     const loadMore = useCallback(() => {
-        if (!comments?.next_page_url || isLoadingMore.current) return;
+        if (!comments?.next_page_url || isLoadingMore.current) {
+            return;
+        }
 
         isLoadingMore.current = true;
         router.get(
@@ -118,113 +101,111 @@ export default function AnnouncementDetail({ organization, estate, membership, p
         return () => observer.disconnect();
     }, [loadMore]);
 
-    function handleSubmitComment(e: React.FormEvent) {
-        e.preventDefault();
-        if (!data.body.trim()) return;
+    function returnToFeed() {
+        if (window.history.length > 1) {
+            window.history.back();
+            return;
+        }
 
-        submitComment(`/org/announcements/${post.hashid || post.id}/comments`, {
+        router.visit(announcementsIndex.url());
+    }
+
+    function handleSubmitComment(event: React.FormEvent) {
+        event.preventDefault();
+        if (!data.body.trim()) {
+            return;
+        }
+
+        submitComment(storeComment.url(post.id), {
             preserveScroll: true,
             onSuccess: () => reset(),
         });
     }
 
     return (
-        <OrganizationLayout title="Announcement" contentClassName="max-w-2xl px-4" hideBottomNav={true}>
+        <OrganizationLayout title="Announcement" contentClassName="max-w-5xl px-4 sm:px-6" hideBottomNav={true}>
             <Head title={`${post.title || 'Announcement'} - ${estateName}`} />
 
-            <div className="space-y-6 pb-24 text-left">
-                {/* 1. Navigation Bar: Back to Feed */}
-                <div className="flex items-center justify-between gap-3 pt-2">
-                    <Link
-                        href="/org/announcements"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-900 active:scale-95"
-                    >
-                        <ArrowLeft className="h-4 w-4 stroke-[2.2]" />
-                        <span>Back to feed</span>
-                    </Link>
-                </div>
+            <main className="mx-auto w-full max-w-3xl pb-20 sm:pb-24">
+                <button
+                    type="button"
+                    onClick={returnToFeed}
+                    className="group mt-1 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#0b4aa2]"
+                >
+                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" />
+                    Back to updates
+                </button>
 
-                {/* 2. Critical Alert Banner if applicable */}
-                {isCritical && (
-                    <div className="flex items-center gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-xs font-semibold text-rose-800">
-                        <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
-                        <span>Urgent Estate Advisory</span>
-                    </div>
-                )}
-
-                {/* 3. The Article itself is the reading surface */}
-                <article className="space-y-6">
-                    {/* Publisher Header Block */}
-                    <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-900 text-sm font-semibold tracking-wide text-white shadow-xs">
-                            {estateName.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-slate-900">{post.publisher_name || estateName}</span>
-                                {isImportant && !isCritical && (
-                                    <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
-                                        Important
-                                    </span>
-                                )}
+                <article className="mt-7 sm:mt-10">
+                    {isCritical && (
+                        <div className="mb-7 flex items-start gap-3 border-y border-rose-200 bg-rose-50/70 px-1 py-3.5 text-rose-900 sm:px-3">
+                            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                            <div>
+                                <p className="text-sm font-semibold">Urgent estate advisory</p>
+                                <p className="mt-0.5 text-sm text-rose-700">Please read this update carefully.</p>
                             </div>
-                            <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                                <span>{post.publisher_role}</span>
-                                <span>·</span>
-                                <time dateTime={post.published_at || undefined}>
-                                    {formattedDate} ({post.published_at_human})
-                                </time>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Metadata & Title */}
-                    <div className="space-y-2 border-t border-slate-100 pt-5">
-                        <div className="flex items-center gap-2">
-                            <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium ${category.tone}`}>
-                                {category.label}
-                            </span>
-                            {post.author_name && <span className="text-xs text-slate-400">Posted by {post.author_name}</span>}
-                        </div>
-
-                        <h1 className="text-2xl leading-snug font-bold tracking-tight [overflow-wrap:anywhere] break-words text-slate-950 sm:text-3xl">
-                            {post.title || 'Untitled notice'}
-                        </h1>
-                    </div>
-
-                    {/* Clean Prose Body */}
-                    <div className="pt-1 text-slate-800">
-                        <AnnouncementProse
-                            html={post.body}
-                            className="prose-p:text-base prose-p:leading-7 prose-p:text-slate-700 prose-headings:font-bold prose-headings:tracking-tight prose-headings:text-slate-900"
-                        />
-                    </div>
-
-                    {/* Media Attachments & Lightbox */}
-                    {post.media && post.media.length > 0 && (
-                        <div className="border-t border-slate-100 pt-6">
-                            <AnnouncementAttachments media={post.media} />
                         </div>
                     )}
+
+                    <header>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#0b4aa2] text-white shadow-sm shadow-blue-950/10">
+                                <Building2 className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold text-slate-950">{post.publisher_name || estateName}</p>
+                                <p className="mt-0.5 text-xs text-slate-500">{post.publisher_role}</p>
+                            </div>
+                        </div>
+
+                        <div className="mt-7 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium">
+                            <span className={category.tone}>{category.label}</span>
+                            {isImportant && !isCritical && (
+                                <>
+                                    <span aria-hidden="true" className="text-slate-300">
+                                        ·
+                                    </span>
+                                    <span className="text-amber-700">Important</span>
+                                </>
+                            )}
+                        </div>
+
+                        <h1 className="mt-3 max-w-[22ch] text-[1.75rem] leading-[1.16] font-semibold tracking-normal break-words text-slate-950 sm:text-4xl sm:leading-[1.12]">
+                            {post.title || 'Estate update'}
+                        </h1>
+
+                        <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+                            {post.author_name && <span>By {post.author_name}</span>}
+                            {post.author_name && <span aria-hidden="true">·</span>}
+                            <time dateTime={post.published_at || undefined} title={post.published_at_timezone}>
+                                {post.published_at_label}
+                            </time>
+                        </div>
+                    </header>
+
+                    <div className="mt-8 border-t border-slate-200 pt-7 sm:mt-10 sm:pt-9">
+                        <AnnouncementProse html={post.body} />
+                    </div>
+
+                    {post.media && post.media.length > 0 && <AnnouncementAttachments media={post.media} className="mt-10 sm:mt-12" />}
                 </article>
 
-                {/* 4. Discussion & Comments Flow */}
-                <div id="discussion" className="mt-8 border-t border-slate-200/80 pt-8">
+                <div id="discussion" className="mt-12 border-t border-slate-200 pt-9 sm:mt-16 sm:pt-11">
                     <AnnouncementDiscussion
                         comments={comments?.data || []}
-                        commentsCount={post.comments_count ?? (comments?.data?.length || 0)}
+                        commentsCount={post.comments_count ?? comments?.data?.length ?? 0}
                         commentBody={data.body}
-                        onCommentBodyChange={(val) => setData('body', val)}
+                        onCommentBodyChange={(value) => setData('body', value)}
                         onSubmitComment={handleSubmitComment}
                         canDeleteComments={false}
                         processing={processing}
                         error={errors.body}
                         nextPageUrl={comments?.next_page_url}
                         loadMoreRef={loadMoreRef}
+                        variant="article"
                     />
                 </div>
-            </div>
+            </main>
         </OrganizationLayout>
     );
 }
-

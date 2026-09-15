@@ -163,6 +163,7 @@ class AnnouncementController extends Controller
         $post->loadCount('comments');
 
         $comments = $this->boardService->getComments($post->id, $organization->estate_id);
+        $publication = $this->publicationMetadata($post);
 
         return Inertia::render('Organization/AnnouncementDetail', [
             'organization' => [
@@ -187,7 +188,10 @@ class AnnouncementController extends Controller
                 'category' => $post->category?->value ?? 'general',
                 'priority' => $post->priority?->value ?? 'normal',
                 'is_read' => true,
-                'published_at' => $post->published_at?->toISOString(),
+                'published_at' => $publication['timestamp'],
+                'published_at_label' => $publication['label'],
+                'published_at_source' => $publication['source'],
+                'published_at_timezone' => $publication['timezone'],
                 'published_at_human' => $post->published_at?->diffForHumans() ?? $post->created_at?->diffForHumans(),
                 'publisher_name' => $organization->estate?->name ?? 'Estate Management',
                 'publisher_role' => 'Estate Management',
@@ -199,6 +203,8 @@ class AnnouncementController extends Controller
                     'mime_type' => $media->mime_type,
                     'width' => $media->width,
                     'height' => $media->height,
+                    'name' => basename($media->path),
+                    'size_bytes' => $media->size_bytes,
                     'sort_order' => $media->sort_order,
                 ])->values(),
             ],
@@ -224,5 +230,39 @@ class AnnouncementController extends Controller
         $action->execute($request->validated(), $post, $organization->estate);
 
         return back()->with('success', 'Comment added.');
+    }
+
+    /**
+     * @return array{timestamp: string|null, label: string, source: string|null, timezone: string}
+     */
+    private function publicationMetadata(EstateBoardPost $post): array
+    {
+        $timezone = config('app.timezone', 'Africa/Lagos');
+        $source = $post->published_at ? 'published_at' : ($post->created_at ? 'created_at' : null);
+        $publishedAt = $post->published_at ?? $post->created_at;
+
+        if (! $publishedAt) {
+            return [
+                'timestamp' => null,
+                'label' => 'Recently',
+                'source' => null,
+                'timezone' => $timezone,
+            ];
+        }
+
+        $localTimestamp = $publishedAt->copy()->timezone($timezone);
+        $now = now($timezone);
+        $dateLabel = match (true) {
+            $localTimestamp->isSameDay($now) => 'Today',
+            $localTimestamp->isSameDay($now->copy()->subDay()) => 'Yesterday',
+            default => $localTimestamp->format('j M Y'),
+        };
+
+        return [
+            'timestamp' => $publishedAt->toISOString(),
+            'label' => sprintf('%s · %s', $dateLabel, $localTimestamp->format('g:i A')),
+            'source' => $source,
+            'timezone' => $timezone,
+        ];
     }
 }

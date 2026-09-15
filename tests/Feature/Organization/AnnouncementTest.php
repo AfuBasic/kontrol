@@ -3,11 +3,13 @@
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Models\Estate;
+use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationMembership;
 use App\Models\User;
 use App\Services\OrganizationContextService;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -128,6 +130,127 @@ test('viewing an announcement marks it as read and renders detail page', functio
         );
 });
 
+test('announcement detail presents an exact publication time in the application timezone', function () {
+    config()->set('app.timezone', 'Africa/Lagos');
+    CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-16 10:00:00', 'Africa/Lagos'));
+
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => User::factory(),
+        'status' => EstateBoardPostStatus::Published,
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => CarbonImmutable::parse('2026-09-16 08:37:00', 'Africa/Lagos'),
+    ]);
+
+    $response = $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->get(route('org.announcements.show', $post));
+
+    $response->assertInertia(fn (Assert $page) => $page
+        ->where('post.published_at_label', 'Today · 8:37 AM')
+        ->where('post.published_at_timezone', 'Africa/Lagos')
+        ->where('post.published_at_source', 'published_at')
+    );
+
+    $post->forceFill(['published_at' => CarbonImmutable::parse('2026-09-15 23:42:00', 'Africa/Lagos')])->save();
+
+    $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->get(route('org.announcements.show', $post))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('post.published_at_label', 'Yesterday · 11:42 PM')
+        );
+
+    $post->forceFill(['published_at' => CarbonImmutable::parse('2026-08-30 09:15:00', 'Africa/Lagos')])->save();
+
+    $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->get(route('org.announcements.show', $post))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('post.published_at_label', '30 Aug 2026 · 9:15 AM')
+        );
+
+    CarbonImmutable::setTestNow();
+});
+
+test('announcement detail falls back to its creation timestamp', function () {
+    config()->set('app.timezone', 'Africa/Lagos');
+    CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-09-16 10:00:00', 'Africa/Lagos'));
+
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => User::factory(),
+        'status' => EstateBoardPostStatus::Published,
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => null,
+        'created_at' => CarbonImmutable::parse('2026-09-16 08:15:00', 'Africa/Lagos'),
+    ]);
+
+    $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->get(route('org.announcements.show', $post))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('post.published_at_label', 'Today · 8:15 AM')
+            ->where('post.published_at_source', 'created_at')
+        );
+
+    CarbonImmutable::setTestNow();
+});
+
+test('announcement publication time conversion is daylight saving safe', function () {
+    config()->set('app.timezone', 'America/New_York');
+    CarbonImmutable::setTestNow(CarbonImmutable::parse('2026-11-01 12:00:00', 'UTC'));
+
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => User::factory(),
+        'status' => EstateBoardPostStatus::Published,
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => CarbonImmutable::parse('2026-11-01 05:30:00', 'UTC'),
+    ]);
+
+    $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->get(route('org.announcements.show', $post))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('post.published_at_label', 'Today · 1:30 AM')
+            ->where('post.published_at_timezone', 'America/New_York')
+        );
+
+    CarbonImmutable::setTestNow();
+});
+
+test('announcement detail lists the newest comments first', function () {
+    $post = EstateBoardPost::factory()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => User::factory(),
+        'status' => EstateBoardPostStatus::Published,
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => now(),
+    ]);
+
+    EstateBoardComment::factory()->create([
+        'estate_board_post_id' => $post->id,
+        'estate_id' => $this->estate->id,
+        'body' => 'Earlier response',
+        'created_at' => now()->subHour(),
+    ]);
+    EstateBoardComment::factory()->create([
+        'estate_board_post_id' => $post->id,
+        'estate_id' => $this->estate->id,
+        'body' => 'Latest response',
+        'created_at' => now(),
+    ]);
+
+    $this->actingAs($this->user)
+        ->withSession([OrganizationContextService::SESSION_KEY => $this->org->id])
+        ->get(route('org.announcements.show', $post))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('comments.data.0.body', 'Latest response')
+            ->where('comments.data.1.body', 'Earlier response')
+        );
+});
+
 test('organization user cannot view announcement from another estate', function () {
     $otherEstate = Estate::factory()->create();
     $otherAuthor = User::factory()->create();
@@ -175,5 +298,3 @@ test('organization user can post comments on estate announcements', function () 
         'body' => 'Our business unit will contribute volunteers and materials.',
     ]);
 });
-
-

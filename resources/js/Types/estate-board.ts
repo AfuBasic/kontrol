@@ -12,6 +12,8 @@ export type PostMedia = {
     mime_type: string;
     width: number | null;
     height: number | null;
+    name?: string;
+    size_bytes?: number;
     sort_order: number;
 };
 
