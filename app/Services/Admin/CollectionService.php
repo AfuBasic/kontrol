@@ -7,6 +7,7 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
+use App\Models\EstateOrganization;
 use App\Models\EstateSettings;
 use App\Models\Property;
 use App\Models\User;
@@ -108,6 +109,17 @@ class CollectionService
                     'target_id' => $zoneId,
                 ]);
             }
+
+            return;
+        }
+
+        if ($collection->applies_to === 'organization' && ! empty($data['organizations'])) {
+            foreach ($data['organizations'] as $orgId) {
+                $collection->targets()->create([
+                    'target_type' => EstateOrganization::class,
+                    'target_id' => $orgId,
+                ]);
+            }
         }
     }
 
@@ -176,10 +188,20 @@ class CollectionService
                 $userIds = array_values(array_unique(array_merge($residentAndOwnerIds, $orgAdminIds)));
             }
         } elseif ($collection->applies_to === 'organization') {
-            $userIds = User::whereHas('organizationMemberships', function ($q) use ($estate) {
+            $orgTargets = $collection->targets
+                ->filter(fn ($t) => $t->target_type === EstateOrganization::class || $t->target_type === 'organization' || $t->target_type === 'App\Models\EstateOrganization')
+                ->pluck('target_id')
+                ->all();
+
+            $userIds = User::whereHas('organizationMemberships', function ($q) use ($estate, $orgTargets) {
                 $q->where('role', 'admin')
                     ->where('is_active', true)
-                    ->whereHas('organization', fn ($oq) => $oq->where('estate_id', $estate->id)->where('is_active', true));
+                    ->whereHas('organization', function ($oq) use ($estate, $orgTargets) {
+                        $oq->where('estate_id', $estate->id)->where('is_active', true);
+                        if (! empty($orgTargets)) {
+                            $oq->whereIn('id', $orgTargets);
+                        }
+                    });
             })
                 ->whereNull('users.suspended_at')
                 ->pluck('users.id')
