@@ -6,6 +6,7 @@ use App\Auth\ContextManager;
 use App\Http\Controllers\Controller;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
+use App\Models\EstateOrganization;
 use App\Models\EstateSettings;
 use App\Models\Payment;
 use App\Models\User;
@@ -326,9 +327,16 @@ class CollectionController extends Controller
             $zones = $zones->where('id', $context->zoneId);
         }
 
+        $organizations = EstateOrganization::where('estate_id', $estate->id)
+            ->where('is_active', true)
+            ->select('id', 'name', 'type')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Admin/Collections/Create', [
             'residents' => $residents,
             'zones' => $zones,
+            'organizations' => $organizations,
             'context' => [
                 'is_zone_scoped' => $context?->isZoneScoped() ?? false,
             ],
@@ -490,10 +498,17 @@ class CollectionController extends Controller
             $zones = $zones->where('id', $context->zoneId);
         }
 
+        $organizations = EstateOrganization::where('estate_id', $estate->id)
+            ->where('is_active', true)
+            ->select('id', 'name', 'type')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Admin/Collections/Edit', [
             'collection' => $collection,
             'residents' => $residents,
             'zones' => $zones,
+            'organizations' => $organizations,
             'context' => [
                 'is_zone_scoped' => $context?->isZoneScoped() ?? false,
             ],
@@ -654,6 +669,13 @@ class CollectionController extends Controller
                         $fail('Zone-scoped administrators can only target their active zone.');
                     }
                 },
+            ],
+            'organizations' => ['nullable', 'array'],
+            'organizations.*' => [
+                'integer',
+                Rule::exists('estate_organizations', 'id')
+                    ->where('estate_id', $estateId)
+                    ->where('is_active', true),
             ],
         ]);
     }
