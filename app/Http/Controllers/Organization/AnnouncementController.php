@@ -2,14 +2,20 @@
 
 namespace App\Http\Controllers\Organization;
 
+use App\Actions\EstateBoard\AddCommentAction;
+use App\Actions\EstateBoard\DeleteCommentAction;
 use App\Actions\EstateBoard\RecordPostReadAction;
 use App\Enums\EstateBoardPostAudience;
 use App\Enums\EstateBoardPostStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EstateBoard\StoreCommentRequest;
+use App\Models\EstateBoardComment;
 use App\Models\EstateBoardPost;
 use App\Models\EstateBoardPostRead;
 use App\Models\EstateOrganization;
+use App\Services\Admin\EstateBoardService;
 use App\Services\OrganizationContextService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,6 +24,7 @@ class AnnouncementController extends Controller
 {
     public function __construct(
         private OrganizationContextService $contextService,
+        private EstateBoardService $boardService,
     ) {}
 
     public function index(Request $request): Response
@@ -41,6 +48,7 @@ class AnnouncementController extends Controller
 
         $posts = (clone $baseQuery)
             ->with(['author:id,name', 'media'])
+            ->withCount('comments')
             ->when($user, function ($q) use ($user) {
                 $q->withExists(['reads as is_read' => fn ($sub) => $sub->where('user_id', $user->id)])
                     ->selectSub(
@@ -53,7 +61,8 @@ class AnnouncementController extends Controller
                     );
             })
             ->latest('published_at')
-            ->paginate(15)
+            ->latest('id')
+            ->cursorPaginate(10)
             ->through(fn (EstateBoardPost $post) => [
                 'id' => $post->id,
                 'hashid' => $post->hashid,
@@ -68,6 +77,7 @@ class AnnouncementController extends Controller
                 'publisher_name' => $organization->estate?->name ?? 'Estate Management',
                 'publisher_role' => 'Estate Management',
                 'author_name' => $post->author?->name,
+                'comments_count' => (int) ($post->comments_count ?? 0),
                 'media_count' => $post->media->count(),
                 'media' => $post->media->map(fn ($media) => [
                     'id' => $media->id,
@@ -119,6 +129,9 @@ class AnnouncementController extends Controller
         }
 
         $post->load(['author:id,name', 'media']);
+        $post->loadCount('comments');
+
+        $comments = $this->boardService->getComments($post->id, $organization->estate_id);
 
         return Inertia::render('Organization/AnnouncementDetail', [
             'organization' => [
@@ -148,6 +161,7 @@ class AnnouncementController extends Controller
                 'publisher_name' => $organization->estate?->name ?? 'Estate Management',
                 'publisher_role' => 'Estate Management',
                 'author_name' => $post->author?->name,
+                'comments_count' => (int) ($post->comments_count ?? 0),
                 'media' => $post->media->map(fn ($media) => [
                     'id' => $media->id,
                     'url' => $media->url,
@@ -157,6 +171,54 @@ class AnnouncementController extends Controller
                     'sort_order' => $media->sort_order,
                 ])->values(),
             ],
+            'comments' => $comments,
         ]);
     }
+
+    /**
+     * Store a comment on an announcement.
+     */
+    public function storeComment(StoreCommentRequest $request, EstateBoardPost $post, AddCommentAction $action): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+
+        abort_unless(
+            $post->estate_id === $organization->estate_id
+            && $post->status === EstateBoardPostStatus::Published
+            && $post->audience === EstateBoardPostAudience::All,
+            404
+        );
+
+        $action->execute($request->validated(), $post, $organization->estate);
+
+        return back()->with('success', 'Comment added.');
+    }
+
+    /**
+     * Delete an announcement comment.
+     */
+    public function destroyComment(Request $request, EstateBoardComment $comment, DeleteCommentAction $action): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $user = $request->user();
+
+        abort_unless(
+            $comment->estate_id === $organization->estate_id,
+            404
+        );
+
+        // User can delete their own comment or if they are an organization admin
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+        abort_unless(
+            $comment->user_id === $user->id || $membership->isAdmin(),
+            403
+        );
+
+        $action->execute($comment);
+
+        return back()->with('success', 'Comment deleted.');
+    }
 }
+
