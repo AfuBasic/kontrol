@@ -9,14 +9,38 @@ interface CommentItemProps {
     canDeleteGlobal?: boolean;
     currentUserId?: number;
     canDelete?: boolean;
+    canReply?: boolean;
+    onReplySubmit?: (body: string, parentId: number, onSuccess: () => void) => void;
+    replyProcessing?: boolean;
 }
 
-function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId, canDelete = true }: CommentItemProps) {
+function CommentItem({
+    comment,
+    onDelete,
+    canDeleteGlobal,
+    currentUserId,
+    canDelete = true,
+    canReply = false,
+    onReplySubmit,
+    replyProcessing = false,
+}: CommentItemProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isReplying, setIsReplying] = useState(false);
+    const [replyBody, setReplyBody] = useState('');
     const isAuthor = currentUserId !== undefined && comment.author.id === currentUserId;
     const isDeletable = Boolean(onDelete && canDelete && (comment.can_delete || canDeleteGlobal || isAuthor));
+    const isTopLevel = !comment.parent_id;
 
     const initial = (comment.author?.name || 'User').charAt(0).toUpperCase();
+
+    const handleReplySubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!replyBody.trim() || !onReplySubmit) return;
+        onReplySubmit(replyBody, comment.id, () => {
+            setReplyBody('');
+            setIsReplying(false);
+        });
+    };
 
     return (
         <div className="flex gap-3 text-left">
@@ -40,40 +64,94 @@ function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId, canDel
                     </p>
                 </div>
 
-                {isDeletable && (
-                    <div className="mt-1.5 flex items-center gap-3 px-1">
-                        {showDeleteConfirm ? (
-                            <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-semibold text-slate-500">Delete comment?</span>
+                <div className="mt-1.5 flex items-center gap-3 px-1">
+                    {canReply && isTopLevel && (
+                        <button
+                            type="button"
+                            onClick={() => setIsReplying(!isReplying)}
+                            className={`inline-flex items-center gap-1 text-[11px] font-semibold transition-colors ${
+                                isReplying ? 'text-primary-600' : 'text-slate-400 hover:text-slate-700'
+                            }`}
+                        >
+                            <Reply className="h-3 w-3" />
+                            <span>{isReplying ? 'Cancel' : 'Reply'}</span>
+                        </button>
+                    )}
+
+                    {isDeletable && (
+                        <>
+                            {showDeleteConfirm ? (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[11px] font-semibold text-slate-500">Delete comment?</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            onDelete?.(comment.id);
+                                            setShowDeleteConfirm(false);
+                                        }}
+                                        className="text-[11px] font-bold text-rose-600 hover:text-rose-700"
+                                    >
+                                        Yes
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        className="text-[11px] font-bold text-slate-500 hover:text-slate-700"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowDeleteConfirm(true)}
+                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 transition-colors hover:text-rose-600"
+                                >
+                                    <Trash2 className="h-3 w-3" />
+                                    Delete
+                                </button>
+                            )}
+                        </>
+                    )}
+                </div>
+
+                {/* Inline Reply Composer */}
+                {isReplying && (
+                    <form onSubmit={handleReplySubmit} className="mt-2.5 space-y-2">
+                        <div className="rounded-2xl border border-primary-500/30 bg-white p-2.5 shadow-xs ring-2 ring-primary-500/10">
+                            <div className="mb-1.5 flex items-center justify-between text-[11px] text-slate-500 px-1">
+                                <span>Replying to <strong className="text-slate-800">{comment.author?.name || 'Resident'}</strong></span>
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        onDelete?.(comment.id);
-                                        setShowDeleteConfirm(false);
+                                        setIsReplying(false);
+                                        setReplyBody('');
                                     }}
-                                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700"
+                                    className="text-[10px] font-medium text-slate-400 hover:text-slate-600"
                                 >
-                                    Yes
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowDeleteConfirm(false)}
-                                    className="text-[11px] font-bold text-slate-500 hover:text-slate-700"
-                                >
-                                    Cancel
+                                    Dismiss
                                 </button>
                             </div>
-                        ) : (
-                            <button
-                                type="button"
-                                onClick={() => setShowDeleteConfirm(true)}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 transition-colors hover:text-rose-600"
-                            >
-                                <Trash2 className="h-3 w-3" />
-                                Delete
-                            </button>
-                        )}
-                    </div>
+                            <textarea
+                                value={replyBody}
+                                onChange={(e) => setReplyBody(e.target.value)}
+                                autoFocus
+                                placeholder="Write your reply..."
+                                rows={2}
+                                className="w-full resize-none border-0 bg-transparent px-1 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:ring-0 focus:outline-none"
+                            />
+                            <div className="flex justify-end gap-2 pt-1">
+                                <button
+                                    type="submit"
+                                    disabled={replyProcessing || !replyBody.trim()}
+                                    className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-1.5 text-[11px] font-bold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-40"
+                                >
+                                    <Send className="h-3 w-3" />
+                                    {replyProcessing ? 'Replying...' : 'Reply'}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 )}
 
                 {comment.replies && comment.replies.length > 0 && (
@@ -86,6 +164,7 @@ function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId, canDel
                                 canDeleteGlobal={canDeleteGlobal}
                                 currentUserId={currentUserId}
                                 canDelete={canDelete}
+                                canReply={false}
                             />
                         ))}
                     </div>
@@ -103,6 +182,9 @@ interface AnnouncementDiscussionProps {
     onSubmitComment: (e: React.FormEvent) => void;
     onDeleteComment?: (commentId: number) => void;
     canDeleteComments?: boolean;
+    canReply?: boolean;
+    onReplySubmit?: (body: string, parentId: number, onSuccess: () => void) => void;
+    replyProcessing?: boolean;
     processing?: boolean;
     error?: string;
     currentUserId?: number;
@@ -120,6 +202,9 @@ export default function AnnouncementDiscussion({
     onSubmitComment,
     onDeleteComment,
     canDeleteComments = true,
+    canReply = false,
+    onReplySubmit,
+    replyProcessing = false,
     processing = false,
     error,
     currentUserId,
@@ -129,7 +214,6 @@ export default function AnnouncementDiscussion({
     className = '',
 }: AnnouncementDiscussionProps) {
     const [isFocused, setIsFocused] = useState(false);
-
 
     return (
         <section className={`space-y-6 ${className}`}>
@@ -181,6 +265,9 @@ export default function AnnouncementDiscussion({
                             canDeleteGlobal={canDeleteGlobal}
                             currentUserId={currentUserId}
                             canDelete={canDeleteComments && Boolean(onDeleteComment)}
+                            canReply={canReply}
+                            onReplySubmit={onReplySubmit}
+                            replyProcessing={replyProcessing}
                         />
                     ))}
 
