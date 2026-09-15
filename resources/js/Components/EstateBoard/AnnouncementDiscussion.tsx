@@ -8,12 +8,13 @@ interface CommentItemProps {
     onDelete?: (commentId: number) => void;
     canDeleteGlobal?: boolean;
     currentUserId?: number;
+    canDelete?: boolean;
 }
 
-function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId }: CommentItemProps) {
+function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId, canDelete = true }: CommentItemProps) {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const isAuthor = currentUserId !== undefined && comment.author.id === currentUserId;
-    const canDelete = Boolean(comment.can_delete || canDeleteGlobal || isAuthor);
+    const isDeletable = Boolean(onDelete && canDelete && (comment.can_delete || canDeleteGlobal || isAuthor));
 
     const initial = (comment.author?.name || 'User').charAt(0).toUpperCase();
 
@@ -39,7 +40,7 @@ function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId }: Comm
                     </p>
                 </div>
 
-                {canDelete && (
+                {isDeletable && (
                     <div className="mt-1.5 flex items-center gap-3 px-1">
                         {showDeleteConfirm ? (
                             <div className="flex items-center gap-2">
@@ -84,6 +85,7 @@ function CommentItem({ comment, onDelete, canDeleteGlobal, currentUserId }: Comm
                                 onDelete={onDelete}
                                 canDeleteGlobal={canDeleteGlobal}
                                 currentUserId={currentUserId}
+                                canDelete={canDelete}
                             />
                         ))}
                     </div>
@@ -99,7 +101,8 @@ interface AnnouncementDiscussionProps {
     commentBody: string;
     onCommentBodyChange: (value: string) => void;
     onSubmitComment: (e: React.FormEvent) => void;
-    onDeleteComment: (commentId: number) => void;
+    onDeleteComment?: (commentId: number) => void;
+    canDeleteComments?: boolean;
     processing?: boolean;
     error?: string;
     currentUserId?: number;
@@ -116,6 +119,7 @@ export default function AnnouncementDiscussion({
     onCommentBodyChange,
     onSubmitComment,
     onDeleteComment,
+    canDeleteComments = true,
     processing = false,
     error,
     currentUserId,
@@ -125,6 +129,7 @@ export default function AnnouncementDiscussion({
     className = '',
 }: AnnouncementDiscussionProps) {
     const [isFocused, setIsFocused] = useState(false);
+
 
     return (
         <section className={`space-y-6 ${className}`}>
@@ -175,6 +180,7 @@ export default function AnnouncementDiscussion({
                             onDelete={onDeleteComment}
                             canDeleteGlobal={canDeleteGlobal}
                             currentUserId={currentUserId}
+                            canDelete={canDeleteComments && Boolean(onDeleteComment)}
                         />
                     ))}
 
