@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft, Check, Share2 } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
 import AnnouncementDiscussion from '@/Components/EstateBoard/AnnouncementDiscussion';
 import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
@@ -54,7 +54,6 @@ const CATEGORY_META: Record<string, { label: string; tone: string }> = {
 export default function AnnouncementDetail({ organization, estate, membership, post, comments }: Props) {
     const estateName = estate?.name || organization.estate_name || 'Golden Heights';
     const { auth } = usePage<SharedData>().props;
-    const [copied, setCopied] = useState(false);
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
@@ -136,62 +135,20 @@ export default function AnnouncementDetail({ organization, estate, membership, p
         });
     }
 
-    const handleShare = async () => {
-        const shareData = {
-            title: post.title || 'Estate Announcement',
-            text: `${post.publisher_name || estateName}: ${post.title || ''}`,
-            url: window.location.href,
-        };
-
-        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-            try {
-                await navigator.share(shareData);
-            } catch {
-                // Ignore cancel
-            }
-        } else {
-            try {
-                await navigator.clipboard.writeText(window.location.href);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            } catch {
-                // Clipboard fallback
-            }
-        }
-    };
-
     return (
         <OrganizationLayout title="Announcement" contentClassName="max-w-2xl px-4" hideBottomNav={true}>
             <Head title={`${post.title || 'Announcement'} - ${estateName}`} />
 
             <div className="space-y-6 pb-24 text-left">
-                {/* 1. Navigation Bar: Back to Feed + Share */}
+                {/* 1. Navigation Bar: Back to Feed */}
                 <div className="flex items-center justify-between gap-3 pt-2">
                     <Link
                         href="/org/announcements"
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-900 active:scale-95"
                     >
                         <ArrowLeft className="h-4 w-4 stroke-[2.2]" />
-                        <span>Feed</span>
+                        <span>Back to feed</span>
                     </Link>
-
-                    <button
-                        type="button"
-                        onClick={handleShare}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 shadow-xs transition-colors hover:bg-slate-50 hover:text-slate-900 active:scale-95"
-                    >
-                        {copied ? (
-                            <>
-                                <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                <span className="text-emerald-700">Link Copied</span>
-                            </>
-                        ) : (
-                            <>
-                                <Share2 className="h-3.5 w-3.5 text-slate-400" />
-                                <span>Share</span>
-                            </>
-                        )}
-                    </button>
                 </div>
 
                 {/* 2. Critical Alert Banner if applicable */}
