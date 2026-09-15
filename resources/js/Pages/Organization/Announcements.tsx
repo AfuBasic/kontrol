@@ -49,6 +49,11 @@ interface Props {
         is_admin: boolean;
     };
     unread_count?: number;
+    filters?: {
+        search?: string;
+        category?: string;
+        sort?: 'latest' | 'oldest';
+    };
     posts: CursorPaginatedPosts;
 }
 
@@ -59,6 +64,15 @@ const CATEGORY_META: Record<string, { label: string; tone: string }> = {
     security: { label: 'Security', tone: 'text-rose-700 bg-rose-50 border-rose-200/60' },
     event: { label: 'Community Event', tone: 'text-indigo-700 bg-indigo-50 border-indigo-200/60' },
 };
+
+const CATEGORIES = [
+    { value: 'all', label: 'All' },
+    { value: 'general', label: 'Notices' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'security', label: 'Security' },
+    { value: 'meeting', label: 'Meetings' },
+    { value: 'event', label: 'Events' },
+];
 
 function formatFeedTimestamp(publishedAt: string | null, humanFallback: string): string {
     if (!publishedAt) return humanFallback;
@@ -82,20 +96,64 @@ export default function Announcements({
     estate,
     membership,
     unread_count = 0,
+    filters = {},
     posts,
 }: Props) {
     const estateName = estate?.name || organization.estate_name || 'Golden Heights';
     const [items, setItems] = useState<Post[]>(posts.data);
     const [nextPageUrl, setNextPageUrl] = useState<string | null>(posts.next_page_url);
 
+    const [search, setSearch] = useState(filters.search || '');
+    const [selectedCategory, setSelectedCategory] = useState(filters.category || 'all');
+    const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>(filters.sort || 'latest');
+
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const isLoadingMore = useRef(false);
 
-    // Sync when fresh props arrive from initial page navigation
+    // Sync when fresh props arrive from initial page navigation or filter visits
     useEffect(() => {
         setItems(posts.data);
         setNextPageUrl(posts.next_page_url);
     }, [posts]);
+
+    // Handle filter application
+    const applyFilters = (newSearch: string, newCategory: string, newSort: 'latest' | 'oldest') => {
+        router.get(
+            '/org/announcements',
+            {
+                search: newSearch || undefined,
+                category: newCategory !== 'all' ? newCategory : undefined,
+                sort: newSort !== 'latest' ? newSort : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            applyFilters(search, selectedCategory, sortOrder);
+        }
+    };
+
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+        applyFilters(search, category, sortOrder);
+    };
+
+    const handleSortToggle = () => {
+        const nextSort = sortOrder === 'latest' ? 'oldest' : 'latest';
+        setSortOrder(nextSort);
+        applyFilters(search, selectedCategory, nextSort);
+    };
+
+    const handleClearSearch = () => {
+        setSearch('');
+        applyFilters('', selectedCategory, sortOrder);
+    };
 
     const loadMore = useCallback(() => {
         if (!nextPageUrl || isLoadingMore.current) return;
@@ -141,6 +199,8 @@ export default function Announcements({
         return () => observer.disconnect();
     }, [loadMore]);
 
+    const hasActiveFilters = Boolean(filters.search || (filters.category && filters.category !== 'all') || (filters.sort && filters.sort !== 'latest'));
+
     return (
         <OrganizationLayout title="Announcements" contentClassName="max-w-xl px-3 sm:px-4">
             <Head title={`Updates - ${estateName}`} />
@@ -165,18 +225,108 @@ export default function Announcements({
                     )}
                 </header>
 
-                {/* 2. Community Stream Feed or Empty State */}
+                {/* 2. Search and Filter Bar */}
+                <div className="mb-4 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                            <input
+                                type="text"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                onKeyDown={handleSearchKeyDown}
+                                placeholder="Search updates..."
+                                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-8 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                            <svg
+                                className="absolute left-3 top-2.5 h-4 w-4 text-slate-400"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
+                            </svg>
+                            {search && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearSearch}
+                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                                    title="Clear search"
+                                >
+                                    <span className="text-xs font-bold leading-none">✕</span>
+                                </button>
+                            )}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={handleSortToggle}
+                            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors ${
+                                sortOrder === 'oldest'
+                                    ? 'border-blue-200 bg-blue-50 text-blue-700'
+                                    : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+                            }`}
+                            title={`Sorted by ${sortOrder === 'latest' ? 'newest first' : 'oldest first'}. Click to toggle.`}
+                        >
+                            <span>{sortOrder === 'latest' ? 'Newest' : 'Oldest'}</span>
+                            <span className="text-slate-400 text-[10px]">⇅</span>
+                        </button>
+                    </div>
+
+                    {/* Category Filter Pills */}
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                        {CATEGORIES.map((cat) => {
+                            const isSelected = selectedCategory === cat.value;
+                            return (
+                                <button
+                                    key={cat.value}
+                                    type="button"
+                                    onClick={() => handleCategoryChange(cat.value)}
+                                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                                        isSelected
+                                            ? 'bg-slate-900 text-white'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                                    }`}
+                                >
+                                    {cat.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* 3. Community Stream Feed or Empty State */}
                 {items.length === 0 ? (
                     <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white px-4 py-16 text-center sm:py-20 shadow-xs">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                             <Building2 className="h-6 w-6 stroke-[1.5]" />
                         </div>
                         <h2 className="mt-4 text-base font-semibold text-slate-900">
-                            You're all caught up
+                            {hasActiveFilters ? 'No updates match your filters' : "You're all caught up"}
                         </h2>
                         <p className="mt-1 mx-auto max-w-xs text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
-                            There aren't any estate updates yet. New announcements from {estateName} will appear here.
+                            {hasActiveFilters
+                                ? 'Try adjusting your search terms or filter category to find what you are looking for.'
+                                : `There aren't any estate updates yet. New announcements from ${estateName} will appear here.`}
                         </p>
+                        {hasActiveFilters && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSearch('');
+                                    setSelectedCategory('all');
+                                    setSortOrder('latest');
+                                    applyFilters('', 'all', 'latest');
+                                }}
+                                className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200"
+                            >
+                                Reset filters
+                            </button>
+                        )}
                     </div>
                 ) : (
                     <div className="mt-2 space-y-4">
