@@ -1,10 +1,11 @@
-import { Head, Link } from '@inertiajs/react';
-import { AlertCircle, ArrowLeft, Check, ChevronRight, FileText, Share2 } from 'lucide-react';
-import React, { useState } from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, ArrowLeft, Check, Share2 } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import AnnouncementAttachments from '@/Components/EstateBoard/AnnouncementAttachments';
+import AnnouncementDiscussion from '@/Components/EstateBoard/AnnouncementDiscussion';
 import AnnouncementProse from '@/Components/EstateBoard/AnnouncementProse';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
-import type { PostMedia } from '@/types';
+import type { CursorPaginatedComments, PostMedia, SharedData } from '@/types';
 
 interface DetailPost {
     id: number;
@@ -19,6 +20,7 @@ interface DetailPost {
     publisher_name: string;
     publisher_role: string;
     author_name: string | null;
+    comments_count?: number;
     media?: PostMedia[];
 }
 
@@ -38,6 +40,7 @@ interface Props {
         is_admin: boolean;
     };
     post: DetailPost;
+    comments: CursorPaginatedComments;
 }
 
 const CATEGORY_META: Record<string, { label: string; tone: string }> = {
@@ -48,9 +51,12 @@ const CATEGORY_META: Record<string, { label: string; tone: string }> = {
     event: { label: 'Community Event', tone: 'text-indigo-700 bg-indigo-50' },
 };
 
-export default function AnnouncementDetail({ organization, estate, post }: Props) {
+export default function AnnouncementDetail({ organization, estate, membership, post, comments }: Props) {
     const estateName = estate?.name || organization.estate_name || 'Golden Heights';
+    const { auth } = usePage<SharedData>().props;
     const [copied, setCopied] = useState(false);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+    const isLoadingMore = useRef(false);
 
     const category = CATEGORY_META[post.category] || {
         label: post.category ? post.category.charAt(0).toUpperCase() + post.category.slice(1) : 'Notice',
@@ -67,6 +73,68 @@ export default function AnnouncementDetail({ organization, estate, post }: Props
               year: 'numeric',
           })
         : 'Recently';
+
+    const {
+        data,
+        setData,
+        post: submitComment,
+        processing,
+        reset,
+        errors,
+    } = useForm({
+        body: '',
+    });
+
+    const loadMore = useCallback(() => {
+        if (!comments?.next_page_url || isLoadingMore.current) return;
+
+        isLoadingMore.current = true;
+        router.get(
+            comments.next_page_url,
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['comments'],
+                onFinish: () => {
+                    isLoadingMore.current = false;
+                },
+            },
+        );
+    }, [comments?.next_page_url]);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    loadMore();
+                }
+            },
+            { threshold: 0.1 },
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [loadMore]);
+
+    function handleSubmitComment(e: React.FormEvent) {
+        e.preventDefault();
+        if (!data.body.trim()) return;
+
+        submitComment(`/org/announcements/${post.hashid || post.id}/comments`, {
+            preserveScroll: true,
+            onSuccess: () => reset(),
+        });
+    }
+
+    function handleDeleteComment(commentId: number) {
+        router.delete(`/org/announcements/comments/${commentId}`, {
+            preserveScroll: true,
+        });
+    }
 
     const handleShare = async () => {
         const shareData = {
@@ -93,18 +161,18 @@ export default function AnnouncementDetail({ organization, estate, post }: Props
     };
 
     return (
-        <OrganizationLayout title="Announcement" contentClassName="max-w-2xl px-4">
+        <OrganizationLayout title="Announcement" contentClassName="max-w-2xl px-4" hideBottomNav={true}>
             <Head title={`${post.title || 'Announcement'} - ${estateName}`} />
 
             <div className="space-y-6 pb-24 text-left">
-                {/* 1. Subtle Navigation Bar: Back link + Share */}
+                {/* 1. Navigation Bar: Back to Feed + Share */}
                 <div className="flex items-center justify-between gap-3 pt-2">
                     <Link
                         href="/org/announcements"
                         className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-slate-900 active:scale-95"
                     >
                         <ArrowLeft className="h-4 w-4 stroke-[2.2]" />
-                        <span>Announcements</span>
+                        <span>Feed</span>
                     </Link>
 
                     <button
@@ -134,7 +202,7 @@ export default function AnnouncementDetail({ organization, estate, post }: Props
                     </div>
                 )}
 
-                {/* 3. The Article itself is the reading surface (No enclosing giant card) */}
+                {/* 3. The Article itself is the reading surface */}
                 <article className="space-y-6">
                     {/* Publisher Header Block */}
                     <div className="flex items-center gap-3">
@@ -195,8 +263,27 @@ export default function AnnouncementDetail({ organization, estate, post }: Props
                         </div>
                     )}
                 </article>
+
+                {/* 4. Discussion & Comments Flow */}
+                <div id="discussion" className="mt-8 border-t border-slate-200/80 pt-8">
+                    <AnnouncementDiscussion
+                        comments={comments?.data || []}
+                        commentsCount={post.comments_count ?? (comments?.data?.length || 0)}
+                        commentBody={data.body}
+                        onCommentBodyChange={(val) => setData('body', val)}
+                        onSubmitComment={handleSubmitComment}
+                        onDeleteComment={handleDeleteComment}
+                        processing={processing}
+                        error={errors.body}
+                        currentUserId={auth?.user?.id}
+                        canDeleteGlobal={membership.is_admin}
+                        nextPageUrl={comments?.next_page_url}
+                        loadMoreRef={loadMoreRef}
+                    />
+                </div>
             </div>
         </OrganizationLayout>
     );
 }
+
 
