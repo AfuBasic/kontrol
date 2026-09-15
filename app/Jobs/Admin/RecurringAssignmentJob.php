@@ -5,6 +5,7 @@ namespace App\Jobs\Admin;
 use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
+use App\Models\EstateOrganization;
 use App\Models\Property;
 use App\Models\User;
 use App\Models\Zone;
@@ -172,10 +173,20 @@ class RecurringAssignmentJob implements ShouldQueue
                 $userIds = array_values(array_unique(array_merge($residentIds, $orgAdminIds)));
             }
         } elseif ($collection->applies_to === 'organization') {
-            $userIds = User::whereHas('organizationMemberships', function ($q) use ($collection) {
+            $orgTargets = $collection->targets
+                ->filter(fn ($t) => $t->target_type === EstateOrganization::class || $t->target_type === 'organization' || $t->target_type === 'App\Models\EstateOrganization')
+                ->pluck('target_id')
+                ->all();
+
+            $userIds = User::whereHas('organizationMemberships', function ($q) use ($collection, $orgTargets) {
                 $q->where('role', 'admin')
                     ->where('is_active', true)
-                    ->whereHas('organization', fn ($oq) => $oq->where('estate_id', $collection->estate_id)->where('is_active', true));
+                    ->whereHas('organization', function ($oq) use ($collection, $orgTargets) {
+                        $oq->where('estate_id', $collection->estate_id)->where('is_active', true);
+                        if (! empty($orgTargets)) {
+                            $oq->whereIn('id', $orgTargets);
+                        }
+                    });
             })
                 ->whereNull('users.suspended_at')
                 ->pluck('users.id')
