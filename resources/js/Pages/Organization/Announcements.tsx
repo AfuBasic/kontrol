@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircle, Building2, ChevronRight, FileText, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { AlertCircle, Building2, ChevronRight, FileText, MessageSquare } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { PostMedia } from '@/types';
@@ -376,7 +376,7 @@ export default function Announcements({
                         )}
                     </div>
                 ) : (
-                    <div className="mt-2 space-y-4">
+                    <div className="mt-2 space-y-3">
                         {items.map((post) => {
                             const isUnread = !post.is_read;
                             const isCritical = post.priority === 'critical';
@@ -384,7 +384,7 @@ export default function Announcements({
                             const preview = extractAnnouncementPreview(post.body, 220);
                             const category = CATEGORY_META[post.category] || {
                                 label: post.category ? post.category.charAt(0).toUpperCase() + post.category.slice(1) : 'Notice',
-                                tone: 'text-slate-700 bg-slate-100 border-slate-200/60',
+                                tone: 'text-slate-600 bg-slate-100/80',
                             };
                             const timeLabel = formatFeedTimestamp(post.published_at, post.published_at_human);
 
@@ -392,80 +392,75 @@ export default function Announcements({
                             const nonImageMedia = post.media?.filter((m) => !m.mime_type?.startsWith('image/')) || [];
                             const postDetailUrl = `/org/announcements/${post.hashid || post.id}`;
 
+                            const initial = (estateName || 'E').charAt(0).toUpperCase();
+
                             return (
                                 <article
                                     key={post.id}
-                                    className={`group rounded-2xl border bg-white shadow-xs transition-all duration-150 hover:border-slate-300 hover:shadow-sm ${
+                                    className={`relative rounded-xl sm:rounded-2xl border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-slate-300 hover:shadow-xs ${
                                         isCritical
                                             ? 'border-rose-200/90'
                                             : isUnread
-                                            ? 'border-blue-200/90 ring-1 ring-blue-500/10'
-                                            : 'border-slate-200/80'
+                                              ? 'border-slate-200/90 ring-1 ring-blue-500/15'
+                                              : 'border-slate-200/80'
                                     }`}
                                 >
-                                    {/* Critical Advisory Banner */}
+                                    {/* Critical Advisory Top Strip */}
                                     {isCritical && (
-                                        <div className="flex items-center gap-2 rounded-t-2xl border-b border-rose-100 bg-rose-50/90 px-4 py-2 text-[11px] font-semibold text-rose-800">
+                                        <div className="flex items-center gap-1.5 rounded-t-xl sm:rounded-t-2xl border-b border-rose-100 bg-rose-50/80 px-3.5 sm:px-4 py-1.5 text-[11px] font-semibold text-rose-700">
                                             <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
                                             <span>Urgent Estate Advisory</span>
                                         </div>
                                     )}
 
-                                    {/* Card Body */}
-                                    <div className="p-4 sm:p-5">
-                                        {/* Publisher Metadata Bar */}
-                                        <div className="flex items-center justify-between gap-3">
+                                    <div className="p-3.5 sm:p-4">
+                                        {/* 1. Header: Publisher & Context */}
+                                        <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-2.5 min-w-0">
-                                                {/* Monogram */}
-                                                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-xs font-bold text-white shadow-xs">
-                                                    <span>{estateName.charAt(0).toUpperCase()}</span>
+                                                {/* Compact Avatar with restrained unread indicator */}
+                                                <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-xs font-semibold text-white">
+                                                    <span>{initial}</span>
                                                     {isUnread && (
                                                         <span
-                                                            className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-blue-600 ring-2 ring-white"
+                                                            className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-blue-600 ring-2 ring-white"
                                                             title="Unread notice"
                                                         />
                                                     )}
                                                 </div>
 
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                                        <span className="text-xs font-bold text-slate-900 truncate">
+                                                {/* Publisher Identity & Meta */}
+                                                <div className="min-w-0 flex-1 leading-tight">
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span className="text-[13px] font-semibold text-slate-900 truncate">
                                                             {post.publisher_name || estateName}
                                                         </span>
-                                                        {isImportant && !isCritical && (
-                                                            <span className="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.2 text-[10px] font-medium text-amber-800 border border-amber-200/50">
-                                                                Important
+                                                        {isUnread && (
+                                                            <span className="shrink-0 rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-700 ring-1 ring-blue-100">
+                                                                New
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-1 text-[11px] text-slate-500 font-normal">
-                                                        <span>{post.publisher_role}</span>
-                                                        <span>·</span>
-                                                        <time dateTime={post.published_at || undefined} className="text-slate-400">
-                                                            {timeLabel}
-                                                        </time>
-                                                        {post.author_name && (
-                                                            <>
-                                                                <span className="text-slate-300">·</span>
-                                                                <span className="text-slate-400 truncate max-w-[120px]">
-                                                                    by {post.author_name}
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                                    <p className="mt-0.5 text-[11px] text-slate-500 truncate">
+                                                        {post.publisher_role || 'Estate Management'} · {timeLabel}
+                                                    </p>
                                                 </div>
                                             </div>
 
-                                            {/* Category Tag Top-Right */}
-                                            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-medium shrink-0 ${category.tone}`}>
-                                                {category.label}
-                                            </span>
+                                            {/* Restrained Urgent/Important Pill or Quiet Category */}
+                                            <div className="shrink-0 flex items-center gap-1.5">
+                                                {isImportant && !isCritical && (
+                                                    <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800 ring-1 ring-amber-200/60">
+                                                        Important
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
 
-                                        {/* Announcement Title & Prose Area */}
-                                        <div className="mt-3">
+                                        {/* 2. Content Area */}
+                                        <div className="mt-2.5">
+                                            {/* Headline / Title */}
                                             {post.title && (
-                                                <h2 className="text-[15px] font-bold leading-snug tracking-tight text-slate-950 sm:text-base">
+                                                <h2 className="text-[15px] sm:text-base font-semibold leading-snug tracking-tight text-slate-950">
                                                     <Link
                                                         href={postDetailUrl}
                                                         className="hover:text-blue-600 transition-colors"
@@ -475,33 +470,24 @@ export default function Announcements({
                                                 </h2>
                                             )}
 
-                                            {/* Preview Excerpt */}
+                                            {/* Clean Body Preview */}
                                             {preview && (
-                                                <div className="mt-1.5 text-xs sm:text-sm font-normal leading-relaxed text-slate-600">
-                                                    <p className="whitespace-pre-line line-clamp-3">
-                                                        {preview}
-                                                    </p>
-                                                    <Link
-                                                        href={postDetailUrl}
-                                                        className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
-                                                    >
-                                                        <span>Read full notice</span>
-                                                        <ChevronRight className="h-3 w-3 stroke-[2.5]" />
-                                                    </Link>
-                                                </div>
+                                                <p className="mt-1 text-[13px] font-normal leading-relaxed text-slate-600 line-clamp-2 sm:line-clamp-3">
+                                                    {preview}
+                                                </p>
                                             )}
                                         </div>
 
-                                        {/* Optional Media Preview */}
+                                        {/* Media Preview (Compact & Clean) */}
                                         {images.length > 0 && (
-                                            <div className="mt-3 overflow-hidden rounded-xl border border-slate-100 bg-slate-50">
+                                            <div className="mt-2.5 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
                                                 <Link href={postDetailUrl} className="block group/img">
                                                     {images.length === 1 ? (
                                                         <div className="aspect-16/9 sm:aspect-2/1 w-full overflow-hidden bg-slate-100">
                                                             <img
                                                                 src={images[0].url}
                                                                 alt={post.title || 'Notice attachment'}
-                                                                className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-[1.02]"
+                                                                className="h-full w-full object-cover transition-transform duration-300 group-hover/img:scale-[1.01]"
                                                                 loading="lazy"
                                                             />
                                                         </div>
@@ -532,9 +518,9 @@ export default function Announcements({
                                         {nonImageMedia.length > 0 && (
                                             <Link
                                                 href={postDetailUrl}
-                                                className="mt-2.5 flex items-center gap-2 rounded-xl bg-slate-50 border border-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                                className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100 transition-colors"
                                             >
-                                                <FileText className="h-4 w-4 text-slate-400 shrink-0" />
+                                                <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                                                 <span className="truncate">
                                                     {nonImageMedia.length} document attachment{nonImageMedia.length > 1 ? 's' : ''}
                                                 </span>
@@ -542,33 +528,25 @@ export default function Announcements({
                                             </Link>
                                         )}
 
-                                        {/* Bottom Bar: Discussion & Comment affordance */}
-                                        <div className="mt-3.5 flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
+                                        {/* 3. Footer: Engagement & Category Context */}
+                                        <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                                            {/* Discussion / Comment Affordance */}
                                             <Link
                                                 href={`${postDetailUrl}#discussion`}
-                                                className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 active:scale-95"
+                                                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
                                             >
                                                 <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
                                                 <span>
-                                                    {post.comments_count > 0 ? (
-                                                        <span>
-                                                            {post.comments_count}{' '}
-                                                            <span>
-                                                                {post.comments_count === 1 ? 'comment' : 'comments'}
-                                                            </span>
-                                                        </span>
-                                                    ) : (
-                                                        <span>Comment</span>
-                                                    )}
+                                                    {post.comments_count > 0
+                                                        ? `${post.comments_count} ${post.comments_count === 1 ? 'comment' : 'comments'}`
+                                                        : 'Comment'}
                                                 </span>
                                             </Link>
 
-                                            <Link
-                                                href={postDetailUrl}
-                                                className="text-xs font-medium text-slate-400 hover:text-slate-700 transition-colors"
-                                            >
-                                                View notice
-                                            </Link>
+                                            {/* Quiet Category Pill */}
+                                            <span className="text-[11px] font-medium text-slate-500">
+                                                {category.label}
+                                            </span>
                                         </div>
                                     </div>
                                 </article>
