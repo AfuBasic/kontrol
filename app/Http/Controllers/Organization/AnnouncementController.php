@@ -44,7 +44,20 @@ class AnnouncementController extends Controller
                 ->count();
         }
 
-        $posts = (clone $baseQuery)
+        $search = $request->string('search')->trim()->toString();
+        $category = $request->string('category')->trim()->toString();
+        $sort = $request->string('sort')->trim()->toString() ?: 'latest';
+
+        $postsQuery = (clone $baseQuery)
+            ->when($search !== '', function ($q) use ($search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('title', 'like', "%{$search}%")
+                        ->orWhere('body', 'like', "%{$search}%");
+                });
+            })
+            ->when($category !== '' && $category !== 'all', function ($q) use ($category) {
+                $q->where('category', $category);
+            })
             ->with(['author:id,name', 'media'])
             ->withCount('comments')
             ->when($user, function ($q) use ($user) {
@@ -57,10 +70,17 @@ class AnnouncementController extends Controller
                             ->limit(1),
                         'read_at'
                     );
-            })
-            ->latest('published_at')
-            ->latest('id')
+            });
+
+        if ($sort === 'oldest') {
+            $postsQuery->oldest('published_at')->oldest('id');
+        } else {
+            $postsQuery->latest('published_at')->latest('id');
+        }
+
+        $posts = $postsQuery
             ->cursorPaginate(10)
+            ->withQueryString()
             ->through(fn (EstateBoardPost $post) => [
                 'id' => $post->id,
                 'hashid' => $post->hashid,
@@ -103,6 +123,11 @@ class AnnouncementController extends Controller
                 'is_admin' => $membership->isAdmin(),
             ],
             'unread_count' => $unreadCount,
+            'filters' => [
+                'search' => $search,
+                'category' => $category ?: 'all',
+                'sort' => $sort,
+            ],
             'posts' => $posts,
         ]);
     }
