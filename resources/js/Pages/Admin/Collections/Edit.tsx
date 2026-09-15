@@ -307,7 +307,8 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     options={[
                                         ...(!isZoneScoped
                                             ? [
-                                                  { value: 'all', label: 'Everyone' },
+                                                  { value: 'all', label: 'Everyone (Residents & Organizations)' },
+                                                  { value: 'organization', label: 'Organizations' },
                                                   { value: 'property_owner', label: 'Property Owners' },
                                               ]
                                             : []),
@@ -500,9 +501,11 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     className="rounded-2xl sm:rounded-3xl bg-blue-50/50 p-6 sm:p-8 text-center ring-1 ring-blue-100"
                                 >
                                     <p className="text-xs sm:text-sm font-bold text-blue-700">
-                                        {data.applies_to === 'property_owner'
-                                            ? 'This collection will apply to all current and future property owners of the estate.'
-                                            : 'This collection will apply to all current and future residents of the estate.'}
+                                        {data.applies_to === 'organization'
+                                            ? 'This collection will apply to all active estate organizations.'
+                                            : data.applies_to === 'property_owner'
+                                              ? 'This collection will apply to all current and future property owners of the estate.'
+                                              : 'This collection will apply to everyone: all current and future residents and organizations in the estate.'}
                                     </p>
                                 </motion.div>
                             )}
