@@ -97,18 +97,22 @@ const READ_STATUSES: { value: 'all' | 'unread' | 'read'; label: string; descript
 function formatFeedTimestamp(publishedAt: string | null, humanFallback: string): string {
     if (!publishedAt) return humanFallback;
     const date = new Date(publishedAt);
+    if (isNaN(date.getTime())) return humanFallback;
+
     const now = new Date();
-    const diffHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
+    const timeString = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+    });
 
-    if (diffHours < 24) {
-        return humanFallback;
-    }
-
-    return date.toLocaleDateString('en-GB', {
+    const dateString = date.toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
     });
+
+    return `${dateString} · ${timeString}`;
 }
 
 export default function Announcements({
