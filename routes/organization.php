@@ -58,7 +58,6 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::get('/', [AnnouncementController::class, 'index'])->name('index');
         Route::get('/{post}', [AnnouncementController::class, 'show'])->name('show');
         Route::post('/{post}/comments', [AnnouncementController::class, 'storeComment'])->name('comments.store');
-        Route::delete('/comments/{comment}', [AnnouncementController::class, 'destroyComment'])->name('comments.destroy');
     });
 
     // 5. Profile & Settings (Team & Preferences)
