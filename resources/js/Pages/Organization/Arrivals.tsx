@@ -150,7 +150,7 @@ export default function Arrivals({ organization, arrivals, metrics }: Props) {
                     </section>
                 )}
 
-                {/* ── MOBILE: Priority surface when pending confirmations exist ── */}
+                {/* Mobile: Priority surface when pending confirmations exist */}
                 {arrivals.length > 0 && hasPending && (
                     <section className="lg:hidden">
                         <div className="mb-3 flex items-center gap-2.5">
@@ -253,7 +253,7 @@ export default function Arrivals({ organization, arrivals, metrics }: Props) {
                     </section>
                 )}
 
-                {/* ── MOBILE: No pending — show confirmed list as primary ── */}
+                {/* Mobile: No pending - show confirmed list as primary */}
                 {arrivals.length > 0 && !hasPending && (
                     <section className="lg:hidden">
                         <div className="mb-3 flex items-center gap-2.5">
@@ -294,7 +294,7 @@ export default function Arrivals({ organization, arrivals, metrics }: Props) {
                     </section>
                 )}
 
-                {/* ── DESKTOP: Two-col split, always shown on lg+ ── */}
+                {/* Desktop: Two-col split, always shown on lg+ */}
                 {arrivals.length > 0 && (
                     <section className="hidden lg:grid lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-4">
                         {/* Left: needs confirmation */}
