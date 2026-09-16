@@ -34,7 +34,8 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
             ->with(['organization', 'estate.subscriptionRecord', 'recipients' => fn ($q) => $q->where('status', 'active')]);
 
         if ($this->bulkInviteId) {
-            $query->where('id', $this->bulkInviteId);
+            $query->where('id', $this->bulkInviteId)
+                ->where('status', 'active');
         } else {
             $query->eligibleForAutoRenewal();
         }
@@ -76,6 +77,13 @@ class RenewBulkVisitorInvitesJob implements ShouldQueue
             ]);
 
             Log::info("RenewBulkVisitorInvitesJob: Estate {$estate?->id} has no active subscription. Blocked renewal for bulk invite {$bulkInvite->id}.");
+
+            return;
+        }
+
+        // Only proceed if renewal is actually due (e.g. next_renewal_at is on or before tomorrow)
+        if ($bulkInvite->next_renewal_at && CarbonImmutable::instance($bulkInvite->next_renewal_at)->isAfter(now()->addDay())) {
+            Log::info("RenewBulkVisitorInvitesJob: Bulk invite {$bulkInvite->id} next renewal date {$bulkInvite->next_renewal_at} is not due yet. Skipping.");
 
             return;
         }
