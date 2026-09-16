@@ -497,3 +497,14 @@ test('organization announcements can be searched, filtered by category, and sort
             ->has('posts.data', 1)
             ->where('posts.data.0.id', $post1->id));
 });
+
+test('organization user can view and manage notifications', function () {
+    $this->actingAs($this->orgAdmin);
+
+    $this->get(route('org.notifications.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Notifications')
+            ->has('notifications.data')
+            ->has('unreadCount'));
+});
