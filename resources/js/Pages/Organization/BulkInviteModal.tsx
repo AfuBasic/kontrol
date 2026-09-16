@@ -60,11 +60,8 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
         if (finalEmails.length === 0) return;
 
+        setData('emails', finalEmails);
         post('/org/bulk-invites', {
-            data: {
-                ...data,
-                emails: finalEmails,
-            },
             preserveScroll: true,
             onSuccess: () => {
                 onClose();
