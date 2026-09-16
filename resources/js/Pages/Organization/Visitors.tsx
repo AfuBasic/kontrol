@@ -9,6 +9,7 @@ import {
     Tag,
     Users,
     Copy,
+    Share2,
     Check,
     X,
     ShieldAlert,
@@ -19,12 +20,15 @@ import {
     ExternalLink,
     QrCode,
     ShieldCheck,
+    Loader2,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import BulkInviteModal from './BulkInviteModal';
 import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import PassCard from '@/Components/Resident/PassCard';
+import CustomSelect from '@/Components/UI/CustomSelect';
+import { shareAccessCode } from '@/Utils/share';
 
 interface Organization {
     id: number;
@@ -107,9 +111,75 @@ export default function Visitors({ organization, membership, visitors, filters }
         end_time: '',
     });
 
+    const [copiedCode, setCopiedCode] = useState(false);
+    const [shareCopied, setShareCopied] = useState(false);
+    const [sharing, setSharing] = useState(false);
+    const [isExtendModalOpen, setIsExtendModalOpen] = useState(false);
+    const [selectedDuration, setSelectedDuration] = useState<number>(120);
+    const [extending, setExtending] = useState(false);
+
+    const cardRef = useRef<HTMLDivElement>(null);
+
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
         router.get('/org/visitors', { search }, { preserveState: true, preserveScroll: true });
+    };
+
+    const copyCodeOnly = (pass: VisitorPass) => {
+        navigator.clipboard.writeText(pass.code);
+        setCopiedCode(true);
+        setTimeout(() => setCopiedCode(false), 2000);
+    };
+
+    const handleShare = async (pass: VisitorPass) => {
+        if (sharing) return;
+        setSharing(true);
+        try {
+            const result = await shareAccessCode(
+                {
+                    ...pass,
+                    estate_name: organization.name,
+                } as any,
+                cardRef.current,
+            );
+            if (result?.method === 'copy' && result.success) {
+                setShareCopied(true);
+                setTimeout(() => setShareCopied(false), 3000);
+            }
+        } finally {
+            setSharing(false);
+        }
+    };
+
+    const handleExtendPass = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedPass) return;
+        setExtending(true);
+        router.post(
+            `/org/visitors/${selectedPass.id}/extend`,
+            { duration_minutes: selectedDuration },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setIsExtendModalOpen(false);
+                    setExtending(false);
+                    // Update local selectedPass expiration if still open
+                    setSelectedPass((prev) => {
+                        if (!prev) return null;
+                        const baseTime = prev.expires_at ? new Date(prev.expires_at) : new Date();
+                        const newExpiry = new Date((baseTime < new Date() ? new Date() : baseTime).getTime() + selectedDuration * 60000);
+                        return {
+                            ...prev,
+                            expires_at: newExpiry.toISOString(),
+                            status: 'active',
+                        };
+                    });
+                },
+                onError: () => {
+                    setExtending(false);
+                },
+            },
+        );
     };
 
     const copyCode = (pass: { pass_uuid: string; id?: number }) => {
@@ -325,7 +395,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                     {selectedPass && (
                         <div className="space-y-6">
                             {/* Reusable Pass Card with visual QR Ticket */}
-                            <div className="mx-auto w-full max-w-sm">
+                            <div ref={cardRef} className="mx-auto w-full max-w-sm">
                                 <PassCard
                                     pass={{
                                         ...selectedPass,
@@ -336,53 +406,130 @@ export default function Visitors({ organization, membership, visitors, filters }
                                 />
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => copyCode(selectedPass)}
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-95"
-                                >
-                                    {copiedCodeId === selectedPass.id ? (
-                                        <>
-                                            <Check className="h-4 w-4 text-emerald-600" />
-                                            <span>Link Copied</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="h-4 w-4 text-slate-500" />
-                                            <span>Copy Link</span>
-                                        </>
-                                    )}
-                                </button>
-
-                                <a
-                                    href={`/pass/${selectedPass.pass_uuid}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 rounded-xl bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                    <span>Public Pass</span>
-                                </a>
-                            </div>
-
-                            {/* Revoke Action */}
-                            {membership.is_admin && selectedPass.status === 'active' && (
-                                <div className="pt-2">
+                            {/* Action Buttons: Copy & Share */}
+                            <div className="mx-auto w-full max-w-sm space-y-2.5">
+                                <div className="flex w-full gap-2.5">
                                     <button
                                         type="button"
-                                        onClick={() => handleRevoke(selectedPass.id)}
-                                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/50 py-3 text-sm font-bold text-rose-600 transition hover:bg-rose-100/70 active:scale-98"
+                                        onClick={() => copyCodeOnly(selectedPass)}
+                                        className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all active:scale-98 ${
+                                            copiedCode
+                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                                        }`}
                                     >
-                                        <ShieldAlert className="h-4 w-4" />
-                                        Revoke Pass Immediately
+                                        <Copy className="h-3.5 w-3.5" />
+                                        <span>{copiedCode ? 'Copied Code!' : 'Copy Code'}</span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => handleShare(selectedPass)}
+                                        disabled={sharing}
+                                        className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-bold transition-all active:scale-98 disabled:opacity-75 ${
+                                            shareCopied
+                                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                                        }`}
+                                    >
+                                        <Share2 className="h-3.5 w-3.5" />
+                                        <span>{shareCopied ? 'Shared / Copied!' : 'Share Pass'}</span>
                                     </button>
                                 </div>
-                            )}
+
+                                {/* Extend Pass Button (for active passes) */}
+                                {selectedPass.status === 'active' && selectedPass.type !== 'long_lived' && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsExtendModalOpen(true)}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-indigo-100 bg-indigo-50/80 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-98"
+                                    >
+                                        <Clock className="h-3.5 w-3.5 text-indigo-600" />
+                                        <span>Extend Pass Duration</span>
+                                    </button>
+                                )}
+
+                                {/* Revoke Action */}
+                                {membership.is_admin && selectedPass.status === 'active' && (
+                                    <div className="pt-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRevoke(selectedPass.id)}
+                                            className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/50 py-2.5 text-xs font-bold text-rose-600 transition hover:bg-rose-100/70 active:scale-98"
+                                        >
+                                            <ShieldAlert className="h-3.5 w-3.5" />
+                                            <span>Revoke Pass Immediately</span>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
                 </ResponsiveSheet>
+
+                {/* Extend Pass Duration Modal */}
+                {isExtendModalOpen && selectedPass && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+                        <div className="animate-in fade-in zoom-in w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl duration-150">
+                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-5 w-5 text-indigo-600" />
+                                    <h3 className="text-sm font-bold text-slate-900">Extend Visitor Pass</h3>
+                                </div>
+                                <button
+                                    onClick={() => setIsExtendModalOpen(false)}
+                                    disabled={extending}
+                                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleExtendPass} className="mt-4 space-y-4" noValidate>
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Select Extension Duration</label>
+                                    <CustomSelect
+                                        value={selectedDuration}
+                                        onChange={(val) => setSelectedDuration(Number(val))}
+                                        disabled={extending}
+                                        options={[
+                                            { value: 60, label: '+1 hour' },
+                                            { value: 120, label: '+2 hours' },
+                                            { value: 240, label: '+4 hours' },
+                                            { value: 480, label: '+8 hours' },
+                                            { value: 1440, label: '+1 day' },
+                                        ]}
+                                    />
+                                </div>
+
+                                <div className="flex gap-2.5 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsExtendModalOpen(false)}
+                                        disabled={extending}
+                                        className="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={extending}
+                                        className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-75"
+                                    >
+                                        {extending ? (
+                                            <>
+                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                <span>Extending...</span>
+                                            </>
+                                        ) : (
+                                            <span>Confirm Extension</span>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
 
                 {/* Invite Visitor Modal */}
                 <ResponsiveSheet isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)}>
