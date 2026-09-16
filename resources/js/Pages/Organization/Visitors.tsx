@@ -4,7 +4,6 @@ import type { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
     Calendar,
-    Plus,
     Search,
     Tag,
     Users,
@@ -15,11 +14,6 @@ import {
     ShieldAlert,
     Link as LinkIcon,
     Clock,
-    Phone,
-    User,
-    ExternalLink,
-    QrCode,
-    ShieldCheck,
     Loader2,
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
