@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import MobileSheet from '@/Components/MobileSheet';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { PostMedia } from '@/types';
 import { extractAnnouncementPreview } from '@/Utils/announcementPreview';
@@ -303,7 +304,7 @@ export default function Announcements({
     const isUnreadQuickActive = selectedReadStatus === 'unread';
 
     return (
-        <OrganizationLayout title="Announcements" contentClassName="max-w-xl px-3 sm:px-4">
+        <OrganizationLayout title="Announcements" contentClassName="max-w-xl">
             <Head title={`Updates - ${estateName}`} />
 
             <div className="text-left pb-16">
@@ -403,27 +404,30 @@ export default function Announcements({
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                             </button>
 
-                            {/* Sort Menu Popover */}
-                            {isSortMenuOpen && (
-                                <div className="absolute right-0 top-full mt-1.5 w-40 z-30 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-black/5 animate-in fade-in-50 zoom-in-95">
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSelectSort('latest')}
-                                        className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 transition-colors"
-                                    >
-                                        <span>Newest first</span>
-                                        {sortOrder === 'latest' && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleSelectSort('oldest')}
-                                        className="w-full flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium text-slate-800 hover:bg-slate-50 transition-colors"
-                                    >
-                                        <span>Oldest first</span>
-                                        {sortOrder === 'oldest' && <Check className="h-3.5 w-3.5 text-blue-600" />}
-                                    </button>
+                            {/* Sort Menu Sheet */}
+                            <ResponsiveSheet isOpen={isSortMenuOpen} onClose={() => setIsSortMenuOpen(false)} maxWidth="sm">
+                                <div className="p-4 sm:p-6 pb-6">
+                                    <h3 className="text-lg font-bold text-slate-900 mb-4 px-2">Sort By</h3>
+                                    <div className="flex flex-col gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectSort('latest')}
+                                            className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <span>Newest first</span>
+                                            {sortOrder === 'latest' && <Check className="h-5 w-5 text-[#0b4aa2]" />}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelectSort('oldest')}
+                                            className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+                                        >
+                                            <span>Oldest first</span>
+                                            {sortOrder === 'oldest' && <Check className="h-5 w-5 text-[#0b4aa2]" />}
+                                        </button>
+                                    </div>
                                 </div>
-                            )}
+                            </ResponsiveSheet>
                         </div>
                     </div>
 
