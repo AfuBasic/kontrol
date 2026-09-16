@@ -8,6 +8,7 @@ import {
     ChevronRight,
     LogOut,
     Plus,
+    Trash2,
     X,
 } from 'lucide-react';
 import React, { useState } from 'react';
