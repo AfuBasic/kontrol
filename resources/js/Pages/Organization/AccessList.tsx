@@ -1,24 +1,34 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Ban,
+    BadgeCheck,
     CalendarClock,
     Check,
     ChevronRight,
     Clock,
     Copy,
     DoorOpen,
+    EyeOff,
     Plus,
     Radio,
     Search,
+    Shield,
     ShieldCheck,
     Trash2,
+    User,
     UserCheck,
     Users,
     X,
+    Share2,
 } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
+import { Clipboard } from '@capacitor/clipboard';
+import { Share } from '@capacitor/share';
+import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
 import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
 import AccessTabs from '@/Components/Organization/AccessTabs';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
 interface Member {
@@ -47,8 +57,6 @@ interface PaginatedMembers {
     total: number;
     links: Array<{ url: string | null; label: string; active: boolean }>;
 }
-
-
 
 interface PublicWindowItem {
     id: number;
@@ -87,13 +95,19 @@ const categoryOptions = ['all', 'staff', 'parent', 'student', 'member', 'contrac
 const statusOptions = ['all', 'active', 'suspended'];
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+const initialsFor = (name: string) => {
+    return name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+};
+
 export default function AccessList({
     organization,
     membership,
     members,
-    arrivals = [],
-    metrics,
-    logs,
     windows = [],
     filters,
 }: Props) {
@@ -126,8 +140,6 @@ export default function AccessList({
             setAddPersonModalOpen(true);
         }
     }, []);
-
-
 
     const hasPublicWindows = organization.access_policy === 'public_window';
     const activeMembers = members.data.filter((member) => member.status === 'active').length;
@@ -209,19 +221,25 @@ export default function AccessList({
         });
     };
 
-
-
-    const copyCode = (code: string, id: number) => {
-        navigator.clipboard.writeText(code);
-        setCopiedCodeId(id);
-        setTimeout(() => setCopiedCodeId(null), 2000);
+    const copyCode = async (code: string, id: number) => {
+        try {
+            if (navigator?.clipboard?.writeText) {
+                await navigator.clipboard.writeText(code);
+            } else {
+                await Clipboard.write({ string: code });
+            }
+            setCopiedCodeId(id);
+            setTimeout(() => setCopiedCodeId(null), 2000);
+        } catch (err) {
+            console.error('Failed to copy code', err);
+        }
     };
 
     return (
         <OrganizationLayout title="Access" contentClassName="max-w-4xl pb-28 sm:pb-12">
             <Head title={`${organization.name} - Access`} />
 
-            <div className="space-y-4 sm:space-y-5 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8">
+            <div className="space-y-4 sm:space-y-5 pt-4 sm:pt-8">
                 {/* Native Mobile Header: Page Title + Contextual Add Action */}
                 <div className="flex items-center justify-between gap-3 pt-1">
                     <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Access</h1>
@@ -237,8 +255,6 @@ export default function AccessList({
                     activeTab="people"
                     hasPublicWindows={hasPublicWindows}
                 />
-
-
 
                 {/* Tab Panel: People */}
                 {members.total === 0 && !search && category === 'all' && status === 'all' ? (
@@ -420,133 +436,118 @@ export default function AccessList({
                             </div>
                         )}
 
-
-
-
-
                 {/* Add Someone Sheet / Modal */}
-                {addPersonModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-6 text-sm shadow-xl sm:rounded-2xl">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-                                <div>
-                                    <h3 className="text-base font-semibold text-slate-950">Add someone</h3>
-                                    <p className="mt-0.5 text-xs text-slate-500">Create access for {organization.name}.</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setAddPersonModalOpen(false)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            </div>
-
-                            <form noValidate onSubmit={handleCreateMember} className="space-y-4 pt-4">
-                                <div>
-                                    <label className="text-xs font-semibold text-slate-800">Full name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Janet Adebayo"
-                                        value={memberData.name}
-                                        onChange={(event) => setMemberData('name', event.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    />
-                                    {memberErrors.name && <p className="mt-1 text-xs text-rose-600">{memberErrors.name}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-slate-800">Relationship</label>
-                                    <select
-                                        value={memberData.category}
-                                        onChange={(event) => setMemberData('category', event.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 capitalize focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    >
-                                        <option value="staff">Staff</option>
-                                        <option value="parent">Parent</option>
-                                        <option value="student">Student</option>
-                                        <option value="member">Member</option>
-                                        <option value="contractor">Contractor</option>
-                                        <option value="visitor">Regular visitor</option>
-                                    </select>
-                                    {memberErrors.category && <p className="mt-1 text-xs text-rose-600">{memberErrors.category}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-slate-800">ID number (optional)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. STU-2026-042"
-                                        value={memberData.identifier}
-                                        onChange={(event) => setMemberData('identifier', event.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    />
-                                    {memberErrors.identifier && <p className="mt-1 text-xs text-rose-600">{memberErrors.identifier}</p>}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-800">Valid from</label>
-                                        <input
-                                            type="date"
-                                            value={memberData.valid_from}
-                                            onChange={(event) => setMemberData('valid_from', event.target.value)}
-                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                        />
-                                        {memberErrors.valid_from && <p className="mt-1 text-xs text-rose-600">{memberErrors.valid_from}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-800">Valid until (optional)</label>
-                                        <input
-                                            type="date"
-                                            value={memberData.valid_until}
-                                            onChange={(event) => setMemberData('valid_until', event.target.value)}
-                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                        />
-                                        {memberErrors.valid_until && <p className="mt-1 text-xs text-rose-600">{memberErrors.valid_until}</p>}
-                                    </div>
-                                </div>
-
-                                <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
-                                    <input
-                                        type="checkbox"
-                                        checked={memberData.issue_credential}
-                                        onChange={(event) => setMemberData('issue_credential', event.target.checked)}
-                                        className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                                    />
-                                    <span>
-                                        <span className="block text-xs font-semibold text-slate-900">Issue an access code now</span>
-                                        <span className="mt-0.5 block text-xs leading-4 text-slate-500">
-                                            The code can be copied from this directory after the person is added.
-                                        </span>
-                                    </span>
-                                </label>
-
-                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => setAddPersonModalOpen(false)}
-                                        className="rounded-xl px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processingMember}
-                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50"
-                                    >
-                                        {processingMember ? 'Adding...' : 'Add person'}
-                                    </button>
-                                </div>
-                            </form>
+                <ResponsiveSheet isOpen={addPersonModalOpen} onClose={() => setAddPersonModalOpen(false)}>
+                    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Add someone</h3>
+                            <p className="mt-0.5 text-xs text-slate-500">Create access for {organization.name}.</p>
                         </div>
                     </div>
-                )}
+
+                    <form noValidate onSubmit={handleCreateMember} className="space-y-4 pt-4">
+                        <div>
+                            <label className="text-xs font-semibold text-slate-800">Full name</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Janet Adebayo"
+                                value={memberData.name}
+                                onChange={(event) => setMemberData('name', event.target.value)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                            />
+                            {memberErrors.name && <p className="mt-1 text-xs text-rose-600">{memberErrors.name}</p>}
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-semibold text-slate-800">Relationship</label>
+                            <select
+                                value={memberData.category}
+                                onChange={(event) => setMemberData('category', event.target.value)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 capitalize focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                            >
+                                <option value="staff">Staff</option>
+                                <option value="parent">Parent</option>
+                                <option value="student">Student</option>
+                                <option value="member">Member</option>
+                                <option value="contractor">Contractor</option>
+                                <option value="visitor">Regular visitor</option>
+                            </select>
+                            {memberErrors.category && <p className="mt-1 text-xs text-rose-600">{memberErrors.category}</p>}
+                        </div>
+
+                        <div>
+                            <label className="text-xs font-semibold text-slate-800">ID number (optional)</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. STU-2026-042"
+                                value={memberData.identifier}
+                                onChange={(event) => setMemberData('identifier', event.target.value)}
+                                className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                            />
+                            {memberErrors.identifier && <p className="mt-1 text-xs text-rose-600">{memberErrors.identifier}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-xs font-semibold text-slate-800">Valid from</label>
+                                <input
+                                    type="date"
+                                    value={memberData.valid_from}
+                                    onChange={(event) => setMemberData('valid_from', event.target.value)}
+                                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                />
+                                {memberErrors.valid_from && <p className="mt-1 text-xs text-rose-600">{memberErrors.valid_from}</p>}
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-slate-800">Valid until (optional)</label>
+                                <input
+                                    type="date"
+                                    value={memberData.valid_until}
+                                    onChange={(event) => setMemberData('valid_until', event.target.value)}
+                                    className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                />
+                                {memberErrors.valid_until && <p className="mt-1 text-xs text-rose-600">{memberErrors.valid_until}</p>}
+                            </div>
+                        </div>
+
+                        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
+                            <input
+                                type="checkbox"
+                                checked={memberData.issue_credential}
+                                onChange={(event) => setMemberData('issue_credential', event.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <span>
+                                <span className="block text-xs font-semibold text-slate-900">Issue an access code now</span>
+                                <span className="mt-0.5 block text-xs leading-4 text-slate-500">
+                                    The code can be copied from this directory after the person is added.
+                                </span>
+                            </span>
+                        </label>
+
+                        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+                            <button
+                                type="button"
+                                onClick={() => setAddPersonModalOpen(false)}
+                                className="rounded-xl px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processingMember}
+                                className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50"
+                            >
+                                {processingMember ? 'Adding...' : 'Add person'}
+                            </button>
+                        </div>
+                    </form>
+                </ResponsiveSheet>
 
                 {/* Member Details Sheet */}
-                {selectedMember && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4" onClick={() => setSelectedMember(null)}>
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-6 shadow-xl sm:rounded-2xl" onClick={e => e.stopPropagation()}>
+                <ResponsiveSheet isOpen={!!selectedMember} onClose={() => setSelectedMember(null)}>
+                    {selectedMember && (
+                        <>
                             <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700">
@@ -557,13 +558,6 @@ export default function AccessList({
                                         <p className="mt-0.5 text-sm text-slate-500 capitalize">{selectedMember.category}</p>
                                     </div>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setSelectedMember(null)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
                             </div>
 
                             <div className="mt-5 space-y-6">
@@ -583,92 +577,162 @@ export default function AccessList({
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">Valid Until</dt>
-                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.valid_until || 'Ongoing'}</dd>
+                                            <dd className="text-sm font-semibold text-slate-900">
+                                                {selectedMember.valid_until ? new Date(selectedMember.valid_until).toLocaleDateString() : 'Forever'}
+                                            </dd>
                                         </div>
                                     </dl>
                                 </div>
 
-                                {/* Credential Info */}
+                                {/* Active Access Code */}
                                 <div>
-                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Access Code</h4>
-                                    <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
-                                        {selectedMember.active_credential ? (
-                                            <div className="flex items-center justify-between gap-4">
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-mono text-lg font-bold tracking-widest text-slate-900">{selectedMember.active_credential.code}</span>
-                                                        <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-inset ring-emerald-100">
-                                                            Active
-                                                        </span>
+                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Access Code</h4>
+                                    {selectedMember.active_credential ? (
+                                        <div className="mt-3 overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
+                                            {/* QR Code Section */}
+                                            <div className="relative flex flex-col items-center justify-center px-5 py-5 bg-emerald-50/50">
+                                                <div className="relative overflow-hidden rounded-2xl border border-emerald-200/60 bg-white p-3 shadow-xs">
+                                                    <img
+                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${selectedMember.active_credential.code}&color=047857&bgcolor=ffffff&qzone=1&ecc=H`}
+                                                        alt="Access QR Code"
+                                                        className="block h-36 w-36 object-contain mix-blend-multiply sm:h-44 sm:w-44"
+                                                    />
+                                                    <div
+                                                        className="absolute flex items-center justify-center rounded-lg bg-white p-1 shadow-sm"
+                                                        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }}
+                                                    >
+                                                        <div 
+                                                            className="h-6 w-6 bg-emerald-600" 
+                                                            style={{
+                                                                maskImage: `url(${KONTROL_LOGO_BASE64})`,
+                                                                maskSize: 'contain',
+                                                                maskRepeat: 'no-repeat',
+                                                                maskPosition: 'center',
+                                                                WebkitMaskImage: `url(${KONTROL_LOGO_BASE64})`,
+                                                                WebkitMaskSize: 'contain',
+                                                                WebkitMaskRepeat: 'no-repeat',
+                                                                WebkitMaskPosition: 'center',
+                                                            }}
+                                                        />
                                                     </div>
-                                                    <p className="mt-1 text-xs text-slate-500">Expires {selectedMember.active_credential.expires_at_human || 'never'}</p>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)}
-                                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 shadow-xs ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-700 active:scale-95"
-                                                >
-                                                    {copiedCodeId === selectedMember.active_credential.id ? (
-                                                        <Check className="h-5 w-5 text-emerald-600" />
-                                                    ) : (
-                                                        <Copy className="h-5 w-5" />
-                                                    )}
-                                                </button>
+                                                <p className="mt-2 text-[10px] font-medium text-emerald-600/80">
+                                                    Expires: {selectedMember.active_credential.expires_at ? new Date(selectedMember.active_credential.expires_at).toLocaleDateString() : 'Never'}
+                                                </p>
                                             </div>
-                                        ) : (
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium text-slate-500">No active access code</span>
-                                                <button
-                                                    onClick={() => handleIssue(selectedMember)}
-                                                    className="inline-flex h-8 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white transition hover:bg-slate-800"
-                                                >
-                                                    Issue code
-                                                </button>
+
+                                            {/* Fallback Code Section with Ticket Notches */}
+                                            <div className="relative flex flex-col items-center justify-center border-t-2 border-dashed border-emerald-100 bg-white px-5 py-4">
+                                                {/* Left & Right Ticket Notches */}
+                                                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full border-r border-emerald-100 bg-white" />
+                                                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-emerald-100 bg-white" />
+
+                                                <div className="flex w-full items-center justify-between">
+                                                    <div>
+                                                        <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">ACCESS CODE</p>
+                                                        <div className="selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text text-emerald-600">
+                                                            {selectedMember.active_credential.code}
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)}
+                                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-50 active:scale-95"
+                                                        >
+                                                            {copiedCodeId === selectedMember.active_credential.id ? (
+                                                                <Check className="h-5 w-5" />
+                                                            ) : (
+                                                                <Copy className="h-5 w-5" />
+                                                            )}
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    await Share.share({
+                                                                        title: 'Kontrol Access Code',
+                                                                        text: `Access Code for ${selectedMember.name}: ${selectedMember.active_credential!.code}`,
+                                                                    });
+                                                                } catch (err) {
+                                                                    copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id);
+                                                                }
+                                                            }}
+                                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-50 active:scale-95"
+                                                        >
+                                                            <Share2 className="h-5 w-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        )}
-                                    </div>
+                                        </div>
+                                    ) : (
+                                        <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+                                            <Shield className="mx-auto h-6 w-6 text-slate-300 mb-2" />
+                                            <p className="text-sm font-medium text-slate-600">No active access code</p>
+                                            <button
+                                                onClick={() => handleIssue(selectedMember)}
+                                                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
+                                            >
+                                                <Plus className="h-3 w-3" />
+                                                Issue new code
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Actions */}
+                                {/* Danger Zone */}
                                 {membership.is_admin && (
-                                    <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
-                                        {selectedMember.status === 'suspended' ? (
+                                    <div className="pt-2">
+                                        <h4 className="text-xs font-semibold uppercase tracking-wider text-rose-400">Danger Zone</h4>
+                                        <div className="mt-3 space-y-2">
                                             <button
-                                                onClick={() => handleActivate(selectedMember)}
-                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-95"
+                                                onClick={() => selectedMember.status === 'suspended' ? handleActivate(selectedMember) : handleSuspend(selectedMember)}
+                                                className={`flex w-full items-center justify-between rounded-xl border p-4 transition-colors disabled:opacity-50 ${selectedMember.status === 'suspended'
+                                                        ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-200'
+                                                        : 'border-orange-100 bg-orange-50 hover:border-orange-200'
+                                                    }`}
                                             >
-                                                Activate Member
+                                                <div className="flex items-center gap-3 text-left">
+                                                    {selectedMember.status === 'suspended' ? (
+                                                        <BadgeCheck className="h-5 w-5 text-emerald-600" />
+                                                    ) : (
+                                                        <Ban className="h-5 w-5 text-orange-600" />
+                                                    )}
+                                                    <div>
+                                                        <p className={`text-sm font-semibold ${selectedMember.status === 'suspended' ? 'text-emerald-900' : 'text-orange-900'}`}>
+                                                            {selectedMember.status === 'suspended' ? 'Reactivate access' : 'Suspend access'}
+                                                        </p>
+                                                        <p className={`text-xs ${selectedMember.status === 'suspended' ? 'text-emerald-700' : 'text-orange-700'}`}>
+                                                            {selectedMember.status === 'suspended' ? 'Restore access immediately' : 'Temporarily disable all access'}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </button>
-                                        ) : (
-                                            <button
-                                                onClick={() => handleSuspend(selectedMember)}
-                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 active:scale-95"
-                                            >
-                                                Suspend Member
-                                            </button>
-                                        )}
-                                        
-                                        {selectedMember.active_credential ? (
-                                            <button
-                                                onClick={() => handleRevoke(selectedMember)}
-                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95"
-                                            >
-                                                Revoke Code
-                                            </button>
-                                        ) : (
-                                            <button
-                                                disabled
-                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-sm font-semibold text-slate-400"
-                                            >
-                                                Revoke Code
-                                            </button>
-                                        )}
+                                            
+                                            {selectedMember.active_credential ? (
+                                                <button
+                                                    onClick={() => {
+                                                        if (confirm('Are you sure you want to permanently revoke this code?')) {
+                                                            handleRevoke(selectedMember);
+                                                        }
+                                                    }}
+                                                    className="flex w-full items-center justify-between rounded-xl border border-rose-100 bg-rose-50 p-4 transition-colors hover:border-rose-200 disabled:opacity-50"
+                                                >
+                                                    <div className="flex items-center gap-3 text-left">
+                                                        <EyeOff className="h-5 w-5 text-rose-600" />
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-rose-900">Revoke code</p>
+                                                            <p className="text-xs text-rose-700">Delete active access code</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            ) : null}
+                                        </div>
                                     </div>
                                 )}
                             </div>
-                        </div>
-                    </div>
-                )}
+                        </>
+                    )}
+                </ResponsiveSheet>
 
 
             </div>
