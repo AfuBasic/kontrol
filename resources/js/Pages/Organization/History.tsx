@@ -1,5 +1,5 @@
-import { Head } from '@inertiajs/react';
-import { CheckCircle2, Clock, DoorOpen, MapPin, Radio } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, DoorOpen, MapPin, Radio } from 'lucide-react';
 import React from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -251,6 +251,47 @@ export default function ArrivalHistory({ organization, logs }: Props) {
                                 </div>
                             ))}
                         </div>
+
+                        {logs.last_page > 1 && (
+                            <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 sm:flex-row">
+                                <p className="text-xs font-semibold text-slate-500">
+                                    Page {logs.current_page} of {logs.last_page} ({logs.total} total visits)
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    {logs.links[0]?.url ? (
+                                        <Link
+                                            href={logs.links[0].url}
+                                            preserveScroll
+                                            className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
+                                        >
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span>Previous</span>
+                                        </Link>
+                                    ) : (
+                                        <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-300 ring-1 ring-slate-100">
+                                            <ChevronLeft className="h-4 w-4" />
+                                            <span>Previous</span>
+                                        </span>
+                                    )}
+
+                                    {logs.links[logs.links.length - 1]?.url ? (
+                                        <Link
+                                            href={logs.links[logs.links.length - 1].url}
+                                            preserveScroll
+                                            className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
+                                        >
+                                            <span>Next</span>
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Link>
+                                    ) : (
+                                        <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-300 ring-1 ring-slate-100">
+                                            <span>Next</span>
+                                            <ChevronRight className="h-4 w-4" />
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </section>
                 )}
             </div>
