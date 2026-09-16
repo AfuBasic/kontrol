@@ -7,6 +7,7 @@ use App\Http\Controllers\Organization\ContextController;
 use App\Http\Controllers\Organization\CredentialController;
 use App\Http\Controllers\Organization\DashboardController;
 use App\Http\Controllers\Organization\NotificationController;
+use App\Http\Controllers\Organization\OrganizationBulkInviteController;
 use App\Http\Controllers\Organization\OrganizationVisitorController;
 use App\Http\Controllers\Organization\PaymentController;
 use App\Http\Controllers\Organization\PublicWindowController;
@@ -48,8 +49,17 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     Route::prefix('visitors')->name('visitors.')->group(function () {
         Route::get('/', [OrganizationVisitorController::class, 'index'])->name('index');
         Route::post('/', [OrganizationVisitorController::class, 'store'])->name('store');
-        Route::post('/bulk', [OrganizationVisitorController::class, 'storeBulk'])->name('storeBulk');
+        Route::post('/bulk', [OrganizationBulkInviteController::class, 'store'])->name('storeBulk');
         Route::delete('/{pass}', [OrganizationVisitorController::class, 'destroy'])->name('destroy');
+    });
+
+    // Access: Bulk Visitor Invites
+    Route::prefix('bulk-invites')->name('bulk-invites.')->group(function () {
+        Route::get('/', [OrganizationBulkInviteController::class, 'index'])->name('index');
+        Route::post('/', [OrganizationBulkInviteController::class, 'store'])->name('store');
+        Route::get('/{bulkInvite}', [OrganizationBulkInviteController::class, 'show'])->name('show');
+        Route::post('/{bulkInvite}/renew', [OrganizationBulkInviteController::class, 'renew'])->name('renew');
+        Route::post('/{bulkInvite}/cancel', [OrganizationBulkInviteController::class, 'cancel'])->name('cancel');
     });
 
     // Access: Public Access Windows (for Public Window policies e.g. Churches)
