@@ -300,6 +300,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
         Route::put('/{incident}/status', [IncidentStatusController::class, 'update'])->name('status.update');
+        Route::post('/{incident}/close', [IncidentController::class, 'close'])->name('close');
 
         Route::post('/{incident}/comments', [IncidentCommentController::class, 'store'])->name('comments.store');
         Route::delete('/comments/{comment}', [IncidentCommentController::class, 'destroy'])->name('comments.destroy');
