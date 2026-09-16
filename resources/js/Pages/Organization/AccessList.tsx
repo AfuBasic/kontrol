@@ -97,7 +97,7 @@ export default function AccessList({
     filters,
 }: Props) {
     const [createModalOpen, setCreateModalOpen] = useState(false);
-    const [createWindowModalOpen, setCreateWindowModalOpen] = useState(false);
+    const [selectedMember, setSelectedMember] = useState<Member | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [search, setSearch] = useState(filters.search ?? '');
     const [category, setCategory] = useState(filters.category ?? 'all');
@@ -125,11 +125,19 @@ export default function AccessList({
     const activeMembers = members.data.filter((member) => member.status === 'active').length;
     const suspendedMembers = members.data.filter((member) => member.status === 'suspended').length;
 
+    const getMemberStatus = (member: Member) => {
+        if (member.status === 'suspended') return { label: 'Suspended', color: 'rose' };
+        if (member.is_valid_now) return { label: 'Active', color: 'emerald' };
+        if (member.valid_until && new Date(member.valid_until) < new Date()) return { label: 'Expired', color: 'slate' };
+        return { label: 'Pending', color: 'amber' };
+    };
 
-
-
-
-
+    const statusColorMap = {
+        rose: 'bg-rose-50 text-rose-700 ring-rose-100',
+        emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+        amber: 'bg-amber-50 text-amber-700 ring-amber-100',
+        slate: 'bg-slate-100 text-slate-700 ring-slate-200',
+    };
 
     const applyFilters = (next?: { search?: string; category?: string; status?: string }) => {
         const query = {
@@ -161,6 +169,35 @@ export default function AccessList({
                 setCreateModalOpen(false);
                 resetMember();
             },
+        });
+    };
+
+    const handleSuspend = (member: Member) => {
+        router.post(`/org/access-list/${member.id}/suspend`, {}, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedMember(null),
+        });
+    };
+
+    const handleActivate = (member: Member) => {
+        router.post(`/org/access-list/${member.id}/activate`, {}, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedMember(null),
+        });
+    };
+
+    const handleRevoke = (member: Member) => {
+        if (!member.active_credential) return;
+        router.post(`/org/credentials/${member.active_credential.id}/revoke`, {}, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedMember(null),
+        });
+    };
+
+    const handleIssue = (member: Member) => {
+        router.post(`/org/credentials/issue/${member.id}`, {}, {
+            preserveScroll: true,
+            onSuccess: () => setSelectedMember(null),
         });
     };
 
@@ -206,26 +243,23 @@ export default function AccessList({
                 {activeTab === 'people' && (
                     <>
                         {members.total === 0 && !search && category === 'all' && status === 'all' ? (
-                            /* Clean native empty state */
-                            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center sm:p-10">
-                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                                    <Users className="h-6 w-6" strokeWidth={1.75} />
+                            <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/60 bg-white p-8 text-center shadow-xs sm:min-h-[400px] sm:p-12">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-400 ring-1 ring-slate-100 sm:h-20 sm:w-20">
+                                    <Users className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={1.5} />
                                 </div>
-                                <h2 className="mt-4 text-lg font-semibold text-slate-900 sm:text-xl">No one has been added yet</h2>
-                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
+                                <h2 className="mt-5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">No one has been added yet</h2>
+                                <p className="mt-2 max-w-md text-sm text-slate-500">
                                     Add staff, parents, contractors, or anyone who regularly needs access to {organization.name}.
                                 </p>
                                 {membership.is_admin && (
-                                    <div className="mt-6">
-                                        <button
-                                            type="button"
-                                            onClick={() => setCreateModalOpen(true)}
-                                            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-slate-800 active:scale-[0.98]"
-                                        >
-                                            <Plus className="h-4 w-4" strokeWidth={2.25} />
-                                            <span>Add someone</span>
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCreateModalOpen(true)}
+                                        className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98]"
+                                    >
+                                        <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                        <span>Add someone</span>
+                                    </button>
                                 )}
                             </div>
                         ) : (
@@ -323,68 +357,65 @@ export default function AccessList({
                                     </div>
                                 ) : (
                                     <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                        {members.data.map((member) => (
-                                            <div
-                                                key={member.id}
-                                                className="flex min-h-[60px] items-center justify-between gap-3 px-3.5 py-2.5 transition hover:bg-slate-50/70 sm:px-4"
-                                            >
-                                                <div className="flex min-w-0 items-center gap-3">
-                                                    {/* Avatar Initials */}
-                                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
-                                                        {initialsFor(member.name)}
+                                        {members.data.map((member) => {
+                                            const memberStatus = getMemberStatus(member);
+                                            return (
+                                                <div
+                                                    key={member.id}
+                                                    onClick={() => setSelectedMember(member)}
+                                                    className="flex min-h-[64px] items-center justify-between gap-3 px-4 py-3 transition hover:bg-slate-50/70 active:bg-slate-100/70 cursor-pointer"
+                                                >
+                                                    <div className="flex min-w-0 items-center gap-3.5">
+                                                        {/* Avatar Initials */}
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold tracking-tight text-slate-700">
+                                                            {initialsFor(member.name)}
+                                                        </div>
+
+                                                        {/* Identity & Status */}
+                                                        <div className="min-w-0 flex-1">
+                                                            <div className="flex items-center gap-2.5">
+                                                                <span className="truncate text-[15px] font-semibold text-slate-900">{member.name}</span>
+                                                                <span className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${statusColorMap[memberStatus.color as keyof typeof statusColorMap]}`}>
+                                                                    {memberStatus.label}
+                                                                </span>
+                                                            </div>
+                                                            <p className="mt-0.5 truncate text-[13px] text-slate-500">
+                                                                <span className="capitalize">{member.category}</span>
+                                                                {member.identifier ? ` · ${member.identifier}` : ''}
+                                                                {member.valid_until ? ` · Until ${member.valid_until}` : ' · Ongoing'}
+                                                            </p>
+                                                        </div>
                                                     </div>
 
-                                                    {/* Identity & Status */}
-                                                    <div className="min-w-0">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="truncate text-sm font-semibold text-slate-900">{member.name}</span>
-                                                            {member.status === 'suspended' ? (
-                                                                <span className="inline-flex shrink-0 items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
-                                                                    Suspended
+                                                    {/* Right Action Affordance: Code & Chevron */}
+                                                    <div className="flex shrink-0 items-center gap-3">
+                                                        {member.active_credential ? (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-[11px] font-semibold tracking-widest text-slate-700 ring-1 ring-inset ring-slate-200/80">
+                                                                    {member.active_credential.code}
                                                                 </span>
-                                                            ) : member.is_valid_now ? (
-                                                                <span className="inline-flex shrink-0 items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                                                                    Active
-                                                                </span>
-                                                            ) : (
-                                                                <span className="inline-flex shrink-0 items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                                                                    Pending
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <p className="mt-0.5 truncate text-xs text-slate-500">
-                                                            <span className="capitalize">{member.category}</span>
-                                                            {member.identifier ? ` · ${member.identifier}` : ''}
-                                                            {member.valid_until ? ` · Until ${member.valid_until}` : ' · Ongoing'}
-                                                        </p>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        copyCode(member.active_credential!.code, member.active_credential!.id);
+                                                                    }}
+                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+                                                                    title="Copy code"
+                                                                >
+                                                                    {copiedCodeId === member.active_credential.id ? (
+                                                                        <Check className="h-4 w-4 text-emerald-600" />
+                                                                    ) : (
+                                                                        <Copy className="h-4 w-4" />
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        ) : null}
+                                                        <ChevronRight className="h-5 w-5 text-slate-300" />
                                                     </div>
                                                 </div>
-
-                                                {/* Right Action Affordance: Code & Chevron */}
-                                                <div className="flex shrink-0 items-center gap-2">
-                                                    {member.active_credential ? (
-                                                        <div className="flex items-center gap-1.5">
-                                                            <span className="rounded-lg bg-slate-50 px-2 py-1 font-mono text-xs font-semibold tracking-wide text-slate-900 ring-1 ring-slate-200/80">
-                                                                {member.active_credential.code}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => copyCode(member.active_credential!.code, member.active_credential!.id)}
-                                                                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                                                title="Copy code"
-                                                            >
-                                                                {copiedCodeId === member.active_credential.id ? (
-                                                                    <Check className="h-3.5 w-3.5 text-emerald-600" />
-                                                                ) : (
-                                                                    <Copy className="h-3.5 w-3.5" />
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                    ) : null}
-                                                    <ChevronRight className="h-4 w-4 text-slate-300" />
-                                                </div>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </div>
@@ -399,8 +430,8 @@ export default function AccessList({
                 {/* Add Someone Sheet / Modal */}
                 {createModalOpen && (
                     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 text-sm shadow-xl sm:p-6">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3.5">
+                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-6 text-sm shadow-xl sm:rounded-2xl">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                                 <div>
                                     <h3 className="text-base font-semibold text-slate-950">Add someone</h3>
                                     <p className="mt-0.5 text-xs text-slate-500">Create access for {organization.name}.</p>
@@ -456,6 +487,29 @@ export default function AccessList({
                                     {memberErrors.identifier && <p className="mt-1 text-xs text-rose-600">{memberErrors.identifier}</p>}
                                 </div>
 
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800">Valid from</label>
+                                        <input
+                                            type="date"
+                                            value={memberData.valid_from}
+                                            onChange={(event) => setMemberData('valid_from', event.target.value)}
+                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                        />
+                                        {memberErrors.valid_from && <p className="mt-1 text-xs text-rose-600">{memberErrors.valid_from}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-slate-800">Valid until (optional)</label>
+                                        <input
+                                            type="date"
+                                            value={memberData.valid_until}
+                                            onChange={(event) => setMemberData('valid_until', event.target.value)}
+                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                        />
+                                        {memberErrors.valid_until && <p className="mt-1 text-xs text-rose-600">{memberErrors.valid_until}</p>}
+                                    </div>
+                                </div>
+
                                 <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-100 bg-slate-50/80 p-3.5">
                                     <input
                                         type="checkbox"
@@ -492,108 +546,134 @@ export default function AccessList({
                     </div>
                 )}
 
-                {/* Add Public Time Sheet / Modal */}
-                {createWindowModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-5 text-sm shadow-xl sm:p-6">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3.5">
-                                <div>
-                                    <h3 className="text-base font-semibold text-slate-950">Add public access time</h3>
-                                    <p className="mt-0.5 text-xs text-slate-500">Schedule gate access without individual codes.</p>
+                {/* Member Details Sheet */}
+                {selectedMember && (
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4" onClick={() => setSelectedMember(null)}>
+                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-6 shadow-xl sm:rounded-2xl" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700">
+                                        {initialsFor(selectedMember.name)}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-slate-950">{selectedMember.name}</h3>
+                                        <p className="mt-0.5 text-sm text-slate-500 capitalize">{selectedMember.category}</p>
+                                    </div>
                                 </div>
                                 <button
                                     type="button"
-                                    onClick={() => setCreateWindowModalOpen(false)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                    onClick={() => setSelectedMember(null)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
                                 >
                                     <X className="h-4 w-4" />
                                 </button>
                             </div>
 
-                            <form noValidate onSubmit={handleCreateWindow} className="space-y-4 pt-4">
+                            <div className="mt-5 space-y-6">
+                                {/* Profile Info */}
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-800">Window name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Sunday Morning Service"
-                                        value={windowData.name}
-                                        onChange={(event) => setWindowData('name', event.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    />
-                                    {windowErrors.name && <p className="mt-1 text-xs text-rose-600">{windowErrors.name}</p>}
+                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Profile Details</h4>
+                                    <dl className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-100 bg-slate-50/50">
+                                        <div className="flex items-center justify-between px-4 py-3">
+                                            <dt className="text-sm font-medium text-slate-500">Status</dt>
+                                            <dd className="text-sm font-semibold text-slate-900">
+                                                {selectedMember.status === 'suspended' ? 'Suspended' : selectedMember.is_valid_now ? 'Active' : 'Pending/Expired'}
+                                            </dd>
+                                        </div>
+                                        <div className="flex items-center justify-between px-4 py-3">
+                                            <dt className="text-sm font-medium text-slate-500">ID Number</dt>
+                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.identifier || '—'}</dd>
+                                        </div>
+                                        <div className="flex items-center justify-between px-4 py-3">
+                                            <dt className="text-sm font-medium text-slate-500">Valid Until</dt>
+                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.valid_until || 'Ongoing'}</dd>
+                                        </div>
+                                    </dl>
                                 </div>
 
+                                {/* Credential Info */}
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-800">Day of week</label>
-                                    <select
-                                        value={windowData.day_of_week}
-                                        onChange={(event) => setWindowData('day_of_week', parseInt(event.target.value, 10))}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    >
-                                        {DAYS.map((day, index) => (
-                                            <option key={day} value={index}>
-                                                {day}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {windowErrors.day_of_week && <p className="mt-1 text-xs text-rose-600">{windowErrors.day_of_week}</p>}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-800">Start time</label>
-                                        <input
-                                            type="time"
-                                            value={windowData.start_time}
-                                            onChange={(event) => setWindowData('start_time', event.target.value)}
-                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                        />
-                                        {windowErrors.start_time && <p className="mt-1 text-xs text-rose-600">{windowErrors.start_time}</p>}
+                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Access Code</h4>
+                                    <div className="mt-3 rounded-xl border border-slate-100 bg-slate-50/50 p-4">
+                                        {selectedMember.active_credential ? (
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-mono text-lg font-bold tracking-widest text-slate-900">{selectedMember.active_credential.code}</span>
+                                                        <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-inset ring-emerald-100">
+                                                            Active
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 text-xs text-slate-500">Expires {selectedMember.active_credential.expires_at_human || 'never'}</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)}
+                                                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 shadow-xs ring-1 ring-slate-200 transition hover:bg-slate-50 hover:text-slate-700 active:scale-95"
+                                                >
+                                                    {copiedCodeId === selectedMember.active_credential.id ? (
+                                                        <Check className="h-5 w-5 text-emerald-600" />
+                                                    ) : (
+                                                        <Copy className="h-5 w-5" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-slate-500">No active access code</span>
+                                                <button
+                                                    onClick={() => handleIssue(selectedMember)}
+                                                    className="inline-flex h-8 items-center justify-center rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white transition hover:bg-slate-800"
+                                                >
+                                                    Issue code
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-slate-800">End time</label>
-                                        <input
-                                            type="time"
-                                            value={windowData.end_time}
-                                            onChange={(event) => setWindowData('end_time', event.target.value)}
-                                            className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                        />
-                                        {windowErrors.end_time && <p className="mt-1 text-xs text-rose-600">{windowErrors.end_time}</p>}
+                                </div>
+
+                                {/* Actions */}
+                                {membership.is_admin && (
+                                    <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
+                                        {selectedMember.status === 'suspended' ? (
+                                            <button
+                                                onClick={() => handleActivate(selectedMember)}
+                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-95"
+                                            >
+                                                Activate Member
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => handleSuspend(selectedMember)}
+                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 active:scale-95"
+                                            >
+                                                Suspend Member
+                                            </button>
+                                        )}
+                                        
+                                        {selectedMember.active_credential ? (
+                                            <button
+                                                onClick={() => handleRevoke(selectedMember)}
+                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-95"
+                                            >
+                                                Revoke Code
+                                            </button>
+                                        ) : (
+                                            <button
+                                                disabled
+                                                className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-sm font-semibold text-slate-400"
+                                            >
+                                                Revoke Code
+                                            </button>
+                                        )}
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-xs font-semibold text-slate-800">Notes (optional)</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Open to congregation members"
-                                        value={windowData.notes}
-                                        onChange={(event) => setWindowData('notes', event.target.value)}
-                                        className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-normal text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    />
-                                    {windowErrors.notes && <p className="mt-1 text-xs text-rose-600">{windowErrors.notes}</p>}
-                                </div>
-
-                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCreateWindowModalOpen(false)}
-                                        className="rounded-xl px-3.5 py-2 text-xs font-medium text-slate-600 hover:text-slate-900"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processingWindow}
-                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50"
-                                    >
-                                        {processingWindow ? 'Saving...' : 'Add time'}
-                                    </button>
-                                </div>
-                            </form>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}
+
+
             </div>
         </OrganizationLayout>
     );
