@@ -7,6 +7,7 @@ import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert, Link a
 import React, { useState, useEffect } from 'react';
 import BulkInviteModal from './BulkInviteModal';
 import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 
 interface Organization {
     id: number;
@@ -121,7 +122,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
         >
             <Head title="Visitors - Organization" />
 
-            <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-4xl py-2 sm:py-4">
                 {/* Header & Actions */}
                 <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -245,103 +246,93 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                 </div>
 
                 {/* Invite Visitor Modal */}
-                {inviteModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-6 shadow-xl sm:rounded-2xl">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-                                <div>
-                                    <h3 className="text-base font-semibold text-slate-950">Invite visitor</h3>
-                                    <p className="mt-0.5 text-xs text-slate-500">Create a temporary pass for a visitor.</p>
-                                </div>
-                                <button
-                                    onClick={() => setInviteModalOpen(false)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleInvite} className="mt-5 space-y-4">
-                                <div>
-                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                        Visitor Name <span className="text-rose-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        required
-                                        placeholder="John Doe"
-                                        value={data.visitor_name}
-                                        onChange={(e) => setData('visitor_name', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                    />
-                                    {errors.visitor_name && <p className="mt-1 text-xs text-rose-500">{errors.visitor_name}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Phone Number</label>
-                                    <input
-                                        type="tel"
-                                        placeholder="+1 234 567 8900"
-                                        value={data.visitor_phone}
-                                        onChange={(e) => setData('visitor_phone', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                    />
-                                    {errors.visitor_phone && <p className="mt-1 text-xs text-rose-500">{errors.visitor_phone}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                        Date of Visit <span className="text-rose-500">*</span>
-                                    </label>
-                                    <input
-                                        type="date"
-                                        required
-                                        min={new Date().toISOString().split('T')[0]}
-                                        value={data.date}
-                                        onChange={(e) => setData('date', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                    />
-                                    {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Purpose</label>
-                                    <select
-                                        value={data.purpose}
-                                        onChange={(e) => setData('purpose', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                    >
-                                        <option value="">Select purpose</option>
-                                        <option value="meeting">Meeting</option>
-                                        <option value="delivery">Delivery</option>
-                                        <option value="maintenance">Maintenance</option>
-                                        <option value="interview">Interview</option>
-                                        <option value="event">Event</option>
-                                        <option value="other">Other</option>
-                                    </select>
-                                    {errors.purpose && <p className="mt-1 text-xs text-rose-500">{errors.purpose}</p>}
-                                </div>
-
-                                <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setInviteModalOpen(false)}
-                                        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
-                                    >
-                                        {processing ? 'Inviting...' : 'Invite Visitor'}
-                                    </button>
-                                </div>
-                            </form>
+                <ResponsiveSheet isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)}>
+                    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Invite visitor</h3>
+                            <p className="mt-0.5 text-xs text-slate-500">Create a temporary pass for a visitor.</p>
                         </div>
                     </div>
-                )}
+
+                    <form onSubmit={handleInvite} className="mt-5 space-y-4">
+                        <div>
+                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                Visitor Name <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                placeholder="John Doe"
+                                value={data.visitor_name}
+                                onChange={(e) => setData('visitor_name', e.target.value)}
+                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                            />
+                            {errors.visitor_name && <p className="mt-1 text-xs text-rose-500">{errors.visitor_name}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Phone Number</label>
+                            <input
+                                type="tel"
+                                placeholder="+1 234 567 8900"
+                                value={data.visitor_phone}
+                                onChange={(e) => setData('visitor_phone', e.target.value)}
+                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                            />
+                            {errors.visitor_phone && <p className="mt-1 text-xs text-rose-500">{errors.visitor_phone}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                Date of Visit <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                                type="date"
+                                required
+                                min={new Date().toISOString().split('T')[0]}
+                                value={data.date}
+                                onChange={(e) => setData('date', e.target.value)}
+                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                            />
+                            {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
+                        </div>
+
+                        <div>
+                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Purpose</label>
+                            <select
+                                value={data.purpose}
+                                onChange={(e) => setData('purpose', e.target.value)}
+                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                            >
+                                <option value="">Select purpose</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="delivery">Delivery</option>
+                                <option value="maintenance">Maintenance</option>
+                                <option value="interview">Interview</option>
+                                <option value="event">Event</option>
+                                <option value="other">Other</option>
+                            </select>
+                            {errors.purpose && <p className="mt-1 text-xs text-rose-500">{errors.purpose}</p>}
+                        </div>
+
+                        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setInviteModalOpen(false)}
+                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
+                            >
+                                {processing ? 'Inviting...' : 'Invite Visitor'}
+                            </button>
+                        </div>
+                    </form>
+                </ResponsiveSheet>
 
                 {/* Bulk Invite Modal */}
                 <BulkInviteModal
@@ -350,22 +341,16 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                 />
 
                 {/* Bulk Summary Modal */}
-                {bulkSummaryOpen && flash.bulk_passes && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
-                        <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl sm:rounded-2xl">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6 pb-4">
+                <ResponsiveSheet isOpen={bulkSummaryOpen && !!flash.bulk_passes} onClose={() => setBulkSummaryOpen(false)}>
+                    {flash.bulk_passes && (
+                        <>
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                                 <div>
                                     <h3 className="text-base font-semibold text-slate-950">Passes Generated Successfully!</h3>
                                     <p className="mt-0.5 text-xs text-slate-500">You can now copy and share these links with your visitors.</p>
                                 </div>
-                                <button
-                                    onClick={() => setBulkSummaryOpen(false)}
-                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
                             </div>
-                            <div className="max-h-[50vh] overflow-y-auto p-4 space-y-3">
+                            <div className="max-h-[50vh] overflow-y-auto pt-4 space-y-3">
                                 {flash.bulk_passes.map((pass, i) => (
                                     <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
                                         <div>
@@ -382,7 +367,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                     </div>
                                 ))}
                             </div>
-                            <div className="p-4 border-t border-slate-100 bg-slate-50">
+                            <div className="mt-4 border-t border-slate-100 pt-4">
                                 <button
                                     onClick={copyAllLinks}
                                     className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -391,9 +376,9 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                     {copiedAll ? 'Copied All Links!' : 'Copy All Links to Clipboard'}
                                 </button>
                             </div>
-                        </div>
-                    </div>
-                )}
+                        </>
+                    )}
+                </ResponsiveSheet>
             </div>
         </OrganizationLayout>
     );
