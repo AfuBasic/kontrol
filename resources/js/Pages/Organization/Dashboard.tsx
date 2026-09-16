@@ -114,7 +114,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
             <div className="flex flex-col gap-6 pb-6 pt-2">
                 
                 {/* 1. TIGHT HEADER & CONTEXT */}
-                <header className="px-4 sm:px-6 lg:px-8 flex items-start justify-between">
+                <header className="flex items-start justify-between">
                     <div>
                         <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
                             {getGreeting()}, {userFirstName}
@@ -129,7 +129,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                 </header>
 
                 {/* 2. TODAY OPERATIONAL PULSE */}
-                <section className="px-4 sm:px-6 lg:px-8">
+                <section>
                     <div className="flex flex-col rounded-[1.25rem] border border-slate-200/80 bg-white shadow-sm overflow-hidden">
                         <div className="px-4 pt-4 pb-1">
                             <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Today</h2>
@@ -170,9 +170,9 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                 </section>
 
                 {/* 3. QUICK ACTIONS IN FIRST VIEWPORT */}
-                <section className="px-4 sm:px-6 lg:px-8">
+                <section>
                     <div className="grid grid-cols-4 gap-2">
-                        <Link href="/org/access-list/create" className="flex flex-col items-center gap-1.5">
+                        <Link href="/org/access-list?action=add_person" className="flex flex-col items-center gap-1.5">
                             <div className="flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-[1rem] bg-[#f0f6ff] text-[#0b4aa2] transition-transform active:scale-95">
                                 <Plus className="h-5 w-5" strokeWidth={2.5} />
                             </div>
@@ -201,7 +201,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
 
                 {/* 4. ATTENTION MODULE (Only if needs attention) */}
                 {needsAttention && (
-                    <section className="px-4 sm:px-6 lg:px-8 mt-2">
+                    <section className="mt-2">
                         <div className={`rounded-xl border p-4 shadow-sm ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50/70 border-amber-200/80'}`}>
                             <div className="flex items-center gap-2 mb-3">
                                 <AlertCircle className={`h-4 w-4 ${isCritical ? 'text-rose-600' : 'text-amber-600'}`} />
@@ -237,7 +237,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                 )}
 
                 {/* 5. ON SITE DIRECTORY (Elastic) */}
-                <section className="px-4 sm:px-6 lg:px-8 mt-3 space-y-3">
+                <section className="mt-3 space-y-3">
                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">On Site</h3>
                     {recent_arrivals.length === 0 ? (
                         <p className="text-[13px] text-slate-600 font-medium">No one currently inside.</p>
@@ -271,7 +271,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                 </section>
 
                 {/* 6. RECENT ACTIVITY (Elastic) */}
-                <section className="px-4 sm:px-6 lg:px-8 mt-5 space-y-3">
+                <section className="mt-5 space-y-3">
                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Recent Activity</h3>
                     {recent_activity.length === 0 ? (
                         <p className="text-[13px] text-slate-600 font-medium">No movement yet today.</p>
