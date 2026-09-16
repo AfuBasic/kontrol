@@ -29,7 +29,8 @@ class OrganizationVisitorController extends Controller
         $search = $request->input('search');
 
         $visitorsQuery = AccessCode::where('organization_id', $organization->id)
-            ->whereIn('type', ['single_use', 'event'])
+            ->whereIn('type', ['single_use', 'event', 'bulk_visitor'])
+            ->with(['accessLogs' => fn ($q) => $q->latest()->limit(1)])
             ->latest('created_at');
 
         if ($search) {
@@ -73,29 +74,48 @@ class OrganizationVisitorController extends Controller
             'visitor_phone' => 'nullable|string|max:50',
             'purpose' => 'nullable|string|max:255',
             'date' => 'required|date|after_or_equal:today',
+            'start_time' => 'nullable|date_format:H:i',
+            'end_time' => 'nullable|date_format:H:i',
         ]);
 
-        $code = strtoupper(Str::random(6)); // simple unique code generation, in prod usually relies on a service
+        $code = strtoupper(Str::random(6));
 
-        // Ensure unique code
         while (AccessCode::where('code', $code)->exists()) {
             $code = strtoupper(Str::random(6));
         }
 
         $visitDate = Carbon::parse($validated['date']);
 
+        if (! empty($validated['start_time'])) {
+            $startTimeParts = explode(':', $validated['start_time']);
+            $startsAt = $visitDate->copy()->setTime((int) $startTimeParts[0], (int) $startTimeParts[1], 0);
+        } else {
+            $startsAt = $visitDate->copy()->startOfDay();
+        }
+
+        if (! empty($validated['end_time'])) {
+            $endTimeParts = explode(':', $validated['end_time']);
+            $expiresAt = $visitDate->copy()->setTime((int) $endTimeParts[0], (int) $endTimeParts[1], 59);
+            // If end_time is earlier than start_time, assume it extends to the next day
+            if ($expiresAt->lessThanOrEqualTo($startsAt)) {
+                $expiresAt = $expiresAt->addDay();
+            }
+        } else {
+            $expiresAt = $visitDate->copy()->endOfDay();
+        }
+
         $pass = AccessCode::create([
-            'estate_id' => $organization->estate_id, // inherited from org
+            'estate_id' => $organization->estate_id,
             'organization_id' => $organization->id,
-            'user_id' => $request->user()->id, // The admin who created the pass
+            'user_id' => $request->user()->id,
             'code' => $code,
             'type' => 'single_use',
             'status' => 'active',
             'visitor_name' => $validated['visitor_name'],
             'visitor_phone' => $validated['visitor_phone'] ?? null,
             'purpose' => $validated['purpose'] ?? 'Organization Visit',
-            'starts_at' => $visitDate->startOfDay(),
-            'expires_at' => $visitDate->copy()->endOfDay(),
+            'starts_at' => $startsAt,
+            'expires_at' => $expiresAt,
             'source' => 'web',
             'created_by_id' => $request->user()->id,
         ]);
