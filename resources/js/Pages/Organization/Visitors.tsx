@@ -6,6 +6,7 @@ import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert, Link as LinkIcon } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import BulkInviteModal from './BulkInviteModal';
+import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
 
 interface Organization {
     id: number;
@@ -58,6 +59,10 @@ export default function Visitors({ auth, organization, membership, visitors, fil
         if (flash.bulk_passes && flash.bulk_passes.length > 0) {
             setBulkSummaryOpen(true);
         }
+
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('action') === 'invite_visitor') setInviteModalOpen(true);
+        if (params.get('action') === 'invite_multiple') setBulkInviteModalOpen(true);
     }, [flash.bulk_passes]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -126,20 +131,10 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
                     {membership.is_admin && (
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setBulkInviteModalOpen(true)}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
-                            >
-                                <Users className="h-4 w-4" />
-                                Invite multiple
-                            </button>
-                            <button
-                                onClick={() => setInviteModalOpen(true)}
-                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 hover:shadow-md active:scale-95"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Invite visitor
-                            </button>
+                            <AccessActionMenu 
+                                onInviteVisitor={() => setInviteModalOpen(true)}
+                                onInviteMultiple={() => setBulkInviteModalOpen(true)}
+                            />
                         </div>
                     )}
                 </div>
