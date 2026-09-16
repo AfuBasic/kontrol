@@ -97,7 +97,7 @@ export default function Arrivals({ organization, arrivals, metrics }: Props) {
         <OrganizationLayout title="Access - Arrivals" contentClassName="max-w-[92rem]">
             <Head title={`${organization.name} - Arrivals`} />
 
-            <div className="space-y-5 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8">
+            <div className="space-y-5 pt-4 sm:pt-8">
                 {/* Header with metrics and tabs */}
                 <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
