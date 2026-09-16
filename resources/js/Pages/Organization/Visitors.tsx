@@ -3,7 +3,24 @@ import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { PageProps } from '@/types';
 import type { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert, Link as LinkIcon } from 'lucide-react';
+import {
+    Calendar,
+    Plus,
+    Search,
+    Tag,
+    Users,
+    Copy,
+    Check,
+    X,
+    ShieldAlert,
+    Link as LinkIcon,
+    Clock,
+    Phone,
+    User,
+    ExternalLink,
+    QrCode,
+    ShieldCheck,
+} from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import BulkInviteModal from './BulkInviteModal';
 import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
@@ -14,6 +31,12 @@ interface Organization {
     name: string;
 }
 
+interface AccessLog {
+    id: number;
+    created_at: string;
+    entry_point: string | null;
+}
+
 interface VisitorPass {
     id: number;
     code: string;
@@ -21,9 +44,12 @@ interface VisitorPass {
     visitor_name: string;
     visitor_phone: string | null;
     purpose: string;
+    type?: string;
     status: 'active' | 'used' | 'revoked' | 'expired';
     starts_at: string;
     expires_at: string;
+    created_at?: string;
+    access_logs?: AccessLog[];
 }
 
 interface PaginationLinks {
@@ -53,8 +79,10 @@ export default function Visitors({ auth, organization, membership, visitors, fil
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
     const [bulkInviteModalOpen, setBulkInviteModalOpen] = useState(false);
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
+    const [selectedPass, setSelectedPass] = useState<VisitorPass | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [copiedAll, setCopiedAll] = useState(false);
+    const [isCustomTime, setIsCustomTime] = useState(false);
 
     useEffect(() => {
         if (flash.bulk_passes && flash.bulk_passes.length > 0) {
@@ -71,6 +99,8 @@ export default function Visitors({ auth, organization, membership, visitors, fil
         visitor_phone: '',
         purpose: '',
         date: new Date().toISOString().split('T')[0],
+        start_time: '',
+        end_time: '',
     });
 
     const handleSearch = (e: React.FormEvent) => {
@@ -102,6 +132,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
             onSuccess: () => {
                 setInviteModalOpen(false);
                 reset();
+                setIsCustomTime(false);
             },
         });
     };
@@ -111,7 +142,33 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
         router.delete(`/org/visitors/${passId}`, {
             preserveScroll: true,
+            onSuccess: () => {
+                if (selectedPass?.id === passId) {
+                    setSelectedPass(null);
+                }
+            },
         });
+    };
+
+    const formatTimeWindow = (startsAtStr: string, expiresAtStr: string) => {
+        const start = new Date(startsAtStr);
+        const end = new Date(expiresAtStr);
+
+        // If it spans whole day 00:00 to 23:59
+        const isWholeDay =
+            start.getHours() === 0 &&
+            start.getMinutes() === 0 &&
+            end.getHours() === 23 &&
+            end.getMinutes() === 59;
+
+        if (isWholeDay) {
+            return 'All Day (Ends 11:59 PM)';
+        }
+
+        const startFormatted = start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        const endFormatted = end.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+        return `${startFormatted} – ${endFormatted}`;
     };
 
     return (
@@ -173,22 +230,25 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                             visitors.data.map((pass) => (
                                 <div
                                     key={pass.id}
-                                    className="flex flex-col justify-between gap-4 px-4 py-4 transition hover:bg-slate-50/70 sm:flex-row sm:items-center sm:px-6"
+                                    onClick={() => setSelectedPass(pass)}
+                                    className="group flex cursor-pointer flex-col justify-between gap-4 px-4 py-4 transition hover:bg-slate-50/80 sm:flex-row sm:items-center sm:px-6"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700 transition group-hover:bg-slate-200">
                                             {pass.visitor_name.charAt(0).toUpperCase()}
                                         </div>
                                         <div>
                                             <div className="flex items-center gap-2">
-                                                <h3 className="text-base font-bold text-slate-950">{pass.visitor_name}</h3>
+                                                <h3 className="text-base font-bold text-slate-950 transition group-hover:text-indigo-600">
+                                                    {pass.visitor_name}
+                                                </h3>
                                                 {pass.status === 'active' && (
                                                     <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 uppercase ring-1 ring-emerald-100 ring-inset">
                                                         Active
                                                     </span>
                                                 )}
                                                 {pass.status === 'used' && (
-                                                    <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-slate-600 uppercase ring-1 ring-slate-200 ring-inset">
+                                                    <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-slate-600 uppercase ring-1 ring-slate-200 ring-inset">
                                                         Used
                                                     </span>
                                                 )}
@@ -197,15 +257,24 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                                         Revoked
                                                     </span>
                                                 )}
+                                                {pass.status === 'expired' && (
+                                                    <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase ring-1 ring-amber-100 ring-inset">
+                                                        Expired
+                                                    </span>
+                                                )}
                                             </div>
-                                            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar className="h-3.5 w-3.5" />
+                                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                                                <span className="flex items-center gap-1 font-medium text-slate-600">
+                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                                     {new Date(pass.starts_at).toLocaleDateString()}
                                                 </span>
+                                                <span className="flex items-center gap-1 text-slate-500">
+                                                    <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                                    {formatTimeWindow(pass.starts_at, pass.expires_at)}
+                                                </span>
                                                 {pass.purpose && (
-                                                    <span className="flex items-center gap-1 capitalize">
-                                                        <Tag className="h-3.5 w-3.5" />
+                                                    <span className="flex items-center gap-1 capitalize text-slate-500">
+                                                        <Tag className="h-3.5 w-3.5 text-slate-400" />
                                                         {pass.purpose}
                                                     </span>
                                                 )}
@@ -213,10 +282,11 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center justify-end gap-3">
-                                        <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
+                                    <div className="flex items-center justify-end gap-3" onClick={(e) => e.stopPropagation()}>
+                                        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 shadow-2xs">
                                             <span className="font-mono text-base font-bold tracking-widest text-slate-900">{pass.code}</span>
                                             <button
+                                                type="button"
                                                 onClick={() => copyCode(pass)}
                                                 className="ml-2 text-slate-400 transition hover:text-slate-700"
                                                 title="Copy Pass Link"
@@ -231,6 +301,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
                                         {membership.is_admin && pass.status === 'active' && (
                                             <button
+                                                type="button"
                                                 onClick={() => handleRevoke(pass.id)}
                                                 className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                                                 title="Revoke Pass"
@@ -244,6 +315,152 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                         )}
                     </div>
                 </div>
+
+                {/* Pass Details Drawer */}
+                <ResponsiveSheet
+                    isOpen={!!selectedPass}
+                    onClose={() => setSelectedPass(null)}
+                    title="Pass Details"
+                >
+                    {selectedPass && (
+                        <div className="space-y-6">
+                            {/* Visitor Header Hero */}
+                            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-base font-bold text-indigo-700">
+                                            {selectedPass.visitor_name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-lg font-bold text-slate-900">{selectedPass.visitor_name}</h4>
+                                            <p className="text-xs text-slate-500">
+                                                {selectedPass.visitor_phone || 'No phone number provided'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <span
+                                        className={`rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${
+                                            selectedPass.status === 'active'
+                                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                                                : selectedPass.status === 'used'
+                                                ? 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
+                                                : 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'
+                                        }`}
+                                    >
+                                        {selectedPass.status}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Pass Code Card */}
+                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+                                <div className="text-center">
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                                        Single-Use Access Code
+                                    </span>
+                                    <div className="mt-1 font-mono text-3xl font-black tracking-widest text-slate-900">
+                                        {selectedPass.code}
+                                    </div>
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        One-off gate pass. Expires automatically after first check-in or when the timeframe elapses.
+                                    </p>
+                                </div>
+
+                                <div className="mt-5 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => copyCode(selectedPass)}
+                                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
+                                    >
+                                        {copiedCodeId === selectedPass.id ? (
+                                            <>
+                                                <Check className="h-4 w-4 text-emerald-600" />
+                                                <span>Link Copied</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="h-4 w-4 text-slate-400" />
+                                                <span>Copy Link</span>
+                                            </>
+                                        )}
+                                    </button>
+
+                                    <a
+                                        href={`/pass/${selectedPass.pass_uuid}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center justify-center gap-2 rounded-xl bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
+                                        <span>View Digital Pass</span>
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* Timeframe & Validity */}
+                            <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 text-sm">
+                                <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                    Validity Timeframe
+                                </h5>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-500 flex items-center gap-1.5">
+                                        <Calendar className="h-4 w-4 text-slate-400" />
+                                        Date
+                                    </span>
+                                    <span className="font-semibold text-slate-900">
+                                        {new Date(selectedPass.starts_at).toLocaleDateString(undefined, {
+                                            weekday: 'short',
+                                            year: 'numeric',
+                                            month: 'short',
+                                            day: 'numeric',
+                                        })}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-500 flex items-center gap-1.5">
+                                        <Clock className="h-4 w-4 text-slate-400" />
+                                        Time Window
+                                    </span>
+                                    <span className="font-semibold text-slate-900">
+                                        {formatTimeWindow(selectedPass.starts_at, selectedPass.expires_at)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-500 flex items-center gap-1.5">
+                                        <Tag className="h-4 w-4 text-slate-400" />
+                                        Purpose
+                                    </span>
+                                    <span className="font-semibold text-slate-900 capitalize">
+                                        {selectedPass.purpose || 'General Visit'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-slate-500 flex items-center gap-1.5">
+                                        <ShieldCheck className="h-4 w-4 text-slate-400" />
+                                        Pass Type
+                                    </span>
+                                    <span className="font-semibold text-slate-900">
+                                        Single-Use (One-time pass)
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Revoke Action */}
+                            {membership.is_admin && selectedPass.status === 'active' && (
+                                <div className="pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRevoke(selectedPass.id)}
+                                        className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50/50 py-3 text-sm font-bold text-rose-600 transition hover:bg-rose-100/70 active:scale-98"
+                                    >
+                                        <ShieldAlert className="h-4 w-4" />
+                                        Revoke Pass Immediately
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </ResponsiveSheet>
 
                 {/* Invite Visitor Modal */}
                 <ResponsiveSheet isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)}>
@@ -295,6 +512,59 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                 className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                             />
                             {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
+                        </div>
+
+                        <div>
+                            <div className="flex items-center justify-between">
+                                <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                    Timeframe
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIsCustomTime(!isCustomTime);
+                                        if (isCustomTime) {
+                                            setData((prev) => ({ ...prev, start_time: '', end_time: '' }));
+                                        }
+                                    }}
+                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                                >
+                                    {isCustomTime ? 'Switch to All Day' : 'Set Specific Hours'}
+                                </button>
+                            </div>
+
+                            {isCustomTime ? (
+                                <div className="mt-2 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+                                    <div>
+                                        <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                            Start Time
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={data.start_time}
+                                            onChange={(e) => setData('start_time', e.target.value)}
+                                            className="mt-1 block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                                        />
+                                        {errors.start_time && <p className="mt-1 text-xs text-rose-500">{errors.start_time}</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                            End Time
+                                        </label>
+                                        <input
+                                            type="time"
+                                            value={data.end_time}
+                                            onChange={(e) => setData('end_time', e.target.value)}
+                                            className="mt-1 block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                                        />
+                                        {errors.end_time && <p className="mt-1 text-xs text-rose-500">{errors.end_time}</p>}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-xs text-slate-600">
+                                    Valid entire day (expires at 11:59 PM)
+                                </div>
+                            )}
                         </div>
 
                         <div>
