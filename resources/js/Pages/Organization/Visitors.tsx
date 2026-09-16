@@ -1,9 +1,11 @@
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
-import { PageProps } from '@/types';
-import { Head, router, useForm } from '@inertiajs/react';
-import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert } from 'lucide-react';
-import React, { useState } from 'react';
+import type { PageProps } from '@/types';
+import type { SharedData } from '@/types';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert, Link as LinkIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import BulkInviteModal from './BulkInviteModal';
 
 interface Organization {
     id: number;
@@ -44,9 +46,19 @@ interface Props extends PageProps {
 }
 
 export default function Visitors({ auth, organization, membership, visitors, filters }: Props) {
+    const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [bulkInviteModalOpen, setBulkInviteModalOpen] = useState(false);
+    const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
+    const [copiedAll, setCopiedAll] = useState(false);
+
+    useEffect(() => {
+        if (flash.bulk_passes && flash.bulk_passes.length > 0) {
+            setBulkSummaryOpen(true);
+        }
+    }, [flash.bulk_passes]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         visitor_name: '',
@@ -57,18 +69,24 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        router.get(
-            '/org/visitors',
-            { search },
-            { preserveState: true, preserveScroll: true }
-        );
+        router.get('/org/visitors', { search }, { preserveState: true, preserveScroll: true });
     };
 
-    const copyCode = (pass: VisitorPass) => {
+    const copyCode = (pass: { pass_uuid: string; id?: number }) => {
         const link = `${window.location.origin}/pass/${pass.pass_uuid}`;
         navigator.clipboard.writeText(link);
-        setCopiedCodeId(pass.id);
-        setTimeout(() => setCopiedCodeId(null), 2000);
+        if (pass.id) {
+            setCopiedCodeId(pass.id);
+            setTimeout(() => setCopiedCodeId(null), 2000);
+        }
+    };
+
+    const copyAllLinks = () => {
+        if (!flash.bulk_passes) return;
+        const textToCopy = flash.bulk_passes.map((pass) => `${pass.visitor_name}: ${window.location.origin}/pass/${pass.pass_uuid}`).join('\n');
+        navigator.clipboard.writeText(textToCopy);
+        setCopiedAll(true);
+        setTimeout(() => setCopiedAll(false), 2000);
     };
 
     const handleInvite = (e: React.FormEvent) => {
@@ -93,7 +111,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
     return (
         <OrganizationLayout
             user={auth.user}
-            header={<h2 className="text-xl font-semibold leading-tight text-slate-800">{organization.name}</h2>}
+            header={<h2 className="text-xl leading-tight font-semibold text-slate-800">{organization.name}</h2>}
             title="Visitors"
         >
             <Head title="Visitors - Organization" />
@@ -108,6 +126,13 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
                     {membership.is_admin && (
                         <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setBulkInviteModalOpen(true)}
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-semibold text-slate-700 shadow-xs ring-1 ring-inset ring-slate-200 transition hover:bg-slate-50 hover:text-slate-900 active:scale-95"
+                            >
+                                <Users className="h-4 w-4" />
+                                Invite multiple
+                            </button>
                             <button
                                 onClick={() => setInviteModalOpen(true)}
                                 className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 hover:shadow-md active:scale-95"
@@ -131,7 +156,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                 placeholder="Search by name, phone or code..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-10 w-full rounded-xl border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                className="h-10 w-full rounded-xl border-0 bg-slate-50 pr-4 pl-10 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                             />
                         </form>
                     </div>
@@ -145,12 +170,15 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                 </div>
                                 <h3 className="mt-4 text-sm font-semibold text-slate-900">No visitors found</h3>
                                 <p className="mt-1 max-w-xs text-sm text-slate-500">
-                                    {search ? "We couldn't find any visitors matching your search." : "Get started by inviting your first visitor."}
+                                    {search ? "We couldn't find any visitors matching your search." : 'Get started by inviting your first visitor.'}
                                 </p>
                             </div>
                         ) : (
                             visitors.data.map((pass) => (
-                                <div key={pass.id} className="flex flex-col justify-between gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-6 transition hover:bg-slate-50/70">
+                                <div
+                                    key={pass.id}
+                                    className="flex flex-col justify-between gap-4 px-4 py-4 transition hover:bg-slate-50/70 sm:flex-row sm:items-center sm:px-6"
+                                >
                                     <div className="flex items-center gap-4">
                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700">
                                             {pass.visitor_name.charAt(0).toUpperCase()}
@@ -159,44 +187,56 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                             <div className="flex items-center gap-2">
                                                 <h3 className="text-base font-bold text-slate-950">{pass.visitor_name}</h3>
                                                 {pass.status === 'active' && (
-                                                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-inset ring-emerald-100">
+                                                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 uppercase ring-1 ring-emerald-100 ring-inset">
                                                         Active
                                                     </span>
                                                 )}
                                                 {pass.status === 'used' && (
-                                                    <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 ring-1 ring-inset ring-slate-200">
+                                                    <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-slate-600 uppercase ring-1 ring-slate-200 ring-inset">
                                                         Used
                                                     </span>
                                                 )}
                                                 {pass.status === 'revoked' && (
-                                                    <span className="inline-flex items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 ring-1 ring-inset ring-rose-100">
+                                                    <span className="inline-flex items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-700 uppercase ring-1 ring-rose-100 ring-inset">
                                                         Revoked
                                                     </span>
                                                 )}
                                             </div>
                                             <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
-                                                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(pass.starts_at).toLocaleDateString()}</span>
-                                                {pass.purpose && <span className="flex items-center gap-1 capitalize"><Tag className="h-3.5 w-3.5" />{pass.purpose}</span>}
+                                                <span className="flex items-center gap-1">
+                                                    <Calendar className="h-3.5 w-3.5" />
+                                                    {new Date(pass.starts_at).toLocaleDateString()}
+                                                </span>
+                                                {pass.purpose && (
+                                                    <span className="flex items-center gap-1 capitalize">
+                                                        <Tag className="h-3.5 w-3.5" />
+                                                        {pass.purpose}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="flex items-center justify-end gap-3">
-                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                        <div className="flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5">
                                             <span className="font-mono text-base font-bold tracking-widest text-slate-900">{pass.code}</span>
                                             <button
                                                 onClick={() => copyCode(pass)}
-                                                className="ml-2 text-slate-400 hover:text-slate-700 transition"
+                                                className="ml-2 text-slate-400 transition hover:text-slate-700"
                                                 title="Copy Pass Link"
                                             >
-                                                {copiedCodeId === pass.id ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                                                {copiedCodeId === pass.id ? (
+                                                    <Check className="h-4 w-4 text-emerald-600" />
+                                                ) : (
+                                                    <Copy className="h-4 w-4" />
+                                                )}
                                             </button>
                                         </div>
 
                                         {membership.is_admin && pass.status === 'active' && (
                                             <button
                                                 onClick={() => handleRevoke(pass.id)}
-                                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                                className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                                                 title="Revoke Pass"
                                             >
                                                 <ShieldAlert className="h-4 w-4" />
@@ -228,49 +268,53 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
                             <form onSubmit={handleInvite} className="mt-5 space-y-4">
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Visitor Name <span className="text-rose-500">*</span></label>
+                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        Visitor Name <span className="text-rose-500">*</span>
+                                    </label>
                                     <input
                                         type="text"
                                         required
                                         placeholder="John Doe"
                                         value={data.visitor_name}
                                         onChange={(e) => setData('visitor_name', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     />
                                     {errors.visitor_name && <p className="mt-1 text-xs text-rose-500">{errors.visitor_name}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Phone Number</label>
+                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Phone Number</label>
                                     <input
                                         type="tel"
                                         placeholder="+1 234 567 8900"
                                         value={data.visitor_phone}
                                         onChange={(e) => setData('visitor_phone', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     />
                                     {errors.visitor_phone && <p className="mt-1 text-xs text-rose-500">{errors.visitor_phone}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Date of Visit <span className="text-rose-500">*</span></label>
+                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        Date of Visit <span className="text-rose-500">*</span>
+                                    </label>
                                     <input
                                         type="date"
                                         required
                                         min={new Date().toISOString().split('T')[0]}
                                         value={data.date}
                                         onChange={(e) => setData('date', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     />
                                     {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Purpose</label>
+                                    <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Purpose</label>
                                     <select
                                         value={data.purpose}
                                         onChange={(e) => setData('purpose', e.target.value)}
-                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     >
                                         <option value="">Select purpose</option>
                                         <option value="meeting">Meeting</option>
@@ -283,7 +327,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                     {errors.purpose && <p className="mt-1 text-xs text-rose-500">{errors.purpose}</p>}
                                 </div>
 
-                                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setInviteModalOpen(false)}
@@ -300,6 +344,58 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Bulk Invite Modal */}
+                <BulkInviteModal
+                    isOpen={bulkInviteModalOpen}
+                    onClose={() => setBulkInviteModalOpen(false)}
+                />
+
+                {/* Bulk Summary Modal */}
+                {bulkSummaryOpen && flash.bulk_passes && (
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
+                        <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl sm:rounded-2xl">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6 pb-4">
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-950">Passes Generated Successfully!</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">You can now copy and share these links with your visitors.</p>
+                                </div>
+                                <button
+                                    onClick={() => setBulkSummaryOpen(false)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <div className="max-h-[50vh] overflow-y-auto p-4 space-y-3">
+                                {flash.bulk_passes.map((pass, i) => (
+                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+                                        <div>
+                                            <div className="text-sm font-bold text-slate-900">{pass.visitor_name}</div>
+                                            <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5"><LinkIcon className="w-3 h-3"/> kontrol.test/pass/{pass.code}</div>
+                                        </div>
+                                        <button
+                                            onClick={() => copyCode(pass)}
+                                            className="p-2 text-slate-400 hover:text-slate-700 transition bg-white rounded-md border border-slate-200 shadow-sm"
+                                            title="Copy link"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="p-4 border-t border-slate-100 bg-slate-50">
+                                <button
+                                    onClick={copyAllLinks}
+                                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                                >
+                                    {copiedAll ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                                    {copiedAll ? 'Copied All Links!' : 'Copy All Links to Clipboard'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 )}

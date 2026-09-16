@@ -48,6 +48,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
     Route::prefix('visitors')->name('visitors.')->group(function () {
         Route::get('/', [OrganizationVisitorController::class, 'index'])->name('index');
         Route::post('/', [OrganizationVisitorController::class, 'store'])->name('store');
+        Route::post('/bulk', [OrganizationVisitorController::class, 'storeBulk'])->name('storeBulk');
         Route::delete('/{pass}', [OrganizationVisitorController::class, 'destroy'])->name('destroy');
     });
 
