@@ -50,6 +50,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::get('/', [OrganizationVisitorController::class, 'index'])->name('index');
         Route::post('/', [OrganizationVisitorController::class, 'store'])->name('store');
         Route::post('/bulk', [OrganizationBulkInviteController::class, 'store'])->name('storeBulk');
+        Route::post('/{pass}/extend', [OrganizationVisitorController::class, 'extend'])->name('extend');
         Route::delete('/{pass}', [OrganizationVisitorController::class, 'destroy'])->name('destroy');
     });
 
