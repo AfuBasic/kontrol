@@ -3,6 +3,7 @@ import { CalendarClock, Clock, DoorOpen, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 
 interface PublicWindow {
     id: number;
@@ -147,109 +148,98 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                     </section>
                 )}
 
-                {createModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-sm sm:items-center sm:p-4">
-                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-[2rem] bg-white p-5 text-sm shadow-2xl sm:p-6">
-                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
-                                <div>
-                                    <h3 className="text-lg font-black text-slate-950">Add public time</h3>
-                                    <p className="mt-1 text-sm font-semibold text-slate-500">
-                                        Tell security when this destination is open to the public.
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setCreateModalOpen(false)}
-                                    className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-500"
-                                >
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <form noValidate onSubmit={handleCreate} className="space-y-4 pt-5">
-                                <div>
-                                    <label className="text-sm font-black text-slate-950">Schedule name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Sunday service"
-                                        value={data.name}
-                                        onChange={(event) => setData('name', event.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
-                                    />
-                                    {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-black text-slate-950">Day</label>
-                                    <select
-                                        value={data.day_of_week}
-                                        onChange={(event) => setData('day_of_week', parseInt(event.target.value, 10))}
-                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
-                                    >
-                                        {DAYS.map((day, index) => (
-                                            <option key={day} value={index}>
-                                                {day}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.day_of_week && <p className="mt-1 text-xs font-bold text-rose-600">{errors.day_of_week}</p>}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="text-sm font-black text-slate-950">Start</label>
-                                        <input
-                                            type="time"
-                                            value={data.start_time}
-                                            onChange={(event) => setData('start_time', event.target.value)}
-                                            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
-                                        />
-                                        {errors.start_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.start_time}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="text-sm font-black text-slate-950">End</label>
-                                        <input
-                                            type="time"
-                                            value={data.end_time}
-                                            onChange={(event) => setData('end_time', event.target.value)}
-                                            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
-                                        />
-                                        {errors.end_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.end_time}</p>}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="text-sm font-black text-slate-950">Notes</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Open to congregation members"
-                                        value={data.notes}
-                                        onChange={(event) => setData('notes', event.target.value)}
-                                        className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
-                                    />
-                                    {errors.notes && <p className="mt-1 text-xs font-bold text-rose-600">{errors.notes}</p>}
-                                </div>
-
-                                <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setCreateModalOpen(false)}
-                                        className="rounded-2xl px-4 py-2.5 text-sm font-black text-slate-500"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="rounded-2xl bg-[#0f172a] px-5 py-2.5 text-sm font-black text-white disabled:opacity-50"
-                                    >
-                                        {processing ? 'Saving...' : 'Add time'}
-                                    </button>
-                                </div>
-                            </form>
+                <ResponsiveSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)}>
+                    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-lg font-black text-slate-950">Add public time</h3>
+                            <p className="mt-1 text-sm font-semibold text-slate-500">
+                                Tell security when this destination is open to the public.
+                            </p>
                         </div>
                     </div>
-                )}
+
+                    <form noValidate onSubmit={handleCreate} className="space-y-4 pt-5">
+                        <div>
+                            <label className="text-sm font-black text-slate-950">Schedule name</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Sunday service"
+                                value={data.name}
+                                onChange={(event) => setData('name', event.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                            />
+                            {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-black text-slate-950">Day</label>
+                            <select
+                                value={data.day_of_week}
+                                onChange={(event) => setData('day_of_week', parseInt(event.target.value, 10))}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                            >
+                                {DAYS.map((day, index) => (
+                                    <option key={day} value={index}>
+                                        {day}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.day_of_week && <p className="mt-1 text-xs font-bold text-rose-600">{errors.day_of_week}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-sm font-black text-slate-950">Start</label>
+                                <input
+                                    type="time"
+                                    value={data.start_time}
+                                    onChange={(event) => setData('start_time', event.target.value)}
+                                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                />
+                                {errors.start_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.start_time}</p>}
+                            </div>
+                            <div>
+                                <label className="text-sm font-black text-slate-950">End</label>
+                                <input
+                                    type="time"
+                                    value={data.end_time}
+                                    onChange={(event) => setData('end_time', event.target.value)}
+                                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                />
+                                {errors.end_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.end_time}</p>}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-black text-slate-950">Notes</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Open to congregation members"
+                                value={data.notes}
+                                onChange={(event) => setData('notes', event.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                            />
+                            {errors.notes && <p className="mt-1 text-xs font-bold text-rose-600">{errors.notes}</p>}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setCreateModalOpen(false)}
+                                className="rounded-2xl px-4 py-2.5 text-sm font-black text-slate-500"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="rounded-2xl bg-[#0f172a] px-5 py-2.5 text-sm font-black text-white disabled:opacity-50"
+                            >
+                                {processing ? 'Saving...' : 'Add time'}
+                            </button>
+                        </div>
+                    </form>
+                </ResponsiveSheet>
             </div>
         </OrganizationLayout>
     );
