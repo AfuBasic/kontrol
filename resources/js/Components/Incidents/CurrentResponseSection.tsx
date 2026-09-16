@@ -17,6 +17,8 @@ interface Props {
     onAcknowledge: () => void;
     onBeginResolution: () => void;
     onOpenResolveModal: () => void;
+    onClose?: () => void;
+    canClose?: boolean;
     isUpdatingStatus?: boolean;
     className?: string;
 }
@@ -95,6 +97,8 @@ export default function CurrentResponseSection({
     onAcknowledge,
     onBeginResolution,
     onOpenResolveModal,
+    onClose,
+    canClose = false,
     isUpdatingStatus = false,
     className = '',
 }: Props) {
@@ -183,10 +187,23 @@ export default function CurrentResponseSection({
                     )}
 
                     {status === 'solved' && (
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-3.5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                            <Shield className="h-4 w-4 shrink-0" />
-                            <span>Awaiting resident closing confirmation</span>
-                        </div>
+                        canClose && onClose ? (
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                disabled={isUpdatingStatus}
+                                className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 dark:text-slate-900 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-slate-800 dark:hover:bg-white active:scale-[0.98] transition-all disabled:opacity-50"
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>{isUpdatingStatus ? 'Closing...' : 'Close Incident'}</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-3.5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
+                                <Shield className="h-4 w-4 shrink-0" />
+                                <span>Awaiting resident closing confirmation</span>
+                            </div>
+                        )
                     )}
 
                     {status === 'closed' && (
