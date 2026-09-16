@@ -366,7 +366,7 @@ export default function Notifications({
                                     <div className="flex flex-col gap-2">
                                         <button
                                             type="button"
-                                            onClick={() => handleSortChange('latest')}
+                                            onClick={() => handleSelectSort('latest')}
                                             className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
                                         >
                                             <span>Newest first</span>
@@ -374,7 +374,7 @@ export default function Notifications({
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => handleSortChange('oldest')}
+                                            onClick={() => handleSelectSort('oldest')}
                                             className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
                                         >
                                             <span>Oldest first</span>
