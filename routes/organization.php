@@ -6,6 +6,7 @@ use App\Http\Controllers\Organization\ArrivalController;
 use App\Http\Controllers\Organization\ContextController;
 use App\Http\Controllers\Organization\CredentialController;
 use App\Http\Controllers\Organization\DashboardController;
+use App\Http\Controllers\Organization\NotificationController;
 use App\Http\Controllers\Organization\PaymentController;
 use App\Http\Controllers\Organization\PublicWindowController;
 use App\Http\Controllers\Organization\SettingsController;
@@ -60,7 +61,15 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::post('/{post}/comments', [AnnouncementController::class, 'storeComment'])->name('comments.store');
     });
 
-    // 5. Profile & Settings (Team & Preferences)
+    // 5. Notifications
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
+        Route::post('/clear-all', [NotificationController::class, 'clearAll'])->name('clear-all');
+    });
+
+    // 6. Profile & Settings (Team & Preferences)
     Route::prefix('settings')->name('settings.')->group(function () {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::patch('/confirmation-policy', [SettingsController::class, 'updateConfirmationPolicy'])->name('confirmation-policy.update');
