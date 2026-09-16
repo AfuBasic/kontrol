@@ -276,7 +276,7 @@ export default function ArrivalHistory({ organization, logs }: Props) {
 
                                     {logs.links[logs.links.length - 1]?.url ? (
                                         <Link
-                                            href={logs.links[logs.links.length - 1].url}
+                                            href={logs.links[logs.links.length - 1].url!}
                                             preserveScroll
                                             className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
                                         >
