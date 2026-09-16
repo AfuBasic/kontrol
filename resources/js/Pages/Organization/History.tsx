@@ -123,17 +123,82 @@ export default function ArrivalHistory({ organization, logs }: Props) {
                     <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
                         <div className="space-y-8">
                             {Object.entries(groupedLogs).map(([date, dayLogs]) => (
-                                <div key={date} className="grid gap-4 lg:grid-cols-[12rem_minmax(0,1fr)]">
-                                    <div>
-                                        <div className="sticky top-24 rounded-[1.35rem] bg-slate-50 p-4 ring-1 ring-slate-100">
-                                            <p className="text-sm font-black text-slate-950">{date}</p>
-                                            <p className="mt-1 text-xs font-bold text-slate-500">
-                                                {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
-                                            </p>
+                                <div key={date}>
+                                    {/* Mobile: date as inline heading */}
+                                    <div className="mb-3 flex items-center gap-3 lg:hidden">
+                                        <p className="text-sm font-black text-slate-950">{date}</p>
+                                        <span className="h-px flex-1 bg-slate-100" />
+                                        <p className="text-xs font-bold text-slate-400">
+                                            {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
+                                        </p>
+                                    </div>
+
+                                    {/* Desktop: date in left column */}
+                                    <div className="hidden gap-4 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)]">
+                                        <div>
+                                            <div className="sticky top-24 rounded-[1.35rem] bg-slate-50 p-4 ring-1 ring-slate-100">
+                                                <p className="text-sm font-black text-slate-950">{date}</p>
+                                                <p className="mt-1 text-xs font-bold text-slate-500">
+                                                    {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {dayLogs.map((log) => {
+                                                const isHere = !log.checked_out_at;
+                                                const confirmed = Boolean(log.confirmed_at);
+
+                                                return (
+                                                    <article
+                                                        key={log.id}
+                                                        className="grid gap-3 rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:items-center"
+                                                    >
+                                                        <time className="text-sm font-black text-slate-500">{formatTime(log.verified_at)}</time>
+
+                                                        <div className="min-w-0">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h2 className="truncate text-base font-black text-slate-950">{log.visitor_name}</h2>
+                                                                {log.tag && (
+                                                                    <span className="rounded-full bg-white px-2 py-1 text-[11px] font-black text-slate-500 ring-1 ring-slate-200">
+                                                                        {log.tag}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
+                                                                <span className="inline-flex items-center gap-1">
+                                                                    <MapPin className="h-3.5 w-3.5" />
+                                                                    {log.entry_point || 'Gate'}
+                                                                </span>
+                                                                <span>{log.admission_basis}</span>
+                                                                {log.vehicle_plate_number && <span>{log.vehicle_plate_number.toUpperCase()}</span>}
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="flex flex-wrap gap-2 sm:justify-end">
+                                                            <span
+                                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                                                                    isHere ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/70 text-slate-600'
+                                                                }`}
+                                                            >
+                                                                {isHere ? <Radio className="h-3.5 w-3.5" /> : <DoorOpen className="h-3.5 w-3.5" />}
+                                                                {isHere ? 'Here now' : `Left ${log.checked_out_at_human || ''}`}
+                                                            </span>
+                                                            {confirmed && (
+                                                                <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf2ff] px-2.5 py-1 text-[11px] font-black text-[#0b4aa2]">
+                                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                                    Confirmed
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </article>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
-                                    <div className="space-y-3">
+                                    {/* Mobile: inline log entries */}
+                                    <div className="space-y-3 lg:hidden">
                                         {dayLogs.map((log) => {
                                             const isHere = !log.checked_out_at;
                                             const confirmed = Boolean(log.confirmed_at);
@@ -141,45 +206,44 @@ export default function ArrivalHistory({ organization, logs }: Props) {
                                             return (
                                                 <article
                                                     key={log.id}
-                                                    className="grid gap-3 rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:items-center"
+                                                    className="rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100"
                                                 >
-                                                    <time className="text-sm font-black text-slate-500">{formatTime(log.verified_at)}</time>
-
-                                                    <div className="min-w-0">
-                                                        <div className="flex flex-wrap items-center gap-2">
-                                                            <h2 className="truncate text-base font-black text-slate-950">{log.visitor_name}</h2>
-                                                            {log.tag && (
-                                                                <span className="rounded-full bg-white px-2 py-1 text-[11px] font-black text-slate-500 ring-1 ring-slate-200">
-                                                                    {log.tag}
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="min-w-0">
+                                                            <div className="flex flex-wrap items-center gap-2">
+                                                                <h2 className="truncate text-base font-black text-slate-950">{log.visitor_name}</h2>
+                                                                {log.tag && (
+                                                                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-black text-slate-500 ring-1 ring-slate-200">
+                                                                        {log.tag}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
+                                                                <time>{formatTime(log.verified_at)}</time>
+                                                                <span className="inline-flex items-center gap-1">
+                                                                    <MapPin className="h-3.5 w-3.5" />
+                                                                    {log.entry_point || 'Gate'}
                                                                 </span>
-                                                            )}
+                                                                {log.vehicle_plate_number && <span>{log.vehicle_plate_number.toUpperCase()}</span>}
+                                                            </p>
                                                         </div>
-                                                        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
-                                                            <span className="inline-flex items-center gap-1">
-                                                                <MapPin className="h-3.5 w-3.5" />
-                                                                {log.entry_point || 'Gate'}
-                                                            </span>
-                                                            <span>{log.admission_basis}</span>
-                                                            {log.vehicle_plate_number && <span>{log.vehicle_plate_number.toUpperCase()}</span>}
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="flex flex-wrap gap-2 sm:justify-end">
                                                         <span
-                                                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
+                                                            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
                                                                 isHere ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/70 text-slate-600'
                                                             }`}
                                                         >
                                                             {isHere ? <Radio className="h-3.5 w-3.5" /> : <DoorOpen className="h-3.5 w-3.5" />}
-                                                            {isHere ? 'Here now' : `Left ${log.checked_out_at_human || ''}`}
+                                                            {isHere ? 'Here' : 'Left'}
                                                         </span>
-                                                        {confirmed && (
+                                                    </div>
+                                                    {confirmed && (
+                                                        <div className="mt-2.5 flex">
                                                             <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf2ff] px-2.5 py-1 text-[11px] font-black text-[#0b4aa2]">
                                                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                                                 Confirmed
                                                             </span>
-                                                        )}
-                                                    </div>
+                                                        </div>
+                                                    )}
                                                 </article>
                                             );
                                         })}
