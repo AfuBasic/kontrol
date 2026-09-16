@@ -221,7 +221,7 @@ export default function AccessList({
         <OrganizationLayout title="Access" contentClassName="max-w-4xl pb-28 sm:pb-12">
             <Head title={`${organization.name} - Access`} />
 
-            <div className="space-y-4 sm:space-y-5">
+            <div className="space-y-4 sm:space-y-5 px-4 sm:px-6 lg:px-8 pt-4 sm:pt-8">
                 {/* Native Mobile Header: Page Title + Contextual Add Action */}
                 <div className="flex items-center justify-between gap-3 pt-1">
                     <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Access</h1>
@@ -418,7 +418,6 @@ export default function AccessList({
                                     </div>
                                 )}
                             </div>
-                        )}
                         )}
 
 
