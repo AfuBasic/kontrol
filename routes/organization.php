@@ -7,6 +7,7 @@ use App\Http\Controllers\Organization\ContextController;
 use App\Http\Controllers\Organization\CredentialController;
 use App\Http\Controllers\Organization\DashboardController;
 use App\Http\Controllers\Organization\NotificationController;
+use App\Http\Controllers\Organization\OrganizationVisitorController;
 use App\Http\Controllers\Organization\PaymentController;
 use App\Http\Controllers\Organization\PublicWindowController;
 use App\Http\Controllers\Organization\SettingsController;
@@ -41,6 +42,13 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
         Route::get('/', [ArrivalController::class, 'index'])->name('index');
         Route::get('/history', [ArrivalController::class, 'history'])->name('history');
         Route::post('/{log}/confirm', [ArrivalController::class, 'confirm'])->name('confirm');
+    });
+
+    // Access: Visitors (Temporary passes)
+    Route::prefix('visitors')->name('visitors.')->group(function () {
+        Route::get('/', [OrganizationVisitorController::class, 'index'])->name('index');
+        Route::post('/', [OrganizationVisitorController::class, 'store'])->name('store');
+        Route::delete('/{pass}', [OrganizationVisitorController::class, 'destroy'])->name('destroy');
     });
 
     // Access: Public Access Windows (for Public Window policies e.g. Churches)

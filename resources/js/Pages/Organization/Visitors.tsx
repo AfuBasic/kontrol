@@ -1,0 +1,313 @@
+import AccessTabs from '@/Components/Organization/AccessTabs';
+import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import { PageProps } from '@/types';
+import { Head, router, useForm } from '@inertiajs/react';
+import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+interface Organization {
+    id: number;
+    name: string;
+}
+
+interface VisitorPass {
+    id: number;
+    code: string;
+    pass_uuid: string;
+    visitor_name: string;
+    visitor_phone: string | null;
+    purpose: string;
+    status: 'active' | 'used' | 'revoked' | 'expired';
+    starts_at: string;
+    expires_at: string;
+}
+
+interface PaginationLinks {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedData<T> {
+    data: T[];
+    links: PaginationLinks[];
+    current_page: number;
+    last_page: number;
+    total: number;
+}
+
+interface Props extends PageProps {
+    organization: Organization;
+    membership: { role: string; is_admin: boolean };
+    visitors: PaginatedData<VisitorPass>;
+    filters: { search: string | null };
+}
+
+export default function Visitors({ auth, organization, membership, visitors, filters }: Props) {
+    const [search, setSearch] = useState(filters.search ?? '');
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        visitor_name: '',
+        visitor_phone: '',
+        purpose: '',
+        date: new Date().toISOString().split('T')[0],
+    });
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        router.get(
+            '/org/visitors',
+            { search },
+            { preserveState: true, preserveScroll: true }
+        );
+    };
+
+    const copyCode = (pass: VisitorPass) => {
+        const link = `${window.location.origin}/pass/${pass.pass_uuid}`;
+        navigator.clipboard.writeText(link);
+        setCopiedCodeId(pass.id);
+        toast.success('Pass link copied to clipboard');
+        setTimeout(() => setCopiedCodeId(null), 2000);
+    };
+
+    const handleInvite = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/org/visitors', {
+            preserveScroll: true,
+            onSuccess: () => {
+                setInviteModalOpen(false);
+                reset();
+                toast.success('Visitor invited successfully');
+            },
+        });
+    };
+
+    const handleRevoke = (passId: number) => {
+        if (!confirm('Are you sure you want to revoke this pass?')) return;
+
+        router.delete(`/org/visitors/${passId}`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Pass revoked.'),
+        });
+    };
+
+    return (
+        <OrganizationLayout
+            user={auth.user}
+            header={<h2 className="text-xl font-semibold leading-tight text-slate-800">{organization.name}</h2>}
+            title="Visitors"
+        >
+            <Head title="Visitors - Organization" />
+
+            <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+                {/* Header & Actions */}
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Access Hub</h1>
+                        <p className="mt-1 text-sm text-slate-500">Manage people, visitors, and active arrivals.</p>
+                    </div>
+
+                    {membership.is_admin && (
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setInviteModalOpen(true)}
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 hover:shadow-md active:scale-95"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Invite visitor
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                <AccessTabs activeTab="visitors" />
+
+                <div className="mt-8 rounded-2xl bg-white shadow-xs ring-1 ring-slate-900/5">
+                    {/* Toolbar */}
+                    <div className="flex flex-col gap-4 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                        <form onSubmit={handleSearch} className="relative max-w-sm flex-1">
+                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name, phone or code..."
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="h-10 w-full rounded-xl border-0 bg-slate-50 pl-10 pr-4 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                            />
+                        </form>
+                    </div>
+
+                    {/* Visitors List */}
+                    <div className="divide-y divide-slate-100">
+                        {visitors.data.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50">
+                                    <Users className="h-8 w-8 text-slate-300" />
+                                </div>
+                                <h3 className="mt-4 text-sm font-semibold text-slate-900">No visitors found</h3>
+                                <p className="mt-1 max-w-xs text-sm text-slate-500">
+                                    {search ? "We couldn't find any visitors matching your search." : "Get started by inviting your first visitor."}
+                                </p>
+                            </div>
+                        ) : (
+                            visitors.data.map((pass) => (
+                                <div key={pass.id} className="flex flex-col justify-between gap-4 px-4 py-4 sm:flex-row sm:items-center sm:px-6 transition hover:bg-slate-50/70">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700">
+                                            {pass.visitor_name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="text-base font-bold text-slate-950">{pass.visitor_name}</h3>
+                                                {pass.status === 'active' && (
+                                                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 ring-1 ring-inset ring-emerald-100">
+                                                        Active
+                                                    </span>
+                                                )}
+                                                {pass.status === 'used' && (
+                                                    <span className="inline-flex items-center rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-600 ring-1 ring-inset ring-slate-200">
+                                                        Used
+                                                    </span>
+                                                )}
+                                                {pass.status === 'revoked' && (
+                                                    <span className="inline-flex items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-700 ring-1 ring-inset ring-rose-100">
+                                                        Revoked
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-slate-500">
+                                                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" />{new Date(pass.starts_at).toLocaleDateString()}</span>
+                                                {pass.purpose && <span className="flex items-center gap-1 capitalize"><Tag className="h-3.5 w-3.5" />{pass.purpose}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-end gap-3">
+                                        <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                                            <span className="font-mono text-base font-bold tracking-widest text-slate-900">{pass.code}</span>
+                                            <button
+                                                onClick={() => copyCode(pass)}
+                                                className="ml-2 text-slate-400 hover:text-slate-700 transition"
+                                                title="Copy Pass Link"
+                                            >
+                                                {copiedCodeId === pass.id ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                                            </button>
+                                        </div>
+
+                                        {membership.is_admin && pass.status === 'active' && (
+                                            <button
+                                                onClick={() => handleRevoke(pass.id)}
+                                                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                                                title="Revoke Pass"
+                                            >
+                                                <ShieldAlert className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* Invite Visitor Modal */}
+                {inviteModalOpen && (
+                    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
+                        <div className="max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl bg-white p-6 shadow-xl sm:rounded-2xl">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                                <div>
+                                    <h3 className="text-base font-semibold text-slate-950">Invite visitor</h3>
+                                    <p className="mt-0.5 text-xs text-slate-500">Create a temporary pass for a visitor.</p>
+                                </div>
+                                <button
+                                    onClick={() => setInviteModalOpen(false)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <form onSubmit={handleInvite} className="mt-5 space-y-4">
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Visitor Name <span className="text-rose-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="John Doe"
+                                        value={data.visitor_name}
+                                        onChange={(e) => setData('visitor_name', e.target.value)}
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    />
+                                    {errors.visitor_name && <p className="mt-1 text-xs text-rose-500">{errors.visitor_name}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Phone Number</label>
+                                    <input
+                                        type="tel"
+                                        placeholder="+1 234 567 8900"
+                                        value={data.visitor_phone}
+                                        onChange={(e) => setData('visitor_phone', e.target.value)}
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    />
+                                    {errors.visitor_phone && <p className="mt-1 text-xs text-rose-500">{errors.visitor_phone}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Date of Visit <span className="text-rose-500">*</span></label>
+                                    <input
+                                        type="date"
+                                        required
+                                        min={new Date().toISOString().split('T')[0]}
+                                        value={data.date}
+                                        onChange={(e) => setData('date', e.target.value)}
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    />
+                                    {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500">Purpose</label>
+                                    <select
+                                        value={data.purpose}
+                                        onChange={(e) => setData('purpose', e.target.value)}
+                                        className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    >
+                                        <option value="">Select purpose</option>
+                                        <option value="meeting">Meeting</option>
+                                        <option value="delivery">Delivery</option>
+                                        <option value="maintenance">Maintenance</option>
+                                        <option value="interview">Interview</option>
+                                        <option value="event">Event</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                    {errors.purpose && <p className="mt-1 text-xs text-rose-500">{errors.purpose}</p>}
+                                </div>
+
+                                <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setInviteModalOpen(false)}
+                                        className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={processing}
+                                        className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
+                                    >
+                                        {processing ? 'Inviting...' : 'Invite Visitor'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </OrganizationLayout>
+    );
+}

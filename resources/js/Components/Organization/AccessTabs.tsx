@@ -3,11 +3,11 @@ import { Calendar, Clock, History, Users } from 'lucide-react';
 import React from 'react';
 
 interface Props {
-    activeTab: 'people' | 'arrivals' | 'history' | 'public_windows';
+    activeTab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows';
     hasPublicWindows?: boolean;
     pendingCount?: number;
     activeCount?: number;
-    onTabChange?: (tab: 'people' | 'arrivals' | 'history' | 'public_windows') => void;
+    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows') => void;
 }
 
 interface AccessTab {
@@ -29,6 +29,13 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
             mobileLabel: 'People',
             href: '/org/access-list',
             icon: Users,
+        },
+        {
+            id: 'visitors',
+            label: 'Visitors',
+            mobileLabel: 'Visitors',
+            href: '/org/visitors',
+            icon: Users, // Using the same icon for now, or something like UserPlus. Let's stick with Users.
         },
         {
             id: 'arrivals',
