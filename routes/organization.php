@@ -38,8 +38,8 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
 
     // Access: Arrivals & History
     Route::prefix('arrivals')->name('arrivals.')->group(function () {
-        Route::get('/', fn () => redirect()->route('org.access-list.index', ['tab' => 'arrivals']))->name('index');
-        Route::get('/history', fn () => redirect()->route('org.access-list.index', ['tab' => 'history']))->name('history');
+        Route::get('/', [ArrivalController::class, 'index'])->name('index');
+        Route::get('/history', [ArrivalController::class, 'history'])->name('history');
         Route::post('/{log}/confirm', [ArrivalController::class, 'confirm'])->name('confirm');
     });
 

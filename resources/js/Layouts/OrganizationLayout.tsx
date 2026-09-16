@@ -188,11 +188,11 @@ export default function OrganizationLayout({
                 </div>
             </header>
 
-            <main className={`w-full flex-1 px-3 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
+            <main className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
                 hideBottomNav
                     ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]'
-                    : 'pb-[calc(6.75rem+env(safe-area-inset-bottom,0px))]'
-            } sm:px-6 sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:px-10 lg:pb-12`}>
+                    : 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
+            } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:pb-12`}>
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 ${contentClassName}`}>
                         {props.flash?.success && (
@@ -214,14 +214,9 @@ export default function OrganizationLayout({
             {!hideBottomNav && (
                 <div
                     data-mobile-bottom-nav
-                    className="pointer-events-none fixed inset-x-0 bottom-[calc(0.8rem+env(safe-area-inset-bottom,0px))] z-40 px-3 transition-opacity duration-150 lg:hidden"
+                    className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/[0.96] pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl lg:hidden"
                 >
-                    <motion.nav
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="pointer-events-auto mx-auto w-full max-w-[26rem] rounded-[26px] border border-white/70 bg-white/[0.94] px-1.5 py-1.5 shadow-[0_16px_50px_rgba(15,23,42,0.16)] ring-1 ring-slate-900/5 backdrop-blur-xl"
-                    >
-                    <div className="grid grid-cols-5 items-center gap-1">
+                    <nav className="flex h-16 w-full items-center justify-between px-2">
                         {navItems.map((item) => {
                             const active = isActive(item);
                             const Icon = item.icon;
@@ -229,14 +224,14 @@ export default function OrganizationLayout({
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`group relative flex min-h-[52px] flex-col items-center justify-center gap-0.5 rounded-[20px] px-1 py-1.5 transition-all active:scale-95 ${
-                                        active ? 'bg-[#eaf2ff] text-[#0b4aa2]' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-colors active:opacity-70 ${
+                                        active ? 'text-[#0b4aa2]' : 'text-slate-400 hover:text-slate-600'
                                     }`}
                                 >
-                                    <Icon className="h-5 w-5 transition-colors" strokeWidth={active ? 2.4 : 1.9} />
+                                    <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
                                     <span
-                                        className={`max-w-full truncate text-[10px] leading-tight tracking-tight transition-colors ${
-                                            active ? 'font-bold text-[#082f6e]' : 'font-medium text-slate-500'
+                                        className={`text-[10px] tracking-tight ${
+                                            active ? 'font-bold' : 'font-medium'
                                         }`}
                                     >
                                         {item.name === 'Announcements' ? 'News' : item.name}
@@ -244,9 +239,8 @@ export default function OrganizationLayout({
                                 </Link>
                             );
                         })}
-                    </div>
-                </motion.nav>
-            </div>
+                    </nav>
+                </div>
             )}
         </div>
     );

@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationAccessMember;
 use App\Services\Organization\AccessMemberService;
-use App\Services\Organization\ArrivalService;
 use App\Services\OrganizationContextService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +17,6 @@ class AccessMemberController extends Controller
     public function __construct(
         private OrganizationContextService $contextService,
         private AccessMemberService $memberService,
-        private ArrivalService $arrivalService,
     ) {}
 
     public function index(Request $request): Response
@@ -29,9 +27,6 @@ class AccessMemberController extends Controller
 
         $filters = $request->only(['search', 'category', 'status', 'tab']);
         $members = $this->memberService->listMembers($organization, $filters);
-        $arrivals = $this->arrivalService->getActiveArrivals($organization);
-        $metrics = $this->arrivalService->getMetrics($organization);
-        $logs = $this->arrivalService->getArrivalHistory($organization, $request->only(['search', 'date', 'status']));
 
         $windows = $organization->access_policy === 'public_window'
             ? $organization->publicWindows()
@@ -64,9 +59,6 @@ class AccessMemberController extends Controller
                 'is_admin' => $membership->isAdmin(),
             ],
             'members' => $members,
-            'arrivals' => $arrivals,
-            'metrics' => $metrics,
-            'logs' => $logs,
             'windows' => $windows,
             'filters' => $filters,
             'initialTab' => $request->query('tab', 'people'),

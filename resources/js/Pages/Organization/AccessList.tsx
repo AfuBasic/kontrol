@@ -1,16 +1,12 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
-    Calendar,
     CalendarClock,
     Check,
-    CheckCircle2,
     ChevronRight,
     Clock,
     Copy,
     DoorOpen,
-    History,
-    MapPin,
     Plus,
     Radio,
     Search,
@@ -51,61 +47,7 @@ interface PaginatedMembers {
     links: Array<{ url: string | null; label: string; active: boolean }>;
 }
 
-interface Arrival {
-    id: number;
-    tag: string | null;
-    visitor_name: string;
-    admission_basis: string;
-    vehicle_plate_number: string | null;
-    vehicle_make: string | null;
-    vehicle_model: string | null;
-    entry_point: string | null;
-    verified_at: string | null;
-    verified_at_human: string | null;
-    confirmed_at: string | null;
-    confirmed_at_human: string | null;
-    confirmation_state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE';
-    is_overdue: boolean;
-    verified_by: { id: number; name: string } | null;
-    confirmed_by: { id: number; name: string } | null;
-    member: {
-        id: number;
-        name: string;
-        identifier: string | null;
-        category: string;
-    } | null;
-}
 
-interface Metrics {
-    currently_inside: number;
-    pending_confirmation: number;
-    overdue_confirmation: number;
-    confirmed: number;
-    confirmation_required: boolean;
-}
-
-interface HistoryLog {
-    id: number;
-    tag: string | null;
-    visitor_name: string;
-    admission_basis: string;
-    vehicle_plate_number: string | null;
-    entry_point: string | null;
-    verified_at: string | null;
-    verified_at_human: string | null;
-    checked_out_at: string | null;
-    checked_out_at_human: string | null;
-    confirmed_at: string | null;
-    confirmation_state: string;
-}
-
-interface PaginatedLogs {
-    data: HistoryLog[];
-    current_page: number;
-    last_page: number;
-    total: number;
-    links: Array<{ url: string | null; label: string; active: boolean }>;
-}
 
 interface PublicWindowItem {
     id: number;
@@ -132,9 +74,6 @@ interface Props {
         is_admin: boolean;
     };
     members: PaginatedMembers;
-    arrivals?: Arrival[];
-    metrics?: Metrics;
-    logs?: PaginatedLogs;
     windows?: PublicWindowItem[];
     filters: {
         search?: string;
@@ -204,67 +143,7 @@ export default function AccessList({
     const activeMembers = members.data.filter((member) => member.status === 'active').length;
     const suspendedMembers = members.data.filter((member) => member.status === 'suspended').length;
 
-    const pendingArrivals = arrivals.filter(
-        (arrival) => arrival.confirmation_state === 'PENDING' || arrival.confirmation_state === 'OVERDUE',
-    );
-    const confirmedArrivals = arrivals.filter(
-        (arrival) => arrival.confirmation_state !== 'PENDING' && arrival.confirmation_state !== 'OVERDUE',
-    );
-    const pendingTotal = (metrics?.pending_confirmation ?? 0) + (metrics?.overdue_confirmation ?? 0);
 
-    const initialsFor = (name: string) =>
-        name
-            .split(' ')
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((part) => part[0])
-            .join('')
-            .toUpperCase();
-
-    const arrivalDetailLine = (arrival: Arrival) => {
-        const parts = [
-            arrival.entry_point || 'Gate',
-            arrival.verified_at_human ? `arrived ${arrival.verified_at_human}` : 'arrived recently',
-            arrival.vehicle_plate_number ? arrival.vehicle_plate_number.toUpperCase() : null,
-        ].filter(Boolean);
-
-        return parts.join(' · ');
-    };
-
-    const formatDay = (isoString: string | null) => {
-        if (!isoString) {
-            return 'Earlier';
-        }
-
-        return new Date(isoString).toLocaleDateString('en-NG', {
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
-
-    const formatTime = (isoString: string | null) => {
-        if (!isoString) {
-            return '--:--';
-        }
-
-        return new Date(isoString).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-        });
-    };
-
-    const groupedLogs = (logs?.data ?? []).reduce<Record<string, HistoryLog[]>>((groups, log) => {
-        const key = formatDay(log.verified_at);
-        groups[key] = groups[key] || [];
-        groups[key].push(log);
-
-        return groups;
-    }, {});
-
-    const handleConfirmArrival = (id: number) => {
-        router.post(`/org/arrivals/${id}/confirm`, {}, { preserveScroll: true });
-    };
 
     const handleTabChange = (nextTab: 'people' | 'arrivals' | 'history' | 'public_windows') => {
         setActiveTab(nextTab);
@@ -365,157 +244,17 @@ export default function AccessList({
                 <AccessTabs
                     activeTab={activeTab}
                     hasPublicWindows={hasPublicWindows}
-                    pendingCount={pendingTotal}
-                    activeCount={arrivals.length}
                     onTabChange={handleTabChange}
                 />
 
-                {/* Tab Panel: Arrivals */}
-                {activeTab === 'arrivals' && (
-                    <div className="space-y-4">
-                        {/* Quiet Arrivals Summary */}
-                        <div className="flex items-center justify-between px-1 text-xs font-medium text-slate-500">
-                            <span>
-                                {arrivals.length} {arrivals.length === 1 ? 'VISITOR HERE' : 'VISITORS HERE'}
-                                {pendingTotal > 0 && ` · ${pendingTotal} need confirmation`}
-                            </span>
-                        </div>
 
-                        {arrivals.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 sm:p-10 text-center">
-                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                                    <ShieldCheck className="h-6 w-6" strokeWidth={1.75} />
-                                </div>
-                                <h2 className="mt-4 text-lg font-semibold text-slate-900">No active arrivals</h2>
-                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
-                                    Security has not checked anyone in for {organization.name}. When someone arrives at the gate, they will appear here.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {/* Needs confirmation section */}
-                                {pendingArrivals.length > 0 && (
-                                    <div className="space-y-2">
-                                        <div className="flex items-center gap-1.5 px-1 text-xs font-semibold text-amber-800">
-                                            <AlertTriangle className="h-3.5 w-3.5" />
-                                            <span>Needs confirmation ({pendingArrivals.length})</span>
-                                        </div>
-
-                                        <div className="divide-y divide-amber-100 overflow-hidden rounded-2xl border border-amber-200/90 bg-amber-50/40">
-                                            {pendingArrivals.map((arrival) => {
-                                                const isOverdue = arrival.confirmation_state === 'OVERDUE';
-                                                return (
-                                                    <div
-                                                        key={arrival.id}
-                                                        className="flex flex-col gap-3 p-3.5 sm:flex-row sm:items-center sm:justify-between sm:p-4"
-                                                    >
-                                                        <div className="flex min-w-0 items-center gap-3">
-                                                            <div
-                                                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                                                                    isOverdue
-                                                                        ? 'bg-rose-100 text-rose-800'
-                                                                        : 'bg-amber-100 text-amber-900'
-                                                                }`}
-                                                            >
-                                                                {initialsFor(arrival.visitor_name)}
-                                                            </div>
-                                                            <div className="min-w-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="truncate text-sm font-semibold text-slate-900">
-                                                                        {arrival.visitor_name}
-                                                                    </span>
-                                                                    <span
-                                                                        className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-medium ${
-                                                                            isOverdue
-                                                                                ? 'bg-rose-100 text-rose-800'
-                                                                                : 'bg-amber-100 text-amber-800'
-                                                                        }`}
-                                                                    >
-                                                                        {isOverdue ? 'Overdue' : 'Waiting'}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="mt-0.5 truncate text-xs text-slate-500">
-                                                                    {arrival.member?.category || arrival.admission_basis} · {arrivalDetailLine(arrival)}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => handleConfirmArrival(arrival.id)}
-                                                            className="inline-flex min-h-9 items-center justify-center gap-1.5 self-start rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:self-auto"
-                                                        >
-                                                            <Check className="h-3.5 w-3.5" />
-                                                            <span>Confirm arrival</span>
-                                                        </button>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Currently here / cleared section */}
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-1.5 px-1 text-xs font-semibold text-slate-700">
-                                        <Radio className="h-3.5 w-3.5 text-slate-500" />
-                                        <span>Currently here ({confirmedArrivals.length})</span>
-                                    </div>
-
-                                    {confirmedArrivals.length === 0 ? (
-                                        <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center text-xs text-slate-500">
-                                            No cleared arrivals yet. Pending visitors will move here once confirmed.
-                                        </div>
-                                    ) : (
-                                        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                            {confirmedArrivals.map((arrival) => (
-                                                <div
-                                                    key={arrival.id}
-                                                    className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
-                                                >
-                                                    <div className="flex min-w-0 items-center gap-3">
-                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
-                                                            {initialsFor(arrival.visitor_name)}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="truncate text-sm font-semibold text-slate-900">
-                                                                    {arrival.visitor_name}
-                                                                </span>
-                                                                <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
-                                                                    <UserCheck className="h-3 w-3" />
-                                                                    Cleared
-                                                                </span>
-                                                            </div>
-                                                            <p className="mt-0.5 truncate text-xs text-slate-500">
-                                                                {arrival.member?.name ? `${arrival.member.name} · ` : ''}
-                                                                {arrival.admission_basis} · {arrivalDetailLine(arrival)}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex shrink-0 items-center gap-2 text-xs text-slate-400">
-                                                        <span className="inline-flex items-center gap-1">
-                                                            <Clock className="h-3.5 w-3.5" />
-                                                            {arrival.verified_at_human || 'recently'}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Tab Panel: People */}
                 {activeTab === 'people' && (
                     <>
                         {members.total === 0 && !search && category === 'all' && status === 'all' ? (
                             /* Clean native empty state */
-                            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 sm:p-10 text-center">
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center sm:p-10">
                                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
                                     <Users className="h-6 w-6" strokeWidth={1.75} />
                                 </div>
@@ -541,7 +280,7 @@ export default function AccessList({
                             <div className="space-y-3.5">
                                 {/* Native Search Field - No heavy outer wrapper */}
                                 <div className="relative">
-                                    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <input
                                         type="search"
                                         value={search}
@@ -550,7 +289,7 @@ export default function AccessList({
                                             applyFilters({ search: event.target.value });
                                         }}
                                         placeholder="Search by name or ID"
-                                        className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
+                                        className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
                                     />
                                 </div>
 
@@ -592,9 +331,7 @@ export default function AccessList({
                                         {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
                                         {activeMembers > 0 && ` · ${activeMembers} active`}
                                     </span>
-                                    {suspendedMembers > 0 && (
-                                        <span className="text-rose-600">{suspendedMembers} suspended</span>
-                                    )}
+                                    {suspendedMembers > 0 && <span className="text-rose-600">{suspendedMembers} suspended</span>}
                                 </div>
 
                                 {/* People Directory List: Clean Rows with subtle dividers */}
@@ -647,9 +384,7 @@ export default function AccessList({
                                                     {/* Identity & Status */}
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2">
-                                                            <span className="truncate text-sm font-semibold text-slate-900">
-                                                                {member.name}
-                                                            </span>
+                                                            <span className="truncate text-sm font-semibold text-slate-900">{member.name}</span>
                                                             {member.status === 'suspended' ? (
                                                                 <span className="inline-flex shrink-0 items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
                                                                     Suspended
@@ -704,105 +439,7 @@ export default function AccessList({
                     </>
                 )}
 
-                {/* Tab Panel: History */}
-                {activeTab === 'history' && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between px-1 text-xs font-medium text-slate-500">
-                            <span>
-                                {logs?.total ?? 0} {(logs?.total ?? 0) === 1 ? 'RECORDED VISIT' : 'RECORDED VISITS'}
-                            </span>
-                        </div>
 
-                        {!logs || logs.data.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center sm:p-10">
-                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                                    <Clock className="h-6 w-6" strokeWidth={1.75} />
-                                </div>
-                                <h2 className="mt-4 text-lg font-semibold text-slate-900">No visits recorded yet</h2>
-                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
-                                    Once security logs arrivals and checkouts for {organization.name}, they will appear here as a chronological timeline.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                {Object.entries(groupedLogs).map(([date, dayLogs]) => (
-                                    <div key={date} className="space-y-2.5">
-                                        <div className="flex items-center justify-between px-1">
-                                            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{date}</span>
-                                            <span className="text-xs text-slate-400">
-                                                {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
-                                            </span>
-                                        </div>
-
-                                        <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                            {dayLogs.map((log) => {
-                                                const isHere = !log.checked_out_at;
-                                                const confirmed = Boolean(log.confirmed_at);
-
-                                                return (
-                                                    <div
-                                                        key={log.id}
-                                                        className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3 transition hover:bg-slate-50/70 sm:px-4"
-                                                    >
-                                                        <div className="flex min-w-0 items-center gap-3">
-                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-700">
-                                                                {initialsFor(log.visitor_name)}
-                                                            </div>
-
-                                                            <div className="min-w-0">
-                                                                <div className="flex items-center gap-2">
-                                                                    <span className="truncate text-sm font-semibold text-slate-900">
-                                                                        {log.visitor_name}
-                                                                    </span>
-                                                                    {log.tag && (
-                                                                        <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
-                                                                            {log.tag}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="mt-0.5 truncate text-xs text-slate-500">
-                                                                    <span>{log.admission_basis}</span>
-                                                                    <span> · {log.entry_point || 'Gate'}</span>
-                                                                    {log.vehicle_plate_number && (
-                                                                        <span> · {log.vehicle_plate_number.toUpperCase()}</span>
-                                                                    )}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex shrink-0 items-center gap-2">
-                                                            <div className="text-right">
-                                                                <div className="flex items-center justify-end gap-1.5">
-                                                                    <span
-                                                                        className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                                                            isHere
-                                                                                ? 'bg-emerald-50 text-emerald-700'
-                                                                                : 'bg-slate-100 text-slate-600'
-                                                                        }`}
-                                                                    >
-                                                                        {isHere ? 'Inside' : 'Departed'}
-                                                                    </span>
-                                                                    {confirmed && (
-                                                                        <span className="inline-flex items-center rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">
-                                                                            Confirmed
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                                <p className="mt-0.5 text-[11px] text-slate-400">
-                                                                    {formatTime(log.verified_at)}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Tab Panel: Public Times (Windows) */}
                 {activeTab === 'public_windows' && hasPublicWindows && (
@@ -837,9 +474,7 @@ export default function AccessList({
 
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="truncate text-sm font-semibold text-slate-900">
-                                                        {window.name}
-                                                    </span>
+                                                    <span className="truncate text-sm font-semibold text-slate-900">{window.name}</span>
                                                     {window.is_open_now && (
                                                         <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
                                                             Open now
@@ -848,7 +483,10 @@ export default function AccessList({
                                                 </div>
                                                 <p className="mt-0.5 truncate text-xs text-slate-500">
                                                     <span>{DAYS[window.day_of_week]}s</span>
-                                                    <span> · {window.start_time} - {window.end_time}</span>
+                                                    <span>
+                                                        {' '}
+                                                        · {window.start_time} - {window.end_time}
+                                                    </span>
                                                     {window.notes ? ` · ${window.notes}` : ''}
                                                 </p>
                                             </div>
