@@ -1,6 +1,5 @@
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
-import type { PageProps } from '@/types';
 import type { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import {
@@ -25,6 +24,7 @@ import React, { useState, useEffect } from 'react';
 import BulkInviteModal from './BulkInviteModal';
 import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import PassCard from '@/Components/Resident/PassCard';
 
 interface Organization {
     id: number;
@@ -41,14 +41,18 @@ interface VisitorPass {
     id: number;
     code: string;
     pass_uuid: string;
+    qr_token: string;
     visitor_name: string;
     visitor_phone: string | null;
     purpose: string;
-    type?: string;
+    type: string;
     status: 'active' | 'used' | 'revoked' | 'expired';
     starts_at: string;
     expires_at: string;
     created_at?: string;
+    arrival_time?: string | null;
+    arrival_date?: string | null;
+    expires_time?: string | null;
     access_logs?: AccessLog[];
 }
 
@@ -66,14 +70,14 @@ interface PaginatedData<T> {
     total: number;
 }
 
-interface Props extends PageProps {
+interface Props {
     organization: Organization;
     membership: { role: string; is_admin: boolean };
     visitors: PaginatedData<VisitorPass>;
     filters: { search: string | null };
 }
 
-export default function Visitors({ auth, organization, membership, visitors, filters }: Props) {
+export default function Visitors({ organization, membership, visitors, filters }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -172,11 +176,7 @@ export default function Visitors({ auth, organization, membership, visitors, fil
     };
 
     return (
-        <OrganizationLayout
-            user={auth.user}
-            header={<h2 className="text-xl leading-tight font-semibold text-slate-800">{organization.name}</h2>}
-            title="Visitors"
-        >
+        <OrganizationLayout title="Visitors">
             <Head title="Visitors - Organization" />
 
             <div className="mx-auto max-w-4xl py-2 sm:py-4">
@@ -324,125 +324,47 @@ export default function Visitors({ auth, organization, membership, visitors, fil
                 >
                     {selectedPass && (
                         <div className="space-y-6">
-                            {/* Visitor Header Hero */}
-                            <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-50 text-base font-bold text-indigo-700">
-                                            {selectedPass.visitor_name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <h4 className="text-lg font-bold text-slate-900">{selectedPass.visitor_name}</h4>
-                                            <p className="text-xs text-slate-500">
-                                                {selectedPass.visitor_phone || 'No phone number provided'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <span
-                                        className={`rounded-lg px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${
-                                            selectedPass.status === 'active'
-                                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                                                : selectedPass.status === 'used'
-                                                ? 'bg-slate-100 text-slate-700 ring-1 ring-slate-200'
-                                                : 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'
-                                        }`}
-                                    >
-                                        {selectedPass.status}
-                                    </span>
-                                </div>
+                            {/* Reusable Pass Card with visual QR Ticket */}
+                            <div className="mx-auto w-full max-w-sm">
+                                <PassCard
+                                    pass={{
+                                        ...selectedPass,
+                                        host_name: organization.name,
+                                        estate_name: organization.name,
+                                    }}
+                                    qrUrl={`kontrol://pass/${selectedPass.pass_uuid}?token=${selectedPass.qr_token}`}
+                                />
                             </div>
 
-                            {/* Pass Code Card */}
-                            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
-                                <div className="text-center">
-                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                                        Single-Use Access Code
-                                    </span>
-                                    <div className="mt-1 font-mono text-3xl font-black tracking-widest text-slate-900">
-                                        {selectedPass.code}
-                                    </div>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                        One-off gate pass. Expires automatically after first check-in or when the timeframe elapses.
-                                    </p>
-                                </div>
+                            {/* Action Buttons */}
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => copyCode(selectedPass)}
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-200 active:scale-95"
+                                >
+                                    {copiedCodeId === selectedPass.id ? (
+                                        <>
+                                            <Check className="h-4 w-4 text-emerald-600" />
+                                            <span>Link Copied</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="h-4 w-4 text-slate-500" />
+                                            <span>Copy Link</span>
+                                        </>
+                                    )}
+                                </button>
 
-                                <div className="mt-5 grid grid-cols-2 gap-2 border-t border-slate-100 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => copyCode(selectedPass)}
-                                        className="flex items-center justify-center gap-2 rounded-xl bg-slate-50 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 active:scale-95"
-                                    >
-                                        {copiedCodeId === selectedPass.id ? (
-                                            <>
-                                                <Check className="h-4 w-4 text-emerald-600" />
-                                                <span>Link Copied</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Copy className="h-4 w-4 text-slate-400" />
-                                                <span>Copy Link</span>
-                                            </>
-                                        )}
-                                    </button>
-
-                                    <a
-                                        href={`/pass/${selectedPass.pass_uuid}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 rounded-xl bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
-                                    >
-                                        <ExternalLink className="h-4 w-4" />
-                                        <span>View Digital Pass</span>
-                                    </a>
-                                </div>
-                            </div>
-
-                            {/* Timeframe & Validity */}
-                            <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50/50 p-5 text-sm">
-                                <h5 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                                    Validity Timeframe
-                                </h5>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 flex items-center gap-1.5">
-                                        <Calendar className="h-4 w-4 text-slate-400" />
-                                        Date
-                                    </span>
-                                    <span className="font-semibold text-slate-900">
-                                        {new Date(selectedPass.starts_at).toLocaleDateString(undefined, {
-                                            weekday: 'short',
-                                            year: 'numeric',
-                                            month: 'short',
-                                            day: 'numeric',
-                                        })}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 flex items-center gap-1.5">
-                                        <Clock className="h-4 w-4 text-slate-400" />
-                                        Time Window
-                                    </span>
-                                    <span className="font-semibold text-slate-900">
-                                        {formatTimeWindow(selectedPass.starts_at, selectedPass.expires_at)}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 flex items-center gap-1.5">
-                                        <Tag className="h-4 w-4 text-slate-400" />
-                                        Purpose
-                                    </span>
-                                    <span className="font-semibold text-slate-900 capitalize">
-                                        {selectedPass.purpose || 'General Visit'}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-slate-500 flex items-center gap-1.5">
-                                        <ShieldCheck className="h-4 w-4 text-slate-400" />
-                                        Pass Type
-                                    </span>
-                                    <span className="font-semibold text-slate-900">
-                                        Single-Use (One-time pass)
-                                    </span>
-                                </div>
+                                <a
+                                    href={`/pass/${selectedPass.pass_uuid}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-2 rounded-xl bg-indigo-50 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 active:scale-95"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                    <span>Public Pass</span>
+                                </a>
                             </div>
 
                             {/* Revoke Action */}
