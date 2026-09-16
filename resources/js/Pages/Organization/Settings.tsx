@@ -103,7 +103,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </Link>
                         <Link
-                            href="/resident/activity?tab=notifications"
+                            href="/org/notifications"
                             className="group flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Notifications</span>
