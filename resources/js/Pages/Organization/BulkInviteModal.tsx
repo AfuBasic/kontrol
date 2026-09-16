@@ -1,171 +1,264 @@
 import { useForm } from '@inertiajs/react';
-import { Plus, X, Trash2 } from 'lucide-react';
-import React from 'react';
+import { Mail, Calendar, RefreshCw, X, AlertCircle, Sparkles } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 
 interface Props {
     isOpen: boolean;
     onClose: () => void;
 }
 
+const MAX_RECIPIENTS = 20;
+
 export default function BulkInviteModal({ isOpen, onClose }: Props) {
+    const today = new Date().toISOString().split('T')[0];
+    const defaultEnd = new Date(Date.now() + 29 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+    const [emailInput, setEmailInput] = useState('');
+
     const { data, setData, post, processing, errors, reset } = useForm({
-        date: new Date().toISOString().split('T')[0],
+        name: '',
         purpose: '',
-        visitors: [{ visitor_name: '', visitor_phone: '' }],
+        emails: [] as string[],
+        valid_from: today,
+        valid_until: defaultEnd,
+        auto_renew: false,
     });
 
-    if (!isOpen) return null;
+    const parsedEmails = useMemo(() => {
+        if (!emailInput.trim()) return [];
+        const raw = emailInput
+            .split(/[\n,;]+/)
+            .map((e) => e.trim().toLowerCase())
+            .filter(Boolean);
+        return Array.from(new Set(raw));
+    }, [emailInput]);
 
-    const handleAddVisitor = () => {
-        setData('visitors', [...data.visitors, { visitor_name: '', visitor_phone: '' }]);
+    const isValidEmail = (email: string) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     };
 
-    const handleRemoveVisitor = (index: number) => {
-        if (data.visitors.length > 1) {
-            setData('visitors', data.visitors.filter((_, i) => i !== index));
-        }
+    const validEmails = useMemo(() => parsedEmails.filter(isValidEmail), [parsedEmails]);
+    const invalidEmails = useMemo(() => parsedEmails.filter((e) => !isValidEmail(e)), [parsedEmails]);
+
+    const handleApplyEmails = () => {
+        const combined = Array.from(new Set([...data.emails, ...validEmails])).slice(0, MAX_RECIPIENTS);
+        setData('emails', combined);
+        setEmailInput('');
     };
 
-    const handleVisitorChange = (index: number, field: 'visitor_name' | 'visitor_phone', value: string) => {
-        const newVisitors = [...data.visitors];
-        newVisitors[index][field] = value;
-        setData('visitors', newVisitors);
+    const handleRemoveEmail = (emailToRemove: string) => {
+        setData(
+            'emails',
+            data.emails.filter((e) => e !== emailToRemove)
+        );
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/org/visitors/bulk', {
+        const finalEmails = data.emails.length > 0 ? data.emails : validEmails.slice(0, MAX_RECIPIENTS);
+
+        if (finalEmails.length === 0) return;
+
+        post('/org/bulk-invites', {
+            data: {
+                ...data,
+                emails: finalEmails,
+            },
             preserveScroll: true,
             onSuccess: () => {
                 onClose();
                 reset();
+                setEmailInput('');
             },
         });
     };
 
+    if (!isOpen) return null;
+
+    const currentRecipientsCount = data.emails.length > 0 ? data.emails.length : validEmails.length;
+    const isOverLimit = currentRecipientsCount > MAX_RECIPIENTS;
+
     return (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 p-3 backdrop-blur-xs sm:items-center sm:p-4">
-            <div className="max-h-[88vh] w-full max-w-2xl flex flex-col overflow-hidden rounded-3xl bg-white shadow-xl sm:rounded-2xl">
-                <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-6 pb-4">
-                    <div>
-                        <h3 className="text-base font-semibold text-slate-950">Bulk Invite Visitors</h3>
-                        <p className="mt-0.5 text-xs text-slate-500">Create multiple temporary passes sharing the same date and purpose.</p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                </div>
+        <ResponsiveSheet isOpen={isOpen} onClose={onClose} title="Bulk Visitor Invite">
+            <div className="flex h-full flex-col">
+                <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+                    <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-6">
+                        <p className="mb-6 text-sm text-slate-500">
+                            Issue individual passes to up to 20 visitor emails with optional 30-day auto-renewal.
+                        </p>
 
-                <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                    <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                        {/* Shared Details */}
-                        <div className="grid gap-4 sm:grid-cols-2 bg-slate-50 p-4 rounded-xl border border-slate-100">
-                            <div>
-                                <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                    Visit Date <span className="text-rose-500">*</span>
-                                </label>
-                                <input
-                                    type="date"
-                                    required
-                                    min={new Date().toISOString().split('T')[0]}
-                                    value={data.date}
-                                    onChange={(e) => setData('date', e.target.value)}
-                                    className="mt-2 block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:leading-6"
-                                />
-                                {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
+                        <div className="space-y-6">
+                            {/* Invite Name & Purpose */}
+                            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 space-y-4">
+                                <div>
+                                    <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                        Batch / List Name (Optional)
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. VIP Conference Guests, Vendor Team"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    />
+                                    {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
+                                </div>
+                                <div>
+                                    <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                        Purpose
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g. Client Onsite Workshop"
+                                        value={data.purpose}
+                                        onChange={(e) => setData('purpose', e.target.value)}
+                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    />
+                                    {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.purpose}</p>}
+                                </div>
                             </div>
 
+                            {/* Recipient Emails Area */}
                             <div>
-                                <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Purpose</label>
-                                <input
-                                    type="text"
-                                    placeholder="e.g. Annual Conference"
-                                    value={data.purpose}
-                                    onChange={(e) => setData('purpose', e.target.value)}
-                                    className="mt-2 block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:leading-6"
-                                />
-                                {errors.purpose && <p className="mt-1 text-xs text-rose-500">{errors.purpose}</p>}
-                            </div>
-                        </div>
+                                <div className="mb-2 flex items-center justify-between">
+                                    <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                        Recipient Emails <span className="text-rose-500">*</span>
+                                    </label>
+                                    <span className={`text-xs font-semibold ${isOverLimit ? 'text-rose-600 font-bold' : 'text-slate-500'}`}>
+                                        {currentRecipientsCount} / {MAX_RECIPIENTS} max
+                                    </span>
+                                </div>
 
-                        {/* Dynamic Visitors List */}
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                    Visitors List
-                                </label>
+                                <textarea
+                                    rows={4}
+                                    placeholder="Paste recipient emails here (one per line, or comma-separated)..."
+                                    value={emailInput}
+                                    onChange={(e) => setEmailInput(e.target.value)}
+                                    className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                />
+
+                                {validEmails.length > 0 && emailInput && (
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <span className="text-xs text-slate-500">
+                                            Found {validEmails.length} valid {validEmails.length === 1 ? 'email' : 'emails'}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={handleApplyEmails}
+                                            className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                                        >
+                                            Add to list
+                                        </button>
+                                    </div>
+                                )}
+
+                                {invalidEmails.length > 0 && (
+                                    <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-600">
+                                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                                        <span>Invalid email format: {invalidEmails.slice(0, 3).join(', ')}{invalidEmails.length > 3 ? '...' : ''}</span>
+                                    </div>
+                                )}
+
+                                {data.emails.length > 0 && (
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {data.emails.map((email) => (
+                                            <span
+                                                key={email}
+                                                className="inline-flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-800"
+                                            >
+                                                {email}
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveEmail(email)}
+                                                    className="text-slate-400 hover:text-rose-500"
+                                                >
+                                                    <X className="h-3.5 w-3.5" />
+                                                </button>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {errors.emails && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.emails}</p>}
+                            </div>
+
+                            {/* Validity Period (1 - 30 days) */}
+                            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+                                <div className="mb-3 flex items-center gap-2">
+                                    <Calendar className="h-4 w-4 text-slate-500" />
+                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Pass Validity Period</h4>
+                                </div>
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Valid From</label>
+                                        <input
+                                            type="date"
+                                            min={today}
+                                            value={data.valid_from}
+                                            onChange={(e) => setData('valid_from', e.target.value)}
+                                            className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-slate-900"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Valid Until (Max 30 Days)</label>
+                                        <input
+                                            type="date"
+                                            min={data.valid_from}
+                                            value={data.valid_until}
+                                            onChange={(e) => setData('valid_until', e.target.value)}
+                                            className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-slate-900"
+                                        />
+                                    </div>
+                                </div>
+                                {errors.valid_until && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.valid_until}</p>}
+                            </div>
+
+                            {/* Auto-renew Toggle */}
+                            <div className="flex items-start justify-between rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
+                                <div className="space-y-1 pr-4">
+                                    <div className="flex items-center gap-2">
+                                        <RefreshCw className="h-4 w-4 text-indigo-600" />
+                                        <span className="text-sm font-bold text-slate-900">Auto-renew this list</span>
+                                    </div>
+                                    <p className="text-xs text-slate-600 leading-relaxed">
+                                        Automatically issue and email a new 30-day pass to active recipients 24 hours before each cycle expires (requires active Estate subscription).
+                                    </p>
+                                </div>
                                 <button
                                     type="button"
-                                    onClick={handleAddVisitor}
-                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 hover:text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md transition"
+                                    role="switch"
+                                    aria-checked={data.auto_renew}
+                                    onClick={() => setData('auto_renew', !data.auto_renew)}
+                                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                                        data.auto_renew ? 'bg-indigo-600' : 'bg-slate-200'
+                                    }`}
                                 >
-                                    <Plus className="h-3 w-3" />
-                                    Add row
+                                    <span
+                                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                            data.auto_renew ? 'translate-x-5' : 'translate-x-0'
+                                        }`}
+                                    />
                                 </button>
                             </div>
-
-                            <div className="space-y-3">
-                                {data.visitors.map((visitor, index) => (
-                                    <div key={index} className="flex items-start gap-3">
-                                        <div className="flex-1">
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="Visitor Name *"
-                                                value={visitor.visitor_name}
-                                                onChange={(e) => handleVisitorChange(index, 'visitor_name', e.target.value)}
-                                                className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:leading-6"
-                                            />
-                                            {errors[`visitors.${index}.visitor_name` as keyof typeof errors] && (
-                                                <p className="mt-1 text-xs text-rose-500">
-                                                    {errors[`visitors.${index}.visitor_name` as keyof typeof errors]}
-                                                </p>
-                                            )}
-                                        </div>
-                                        <div className="flex-1">
-                                            <input
-                                                type="tel"
-                                                placeholder="Phone (optional)"
-                                                value={visitor.visitor_phone}
-                                                onChange={(e) => handleVisitorChange(index, 'visitor_phone', e.target.value)}
-                                                className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-inset focus:ring-slate-900 sm:leading-6"
-                                            />
-                                            {errors[`visitors.${index}.visitor_phone` as keyof typeof errors] && (
-                                                <p className="mt-1 text-xs text-rose-500">
-                                                    {errors[`visitors.${index}.visitor_phone` as keyof typeof errors]}
-                                                </p>
-                                            )}
-                                        </div>
-                                        {data.visitors.length > 1 && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRemoveVisitor(index)}
-                                                className="mt-1 p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition"
-                                                title="Remove Visitor"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                            {errors.auto_renew && <p className="text-xs font-medium text-rose-500">{errors.auto_renew}</p>}
                         </div>
                     </div>
 
-                    <div className="border-t border-slate-100 p-6 bg-slate-50 shrink-0">
+                    <div className="shrink-0 border-t border-slate-100 p-5 sm:px-6">
                         <button
                             type="submit"
-                            disabled={processing}
-                            className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:opacity-50"
+                            disabled={processing || currentRecipientsCount === 0 || isOverLimit}
+                            className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
                         >
-                            {processing ? 'Generating Passes...' : `Generate ${data.visitors.length} ${data.visitors.length === 1 ? 'Pass' : 'Passes'}`}
+                            {processing
+                                ? 'Generating Passes...'
+                                : `Generate ${currentRecipientsCount} ${currentRecipientsCount === 1 ? 'Pass' : 'Passes'}`}
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </ResponsiveSheet>
     );
 }
+
