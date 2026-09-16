@@ -26,18 +26,21 @@ class NotificationController extends Controller
         $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
         $user = $request->user();
 
+        $readStatus = $request->input('read_status') ?? $request->input('type') ?? 'all';
+        $sort = $request->input('sort') === 'oldest' ? 'asc' : 'desc';
+
         // Scope notifications: either tied to this organization, this estate, or user level notifications
         $notifications = $user->notifications()
             ->when($request->search, function ($query, $search) {
                 $query->where('data', 'like', "%{$search}%");
             })
-            ->when($request->type === 'unread', function ($query) {
+            ->when($readStatus === 'unread', function ($query) {
                 $query->whereNull('read_at');
             })
-            ->when($request->type === 'read', function ($query) {
+            ->when($readStatus === 'read', function ($query) {
                 $query->whereNotNull('read_at');
             })
-            ->latest()
+            ->orderBy('created_at', $sort)
             ->paginate(15)
             ->withQueryString();
 
@@ -56,7 +59,11 @@ class NotificationController extends Controller
             ],
             'notifications' => $notifications,
             'unreadCount' => $unreadCount,
-            'filters' => $request->only(['search', 'type']),
+            'filters' => [
+                'search' => $request->input('search', ''),
+                'read_status' => $readStatus,
+                'sort' => $request->input('sort', 'latest'),
+            ],
         ]);
     }
 
