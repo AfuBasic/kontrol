@@ -1,7 +1,19 @@
-import { Head, useForm, router, usePage, Link } from '@inertiajs/react';
-import { ChevronRight, LogOut, Trash2, X } from 'lucide-react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import {
+    AlertCircle,
+    Bell,
+    Building2,
+    Check,
+    ChevronDown,
+    ChevronRight,
+    LogOut,
+    Plus,
+    X,
+} from 'lucide-react';
 import React, { useState } from 'react';
+import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 
 interface StaffMember {
     id: number;
@@ -37,7 +49,7 @@ export default function Settings({ organization, membership, staff }: Props) {
     const auth = (page.props as any).auth || {};
     const user = auth.user || {};
 
-    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'preferences' | 'help' | null>(null);
+    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'preferences' | 'help' | 'signout' | 'personal' | null>(null);
 
     const policyForm = useForm({
         arrival_confirmation_required: organization.arrival_confirmation_required,
@@ -95,13 +107,14 @@ export default function Settings({ organization, membership, staff }: Props) {
                 <section className="space-y-3">
                     <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Account</h2>
                     <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
-                        <Link
-                            href="/resident/profile"
-                            className="group flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal('personal')}
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-slate-900">Personal information</span>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
-                        </Link>
+                        </button>
                         <Link
                             href="/org/notifications"
                             className="group flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
@@ -125,14 +138,6 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => setActiveModal('team')}
-                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
-                        >
-                            <span className="text-sm font-bold text-slate-900">Team</span>
-                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
-                        </button>
 
                         {!organization.is_unrestricted && membership.is_admin && (
                             <button
@@ -160,264 +165,303 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </button>
 
-                        <Link
-                            href="/logout"
-                            method="post"
-                            as="button"
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal('signout')}
                             className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-rose-50/50 sm:p-5"
                         >
                             <span className="text-sm font-bold text-rose-600">Sign out</span>
                             <LogOut className="h-4 w-4 text-rose-400" />
-                        </Link>
+                        </button>
                     </div>
                 </section>
 
                 {/* FOCUSED MODAL: ORGANIZATION DETAILS */}
-                {activeModal === 'details' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
-                        <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h3 className="text-base font-bold text-slate-900">Organization Details</h3>
-                                <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-3 py-2 text-xs sm:text-sm">
-                                <div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase">Name</span>
-                                    <p className="mt-0.5 font-bold text-slate-900">{organization.name}</p>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase">Estate</span>
-                                    <p className="mt-0.5 font-bold text-slate-900">{organization.estate_name || 'Estate'}</p>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase">Category</span>
-                                    <p className="mt-0.5 font-bold text-slate-900 capitalize">{organization.type}</p>
-                                </div>
-                                <div>
-                                    <span className="text-xs font-bold text-slate-400 uppercase">Policy Setup</span>
-                                    <p className="mt-0.5 font-bold text-slate-900">
-                                        {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end border-t border-slate-100 pt-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveModal(null)}
-                                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                {/* FOCUSED MODAL: ORGANIZATION DETAILS */}
+                <ResponsiveSheet isOpen={activeModal === 'details'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Organization Details</h3>
                         </div>
                     </div>
-                )}
+
+                    <div className="space-y-4 pt-4 text-xs sm:text-sm">
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Name</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{organization.name}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Estate</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{organization.estate_name || 'Estate'}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{organization.type}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Policy Setup</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </ResponsiveSheet>
+
+                {/* FOCUSED MODAL: PERSONAL INFORMATION */}
+                <ResponsiveSheet isOpen={activeModal === 'personal'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Personal Information</h3>
+                            <p className="mt-1 text-sm text-slate-500">Your account details across Kontrol.</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4 text-xs sm:text-sm">
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Full Name</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{user.name}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Email Address</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{user.email}</p>
+                        </div>
+                        {user.phone && (
+                            <div>
+                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Phone</span>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">{user.phone}</p>
+                            </div>
+                        )}
+                        <div>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{membership.role || 'Member'}</p>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </ResponsiveSheet>
 
                 {/* FOCUSED MODAL: TEAM */}
-                {activeModal === 'team' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
-                        <div className="max-h-[85vh] w-full max-w-md space-y-4 overflow-y-auto rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h3 className="text-base font-bold text-slate-900">Team Members</h3>
-                                <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            {membership.is_admin && (
-                                <form noValidate onSubmit={handleInviteStaff} className="space-y-2 border-b border-slate-100 pt-1 pb-3">
-                                    <span className="text-xs font-bold text-slate-700">Invite someone</span>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            inputMode="email"
-                                            placeholder="colleague@example.com"
-                                            value={inviteForm.data.email}
-                                            onChange={(e) => inviteForm.setData('email', e.target.value)}
-                                            className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-xs focus:ring-1 focus:ring-slate-900 focus:outline-none"
-                                        />
-                                        <select
-                                            value={inviteForm.data.role}
-                                            onChange={(e) => inviteForm.setData('role', e.target.value)}
-                                            className="rounded-xl border border-slate-200 px-2 py-2 text-xs capitalize focus:outline-none"
-                                        >
-                                            <option value="member">Staff</option>
-                                            <option value="admin">Admin</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            type="submit"
-                                            disabled={inviteForm.processing}
-                                            className="rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-bold text-white disabled:opacity-50"
-                                        >
-                                            {inviteForm.processing ? 'Inviting...' : 'Invite'}
-                                        </button>
-                                    </div>
-                                </form>
-                            )}
-
-                            <div className="divide-y divide-slate-100 py-1">
-                                {staff.map((member) => (
-                                    <div key={member.id} className="flex items-center justify-between gap-3 py-2.5">
-                                        <div>
-                                            <p className="text-xs font-bold text-slate-900 sm:text-sm">{member.name}</p>
-                                            <p className="text-xs text-slate-400">{member.email}</p>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 capitalize">
-                                                {member.role}
-                                            </span>
-                                            {membership.is_admin && member.user_id !== user.id && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleRemoveStaff(member.id)}
-                                                    className="p-1 text-slate-400 hover:text-rose-600"
-                                                    title="Remove"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="flex justify-end border-t border-slate-100 pt-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveModal(null)}
-                                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
-                                >
-                                    Done
-                                </button>
-                            </div>
+                {/* FOCUSED MODAL: TEAM */}
+                <ResponsiveSheet isOpen={activeModal === 'team'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Team Members</h3>
                         </div>
                     </div>
-                )}
 
-                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
-                {activeModal === 'preferences' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
-                        <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h3 className="text-base font-bold text-slate-900">Arrival Preferences</h3>
-                                <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleUpdatePolicy} className="space-y-4 pt-1 text-xs sm:text-sm">
-                                <label className="flex cursor-pointer items-start gap-3">
+                    <div className="pt-4">
+                        {membership.is_admin && (
+                            <form noValidate onSubmit={handleInviteStaff} className="mb-4 space-y-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                                <span className="block text-xs font-semibold text-slate-900">Invite someone</span>
+                                <div className="flex gap-2">
                                     <input
-                                        type="checkbox"
-                                        checked={policyForm.data.arrival_confirmation_required}
-                                        onChange={(e) => policyForm.setData('arrival_confirmation_required', e.target.checked)}
-                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                                        type="text"
+                                        inputMode="email"
+                                        placeholder="colleague@example.com"
+                                        value={inviteForm.data.email}
+                                        onChange={(e) => inviteForm.setData('email', e.target.value)}
+                                        className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:ring-1 focus:ring-slate-900 focus:outline-none"
                                     />
-                                    <div>
-                                        <span className="font-bold text-slate-900">Confirm visitor arrivals</span>
-                                        <p className="mt-0.5 text-xs text-slate-500">Ask team to confirm when visitors reach your reception desk.</p>
-                                    </div>
-                                </label>
-
-                                {policyForm.data.arrival_confirmation_required && (
-                                    <div className="space-y-3 pt-2">
-                                        <div>
-                                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-700 uppercase">
-                                                How long should we wait?
-                                            </label>
-                                            <select
-                                                value={policyForm.data.confirmation_window_minutes}
-                                                onChange={(e) => policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))}
-                                                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs focus:outline-none"
-                                            >
-                                                <option value={10}>10 minutes</option>
-                                                <option value={15}>15 minutes</option>
-                                                <option value={30}>30 minutes</option>
-                                                <option value={45}>45 minutes</option>
-                                                <option value={60}>1 hour</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="mb-1 block text-xs font-bold tracking-wider text-slate-700 uppercase">
-                                                If unconfirmed
-                                            </label>
-                                            <select
-                                                value={policyForm.data.confirmation_escalation}
-                                                onChange={(e) => policyForm.setData('confirmation_escalation', e.target.value)}
-                                                className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs focus:outline-none"
-                                            >
-                                                <option value="alert_only">Highlight on dashboard only</option>
-                                                <option value="flag_security">Flag for security gate</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveModal(null)}
-                                        className="rounded-xl px-4 py-2 text-xs font-bold text-slate-500"
+                                    <select
+                                        value={inviteForm.data.role}
+                                        onChange={(e) => inviteForm.setData('role', e.target.value)}
+                                        className="rounded-xl border border-slate-200 px-2 py-2 text-sm capitalize focus:outline-none"
                                     >
-                                        Cancel
-                                    </button>
+                                        <option value="member">Staff</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
+                                </div>
+                                <div className="flex justify-end pt-1">
                                     <button
                                         type="submit"
-                                        disabled={policyForm.processing}
-                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
+                                        disabled={inviteForm.processing}
+                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
                                     >
-                                        {policyForm.processing ? 'Saving...' : 'Save'}
+                                        {inviteForm.processing ? 'Inviting...' : 'Invite Member'}
                                     </button>
                                 </div>
                             </form>
+                        )}
+
+                        <div className="divide-y divide-slate-100">
+                            {staff.map((member) => (
+                                <div key={member.id} className="flex items-center justify-between gap-3 py-3">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">{member.name}</p>
+                                        <p className="text-xs text-slate-500">{member.email}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 capitalize">
+                                            {member.role}
+                                        </span>
+                                        {membership.is_admin && member.user_id !== user.id && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveStaff(member.id)}
+                                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                                                title="Remove"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                )}
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </ResponsiveSheet>
+
+                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
+                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
+                <ResponsiveSheet isOpen={activeModal === 'preferences'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Arrival Preferences</h3>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleUpdatePolicy} className="mt-5 space-y-5">
+                        <label className="flex cursor-pointer items-start gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                            <input
+                                type="checkbox"
+                                checked={policyForm.data.arrival_confirmation_required}
+                                onChange={(e) => policyForm.setData('arrival_confirmation_required', e.target.checked)}
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <div>
+                                <span className="block text-sm font-semibold text-slate-900">Confirm visitor arrivals</span>
+                                <p className="mt-1 text-xs text-slate-500">Ask team to confirm when visitors reach your reception desk.</p>
+                            </div>
+                        </label>
+
+                        {policyForm.data.arrival_confirmation_required && (
+                            <div className="space-y-4 pt-2">
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        How long should we wait?
+                                    </label>
+                                    <select
+                                        value={policyForm.data.confirmation_window_minutes}
+                                        onChange={(e) => policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))}
+                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                                    >
+                                        <option value={10}>10 minutes</option>
+                                        <option value={15}>15 minutes</option>
+                                        <option value={30}>30 minutes</option>
+                                        <option value={45}>45 minutes</option>
+                                        <option value={60}>1 hour</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        If unconfirmed
+                                    </label>
+                                    <select
+                                        value={policyForm.data.confirmation_escalation}
+                                        onChange={(e) => policyForm.setData('confirmation_escalation', e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                                    >
+                                        <option value="alert_only">Highlight on dashboard only</option>
+                                        <option value="flag_security">Flag for security gate</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setActiveModal(null)}
+                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={policyForm.processing}
+                                className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
+                            >
+                                {policyForm.processing ? 'Saving...' : 'Save Preferences'}
+                            </button>
+                        </div>
+                    </form>
+                </ResponsiveSheet>
 
                 {/* FOCUSED MODAL: HELP & SUPPORT */}
-                {activeModal === 'help' && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
-                        <div className="w-full max-w-md space-y-4 rounded-3xl bg-white p-6 text-sm shadow-xl sm:p-7">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                                <h3 className="text-base font-bold text-slate-900">Help & Support</h3>
-                                <button onClick={() => setActiveModal(null)} className="p-1 text-slate-400 hover:text-slate-800">
-                                    <X className="h-5 w-5" />
-                                </button>
-                            </div>
-
-                            <p className="text-xs text-slate-600 sm:text-sm">
-                                For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office
-                                or Kontrol support.
-                            </p>
-
-                            <div className="space-y-2 py-2 text-xs">
-                                <a
-                                    href="mailto:support@kontrol.app"
-                                    className="block rounded-2xl bg-slate-50 p-3 font-bold text-slate-900 transition-colors hover:bg-slate-100"
-                                >
-                                    Email Kontrol Support (support@kontrol.app)
-                                </a>
-                            </div>
-
-                            <div className="flex justify-end border-t border-slate-100 pt-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setActiveModal(null)}
-                                    className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white"
-                                >
-                                    Close
-                                </button>
-                            </div>
+                {/* FOCUSED MODAL: HELP & SUPPORT */}
+                <ResponsiveSheet isOpen={activeModal === 'help'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Help & Support</h3>
                         </div>
                     </div>
-                )}
+
+                    <div className="space-y-4 pt-4">
+                        <p className="text-sm text-slate-600 leading-relaxed">
+                            For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office
+                            or Kontrol support.
+                        </p>
+
+                        <div className="pt-2">
+                            <a
+                                href="mailto:support@kontrol.app"
+                                className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50"
+                            >
+                                Email Kontrol Support
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </ResponsiveSheet>
+
+                {/* SIGN OUT CONFIRMATION MODAL */}
+                <ConfirmationSheet
+                    isOpen={activeModal === 'signout'}
+                    onClose={() => setActiveModal(null)}
+                    onConfirm={() => router.post('/logout')}
+                    title="Sign Out"
+                    message="Are you sure you want to sign out of your account? You will need to log in again to access Kontrol."
+                    confirmLabel="Sign out"
+                    type="danger"
+                />
             </div>
         </OrganizationLayout>
     );
