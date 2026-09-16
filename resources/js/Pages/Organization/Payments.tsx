@@ -78,12 +78,12 @@ export default function Payments({ organization, total_outstanding = 0, outstand
                             </span>
                         </div>
 
-                        <h1 className="mt-4 max-w-3xl text-[2rem] leading-none font-black sm:mt-5 sm:text-6xl">
+                        <h1 className="mt-4 max-w-3xl text-3xl leading-none font-black break-words sm:mt-5 sm:text-5xl lg:text-6xl">
                             {isAllCaughtUp ? 'No balance due' : formatCurrency(total_outstanding)}
                         </h1>
 
                         <p
-                            className={`mt-5 max-w-xl text-base leading-7 font-semibold sm:text-lg ${
+                            className={`mt-4 max-w-xl text-sm leading-6 font-semibold sm:mt-5 sm:text-base sm:leading-7 ${
                                 isAllCaughtUp ? 'text-slate-300' : 'text-slate-600'
                             }`}
                         >
@@ -99,16 +99,16 @@ export default function Payments({ organization, total_outstanding = 0, outstand
                         }`}
                     >
                         {isAllCaughtUp ? (
-                            <div className="flex h-full flex-col justify-between gap-8">
+                            <div className="flex h-full flex-col justify-between gap-6 sm:gap-8">
                                 <div>
                                     <p className="text-sm font-black text-white">Financial calm</p>
                                     <p className="mt-2 text-sm leading-6 font-semibold text-slate-300">
-                                        Receipts and past payments remain available below when they exist.
+                                        Receipts and past payments remain available below when recorded by the estate.
                                     </p>
                                 </div>
                                 <div className="rounded-[1.5rem] bg-white/10 p-4 ring-1 ring-white/10">
                                     <p className="text-sm font-bold text-slate-300">Outstanding</p>
-                                    <p className="mt-1 text-3xl font-black">{formatCurrency(0)}</p>
+                                    <p className="mt-1 text-2xl font-black sm:text-3xl">{formatCurrency(0)}</p>
                                 </div>
                             </div>
                         ) : (
@@ -124,14 +124,12 @@ export default function Payments({ organization, total_outstanding = 0, outstand
                                     </p>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={() => alert('Online payment checkout can be completed with the estate management office.')}
-                                    className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#0f172a] px-5 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.18)]"
-                                >
-                                    <CreditCard className="h-4 w-4" />
-                                    Pay {formatCurrency(total_outstanding)}
-                                </button>
+                                <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-3.5 text-xs leading-relaxed font-semibold text-amber-900">
+                                    <p className="font-bold">Settlement instructions</p>
+                                    <p className="mt-1 text-amber-800">
+                                        Payments are settled directly with the estate management office. Contact them to record and confirm this payment.
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -207,7 +205,10 @@ export default function Payments({ organization, total_outstanding = 0, outstand
                                     </div>
                                     <div className="flex items-center justify-between gap-3 sm:justify-end">
                                         <span className="text-lg font-black text-slate-950">{formatCurrency(item.amount_paid)}</span>
-                                        <span className="rounded-full bg-[#eaf2ff] px-2.5 py-1 text-[11px] font-black text-[#0b4aa2]">Receipt</span>
+                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                                            <CheckCircle2 className="h-3 w-3" />
+                                            Settled
+                                        </span>
                                     </div>
                                 </article>
                             ))}
