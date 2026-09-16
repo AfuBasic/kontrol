@@ -134,7 +134,7 @@ export default function OrganizationLayout({
 
                     <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                         <Link
-                            href="/resident/activity?tab=notifications"
+                            href="/org/notifications"
                             className="relative rounded-2xl p-2.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
                             title="Notifications"
                         >
