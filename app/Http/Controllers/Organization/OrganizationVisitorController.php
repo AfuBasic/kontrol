@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Organization;
 
+use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\EstateOrganization;
@@ -183,6 +184,37 @@ class OrganizationVisitorController extends Controller
         $request->session()->flash('bulk_passes', $createdPasses);
 
         return back()->with('success', count($createdPasses).' visitor passes created successfully.');
+    }
+
+    public function extend(Request $request, AccessCode $pass): RedirectResponse
+    {
+        /** @var EstateOrganization $organization */
+        $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
+        $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
+
+        if (! $membership->isAdmin() || $pass->organization_id !== $organization->id) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if ($pass->type === 'long_lived') {
+            return back()->withErrors(['duration_minutes' => 'Long-term passes cannot be extended.']);
+        }
+
+        $validated = $request->validate([
+            'duration_minutes' => ['required', 'integer', 'min:15'],
+        ]);
+
+        $minutes = (int) $validated['duration_minutes'];
+        $currentExpiresAt = $pass->expires_at ? Carbon::parse($pass->expires_at) : now();
+        $baseTime = $currentExpiresAt->isPast() ? now() : $currentExpiresAt;
+        $newExpiresAt = $baseTime->copy()->addMinutes($minutes);
+
+        $pass->update([
+            'expires_at' => $newExpiresAt,
+            'status' => AccessCodeStatus::Active->value,
+        ]);
+
+        return back()->with('success', 'Pass validity successfully extended.');
     }
 
     public function destroy(Request $request, AccessCode $pass): RedirectResponse
