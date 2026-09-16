@@ -4,7 +4,6 @@ import { PageProps } from '@/types';
 import { Head, router, useForm } from '@inertiajs/react';
 import { Calendar, Plus, Search, Tag, Users, Copy, Check, X, ShieldAlert } from 'lucide-react';
 import React, { useState } from 'react';
-import { toast } from 'sonner';
 
 interface Organization {
     id: number;
@@ -69,7 +68,6 @@ export default function Visitors({ auth, organization, membership, visitors, fil
         const link = `${window.location.origin}/pass/${pass.pass_uuid}`;
         navigator.clipboard.writeText(link);
         setCopiedCodeId(pass.id);
-        toast.success('Pass link copied to clipboard');
         setTimeout(() => setCopiedCodeId(null), 2000);
     };
 
@@ -80,7 +78,6 @@ export default function Visitors({ auth, organization, membership, visitors, fil
             onSuccess: () => {
                 setInviteModalOpen(false);
                 reset();
-                toast.success('Visitor invited successfully');
             },
         });
     };
@@ -90,7 +87,6 @@ export default function Visitors({ auth, organization, membership, visitors, fil
 
         router.delete(`/org/visitors/${passId}`, {
             preserveScroll: true,
-            onSuccess: () => toast.success('Pass revoked.'),
         });
     };
 
