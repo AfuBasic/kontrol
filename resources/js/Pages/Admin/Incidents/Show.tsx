@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Deferred, Head, Link, router } from '@inertiajs/react';
 import {
     ArrowLeft,
+    CheckCircle2,
     Clock,
     MapPin,
     Paperclip,
@@ -40,6 +41,7 @@ type ActivityEvent = {
 
 interface Props {
     incident: Incident;
+    canClose?: boolean;
     require_resolution_notes?: boolean;
     official_comments?: IncidentComment[];
     discussion_comments?: PaginatedData<IncidentComment>;
@@ -52,6 +54,7 @@ interface Props {
 
 export default function Show({
     incident,
+    canClose = false,
     require_resolution_notes = false,
     official_comments = [],
     discussion_comments,
@@ -154,6 +157,28 @@ export default function Show({
         );
     };
 
+    const handleClose = () => {
+        confirm({
+            title: 'Close this Incident?',
+            message:
+                'Are you satisfied that this issue has been fully resolved? Closing it will archive this case.',
+            confirmLabel: 'Yes, Close Incident',
+            cancelLabel: 'Keep Open',
+            type: 'info',
+            onConfirm: () => {
+                setIsUpdatingStatus(true);
+                router.post(
+                    `/admin/incidents/${incident.hashid}/close`,
+                    {},
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setIsUpdatingStatus(false),
+                    }
+                );
+            },
+        });
+    };
+
     // Official Update Submission
     const handlePostOfficialUpdate = (body: string) => {
         setSubmittingOfficial(true);
@@ -245,6 +270,17 @@ export default function Show({
                 </Link>
 
                 <div className="flex items-center gap-3">
+                    {canClose && (
+                        <button
+                            type="button"
+                            onClick={handleClose}
+                            disabled={isUpdatingStatus}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-900 bg-slate-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white transition-colors disabled:opacity-50"
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>{isUpdatingStatus ? 'Closing...' : 'Close Incident'}</span>
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={handleDelete}
@@ -335,6 +371,8 @@ export default function Show({
                         onAcknowledge={handleAcknowledge}
                         onBeginResolution={handleBeginResolution}
                         onOpenResolveModal={() => setIsResolveModalOpen(true)}
+                        onClose={handleClose}
+                        canClose={canClose}
                         isUpdatingStatus={isUpdatingStatus}
                     />
 
