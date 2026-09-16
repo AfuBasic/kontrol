@@ -28,23 +28,6 @@ class AccessMemberController extends Controller
         $filters = $request->only(['search', 'category', 'status', 'tab']);
         $members = $this->memberService->listMembers($organization, $filters);
 
-        $windows = $organization->access_policy === 'public_window'
-            ? $organization->publicWindows()
-                ->orderBy('day_of_week')
-                ->orderBy('start_time')
-                ->get()
-                ->map(fn ($w) => [
-                    'id' => $w->id,
-                    'name' => $w->name,
-                    'day_of_week' => $w->day_of_week,
-                    'start_time' => substr($w->start_time, 0, 5),
-                    'end_time' => substr($w->end_time, 0, 5),
-                    'is_active' => $w->is_active,
-                    'notes' => $w->notes,
-                    'is_open_now' => $w->isOpenAt(),
-                ])
-            : [];
-
         return Inertia::render('Organization/AccessList', [
             'organization' => [
                 'id' => $organization->id,
@@ -59,7 +42,6 @@ class AccessMemberController extends Controller
                 'is_admin' => $membership->isAdmin(),
             ],
             'members' => $members,
-            'windows' => $windows,
             'filters' => $filters,
             'initialTab' => $request->query('tab', 'people'),
         ]);

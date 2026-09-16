@@ -45,7 +45,7 @@ Route::middleware(['auth', 'org.membership'])->prefix('org')->name('org.')->grou
 
     // Access: Public Access Windows (for Public Window policies e.g. Churches)
     Route::prefix('public-windows')->name('public-windows.')->group(function () {
-        Route::get('/', fn () => redirect()->route('org.access-list.index', ['tab' => 'public_windows']))->name('index');
+        Route::get('/', [PublicWindowController::class, 'index'])->name('index');
         Route::post('/', [PublicWindowController::class, 'store'])->name('store');
         Route::patch('/{window}', [PublicWindowController::class, 'update'])->name('update');
         Route::delete('/{window}', [PublicWindowController::class, 'destroy'])->name('destroy');

@@ -79,9 +79,7 @@ interface Props {
         search?: string;
         category?: string;
         status?: string;
-        tab?: string;
     };
-    initialTab?: 'people' | 'arrivals' | 'history' | 'public_windows';
 }
 
 const categoryOptions = ['all', 'staff', 'parent', 'student', 'member', 'contractor', 'visitor'];
@@ -97,9 +95,7 @@ export default function AccessList({
     logs,
     windows = [],
     filters,
-    initialTab = 'people',
 }: Props) {
-    const [activeTab, setActiveTab] = useState<'people' | 'arrivals' | 'history' | 'public_windows'>(initialTab);
     const [createModalOpen, setCreateModalOpen] = useState(false);
     const [createWindowModalOpen, setCreateWindowModalOpen] = useState(false);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
@@ -123,21 +119,7 @@ export default function AccessList({
         issue_credential: true,
     });
 
-    const {
-        data: windowData,
-        setData: setWindowData,
-        post: postWindow,
-        processing: processingWindow,
-        errors: windowErrors,
-        reset: resetWindow,
-    } = useForm({
-        name: '',
-        day_of_week: 0,
-        start_time: '08:00',
-        end_time: '12:00',
-        is_active: true,
-        notes: '',
-    });
+
 
     const hasPublicWindows = organization.access_policy === 'public_window';
     const activeMembers = members.data.filter((member) => member.status === 'active').length;
@@ -145,17 +127,9 @@ export default function AccessList({
 
 
 
-    const handleTabChange = (nextTab: 'people' | 'arrivals' | 'history' | 'public_windows') => {
-        setActiveTab(nextTab);
-        const url = nextTab === 'people' ? '/org/access-list' : `/org/access-list?tab=${nextTab}`;
-        window.history.replaceState(null, '', url);
-    };
 
-    const handleDeleteWindow = (id: number) => {
-        if (confirm('Delete this public access time?')) {
-            router.delete(`/org/public-windows/${id}`, { preserveScroll: true });
-        }
-    };
+
+
 
     const applyFilters = (next?: { search?: string; category?: string; status?: string }) => {
         const query = {
@@ -190,16 +164,7 @@ export default function AccessList({
         });
     };
 
-    const handleCreateWindow = (e: React.FormEvent) => {
-        e.preventDefault();
 
-        postWindow('/org/public-windows', {
-            onSuccess: () => {
-                setCreateWindowModalOpen(false);
-                resetWindow();
-            },
-        });
-    };
 
     const copyCode = (code: string, id: number) => {
         navigator.clipboard.writeText(code);
@@ -217,34 +182,22 @@ export default function AccessList({
                     <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Access</h1>
                     {membership.is_admin && (
                         <div>
-                            {activeTab === 'public_windows' ? (
-                                <button
-                                    type="button"
-                                    onClick={() => setCreateWindowModalOpen(true)}
-                                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
-                                >
-                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
-                                    <span>Add time</span>
-                                </button>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => setCreateModalOpen(true)}
-                                    className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
-                                >
-                                    <Plus className="h-4 w-4" strokeWidth={2.25} />
-                                    <span>Add</span>
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={() => setCreateModalOpen(true)}
+                                className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] sm:min-h-10 sm:px-4 sm:text-sm"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                <span>Add</span>
+                            </button>
                         </div>
                     )}
                 </div>
 
                 {/* Internal Navigation: People, Arrivals, History, Public times */}
                 <AccessTabs
-                    activeTab={activeTab}
+                    activeTab="people"
                     hasPublicWindows={hasPublicWindows}
-                    onTabChange={handleTabChange}
                 />
 
 
@@ -441,73 +394,7 @@ export default function AccessList({
 
 
 
-                {/* Tab Panel: Public Times (Windows) */}
-                {activeTab === 'public_windows' && hasPublicWindows && (
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between px-1 text-xs font-medium text-slate-500">
-                            <span>
-                                {windows.length} {windows.length === 1 ? 'ACTIVE WINDOW' : 'ACTIVE WINDOWS'}
-                            </span>
-                        </div>
 
-                        {windows.length === 0 ? (
-                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center sm:p-10">
-                                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                                    <CalendarClock className="h-6 w-6" strokeWidth={1.75} />
-                                </div>
-                                <h2 className="mt-4 text-lg font-semibold text-slate-900">No public access times</h2>
-                                <p className="mx-auto mt-2 max-w-sm text-sm text-slate-500">
-                                    Define regular weekly windows when the estate gate should admit visitors without individual codes.
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                {windows.map((window) => (
-                                    <div
-                                        key={window.id}
-                                        className="flex min-h-[64px] items-center justify-between gap-3 px-3.5 py-3.5 transition hover:bg-slate-50/70 sm:px-4"
-                                    >
-                                        <div className="flex min-w-0 items-center gap-3">
-                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-700">
-                                                <DoorOpen className="h-5 w-5" strokeWidth={1.75} />
-                                            </div>
-
-                                            <div className="min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="truncate text-sm font-semibold text-slate-900">{window.name}</span>
-                                                    {window.is_open_now && (
-                                                        <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
-                                                            Open now
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <p className="mt-0.5 truncate text-xs text-slate-500">
-                                                    <span>{DAYS[window.day_of_week]}s</span>
-                                                    <span>
-                                                        {' '}
-                                                        · {window.start_time} - {window.end_time}
-                                                    </span>
-                                                    {window.notes ? ` · ${window.notes}` : ''}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        {membership.is_admin && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteWindow(window.id)}
-                                                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                                                title="Delete window"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
 
                 {/* Add Someone Sheet / Modal */}
                 {createModalOpen && (
