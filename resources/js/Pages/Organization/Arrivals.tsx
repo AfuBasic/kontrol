@@ -212,7 +212,7 @@ export default function Arrivals({ organization, arrivals, metrics }: Props) {
                                             }`}
                                         >
                                             <Check className="h-4 w-4" />
-                                            {isConfirming ? 'Confirming…' : 'Confirm arrival'}
+                                            {isConfirming ? 'Confirming...' : 'Confirm arrival'}
                                         </button>
                                     </article>
                                 );
@@ -370,7 +370,7 @@ export default function Arrivals({ organization, arrivals, metrics }: Props) {
                                                     }`}
                                                 >
                                                     <Check className="h-4 w-4" />
-                                                    {isConfirming ? 'Confirming…' : 'Confirm arrival'}
+                                                    {isConfirming ? 'Confirming...' : 'Confirm arrival'}
                                                 </button>
                                             </article>
                                         );
