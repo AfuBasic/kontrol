@@ -84,6 +84,7 @@ class AccessCode extends Model
         'estate_id',
         'organization_id',
         'organization_member_id',
+        'bulk_invite_recipient_id',
         'user_id',
         'code',
         'pass_uuid',
@@ -190,6 +191,14 @@ class AccessCode extends Model
     public function organizationMember(): BelongsTo
     {
         return $this->belongsTo(OrganizationAccessMember::class, 'organization_member_id');
+    }
+
+    /**
+     * @return BelongsTo<OrganizationBulkInviteRecipient, $this>
+     */
+    public function bulkInviteRecipient(): BelongsTo
+    {
+        return $this->belongsTo(OrganizationBulkInviteRecipient::class, 'bulk_invite_recipient_id');
     }
 
     /**
