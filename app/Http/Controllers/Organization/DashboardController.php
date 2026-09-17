@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Organization;
 use App\Http\Controllers\Controller;
 use App\Models\AccessLog;
 use App\Models\EstateOrganization;
+use App\Models\OrganizationAccessMember;
 use App\Models\Scopes\ZoneScope;
 use App\Services\Organization\ArrivalService;
 use App\Services\OrganizationContextService;
@@ -71,6 +72,8 @@ class DashboardController extends Controller
             ];
         });
 
+        $totalAccessMembers = OrganizationAccessMember::where('organization_id', $organization->id)->count();
+
         return Inertia::render('Organization/Dashboard', [
             'organization' => [
                 'id' => $organization->id,
@@ -86,6 +89,7 @@ class DashboardController extends Controller
                 'role' => $membership->role,
                 'is_admin' => $membership->isAdmin(),
             ],
+            'total_access_members' => $totalAccessMembers,
             'metrics' => $metrics,
             'recent_arrivals' => $activeArrivals->take(10)->values(),
             'pending_arrivals' => $pendingArrivals,

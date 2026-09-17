@@ -971,3 +971,116 @@ input::-webkit-calendar-picker-indicator {
     left: 0;
     z-index: 10;
 }
+
+/* ========================================= */
+/* GRAPHIC BACKGROUND AND CARD VISUAL SYSTEM */
+/* ========================================= */
+
+.app-atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      circle at 88% 8%,
+      rgba(37, 99, 235, 0.10),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 12% 42%,
+      rgba(96, 165, 250, 0.06),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      #F9FBFF 0%,
+      #F3F7FC 100%
+    );
+}
+
+.app-atmosphere::before {
+  content: "";
+  position: absolute;
+  top: 80px;
+  right: -120px;
+  width: 320px;
+  height: 320px;
+  border-radius: 9999px;
+  background: rgba(59, 130, 246, 0.08);
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+.app-atmosphere::after {
+  content: "";
+  position: absolute;
+  top: 430px;
+  left: -100px;
+  width: 260px;
+  height: 260px;
+  border-radius: 9999px;
+  background: rgba(147, 197, 253, 0.07);
+  filter: blur(70px);
+  pointer-events: none;
+}
+
+.brand-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      135deg,
+      #082B63 0%,
+      #0A3F83 55%,
+      #0C4F9B 100%
+    );
+  border-radius: 20px;
+  box-shadow:
+    0 12px 30px rgba(8, 43, 99, 0.16);
+}
+
+.brand-card::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  bottom: -90px;
+  width: 340px;
+  height: 180px;
+  border-radius: 50%;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(59, 130, 246, 0.18),
+      rgba(37, 99, 235, 0.04)
+    );
+  transform: rotate(-8deg);
+  pointer-events: none;
+}
+
+.soft-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(120, 145, 175, 0.10);
+  box-shadow: 0 8px 30px rgba(31, 64, 112, 0.07);
+  border-radius: 18px;
+}
+
+.icon-tile-blue {
+  background: linear-gradient(135deg, #EAF2FF 0%, #DDEAFF 100%);
+  color: #0b4aa2;
+}
+
+.icon-tile-mint {
+  background: linear-gradient(135deg, #EAF9F3 0%, #DDF5EB 100%);
+  color: #059669;
+}
+
+.icon-tile-amber {
+  background: linear-gradient(135deg, #FFF6E4 0%, #FFECC7 100%);
+  color: #d97706;
+}
+
+.icon-tile-lavender {
+  background: linear-gradient(135deg, #F2EDFF 0%, #E8E0FF 100%);
+  color: #7c3aed;
+}

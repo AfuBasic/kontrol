@@ -12,6 +12,7 @@ interface Props {
     contentClassName?: string;
     onRefresh?: () => void;
     hideBottomNav?: boolean;
+    transparentHeader?: boolean;
 }
 
 interface NavItem {
@@ -21,7 +22,14 @@ interface NavItem {
     exact?: boolean;
 }
 
-export default function OrganizationLayout({ children, title: _title, contentClassName = 'max-w-7xl', onRefresh, hideBottomNav = false }: Props) {
+export default function OrganizationLayout({
+    children,
+    title: _title,
+    contentClassName = 'max-w-7xl',
+    onRefresh,
+    hideBottomNav = false,
+    transparentHeader = false,
+}: Props) {
     const page = usePage();
     const { url } = page;
     const props = page.props as any;
@@ -95,7 +103,13 @@ export default function OrganizationLayout({ children, title: _title, contentCla
 
     return (
         <div className="flex min-h-screen flex-col bg-[#f6f8fb] font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
-            <header className="fixed inset-x-0 top-0 z-40 border-b border-slate-200/70 bg-white/[0.94] px-3 pt-[var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))] shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur-xl sm:px-6 lg:px-10">
+            <header
+                className={`fixed inset-x-0 top-0 z-40 px-3 pt-[var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))] sm:px-6 lg:px-10 ${
+                    transparentHeader
+                        ? 'bg-transparent border-transparent'
+                        : 'border-b border-slate-200/70 bg-white/[0.94] shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur-xl'
+                }`}
+            >
                 <div className="mx-auto flex h-16 w-full max-w-[96rem] items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3 sm:gap-5">
                         <Link href="/org" className="group flex shrink-0 items-center gap-2.5">
