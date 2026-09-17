@@ -3,14 +3,7 @@ import { ChevronRight } from 'lucide-react';
 import EmptyState from '@/Components/States/EmptyState';
 import VisitEventIcon from './VisitEventIcon';
 import { ACTIVITY_KINDS, resolveActivityKind } from './activityKinds';
-import {
-    buildActivityEvents,
-    groupEventsByDay,
-    hasActiveVisitorFilters,
-    type ActivityEvent,
-    type VisitorFilters,
-    type VisitorRecord,
-} from './types';
+import { buildActivityEvents, groupEventsByDay, hasActiveVisitorFilters, type ActivityEvent, type VisitorFilters, type VisitorRecord } from './types';
 
 type Props = {
     logs: VisitorRecord[];
