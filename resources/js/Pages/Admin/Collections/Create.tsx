@@ -58,9 +58,10 @@ export default function CreateCollection({ residents = [], zones = [], organizat
     const [orgSearchQuery, setOrgSearchQuery] = useState('');
 
     const filteredOrganizations = useMemo(() => {
-        return (organizations || []).filter((org) =>
-            org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()) ||
-            (org.type && org.type.toLowerCase().includes(orgSearchQuery.toLowerCase()))
+        return (organizations || []).filter(
+            (org) =>
+                org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()) ||
+                (org.type && org.type.toLowerCase().includes(orgSearchQuery.toLowerCase())),
         );
     }, [organizations, orgSearchQuery]);
 
@@ -127,15 +128,15 @@ export default function CreateCollection({ residents = [], zones = [], organizat
 
                 <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                     {/* Basic Information */}
-                    <div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm ring-1 ring-slate-100">
-                        <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
-                            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:rounded-[2.5rem] sm:p-10">
+                        <div className="mb-6 flex items-center gap-3 sm:mb-8 sm:gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-500 sm:h-12 sm:w-12">
                                 <Wallet className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
-                            <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Basic Information</h2>
+                            <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Basic Information</h2>
                         </div>
 
-                        <div className="grid gap-6 sm:gap-8 sm:grid-cols-2">
+                        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
                             <div className="sm:col-span-2">
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Collection Name</label>
                                 <input
@@ -146,7 +147,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                     autoComplete="on"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     placeholder="e.g., Annual Security Levy"
                                     required
                                 />
@@ -162,7 +163,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     placeholder="Briefly explain what this collection is for..."
                                 />
                                 {errors.description && <p className="mt-2 text-sm font-bold text-red-500">{errors.description}</p>}
@@ -193,15 +194,15 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                     </div>
 
                     {/* Schedule & Penalties */}
-                    <div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm ring-1 ring-slate-100">
-                        <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
-                            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:rounded-[2.5rem] sm:p-10">
+                        <div className="mb-6 flex items-center gap-3 sm:mb-8 sm:gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 sm:h-12 sm:w-12">
                                 <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
-                            <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Schedule & Rules</h2>
+                            <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Schedule & Rules</h2>
                         </div>
 
-                        <div className="grid gap-6 sm:gap-8 sm:grid-cols-2">
+                        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
                             {data.billing_type === 'recurring' && (
                                 <div>
                                     <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Interval</label>
@@ -222,7 +223,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                     type="date"
                                     value={data.start_date}
                                     onChange={(e) => setData('start_date', e.target.value)}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     required
                                 />
                                 {errors.start_date && <p className="mt-2 text-sm font-bold text-red-500">{errors.start_date}</p>}
@@ -235,7 +236,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                         type="date"
                                         value={data.due_at}
                                         onChange={(e) => setData('due_at', e.target.value)}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                         required
                                     />
                                     {errors.due_at && <p className="mt-2 text-sm font-bold text-red-500">{errors.due_at}</p>}
@@ -251,7 +252,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                         pattern="[0-9]*"
                                         value={data.due_day}
                                         onChange={(e) => setData('due_day', parseInt(e.target.value))}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                         min="1"
                                         max="28"
                                         required
@@ -270,7 +271,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                     pattern="[0-9]*"
                                     value={data.grace_days}
                                     onChange={(e) => setData('grace_days', parseInt(e.target.value))}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     min="0"
                                 />
                             </div>
@@ -287,13 +288,13 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                     </div>
 
                     {/* Targeting */}
-                    <div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm ring-1 ring-slate-100">
-                        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:rounded-[2.5rem] sm:p-10">
+                        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
                             <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 sm:h-12 sm:w-12">
                                     <Users className="h-5 w-5 sm:h-6 sm:w-6" />
                                 </div>
-                                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Target Audience</h2>
+                                <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Target Audience</h2>
                             </div>
                             <div className="w-full sm:w-56">
                                 <CustomSelect
@@ -354,9 +355,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                                         </div>
                                                         <div
                                                             className={`flex h-6 w-6 items-center justify-center rounded-full border transition-all ${
-                                                                isSelected
-                                                                    ? 'border-[#1F6FDB] bg-[#1F6FDB] text-white'
-                                                                    : 'border-slate-300 bg-white'
+                                                                isSelected ? 'border-[#1F6FDB] bg-[#1F6FDB] text-white' : 'border-slate-300 bg-white'
                                                             }`}
                                                         >
                                                             {isSelected && <Check className="h-3.5 w-3.5" />}
@@ -430,7 +429,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                             })}
                                         </div>
                                     </div>
-                                    <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2">
+                                    <div className="mt-4 flex flex-col items-start justify-between gap-3 px-2 sm:flex-row sm:items-center">
                                         <p className="text-xs font-bold text-slate-500">{(data.targets || []).length} residents selected</p>
                                         <div className="flex flex-wrap gap-2 sm:gap-3">
                                             <AnimatePresence mode="popLayout">
@@ -504,7 +503,8 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                     {organizations.length === 0 ? (
                                         <div className="rounded-3xl bg-amber-50 p-8 text-center ring-1 ring-amber-100">
                                             <p className="text-sm font-bold text-amber-800">
-                                                No active organizations found in this estate. Register organizations first to target them for collections.
+                                                No active organizations found in this estate. Register organizations first to target them for
+                                                collections.
                                             </p>
                                         </div>
                                     ) : (
@@ -541,7 +541,9 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                                                     <div
                                                                         className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}
                                                                     >
-                                                                        <Building2 className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`} />
+                                                                        <Building2
+                                                                            className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`}
+                                                                        />
                                                                     </div>
                                                                     <div className="text-left">
                                                                         <div className="flex items-center gap-2">
@@ -565,7 +567,7 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                                 </div>
                                             </div>
 
-                                            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2">
+                                            <div className="mt-4 flex flex-col items-start justify-between gap-3 px-2 sm:flex-row sm:items-center">
                                                 <p className="text-xs font-bold text-slate-500">
                                                     {(data.organizations || []).length === 0
                                                         ? 'All organizations will be billed (or choose specific ones below)'
@@ -585,7 +587,10 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                                                     type="button"
                                                                     onClick={() => {
                                                                         const newOrgs = Array.from(
-                                                                            new Set([...(data.organizations || []), ...filteredOrganizations.map((o) => o.id)]),
+                                                                            new Set([
+                                                                                ...(data.organizations || []),
+                                                                                ...filteredOrganizations.map((o) => o.id),
+                                                                            ]),
                                                                         );
                                                                         setData('organizations', newOrgs);
                                                                     }}
@@ -639,9 +644,9 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="rounded-2xl sm:rounded-3xl bg-blue-50/50 p-6 sm:p-8 text-center ring-1 ring-blue-100"
+                                    className="rounded-2xl bg-blue-50/50 p-6 text-center ring-1 ring-blue-100 sm:rounded-3xl sm:p-8"
                                 >
-                                    <p className="text-xs sm:text-sm font-bold text-blue-700">
+                                    <p className="text-xs font-bold text-blue-700 sm:text-sm">
                                         {data.applies_to === 'property_owner'
                                             ? 'This collection will apply to all current and future property owners of the estate.'
                                             : 'This collection will apply to everyone: all current and future residents and organizations in the estate.'}
@@ -651,17 +656,17 @@ export default function CreateCollection({ residents = [], zones = [], organizat
                         </AnimatePresence>
                     </div>
 
-                    <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 sm:gap-6 pt-4">
+                    <div className="flex flex-col-reverse items-center justify-end gap-4 pt-4 sm:flex-row sm:gap-6">
                         <Link
                             href={index.url()}
-                            className="w-full sm:w-auto text-center py-2 sm:py-0 text-sm font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
+                            className="w-full py-2 text-center text-sm font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900 sm:w-auto sm:py-0"
                         >
                             Cancel
                         </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full sm:w-auto flex items-center justify-center gap-3 rounded-2xl sm:rounded-[1.5rem] bg-[#1F6FDB] px-8 sm:px-12 py-4 sm:py-5 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-slate-800 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
+                            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#1F6FDB] px-8 py-4 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-slate-800 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50 sm:w-auto sm:rounded-[1.5rem] sm:px-12 sm:py-5"
                         >
                             <Save className="h-5 w-5" />
                             {processing ? 'Creating Collection...' : 'Create Collection'}
