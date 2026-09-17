@@ -1,19 +1,20 @@
-import AccessTabs from '@/Components/Organization/AccessTabs';
+
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Search, Tag, Users, Copy, Share2, Check, X, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import AccessHeader from '@/Components/Organization/AccessHeader';
 import FilterChips from '@/Components/Organization/FilterChips';
+import AccessHeader from '@/Components/Organization/AccessHeader';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import PassCard from '@/Components/Resident/PassCard';
-import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import { ChevronDown, ChevronRight, MapPin, Plus } from 'lucide-react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import Button from '@/Components/UI/Button';
+import TextInput from '@/Components/UI/TextInput';
 import { shareAccessCode } from '@/Utils/share';
+import BulkInviteModal from './BulkInviteModal';
 
 interface Organization {
     id: number;
@@ -283,11 +284,10 @@ export default function Visitors({ organization, membership, visitors, filters }
                             <button
                                 type="button"
                                 onClick={() => setInviteModalOpen(true)}
-                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#0b4aa2] px-3.5 text-[13px] font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95"
+                                className="flex items-center gap-1 rounded-full px-2 py-1 text-[13px] font-bold text-[#0b4aa2] hover:bg-[#0b4aa2]/10"
                             >
                                 <Plus className="h-4 w-4" strokeWidth={2.5} />
                                 <span>Invite</span>
-                                <ChevronDown className="ml-0.5 h-4 w-4 opacity-80" strokeWidth={2.5} />
                             </button>
                         ) : undefined
                     }
@@ -302,7 +302,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                             type="search"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                            placeholder="Search visitors or pass ID..."
+                            placeholder="Search visitors..."
                             className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
@@ -311,19 +311,26 @@ export default function Visitors({ organization, membership, visitors, filters }
                     <FilterChips
                         variant="status"
                         value={status}
-                        onChange={(id) => setStatus(id)}
+                        onChange={(id) => {
+                            if (id === 'more') {
+                                // Normally opens a filter sheet, doing nothing for now to keep UI clean
+                            } else {
+                                setStatus(id);
+                            }
+                        }}
                         options={[
                             { id: 'all', label: 'All', count: status === 'all' ? visitors.total : undefined },
-                            { id: 'active', label: 'Active', color: 'mint' },
-                            { id: 'used', label: 'Used', color: 'slate' },
-                            { id: 'expired', label: 'Expired', color: 'amber' },
-                            { id: 'revoked', label: 'Revoked', color: 'red' },
+                            { id: 'active', label: 'Active', count: undefined, color: 'mint' },
+                            { id: 'more', label: 'More' },
                         ]}
                     />
 
-                    {/* Quiet Directory Count */}
-                    <div className="px-1 pt-2 pb-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                        {visitors.total} {visitors.total === 1 ? 'VISITOR' : 'VISITORS'}
+                    {/* Recent Visitors Header */}
+                    <div className="flex items-center justify-between px-1 pt-2">
+                        <h2 className="text-[15px] font-bold text-slate-800">Recent Visitors</h2>
+                        <button className="flex items-center text-[13px] font-medium text-slate-500 hover:text-[#0b1f40]">
+                            View all <ChevronRight className="ml-0.5 h-3.5 w-3.5" strokeWidth={2.5} />
+                        </button>
                     </div>
 
                     {/* Visitors Directory List: Card Rows */}
@@ -335,53 +342,48 @@ export default function Visitors({ organization, membership, visitors, filters }
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-3">
-                            {visitors.data.map((pass) => {
+                        <div className="mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                            {visitors.data.map((pass, index) => {
                                 // Status styling mappings
                                 const statusMap = {
-                                    active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700' },
-                                    used: { label: 'Used', classes: 'bg-slate-100 text-slate-700' },
-                                    revoked: { label: 'Revoked', classes: 'bg-rose-50 text-rose-700' },
-                                    expired: { label: 'Expired', classes: 'bg-amber-50 text-amber-700' },
-                                } as const;
-                                const statusConfig = statusMap[pass.status] || statusMap.expired;
+                                    active: { label: 'Active', color: 'text-emerald-600 font-semibold', bg: 'bg-emerald-100' },
+                                    used: { label: 'Pending', color: 'text-amber-600 font-semibold', bg: 'bg-amber-100' },
+                                    revoked: { label: 'Revoked', color: 'text-rose-600 font-semibold', bg: 'bg-rose-100' },
+                                    expired: { label: 'Expired', color: 'text-slate-600 font-semibold', bg: 'bg-slate-100' },
+                                };
+                                const s = statusMap[pass.status] || statusMap.active;
 
                                 return (
                                     <div
                                         key={pass.id}
                                         onClick={() => setSelectedPass(pass)}
-                                        className="flex min-h-[88px] cursor-pointer items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/5 transition hover:bg-slate-50"
+                                        className={`flex min-h-[64px] cursor-pointer items-center justify-between gap-3 p-3.5 transition hover:bg-slate-50 active:bg-slate-100 ${
+                                            index !== visitors.data.length - 1 ? 'border-b border-slate-100' : ''
+                                        }`}
                                     >
-                                        <div className="flex min-w-0 items-start gap-4">
-                                            {/* Avatar */}
-                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-base font-bold tracking-tight text-[#0b4aa2]">
+                                        <div className="flex min-w-0 items-start gap-3.5">
+                                            {/* Avatar/Initial */}
+                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold tracking-tight text-slate-600">
                                                 {pass.visitor_name.charAt(0).toUpperCase()}
                                             </div>
 
-                                            {/* Identity */}
-                                            <div className="min-w-0 flex-1 pt-0.5">
-                                                <div className="truncate text-base font-bold text-slate-900">{pass.visitor_name}</div>
+                                            {/* Identity & Metadata */}
+                                            <div className="min-w-0 flex-1 py-0.5">
+                                                <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{pass.visitor_name}</div>
                                                 <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
-                                                    <span className="capitalize">{pass.purpose || 'Visit'}</span>
+                                                    <span className="capitalize">{pass.purpose}</span>
                                                     {' · '}
-                                                    {new Date(pass.starts_at).toLocaleDateString()}
+                                                    <span className={s.color}>{s.label}</span>
                                                 </p>
-                                                <div className="mt-1 flex items-center gap-1 text-[13px] text-slate-400">
-                                                    <MapPin className="h-3.5 w-3.5 shrink-0" />
-                                                    <span className="truncate">{organization.name}</span>
-                                                </div>
+                                                <p className="mt-0.5 truncate text-[12px] text-slate-400">
+                                                    {formatTimeWindow(pass.starts_at, pass.expires_at)}
+                                                </p>
                                             </div>
                                         </div>
 
-                                        {/* Right Column: Status & Chevron */}
-                                        <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch py-0.5">
-                                            <span
-                                                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${statusConfig.classes}`}
-                                            >
-                                                <span className={`h-1.5 w-1.5 rounded-full bg-current opacity-75`} />
-                                                {statusConfig.label}
-                                            </span>
-                                            <ChevronRight className="h-5 w-5 text-slate-300" strokeWidth={2.5} />
+                                        {/* Right Column */}
+                                        <div className="flex shrink-0 items-center justify-end">
+                                            <ChevronRight className="h-4 w-4 text-slate-300" strokeWidth={2.5} />
                                         </div>
                                     </div>
                                 );
