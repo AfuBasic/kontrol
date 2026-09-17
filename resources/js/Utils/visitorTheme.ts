@@ -180,4 +180,3 @@ export function resolveVisitorName(visitorName?: string | null, type?: string | 
 
     return 'Guest Visitor';
 }
-
