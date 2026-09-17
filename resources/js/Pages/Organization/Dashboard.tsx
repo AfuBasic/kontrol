@@ -1,5 +1,19 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { AlertCircle, ArrowRight, CheckCircle2, Clock, DoorOpen, MapPin, Radio, ShieldCheck, Users, Search, Plus, KeyRound, Bell } from 'lucide-react';
+import {
+    AlertCircle,
+    ArrowRight,
+    CheckCircle2,
+    Clock,
+    DoorOpen,
+    MapPin,
+    Radio,
+    ShieldCheck,
+    Users,
+    Search,
+    Plus,
+    KeyRound,
+    Bell,
+} from 'lucide-react';
 import React from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
@@ -61,7 +75,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
     const currentlyHere = metrics.currently_inside ?? 0;
     const pendingTotal = pending_arrivals.length;
     const overdueTotal = metrics.overdue_confirmation ?? 0;
-    
+
     // Total people that require attention (pending or overdue)
     const waitingCount = pendingTotal + overdueTotal;
 
@@ -83,20 +97,20 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
               label: 'Critical attention',
               dot: 'bg-rose-500',
               text: 'text-rose-700',
-              bg: 'bg-rose-50'
+              bg: 'bg-rose-50',
           }
         : needsAttention
           ? {
                 label: `${waitingCount} waiting confirmation`,
                 dot: 'bg-amber-500',
                 text: 'text-amber-700',
-                bg: 'bg-amber-50'
+                bg: 'bg-amber-50',
             }
           : {
                 label: 'Everything looks good',
                 dot: 'bg-emerald-500',
                 text: 'text-emerald-700',
-                bg: 'bg-emerald-50/50'
+                bg: 'bg-emerald-50/50',
             };
 
     const activityIcon = (item: ActivityItem) => {
@@ -104,47 +118,42 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
         if (item.type === 'checkout') return <DoorOpen className="h-3.5 w-3.5" />;
         return <Radio className="h-3.5 w-3.5" />;
     };
-    
+
     const latestActivity = recent_activity[0];
 
     return (
         <OrganizationLayout title="Home" contentClassName="w-full">
             <Head title={`${organization.name} - Home`} />
 
-            <div className="flex flex-col gap-6 pb-6 pt-2">
-                
+            <div className="flex flex-col gap-6 pt-2 pb-6">
                 {/* 1. TIGHT HEADER & CONTEXT */}
                 <header className="flex items-start justify-between">
                     <div>
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                        <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">
                             {getGreeting()}, {userFirstName}
                         </p>
-                        <h1 className="mt-0.5 text-2xl font-bold tracking-tight text-[#082f6e] leading-none">
-                            {organization.name}
-                        </h1>
-                        {organization.estate_name && (
-                            <p className="mt-1 text-sm font-medium text-slate-500">{organization.estate_name}</p>
-                        )}
+                        <h1 className="mt-0.5 text-2xl leading-none font-bold tracking-tight text-[#082f6e]">{organization.name}</h1>
+                        {organization.estate_name && <p className="mt-1 text-sm font-medium text-slate-500">{organization.estate_name}</p>}
                     </div>
                 </header>
 
                 {/* 2. TODAY OPERATIONAL PULSE */}
                 <section>
-                    <div className="flex flex-col rounded-[1.25rem] border border-slate-200/80 bg-white shadow-sm overflow-hidden">
+                    <div className="flex flex-col overflow-hidden rounded-[1.25rem] border border-slate-200/80 bg-white shadow-sm">
                         <div className="px-4 pt-4 pb-1">
-                            <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-2">Today</h2>
+                            <h2 className="mb-2 text-[11px] font-bold tracking-widest text-slate-400 uppercase">Today</h2>
                             <div className="flex items-center gap-2">
                                 <span className={`h-2.5 w-2.5 rounded-full ${stateConfig.dot}`} />
                                 <span className={`text-sm font-semibold ${stateConfig.text}`}>{stateConfig.label}</span>
                             </div>
                         </div>
-                        
-                        <div className="px-4 py-3 flex items-center gap-4">
+
+                        <div className="flex items-center gap-4 px-4 py-3">
                             <div className="flex items-baseline gap-1.5">
                                 <span className="text-xl font-bold text-slate-900">{currentlyHere}</span>
                                 <span className="text-sm font-medium text-slate-500">inside</span>
                             </div>
-                            <span className="text-slate-300 font-bold">·</span>
+                            <span className="font-bold text-slate-300">·</span>
                             <div className="flex items-baseline gap-1.5">
                                 <span className="text-xl font-bold text-slate-900">{waitingCount}</span>
                                 <span className="text-sm font-medium text-slate-500">waiting</span>
@@ -152,16 +161,16 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                         </div>
 
                         {latestActivity ? (
-                            <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3">
                                 <div>
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Last Activity</p>
+                                    <p className="mb-0.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Last Activity</p>
                                     <p className="text-xs font-medium text-slate-700">{latestActivity.time_human}</p>
                                 </div>
                             </div>
                         ) : (
-                            <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-4 py-3">
                                 <div>
-                                    <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">Last Activity</p>
+                                    <p className="mb-0.5 text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Last Activity</p>
                                     <p className="text-xs font-medium text-slate-500">No movement yet today.</p>
                                 </div>
                             </div>
@@ -202,10 +211,12 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                 {/* 4. ATTENTION MODULE (Only if needs attention) */}
                 {needsAttention && (
                     <section className="mt-2">
-                        <div className={`rounded-xl border p-4 shadow-sm ${isCritical ? 'bg-rose-50 border-rose-200' : 'bg-amber-50/70 border-amber-200/80'}`}>
-                            <div className="flex items-center gap-2 mb-3">
+                        <div
+                            className={`rounded-xl border p-4 shadow-sm ${isCritical ? 'border-rose-200 bg-rose-50' : 'border-amber-200/80 bg-amber-50/70'}`}
+                        >
+                            <div className="mb-3 flex items-center gap-2">
                                 <AlertCircle className={`h-4 w-4 ${isCritical ? 'text-rose-600' : 'text-amber-600'}`} />
-                                <h3 className={`text-xs font-bold uppercase tracking-wider ${isCritical ? 'text-rose-900' : 'text-amber-900'}`}>
+                                <h3 className={`text-xs font-bold tracking-wider uppercase ${isCritical ? 'text-rose-900' : 'text-amber-900'}`}>
                                     Action Required
                                 </h3>
                             </div>
@@ -215,16 +226,18 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                                         key={arrival.id}
                                         href="/org/arrivals"
                                         className={`flex items-center justify-between gap-3 rounded-lg border p-3 transition active:scale-[0.98] ${
-                                            isCritical 
-                                            ? 'bg-white border-rose-200 hover:bg-rose-50' 
-                                            : 'bg-white border-amber-200/60 hover:bg-amber-50/50'
+                                            isCritical
+                                                ? 'border-rose-200 bg-white hover:bg-rose-50'
+                                                : 'border-amber-200/60 bg-white hover:bg-amber-50/50'
                                         }`}
                                     >
                                         <div className="min-w-0">
                                             <p className={`truncate text-sm font-semibold ${isCritical ? 'text-rose-950' : 'text-amber-950'}`}>
                                                 {arrival.visitor_name}
                                             </p>
-                                            <p className={`mt-0.5 truncate text-xs font-medium ${isCritical ? 'text-rose-800/80' : 'text-amber-800/80'}`}>
+                                            <p
+                                                className={`mt-0.5 truncate text-xs font-medium ${isCritical ? 'text-rose-800/80' : 'text-amber-800/80'}`}
+                                            >
                                                 {arrival.entry_point || 'Gate'} • {arrival.verified_at_human || 'recently'}
                                             </p>
                                         </div>
@@ -238,14 +251,14 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
 
                 {/* 5. ON SITE DIRECTORY (Elastic) */}
                 <section className="mt-3 space-y-3">
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">On Site</h3>
+                    <h3 className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">On Site</h3>
                     {recent_arrivals.length === 0 ? (
-                        <p className="text-[13px] text-slate-600 font-medium">No one currently inside.</p>
+                        <p className="text-[13px] font-medium text-slate-600">No one currently inside.</p>
                     ) : (
                         <div className="space-y-1">
                             {recent_arrivals.slice(0, 4).map((arrival) => (
-                                <div key={arrival.id} className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
-                                    <div className="min-w-0 flex items-center gap-3">
+                                <div key={arrival.id} className="flex items-center justify-between border-b border-slate-100 py-2.5 last:border-0">
+                                    <div className="flex min-w-0 items-center gap-3">
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f0f6ff] text-[10px] font-bold text-[#0b4aa2]">
                                             {arrival.visitor_name.slice(0, 2).toUpperCase()}
                                         </div>
@@ -263,7 +276,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                             ))}
                             {recent_arrivals.length > 4 && (
                                 <Link href="/org/arrivals" className="block py-2 text-xs font-bold text-[#0b4aa2]">
-                                    View all {recent_arrivals.length} <ArrowRight className="inline h-3 w-3 ml-0.5 relative -top-[0.5px]" />
+                                    View all {recent_arrivals.length} <ArrowRight className="relative -top-[0.5px] ml-0.5 inline h-3 w-3" />
                                 </Link>
                             )}
                         </div>
@@ -272,16 +285,16 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
 
                 {/* 6. RECENT ACTIVITY (Elastic) */}
                 <section className="mt-5 space-y-3">
-                    <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Recent Activity</h3>
+                    <h3 className="text-[11px] font-bold tracking-widest text-slate-500 uppercase">Recent Activity</h3>
                     {recent_activity.length === 0 ? (
-                        <p className="text-[13px] text-slate-600 font-medium">No movement yet today.</p>
+                        <p className="text-[13px] font-medium text-slate-600">No movement yet today.</p>
                     ) : (
                         <div className="space-y-2">
                             {recent_activity.slice(0, 5).map((item) => (
-                                <div key={item.id} className="flex flex-col py-2.5 border-b border-slate-100 last:border-0">
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400 mb-1">{item.time_human}</p>
+                                <div key={item.id} className="flex flex-col border-b border-slate-100 py-2.5 last:border-0">
+                                    <p className="mb-1 text-[10px] font-bold tracking-wide text-slate-400 uppercase">{item.time_human}</p>
                                     <div className="flex items-start justify-between gap-3">
-                                        <p className="text-[13px] font-medium text-slate-800 leading-snug">{item.description}</p>
+                                        <p className="text-[13px] leading-snug font-medium text-slate-800">{item.description}</p>
                                         <Link href="/org/arrivals/history" className="shrink-0 p-1 text-slate-300 transition active:scale-95">
                                             <ArrowRight className="h-4 w-4" />
                                         </Link>
@@ -290,7 +303,7 @@ export default function Dashboard({ organization, metrics, recent_arrivals = [],
                             ))}
                             {recent_activity.length > 5 && (
                                 <Link href="/org/arrivals/history" className="block py-2 text-xs font-bold text-[#0b4aa2]">
-                                    View activity history <ArrowRight className="inline h-3 w-3 ml-0.5 relative -top-[0.5px]" />
+                                    View activity history <ArrowRight className="relative -top-[0.5px] ml-0.5 inline h-3 w-3" />
                                 </Link>
                             )}
                         </div>
