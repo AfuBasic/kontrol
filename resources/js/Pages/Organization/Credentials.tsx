@@ -78,7 +78,7 @@ export default function Credentials({ organization, membership, credentials, fil
                 </div>
 
                 {/* Unified Access Tabs */}
-                <AccessTabs activeTab="people" hasPublicWindows={hasPublicWindows} />
+                <AccessTabs activeTab="people" />
 
                 <div className="flex items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 text-xs text-indigo-900">
                     <p>
