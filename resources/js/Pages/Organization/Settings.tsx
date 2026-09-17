@@ -1,16 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import {
-    AlertCircle,
-    Bell,
-    Building2,
-    Check,
-    ChevronDown,
-    ChevronRight,
-    LogOut,
-    Plus,
-    Trash2,
-    X,
-} from 'lucide-react';
+import { AlertCircle, Bell, Building2, Check, ChevronDown, ChevronRight, LogOut, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -139,7 +128,6 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
                         </button>
 
-
                         {!organization.is_unrestricted && membership.is_admin && (
                             <button
                                 type="button"
@@ -188,19 +176,19 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                     <div className="space-y-4 pt-4 text-xs sm:text-sm">
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Name</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Name</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">{organization.name}</p>
                         </div>
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Estate</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Estate</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">{organization.estate_name || 'Estate'}</p>
                         </div>
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Category</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Category</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{organization.type}</p>
                         </div>
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Policy Setup</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Policy Setup</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">
                                 {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
                             </p>
@@ -229,21 +217,21 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                     <div className="space-y-4 pt-4 text-xs sm:text-sm">
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Full Name</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Full Name</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">{user.name}</p>
                         </div>
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Email Address</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Email Address</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900">{user.email}</p>
                         </div>
                         {user.phone && (
                             <div>
-                                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Phone</span>
+                                <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Phone</span>
                                 <p className="mt-1 text-sm font-semibold text-slate-900">{user.phone}</p>
                             </div>
                         )}
                         <div>
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Role</span>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Role</span>
                             <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{membership.role || 'Member'}</p>
                         </div>
                     </div>
@@ -270,7 +258,11 @@ export default function Settings({ organization, membership, staff }: Props) {
 
                     <div className="pt-4">
                         {membership.is_admin && (
-                            <form noValidate onSubmit={handleInviteStaff} className="mb-4 space-y-3 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                            <form
+                                noValidate
+                                onSubmit={handleInviteStaff}
+                                className="mb-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                            >
                                 <span className="block text-xs font-semibold text-slate-900">Invite someone</span>
                                 <div className="flex gap-2">
                                     <input
@@ -317,7 +309,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveStaff(member.id)}
-                                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                                                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
                                                 title="Remove"
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -427,9 +419,9 @@ export default function Settings({ organization, membership, staff }: Props) {
                     </div>
 
                     <div className="space-y-4 pt-4">
-                        <p className="text-sm text-slate-600 leading-relaxed">
-                            For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office
-                            or Kontrol support.
+                        <p className="text-sm leading-relaxed text-slate-600">
+                            For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office or
+                            Kontrol support.
                         </p>
 
                         <div className="pt-2">
