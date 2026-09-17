@@ -152,9 +152,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                     <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                         <div>
                             <h3 className="text-lg font-black text-slate-950">Add public time</h3>
-                            <p className="mt-1 text-sm font-semibold text-slate-500">
-                                Tell security when this destination is open to the public.
-                            </p>
+                            <p className="mt-1 text-sm font-semibold text-slate-500">Tell security when this destination is open to the public.</p>
                         </div>
                     </div>
 
