@@ -184,7 +184,7 @@ export default function Show({ resident, provenance, residence, financials, acti
                     <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
                         <Link
                             href={`/admin/residents/${resident.id}/edit`}
-                            className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-bold whitespace-nowrap text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                         >
                             <Pencil className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                             <span>Edit</span>
@@ -194,7 +194,7 @@ export default function Show({ resident, provenance, residence, financials, acti
                             <button
                                 onClick={handleResendInvitation}
                                 disabled={isResending}
-                                className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-xs font-bold whitespace-nowrap text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-95 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
                             >
                                 <Clock className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                                 <span>{isResending ? 'Sending...' : 'Resend'}</span>
@@ -203,10 +203,8 @@ export default function Show({ resident, provenance, residence, financials, acti
 
                         <button
                             onClick={handleToggleSuspend}
-                            className={`inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-center text-xs font-bold text-white shadow-xs transition active:scale-95 ${
-                                resident.is_active
-                                    ? 'bg-rose-600 hover:bg-rose-700'
-                                    : 'bg-emerald-600 hover:bg-emerald-700'
+                            className={`inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-center text-xs font-bold whitespace-nowrap text-white shadow-xs transition active:scale-95 ${
+                                resident.is_active ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'
                             }`}
                         >
                             {resident.is_active ? (
@@ -242,11 +240,11 @@ export default function Show({ resident, provenance, residence, financials, acti
                                         {resident.role_label}
                                     </span>
                                     {resident.is_active ? (
-                                        <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 ring-1 ring-emerald-500/35 uppercase">
+                                        <span className="inline-flex items-center rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 uppercase ring-1 ring-emerald-500/35">
                                             Active
                                         </span>
                                     ) : (
-                                        <span className="inline-flex items-center rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-300 ring-1 ring-rose-500/35 uppercase">
+                                        <span className="inline-flex items-center rounded-full bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-300 uppercase ring-1 ring-rose-500/35">
                                             Suspended
                                         </span>
                                     )}
@@ -290,7 +288,7 @@ export default function Show({ resident, provenance, residence, financials, acti
                         </div>
                     </div>
                 </div>
-                                {/* Dashboard Main Grid Layout */}
+                {/* Dashboard Main Grid Layout */}
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-3 lg:gap-6">
                     {/* COLUMN 1: Provenance & Registration Provenance */}
                     <div className="space-y-5 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6 dark:border-slate-800 dark:bg-slate-900">
@@ -298,7 +296,9 @@ export default function Show({ resident, provenance, residence, financials, acti
                             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400">
                                 <Shield className="h-4 w-4" />
                             </div>
-                            <h2 className="text-xs font-black tracking-wider text-slate-900 uppercase dark:text-slate-100">Registration Provenance</h2>
+                            <h2 className="text-xs font-black tracking-wider text-slate-900 uppercase dark:text-slate-100">
+                                Registration Provenance
+                            </h2>
                         </div>
 
                         <div className="space-y-4">
@@ -334,7 +334,9 @@ export default function Show({ resident, provenance, residence, financials, acti
                                     <div className="space-y-1 border-l-2 border-slate-200 pl-3 dark:border-slate-700">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase">Last Resent By:</span>
-                                            <span className="font-bold text-slate-700 dark:text-slate-300">{provenance.last_invited_by_name || 'System'}</span>
+                                            <span className="font-bold text-slate-700 dark:text-slate-300">
+                                                {provenance.last_invited_by_name || 'System'}
+                                            </span>
                                         </div>
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-[10px] font-bold text-slate-400 uppercase">Last Resent At:</span>
@@ -365,7 +367,9 @@ export default function Show({ resident, provenance, residence, financials, acti
                             {/* Pathway Specific Metadata */}
                             {provenance.import_batch && (
                                 <div className="space-y-1 rounded-2xl border border-purple-100 bg-purple-50/40 p-3 dark:border-purple-900/30 dark:bg-purple-950/20">
-                                    <span className="block text-[9px] font-black tracking-widest text-purple-600 uppercase dark:text-purple-400">Import Batch</span>
+                                    <span className="block text-[9px] font-black tracking-widest text-purple-600 uppercase dark:text-purple-400">
+                                        Import Batch
+                                    </span>
                                     <div className="flex items-center gap-1.5 text-xs font-bold text-purple-900 dark:text-purple-300">
                                         <FileText className="h-3.5 w-3.5 shrink-0 text-purple-500" />
                                         <span className="truncate">{provenance.import_batch}</span>
@@ -375,7 +379,9 @@ export default function Show({ resident, provenance, residence, financials, acti
 
                             {provenance.invite_link_url && (
                                 <div className="space-y-1 rounded-2xl border border-pink-100 bg-pink-50/40 p-3 dark:border-pink-900/30 dark:bg-pink-950/20">
-                                    <span className="block text-[9px] font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">Via Invite Link</span>
+                                    <span className="block text-[9px] font-black tracking-widest text-pink-600 uppercase dark:text-pink-400">
+                                        Via Invite Link
+                                    </span>
                                     <a
                                         href={provenance.invite_link_url}
                                         target="_blank"
@@ -444,7 +450,10 @@ export default function Show({ resident, provenance, residence, financials, acti
                                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
                                         <UserCheck className="h-3.5 w-3.5 text-emerald-500" />
                                         {residence.property_owner_id ? (
-                                            <Link href={`/admin/residents/${residence.property_owner_id}`} className="text-blue-600 hover:underline dark:text-blue-400">
+                                            <Link
+                                                href={`/admin/residents/${residence.property_owner_id}`}
+                                                className="text-blue-600 hover:underline dark:text-blue-400"
+                                            >
                                                 {residence.property_owner_name}
                                             </Link>
                                         ) : (
@@ -473,18 +482,28 @@ export default function Show({ resident, provenance, residence, financials, acti
                             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                                 <DollarSign className="h-4 w-4" />
                             </div>
-                            <h2 className="text-xs font-black tracking-wider text-slate-900 uppercase dark:text-slate-100">Collections & Financials</h2>
+                            <h2 className="text-xs font-black tracking-wider text-slate-900 uppercase dark:text-slate-100">
+                                Collections & Financials
+                            </h2>
                         </div>
 
                         {/* Payment Cards row */}
                         <div className="grid grid-cols-2 gap-2.5">
                             <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-3 text-center dark:border-emerald-900/30 dark:bg-emerald-950/20">
-                                <span className="block text-[9px] font-black tracking-widest text-emerald-600 uppercase dark:text-emerald-400">Total Paid</span>
-                                <span className="mt-1 block text-lg font-black text-slate-900 dark:text-slate-100">₦{financials.total_paid.toLocaleString()}</span>
+                                <span className="block text-[9px] font-black tracking-widest text-emerald-600 uppercase dark:text-emerald-400">
+                                    Total Paid
+                                </span>
+                                <span className="mt-1 block text-lg font-black text-slate-900 dark:text-slate-100">
+                                    ₦{financials.total_paid.toLocaleString()}
+                                </span>
                             </div>
                             <div className="rounded-2xl border border-rose-100 bg-rose-50/30 p-3 text-center dark:border-rose-900/30 dark:bg-rose-950/20">
-                                <span className="block text-[9px] font-black tracking-widest text-rose-600 uppercase dark:text-rose-400">Outstanding</span>
-                                <span className="mt-1 block text-lg font-black text-slate-900 dark:text-slate-100">₦{financials.total_outstanding.toLocaleString()}</span>
+                                <span className="block text-[9px] font-black tracking-widest text-rose-600 uppercase dark:text-rose-400">
+                                    Outstanding
+                                </span>
+                                <span className="mt-1 block text-lg font-black text-slate-900 dark:text-slate-100">
+                                    ₦{financials.total_outstanding.toLocaleString()}
+                                </span>
                             </div>
                         </div>
 
@@ -502,7 +521,9 @@ export default function Show({ resident, provenance, residence, financials, acti
                                                 <div className="truncate font-bold text-slate-800 dark:text-slate-200">{p.name}</div>
                                                 <div className="text-[10px] text-slate-400">{p.date}</div>
                                             </div>
-                                            <div className="shrink-0 font-black text-emerald-600 dark:text-emerald-400">+₦{p.amount.toLocaleString()}</div>
+                                            <div className="shrink-0 font-black text-emerald-600 dark:text-emerald-400">
+                                                +₦{p.amount.toLocaleString()}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -602,7 +623,9 @@ export default function Show({ resident, provenance, residence, financials, acti
                             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                                 <History className="h-4 w-4" />
                             </div>
-                            <h2 className="text-xs font-black tracking-wider text-slate-900 uppercase dark:text-slate-100">Activity Log / Audit Trail</h2>
+                            <h2 className="text-xs font-black tracking-wider text-slate-900 uppercase dark:text-slate-100">
+                                Activity Log / Audit Trail
+                            </h2>
                         </div>
 
                         {activities.length > 0 ? (
