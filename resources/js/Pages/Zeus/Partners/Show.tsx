@@ -146,21 +146,13 @@ function formatDate(isoString: string | null | undefined): string {
     }
 }
 
-export default function PartnerShow({
-    partner,
-    estates,
-    earnings,
-    recentCommissions,
-    members,
-    stats,
-    partnerPortalUrl,
-}: Props) {
+export default function PartnerShow({ partner, estates, earnings, recentCommissions, members, stats, partnerPortalUrl }: Props) {
     const [activeTab, setActiveTab] = useState<'estates' | 'earnings' | 'banking' | 'team'>('estates');
     const [estateSearch, setEstateSearch] = useState('');
 
-    const filteredEstates = estates.filter((e) =>
-        e.name.toLowerCase().includes(estateSearch.toLowerCase()) ||
-        (e.address && e.address.toLowerCase().includes(estateSearch.toLowerCase()))
+    const filteredEstates = estates.filter(
+        (e) =>
+            e.name.toLowerCase().includes(estateSearch.toLowerCase()) || (e.address && e.address.toLowerCase().includes(estateSearch.toLowerCase())),
     );
 
     return (
@@ -172,12 +164,7 @@ export default function PartnerShow({
                 <div className="pointer-events-none absolute top-0 right-1/4 h-[500px] w-[500px] animate-pulse rounded-full bg-gradient-to-br from-[#6C5DFD]/5 to-[#A78BFA]/5 blur-[120px] duration-[8000ms]" />
 
                 {/* Header & Breadcrumbs */}
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-4"
-                >
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-4">
                     <div className="flex items-center gap-2 text-xs font-semibold text-[#9297A8]">
                         <Link href="/zeus/partners" className="inline-flex items-center gap-1.5 transition-colors hover:text-white">
                             <ArrowLeftIcon className="h-3.5 w-3.5" />
@@ -191,9 +178,7 @@ export default function PartnerShow({
                         <div>
                             <div className="mb-2 flex items-center gap-3">
                                 <span className="h-2 w-2 rounded-full bg-[#6C5DFD] shadow-[0_0_12px_rgba(108,93,253,0.8)]" />
-                                <span className="text-[11px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">
-                                    PARTNER PROFILE
-                                </span>
+                                <span className="text-[11px] font-black tracking-[0.25em] text-[#6C5DFD] uppercase">PARTNER PROFILE</span>
                                 <span
                                     className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${
                                         partner.status === 'active'
@@ -216,9 +201,7 @@ export default function PartnerShow({
                                 </span>
                             </div>
 
-                            <h1 className="text-3xl font-black tracking-tight text-[#F2F3F6] sm:text-4xl">
-                                {partner.name}
-                            </h1>
+                            <h1 className="text-3xl font-black tracking-tight text-[#F2F3F6] sm:text-4xl">{partner.name}</h1>
 
                             <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#9297A8]">
                                 {partner.email && (
@@ -240,9 +223,7 @@ export default function PartnerShow({
                                 )}
                                 <span className="text-[#9297A8]">
                                     Commission:{' '}
-                                    <strong className="text-[#34D399]">
-                                        {formatCommission(partner.commission_rate, partner.commission_type)}
-                                    </strong>
+                                    <strong className="text-[#34D399]">{formatCommission(partner.commission_rate, partner.commission_type)}</strong>
                                 </span>
                             </div>
                         </div>
@@ -285,7 +266,7 @@ export default function PartnerShow({
                         </div>
                         <div className="text-2xl font-black text-[#F2F3F6] sm:text-3xl">{stats.total_estates}</div>
                         <div className="mt-1 flex items-center gap-1.5 text-xs text-[#9297A8]">
-                            <span className="text-[#34D399] font-bold">{stats.active_estates} Active</span>
+                            <span className="font-bold text-[#34D399]">{stats.active_estates} Active</span>
                             <span>•</span>
                             <span>{stats.total_estates - stats.active_estates} Pending/Inactive</span>
                         </div>
@@ -299,9 +280,7 @@ export default function PartnerShow({
                                 <CheckCircleIcon className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-2xl font-black text-[#34D399] sm:text-3xl">
-                            {formatAmount(stats.total_settled_earnings)}
-                        </div>
+                        <div className="text-2xl font-black text-[#34D399] sm:text-3xl">{formatAmount(stats.total_settled_earnings)}</div>
                         <div className="mt-1 text-xs text-[#9297A8]">Commissions disbursed to date</div>
                     </div>
 
@@ -314,12 +293,13 @@ export default function PartnerShow({
                             </div>
                         </div>
                         <div className="text-2xl font-black text-[#F5A623] sm:text-3xl">
-                            {formatAmount(stats.total_unpaid_commissions ?? (stats.pending_commissions + stats.accruing_commissions))}
+                            {formatAmount(stats.total_unpaid_commissions ?? stats.pending_commissions + stats.accruing_commissions)}
                         </div>
                         <div className="mt-1 text-xs text-[#9297A8]">
                             {stats.pending_commissions > 0 ? (
                                 <span>
-                                    Pending payout: <strong className="text-[#F2F3F6]">{formatAmount(stats.pending_commissions)}</strong> • Accruing: <strong className="text-[#F2F3F6]">{formatAmount(stats.accruing_commissions)}</strong>
+                                    Pending payout: <strong className="text-[#F2F3F6]">{formatAmount(stats.pending_commissions)}</strong> • Accruing:{' '}
+                                    <strong className="text-[#F2F3F6]">{formatAmount(stats.accruing_commissions)}</strong>
                                 </span>
                             ) : (
                                 <span>Accruing this month: {formatAmount(stats.accruing_commissions)}</span>
@@ -335,9 +315,7 @@ export default function PartnerShow({
                                 <CurrencyDollarIcon className="h-5 w-5" />
                             </div>
                         </div>
-                        <div className="text-2xl font-black text-[#F2F3F6] sm:text-3xl">
-                            {formatAmount(stats.total_gross_revenue)}
-                        </div>
+                        <div className="text-2xl font-black text-[#F2F3F6] sm:text-3xl">{formatAmount(stats.total_gross_revenue)}</div>
                         <div className="mt-1 text-xs text-[#9297A8]">Processed by referred estates</div>
                     </div>
                 </motion.div>
@@ -349,9 +327,7 @@ export default function PartnerShow({
                             type="button"
                             onClick={() => setActiveTab('estates')}
                             className={`flex items-center gap-2 border-b-2 py-4 text-sm font-bold transition-all ${
-                                activeTab === 'estates'
-                                    ? 'border-[#6C5DFD] text-[#F2F3F6]'
-                                    : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
+                                activeTab === 'estates' ? 'border-[#6C5DFD] text-[#F2F3F6]' : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
                             }`}
                         >
                             <BuildingOffice2Icon className="h-4 w-4" />
@@ -375,9 +351,7 @@ export default function PartnerShow({
                             type="button"
                             onClick={() => setActiveTab('banking')}
                             className={`flex items-center gap-2 border-b-2 py-4 text-sm font-bold transition-all ${
-                                activeTab === 'banking'
-                                    ? 'border-[#6C5DFD] text-[#F2F3F6]'
-                                    : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
+                                activeTab === 'banking' ? 'border-[#6C5DFD] text-[#F2F3F6]' : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
                             }`}
                         >
                             <ShieldCheckIcon className="h-4 w-4" />
@@ -388,9 +362,7 @@ export default function PartnerShow({
                             type="button"
                             onClick={() => setActiveTab('team')}
                             className={`flex items-center gap-2 border-b-2 py-4 text-sm font-bold transition-all ${
-                                activeTab === 'team'
-                                    ? 'border-[#6C5DFD] text-[#F2F3F6]'
-                                    : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
+                                activeTab === 'team' ? 'border-[#6C5DFD] text-[#F2F3F6]' : 'border-transparent text-[#9297A8] hover:text-[#F2F3F6]'
                             }`}
                         >
                             <UserGroupIcon className="h-4 w-4" />
@@ -401,16 +373,9 @@ export default function PartnerShow({
 
                 {/* Tab 1: Referred Estates */}
                 {activeTab === 'estates' && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-4"
-                    >
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="text-sm font-bold text-[#F2F3F6]">
-                                All Estates Assigned to {partner.name}
-                            </div>
+                            <div className="text-sm font-bold text-[#F2F3F6]">All Estates Assigned to {partner.name}</div>
                             {estates.length > 3 && (
                                 <input
                                     type="text"
@@ -480,9 +445,7 @@ export default function PartnerShow({
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-center">
-                                                        <span className="font-semibold text-[#F2F3F6]">
-                                                            {estate.residents_count}
-                                                        </span>
+                                                        <span className="font-semibold text-[#F2F3F6]">{estate.residents_count}</span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right font-semibold text-[#F2F3F6]">
                                                         {formatAmount(estate.total_revenue)}
@@ -514,12 +477,7 @@ export default function PartnerShow({
 
                 {/* Tab 2: Earnings & Commissions */}
                 {activeTab === 'earnings' && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-6"
-                    >
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
                         {/* Commission Structure Banner */}
                         <div className="flex flex-col gap-4 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 sm:flex-row sm:items-center sm:justify-between">
                             <div className="space-y-1">
@@ -537,7 +495,7 @@ export default function PartnerShow({
 
                             <Link
                                 href={`/zeus/partners/${partner.id}/earnings`}
-                                className="inline-flex items-center gap-2 rounded-xl bg-[#34D399]/10 px-5 py-3 text-xs font-bold text-[#34D399] border border-[#34D399]/20 hover:bg-[#34D399]/20 transition-all"
+                                className="inline-flex items-center gap-2 rounded-xl border border-[#34D399]/20 bg-[#34D399]/10 px-5 py-3 text-xs font-bold text-[#34D399] transition-all hover:bg-[#34D399]/20"
                             >
                                 Full Earnings Ledger
                                 <ArrowTopRightOnSquareIcon className="h-4 w-4" />
@@ -570,9 +528,7 @@ export default function PartnerShow({
                                             ) : (
                                                 earnings.map((earning) => (
                                                     <tr key={earning.id} className="transition-colors hover:bg-[#1A1D27]/40">
-                                                        <td className="px-6 py-4 font-bold text-[#F2F3F6]">
-                                                            {earning.month_label}
-                                                        </td>
+                                                        <td className="px-6 py-4 font-bold text-[#F2F3F6]">{earning.month_label}</td>
                                                         <td className="px-6 py-4 text-right font-semibold text-[#9297A8]">
                                                             {formatAmount(earning.revenue_amount)}
                                                         </td>
@@ -626,9 +582,7 @@ export default function PartnerShow({
                                             <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
                                                 {recentCommissions.map((cr) => (
                                                     <tr key={cr.id} className="transition-colors hover:bg-[#1A1D27]/40">
-                                                        <td className="px-6 py-4 font-semibold text-[#F2F3F6]">
-                                                            {cr.estate_name}
-                                                        </td>
+                                                        <td className="px-6 py-4 font-semibold text-[#F2F3F6]">{cr.estate_name}</td>
                                                         <td className="px-6 py-4 text-xs text-[#9297A8]">
                                                             <span className="font-medium text-[#F2F3F6]">{cr.user_name}</span>
                                                             {cr.user_email && <p className="text-[11px] text-[#9297A8]">{cr.user_email}</p>}
@@ -639,9 +593,7 @@ export default function PartnerShow({
                                                         <td className="px-6 py-4 text-right font-bold text-[#34D399]">
                                                             {formatAmount(cr.commission_amount)}
                                                         </td>
-                                                        <td className="px-6 py-4 text-right text-xs text-[#9297A8]">
-                                                            {formatDate(cr.created_at)}
-                                                        </td>
+                                                        <td className="px-6 py-4 text-right text-xs text-[#9297A8]">{formatDate(cr.created_at)}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -662,7 +614,7 @@ export default function PartnerShow({
                         className="grid gap-6 md:grid-cols-2"
                     >
                         {/* Bank Account Card */}
-                        <div className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-xl space-y-4">
+                        <div className="space-y-4 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-xl">
                             <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] pb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#34D399]/10 text-[#34D399]">
@@ -709,7 +661,7 @@ export default function PartnerShow({
                         </div>
 
                         {/* Settlement Schedule Card */}
-                        <div className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-xl space-y-4">
+                        <div className="space-y-4 rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[#12141C] p-6 shadow-xl">
                             <div className="flex items-center gap-3 border-b border-[rgba(255,255,255,0.08)] pb-4">
                                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#6C5DFD]/10 text-[#6C5DFD]">
                                     <ClockIcon className="h-5 w-5" />
@@ -727,15 +679,11 @@ export default function PartnerShow({
                                 </div>
                                 <div className="flex justify-between py-1">
                                     <span className="text-[#9297A8]">Next Settlement Date</span>
-                                    <span className="font-semibold text-[#34D399]">
-                                        {formatDate(stats.next_settlement_date)}
-                                    </span>
+                                    <span className="font-semibold text-[#34D399]">{formatDate(stats.next_settlement_date)}</span>
                                 </div>
                                 <div className="flex justify-between py-1">
                                     <span className="text-[#9297A8]">Pending Payout Balance</span>
-                                    <span className="font-bold text-[#F5A623]">
-                                        {formatAmount(stats.pending_commissions)}
-                                    </span>
+                                    <span className="font-bold text-[#F5A623]">{formatAmount(stats.pending_commissions)}</span>
                                 </div>
                             </div>
                         </div>
@@ -744,12 +692,7 @@ export default function PartnerShow({
 
                 {/* Tab 4: Portal Team & API Access */}
                 {activeTab === 'team' && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="space-y-6"
-                    >
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
                         <div className="flex items-center justify-between">
                             <div>
                                 <h3 className="text-sm font-bold text-[#F2F3F6]">Partner Portal Members</h3>
@@ -783,12 +726,8 @@ export default function PartnerShow({
                                     ) : (
                                         members.map((member) => (
                                             <tr key={member.id} className="transition-colors hover:bg-[#1A1D27]/40">
-                                                <td className="px-6 py-4 font-bold text-[#F2F3F6]">
-                                                    {member.name}
-                                                </td>
-                                                <td className="px-6 py-4 text-xs text-[#9297A8]">
-                                                    {member.email}
-                                                </td>
+                                                <td className="px-6 py-4 font-bold text-[#F2F3F6]">{member.name}</td>
+                                                <td className="px-6 py-4 text-xs text-[#9297A8]">{member.email}</td>
                                                 <td className="px-6 py-4 text-center">
                                                     {member.suspended_at ? (
                                                         <span className="rounded-full bg-rose-500/10 px-2.5 py-0.5 text-xs font-semibold text-rose-400">
@@ -804,9 +743,7 @@ export default function PartnerShow({
                                                         </span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 text-right text-xs text-[#9297A8]">
-                                                    {formatDate(member.created_at)}
-                                                </td>
+                                                <td className="px-6 py-4 text-right text-xs text-[#9297A8]">{formatDate(member.created_at)}</td>
                                             </tr>
                                         ))
                                     )}
