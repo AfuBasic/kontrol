@@ -21,15 +21,19 @@ import {
     Users,
     X,
     Share2,
+    Loader2,
 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Clipboard } from '@capacitor/clipboard';
 import { Share } from '@capacitor/share';
 import { KONTROL_LOGO_BASE64 } from '@/Utils/logo';
-import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
-import AccessTabs from '@/Components/Organization/AccessTabs';
+import { shareAccessCode } from '@/Utils/share';
+import AccessHeader from '@/Components/Organization/AccessHeader';
+import FilterChips, { FilterChipOption } from '@/Components/Organization/FilterChips';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import PassCard from '@/Components/Resident/PassCard';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import { ChevronDown, MapPin } from 'lucide-react';
 
 interface Member {
     id: number;
@@ -104,16 +108,13 @@ const initialsFor = (name: string) => {
         .slice(0, 2);
 };
 
-export default function AccessList({
-    organization,
-    membership,
-    members,
-    windows = [],
-    filters,
-}: Props) {
+export default function AccessList({ organization, membership, members, windows = [], filters }: Props) {
     const [addPersonModalOpen, setAddPersonModalOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<Member | null>(null);
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
+    const [shareCopied, setShareCopied] = useState(false);
+    const [sharing, setSharing] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
     const [search, setSearch] = useState(filters.search ?? '');
     const [category, setCategory] = useState(filters.category ?? 'all');
     const [status, setStatus] = useState(filters.status ?? 'all');
@@ -153,10 +154,10 @@ export default function AccessList({
     };
 
     const statusColorMap = {
-        rose: 'bg-rose-50 text-rose-700 ring-rose-100',
-        emerald: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
-        amber: 'bg-amber-50 text-amber-700 ring-amber-100',
-        slate: 'bg-slate-100 text-slate-700 ring-slate-200',
+        rose: 'bg-rose-50 text-rose-700',
+        emerald: 'bg-emerald-50 text-emerald-700',
+        amber: 'bg-amber-50 text-amber-700',
+        slate: 'bg-slate-100 text-slate-700',
     };
 
     const applyFilters = (next?: { search?: string; category?: string; status?: string }) => {
@@ -193,32 +194,77 @@ export default function AccessList({
     };
 
     const handleSuspend = (member: Member) => {
-        router.post(`/org/access-list/${member.id}/suspend`, {}, {
-            preserveScroll: true,
-            onSuccess: () => setSelectedMember(null),
-        });
+        router.post(
+            `/org/access-list/${member.id}/suspend`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelectedMember(null),
+            },
+        );
     };
 
     const handleActivate = (member: Member) => {
-        router.post(`/org/access-list/${member.id}/activate`, {}, {
-            preserveScroll: true,
-            onSuccess: () => setSelectedMember(null),
-        });
+        router.post(
+            `/org/access-list/${member.id}/activate`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelectedMember(null),
+            },
+        );
     };
 
     const handleRevoke = (member: Member) => {
         if (!member.active_credential) return;
-        router.post(`/org/credentials/${member.active_credential.id}/revoke`, {}, {
-            preserveScroll: true,
-            onSuccess: () => setSelectedMember(null),
-        });
+        router.post(
+            `/org/credentials/${member.active_credential.id}/revoke`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelectedMember(null),
+            },
+        );
     };
 
     const handleIssue = (member: Member) => {
-        router.post(`/org/credentials/issue/${member.id}`, {}, {
-            preserveScroll: true,
-            onSuccess: () => setSelectedMember(null),
-        });
+        router.post(
+            `/org/credentials/issue/${member.id}`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => setSelectedMember(null),
+            },
+        );
+    };
+
+    const handleShareMemberPass = async (member: Member) => {
+        if (sharing || !member.active_credential) return;
+        setSharing(true);
+        try {
+            const passData = {
+                id: member.active_credential.id,
+                code: member.active_credential.code,
+                visitor_name: member.name,
+                visitor_phone: null,
+                purpose: member.category,
+                status: member.status === 'suspended' ? 'revoked' : member.is_valid_now ? 'expected' : 'expired',
+                type: 'long_lived',
+                expires_at: member.active_credential.expires_at,
+                starts_at: member.valid_from,
+                estate_name: organization.name,
+                host_name: 'Admin',
+            };
+            const result = await shareAccessCode(passData as any, cardRef.current);
+            if (result?.method === 'copy' && result.success) {
+                setShareCopied(true);
+                setTimeout(() => setShareCopied(false), 3000);
+            }
+        } catch (err) {
+            console.error('Failed to share pass', err);
+        } finally {
+            setSharing(false);
+        }
     };
 
     const copyCode = async (code: string, id: number) => {
@@ -236,205 +282,142 @@ export default function AccessList({
     };
 
     return (
-        <OrganizationLayout title="Access" contentClassName="max-w-4xl pb-28 sm:pb-12">
+        <OrganizationLayout title="Access - People" contentClassName="max-w-[92rem]">
             <Head title={`${organization.name} - Access`} />
 
-            <div className="space-y-4 sm:space-y-5 pt-4 sm:pt-8">
-                {/* Native Mobile Header: Page Title + Contextual Add Action */}
-                <div className="flex items-center justify-between gap-3 pt-1">
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">Access</h1>
-                    {membership.is_admin && (
-                        <div className="flex items-center gap-3">
-                            <AccessActionMenu onAddPerson={() => setAddPersonModalOpen(true)} />
-                        </div>
-                    )}
-                </div>
-
-                {/* Internal Navigation: People, Arrivals, History, Public times */}
-                <AccessTabs
+            <div className="space-y-4 pt-1 sm:pt-4">
+                <AccessHeader
                     activeTab="people"
                     hasPublicWindows={hasPublicWindows}
+                    primaryAction={
+                        membership.is_admin ? (
+                            <button
+                                type="button"
+                                onClick={() => setAddPersonModalOpen(true)}
+                                className="inline-flex items-center gap-1.5 rounded-full bg-[#0b4aa2] px-4 py-2 text-sm font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                                <span>Add</span>
+                                <ChevronDown className="ml-0.5 h-4 w-4 opacity-80" strokeWidth={2.5} />
+                            </button>
+                        ) : undefined
+                    }
                 />
 
                 {/* Tab Panel: People */}
                 {members.total === 0 && !search && category === 'all' && status === 'all' ? (
-                            <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/60 bg-white p-8 text-center shadow-xs sm:min-h-[400px] sm:p-12">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-400 ring-1 ring-slate-100 sm:h-20 sm:w-20">
-                                    <Users className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={1.5} />
-                                </div>
-                                <h2 className="mt-5 text-lg font-bold tracking-tight text-slate-900 sm:text-xl">No one has been added yet</h2>
-                                <p className="mt-2 max-w-md text-sm text-slate-500">
-                                    Add staff, parents, contractors, or anyone who regularly needs access to {organization.name}.
+                    <div className="mt-8 flex flex-col items-center justify-center rounded-2xl border border-slate-200/60 bg-white p-8 text-center shadow-xs sm:p-12">
+                        <h2 className="text-lg font-bold tracking-tight text-slate-900">No people yet</h2>
+                        <p className="mt-1 max-w-md text-sm text-slate-500">
+                            Add staff, parents, contractors or anyone who regularly needs recurring access.
+                        </p>
+                        {membership.is_admin && (
+                            <button
+                                type="button"
+                                onClick={() => setAddPersonModalOpen(true)}
+                                className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#0b4aa2] px-6 text-sm font-semibold text-white shadow-xs transition hover:bg-[#0a408b] active:scale-[0.98]"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2.25} />
+                                <span>Add person</span>
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    /* Directory with search, filters, and list */
+                    <div className="space-y-4 pt-2">
+                        {/* Native Search Field */}
+                        <div className="relative">
+                            <Search
+                                className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400"
+                                strokeWidth={2.5}
+                            />
+                            <input
+                                type="search"
+                                value={search}
+                                onChange={(event) => setSearch(event.target.value)}
+                                placeholder="Search by name, phone or ID..."
+                                className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                            />
+                        </div>
+
+                        {/* Category Filters */}
+                        <FilterChips
+                            variant="category"
+                            value={category}
+                            onChange={(id) => {
+                                setCategory(id);
+                                applyFilters({ category: id });
+                            }}
+                            options={[
+                                { id: 'all', label: 'All', count: category === 'all' ? members.total : undefined },
+                                { id: 'staff', label: 'Staff' },
+                                { id: 'parent', label: 'Parents' },
+                                { id: 'contractor', label: 'Contractors' },
+                                { id: 'student', label: 'Students' },
+                            ]}
+                        />
+
+                        {/* Quiet Directory Count */}
+                        <div className="px-1 pt-2 pb-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                            {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
+                        </div>
+
+                        {/* People Directory List: Card Rows */}
+                        {members.data.length === 0 ? (
+                            <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
+                                <p className="text-sm font-bold text-slate-900">No matching people found</p>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    {search ? `No members matched "${search}".` : 'No members found in this category.'}
                                 </p>
-                                {membership.is_admin && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setAddPersonModalOpen(true)}
-                                        className="mt-8 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98]"
-                                    >
-                                        <Plus className="h-4 w-4" strokeWidth={2.25} />
-                                        <span>Add someone</span>
-                                    </button>
-                                )}
                             </div>
                         ) : (
-                            /* Directory with search, filters, and list */
-                            <div className="space-y-3.5">
-                                {/* Native Search Field - No heavy outer wrapper */}
-                                <div className="relative">
-                                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                                    <input
-                                        type="search"
-                                        value={search}
-                                        onChange={(event) => {
-                                            setSearch(event.target.value);
-                                            applyFilters({ search: event.target.value });
-                                        }}
-                                        placeholder="Search by name or ID"
-                                        className="w-full rounded-xl border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-900/10 focus:outline-none"
-                                    />
-                                </div>
+                            <div className="space-y-3">
+                                {members.data.map((member) => {
+                                    const memberStatus = getMemberStatus(member);
+                                    return (
+                                        <div
+                                            key={member.id}
+                                            onClick={() => setSelectedMember(member)}
+                                            className="flex min-h-[88px] cursor-pointer items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/5 transition hover:bg-slate-50"
+                                        >
+                                            <div className="flex min-w-0 items-start gap-4">
+                                                {/* Avatar */}
+                                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-base font-bold tracking-tight text-[#0b4aa2]">
+                                                    {initialsFor(member.name)}
+                                                </div>
 
-                                {/* Streamlined Quick Filters */}
-                                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                    {[
-                                        { id: 'all', label: 'All' },
-                                        { id: 'staff', label: 'Staff' },
-                                        { id: 'parent', label: 'Parents' },
-                                        { id: 'contractor', label: 'Contractors' },
-                                        { id: 'student', label: 'Students' },
-                                        { id: 'visitor', label: 'Visitors' },
-                                    ].map((tab) => {
-                                        const isSelected = category === tab.id;
-                                        return (
-                                            <button
-                                                key={tab.id}
-                                                type="button"
-                                                onClick={() => {
-                                                    const nextCategory = isSelected ? 'all' : tab.id;
-                                                    setCategory(nextCategory);
-                                                    applyFilters({ category: nextCategory });
-                                                }}
-                                                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition ${
-                                                    isSelected
-                                                        ? 'bg-slate-900 text-white'
-                                                        : 'border border-slate-200/80 bg-white text-slate-600 hover:bg-slate-50'
-                                                }`}
-                                            >
-                                                {tab.label}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* Quiet Directory Count */}
-                                <div className="flex items-center justify-between px-1 pt-1 text-xs font-medium text-slate-500">
-                                    <span>
-                                        {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
-                                        {activeMembers > 0 && ` · ${activeMembers} active`}
-                                    </span>
-                                    {suspendedMembers > 0 && <span className="text-rose-600">{suspendedMembers} suspended</span>}
-                                </div>
-
-                                {/* People Directory List: Clean Rows with subtle dividers */}
-                                {members.data.length === 0 ? (
-                                    <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center sm:p-10">
-                                        <p className="text-sm font-semibold text-slate-900">No matching people found</p>
-                                        <p className="mt-1 text-xs text-slate-500">
-                                            {search ? `No members matched "${search}".` : 'No members found in this category.'}
-                                        </p>
-                                        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                                            {(search || category !== 'all') && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setSearch('');
-                                                        setCategory('all');
-                                                        applyFilters({ search: '', category: 'all' });
-                                                    }}
-                                                    className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                >
-                                                    <X className="h-3.5 w-3.5" />
-                                                    <span>Clear filters</span>
-                                                </button>
-                                            )}
-                                            {membership.is_admin && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setAddPersonModalOpen(true)}
-                                                    className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-800"
-                                                >
-                                                    <Plus className="h-3.5 w-3.5" />
-                                                    <span>Add someone</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-                                        {members.data.map((member) => {
-                                            const memberStatus = getMemberStatus(member);
-                                            return (
-                                                <div
-                                                    key={member.id}
-                                                    onClick={() => setSelectedMember(member)}
-                                                    className="flex min-h-[64px] items-center justify-between gap-3 px-4 py-3 transition hover:bg-slate-50/70 active:bg-slate-100/70 cursor-pointer"
-                                                >
-                                                    <div className="flex min-w-0 items-center gap-3.5">
-                                                        {/* Avatar Initials */}
-                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold tracking-tight text-slate-700">
-                                                            {initialsFor(member.name)}
-                                                        </div>
-
-                                                        {/* Identity & Status */}
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="flex items-center gap-2.5">
-                                                                <span className="truncate text-[15px] font-semibold text-slate-900">{member.name}</span>
-                                                                <span className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ring-1 ring-inset ${statusColorMap[memberStatus.color as keyof typeof statusColorMap]}`}>
-                                                                    {memberStatus.label}
-                                                                </span>
-                                                            </div>
-                                                            <p className="mt-0.5 truncate text-[13px] text-slate-500">
-                                                                <span className="capitalize">{member.category}</span>
-                                                                {member.identifier ? ` · ${member.identifier}` : ''}
-                                                                {member.valid_until ? ` · Until ${member.valid_until}` : ' · Ongoing'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Right Action Affordance: Code & Chevron */}
-                                                    <div className="flex shrink-0 items-center gap-3">
-                                                        {member.active_credential ? (
-                                                            <div className="flex items-center gap-1">
-                                                                <span className="rounded-md bg-slate-50 px-2 py-1 font-mono text-[11px] font-semibold tracking-widest text-slate-700 ring-1 ring-inset ring-slate-200/80">
-                                                                    {member.active_credential.code}
-                                                                </span>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        copyCode(member.active_credential!.code, member.active_credential!.id);
-                                                                    }}
-                                                                    className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
-                                                                    title="Copy code"
-                                                                >
-                                                                    {copiedCodeId === member.active_credential.id ? (
-                                                                        <Check className="h-4 w-4 text-emerald-600" />
-                                                                    ) : (
-                                                                        <Copy className="h-4 w-4" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        ) : null}
-                                                        <ChevronRight className="h-5 w-5 text-slate-300" />
+                                                {/* Identity */}
+                                                <div className="min-w-0 flex-1 pt-0.5">
+                                                    <div className="truncate text-base font-bold text-slate-900">{member.name}</div>
+                                                    <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
+                                                        <span className="capitalize">{member.category}</span>
+                                                        {' · '}
+                                                        {member.valid_until ? `Until ${member.valid_until}` : 'Ongoing'}
+                                                    </p>
+                                                    <div className="mt-1 flex items-center gap-1 text-[13px] text-slate-400">
+                                                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                                        <span className="truncate">{organization.name}</span>
                                                     </div>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                            </div>
+
+                                            {/* Right Column: Status & Chevron */}
+                                            <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch py-0.5">
+                                                <span
+                                                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${statusColorMap[memberStatus.color as keyof typeof statusColorMap]}`}
+                                                >
+                                                    <span className={`h-1.5 w-1.5 rounded-full bg-current opacity-75`} />
+                                                    {memberStatus.label}
+                                                </span>
+                                                <ChevronRight className="h-5 w-5 text-slate-300" strokeWidth={2.5} />
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
+                    </div>
+                )}
 
                 {/* Add Someone Sheet / Modal */}
                 <ResponsiveSheet isOpen={addPersonModalOpen} onClose={() => setAddPersonModalOpen(false)}>
@@ -563,12 +546,16 @@ export default function AccessList({
                             <div className="mt-5 space-y-6">
                                 {/* Profile Info */}
                                 <div>
-                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Profile Details</h4>
+                                    <h4 className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Profile Details</h4>
                                     <dl className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-100 bg-slate-50/50">
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">Status</dt>
                                             <dd className="text-sm font-semibold text-slate-900">
-                                                {selectedMember.status === 'suspended' ? 'Suspended' : selectedMember.is_valid_now ? 'Active' : 'Pending/Expired'}
+                                                {selectedMember.status === 'suspended'
+                                                    ? 'Suspended'
+                                                    : selectedMember.is_valid_now
+                                                      ? 'Active'
+                                                      : 'Pending/Expired'}
                                             </dd>
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
@@ -586,87 +573,80 @@ export default function AccessList({
 
                                 {/* Active Access Code */}
                                 <div>
-                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400">Current Access Code</h4>
+                                    <h4 className="mb-3 text-xs font-semibold tracking-wider text-slate-400 uppercase">Current Access Code</h4>
                                     {selectedMember.active_credential ? (
-                                        <div className="mt-3 overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
-                                            {/* QR Code Section */}
-                                            <div className="relative flex flex-col items-center justify-center px-5 py-5 bg-emerald-50/50">
-                                                <div className="relative overflow-hidden rounded-2xl border border-emerald-200/60 bg-white p-3 shadow-xs">
-                                                    <img
-                                                        src={`https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${selectedMember.active_credential.code}&color=047857&bgcolor=ffffff&qzone=1&ecc=H`}
-                                                        alt="Access QR Code"
-                                                        className="block h-36 w-36 object-contain mix-blend-multiply sm:h-44 sm:w-44"
-                                                    />
-                                                    <div
-                                                        className="absolute flex items-center justify-center rounded-lg bg-white p-1 shadow-sm"
-                                                        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }}
-                                                    >
-                                                        <div 
-                                                            className="h-6 w-6 bg-emerald-600" 
-                                                            style={{
-                                                                maskImage: `url(${KONTROL_LOGO_BASE64})`,
-                                                                maskSize: 'contain',
-                                                                maskRepeat: 'no-repeat',
-                                                                maskPosition: 'center',
-                                                                WebkitMaskImage: `url(${KONTROL_LOGO_BASE64})`,
-                                                                WebkitMaskSize: 'contain',
-                                                                WebkitMaskRepeat: 'no-repeat',
-                                                                WebkitMaskPosition: 'center',
-                                                            }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <p className="mt-2 text-[10px] font-medium text-emerald-600/80">
-                                                    Expires: {selectedMember.active_credential.expires_at ? new Date(selectedMember.active_credential.expires_at).toLocaleDateString() : 'Never'}
-                                                </p>
+                                        <>
+                                            <div ref={cardRef} className="mx-auto w-full max-w-sm">
+                                                <PassCard
+                                                    pass={
+                                                        {
+                                                            id: selectedMember.active_credential.id,
+                                                            code: selectedMember.active_credential.code,
+                                                            visitor_name: selectedMember.name,
+                                                            visitor_phone: null,
+                                                            purpose: selectedMember.category,
+                                                            status:
+                                                                selectedMember.status === 'suspended'
+                                                                    ? 'revoked'
+                                                                    : selectedMember.is_valid_now
+                                                                      ? 'expected'
+                                                                      : 'expired',
+                                                            type: 'long_lived',
+                                                            expires_at: selectedMember.active_credential.expires_at,
+                                                            starts_at: selectedMember.valid_from,
+                                                            estate_name: organization.name,
+                                                            host_name: 'Admin',
+                                                        } as any
+                                                    }
+                                                    qrUrl={selectedMember.active_credential.code}
+                                                />
                                             </div>
 
-                                            {/* Fallback Code Section with Ticket Notches */}
-                                            <div className="relative flex flex-col items-center justify-center border-t-2 border-dashed border-emerald-100 bg-white px-5 py-4">
-                                                {/* Left & Right Ticket Notches */}
-                                                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full border-r border-emerald-100 bg-white" />
-                                                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-emerald-100 bg-white" />
+                                            {/* Action Buttons: Copy & Share */}
+                                            <div className="mt-4 flex w-full gap-3">
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)
+                                                    }
+                                                    className={`flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold shadow-xs transition-all active:scale-98 ${
+                                                        copiedCodeId === selectedMember.active_credential.id
+                                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                            : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {copiedCodeId === selectedMember.active_credential.id ? (
+                                                        <Check className="h-4 w-4 text-emerald-600" />
+                                                    ) : (
+                                                        <Copy className="h-4 w-4 text-slate-500" />
+                                                    )}
+                                                    <span>{copiedCodeId === selectedMember.active_credential.id ? 'Copied Code!' : 'Copy Code'}</span>
+                                                </button>
 
-                                                <div className="flex w-full items-center justify-between">
-                                                    <div>
-                                                        <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">ACCESS CODE</p>
-                                                        <div className="selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text text-emerald-600">
-                                                            {selectedMember.active_credential.code}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id)}
-                                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-50 active:scale-95"
-                                                        >
-                                                            {copiedCodeId === selectedMember.active_credential.id ? (
-                                                                <Check className="h-5 w-5" />
-                                                            ) : (
-                                                                <Copy className="h-5 w-5" />
-                                                            )}
-                                                        </button>
-                                                        <button
-                                                            onClick={async () => {
-                                                                try {
-                                                                    await Share.share({
-                                                                        title: 'Kontrol Access Code',
-                                                                        text: `Access Code for ${selectedMember.name}: ${selectedMember.active_credential!.code}`,
-                                                                    });
-                                                                } catch (err) {
-                                                                    copyCode(selectedMember.active_credential!.code, selectedMember.active_credential!.id);
-                                                                }
-                                                            }}
-                                                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-600 shadow-sm ring-1 ring-emerald-200 transition hover:bg-emerald-50 active:scale-95"
-                                                        >
-                                                            <Share2 className="h-5 w-5" />
-                                                        </button>
-                                                    </div>
-                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleShareMemberPass(selectedMember)}
+                                                    disabled={sharing}
+                                                    className={`flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold shadow-xs transition-all active:scale-98 disabled:opacity-75 ${
+                                                        shareCopied
+                                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                            : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
+                                                    }`}
+                                                >
+                                                    {sharing ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
+                                                    ) : shareCopied ? (
+                                                        <Check className="h-4 w-4 text-emerald-600" />
+                                                    ) : (
+                                                        <Share2 className="h-4 w-4 text-slate-500" />
+                                                    )}
+                                                    <span>{shareCopied ? 'Shared / Copied!' : sharing ? 'Preparing...' : 'Share Pass'}</span>
+                                                </button>
                                             </div>
-                                        </div>
+                                        </>
                                     ) : (
                                         <div className="mt-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
-                                            <Shield className="mx-auto h-6 w-6 text-slate-300 mb-2" />
+                                            <Shield className="mx-auto mb-2 h-6 w-6 text-slate-300" />
                                             <p className="text-sm font-medium text-slate-600">No active access code</p>
                                             <button
                                                 onClick={() => handleIssue(selectedMember)}
@@ -682,14 +662,19 @@ export default function AccessList({
                                 {/* Danger Zone */}
                                 {membership.is_admin && (
                                     <div className="pt-2">
-                                        <h4 className="text-xs font-semibold uppercase tracking-wider text-rose-400">Danger Zone</h4>
+                                        <h4 className="text-xs font-semibold tracking-wider text-rose-400 uppercase">Danger Zone</h4>
                                         <div className="mt-3 space-y-2">
                                             <button
-                                                onClick={() => selectedMember.status === 'suspended' ? handleActivate(selectedMember) : handleSuspend(selectedMember)}
-                                                className={`flex w-full items-center justify-between rounded-xl border p-4 transition-colors disabled:opacity-50 ${selectedMember.status === 'suspended'
+                                                onClick={() =>
+                                                    selectedMember.status === 'suspended'
+                                                        ? handleActivate(selectedMember)
+                                                        : handleSuspend(selectedMember)
+                                                }
+                                                className={`flex w-full items-center justify-between rounded-xl border p-4 transition-colors disabled:opacity-50 ${
+                                                    selectedMember.status === 'suspended'
                                                         ? 'border-emerald-100 bg-emerald-50 hover:border-emerald-200'
                                                         : 'border-orange-100 bg-orange-50 hover:border-orange-200'
-                                                    }`}
+                                                }`}
                                             >
                                                 <div className="flex items-center gap-3 text-left">
                                                     {selectedMember.status === 'suspended' ? (
@@ -698,16 +683,22 @@ export default function AccessList({
                                                         <Ban className="h-5 w-5 text-orange-600" />
                                                     )}
                                                     <div>
-                                                        <p className={`text-sm font-semibold ${selectedMember.status === 'suspended' ? 'text-emerald-900' : 'text-orange-900'}`}>
+                                                        <p
+                                                            className={`text-sm font-semibold ${selectedMember.status === 'suspended' ? 'text-emerald-900' : 'text-orange-900'}`}
+                                                        >
                                                             {selectedMember.status === 'suspended' ? 'Reactivate access' : 'Suspend access'}
                                                         </p>
-                                                        <p className={`text-xs ${selectedMember.status === 'suspended' ? 'text-emerald-700' : 'text-orange-700'}`}>
-                                                            {selectedMember.status === 'suspended' ? 'Restore access immediately' : 'Temporarily disable all access'}
+                                                        <p
+                                                            className={`text-xs ${selectedMember.status === 'suspended' ? 'text-emerald-700' : 'text-orange-700'}`}
+                                                        >
+                                                            {selectedMember.status === 'suspended'
+                                                                ? 'Restore access immediately'
+                                                                : 'Temporarily disable all access'}
                                                         </p>
                                                     </div>
                                                 </div>
                                             </button>
-                                            
+
                                             {selectedMember.active_credential ? (
                                                 <button
                                                     onClick={() => {
@@ -733,8 +724,6 @@ export default function AccessList({
                         </>
                     )}
                 </ResponsiveSheet>
-
-
             </div>
         </OrganizationLayout>
     );
