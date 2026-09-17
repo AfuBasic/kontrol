@@ -1,11 +1,4 @@
-import {
-    UsersIcon,
-    BuildingOffice2Icon,
-    WalletIcon,
-    MegaphoneIcon,
-    ChevronRightIcon,
-    ArrowDownLeftIcon,
-} from '@heroicons/react/24/outline';
+import { UsersIcon, BuildingOffice2Icon, WalletIcon, MegaphoneIcon, ChevronRightIcon, ArrowDownLeftIcon } from '@heroicons/react/24/outline';
 import { Head, Link } from '@inertiajs/react';
 import { index as announcementsIndex } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/AnnouncementController';
 import { index as collectionsIndex } from '@/actions/App/Http/Controllers/Resident/PropertyOwner/CollectionController';
