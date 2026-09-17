@@ -21,13 +21,7 @@ interface NavItem {
     exact?: boolean;
 }
 
-export default function OrganizationLayout({
-    children,
-    title: _title,
-    contentClassName = 'max-w-7xl',
-    onRefresh,
-    hideBottomNav = false,
-}: Props) {
+export default function OrganizationLayout({ children, title: _title, contentClassName = 'max-w-7xl', onRefresh, hideBottomNav = false }: Props) {
     const page = usePage();
     const { url } = page;
     const props = page.props as any;
@@ -188,11 +182,11 @@ export default function OrganizationLayout({
                 </div>
             </header>
 
-            <main className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
-                hideBottomNav
-                    ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]'
-                    : 'pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]'
-            } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:pb-12`}>
+            <main
+                className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
+                    hideBottomNav ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]'
+                } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:pb-12`}
+            >
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 px-3 sm:px-6 lg:px-10 ${contentClassName}`}>
                         {props.flash?.success && (
@@ -229,11 +223,7 @@ export default function OrganizationLayout({
                                     }`}
                                 >
                                     <Icon className="h-5 w-5" strokeWidth={active ? 2.5 : 2} />
-                                    <span
-                                        className={`text-[10px] tracking-tight ${
-                                            active ? 'font-bold' : 'font-medium'
-                                        }`}
-                                    >
+                                    <span className={`text-[10px] tracking-tight ${active ? 'font-bold' : 'font-medium'}`}>
                                         {item.name === 'Announcements' ? 'News' : item.name}
                                     </span>
                                 </Link>
