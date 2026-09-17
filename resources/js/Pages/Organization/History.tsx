@@ -1,7 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock, DoorOpen, MapPin, Radio } from 'lucide-react';
-import React from 'react';
-import AccessTabs from '@/Components/Organization/AccessTabs';
+import { Head, Link, router } from '@inertiajs/react';
+import { CheckCircle2, ChevronLeft, ChevronRight, Clock, DoorOpen, MapPin, Radio, Search } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import AccessHeader from '@/Components/Organization/AccessHeader';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
 interface Log {
@@ -45,8 +45,21 @@ interface Props {
     };
 }
 
-export default function ArrivalHistory({ organization, logs }: Props) {
+export default function ArrivalHistory({ organization, logs, filters }: Props) {
     const hasPublicWindows = organization.access_policy === 'public_window';
+    const [search, setSearch] = useState(filters.search ?? '');
+
+    const handleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        router.get('/org/history', { search }, { preserveState: true, preserveScroll: true });
+    };
+
+    useEffect(() => {
+        const debounce = setTimeout(() => {
+            handleSearch();
+        }, 300);
+        return () => clearTimeout(debounce);
+    }, [search]);
 
     const formatDay = (isoString: string | null) => {
         if (!isoString) {
@@ -79,221 +92,155 @@ export default function ArrivalHistory({ organization, logs }: Props) {
         return groups;
     }, {});
 
+    const initialsFor = (name: string) =>
+        name
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0])
+            .join('')
+            .toUpperCase();
+
     return (
-        <OrganizationLayout title="Access - History" contentClassName="max-w-[86rem]">
+        <OrganizationLayout title="Access - History" contentClassName="max-w-[92rem]">
             <Head title={`${organization.name} - History`} />
 
-            <div className="space-y-5 pt-4 sm:pt-8">
-                <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
-                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                        <div className="max-w-2xl">
-                            <p className="text-sm font-black text-[#0b4aa2]">Arrival history</p>
-                            <h1 className="mt-1.5 text-2xl font-black text-slate-950 sm:mt-2 sm:text-4xl">Movement record for {organization.name}</h1>
-                            <p className="mt-3 text-sm leading-6 font-semibold text-slate-500 sm:text-base">
-                                Review completed and active visits as a chronological ledger, not a raw audit table.
+            <div className="space-y-4 pt-1 sm:pt-4">
+                <AccessHeader activeTab="history" hasPublicWindows={hasPublicWindows} />
+
+                <div className="space-y-4 pt-2">
+                    {/* Native Search Field */}
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />
+                        <input
+                            type="search"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search access history..."
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                        />
+                    </div>
+
+                    <div className="px-1 pt-2 pb-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                        {logs.total} {logs.total === 1 ? 'RECORDED VISIT' : 'RECORDED VISITS'}
+                    </div>
+
+                    {logs.data.length === 0 ? (
+                        <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
+                            <p className="text-sm font-bold text-slate-900">No matching visits found</p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {search ? `No visits matched "${search}".` : 'Once security logs arrivals, this page will show the timeline by day.'}
                             </p>
                         </div>
-
-                        <div className="rounded-[1.5rem] bg-[#0f172a] p-4 text-white lg:min-w-48">
-                            <p className="text-3xl font-black">{logs.total}</p>
-                            <p className="mt-1 text-xs font-bold text-slate-300">Recorded visits</p>
-                        </div>
-                    </div>
-
-                    <div className="mt-6">
-                        <AccessTabs activeTab="history" hasPublicWindows={hasPublicWindows} />
-                    </div>
-                </section>
-
-                {logs.data.length === 0 ? (
-                    <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-8">
-                        <div className="flex max-w-2xl gap-4">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-slate-500">
-                                <Clock className="h-6 w-6" />
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black tracking-tight text-slate-950">No visits recorded yet.</h2>
-                                <p className="mt-3 text-sm leading-6 font-semibold text-slate-500">
-                                    Once security logs arrivals for your organization, this page will show the timeline by day.
-                                </p>
-                            </div>
-                        </div>
-                    </section>
-                ) : (
-                    <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
-                        <div className="space-y-8">
+                    ) : (
+                        <div className="space-y-6">
                             {Object.entries(groupedLogs).map(([date, dayLogs]) => (
-                                <div key={date}>
-                                    {/* Mobile: date as inline heading */}
-                                    <div className="mb-3 flex items-center gap-3 lg:hidden">
-                                        <p className="text-sm font-black text-slate-950">{date}</p>
-                                        <span className="h-px flex-1 bg-slate-100" />
-                                        <p className="text-xs font-bold text-slate-400">
-                                            {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
-                                        </p>
-                                    </div>
-
-                                    {/* Desktop: date in left column */}
-                                    <div className="hidden gap-4 lg:grid lg:grid-cols-[12rem_minmax(0,1fr)]">
-                                        <div>
-                                            <div className="sticky top-24 rounded-[1.35rem] bg-slate-50 p-4 ring-1 ring-slate-100">
-                                                <p className="text-sm font-black text-slate-950">{date}</p>
-                                                <p className="mt-1 text-xs font-bold text-slate-500">
-                                                    {dayLogs.length} {dayLogs.length === 1 ? 'visit' : 'visits'}
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-3">
-                                            {dayLogs.map((log) => {
-                                                const isHere = !log.checked_out_at;
-                                                const confirmed = Boolean(log.confirmed_at);
-
-                                                return (
-                                                    <article
-                                                        key={log.id}
-                                                        className="grid gap-3 rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100 sm:grid-cols-[5.5rem_minmax(0,1fr)_auto] sm:items-center"
-                                                    >
-                                                        <time className="text-sm font-black text-slate-500">{formatTime(log.verified_at)}</time>
-
-                                                        <div className="min-w-0">
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <h2 className="truncate text-base font-black text-slate-950">{log.visitor_name}</h2>
-                                                                {log.tag && (
-                                                                    <span className="rounded-full bg-white px-2 py-1 text-[11px] font-black text-slate-500 ring-1 ring-slate-200">
-                                                                        {log.tag}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
-                                                                <span className="inline-flex items-center gap-1">
-                                                                    <MapPin className="h-3.5 w-3.5" />
-                                                                    {log.entry_point || 'Gate'}
-                                                                </span>
-                                                                <span>{log.admission_basis}</span>
-                                                                {log.vehicle_plate_number && <span>{log.vehicle_plate_number.toUpperCase()}</span>}
-                                                            </p>
-                                                        </div>
-
-                                                        <div className="flex flex-wrap gap-2 sm:justify-end">
-                                                            <span
-                                                                className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                                                                    isHere ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/70 text-slate-600'
-                                                                }`}
-                                                            >
-                                                                {isHere ? <Radio className="h-3.5 w-3.5" /> : <DoorOpen className="h-3.5 w-3.5" />}
-                                                                {isHere ? 'Here now' : `Left ${log.checked_out_at_human || ''}`}
-                                                            </span>
-                                                            {confirmed && (
-                                                                <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf2ff] px-2.5 py-1 text-[11px] font-black text-[#0b4aa2]">
-                                                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                                                    Confirmed
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </article>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-
-                                    {/* Mobile: inline log entries */}
-                                    <div className="space-y-3 lg:hidden">
+                                <div key={date} className="space-y-3">
+                                    <h3 className="px-1 text-[13px] font-bold text-slate-900">{date}</h3>
+                                    <div className="space-y-3">
                                         {dayLogs.map((log) => {
                                             const isHere = !log.checked_out_at;
                                             const confirmed = Boolean(log.confirmed_at);
 
                                             return (
-                                                <article
+                                                <div
                                                     key={log.id}
-                                                    className="rounded-[1.5rem] bg-slate-50 p-4 ring-1 ring-slate-100"
+                                                    className="flex flex-col justify-between gap-4 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/5 transition hover:bg-slate-50 sm:flex-row sm:items-center"
                                                 >
-                                                    <div className="flex items-start justify-between gap-3">
-                                                        <div className="min-w-0">
-                                                            <div className="flex flex-wrap items-center gap-2">
-                                                                <h2 className="truncate text-base font-black text-slate-950">{log.visitor_name}</h2>
+                                                    <div className="flex min-w-0 items-start gap-4">
+                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f1f5f9] text-base font-bold tracking-tight text-slate-700">
+                                                            {initialsFor(log.visitor_name)}
+                                                        </div>
+
+                                                        <div className="min-w-0 flex-1 pt-0.5">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="truncate text-base font-bold text-slate-900">{log.visitor_name}</div>
                                                                 {log.tag && (
-                                                                    <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-black text-slate-500 ring-1 ring-slate-200">
+                                                                    <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 uppercase">
                                                                         {log.tag}
                                                                     </span>
                                                                 )}
                                                             </div>
-                                                            <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-500">
-                                                                <time>{formatTime(log.verified_at)}</time>
-                                                                <span className="inline-flex items-center gap-1">
-                                                                    <MapPin className="h-3.5 w-3.5" />
-                                                                    {log.entry_point || 'Gate'}
-                                                                </span>
-                                                                {log.vehicle_plate_number && <span>{log.vehicle_plate_number.toUpperCase()}</span>}
+                                                            <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
+                                                                <span className="capitalize">{log.admission_basis}</span>
+                                                                {' · '}
+                                                                {formatTime(log.verified_at)}
                                                             </p>
+                                                            <div className="mt-1 flex items-center gap-1 text-[13px] text-slate-400">
+                                                                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                                                <span className="truncate">
+                                                                    {log.entry_point || 'Gate'}{' '}
+                                                                    {log.vehicle_plate_number ? ` (${log.vehicle_plate_number.toUpperCase()})` : ''}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <span
-                                                            className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-black ${
-                                                                isHere ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-200/70 text-slate-600'
-                                                            }`}
-                                                        >
-                                                            {isHere ? <Radio className="h-3.5 w-3.5" /> : <DoorOpen className="h-3.5 w-3.5" />}
-                                                            {isHere ? 'Here' : 'Left'}
-                                                        </span>
                                                     </div>
-                                                    {confirmed && (
-                                                        <div className="mt-2.5 flex">
-                                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#eaf2ff] px-2.5 py-1 text-[11px] font-black text-[#0b4aa2]">
-                                                                <CheckCircle2 className="h-3.5 w-3.5" />
+
+                                                    <div className="flex shrink-0 flex-col items-start justify-center gap-2 self-stretch py-0.5 sm:items-end">
+                                                        <span
+                                                            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${isHere ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}
+                                                        >
+                                                            {isHere ? <Radio className="h-3 w-3" /> : <DoorOpen className="h-3 w-3" />}
+                                                            {isHere ? 'Here now' : `Left ${log.checked_out_at_human || ''}`}
+                                                        </span>
+
+                                                        {confirmed && (
+                                                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#eaf2ff] px-2 py-0.5 text-[11px] font-bold text-[#0b4aa2]">
+                                                                <CheckCircle2 className="h-3 w-3" />
                                                                 Confirmed
                                                             </span>
-                                                        </div>
-                                                    )}
-                                                </article>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             );
                                         })}
                                     </div>
                                 </div>
                             ))}
-                        </div>
 
-                        {logs.last_page > 1 && (
-                            <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 sm:flex-row">
-                                <p className="text-xs font-semibold text-slate-500">
-                                    Page {logs.current_page} of {logs.last_page} ({logs.total} total visits)
-                                </p>
-                                <div className="flex items-center gap-2">
-                                    {logs.links[0]?.url ? (
-                                        <Link
-                                            href={logs.links[0].url}
-                                            preserveScroll
-                                            className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
-                                        >
-                                            <ChevronLeft className="h-4 w-4" />
-                                            <span>Previous</span>
-                                        </Link>
-                                    ) : (
-                                        <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-300 ring-1 ring-slate-100">
-                                            <ChevronLeft className="h-4 w-4" />
-                                            <span>Previous</span>
-                                        </span>
-                                    )}
+                            {logs.last_page > 1 && (
+                                <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-slate-100 pt-6 sm:flex-row">
+                                    <p className="text-xs font-semibold text-slate-500">
+                                        Page {logs.current_page} of {logs.last_page} ({logs.total} total visits)
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        {logs.links[0]?.url ? (
+                                            <Link
+                                                href={logs.links[0].url}
+                                                preserveScroll
+                                                className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                                <span>Previous</span>
+                                            </Link>
+                                        ) : (
+                                            <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-300 ring-1 ring-slate-100">
+                                                <ChevronLeft className="h-4 w-4" />
+                                                <span>Previous</span>
+                                            </span>
+                                        )}
 
-                                    {logs.links[logs.links.length - 1]?.url ? (
-                                        <Link
-                                            href={logs.links[logs.links.length - 1].url!}
-                                            preserveScroll
-                                            className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
-                                        >
-                                            <span>Next</span>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Link>
-                                    ) : (
-                                        <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-300 ring-1 ring-slate-100">
-                                            <span>Next</span>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </span>
-                                    )}
+                                        {logs.links[logs.links.length - 1]?.url ? (
+                                            <Link
+                                                href={logs.links[logs.links.length - 1].url!}
+                                                preserveScroll
+                                                className="inline-flex items-center gap-1.5 rounded-2xl bg-white px-3.5 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200/80 transition hover:bg-slate-50"
+                                            >
+                                                <span>Next</span>
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Link>
+                                        ) : (
+                                            <span className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-2xl bg-slate-50 px-3.5 py-2 text-xs font-bold text-slate-300 ring-1 ring-slate-100">
+                                                <span>Next</span>
+                                                <ChevronRight className="h-4 w-4" />
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
-                    </section>
-                )}
+                            )}
+                        </div>
+                    )}
+                </div>
             </div>
         </OrganizationLayout>
     );
