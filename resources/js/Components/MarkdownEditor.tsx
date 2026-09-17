@@ -176,7 +176,11 @@ export default function MarkdownEditor({
                     <ListOrdered className="h-3.5 w-3.5" />
                 </ToolbarButton>
                 {!compact && (
-                    <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} title="Quote">
+                    <ToolbarButton
+                        onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                        isActive={editor.isActive('blockquote')}
+                        title="Quote"
+                    >
                         <Quote className="h-3.5 w-3.5" />
                     </ToolbarButton>
                 )}
@@ -218,7 +222,9 @@ export default function MarkdownEditor({
                 </div>
             </div>
 
-            <div className={`rounded-b-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 ${error ? 'border-rose-300 dark:border-rose-800' : ''}`}>
+            <div
+                className={`rounded-b-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 ${error ? 'border-rose-300 dark:border-rose-800' : ''}`}
+            >
                 <EditorContent editor={editor} />
             </div>
 
