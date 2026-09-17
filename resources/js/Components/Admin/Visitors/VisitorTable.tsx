@@ -55,32 +55,26 @@ export default function VisitorTable({ logs, filters, checkoutEnabled, onSort, o
                             onClick={() => onSelect(log)}
                             className="flex cursor-pointer items-start justify-between gap-3 p-4 transition-colors duration-150 ease-out hover:bg-gray-50/80 active:bg-gray-100/70"
                         >
-                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="flex min-w-0 flex-1 items-start gap-3">
                                 <div className="mt-0.5 shrink-0">
                                     <VisitEventIcon type={eventType} size="sm" />
                                 </div>
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5">
                                         <p className="truncate text-sm font-bold text-gray-900">{log.visitor.name}</p>
-                                        {log.code && (
-                                            <span className="font-mono text-[10px] font-bold text-gray-400">#{log.code}</span>
-                                        )}
+                                        {log.code && <span className="font-mono text-[10px] font-bold text-gray-400">#{log.code}</span>}
                                     </div>
 
-                                    <p className="mt-0.5 text-xs text-gray-600 font-medium">
+                                    <p className="mt-0.5 text-xs font-medium text-gray-600">
                                         Visiting <span className="font-semibold text-gray-900">{log.host.name}</span>
                                         {log.host.unit ? <span className="text-gray-400"> · {log.host.unit}</span> : null}
                                     </p>
 
                                     <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] font-medium text-gray-400">
                                         <span>In: {log.verified_at_time || log.verified_at}</span>
-                                        {checkoutEnabled && log.checked_out_at && (
-                                            <span>· Out: {log.checked_out_at_time || log.checked_out_at}</span>
-                                        )}
+                                        {checkoutEnabled && log.checked_out_at && <span>· Out: {log.checked_out_at_time || log.checked_out_at}</span>}
                                         {checkoutEnabled && (
-                                            <span className="font-semibold text-gray-700">
-                                                · {formatStayDuration(log.duration_minutes, log)}
-                                            </span>
+                                            <span className="font-semibold text-gray-700">· {formatStayDuration(log.duration_minutes, log)}</span>
                                         )}
                                     </div>
                                 </div>
