@@ -19,26 +19,12 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
     // 1. ACCOUNT INACTIVE / EXPIRED / OVERDUE
     if (status === 'past_due') {
         if (is_grace_period) {
-            return (
-                <Banner
-                    title="Overdue"
-                    description="Grace period active"
-                    cta="Settle now"
-                    onCtaClick={openExternalBilling}
-                    variant="grace"
-                />
-            );
+            return <Banner title="Overdue" description="Grace period active" cta="Settle now" onCtaClick={openExternalBilling} variant="grace" />;
         }
 
         if (!is_active) {
             return (
-                <Banner
-                    title="Account inactive"
-                    description="Access limited"
-                    cta="Settle now"
-                    onCtaClick={openExternalBilling}
-                    variant="inactive"
-                />
+                <Banner title="Account inactive" description="Access limited" cta="Settle now" onCtaClick={openExternalBilling} variant="inactive" />
             );
         }
     }
@@ -56,27 +42,11 @@ export default function SubscriptionBanner({ subscription }: SubscriptionBannerP
         const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (diffTime < 0) {
-            return (
-                <Banner
-                    title="Trial expired"
-                    description="Access limited"
-                    cta="Settle now"
-                    onCtaClick={openExternalBilling}
-                    variant="inactive"
-                />
-            );
+            return <Banner title="Trial expired" description="Access limited" cta="Settle now" onCtaClick={openExternalBilling} variant="inactive" />;
         }
 
         if (diffTime === 0) {
-            return (
-                <Banner
-                    title="Trial period"
-                    description="Ends today"
-                    cta="Settle now"
-                    onCtaClick={openExternalBilling}
-                    variant="grace"
-                />
-            );
+            return <Banner title="Trial period" description="Ends today" cta="Settle now" onCtaClick={openExternalBilling} variant="grace" />;
         }
 
         // Less than or equal to 3 days: show 'Settle now'
@@ -133,9 +103,9 @@ function Banner({ title, description, cta, onCtaClick, variant }: BannerProps) {
 
                 {/* Text Block */}
                 <div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden">
-                    <span className="shrink-0 font-medium text-[13px] tracking-tight text-[#1C1C1E] sm:text-[14px]">{title}</span>
+                    <span className="shrink-0 text-[13px] font-medium tracking-tight text-[#1C1C1E] sm:text-[14px]">{title}</span>
                     <span className="shrink-0 text-[11px] text-[#6B7280] sm:text-[12px]">·</span>
-                    <span className="truncate font-medium text-[11px] text-[#6B7280] sm:text-[12px]">{description}</span>
+                    <span className="truncate text-[11px] font-medium text-[#6B7280] sm:text-[12px]">{description}</span>
                 </div>
             </div>
 
@@ -143,7 +113,7 @@ function Banner({ title, description, cta, onCtaClick, variant }: BannerProps) {
             {cta && (
                 <button
                     onClick={onCtaClick}
-                    className="ml-2 shrink-0 pl-2 font-semibold text-[12px] text-[#6366F1] transition-opacity active:opacity-60 sm:ml-auto sm:pl-4 sm:font-medium sm:text-[13px]"
+                    className="ml-2 shrink-0 pl-2 text-[12px] font-semibold text-[#6366F1] transition-opacity active:opacity-60 sm:ml-auto sm:pl-4 sm:text-[13px] sm:font-medium"
                 >
                     {cta} →
                 </button>
