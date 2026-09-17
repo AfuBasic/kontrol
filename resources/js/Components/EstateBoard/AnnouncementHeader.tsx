@@ -34,12 +34,7 @@ interface AnnouncementHeaderProps {
     className?: string;
 }
 
-export default function AnnouncementHeader({
-    post,
-    showStatusBadge = false,
-    isAdminView = false,
-    className = '',
-}: AnnouncementHeaderProps) {
+export default function AnnouncementHeader({ post, showStatusBadge = false, isAdminView = false, className = '' }: AnnouncementHeaderProps) {
     const category = post.category || 'general';
     const categoryInfo = CATEGORY_CONFIG[category] || CATEGORY_CONFIG.general;
     const CategoryIcon = categoryInfo.icon;
@@ -64,9 +59,7 @@ export default function AnnouncementHeader({
     const { auth } = usePage<SharedData>().props;
     const estateName = (auth as any)?.estate?.name || auth?.user?.context?.estate_name || auth?.user?.estate_name || 'Estate Administration';
 
-    const authorName = post.property_owner_id
-        ? (post.author?.name ? `Landlord (${post.author.name})` : 'Landlord Bulletin')
-        : estateName;
+    const authorName = post.property_owner_id ? (post.author?.name ? `Landlord (${post.author.name})` : 'Landlord Bulletin') : estateName;
 
     const initial = authorName.charAt(0).toUpperCase();
 
@@ -104,13 +97,13 @@ export default function AnnouncementHeader({
             </div>
 
             {/* Title */}
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight text-slate-900 leading-tight [overflow-wrap:anywhere] break-words">
+            <h1 className="text-xl leading-tight font-black tracking-tight [overflow-wrap:anywhere] break-words text-slate-900 sm:text-2xl lg:text-3xl">
                 {post.title || 'Untitled Announcement'}
             </h1>
 
             {/* Author & Publication Context */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                <div className="flex items-center gap-3 min-w-0 max-w-full">
+                <div className="flex max-w-full min-w-0 items-center gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700 ring-1 ring-slate-200">
                         {initial}
                     </div>
@@ -133,7 +126,7 @@ export default function AnnouncementHeader({
                             </span>
                         ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-bold text-indigo-700">
-                                <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-600" />
                                 <span>Unread</span>
                             </span>
                         )}
@@ -143,11 +136,11 @@ export default function AnnouncementHeader({
 
             {/* Priority Callout if Important / Critical */}
             {priorityCallout && (
-                <div className={`flex items-start gap-3 rounded-2xl border p-3.5 sm:p-4 text-left transition-all ${priorityCallout.banner}`}>
-                    <priorityCallout.icon className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className={`flex items-start gap-3 rounded-2xl border p-3.5 text-left transition-all sm:p-4 ${priorityCallout.banner}`}>
+                    <priorityCallout.icon className="mt-0.5 h-4 w-4 shrink-0" />
                     <div>
                         <p className="text-xs font-black tracking-tight">{priorityCallout.title}</p>
-                        <p className="mt-0.5 text-[11px] font-medium leading-relaxed opacity-90">{priorityCallout.text}</p>
+                        <p className="mt-0.5 text-[11px] leading-relaxed font-medium opacity-90">{priorityCallout.text}</p>
                     </div>
                 </div>
             )}
