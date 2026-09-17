@@ -90,7 +90,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                     </div>
 
                     <div className="mt-6">
-                        <AccessTabs activeTab="public_windows" hasPublicWindows={true} />
+                        <AccessTabs activeTab="public_windows" />
                     </div>
                 </section>
 
