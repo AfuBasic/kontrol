@@ -1,44 +1,41 @@
 import React, { ReactNode } from 'react';
 import AccessTabs from './AccessTabs';
+import { usePage } from '@inertiajs/react';
 
 interface Props {
-    title?: string;
-    subtitle?: string;
     primaryAction?: ReactNode;
-    activeTab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows';
-    hasPublicWindows?: boolean;
+    activeTab: 'people' | 'visitors' | 'arrivals' | 'history';
     pendingCount?: number;
     activeCount?: number;
-    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows') => void;
+    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history') => void;
 }
 
 export default function AccessHeader({
-    title = 'Access',
-    subtitle = 'Manage people, visitors, arrivals and history for your estate.',
     primaryAction,
     activeTab,
-    hasPublicWindows,
     pendingCount,
     activeCount,
     onTabChange,
 }: Props) {
+    const { organization } = usePage().props as any;
+    const estateContext = organization?.estate ? ` · ${organization.estate}` : '';
+
     return (
         <div className="w-full">
-            {/* Access Intro Band */}
-            <div className="relative -mx-3 overflow-hidden bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/40 px-3 py-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
-                <div className="relative z-10 flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                        <h1 className="text-xl font-bold tracking-tight text-[#0b4aa2] sm:text-2xl">{title}</h1>
-                        {subtitle && <p className="mt-1 max-w-sm text-[13px] leading-snug text-slate-500">{subtitle}</p>}
-                    </div>
-                    {primaryAction && <div className="mt-0.5 shrink-0">{primaryAction}</div>}
+            {/* Access Intro */}
+            <div className="flex items-center justify-between px-1 pb-3 pt-1 sm:px-4">
+                <div>
+                    <h1 className="text-[26px] font-bold tracking-tight text-[#0b1f40]">Access</h1>
+                    <p className="mt-0.5 text-[13px] font-medium text-slate-500">
+                        {organization?.name || 'Kontrol'}{estateContext}
+                    </p>
                 </div>
+                {primaryAction && <div className="shrink-0">{primaryAction}</div>}
             </div>
 
             {/* Tabs */}
             <AccessTabs
                 activeTab={activeTab}
-                hasPublicWindows={hasPublicWindows}
                 pendingCount={pendingCount}
                 activeCount={activeCount}
                 onTabChange={onTabChange}
