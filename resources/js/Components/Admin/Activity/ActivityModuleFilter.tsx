@@ -34,7 +34,7 @@ export default function ActivityModuleFilter({ currentModule, onSelectModule }: 
                         key={option.key}
                         type="button"
                         onClick={() => onSelectModule(option.key)}
-                        className={`inline-flex shrink-0 items-center justify-center rounded-xl px-3.5 py-1.5 font-medium text-xs transition-all duration-150 select-none ${
+                        className={`inline-flex shrink-0 items-center justify-center rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all duration-150 select-none ${
                             isActive
                                 ? 'bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900'
                                 : 'border border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
