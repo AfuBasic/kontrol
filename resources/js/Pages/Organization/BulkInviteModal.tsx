@@ -50,7 +50,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
     const handleRemoveEmail = (emailToRemove: string) => {
         setData(
             'emails',
-            data.emails.filter((e) => e !== emailToRemove)
+            data.emails.filter((e) => e !== emailToRemove),
         );
     };
 
@@ -87,7 +87,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
                         <div className="space-y-6">
                             {/* Invite Name & Purpose */}
-                            <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5 space-y-4">
+                            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
                                 <div>
                                     <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                         Batch / List Name (Optional)
@@ -97,20 +97,18 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         placeholder="e.g. VIP Conference Guests, Vendor Team"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     />
                                     {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
                                 </div>
                                 <div>
-                                    <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                        Purpose
-                                    </label>
+                                    <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">Purpose</label>
                                     <input
                                         type="text"
                                         placeholder="e.g. Client Onsite Workshop"
                                         value={data.purpose}
                                         onChange={(e) => setData('purpose', e.target.value)}
-                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                     />
                                     {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.purpose}</p>}
                                 </div>
@@ -122,7 +120,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
                                         Recipient Emails <span className="text-rose-500">*</span>
                                     </label>
-                                    <span className={`text-xs font-semibold ${isOverLimit ? 'text-rose-600 font-bold' : 'text-slate-500'}`}>
+                                    <span className={`text-xs font-semibold ${isOverLimit ? 'font-bold text-rose-600' : 'text-slate-500'}`}>
                                         {currentRecipientsCount} / {MAX_RECIPIENTS} max
                                     </span>
                                 </div>
@@ -132,7 +130,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     placeholder="Paste recipient emails here (one per line, or comma-separated)..."
                                     value={emailInput}
                                     onChange={(e) => setEmailInput(e.target.value)}
-                                    className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-slate-900"
+                                    className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:ring-inset"
                                 />
 
                                 {validEmails.length > 0 && emailInput && (
@@ -152,8 +150,11 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
 
                                 {invalidEmails.length > 0 && (
                                     <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-600">
-                                        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                                        <span>Invalid email format: {invalidEmails.slice(0, 3).join(', ')}{invalidEmails.length > 3 ? '...' : ''}</span>
+                                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                                        <span>
+                                            Invalid email format: {invalidEmails.slice(0, 3).join(', ')}
+                                            {invalidEmails.length > 3 ? '...' : ''}
+                                        </span>
                                     </div>
                                 )}
 
@@ -184,7 +185,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                             <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
                                 <div className="mb-3 flex items-center gap-2">
                                     <Calendar className="h-4 w-4 text-slate-500" />
-                                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Pass Validity Period</h4>
+                                    <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">Pass Validity Period</h4>
                                 </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div>
@@ -194,7 +195,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                             min={today}
                                             value={data.valid_from}
                                             onChange={(e) => setData('valid_from', e.target.value)}
-                                            className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-slate-900"
+                                            className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900"
                                         />
                                     </div>
                                     <div>
@@ -204,7 +205,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                             min={data.valid_from}
                                             value={data.valid_until}
                                             onChange={(e) => setData('valid_until', e.target.value)}
-                                            className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-inset ring-slate-200 focus:ring-2 focus:ring-slate-900"
+                                            className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900"
                                         />
                                     </div>
                                 </div>
@@ -218,8 +219,9 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         <RefreshCw className="h-4 w-4 text-indigo-600" />
                                         <span className="text-sm font-bold text-slate-900">Auto-renew this list</span>
                                     </div>
-                                    <p className="text-xs text-slate-600 leading-relaxed">
-                                        Automatically issue and email a new 30-day pass to active recipients 24 hours before each cycle expires (requires active Estate subscription).
+                                    <p className="text-xs leading-relaxed text-slate-600">
+                                        Automatically issue and email a new 30-day pass to active recipients 24 hours before each cycle expires
+                                        (requires active Estate subscription).
                                     </p>
                                 </div>
                                 <button
@@ -258,4 +260,3 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
         </ResponsiveSheet>
     );
 }
-
