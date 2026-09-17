@@ -153,9 +153,7 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                             <section>
                                 <div className="mb-4">
                                     <h2 className="text-[13px] font-black text-slate-900">Coverage Jurisdiction</h2>
-                                    <p className="mt-1 text-xs font-semibold text-slate-500">
-                                        Where should this authority apply within the estate?
-                                    </p>
+                                    <p className="mt-1 text-xs font-semibold text-slate-500">Where should this authority apply within the estate?</p>
                                 </div>
 
                                 <div className="grid max-w-xl grid-cols-2 gap-3">
@@ -174,10 +172,14 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                             onChange={(e) => setData('scope_type', e.target.value as 'estate' | 'zone')}
                                             className="sr-only"
                                         />
-                                        <Building2 className={`mt-0.5 h-4 w-4 shrink-0 ${data.scope_type === 'estate' ? 'text-white' : 'text-slate-400'}`} />
+                                        <Building2
+                                            className={`mt-0.5 h-4 w-4 shrink-0 ${data.scope_type === 'estate' ? 'text-white' : 'text-slate-400'}`}
+                                        />
                                         <div>
                                             <p className="text-xs font-black">Estate-wide</p>
-                                            <p className={`mt-0.5 text-[11px] font-medium leading-relaxed ${data.scope_type === 'estate' ? 'text-slate-300' : 'text-slate-500'}`}>
+                                            <p
+                                                className={`mt-0.5 text-[11px] leading-relaxed font-medium ${data.scope_type === 'estate' ? 'text-slate-300' : 'text-slate-500'}`}
+                                            >
                                                 Global jurisdiction across all estate zones.
                                             </p>
                                         </div>
@@ -198,10 +200,14 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                             onChange={(e) => setData('scope_type', e.target.value as 'estate' | 'zone')}
                                             className="sr-only"
                                         />
-                                        <MapPin className={`mt-0.5 h-4 w-4 shrink-0 ${data.scope_type === 'zone' ? 'text-white' : 'text-slate-400'}`} />
+                                        <MapPin
+                                            className={`mt-0.5 h-4 w-4 shrink-0 ${data.scope_type === 'zone' ? 'text-white' : 'text-slate-400'}`}
+                                        />
                                         <div>
                                             <p className="text-xs font-black">Zone-specific</p>
-                                            <p className={`mt-0.5 text-[11px] font-medium leading-relaxed ${data.scope_type === 'zone' ? 'text-slate-300' : 'text-slate-500'}`}>
+                                            <p
+                                                className={`mt-0.5 text-[11px] leading-relaxed font-medium ${data.scope_type === 'zone' ? 'text-slate-300' : 'text-slate-500'}`}
+                                            >
                                                 Confined to a designated geographic zone.
                                             </p>
                                         </div>
@@ -240,7 +246,9 @@ export default function EditAssignment({ assignment, user_role_ids, roles, zones
                                             )}
                                             {errors.zone_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone_id}</p>}
                                             {(errors as Record<string, string | undefined>).zone && (
-                                                <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).zone}</p>
+                                                <p className="mt-2 text-xs font-bold text-red-600">
+                                                    {(errors as Record<string, string | undefined>).zone}
+                                                </p>
                                             )}
                                         </div>
                                     )}
