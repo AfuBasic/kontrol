@@ -197,9 +197,13 @@ export default function OrganizationLayout({
             </header>
 
             <main
-                className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+0.5rem)] ${
-                    hideBottomNav ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
-                } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+0.75rem)] lg:pb-12`}
+                className="w-full flex-1 lg:pb-12"
+                style={{
+                    paddingTop: 'calc(4rem + var(--safe-area-inset-top-stable, env(safe-area-inset-top, 0px)) + 1.5rem)',
+                    paddingBottom: hideBottomNav 
+                        ? 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' 
+                        : 'calc(4.5rem + env(safe-area-inset-bottom, 0px))'
+                }}
             >
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 px-3 sm:px-6 lg:px-10 ${contentClassName}`}>
