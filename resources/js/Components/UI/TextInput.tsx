@@ -67,7 +67,7 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(function T
             <div className="relative flex items-center">
                 {Icon && (
                     <Icon
-                        className={`pointer-events-none absolute text-slate-400 ${iconSizeClasses}`}
+                        className={`pointer-events-none absolute z-10 text-slate-400 ${iconSizeClasses}`}
                         aria-hidden="true"
                     />
                 )}
