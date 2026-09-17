@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 
-
 type Invoice = {
     ulid: string;
     id: number;
