@@ -37,7 +37,7 @@ export default function AnnouncementAudienceCard({
     }
 
     return (
-        <div className={`rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs ${className}`}>
+        <div className={`rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6 ${className}`}>
             <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-slate-800">
                     <Globe className="h-4 w-4 text-primary-600" />
@@ -51,7 +51,7 @@ export default function AnnouncementAudienceCard({
             </div>
 
             {!hasCustomTargets ? (
-                <div className="rounded-2xl bg-slate-50/70 p-3.5 border border-slate-100 flex items-center gap-3">
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/70 p-3.5">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-primary-600 shadow-xs ring-1 ring-slate-200/60">
                         {audience === 'residents' ? (
                             <Users className="h-4 w-4" />
@@ -67,19 +67,19 @@ export default function AnnouncementAudienceCard({
                     </div>
                 </div>
             ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
                     {targets!.map((target, idx) => (
                         <div
                             key={idx}
-                            className="flex items-center justify-between rounded-xl bg-slate-50/80 p-2.5 border border-slate-100 text-left"
+                            className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-left"
                         >
-                            <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex min-w-0 items-center gap-2">
                                 {target.type.toLowerCase().includes('zone') ? (
-                                    <MapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-blue-500" />
                                 ) : target.type.toLowerCase().includes('property') ? (
-                                    <Building className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                                    <Building className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
                                 ) : (
-                                    <User className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                                    <User className="h-3.5 w-3.5 shrink-0 text-slate-500" />
                                 )}
                                 <span className="truncate text-xs font-bold text-slate-800">{target.name}</span>
                             </div>
