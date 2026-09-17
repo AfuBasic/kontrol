@@ -165,9 +165,7 @@ export default function ErrorLogsShow({ error }: Props) {
                             }`}
                         >
                             <span
-                                className={`h-1.5 w-1.5 rounded-full ${
-                                    isResolved ? 'bg-emerald-400' : isIgnored ? 'bg-slate-500' : 'bg-rose-500'
-                                }`}
+                                className={`h-1.5 w-1.5 rounded-full ${isResolved ? 'bg-emerald-400' : isIgnored ? 'bg-slate-500' : 'bg-rose-500'}`}
                             />
                             <span className="uppercase">{error.status}</span>
                         </span>
@@ -178,16 +176,14 @@ export default function ErrorLogsShow({ error }: Props) {
                         </span>
                     </div>
 
-                    <h1 className="mt-3 text-lg font-bold tracking-tight text-rose-400 sm:text-xl">
-                        {error.exception_class}
-                    </h1>
+                    <h1 className="mt-3 text-lg font-bold tracking-tight text-rose-400 sm:text-xl">{error.exception_class}</h1>
 
-                    <div className="mt-3 rounded-xl border border-slate-800 bg-[#06090e] p-4 text-rose-200 text-xs leading-relaxed">
+                    <div className="mt-3 rounded-xl border border-slate-800 bg-[#06090e] p-4 text-xs leading-relaxed text-rose-200">
                         <code>{error.message}</code>
                     </div>
 
                     {error.file && (
-                        <div className="mt-3 flex items-center gap-2 text-xs text-slate-400 font-mono">
+                        <div className="mt-3 flex items-center gap-2 font-mono text-xs text-slate-400">
                             <FileCode className="h-4 w-4 text-slate-500" />
                             <span>
                                 {error.file}
@@ -214,9 +210,7 @@ export default function ErrorLogsShow({ error }: Props) {
                             </div>
                             <div className="flex justify-between pt-2.5">
                                 <dt className="text-slate-400">LAST_SEEN</dt>
-                                <dd className="font-bold text-white">
-                                    {error.last_seen_at ? new Date(error.last_seen_at).toLocaleString() : 'N/A'}
-                                </dd>
+                                <dd className="font-bold text-white">{error.last_seen_at ? new Date(error.last_seen_at).toLocaleString() : 'N/A'}</dd>
                             </div>
                             <div className="flex justify-between pt-2.5">
                                 <dt className="text-slate-400">TOTAL_REPEATS</dt>
@@ -224,7 +218,7 @@ export default function ErrorLogsShow({ error }: Props) {
                             </div>
                             <div className="flex justify-between pt-2.5">
                                 <dt className="text-slate-400">FINGERPRINT</dt>
-                                <dd className="truncate max-w-[140px] text-slate-400" title={error.fingerprint || ''}>
+                                <dd className="max-w-[140px] truncate text-slate-400" title={error.fingerprint || ''}>
                                     {error.fingerprint || 'N/A'}
                                 </dd>
                             </div>
