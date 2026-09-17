@@ -180,11 +180,15 @@ export default function Dashboard({
                             data.trend === 'up'
                                 ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
                                 : data.trend === 'down'
-                                ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
-                                : 'bg-slate-500/10 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400'
+                                  ? 'bg-rose-500/10 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
+                                  : 'bg-slate-500/10 text-slate-600 dark:bg-slate-500/10 dark:text-slate-400'
                         }`}
                     >
-                        {data.trend === 'up' ? <ArrowTrendingUpIcon className="h-3 w-3" /> : data.trend === 'down' ? <ArrowTrendingDownIcon className="h-3 w-3" /> : null}
+                        {data.trend === 'up' ? (
+                            <ArrowTrendingUpIcon className="h-3 w-3" />
+                        ) : data.trend === 'down' ? (
+                            <ArrowTrendingDownIcon className="h-3 w-3" />
+                        ) : null}
                         {Math.abs(data.growth)}%
                     </span>
                 </div>
@@ -224,7 +228,9 @@ export default function Dashboard({
         ...(operationsQueue?.pendingApplications || []),
         ...(operationsQueue?.unresolvedErrors || []),
         ...(operationsQueue?.partnerRequests || []),
-    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 6);
+    ]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 6);
 
     return (
         <ZeusLayout>
@@ -243,9 +249,12 @@ export default function Dashboard({
                             {briefing.highlights.pending_apps} pending applications
                         </span>{' '}
                         awaiting review. Platform health reports{' '}
-                        <span className={briefing.highlights.unresolved_errors > 0 ? "font-semibold text-rose-500" : "font-semibold text-emerald-500"}>
+                        <span
+                            className={briefing.highlights.unresolved_errors > 0 ? 'font-semibold text-rose-500' : 'font-semibold text-emerald-500'}
+                        >
                             {briefing.highlights.unresolved_errors} unresolved errors
-                        </span>.
+                        </span>
+                        .
                     </p>
                 </motion.div>
 
@@ -381,9 +390,7 @@ export default function Dashboard({
                                 </div>
                                 <div className="divide-y divide-slate-50 dark:divide-slate-800/30">
                                     {liveActivityStream.length === 0 ? (
-                                        <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                                            No recent activity.
-                                        </div>
+                                        <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400">No recent activity.</div>
                                     ) : (
                                         liveActivityStream.slice(0, 4).map((activity) => (
                                             <div
@@ -414,7 +421,7 @@ export default function Dashboard({
                             {/* Financial Pulse */}
                             <motion.div
                                 variants={itemVariants}
-                                className="rounded-3xl border border-slate-200/50 bg-white shadow-sm flex flex-col dark:border-slate-800/50 dark:bg-[#0f1423]"
+                                className="flex flex-col rounded-3xl border border-slate-200/50 bg-white shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]"
                             >
                                 <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5 dark:border-slate-800/50">
                                     <h2 className="flex items-center gap-2 text-sm font-bold tracking-wider text-slate-900 uppercase dark:text-white">
@@ -429,13 +436,21 @@ export default function Dashboard({
                                             <span className="text-2xl font-bold text-slate-900 dark:text-white">
                                                 {formatExactCurrency(financialPulse.mrr.current)}
                                             </span>
-                                            <span className={`flex items-center gap-1 text-xs font-bold ${financialPulse.mrr.trend === 'up' ? 'text-emerald-500' : financialPulse.mrr.trend === 'down' ? 'text-rose-500' : 'text-slate-500'}`}>
-                                                {financialPulse.mrr.trend === 'up' ? <ArrowTrendingUpIcon className="h-3 w-3" /> : financialPulse.mrr.trend === 'down' ? <ArrowTrendingDownIcon className="h-3 w-3" /> : null}
+                                            <span
+                                                className={`flex items-center gap-1 text-xs font-bold ${financialPulse.mrr.trend === 'up' ? 'text-emerald-500' : financialPulse.mrr.trend === 'down' ? 'text-rose-500' : 'text-slate-500'}`}
+                                            >
+                                                {financialPulse.mrr.trend === 'up' ? (
+                                                    <ArrowTrendingUpIcon className="h-3 w-3" />
+                                                ) : financialPulse.mrr.trend === 'down' ? (
+                                                    <ArrowTrendingDownIcon className="h-3 w-3" />
+                                                ) : null}
                                                 {Math.abs(financialPulse.mrr.growth)}%
                                             </span>
                                         </div>
                                     </div>
-                                    <h3 className="mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">Recent Collections</h3>
+                                    <h3 className="mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                                        Recent Collections
+                                    </h3>
                                     <div className="space-y-3">
                                         {financialPulse.recentPayments.length === 0 ? (
                                             <div className="py-4 text-center text-sm text-slate-500 dark:text-slate-400">No recent payments.</div>
@@ -446,9 +461,13 @@ export default function Dashboard({
                                                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
                                                             <BanknotesIcon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                                                         </div>
-                                                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">{timeAgo(payment.created_at)}</span>
+                                                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                                                            {timeAgo(payment.created_at)}
+                                                        </span>
                                                     </div>
-                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">{formatCompactCurrency(payment.amount / 100)}</span>
+                                                    <span className="text-sm font-bold text-slate-900 dark:text-white">
+                                                        {formatCompactCurrency(payment.amount / 100)}
+                                                    </span>
                                                 </div>
                                             ))
                                         )}
@@ -460,7 +479,6 @@ export default function Dashboard({
 
                     {/* Right Column (1/3 width) - Tasks, Health, Leaderboard */}
                     <div className="space-y-8">
-                        
                         {/* System Health Widget */}
                         <motion.div
                             variants={itemVariants}
@@ -471,8 +489,12 @@ export default function Dashboard({
                                     <ServerStackIcon className="h-4 w-4 text-sky-400" />
                                     Platform Health
                                 </h2>
-                                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ring-1 ${systemHealth.system_status === 'Operational' ? 'bg-emerald-500/20 text-emerald-400 ring-emerald-500/30' : 'bg-rose-500/20 text-rose-400 ring-rose-500/30'}`}>
-                                    <div className={`h-1.5 w-1.5 rounded-full ${systemHealth.system_status === 'Operational' ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                                <span
+                                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide ring-1 ${systemHealth.system_status === 'Operational' ? 'bg-emerald-500/20 text-emerald-400 ring-emerald-500/30' : 'bg-rose-500/20 text-rose-400 ring-rose-500/30'}`}
+                                >
+                                    <div
+                                        className={`h-1.5 w-1.5 rounded-full ${systemHealth.system_status === 'Operational' ? 'bg-emerald-400' : 'bg-rose-400'}`}
+                                    />
                                     {systemHealth.system_status}
                                 </span>
                             </div>
@@ -530,17 +552,17 @@ export default function Dashboard({
                                                     </div>
                                                     <div className="flex-1">
                                                         <p className="text-sm font-bold text-slate-900 dark:text-white">{item.title}</p>
-                                                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{item.subtitle}</p>
+                                                        <p className="mt-0.5 line-clamp-1 text-xs text-slate-500 dark:text-slate-400">
+                                                            {item.subtitle}
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{timeAgo(item.created_at)}</span>
+                                                    <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+                                                        {timeAgo(item.created_at)}
+                                                    </span>
                                                     <Link
-                                                        href={
-                                                            item.type === 'error'
-                                                                ? `/zeus/error-logs/${item.id}`
-                                                                : `/zeus/applications/${item.id}`
-                                                        }
+                                                        href={item.type === 'error' ? `/zeus/error-logs/${item.id}` : `/zeus/applications/${item.id}`}
                                                         className="flex items-center gap-1 text-[10px] font-bold tracking-widest text-indigo-600 uppercase hover:text-indigo-500 dark:text-indigo-400"
                                                     >
                                                         Review <ArrowRightIcon className="h-3 w-3" />
@@ -572,11 +594,15 @@ export default function Dashboard({
                                     </div>
                                     <div className="text-right">
                                         <p className="text-xs font-bold text-indigo-600 uppercase dark:text-indigo-400">Unpaid Comm.</p>
-                                        <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">{formatExactCurrency(partnerMetrics.unpaid_earnings)}</p>
+                                        <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
+                                            {formatExactCurrency(partnerMetrics.unpaid_earnings)}
+                                        </p>
                                     </div>
                                 </div>
-                                
-                                <h3 className="mb-3 mt-5 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">Top Estates (Users)</h3>
+
+                                <h3 className="mt-5 mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase dark:text-slate-400">
+                                    Top Estates (Users)
+                                </h3>
                                 <div className="space-y-2">
                                     {topEstates.slice(0, 3).map((estate, idx) => (
                                         <div
@@ -593,7 +619,6 @@ export default function Dashboard({
                                 </div>
                             </div>
                         </motion.div>
-                        
                     </div>
                 </div>
             </motion.div>
