@@ -137,7 +137,7 @@ export default function Edit({ resident, properties }: Props) {
 
                         {/* Property assignment */}
                         <div>
-                            <label htmlFor="property_id" className="block text-xs font-bold tracking-wider text-slate-700 uppercase mb-2">
+                            <label htmlFor="property_id" className="mb-2 block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                 Assigned Property
                             </label>
                             <CustomSelect
