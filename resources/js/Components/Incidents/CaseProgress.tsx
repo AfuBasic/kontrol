@@ -26,12 +26,10 @@ export default function CaseProgress({ incident, className = '' }: Props) {
 
     return (
         <section
-            className={`rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs dark:border-slate-800 dark:bg-slate-900 ${className}`}
+            className={`rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs sm:p-5 dark:border-slate-800 dark:bg-slate-900 ${className}`}
         >
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
-                <span className="text-[11px] font-black tracking-wider uppercase text-slate-400 dark:text-slate-500">
-                    Case Lifecycle Progress
-                </span>
+            <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+                <span className="text-[11px] font-black tracking-wider text-slate-400 uppercase dark:text-slate-500">Case Lifecycle Progress</span>
                 <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
                     Step {currentIdx + 1} of {STEPS.length}
                 </span>
@@ -47,14 +45,10 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                     return (
                         <div key={step.key} className="flex flex-col items-center text-center">
                             {/* Track bar / Indicator */}
-                            <div className="w-full flex items-center gap-1 mb-2">
+                            <div className="mb-2 flex w-full items-center gap-1">
                                 <div
                                     className={`h-1.5 w-full rounded-full transition-all ${
-                                        isCurrent
-                                            ? 'bg-indigo-600'
-                                            : isCompleted
-                                              ? 'bg-emerald-500'
-                                              : 'bg-slate-100 dark:bg-slate-800'
+                                        isCurrent ? 'bg-indigo-600' : isCompleted ? 'bg-emerald-500' : 'bg-slate-100 dark:bg-slate-800'
                                     }`}
                                 />
                             </div>
@@ -72,7 +66,7 @@ export default function CaseProgress({ incident, className = '' }: Props) {
                             </div>
 
                             <span
-                                className={`mt-1.5 text-[10px] sm:text-xs font-bold truncate max-w-full ${
+                                className={`mt-1.5 max-w-full truncate text-[10px] font-bold sm:text-xs ${
                                     isCurrent
                                         ? 'text-indigo-600 dark:text-indigo-400'
                                         : isCompleted
