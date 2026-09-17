@@ -53,7 +53,8 @@ export default function ProductResidents() {
                         </h1>
 
                         <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
-                            No more calling the gate to confirm guests. No more digging for payment receipts. Kontrol gives you instant control over who enters your home, how you pay dues, and what's happening in your neighborhood.
+                            No more calling the gate to confirm guests. No more digging for payment receipts. Kontrol gives you instant control over
+                            who enters your home, how you pay dues, and what's happening in your neighborhood.
                         </p>
 
                         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -170,7 +171,8 @@ export default function ProductResidents() {
                                         <div>
                                             <h4 className="text-base font-bold text-slate-900 dark:text-white">Instant arrival alert</h4>
                                             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                                                Guard verifies the pass with one tap. You get a push notification: "Your guest has arrived at the gate."
+                                                Guard verifies the pass with one tap. You get a push notification: "Your guest has arrived at the
+                                                gate."
                                             </p>
                                         </div>
                                     </div>
@@ -181,15 +183,17 @@ export default function ProductResidents() {
                             <div className="mx-auto max-w-sm rounded-[2.5rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-2xl dark:border-slate-800">
                                 <div className="flex items-center justify-between border-b border-slate-800 pb-4">
                                     <div className="flex items-center gap-2">
-                                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                                        <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-emerald-400" />
                                         <span className="text-xs font-semibold text-slate-400">Visitor Pass Active</span>
                                     </div>
-                                    <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-400 uppercase">Single Entry</span>
+                                    <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-400 uppercase">
+                                        Single Entry
+                                    </span>
                                 </div>
 
                                 <div className="mt-6 text-center">
                                     <p className="text-xs text-slate-400">Access Code</p>
-                                    <p className="mt-1 text-4xl font-mono font-extrabold tracking-widest text-white">482 910</p>
+                                    <p className="mt-1 font-mono text-4xl font-extrabold tracking-widest text-white">482 910</p>
                                     <p className="mt-2 text-xs text-slate-400">Valid for: Olumide Davies</p>
                                 </div>
 
@@ -225,9 +229,7 @@ export default function ProductResidents() {
                             Available on iOS & Android
                         </div>
 
-                        <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-                            Download Kontrol for your phone
-                        </h2>
+                        <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Download Kontrol for your phone</h2>
 
                         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
                             Already on a Kontrol estate? Download and activate your resident account in minutes.
@@ -238,11 +240,11 @@ export default function ProductResidents() {
                                 href="https://apps.apple.com/ng/app/access-kontrol/id6772562083"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex min-w-[200px] items-center gap-3 rounded-2xl bg-white px-6 py-3.5 text-slate-950 shadow-xl transition-all duration-300 hover:bg-slate-100 hover:scale-105"
+                                className="flex min-w-[200px] items-center gap-3 rounded-2xl bg-white px-6 py-3.5 text-slate-950 shadow-xl transition-all duration-300 hover:scale-105 hover:bg-slate-100"
                             >
                                 <img src="/assets/images/apple-store.svg" alt="Apple App Store" className="h-7 w-7 text-slate-950" />
                                 <div className="text-left">
-                                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600">Download on the</p>
+                                    <p className="text-[10px] font-medium tracking-wider text-slate-600 uppercase">Download on the</p>
                                     <p className="text-base font-bold">App Store</p>
                                 </div>
                             </a>
@@ -251,11 +253,11 @@ export default function ProductResidents() {
                                 href="https://play.google.com/store/apps/details?id=com.kontrol.hq&hl=en"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex min-w-[200px] items-center gap-3 rounded-2xl bg-slate-800 px-6 py-3.5 text-white ring-1 ring-white/10 transition-all duration-300 hover:bg-slate-700 hover:scale-105"
+                                className="flex min-w-[200px] items-center gap-3 rounded-2xl bg-slate-800 px-6 py-3.5 text-white ring-1 ring-white/10 transition-all duration-300 hover:scale-105 hover:bg-slate-700"
                             >
                                 <img src="/assets/images/google-play.svg" alt="Google Play" className="h-7 w-7" />
                                 <div className="text-left">
-                                    <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">Get it on</p>
+                                    <p className="text-[10px] font-medium tracking-wider text-slate-400 uppercase">Get it on</p>
                                     <p className="text-base font-bold">Google Play</p>
                                 </div>
                             </a>
