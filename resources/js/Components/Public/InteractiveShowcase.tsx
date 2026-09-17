@@ -115,10 +115,10 @@ export default function InteractiveShowcase() {
     return (
         <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
             <div className="mx-auto mb-16 max-w-3xl text-center sm:mb-24">
-                <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white">Everything your estate needs. One platform.</h2>
-                <p className="mt-6 text-xl text-slate-600 dark:text-slate-400">
-                    Tap a feature below and see it working. This is the actual product.
-                </p>
+                <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white">
+                    Everything your estate needs. One platform.
+                </h2>
+                <p className="mt-6 text-xl text-slate-600 dark:text-slate-400">Tap a feature below and see it working. This is the actual product.</p>
             </div>
 
             {/* Mobile horizontal pill layout tabs */}
@@ -261,7 +261,10 @@ export default function InteractiveShowcase() {
                                 {activeFeature.id === 'access' && (
                                     <>
                                         Ready to manage visitors?{' '}
-                                        <Link href="/product/residents#download" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href="/product/residents#download"
+                                            className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             Download the app &rarr;
                                         </Link>
                                     </>
@@ -269,7 +272,10 @@ export default function InteractiveShowcase() {
                                 {activeFeature.id === 'collections' && (
                                     <>
                                         Want this for your estate?{' '}
-                                        <Link href="/apply" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href="/apply"
+                                            className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             Apply here &rarr;
                                         </Link>
                                     </>
@@ -277,7 +283,10 @@ export default function InteractiveShowcase() {
                                 {activeFeature.id === 'household' && (
                                     <>
                                         Your household, your rules.{' '}
-                                        <Link href="/product/residents#download" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href="/product/residents#download"
+                                            className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             Download the app &rarr;
                                         </Link>
                                     </>
@@ -285,7 +294,10 @@ export default function InteractiveShowcase() {
                                 {activeFeature.id === 'announcements' && (
                                     <>
                                         Bring Kontrol to your estate.{' '}
-                                        <Link href="/apply" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href="/apply"
+                                            className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             Apply here &rarr;
                                         </Link>
                                     </>
@@ -293,7 +305,10 @@ export default function InteractiveShowcase() {
                                 {activeFeature.id === 'security' && (
                                     <>
                                         Want this for your estate?{' '}
-                                        <Link href="/apply" className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                        <Link
+                                            href="/apply"
+                                            className="font-semibold text-blue-600 transition-colors hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                                        >
                                             Apply here &rarr;
                                         </Link>
                                     </>
