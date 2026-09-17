@@ -13,13 +13,7 @@ function getFingerprint(message: string, file?: string, line?: number): string {
     return `${message}:${file || ''}:${line || 0}`;
 }
 
-export function reportClientError(errorData: {
-    message: string;
-    stack?: string;
-    file?: string;
-    line?: number;
-    exception_class?: string;
-}) {
+export function reportClientError(errorData: { message: string; stack?: string; file?: string; line?: number; exception_class?: string }) {
     try {
         const fp = getFingerprint(errorData.message, errorData.file, errorData.line);
         const count = reportedFingerprints.get(fp) || 0;
@@ -67,7 +61,7 @@ export function initErrorReporter() {
 
     window.onerror = (message, source, lineno, colno, error) => {
         reportClientError({
-            message: typeof message === 'string' ? message : (error?.message || 'Script error'),
+            message: typeof message === 'string' ? message : error?.message || 'Script error',
             stack: error?.stack,
             file: typeof source === 'string' ? source : undefined,
             line: lineno,
@@ -77,7 +71,7 @@ export function initErrorReporter() {
 
     window.addEventListener('unhandledrejection', (event) => {
         const reason = event.reason;
-        const message = reason instanceof Error ? reason.message : (typeof reason === 'string' ? reason : 'Unhandled Promise Rejection');
+        const message = reason instanceof Error ? reason.message : typeof reason === 'string' ? reason : 'Unhandled Promise Rejection';
         const stack = reason instanceof Error ? reason.stack : undefined;
         const name = reason instanceof Error ? reason.name : 'UnhandledPromiseRejection';
 
