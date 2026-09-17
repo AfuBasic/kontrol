@@ -2,6 +2,7 @@ import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
     Calendar,
     Search,
@@ -15,13 +16,17 @@ import {
     Link as LinkIcon,
     Clock,
     Loader2,
+    User,
+    Phone,
 } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import BulkInviteModal from './BulkInviteModal';
 import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import PassCard from '@/Components/Resident/PassCard';
+import TextInput from '@/Components/UI/TextInput';
 import CustomSelect from '@/Components/UI/CustomSelect';
+import Button from '@/Components/UI/Button';
 import { shareAccessCode } from '@/Utils/share';
 
 interface Organization {
@@ -85,6 +90,15 @@ export default function Visitors({ organization, membership, visitors, filters }
     const [copiedCodeId, setCopiedCodeId] = useState<number | null>(null);
     const [copiedAll, setCopiedAll] = useState(false);
     const [isCustomTime, setIsCustomTime] = useState(false);
+
+    const purposeOptions = [
+        { value: 'meeting', label: 'Meeting' },
+        { value: 'delivery', label: 'Delivery' },
+        { value: 'maintenance', label: 'Maintenance' },
+        { value: 'interview', label: 'Interview' },
+        { value: 'event', label: 'Event' },
+        { value: 'other', label: 'Other' },
+    ];
 
     useEffect(() => {
         if (flash.bulk_passes && flash.bulk_passes.length > 0) {
@@ -570,140 +584,136 @@ export default function Visitors({ organization, membership, visitors, filters }
                 <ResponsiveSheet isOpen={inviteModalOpen} onClose={() => setInviteModalOpen(false)}>
                     <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                         <div>
-                            <h3 className="text-base font-semibold text-slate-950">Invite visitor</h3>
-                            <p className="mt-0.5 text-xs text-slate-500">Create a temporary pass for a visitor.</p>
+                            <h3 className="text-xl font-bold tracking-tight text-slate-900">Invite visitor</h3>
+                            <p className="mt-1 text-sm font-medium text-slate-500">Create a temporary pass for a visitor.</p>
                         </div>
                     </div>
 
-                    <form onSubmit={handleInvite} className="mt-5 space-y-4">
-                        <div>
-                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                Visitor Name <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                placeholder="John Doe"
-                                value={data.visitor_name}
-                                onChange={(e) => setData('visitor_name', e.target.value)}
-                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                            />
-                            {errors.visitor_name && <p className="mt-1 text-xs text-rose-500">{errors.visitor_name}</p>}
-                        </div>
+                    <form onSubmit={handleInvite} className="mt-6 space-y-5">
+                        <TextInput
+                            label="Visitor Name"
+                            icon={User}
+                            placeholder="John Doe"
+                            required
+                            value={data.visitor_name}
+                            onChange={(e) => setData('visitor_name', e.target.value)}
+                            error={errors.visitor_name}
+                        />
+
+                        <TextInput
+                            label="Phone Number"
+                            icon={Phone}
+                            type="tel"
+                            placeholder="+1 234 567 8900"
+                            description="Optional. We'll send the pass to this number via SMS."
+                            value={data.visitor_phone}
+                            onChange={(e) => setData('visitor_phone', e.target.value)}
+                            error={errors.visitor_phone}
+                        />
+
+                        <TextInput
+                            label="Date of Visit"
+                            icon={Calendar}
+                            type="date"
+                            required
+                            min={new Date().toISOString().split('T')[0]}
+                            value={data.date}
+                            onChange={(e) => setData('date', e.target.value)}
+                            error={errors.date}
+                        />
 
                         <div>
-                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Phone Number</label>
-                            <input
-                                type="tel"
-                                placeholder="+1 234 567 8900"
-                                value={data.visitor_phone}
-                                onChange={(e) => setData('visitor_phone', e.target.value)}
-                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                            />
-                            {errors.visitor_phone && <p className="mt-1 text-xs text-rose-500">{errors.visitor_phone}</p>}
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                Date of Visit <span className="text-rose-500">*</span>
-                            </label>
-                            <input
-                                type="date"
-                                required
-                                min={new Date().toISOString().split('T')[0]}
-                                value={data.date}
-                                onChange={(e) => setData('date', e.target.value)}
-                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                            />
-                            {errors.date && <p className="mt-1 text-xs text-rose-500">{errors.date}</p>}
-                        </div>
-
-                        <div>
-                            <div className="flex items-center justify-between">
-                                <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">
-                                    Timeframe
-                                </label>
+                            <label className="mb-2 block text-xs font-medium text-slate-700">Timeframe</label>
+                            <div className="relative flex rounded-xl border border-slate-200 bg-slate-50 p-1">
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        setIsCustomTime(!isCustomTime);
-                                        if (isCustomTime) {
-                                            setData((prev) => ({ ...prev, start_time: '', end_time: '' }));
-                                        }
+                                        setIsCustomTime(false);
+                                        setData((prev) => ({ ...prev, start_time: '', end_time: '' }));
                                     }}
-                                    className="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+                                    className={`relative z-10 flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+                                        !isCustomTime ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
                                 >
-                                    {isCustomTime ? 'Switch to All Day' : 'Set Specific Hours'}
+                                    All Day
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCustomTime(true)}
+                                    className={`relative z-10 flex-1 rounded-lg py-2 text-sm font-semibold transition-colors ${
+                                        isCustomTime ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                                >
+                                    Specific Hours
+                                </button>
+                                {/* Active background pill */}
+                                <motion.div
+                                    className="absolute inset-y-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-xs ring-1 ring-slate-900/5"
+                                    animate={{ left: isCustomTime ? 'calc(50% + 0.125rem)' : '0.25rem' }}
+                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                />
                             </div>
 
-                            {isCustomTime ? (
-                                <div className="mt-2 grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-3">
-                                    <div>
-                                        <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                            Start Time
-                                        </label>
-                                        <input
-                                            type="time"
-                                            value={data.start_time}
-                                            onChange={(e) => setData('start_time', e.target.value)}
-                                            className="mt-1 block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                        />
-                                        {errors.start_time && <p className="mt-1 text-xs text-rose-500">{errors.start_time}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                            End Time
-                                        </label>
-                                        <input
-                                            type="time"
-                                            value={data.end_time}
-                                            onChange={(e) => setData('end_time', e.target.value)}
-                                            className="mt-1 block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                                        />
-                                        {errors.end_time && <p className="mt-1 text-xs text-rose-500">{errors.end_time}</p>}
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-xs text-slate-600">
+                            <AnimatePresence>
+                                {isCustomTime && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        transition={{ duration: 0.25 }}
+                                        className="overflow-hidden"
+                                    >
+                                        <div className="mt-4 grid grid-cols-2 gap-4">
+                                            <TextInput
+                                                label="Start Time"
+                                                icon={Clock}
+                                                type="time"
+                                                value={data.start_time}
+                                                onChange={(e) => setData('start_time', e.target.value)}
+                                                error={errors.start_time}
+                                            />
+                                            <TextInput
+                                                label="End Time"
+                                                icon={Clock}
+                                                type="time"
+                                                value={data.end_time}
+                                                onChange={(e) => setData('end_time', e.target.value)}
+                                                error={errors.end_time}
+                                            />
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            {!isCustomTime && (
+                                <p className="mt-2 px-1 text-xs text-slate-400">
                                     Valid entire day (expires at 11:59 PM)
-                                </div>
+                                </p>
                             )}
                         </div>
 
-                        <div>
-                            <label className="block text-xs font-semibold tracking-wider text-slate-500 uppercase">Purpose</label>
-                            <select
-                                value={data.purpose}
-                                onChange={(e) => setData('purpose', e.target.value)}
-                                className="mt-2 block w-full rounded-xl border-0 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                            >
-                                <option value="">Select purpose</option>
-                                <option value="meeting">Meeting</option>
-                                <option value="delivery">Delivery</option>
-                                <option value="maintenance">Maintenance</option>
-                                <option value="interview">Interview</option>
-                                <option value="event">Event</option>
-                                <option value="other">Other</option>
-                            </select>
-                            {errors.purpose && <p className="mt-1 text-xs text-rose-500">{errors.purpose}</p>}
-                        </div>
+                        <CustomSelect
+                            label="Purpose"
+                            value={data.purpose}
+                            onChange={(val) => setData('purpose', String(val))}
+                            options={purposeOptions}
+                        />
+                        {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-600">{errors.purpose}</p>}
 
-                        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
-                            <button
+                        <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-5">
+                            <Button
                                 type="button"
+                                variant="ghost"
                                 onClick={() => setInviteModalOpen(false)}
-                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
                             >
                                 Cancel
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                                 type="submit"
-                                disabled={processing}
-                                className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
+                                variant="secondary"
+                                isLoading={processing}
                             >
-                                {processing ? 'Inviting...' : 'Invite Visitor'}
-                            </button>
+                                Invite Visitor
+                            </Button>
                         </div>
                     </form>
                 </ResponsiveSheet>
