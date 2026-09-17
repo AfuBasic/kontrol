@@ -1036,11 +1036,11 @@ input::-webkit-calendar-picker-indicator {
   background:
     linear-gradient(
       135deg,
-      #082B63 0%,
-      #0B438B 56%,
-      #1259A8 100%
+      #041533 0%,
+      #082a61 45%,
+      #104e9a 100%
     );
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow:
     0 14px 36px rgba(8, 43, 99, 0.20),
     0 4px 12px rgba(8, 43, 99, 0.10);
@@ -1049,19 +1049,18 @@ input::-webkit-calendar-picker-indicator {
 .brand-card::after {
   content: "";
   position: absolute;
-  right: -160px;
-  bottom: -150px;
-  width: 480px;
-  height: 260px;
+  right: -10%;
+  bottom: -60%;
+  width: 70%;
+  height: 140%;
   border-radius: 50%;
   background:
     linear-gradient(
-      140deg,
-      rgba(70, 145, 245, 0.20),
-      rgba(30, 100, 200, 0.04)
+      180deg,
+      rgba(255, 255, 255, 0.07) 0%,
+      rgba(255, 255, 255, 0) 100%
     );
-  filter: blur(4px);
-  transform: rotate(-10deg);
+  transform: rotate(-30deg);
   pointer-events: none;
 }
 
@@ -1076,7 +1075,7 @@ input::-webkit-calendar-picker-indicator {
   box-shadow:
     0 8px 26px rgba(37, 72, 120, 0.075),
     0 1px 3px rgba(37, 72, 120, 0.04);
-  border-radius: 18px;
+  border-radius: 14px;
 }
 
 .icon-tile-blue {
