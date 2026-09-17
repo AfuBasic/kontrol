@@ -85,16 +85,14 @@ export default function ActivityRow({ activity }: ActivityRowProps) {
         >
             {/* Actor Avatar or System Icon */}
             <div className="flex items-center gap-3 sm:block">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 font-semibold text-xs text-slate-700 shadow-xs select-none sm:h-11 sm:w-11 sm:text-sm dark:bg-slate-800 dark:text-slate-200">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-xs font-semibold text-slate-700 shadow-xs select-none sm:h-11 sm:w-11 sm:text-sm dark:bg-slate-800 dark:text-slate-200">
                     {activity.actor ? activity.actor.initials : 'SYS'}
                 </div>
                 {/* Mobile time displayed inline next to avatar */}
                 <div className="flex flex-1 items-center justify-between sm:hidden">
-                    <span className="font-medium text-xs text-slate-400 dark:text-slate-500">
-                        {activity.relative_time}
-                    </span>
+                    <span className="text-xs font-medium text-slate-400 dark:text-slate-500">{activity.relative_time}</span>
                     <span
-                        className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 font-medium text-[11px] ${getModuleBadgeColor()}`}
+                        className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-medium ${getModuleBadgeColor()}`}
                     >
                         {renderModuleIcon()}
                         {activity.module_label}
@@ -105,24 +103,18 @@ export default function ActivityRow({ activity }: ActivityRowProps) {
             {/* Main content body */}
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold text-base text-slate-900 leading-snug break-words dark:text-slate-100">
-                        {activity.headline}
-                    </p>
+                    <p className="text-base leading-snug font-semibold break-words text-slate-900 dark:text-slate-100">{activity.headline}</p>
                 </div>
 
                 {activity.supporting_context && (
-                    <div className="mt-1.5 flex items-center gap-2 text-slate-500 text-sm dark:text-slate-400">
-                        <span className="line-clamp-2 italic font-normal">
-                            &ldquo;{activity.supporting_context}&rdquo;
-                        </span>
+                    <div className="mt-1.5 flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+                        <span className="line-clamp-2 font-normal italic">&ldquo;{activity.supporting_context}&rdquo;</span>
                     </div>
                 )}
 
                 {/* Footer metadata on desktop */}
                 <div className="mt-2.5 hidden items-center gap-2.5 text-xs text-slate-400 sm:flex dark:text-slate-500">
-                    <span
-                        className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 font-medium text-xs ${getModuleBadgeColor()}`}
-                    >
+                    <span className={`inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-xs font-medium ${getModuleBadgeColor()}`}>
                         {renderModuleIcon()}
                         {activity.module_label}
                     </span>
