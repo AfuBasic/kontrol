@@ -113,9 +113,7 @@ const buildOperationalDetail = (org: Organization): string => {
 
     if (org.access_policy === 'public_window') {
         const nextWindow = org.public_windows?.[0];
-        const nextStr = nextWindow
-            ? `Next: ${DAY_LABELS[nextWindow.day_of_week]} ${formatTime(nextWindow.start_time)}`
-            : 'No windows configured';
+        const nextStr = nextWindow ? `Next: ${DAY_LABELS[nextWindow.day_of_week]} ${formatTime(nextWindow.start_time)}` : 'No windows configured';
         return `Public schedule · ${count} member${count !== 1 ? 's' : ''} · ${nextStr}`;
     }
 
@@ -570,7 +568,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                         placeholder="Search organizations..."
-                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-9 text-xs font-semibold text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800"
+                                        className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-9 pl-9 text-xs font-semibold text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                                     />
                                     {searchQuery && (
                                         <button
@@ -702,9 +700,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 </div>
 
                                                 {/* Single Policy-Aware Prose Operational Detail */}
-                                                <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                                                    {buildOperationalDetail(org)}
-                                                </p>
+                                                <p className="mt-1 text-xs leading-relaxed text-slate-600">{buildOperationalDetail(org)}</p>
 
                                                 {/* Admin Information */}
                                                 {primaryAdmin && (
@@ -718,11 +714,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                             </div>
 
                                             {/* Overflow Actions Menu */}
-                                            <div
-                                                className="relative shrink-0 self-center"
-                                                data-overflow-menu
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
+                                            <div className="relative shrink-0 self-center" data-overflow-menu onClick={(e) => e.stopPropagation()}>
                                                 <button
                                                     type="button"
                                                     onClick={() => setOpenMenuId(openMenuId === org.id ? null : org.id)}
@@ -733,7 +725,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                 </button>
 
                                                 {openMenuId === org.id && (
-                                                    <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
+                                                    <div className="absolute top-full right-0 z-30 mt-1 w-48 rounded-xl border border-slate-200/80 bg-white py-1 shadow-lg shadow-slate-900/5">
                                                         <button
                                                             type="button"
                                                             onClick={() => {
@@ -936,7 +928,8 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 {form.data.type === 'hospital' ? (
                                     <div className="rounded-lg border border-rose-100 bg-rose-50 p-3.5 text-xs leading-relaxed text-rose-800">
                                         <span className="mb-0.5 block font-semibold">Unrestricted medical destination</span>
-                                        Security logs visitor details and generates an entry tag immediately 24/7. Physical arrival confirmation is never required.
+                                        Security logs visitor details and generates an entry tag immediately 24/7. Physical arrival confirmation is
+                                        never required.
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -1000,7 +993,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         <div className="flex items-center justify-between gap-4 py-1">
                                             <div className="flex-1 pr-2">
                                                 <span className="block text-xs font-medium text-slate-900">Quick Entry</span>
-                                                <span className="block text-xs text-slate-500 leading-relaxed">
+                                                <span className="block text-xs leading-relaxed text-slate-500">
                                                     Allow guards to admit visitors with quick physical tags without a resident code
                                                 </span>
                                             </div>
@@ -1029,7 +1022,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                                         <span className="block text-xs font-semibold text-slate-900">
                                                             Require Arrival Confirmation
                                                         </span>
-                                                        <span className="block text-[11px] text-slate-500 leading-relaxed">
+                                                        <span className="block text-[11px] leading-relaxed text-slate-500">
                                                             Organization admin verifies visitor reached premises (checkout is never blocked)
                                                         </span>
                                                     </div>
@@ -1103,7 +1096,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                     <div className="flex items-center justify-between gap-4">
                                         <div className="flex-1 pr-2">
                                             <h3 className="text-sm font-semibold text-slate-900">Operating hours</h3>
-                                            <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">Set normal operational days and gate arrival window</p>
+                                            <p className="mt-0.5 text-xs leading-relaxed text-slate-500">
+                                                Set normal operational days and gate arrival window
+                                            </p>
                                         </div>
 
                                         <button
@@ -1226,7 +1221,9 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                 <div className="flex items-center justify-between gap-4 border-t border-slate-100 pt-5">
                                     <div className="flex-1 pr-2">
                                         <span className="block text-xs font-medium text-slate-900">Active status</span>
-                                        <span className="block text-xs text-slate-500 leading-relaxed">Deactivated organizations are hidden from security terminals</span>
+                                        <span className="block text-xs leading-relaxed text-slate-500">
+                                            Deactivated organizations are hidden from security terminals
+                                        </span>
                                     </div>
                                     <button
                                         type="button"
@@ -1331,9 +1328,7 @@ export default function OrganizationsIndex({ organizations, filters }: Props) {
                                         {form.data.admin_email.trim() ? (
                                             <div>
                                                 <p className="font-medium text-slate-800">{form.data.admin_email.trim()}</p>
-                                                {form.data.admin_phone.trim() && (
-                                                    <p className="text-slate-400">{form.data.admin_phone.trim()}</p>
-                                                )}
+                                                {form.data.admin_phone.trim() && <p className="text-slate-400">{form.data.admin_phone.trim()}</p>}
                                             </div>
                                         ) : (
                                             <p className="text-slate-500">Not assigned (can be added later)</p>
