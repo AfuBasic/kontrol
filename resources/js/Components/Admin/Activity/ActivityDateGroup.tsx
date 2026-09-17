@@ -28,9 +28,7 @@ export default function ActivityDateGroup({ date, items }: ActivityDateGroupProp
         <section className="space-y-3">
             {/* Sticky/pinned date header banner */}
             <div className="sticky top-28 z-10 -mx-2 bg-slate-50/90 px-2 py-1.5 backdrop-blur-md dark:bg-slate-950/90">
-                <h3 className="font-bold text-xs tracking-wider text-slate-500 uppercase dark:text-slate-400">
-                    {getDateLabel(date)}
-                </h3>
+                <h3 className="text-xs font-bold tracking-wider text-slate-500 uppercase dark:text-slate-400">{getDateLabel(date)}</h3>
             </div>
 
             {/* Flat list of rows without vertical rails */}
