@@ -1,18 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import {
-    ArrowDown,
-    Bell,
-    BellOff,
-    Check,
-    CheckCheck,
-    CheckCircle2,
-    ChevronDown,
-    Clock,
-    Search,
-    SlidersHorizontal,
-    Trash2,
-    X,
-} from 'lucide-react';
+import { ArrowDown, Bell, BellOff, Check, CheckCheck, CheckCircle2, ChevronDown, Clock, Search, SlidersHorizontal, Trash2, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import MobileSheet from '@/Components/MobileSheet';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
@@ -79,18 +66,10 @@ const READ_STATUSES: { value: 'all' | 'unread' | 'read'; label: string; descript
     { value: 'read', label: 'Read only', description: 'Show previously viewed notifications' },
 ];
 
-export default function Notifications({
-    organization,
-    membership,
-    notifications,
-    unreadCount,
-    filters = {},
-}: Props) {
+export default function Notifications({ organization, membership, notifications, unreadCount, filters = {} }: Props) {
     // Filter states
     const [search, setSearch] = useState(filters.search || '');
-    const [selectedReadStatus, setSelectedReadStatus] = useState<'all' | 'unread' | 'read'>(
-        filters.read_status || 'all'
-    );
+    const [selectedReadStatus, setSelectedReadStatus] = useState<'all' | 'unread' | 'read'>(filters.read_status || 'all');
     const [sortOrder, setSortOrder] = useState<'latest' | 'oldest'>(filters.sort || 'latest');
 
     // UI overlays
@@ -116,11 +95,7 @@ export default function Notifications({
     }, [isSortMenuOpen]);
 
     // Apply filters through Inertia
-    const applyFilters = (
-        newSearch: string,
-        newReadStatus: 'all' | 'unread' | 'read',
-        newSort: 'latest' | 'oldest'
-    ) => {
+    const applyFilters = (newSearch: string, newReadStatus: 'all' | 'unread' | 'read', newSort: 'latest' | 'oldest') => {
         router.get(
             '/org/notifications',
             {
@@ -132,7 +107,7 @@ export default function Notifications({
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-            }
+            },
         );
     };
 
@@ -235,18 +210,14 @@ export default function Notifications({
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
-                                <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
-                                    Notifications
-                                </h1>
+                                <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Notifications</h1>
                                 {unreadCount > 0 && (
                                     <span className="rounded-full bg-[#0b4aa2] px-2.5 py-0.5 text-xs font-bold text-white shadow-xs">
                                         {unreadCount} new
                                     </span>
                                 )}
                             </div>
-                            <p className="text-xs font-medium text-slate-500">
-                                Alerts, visitor arrivals, and updates for {organization.name}
-                            </p>
+                            <p className="text-xs font-medium text-slate-500">Alerts, visitor arrivals, and updates for {organization.name}</p>
                         </div>
                     </div>
 
@@ -278,20 +249,20 @@ export default function Notifications({
                 <div className="space-y-2.5">
                     {/* Search Input */}
                     <div className="relative">
-                        <Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                        <Search className="pointer-events-none absolute top-3 left-3 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             onKeyDown={handleSearchKeyDown}
                             placeholder="Search notifications..."
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:outline-none focus:ring-1 focus:ring-[#0b4aa2]"
+                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pr-9 pl-9 text-base text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none sm:text-sm"
                         />
                         {search && (
                             <button
                                 type="button"
                                 onClick={handleClearSearch}
-                                className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                className="absolute top-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                 title="Clear search"
                                 aria-label="Clear search"
                             >
@@ -307,17 +278,13 @@ export default function Notifications({
                             type="button"
                             onClick={handleQuickUnreadToggle}
                             aria-pressed={isUnreadQuickActive}
-                            className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors ${
+                            className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors ${
                                 isUnreadQuickActive
                                     ? 'bg-[#0b4aa2] text-white shadow-xs'
                                     : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
                             }`}
                         >
-                            <span
-                                className={`h-1.5 w-1.5 rounded-full ${
-                                    isUnreadQuickActive ? 'bg-white' : 'bg-[#0b4aa2]'
-                                }`}
-                            />
+                            <span className={`h-1.5 w-1.5 rounded-full ${isUnreadQuickActive ? 'bg-white' : 'bg-[#0b4aa2]'}`} />
                             <span>Unread</span>
                         </button>
 
@@ -325,7 +292,7 @@ export default function Notifications({
                         <button
                             type="button"
                             onClick={openFilterSheet}
-                            className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                            className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
                                 activeSheetFilterCount > 0
                                     ? 'border-[#0b4aa2]/40 bg-[#eaf2ff] text-[#0b4aa2]'
                                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -335,7 +302,7 @@ export default function Notifications({
                             <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
                             <span>Filter</span>
                             {activeSheetFilterCount > 0 && (
-                                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0b4aa2] px-1 text-[10px] font-bold text-white leading-none">
+                                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#0b4aa2] px-1 text-[10px] leading-none font-bold text-white">
                                     {activeSheetFilterCount}
                                 </span>
                             )}
@@ -346,14 +313,12 @@ export default function Notifications({
                             <button
                                 type="button"
                                 onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-                                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
                                 aria-haspopup="true"
                                 aria-expanded={isSortMenuOpen}
                             >
                                 <ArrowDown
-                                    className={`h-3.5 w-3.5 text-slate-400 transition-transform ${
-                                        sortOrder === 'oldest' ? 'rotate-180' : ''
-                                    }`}
+                                    className={`h-3.5 w-3.5 text-slate-400 transition-transform ${sortOrder === 'oldest' ? 'rotate-180' : ''}`}
                                 />
                                 <span>{sortOrder === 'latest' ? 'Newest' : 'Oldest'}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
@@ -361,13 +326,13 @@ export default function Notifications({
 
                             {/* Sort Menu Sheet */}
                             <ResponsiveSheet isOpen={isSortMenuOpen} onClose={() => setIsSortMenuOpen(false)} maxWidth="sm">
-                                <div className="p-4 sm:p-6 pb-6">
-                                    <h3 className="text-lg font-bold text-slate-900 mb-4 px-2">Sort By</h3>
+                                <div className="p-4 pb-6 sm:p-6">
+                                    <h3 className="mb-4 px-2 text-lg font-bold text-slate-900">Sort By</h3>
                                     <div className="flex flex-col gap-2">
                                         <button
                                             type="button"
                                             onClick={() => handleSelectSort('latest')}
-                                            className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+                                            className="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50"
                                         >
                                             <span>Newest first</span>
                                             {sortOrder === 'latest' && <Check className="h-5 w-5 text-[#0b4aa2]" />}
@@ -375,7 +340,7 @@ export default function Notifications({
                                         <button
                                             type="button"
                                             onClick={() => handleSelectSort('oldest')}
-                                            className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+                                            className="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50"
                                         >
                                             <span>Oldest first</span>
                                             {sortOrder === 'oldest' && <Check className="h-5 w-5 text-[#0b4aa2]" />}
@@ -424,7 +389,7 @@ export default function Notifications({
                             <button
                                 type="button"
                                 onClick={handleClearAll}
-                                className="text-[11px] font-medium text-[#0b4aa2] hover:text-[#082f6e] ml-1"
+                                className="ml-1 text-[11px] font-medium text-[#0b4aa2] hover:text-[#082f6e]"
                             >
                                 Reset all
                             </button>
@@ -436,16 +401,10 @@ export default function Notifications({
                 <div className="space-y-3">
                     {notifications.data.length > 0 ? (
                         notifications.data.map((notification) => {
-                            const actionUrl =
-                                notification.data.action_url || notification.data.url;
+                            const actionUrl = notification.data.action_url || notification.data.url;
                             const isUnread = !notification.read_at;
-                            const title =
-                                notification.data.title ||
-                                (notification.data.message ? 'Notification' : 'Notice');
-                            const message =
-                                notification.data.message ||
-                                notification.data.body ||
-                                'You have a new update.';
+                            const title = notification.data.title || (notification.data.message ? 'Notification' : 'Notice');
+                            const message = notification.data.message || notification.data.body || 'You have a new update.';
 
                             return (
                                 <div
@@ -463,9 +422,7 @@ export default function Notifications({
                                 >
                                     <div
                                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
-                                            isUnread
-                                                ? 'bg-[#0b4aa2] text-white shadow-sm'
-                                                : 'bg-slate-100 text-slate-500'
+                                            isUnread ? 'bg-[#0b4aa2] text-white shadow-sm' : 'bg-slate-100 text-slate-500'
                                         }`}
                                     >
                                         <Bell className="h-5 w-5" />
@@ -474,20 +431,16 @@ export default function Notifications({
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-start justify-between gap-3">
                                             <div>
-                                                <h3 className="text-sm font-black text-slate-900 leading-snug">
-                                                    {title}
-                                                </h3>
-                                                <p className="mt-1 text-xs font-medium text-slate-600 leading-relaxed whitespace-pre-line">
+                                                <h3 className="text-sm leading-snug font-black text-slate-900">{title}</h3>
+                                                <p className="mt-1 text-xs leading-relaxed font-medium whitespace-pre-line text-slate-600">
                                                     {message}
                                                 </p>
                                             </div>
 
-                                            {isUnread && (
-                                                <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#0b4aa2] ring-4 ring-[#0b4aa2]/20" />
-                                            )}
+                                            {isUnread && <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#0b4aa2] ring-4 ring-[#0b4aa2]/20" />}
                                         </div>
 
-                                        <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+                                        <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
                                             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
                                                 <Clock className="h-3 w-3" />
                                                 <time>{formatNotificationTime(notification.created_at)}</time>
@@ -512,13 +465,11 @@ export default function Notifications({
                             );
                         })
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-200/80 border-dashed bg-white px-6 py-16 text-center shadow-xs">
+                        <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200/80 bg-white px-6 py-16 text-center shadow-xs">
                             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                                 <BellOff className="h-7 w-7" />
                             </div>
-                            <h3 className="mt-4 text-base font-black text-slate-900">
-                                No notifications
-                            </h3>
+                            <h3 className="mt-4 text-base font-black text-slate-900">No notifications</h3>
                             <p className="mt-1 max-w-sm text-xs font-medium text-slate-500">
                                 {hasActiveFilters
                                     ? 'No notifications match your current filter criteria.'
@@ -528,7 +479,7 @@ export default function Notifications({
                                 <button
                                     type="button"
                                     onClick={handleClearAll}
-                                    className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                                    className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                                 >
                                     Clear filters
                                 </button>
@@ -562,9 +513,7 @@ export default function Notifications({
                                         href={link.url}
                                         dangerouslySetInnerHTML={{ __html: link.label }}
                                         className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                                            link.active
-                                                ? 'bg-[#0b4aa2] text-white shadow-xs'
-                                                : 'text-slate-600 hover:bg-slate-100'
+                                            link.active ? 'bg-[#0b4aa2] text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'
                                         }`}
                                     />
                                 );
@@ -575,17 +524,11 @@ export default function Notifications({
             </div>
 
             {/* Filter Mobile Bottom Sheet */}
-            <MobileSheet
-                isOpen={isFilterSheetOpen}
-                onClose={() => setIsFilterSheetOpen(false)}
-                title="Filter Notifications"
-            >
-                <div className="space-y-5 px-6 pb-6 pt-2">
+            <MobileSheet isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter Notifications">
+                <div className="space-y-5 px-6 pt-2 pb-6">
                     {/* Read Status Group */}
                     <div>
-                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                            Read Status
-                        </label>
+                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Read Status</label>
                         <div className="mt-2.5 space-y-1.5">
                             {READ_STATUSES.map((status) => {
                                 const isSelected = draftReadStatus === status.value;
@@ -594,7 +537,7 @@ export default function Notifications({
                                         key={status.value}
                                         type="button"
                                         onClick={() => setDraftReadStatus(status.value)}
-                                        className={`w-full min-h-[44px] flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors ${
+                                        className={`flex min-h-[44px] w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors ${
                                             isSelected
                                                 ? 'bg-blue-50 text-blue-900 ring-1 ring-blue-200'
                                                 : 'bg-slate-50 text-slate-800 hover:bg-slate-100'
@@ -602,15 +545,11 @@ export default function Notifications({
                                     >
                                         <div>
                                             <p className="text-xs font-semibold">{status.label}</p>
-                                            <p className="text-[11px] text-slate-500 font-normal">
-                                                {status.description}
-                                            </p>
+                                            <p className="text-[11px] font-normal text-slate-500">{status.description}</p>
                                         </div>
                                         <div
                                             className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                                                isSelected
-                                                    ? 'border-[#0b4aa2] bg-[#0b4aa2] text-white'
-                                                    : 'border-slate-300 bg-white'
+                                                isSelected ? 'border-[#0b4aa2] bg-[#0b4aa2] text-white' : 'border-slate-300 bg-white'
                                             }`}
                                         >
                                             {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
@@ -622,18 +561,18 @@ export default function Notifications({
                     </div>
 
                     {/* Sheet Footer Action Buttons */}
-                    <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-3 border-t border-slate-100 pt-3">
                         <button
                             type="button"
                             onClick={handleResetSheetFilters}
-                            className="min-h-[44px] flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                            className="min-h-[44px] flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                         >
                             Reset
                         </button>
                         <button
                             type="button"
                             onClick={handleApplySheetFilters}
-                            className="min-h-[44px] flex-2 rounded-xl bg-[#0b4aa2] py-2.5 text-xs font-bold text-white shadow-sm hover:bg-[#082f6e] transition-colors"
+                            className="min-h-[44px] flex-2 rounded-xl bg-[#0b4aa2] py-2.5 text-xs font-bold text-white shadow-sm transition-colors hover:bg-[#082f6e]"
                         >
                             Show results
                         </button>
