@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { Calendar, Clock, History, Users } from 'lucide-react';
+import { Calendar, Clock, History, User, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
 import React from 'react';
 
 interface Props {
@@ -35,7 +36,7 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
             label: 'Visitors',
             mobileLabel: 'Visitors',
             href: '/org/visitors',
-            icon: Users, // Using the same icon for now, or something like UserPlus. Let's stick with Users.
+            icon: User,
         },
         {
             id: 'arrivals',
@@ -68,43 +69,50 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
     ];
 
     return (
-        <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="-mx-3 w-full border-b border-slate-200/60 bg-white px-3 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
             <nav
                 aria-label="Access workspace tabs"
-                className="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+                className="flex items-center overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             >
-                <div className="inline-flex w-max items-center gap-1.5 rounded-2xl bg-slate-100/90 p-1">
-                    {tabs.map((tab) => {
-                        const isActive = activeTab === tab.id;
-                        const Icon = tab.icon;
-                        const content = (
-                            <>
-                                <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={isActive ? 2 : 1.75} />
-                                <span className="whitespace-nowrap">{tab.label}</span>
-                                {tab.badge && (
+                {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+
+                    const content = (
+                        <div className="flex flex-col items-center justify-center gap-1">
+                            <Icon className="h-4 w-4 shrink-0" strokeWidth={isActive ? 2.5 : 2} />
+                            <span className="whitespace-nowrap">{tab.label}</span>
+                        </div>
+                    );
+
+                    const tabClassName = `relative flex-1 flex min-h-[52px] min-w-[72px] shrink-0 items-center justify-center px-1 py-2 text-[11px] sm:text-xs transition-colors ${
+                        isActive ? 'text-[#0b4aa2] font-bold' : 'text-slate-500 font-medium hover:text-slate-900'
+                    }`;
+
+                    const innerContent = (
+                        <>
+                            {content}
+                            {isActive && (
+                                <motion.div
+                                    layoutId="access-tabs-active-underline"
+                                    className="absolute bottom-0 left-1/2 h-0.5 w-[60%] -translate-x-1/2 rounded-t-full bg-[#0b4aa2]"
+                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                                />
+                            )}
+                            {tab.badge && (
+                                <div className="absolute top-1 right-2">
                                     <span
                                         aria-label={tab.badgeLabel}
-                                        className={`ml-0.5 min-w-4 rounded-full px-1.5 py-0.5 text-center text-[10px] font-semibold leading-none ${
-                                            tab.badgeVariant === 'warning'
-                                                ? isActive
-                                                    ? 'bg-amber-100 text-amber-900'
-                                                    : 'bg-amber-100/80 text-amber-900'
-                                                : isActive
-                                                  ? 'bg-slate-100 text-slate-700'
-                                                  : 'bg-slate-200/80 text-slate-700'
+                                        className={`flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] leading-none font-bold ${
+                                            tab.badgeVariant === 'warning' ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-900'
                                         }`}
                                     >
                                         {tab.badge}
                                     </span>
-                                )}
-                            </>
-                        );
-
-                        const tabClassName = `relative flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium tracking-tight whitespace-nowrap transition-all sm:min-h-10 sm:px-4 sm:text-sm ${
-                            isActive
-                                ? 'bg-white text-slate-950 font-semibold shadow-xs ring-1 ring-slate-900/5'
-                                : 'text-slate-500 hover:text-slate-900'
-                        }`;
+                                </div>
+                            )}
+                        </>
+                    );
 
                     if (onTabChange) {
                         return (
@@ -115,7 +123,7 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                                 aria-current={isActive ? 'page' : undefined}
                                 className={tabClassName}
                             >
-                                {content}
+                                {innerContent}
                             </button>
                         );
                     }
@@ -129,12 +137,11 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
                             aria-current={isActive ? 'page' : undefined}
                             className={tabClassName}
                         >
-                            {content}
+                            {innerContent}
                         </Link>
                     );
                 })}
-            </div>
-        </nav>
+            </nav>
         </div>
     );
 }
