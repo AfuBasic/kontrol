@@ -1,13 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { formatDistanceToNow } from 'date-fns';
 import { motion } from 'framer-motion';
-import {
-    ArrowRight,
-    Check,
-    Home,
-    MessageSquare,
-    Megaphone,
-} from 'lucide-react';
+import { ArrowRight, Check, Home, MessageSquare, Megaphone } from 'lucide-react';
 import React, { useCallback, useEffect, useRef } from 'react';
 
 import { index, show } from '@/actions/App/Http/Controllers/Resident/EstateBoardController';
@@ -47,8 +41,10 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
     const categoryLabel = CATEGORY_LABELS[category] || 'Update';
 
     const authorName = post.property_owner_id
-        ? (post.author?.name ? `Landlord (${post.author.name})` : 'Landlord Bulletin')
-        : (estateName || 'Estate Office');
+        ? post.author?.name
+            ? `Landlord (${post.author.name})`
+            : 'Landlord Bulletin'
+        : estateName || 'Estate Office';
 
     // Clean plain text excerpt (up to 3 lines)
     const bodyPreview = post.body
@@ -73,17 +69,14 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
                     : 'border-slate-200/60 bg-slate-50/50 hover:border-slate-300/80 hover:bg-white'
             }`}
         >
-            <Link
-                href={show.url({ post: post.hashid })}
-                className="block p-4 sm:p-5 text-left focus:outline-hidden"
-            >
+            <Link href={show.url({ post: post.hashid })} className="block p-4 text-left focus:outline-hidden sm:p-5">
                 {/* Meta Header: Read Status + Author + Category */}
                 <div className="flex items-center justify-between gap-2">
                     {/* Left: Author + Time + Read Dot */}
                     <div className="flex min-w-0 items-center gap-2">
                         {isUnread ? (
                             <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700">
-                                <span className="h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                                <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-600" />
                                 <span>Unread</span>
                             </span>
                         ) : (
@@ -96,20 +89,15 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
                         <span className="text-slate-300">·</span>
 
                         <div className="flex min-w-0 items-center gap-1.5 truncate">
-                            <span
-                                className="truncate text-xs font-bold text-slate-800 max-w-[130px] sm:max-w-[200px]"
-                                title={authorName}
-                            >
+                            <span className="max-w-[130px] truncate text-xs font-bold text-slate-800 sm:max-w-[200px]" title={authorName}>
                                 {authorName}
                             </span>
-                            <span className="shrink-0 text-[11px] font-medium text-slate-600">
-                                {timeAgo}
-                            </span>
+                            <span className="shrink-0 text-[11px] font-medium text-slate-600">{timeAgo}</span>
                         </div>
                     </div>
 
                     {/* Right: Category Label */}
-                    <div className="shrink-0 flex items-center gap-1.5">
+                    <div className="flex shrink-0 items-center gap-1.5">
                         {post.property_owner_id ? (
                             <span className="inline-flex items-center gap-1 rounded-md bg-purple-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-purple-700 uppercase ring-1 ring-purple-100">
                                 <Home className="h-2.5 w-2.5" /> House
@@ -124,10 +112,8 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
 
                 {/* Title */}
                 <h2
-                    className={`mt-2.5 text-base sm:text-lg font-bold leading-snug [overflow-wrap:anywhere] break-words transition-colors ${
-                        isUnread
-                            ? 'text-slate-900 group-hover:text-indigo-600'
-                            : 'text-slate-700 group-hover:text-slate-900'
+                    className={`mt-2.5 text-base leading-snug font-bold [overflow-wrap:anywhere] break-words transition-colors sm:text-lg ${
+                        isUnread ? 'text-slate-900 group-hover:text-indigo-600' : 'text-slate-700 group-hover:text-slate-900'
                     }`}
                 >
                     {post.title || 'Untitled Announcement'}
@@ -136,7 +122,7 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
                 {/* Excerpt */}
                 {bodyPreview && (
                     <p
-                        className={`mt-1.5 line-clamp-2 text-xs sm:text-sm leading-relaxed [overflow-wrap:anywhere] break-words ${
+                        className={`mt-1.5 line-clamp-2 text-xs leading-relaxed [overflow-wrap:anywhere] break-words sm:text-sm ${
                             isUnread ? 'text-slate-600' : 'text-slate-600'
                         }`}
                     >
@@ -147,7 +133,7 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
                 {/* Compact Media Preview (if present) */}
                 {hasMedia && (
                     <div className="mt-3 overflow-hidden rounded-xl bg-slate-100/80">
-                        <div className="relative aspect-[21/9] sm:aspect-[24/9] w-full overflow-hidden">
+                        <div className="relative aspect-[21/9] w-full overflow-hidden sm:aspect-[24/9]">
                             <img
                                 src={post.media[0].url}
                                 alt=""
@@ -155,7 +141,7 @@ function AnnouncementFeedItem({ post, index: idx, estateName }: { post: EstateBo
                                 loading="lazy"
                             />
                             {post.media.length > 1 && (
-                                <div className="absolute bottom-2 right-2 rounded-lg bg-slate-900/70 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-xs">
+                                <div className="absolute right-2 bottom-2 rounded-lg bg-slate-900/70 px-2 py-0.5 text-[10px] font-black text-white backdrop-blur-xs">
                                     +{post.media.length - 1} more
                                 </div>
                             )}
@@ -198,9 +184,9 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
         router.get(
             index.url(),
             {
-                filter: newFilter !== undefined ? (newFilter || undefined) : (filter || undefined),
-                category: newCategory !== undefined ? (newCategory || undefined) : (category || undefined),
-                unread_only: newUnreadOnly !== undefined ? (newUnreadOnly ? 1 : undefined) : (unread_only ? 1 : undefined),
+                filter: newFilter !== undefined ? newFilter || undefined : filter || undefined,
+                category: newCategory !== undefined ? newCategory || undefined : category || undefined,
+                unread_only: newUnreadOnly !== undefined ? (newUnreadOnly ? 1 : undefined) : unread_only ? 1 : undefined,
             },
             { preserveState: true, preserveScroll: true },
         );
@@ -255,12 +241,8 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
             {/* Compact Header */}
             <div className="mb-4 flex items-end justify-between px-1">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900">
-                        Estate Updates
-                    </h1>
-                    <p className="mt-0.5 text-xs font-medium text-slate-600">
-                        Notices and announcements from {estateName}
-                    </p>
+                    <h1 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">Estate Updates</h1>
+                    <p className="mt-0.5 text-xs font-medium text-slate-600">Notices and announcements from {estateName}</p>
                 </div>
 
                 {typeof unread_count === 'number' && unread_count > 0 && (
@@ -284,17 +266,14 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
                 <div className="mb-3">
                     <div className="flex max-w-xs rounded-xl bg-slate-100 p-1">
                         {tabs.map((tab) => {
-                            const isActive =
-                                filter === tab.id || (filter === null && tab.id === 'estate');
+                            const isActive = filter === tab.id || (filter === null && tab.id === 'estate');
                             return (
                                 <button
                                     key={tab.id}
                                     type="button"
                                     onClick={() => handleFilterChange(tab.id, undefined, undefined)}
                                     className={`relative flex flex-1 items-center justify-center rounded-lg py-1.5 text-xs font-bold transition-all ${
-                                        isActive
-                                            ? 'text-slate-900'
-                                            : 'text-slate-600 hover:text-slate-700'
+                                        isActive ? 'text-slate-900' : 'text-slate-600 hover:text-slate-700'
                                     }`}
                                 >
                                     {isActive && (
@@ -317,7 +296,7 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
             )}
 
             {/* Simple Category Filter Pills */}
-            <div className="mb-4 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="mb-4 flex items-center gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {CATEGORY_FILTERS.map((cat) => {
                     const isCatActive = (category || null) === cat.id;
                     return (
@@ -340,10 +319,8 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
                 <button
                     type="button"
                     onClick={() => handleFilterChange(undefined, undefined, !unread_only)}
-                    className={`shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all active:scale-95 ${
-                        unread_only
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-bold transition-all active:scale-95 ${
+                        unread_only ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
                     }`}
                 >
                     <span className={`h-1.5 w-1.5 rounded-full ${unread_only ? 'bg-white' : 'bg-indigo-500'}`} />
@@ -355,12 +332,7 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
             {posts.data.length > 0 ? (
                 <div className="space-y-3">
                     {posts.data.map((post, idx) => (
-                        <AnnouncementFeedItem
-                            key={post.id}
-                            post={post}
-                            index={idx}
-                            estateName={estateName}
-                        />
+                        <AnnouncementFeedItem key={post.id} post={post} index={idx} estateName={estateName} />
                     ))}
 
                     {/* Load More Spinner */}
@@ -376,15 +348,13 @@ export default function EstateBoardIndex({ posts, filter, category, unread_only 
                     initial={{ opacity: 0, scale: 0.98 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.35, ease: 'easeOut' }}
-                    className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 py-12 px-4 text-center"
+                    className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-12 text-center"
                 >
                     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-400 shadow-xs ring-1 ring-slate-200/60">
                         <Megaphone className="h-6 w-6 text-slate-400" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-900">No updates yet</h3>
-                    <p className="mt-1 max-w-xs text-xs text-slate-600">
-                        New notices and announcements from your estate will appear here.
-                    </p>
+                    <p className="mt-1 max-w-xs text-xs text-slate-600">New notices and announcements from your estate will appear here.</p>
                 </motion.div>
             )}
         </div>
