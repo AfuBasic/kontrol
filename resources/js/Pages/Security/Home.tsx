@@ -242,7 +242,7 @@ export default function SecurityCommandCenter() {
                     <StatCard label="Expected" value={stats.expected_today} hint="today" />
                     <StatCard label="Validated" value={stats.validated_today} hint="today" tone="emerald" />
                     {checkoutEnabled ? (
-                        <Link href={`${HistoryController.index.url()}?tab=active`} className="block active:scale-95 transition">
+                        <Link href={`${HistoryController.index.url()}?tab=active`} className="block transition active:scale-95">
                             <StatCard
                                 label="Inside"
                                 value={stats.active_inside ?? 0}
