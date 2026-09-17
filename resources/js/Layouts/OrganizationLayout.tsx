@@ -102,7 +102,7 @@ export default function OrganizationLayout({
     const userFirstName = user.name ? user.name.split(' ')[0] : 'Account';
 
     return (
-        <div className="flex min-h-screen flex-col bg-[#f6f8fb] font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
+        <div className="flex min-h-screen flex-col font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
             <header
                 className={`fixed inset-x-0 top-0 z-40 px-3 pt-[var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))] sm:px-6 lg:px-10 ${
                     transparentHeader
@@ -197,9 +197,9 @@ export default function OrganizationLayout({
             </header>
 
             <main
-                className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
+                className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+0.5rem)] ${
                     hideBottomNav ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
-                } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:pb-12`}
+                } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+0.75rem)] lg:pb-12`}
             >
                 <PullToRefresh onRefresh={onRefresh}>
                     <div className={`mx-auto w-full space-y-5 px-3 sm:px-6 lg:px-10 ${contentClassName}`}>
