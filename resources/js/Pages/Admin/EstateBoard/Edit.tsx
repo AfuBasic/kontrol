@@ -484,7 +484,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
-                                    disabled={(existingMedia.length + (data.images?.length ?? 0)) >= 10}
+                                    disabled={existingMedia.length + (data.images?.length ?? 0) >= 10}
                                     className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-4 text-xs text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <Upload className="h-4 w-4" />
@@ -494,9 +494,7 @@ export default function EditPost({ post, zones = [] }: Props) {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase">
-                                    Publishing Status
-                                </label>
+                                <label className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase">Publishing Status</label>
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <label
                                         className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all ${
@@ -541,14 +539,14 @@ export default function EditPost({ post, zones = [] }: Props) {
                             <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
                                 <Link
                                     href={show.url({ post: post.hashid })}
-                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95"
+                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-xs font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 sm:text-sm"
                                 >
                                     Cancel
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+                                    className="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-center text-xs font-bold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 sm:text-sm"
                                 >
                                     {processing ? 'Saving...' : 'Save changes'}
                                 </button>
