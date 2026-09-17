@@ -116,14 +116,7 @@ function formatFeedTimestamp(publishedAt: string | null, humanFallback: string):
     return `${dateString} · ${timeString}`;
 }
 
-export default function Announcements({
-    organization,
-    estate,
-    membership,
-    unread_count = 0,
-    filters = {},
-    posts,
-}: Props) {
+export default function Announcements({ organization, estate, membership, unread_count = 0, filters = {}, posts }: Props) {
     const estateName = estate?.name || organization.estate_name || 'Golden Heights';
     const [items, setItems] = useState<Post[]>(posts.data);
     const [nextPageUrl, setNextPageUrl] = useState<string | null>(posts.next_page_url);
@@ -166,12 +159,7 @@ export default function Announcements({
     }, [isSortMenuOpen]);
 
     // Apply filters through Inertia (backend authoritative)
-    const applyFilters = (
-        newSearch: string,
-        newCategory: string,
-        newReadStatus: 'all' | 'unread' | 'read',
-        newSort: 'latest' | 'oldest',
-    ) => {
+    const applyFilters = (newSearch: string, newCategory: string, newReadStatus: 'all' | 'unread' | 'read', newSort: 'latest' | 'oldest') => {
         router.get(
             '/org/announcements',
             {
@@ -291,14 +279,13 @@ export default function Announcements({
     }, [loadMore]);
 
     // Active sheet filter count (excluding default 'all')
-    const activeSheetFilterCount =
-        (selectedCategory !== 'all' ? 1 : 0) + (selectedReadStatus === 'read' ? 1 : 0);
+    const activeSheetFilterCount = (selectedCategory !== 'all' ? 1 : 0) + (selectedReadStatus === 'read' ? 1 : 0);
 
     const hasActiveFilters = Boolean(
         filters.search ||
-            (filters.category && filters.category !== 'all') ||
-            (filters.read_status && filters.read_status !== 'all') ||
-            (filters.sort && filters.sort !== 'latest'),
+        (filters.category && filters.category !== 'all') ||
+        (filters.read_status && filters.read_status !== 'all') ||
+        (filters.sort && filters.sort !== 'latest'),
     );
 
     const isUnreadQuickActive = selectedReadStatus === 'unread';
@@ -307,20 +294,16 @@ export default function Announcements({
         <OrganizationLayout title="Announcements" contentClassName="max-w-xl">
             <Head title={`Updates - ${estateName}`} />
 
-            <div className="text-left pb-16">
+            <div className="pb-16 text-left">
                 {/* 1. Page Header */}
-                <header className="px-1 py-3 sm:py-4 flex items-baseline justify-between">
+                <header className="flex items-baseline justify-between px-1 py-3 sm:py-4">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">
-                            Updates
-                        </h1>
-                        <p className="text-xs font-medium text-slate-500">
-                            {estateName}
-                        </p>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Updates</h1>
+                        <p className="text-xs font-medium text-slate-500">{estateName}</p>
                     </div>
 
                     {unread_count > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700 border border-blue-100">
+                        <span className="inline-flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
                             <span className="h-1.5 w-1.5 rounded-full bg-blue-600" />
                             {unread_count} new
                         </span>
@@ -331,20 +314,20 @@ export default function Announcements({
                 <div className="mb-3 space-y-2">
                     {/* Search Field */}
                     <div className="relative">
-                        <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                        <Search className="pointer-events-none absolute top-2.5 left-3 h-4 w-4 text-slate-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             onKeyDown={handleSearchKeyDown}
                             placeholder="Search updates..."
-                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-9 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full rounded-xl border border-slate-200 bg-white py-2 pr-9 pl-9 text-base text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none sm:text-sm"
                         />
                         {search && (
                             <button
                                 type="button"
                                 onClick={handleClearSearch}
-                                className="absolute right-2.5 top-2.5 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                                className="absolute top-2.5 right-2.5 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                                 title="Clear search"
                                 aria-label="Clear search"
                             >
@@ -360,7 +343,7 @@ export default function Announcements({
                             type="button"
                             onClick={handleQuickUnreadToggle}
                             aria-pressed={isUnreadQuickActive}
-                            className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors ${
+                            className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-colors ${
                                 isUnreadQuickActive
                                     ? 'bg-blue-600 text-white shadow-xs'
                                     : 'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -374,7 +357,7 @@ export default function Announcements({
                         <button
                             type="button"
                             onClick={openFilterSheet}
-                            className={`min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
+                            className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-colors ${
                                 activeSheetFilterCount > 0
                                     ? 'border-blue-300 bg-blue-50/80 text-blue-700'
                                     : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
@@ -384,7 +367,7 @@ export default function Announcements({
                             <SlidersHorizontal className="h-3.5 w-3.5 text-slate-500" />
                             <span>Filter</span>
                             {activeSheetFilterCount > 0 && (
-                                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] font-bold text-white leading-none">
+                                <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-blue-600 px-1 text-[10px] leading-none font-bold text-white">
                                     {activeSheetFilterCount}
                                 </span>
                             )}
@@ -395,24 +378,26 @@ export default function Announcements({
                             <button
                                 type="button"
                                 onClick={() => setIsSortMenuOpen(!isSortMenuOpen)}
-                                className="min-h-[40px] inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                                className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50"
                                 aria-haspopup="true"
                                 aria-expanded={isSortMenuOpen}
                             >
-                                <ArrowDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${sortOrder === 'oldest' ? 'rotate-180' : ''}`} />
+                                <ArrowDown
+                                    className={`h-3.5 w-3.5 text-slate-400 transition-transform ${sortOrder === 'oldest' ? 'rotate-180' : ''}`}
+                                />
                                 <span>{sortOrder === 'latest' ? 'Newest' : 'Oldest'}</span>
                                 <ChevronDown className="h-3 w-3 text-slate-400" />
                             </button>
 
                             {/* Sort Menu Sheet */}
                             <ResponsiveSheet isOpen={isSortMenuOpen} onClose={() => setIsSortMenuOpen(false)} maxWidth="sm">
-                                <div className="p-4 sm:p-6 pb-6">
-                                    <h3 className="text-lg font-bold text-slate-900 mb-4 px-2">Sort By</h3>
+                                <div className="p-4 pb-6 sm:p-6">
+                                    <h3 className="mb-4 px-2 text-lg font-bold text-slate-900">Sort By</h3>
                                     <div className="flex flex-col gap-2">
                                         <button
                                             type="button"
                                             onClick={() => handleSelectSort('latest')}
-                                            className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+                                            className="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50"
                                         >
                                             <span>Newest first</span>
                                             {sortOrder === 'latest' && <Check className="h-5 w-5 text-[#0b4aa2]" />}
@@ -420,7 +405,7 @@ export default function Announcements({
                                         <button
                                             type="button"
                                             onClick={() => handleSelectSort('oldest')}
-                                            className="w-full flex items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition-colors"
+                                            className="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50"
                                         >
                                             <span>Oldest first</span>
                                             {sortOrder === 'oldest' && <Check className="h-5 w-5 text-[#0b4aa2]" />}
@@ -484,11 +469,7 @@ export default function Announcements({
                                 </span>
                             )}
 
-                            <button
-                                type="button"
-                                onClick={handleClearAll}
-                                className="text-[11px] font-medium text-blue-600 hover:text-blue-800 ml-1"
-                            >
+                            <button type="button" onClick={handleClearAll} className="ml-1 text-[11px] font-medium text-blue-600 hover:text-blue-800">
                                 Reset all
                             </button>
                         </div>
@@ -497,14 +478,14 @@ export default function Announcements({
 
                 {/* 3. Community Stream Feed or Empty State */}
                 {items.length === 0 ? (
-                    <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white px-4 py-16 text-center sm:py-20 shadow-xs">
+                    <div className="mt-4 rounded-2xl border border-slate-200/80 bg-white px-4 py-16 text-center shadow-xs sm:py-20">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
                             <Building2 className="h-6 w-6 stroke-[1.5]" />
                         </div>
                         <h2 className="mt-4 text-base font-semibold text-slate-900">
                             {hasActiveFilters ? 'No matching updates' : "You're all caught up"}
                         </h2>
-                        <p className="mt-1 mx-auto max-w-xs text-xs sm:text-sm font-normal text-slate-500 leading-relaxed">
+                        <p className="mx-auto mt-1 max-w-xs text-xs leading-relaxed font-normal text-slate-500 sm:text-sm">
                             {hasActiveFilters
                                 ? 'Try changing your search terms or filter criteria to find what you are looking for.'
                                 : `There aren't any estate updates yet. New announcements from ${estateName} will appear here.`}
@@ -513,7 +494,7 @@ export default function Announcements({
                             <button
                                 type="button"
                                 onClick={handleClearAll}
-                                className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                                className="mt-4 inline-flex items-center rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                             >
                                 Clear filters
                             </button>
@@ -541,7 +522,7 @@ export default function Announcements({
                             return (
                                 <article
                                     key={post.id}
-                                    className={`relative rounded-xl sm:rounded-2xl border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-slate-300 hover:shadow-xs ${
+                                    className={`relative rounded-xl border bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-slate-300 hover:shadow-xs sm:rounded-2xl ${
                                         isCritical
                                             ? 'border-rose-200/90'
                                             : isUnread
@@ -551,7 +532,7 @@ export default function Announcements({
                                 >
                                     {/* Critical Advisory Top Strip */}
                                     {isCritical && (
-                                        <div className="flex items-center gap-1.5 rounded-t-xl sm:rounded-t-2xl border-b border-rose-100 bg-rose-50/80 px-3.5 sm:px-4 py-1.5 text-[11px] font-semibold text-rose-700">
+                                        <div className="flex items-center gap-1.5 rounded-t-xl border-b border-rose-100 bg-rose-50/80 px-3.5 py-1.5 text-[11px] font-semibold text-rose-700 sm:rounded-t-2xl sm:px-4">
                                             <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
                                             <span>Urgent Estate Advisory</span>
                                         </div>
@@ -560,7 +541,7 @@ export default function Announcements({
                                     <div className="p-3.5 sm:p-4">
                                         {/* 1. Header: Publisher & Context */}
                                         <div className="flex items-start justify-between gap-3">
-                                            <div className="flex items-center gap-2.5 min-w-0">
+                                            <div className="flex min-w-0 items-center gap-2.5">
                                                 {/* Compact Avatar with restrained unread indicator */}
                                                 <div className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-xs font-semibold text-white">
                                                     <span>{initial}</span>
@@ -575,7 +556,7 @@ export default function Announcements({
                                                 {/* Publisher Identity & Meta */}
                                                 <div className="min-w-0 flex-1 leading-tight">
                                                     <div className="flex items-center gap-1.5">
-                                                        <span className="text-[13px] font-semibold text-slate-900 truncate">
+                                                        <span className="truncate text-[13px] font-semibold text-slate-900">
                                                             {post.publisher_name || estateName}
                                                         </span>
                                                         {isUnread && (
@@ -584,14 +565,14 @@ export default function Announcements({
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p className="mt-0.5 text-[11px] text-slate-500 truncate">
+                                                    <p className="mt-0.5 truncate text-[11px] text-slate-500">
                                                         {post.publisher_role || 'Estate Management'} · {timeLabel}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             {/* Restrained Urgent/Important Pill or Quiet Category */}
-                                            <div className="shrink-0 flex items-center gap-1.5">
+                                            <div className="flex shrink-0 items-center gap-1.5">
                                                 {isImportant && !isCritical && (
                                                     <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-800 ring-1 ring-amber-200/60">
                                                         Important
@@ -604,11 +585,8 @@ export default function Announcements({
                                         <div className="mt-2.5">
                                             {/* Headline / Title */}
                                             {post.title && (
-                                                <h2 className="text-[15px] sm:text-base font-semibold leading-snug tracking-tight text-slate-950">
-                                                    <Link
-                                                        href={postDetailUrl}
-                                                        className="hover:text-blue-600 transition-colors"
-                                                    >
+                                                <h2 className="text-[15px] leading-snug font-semibold tracking-tight text-slate-950 sm:text-base">
+                                                    <Link href={postDetailUrl} className="transition-colors hover:text-blue-600">
                                                         {post.title}
                                                     </Link>
                                                 </h2>
@@ -616,7 +594,7 @@ export default function Announcements({
 
                                             {/* Clean Body Preview */}
                                             {preview && (
-                                                <p className="mt-1 text-[13px] font-normal leading-relaxed text-slate-600 line-clamp-2 sm:line-clamp-3">
+                                                <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed font-normal text-slate-600 sm:line-clamp-3">
                                                     {preview}
                                                 </p>
                                             )}
@@ -625,9 +603,9 @@ export default function Announcements({
                                         {/* Media Preview (Compact & Clean) */}
                                         {images.length > 0 && (
                                             <div className="mt-2.5 overflow-hidden rounded-lg border border-slate-100 bg-slate-50">
-                                                <Link href={postDetailUrl} className="block group/img">
+                                                <Link href={postDetailUrl} className="group/img block">
                                                     {images.length === 1 ? (
-                                                        <div className="aspect-16/9 sm:aspect-2/1 w-full overflow-hidden bg-slate-100">
+                                                        <div className="aspect-16/9 w-full overflow-hidden bg-slate-100 sm:aspect-2/1">
                                                             <img
                                                                 src={images[0].url}
                                                                 alt={post.title || 'Notice attachment'}
@@ -662,22 +640,22 @@ export default function Announcements({
                                         {nonImageMedia.length > 0 && (
                                             <Link
                                                 href={postDetailUrl}
-                                                className="mt-2 flex items-center gap-2 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                                                className="mt-2 flex items-center gap-2 rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-700 transition-colors hover:bg-slate-100"
                                             >
-                                                <FileText className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                                <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                                                 <span className="truncate">
                                                     {nonImageMedia.length} document attachment{nonImageMedia.length > 1 ? 's' : ''}
                                                 </span>
-                                                <ChevronRight className="h-3 w-3 text-slate-400 ml-auto shrink-0" />
+                                                <ChevronRight className="ml-auto h-3 w-3 shrink-0 text-slate-400" />
                                             </Link>
                                         )}
 
                                         {/* 3. Footer: Engagement & Category Context */}
-                                        <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                                        <div className="mt-2.5 flex items-center justify-between border-t border-slate-100 pt-2 text-xs">
                                             {/* Discussion / Comment Affordance */}
                                             <Link
                                                 href={`${postDetailUrl}#discussion`}
-                                                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                                                className="inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium text-slate-600 transition-colors hover:text-slate-900"
                                             >
                                                 <MessageSquare className="h-3.5 w-3.5 text-slate-400" />
                                                 <span>
@@ -688,9 +666,7 @@ export default function Announcements({
                                             </Link>
 
                                             {/* Quiet Category Pill */}
-                                            <span className="text-[11px] font-medium text-slate-500">
-                                                {category.label}
-                                            </span>
+                                            <span className="text-[11px] font-medium text-slate-500">{category.label}</span>
                                         </div>
                                     </div>
                                 </article>
@@ -712,17 +688,11 @@ export default function Announcements({
             </div>
 
             {/* Mobile Filter Sheet */}
-            <MobileSheet
-                isOpen={isFilterSheetOpen}
-                onClose={() => setIsFilterSheetOpen(false)}
-                title="Filter updates"
-            >
+            <MobileSheet isOpen={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filter updates">
                 <div className="space-y-6 pt-1">
                     {/* Status Group */}
                     <div>
-                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                            Read Status
-                        </label>
+                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Read Status</label>
                         <div className="mt-2.5 space-y-1.5">
                             {READ_STATUSES.map((status) => {
                                 const isSelected = draftReadStatus === status.value;
@@ -731,7 +701,7 @@ export default function Announcements({
                                         key={status.value}
                                         type="button"
                                         onClick={() => setDraftReadStatus(status.value)}
-                                        className={`w-full min-h-[44px] flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors ${
+                                        className={`flex min-h-[44px] w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-left transition-colors ${
                                             isSelected
                                                 ? 'bg-blue-50 text-blue-900 ring-1 ring-blue-200'
                                                 : 'bg-slate-50 text-slate-800 hover:bg-slate-100'
@@ -739,13 +709,11 @@ export default function Announcements({
                                     >
                                         <div>
                                             <p className="text-xs font-semibold">{status.label}</p>
-                                            <p className="text-[11px] text-slate-500 font-normal">{status.description}</p>
+                                            <p className="text-[11px] font-normal text-slate-500">{status.description}</p>
                                         </div>
                                         <div
                                             className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
-                                                isSelected
-                                                    ? 'border-blue-600 bg-blue-600 text-white'
-                                                    : 'border-slate-300 bg-white'
+                                                isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white'
                                             }`}
                                         >
                                             {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
@@ -758,9 +726,7 @@ export default function Announcements({
 
                     {/* Category Group */}
                     <div>
-                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                            Category
-                        </label>
+                        <label className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">Category</label>
                         <div className="mt-2.5 grid grid-cols-2 gap-2">
                             {CATEGORIES.map((cat) => {
                                 const isSelected = draftCategory === cat.value;
@@ -769,14 +735,14 @@ export default function Announcements({
                                         key={cat.value}
                                         type="button"
                                         onClick={() => setDraftCategory(cat.value)}
-                                        className={`min-h-[44px] flex items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-colors ${
+                                        className={`flex min-h-[44px] items-center justify-between rounded-xl px-3 py-2.5 text-xs font-medium transition-colors ${
                                             isSelected
-                                                ? 'bg-blue-50 text-blue-900 ring-1 ring-blue-200 font-semibold'
+                                                ? 'bg-blue-50 font-semibold text-blue-900 ring-1 ring-blue-200'
                                                 : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
                                         }`}
                                     >
                                         <span className="truncate">{cat.label}</span>
-                                        {isSelected && <Check className="h-3.5 w-3.5 text-blue-600 shrink-0 ml-1" />}
+                                        {isSelected && <Check className="ml-1 h-3.5 w-3.5 shrink-0 text-blue-600" />}
                                     </button>
                                 );
                             })}
@@ -784,18 +750,18 @@ export default function Announcements({
                     </div>
 
                     {/* Sheet Footer Action Buttons */}
-                    <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-3 border-t border-slate-100 pt-3">
                         <button
                             type="button"
                             onClick={handleResetSheetFilters}
-                            className="min-h-[44px] flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition-colors"
+                            className="min-h-[44px] flex-1 rounded-xl bg-slate-100 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
                         >
                             Reset
                         </button>
                         <button
                             type="button"
                             onClick={handleApplySheetFilters}
-                            className="min-h-[44px] flex-1 rounded-xl bg-blue-600 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 transition-colors"
+                            className="min-h-[44px] flex-1 rounded-xl bg-blue-600 py-2.5 text-xs font-semibold text-white shadow-xs transition-colors hover:bg-blue-700"
                         >
                             Show results
                         </button>
