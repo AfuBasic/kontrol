@@ -17,7 +17,7 @@ function copyWithTextArea(text: string): boolean {
     textArea.style.fontSize = '12pt';
 
     document.body.appendChild(textArea);
-    
+
     // Select without invoking native mobile keyboard
     textArea.select();
     textArea.setSelectionRange(0, 99999);
