@@ -521,9 +521,7 @@ function DetailRow({ label, value, mono = false, icon: Icon }: { label: string; 
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-    return (
-        <p className="mb-5 text-[10px] font-bold tracking-widest text-indigo-500 uppercase dark:text-indigo-400">{children}</p>
-    );
+    return <p className="mb-5 text-[10px] font-bold tracking-widest text-indigo-500 uppercase dark:text-indigo-400">{children}</p>;
 }
 
 function TransactionDetailModal({
@@ -584,7 +582,7 @@ function TransactionDetailModal({
 
                 <div className="max-h-[78vh] overflow-y-auto">
                     {/* Hero Amount Banner */}
-                    <div className="flex flex-col items-center justify-center gap-4 bg-slate-950 px-8 py-10 dark:bg-indigo-500/10 dark:ring-1 dark:ring-inset dark:ring-indigo-500/20">
+                    <div className="flex flex-col items-center justify-center gap-4 bg-slate-950 px-8 py-10 dark:bg-indigo-500/10 dark:ring-1 dark:ring-indigo-500/20 dark:ring-inset">
                         <p className="text-[11px] font-bold tracking-widest text-slate-500 uppercase dark:text-indigo-300/60">Amount Charged</p>
                         <p className="text-5xl font-black tracking-tight text-white dark:text-indigo-100">
                             {formatCurrency(transaction.amount)}
@@ -620,9 +618,7 @@ function TransactionDetailModal({
                             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-500" />
                             <div>
                                 {transaction.error_code && (
-                                    <p className="text-[11px] font-bold text-rose-700 dark:text-rose-400">
-                                        Code: {transaction.error_code}
-                                    </p>
+                                    <p className="text-[11px] font-bold text-rose-700 dark:text-rose-400">Code: {transaction.error_code}</p>
                                 )}
                                 {transaction.error_message && (
                                     <p className="mt-0.5 text-xs text-rose-600 dark:text-rose-300">{transaction.error_message}</p>
@@ -648,11 +644,21 @@ function TransactionDetailModal({
                                     }
                                     icon={CreditCard}
                                 />
-                                <DetailRow label="Attempt Count" value={`${transaction.attempt_count} attempt${transaction.attempt_count !== 1 ? 's' : ''}`} icon={RotateCcw} />
+                                <DetailRow
+                                    label="Attempt Count"
+                                    value={`${transaction.attempt_count} attempt${transaction.attempt_count !== 1 ? 's' : ''}`}
+                                    icon={RotateCcw}
+                                />
                                 <DetailRow label="Initiated At" value={formatDate(transaction.created_at)} icon={Clock} />
                                 <DetailRow
                                     label="Paid / Verified At"
-                                    value={transaction.verified_at ? formatDate(transaction.verified_at) : <span className="text-slate-400">Not yet verified</span>}
+                                    value={
+                                        transaction.verified_at ? (
+                                            formatDate(transaction.verified_at)
+                                        ) : (
+                                            <span className="text-slate-400">Not yet verified</span>
+                                        )
+                                    }
                                     icon={CheckCircle2}
                                 />
                                 {transaction.recorded_at && (
@@ -675,9 +681,7 @@ function TransactionDetailModal({
                                     value={payer?.email || transaction.customer_email || <span className="text-slate-400">-</span>}
                                     icon={User}
                                 />
-                                {payer?.id && (
-                                    <DetailRow label="User ID" value={`#${payer.id}`} mono icon={Hash} />
-                                )}
+                                {payer?.id && <DetailRow label="User ID" value={`#${payer.id}`} mono icon={Hash} />}
                             </div>
                         </div>
 
@@ -710,7 +714,11 @@ function TransactionDetailModal({
                                         }
                                         icon={Building2}
                                     />
-                                    <DetailRow label="Resident Count" value={`${inv.resident_count} resident${inv.resident_count !== 1 ? 's' : ''}`} icon={User} />
+                                    <DetailRow
+                                        label="Resident Count"
+                                        value={`${inv.resident_count} resident${inv.resident_count !== 1 ? 's' : ''}`}
+                                        icon={User}
+                                    />
                                     {inv.billing_period_start && (
                                         <DetailRow
                                             label="Billing Period"
@@ -737,13 +745,21 @@ function TransactionDetailModal({
                                     {hasDiscount && (
                                         <DetailRow
                                             label="Discount Applied"
-                                            value={<span className="text-emerald-600 dark:text-emerald-400">− {formatCurrency(inv.metadata!.discount_amount!)}</span>}
+                                            value={
+                                                <span className="text-emerald-600 dark:text-emerald-400">
+                                                    − {formatCurrency(inv.metadata!.discount_amount!)}
+                                                </span>
+                                            }
                                             icon={Tag}
                                         />
                                     )}
                                     <DetailRow
                                         label="Final Charge"
-                                        value={<span className="text-lg font-black text-slate-900 dark:text-white">{formatCurrency(transaction.amount)}</span>}
+                                        value={
+                                            <span className="text-lg font-black text-slate-900 dark:text-white">
+                                                {formatCurrency(transaction.amount)}
+                                            </span>
+                                        }
                                         icon={DollarSign}
                                     />
                                 </div>
@@ -757,15 +773,11 @@ function TransactionDetailModal({
                                 className="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20"
                             >
                                 <p className="text-[10px] font-bold tracking-widest text-slate-400 uppercase dark:text-slate-500">Raw Metadata</p>
-                                {metaOpen ? (
-                                    <ChevronUp className="h-4 w-4 text-slate-400" />
-                                ) : (
-                                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                                )}
+                                {metaOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
                             </button>
                             {metaOpen && (
                                 <div className="border-t border-slate-100 px-6 pb-6 dark:border-slate-800/50">
-                                    <pre className="mt-4 whitespace-pre-wrap rounded-2xl bg-slate-50 p-4 font-mono text-[11px] leading-relaxed text-slate-600 dark:bg-[#0a0e17] dark:text-slate-400">
+                                    <pre className="mt-4 rounded-2xl bg-slate-50 p-4 font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-slate-600 dark:bg-[#0a0e17] dark:text-slate-400">
                                         {JSON.stringify({ transaction: transaction.metadata, invoice: transaction.invoice?.metadata }, null, 2)}
                                     </pre>
                                 </div>
