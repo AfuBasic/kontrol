@@ -4,11 +4,10 @@ import { motion } from 'framer-motion';
 import React from 'react';
 
 interface Props {
-    activeTab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows';
-    hasPublicWindows?: boolean;
+    activeTab?: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
     pendingCount?: number;
     activeCount?: number;
-    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows') => void;
+    onTabChange?: (tab: 'people' | 'visitors' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
 }
 
 interface AccessTab {
@@ -22,7 +21,7 @@ interface AccessTab {
     badgeVariant?: 'warning' | 'neutral';
 }
 
-export default function AccessTabs({ activeTab, hasPublicWindows = false, pendingCount = 0, activeCount = 0, onTabChange }: Props) {
+export default function AccessTabs({ activeTab, pendingCount = 0, activeCount = 0, onTabChange }: Props) {
     const tabs: AccessTab[] = [
         {
             id: 'people',
@@ -55,17 +54,6 @@ export default function AccessTabs({ activeTab, hasPublicWindows = false, pendin
             href: '/org/arrivals/history',
             icon: History,
         },
-        ...(hasPublicWindows
-            ? [
-                  {
-                      id: 'public_windows' as const,
-                      label: 'Public hours',
-                      mobileLabel: 'Public hours',
-                      href: '/org/public-windows',
-                      icon: Calendar,
-                  },
-              ]
-            : []),
     ];
 
     return (
