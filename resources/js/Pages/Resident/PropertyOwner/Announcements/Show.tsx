@@ -1,5 +1,4 @@
 import {
-    
     ArrowLeftIcon,
     TrashIcon,
     UserGroupIcon,
