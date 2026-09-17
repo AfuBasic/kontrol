@@ -288,17 +288,15 @@ export default function AccessList({ organization, membership, members, windows 
             <div className="space-y-4 pt-1 sm:pt-4">
                 <AccessHeader
                     activeTab="people"
-                    hasPublicWindows={hasPublicWindows}
                     primaryAction={
                         membership.is_admin ? (
                             <button
                                 type="button"
                                 onClick={() => setAddPersonModalOpen(true)}
-                                className="inline-flex items-center gap-1.5 rounded-full bg-[#0b4aa2] px-4 py-2 text-sm font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95"
+                                className="flex items-center gap-1 rounded-full px-2 py-1 text-[13px] font-bold text-[#0b4aa2] hover:bg-[#0b4aa2]/10"
                             >
                                 <Plus className="h-4 w-4" strokeWidth={2.5} />
-                                <span>Add</span>
-                                <ChevronDown className="ml-0.5 h-4 w-4 opacity-80" strokeWidth={2.5} />
+                                <span>Add person</span>
                             </button>
                         ) : undefined
                     }
@@ -335,7 +333,7 @@ export default function AccessList({ organization, membership, members, windows 
                                 type="search"
                                 value={search}
                                 onChange={(event) => setSearch(event.target.value)}
-                                placeholder="Search by name, phone or ID..."
+                                placeholder="Search people..."
                                 className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                             />
                         </div>
@@ -345,21 +343,26 @@ export default function AccessList({ organization, membership, members, windows 
                             variant="category"
                             value={category}
                             onChange={(id) => {
-                                setCategory(id);
-                                applyFilters({ category: id });
+                                if (id === 'more') {
+                                    // Normally opens a filter sheet, doing nothing for now to keep UI clean
+                                } else {
+                                    setCategory(id);
+                                    applyFilters({ category: id });
+                                }
                             }}
                             options={[
                                 { id: 'all', label: 'All', count: category === 'all' ? members.total : undefined },
                                 { id: 'staff', label: 'Staff' },
                                 { id: 'parent', label: 'Parents' },
-                                { id: 'contractor', label: 'Contractors' },
-                                { id: 'student', label: 'Students' },
+                                { id: 'more', label: 'More' },
                             ]}
                         />
 
-                        {/* Quiet Directory Count */}
-                        <div className="px-1 pt-2 pb-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                            {members.total} {members.total === 1 ? 'PERSON' : 'PEOPLE'}
+                        {/* Section Header */}
+                        <div className="flex items-center justify-between px-1 pt-2 pb-2">
+                            <h2 className="text-[12px] font-bold tracking-wider text-slate-500 uppercase">
+                                {members.total} {members.total === 1 ? 'Person' : 'People'}
+                            </h2>
                         </div>
 
                         {/* People Directory List: Card Rows */}
@@ -371,45 +374,43 @@ export default function AccessList({ organization, membership, members, windows 
                                 </p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
-                                {members.data.map((member) => {
+                            <div className="mb-6 overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                                {members.data.map((member, index) => {
                                     const memberStatus = getMemberStatus(member);
+                                    const statusLabel = memberStatus.label === 'Active' ? 'Active' : memberStatus.label;
+                                    const dateLabel = member.valid_until ? `Until ${member.valid_until}` : 'No end date';
+
                                     return (
                                         <div
                                             key={member.id}
                                             onClick={() => setSelectedMember(member)}
-                                            className="flex min-h-[88px] cursor-pointer items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/5 transition hover:bg-slate-50"
+                                            className={`flex min-h-[64px] cursor-pointer items-center justify-between gap-3 p-3.5 transition hover:bg-slate-50 active:bg-slate-100 ${
+                                                index !== members.data.length - 1 ? 'border-b border-slate-100' : ''
+                                            }`}
                                         >
-                                            <div className="flex min-w-0 items-start gap-4">
+                                            <div className="flex min-w-0 items-start gap-3.5">
                                                 {/* Avatar */}
-                                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-base font-bold tracking-tight text-[#0b4aa2]">
+                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold tracking-tight text-slate-600">
                                                     {initialsFor(member.name)}
                                                 </div>
 
                                                 {/* Identity */}
-                                                <div className="min-w-0 flex-1 pt-0.5">
-                                                    <div className="truncate text-base font-bold text-slate-900">{member.name}</div>
+                                                <div className="min-w-0 flex-1 py-0.5">
+                                                    <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{member.name}</div>
                                                     <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
                                                         <span className="capitalize">{member.category}</span>
                                                         {' · '}
-                                                        {member.valid_until ? `Until ${member.valid_until}` : 'Ongoing'}
+                                                        <span className={statusLabel === 'Active' ? 'text-emerald-600 font-semibold' : ''}>{statusLabel}</span>
                                                     </p>
-                                                    <div className="mt-1 flex items-center gap-1 text-[13px] text-slate-400">
-                                                        <MapPin className="h-3.5 w-3.5 shrink-0" />
-                                                        <span className="truncate">{organization.name}</span>
-                                                    </div>
+                                                    <p className="mt-0.5 truncate text-[12px] text-slate-400">
+                                                        {dateLabel}
+                                                    </p>
                                                 </div>
                                             </div>
 
-                                            {/* Right Column: Status & Chevron */}
-                                            <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch py-0.5">
-                                                <span
-                                                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${statusColorMap[memberStatus.color as keyof typeof statusColorMap]}`}
-                                                >
-                                                    <span className={`h-1.5 w-1.5 rounded-full bg-current opacity-75`} />
-                                                    {memberStatus.label}
-                                                </span>
-                                                <ChevronRight className="h-5 w-5 text-slate-300" strokeWidth={2.5} />
+                                            {/* Right Column: Chevron */}
+                                            <div className="flex shrink-0 items-center justify-end">
+                                                <ChevronRight className="h-4 w-4 text-slate-300" strokeWidth={2.5} />
                                             </div>
                                         </div>
                                     );
