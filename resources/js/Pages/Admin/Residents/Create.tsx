@@ -370,7 +370,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
 
                                 {/* Property Owner Delegation */}
                                 <div>
-                                    <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    <label htmlFor="property_owner_id" className="mb-1.5 block text-sm font-medium text-gray-700">
                                         Property Owner <span className="text-gray-400">(optional delegation)</span>
                                     </label>
                                     <CustomSelect
@@ -389,7 +389,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
 
                                 {/* Property Assignment */}
                                 <div>
-                                    <label htmlFor="property_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    <label htmlFor="property_id" className="mb-1.5 block text-sm font-medium text-gray-700">
                                         Property Assignment <span className="text-gray-400">(optional)</span>
                                     </label>
                                     <CustomSelect
@@ -459,7 +459,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Zone
                                                 </label>
                                                 <CustomSelect
@@ -628,7 +628,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="bulk_zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Zone
                                                 </label>
                                                 <CustomSelect
@@ -792,7 +792,7 @@ export default function CreateResident({ inviteLinks = [], propertyOwners = [], 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="paste_zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Zone
                                                 </label>
                                                 <CustomSelect
