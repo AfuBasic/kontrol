@@ -14,12 +14,11 @@ import {
     XCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Head, Link, router } from '@inertiajs/react';
-import {  motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import React, { useState } from 'react';
 import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 import Spinner from '@/Components/Spinner';
 import Toast from '@/Components/Toast';
-
 
 type PaymentTransaction = {
     id: number;
