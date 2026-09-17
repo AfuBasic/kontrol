@@ -315,7 +315,7 @@ export default function Apply() {
                                             <span className="ml-2 text-xs font-semibold text-slate-400">Kontrol Estate Command Center</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                            <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
                                             <span className="text-[11px] font-medium text-emerald-400">Gate Active · Main Gate</span>
                                         </div>
                                     </div>
@@ -341,7 +341,7 @@ export default function Apply() {
 
                                     {/* Live Activity Table Preview */}
                                     <div className="mt-4 rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                                        <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <div className="flex items-center justify-between border-b border-slate-800 pb-2 text-[11px] font-bold tracking-wider text-slate-400 uppercase">
                                             <span>Recent Gate Activity</span>
                                             <span className="text-[10px] text-blue-400">View All Entries</span>
                                         </div>
@@ -351,13 +351,18 @@ export default function Apply() {
                                                 { code: 'PASS-714', guest: 'FedEx Courier', host: 'Unit 12A', time: '14:25', type: 'Delivery' },
                                                 { code: 'PASS-603', guest: 'Dr. Chika Amadi', host: 'Unit 1A', time: '14:12', type: 'Guest' },
                                             ].map((item, idx) => (
-                                                <div key={idx} className="flex items-center justify-between rounded-lg bg-slate-900/80 px-2.5 py-1.5 text-left text-xs">
+                                                <div
+                                                    key={idx}
+                                                    className="flex items-center justify-between rounded-lg bg-slate-900/80 px-2.5 py-1.5 text-left text-xs"
+                                                >
                                                     <div>
                                                         <span className="font-semibold text-white">{item.guest}</span>
                                                         <span className="ml-2 text-[11px] text-slate-400">({item.host})</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">{item.type}</span>
+                                                        <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[10px] font-medium text-blue-300">
+                                                            {item.type}
+                                                        </span>
                                                         <span className="text-[11px] text-slate-400">{item.time}</span>
                                                     </div>
                                                 </div>
@@ -785,7 +790,9 @@ export default function Apply() {
                                                             />
                                                         </div>
                                                         {(errors.estateName || (errors as any).estate_name) && (
-                                                            <p className="mt-2 text-sm text-red-500">{errors.estateName || (errors as any).estate_name}</p>
+                                                            <p className="mt-2 text-sm text-red-500">
+                                                                {errors.estateName || (errors as any).estate_name}
+                                                            </p>
                                                         )}
                                                     </div>
                                                     <div>
@@ -806,7 +813,9 @@ export default function Apply() {
                                                             />
                                                         </div>
                                                         {(errors.estateLocation || (errors as any).address) && (
-                                                            <p className="mt-2 text-sm text-red-500">{errors.estateLocation || (errors as any).address}</p>
+                                                            <p className="mt-2 text-sm text-red-500">
+                                                                {errors.estateLocation || (errors as any).address}
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -846,7 +855,9 @@ export default function Apply() {
                                                             />
                                                         </div>
                                                         {(errors.contactName || (errors as any).contact_name) && (
-                                                            <p className="mt-2 text-sm text-red-500">{errors.contactName || (errors as any).contact_name}</p>
+                                                            <p className="mt-2 text-sm text-red-500">
+                                                                {errors.contactName || (errors as any).contact_name}
+                                                            </p>
                                                         )}
                                                     </div>
                                                     <div>
@@ -867,7 +878,9 @@ export default function Apply() {
                                                             />
                                                         </div>
                                                         {(errors.contactEmail || (errors as any).email) && (
-                                                            <p className="mt-2 text-sm text-red-500">{errors.contactEmail || (errors as any).email}</p>
+                                                            <p className="mt-2 text-sm text-red-500">
+                                                                {errors.contactEmail || (errors as any).email}
+                                                            </p>
                                                         )}
                                                     </div>
                                                     <div>
@@ -890,7 +903,9 @@ export default function Apply() {
                                                             />
                                                         </div>
                                                         {(errors.contactPhone || (errors as any).phone) && (
-                                                            <p className="mt-2 text-sm text-red-500">{errors.contactPhone || (errors as any).phone}</p>
+                                                            <p className="mt-2 text-sm text-red-500">
+                                                                {errors.contactPhone || (errors as any).phone}
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </div>
