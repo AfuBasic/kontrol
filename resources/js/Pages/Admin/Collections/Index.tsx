@@ -439,7 +439,7 @@ export default function CollectionsIndex({
                     <div className="flex items-center gap-2">
                         <button
                             onClick={() => setIsBankingModalOpen(true)}
-                            className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 shadow-xs ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white px-3.5 py-2.5 text-xs font-bold whitespace-nowrap text-slate-700 shadow-xs ring-1 ring-slate-200 transition-colors hover:bg-slate-50"
                         >
                             <Settings2 className="h-4 w-4 text-slate-400" />
                             <span>{hasBanking ? 'Settlement' : 'Setup Bank'}</span>
@@ -447,7 +447,7 @@ export default function CollectionsIndex({
                         {hasBanking ? (
                             <Link
                                 href={create.url()}
-                                className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-95"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#1F6FDB] px-4 py-2.5 text-xs font-bold whitespace-nowrap text-white shadow-xs transition-all hover:bg-blue-700 active:scale-95"
                             >
                                 <PlusIcon className="h-4 w-4" />
                                 <span>New Collection</span>
@@ -455,7 +455,7 @@ export default function CollectionsIndex({
                         ) : (
                             <button
                                 onClick={() => setIsBankingModalOpen(true)}
-                                className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 whitespace-nowrap rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold text-slate-400"
+                                className="inline-flex cursor-not-allowed items-center justify-center gap-1.5 rounded-xl bg-slate-100 px-4 py-2.5 text-xs font-bold whitespace-nowrap text-slate-400"
                             >
                                 <PlusIcon className="h-4 w-4" />
                                 <span>New Collection</span>
