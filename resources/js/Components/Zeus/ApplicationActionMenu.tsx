@@ -11,7 +11,14 @@ interface Props {
     isLoading: boolean;
 }
 
-export default function ApplicationActionMenu({ applicationId: _applicationId, estateName: _estateName, onView, onApprove, onReject, isLoading }: Props) {
+export default function ApplicationActionMenu({
+    applicationId: _applicationId,
+    estateName: _estateName,
+    onView,
+    onApprove,
+    onReject,
+    isLoading,
+}: Props) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
