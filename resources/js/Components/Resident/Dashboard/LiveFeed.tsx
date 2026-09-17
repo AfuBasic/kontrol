@@ -1,4 +1,3 @@
-
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Clock, X, Info, DoorOpen } from 'lucide-react';
 import type { ActivityItem } from '@/types/access-code';
