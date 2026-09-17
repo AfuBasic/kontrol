@@ -1,6 +1,21 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { User, Shield, ChevronRight, Zap, Users, UserCircle, Crown, X, Loader2, Plus, Wallet, HelpCircle, CreditCard, ExternalLink } from 'lucide-react';
+import {
+    User,
+    Shield,
+    ChevronRight,
+    Zap,
+    Users,
+    UserCircle,
+    Crown,
+    X,
+    Loader2,
+    Plus,
+    Wallet,
+    HelpCircle,
+    CreditCard,
+    ExternalLink,
+} from 'lucide-react';
 import { type FormEventHandler, useState, useEffect } from 'react';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as TrustedDeviceController from '@/actions/App/Http/Controllers/Account/TrustedDeviceController';
