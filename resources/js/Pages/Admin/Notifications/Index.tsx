@@ -86,19 +86,15 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                 {/* Header with Title and Quick Actions */}
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 className="font-bold text-2xl text-slate-900 tracking-tight sm:text-3xl dark:text-slate-100">
-                            Notifications
-                        </h1>
-                        <p className="mt-1 text-slate-500 text-sm dark:text-slate-400">
-                            View and manage your system notifications.
-                        </p>
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">Notifications</h1>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">View and manage your system notifications.</p>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <button
                             type="button"
                             onClick={markAllAsRead}
-                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 font-medium text-xs text-slate-700 shadow-xs transition-colors hover:bg-slate-50 sm:flex-none sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 sm:flex-none sm:text-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
                         >
                             <CheckCircleIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             <span>Mark all read</span>
@@ -106,7 +102,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                         <button
                             type="button"
                             onClick={clearAll}
-                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 font-medium text-rose-600 text-xs shadow-xs transition-colors hover:bg-rose-50 sm:flex-none sm:text-sm dark:border-rose-900/40 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-medium text-rose-600 shadow-xs transition-colors hover:bg-rose-50 sm:flex-none sm:text-sm dark:border-rose-900/40 dark:bg-slate-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
                         >
                             <TrashIcon className="h-4 w-4 text-rose-500" />
                             <span>Clear all</span>
@@ -127,7 +123,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Search notifications..."
-                                className="block w-full rounded-xl border border-slate-200 bg-white py-2 pr-3 pl-10 text-slate-900 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-slate-100 dark:focus:ring-slate-100"
+                                className="block w-full rounded-xl border border-slate-200 bg-white py-2 pr-3 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-slate-100 dark:focus:ring-slate-100"
                             />
                         </div>
                     </form>
@@ -139,7 +135,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                 key={f}
                                 type="button"
                                 onClick={() => handleTypeChange(f)}
-                                className={`inline-flex shrink-0 items-center justify-center rounded-xl px-3.5 py-1.5 font-medium text-xs transition-all select-none ${
+                                className={`inline-flex shrink-0 items-center justify-center rounded-xl px-3.5 py-1.5 text-xs font-medium transition-all select-none ${
                                     type === f
                                         ? 'bg-slate-900 text-white shadow-xs dark:bg-slate-100 dark:text-slate-900'
                                         : 'border border-slate-200/80 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800'
@@ -185,7 +181,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                     {/* Content */}
                                     <div className="min-w-0 flex-1">
                                         <div className="flex items-start justify-between gap-2">
-                                            <p className="font-semibold text-slate-900 text-sm leading-snug break-words dark:text-slate-100">
+                                            <p className="text-sm leading-snug font-semibold break-words text-slate-900 dark:text-slate-100">
                                                 {notification.data.message || 'New notification'}
                                             </p>
                                             {!notification.read_at && (
@@ -194,7 +190,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                         </div>
 
                                         <div className="mt-2 flex items-center justify-between gap-2">
-                                            <time className="text-slate-400 text-xs dark:text-slate-500">
+                                            <time className="text-xs text-slate-400 dark:text-slate-500">
                                                 {new Date(notification.created_at).toLocaleDateString(undefined, {
                                                     year: 'numeric',
                                                     month: 'short',
@@ -211,7 +207,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                                         e.stopPropagation();
                                                         markAsRead(notification.id);
                                                     }}
-                                                    className="font-medium text-indigo-600 text-xs hover:text-indigo-500 hover:underline dark:text-indigo-400"
+                                                    className="text-xs font-medium text-indigo-600 hover:text-indigo-500 hover:underline dark:text-indigo-400"
                                                 >
                                                     Mark as read
                                                 </button>
@@ -222,14 +218,12 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                             );
                         })
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 border-dashed bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">
                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
                                 <BellIcon className="h-6 w-6" />
                             </div>
-                            <h3 className="mt-4 font-semibold text-base text-slate-900 dark:text-slate-100">
-                                No notifications found
-                            </h3>
-                            <p className="mt-1 max-w-sm text-slate-500 text-sm dark:text-slate-400">
+                            <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">No notifications found</h3>
+                            <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
                                 Try adjusting your search keywords or switching filters.
                             </p>
                         </div>
@@ -243,24 +237,24 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                             {notifications.links[0]?.url ? (
                                 <Link
                                     href={notifications.links[0].url}
-                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                                 >
                                     Previous
                                 </Link>
                             ) : (
-                                <span className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 font-medium text-slate-400 text-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600">
+                                <span className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600">
                                     Previous
                                 </span>
                             )}
                             {notifications.links[notifications.links.length - 1]?.url ? (
                                 <Link
                                     href={notifications.links[notifications.links.length - 1].url!}
-                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                    className="inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                                 >
                                     Next
                                 </Link>
                             ) : (
-                                <span className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 font-medium text-slate-400 text-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600">
+                                <span className="inline-flex items-center rounded-lg border border-slate-100 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-400 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-600">
                                     Next
                                 </span>
                             )}
@@ -269,7 +263,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                         {/* Desktop Pagination */}
                         <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-slate-500 text-xs dark:text-slate-400">
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
                                     Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{notifications.from}</span> to{' '}
                                     <span className="font-semibold text-slate-700 dark:text-slate-200">{notifications.to}</span> of{' '}
                                     <span className="font-semibold text-slate-700 dark:text-slate-200">{notifications.total}</span> notifications
@@ -281,7 +275,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                         <Link
                                             key={i}
                                             href={link.url || '#'}
-                                            className={`relative inline-flex items-center px-3 py-1.5 font-semibold text-xs ${
+                                            className={`relative inline-flex items-center px-3 py-1.5 text-xs font-semibold ${
                                                 link.active
                                                     ? 'z-10 bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
                                                     : 'bg-white text-slate-700 ring-1 ring-slate-200 ring-inset hover:bg-slate-50 dark:bg-slate-900 dark:text-slate-300 dark:ring-slate-800'
