@@ -3,28 +3,14 @@ import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import type { SharedData } from '@/types';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    Calendar,
-    Search,
-    Tag,
-    Users,
-    Copy,
-    Share2,
-    Check,
-    X,
-    ShieldAlert,
-    Link as LinkIcon,
-    Clock,
-    Loader2,
-    User,
-    Phone,
-} from 'lucide-react';
+import { Calendar, Search, Tag, Users, Copy, Share2, Check, X, ShieldAlert, Link as LinkIcon, Clock, Loader2, User, Phone } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
-import BulkInviteModal from './BulkInviteModal';
-import AccessActionMenu from '@/Components/Organization/AccessActionMenu';
+import AccessHeader from '@/Components/Organization/AccessHeader';
+import FilterChips from '@/Components/Organization/FilterChips';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 import PassCard from '@/Components/Resident/PassCard';
-import TextInput from '@/Components/UI/TextInput';
+import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import { ChevronDown, ChevronRight, MapPin, Plus } from 'lucide-react';
 import CustomSelect from '@/Components/UI/CustomSelect';
 import Button from '@/Components/UI/Button';
 import { shareAccessCode } from '@/Utils/share';
@@ -83,6 +69,7 @@ interface Props {
 export default function Visitors({ organization, membership, visitors, filters }: Props) {
     const { flash } = usePage<SharedData>().props;
     const [search, setSearch] = useState(filters.search ?? '');
+    const [status, setStatus] = useState('all');
     const [inviteModalOpen, setInviteModalOpen] = useState(false);
     const [bulkInviteModalOpen, setBulkInviteModalOpen] = useState(false);
     const [bulkSummaryOpen, setBulkSummaryOpen] = useState(false);
@@ -131,10 +118,17 @@ export default function Visitors({ organization, membership, visitors, filters }
 
     const cardRef = useRef<HTMLDivElement>(null);
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        router.get('/org/visitors', { search }, { preserveState: true, preserveScroll: true });
+    const handleSearch = (e?: React.FormEvent) => {
+        if (e) e.preventDefault();
+        router.get('/org/visitors', { search, status: status === 'all' ? undefined : status }, { preserveState: true, preserveScroll: true });
     };
+
+    useEffect(() => {
+        const debounce = setTimeout(() => {
+            handleSearch();
+        }, 300);
+        return () => clearTimeout(debounce);
+    }, [search, status]);
 
     const copyCodeOnly = async (pass: VisitorPass) => {
         if (copying) return;
@@ -265,11 +259,7 @@ export default function Visitors({ organization, membership, visitors, filters }
         const end = new Date(expiresAtStr);
 
         // If it spans whole day 00:00 to 23:59
-        const isWholeDay =
-            start.getHours() === 0 &&
-            start.getMinutes() === 0 &&
-            end.getHours() === 23 &&
-            end.getMinutes() === 59;
+        const isWholeDay = start.getHours() === 0 && start.getMinutes() === 0 && end.getHours() === 23 && end.getMinutes() === 59;
 
         if (isWholeDay) {
             return 'All Day (Ends 11:59 PM)';
@@ -282,152 +272,126 @@ export default function Visitors({ organization, membership, visitors, filters }
     };
 
     return (
-        <OrganizationLayout title="Visitors">
-            <Head title="Visitors - Organization" />
+        <OrganizationLayout title="Access - Visitors" contentClassName="max-w-[92rem]">
+            <Head title={`${organization.name} - Visitors`} />
 
-            <div className="mx-auto max-w-4xl py-2 sm:py-4">
-                {/* Header & Actions */}
-                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Access Hub</h1>
-                        <p className="mt-1 text-sm text-slate-500">Manage people, visitors, and active arrivals.</p>
+            <div className="space-y-4 pt-1 sm:pt-4">
+                <AccessHeader
+                    activeTab="visitors"
+                    primaryAction={
+                        membership.is_admin ? (
+                            <button
+                                type="button"
+                                onClick={() => setInviteModalOpen(true)}
+                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#0b4aa2] px-3.5 text-[13px] font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95"
+                            >
+                                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                                <span>Invite</span>
+                                <ChevronDown className="ml-0.5 h-4 w-4 opacity-80" strokeWidth={2.5} />
+                            </button>
+                        ) : undefined
+                    }
+                />
+
+                {/* Directory with search, filters, and list */}
+                <div className="space-y-4 pt-2">
+                    {/* Native Search Field */}
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />
+                        <input
+                            type="search"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Search visitors or pass ID..."
+                            className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
+                        />
                     </div>
 
-                    {membership.is_admin && (
-                        <div className="flex items-center gap-3">
-                            <AccessActionMenu 
-                                onInviteVisitor={() => setInviteModalOpen(true)}
-                                onInviteMultiple={() => setBulkInviteModalOpen(true)}
-                            />
+                    {/* Status Filters */}
+                    <FilterChips
+                        variant="status"
+                        value={status}
+                        onChange={(id) => setStatus(id)}
+                        options={[
+                            { id: 'all', label: 'All', count: status === 'all' ? visitors.total : undefined },
+                            { id: 'active', label: 'Active', color: 'mint' },
+                            { id: 'used', label: 'Used', color: 'slate' },
+                            { id: 'expired', label: 'Expired', color: 'amber' },
+                            { id: 'revoked', label: 'Revoked', color: 'red' },
+                        ]}
+                    />
+
+                    {/* Quiet Directory Count */}
+                    <div className="px-1 pt-2 pb-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                        {visitors.total} {visitors.total === 1 ? 'VISITOR' : 'VISITORS'}
+                    </div>
+
+                    {/* Visitors Directory List: Card Rows */}
+                    {visitors.data.length === 0 ? (
+                        <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
+                            <p className="text-sm font-bold text-slate-900">No matching visitors found</p>
+                            <p className="mt-1 text-sm text-slate-500">
+                                {search ? `No visitors matched "${search}".` : 'No visitors found in this category.'}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {visitors.data.map((pass) => {
+                                // Status styling mappings
+                                const statusMap = {
+                                    active: { label: 'Active', classes: 'bg-emerald-50 text-emerald-700' },
+                                    used: { label: 'Used', classes: 'bg-slate-100 text-slate-700' },
+                                    revoked: { label: 'Revoked', classes: 'bg-rose-50 text-rose-700' },
+                                    expired: { label: 'Expired', classes: 'bg-amber-50 text-amber-700' },
+                                } as const;
+                                const statusConfig = statusMap[pass.status] || statusMap.expired;
+
+                                return (
+                                    <div
+                                        key={pass.id}
+                                        onClick={() => setSelectedPass(pass)}
+                                        className="flex min-h-[88px] cursor-pointer items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/5 transition hover:bg-slate-50"
+                                    >
+                                        <div className="flex min-w-0 items-start gap-4">
+                                            {/* Avatar */}
+                                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#dbeafe] text-base font-bold tracking-tight text-[#0b4aa2]">
+                                                {pass.visitor_name.charAt(0).toUpperCase()}
+                                            </div>
+
+                                            {/* Identity */}
+                                            <div className="min-w-0 flex-1 pt-0.5">
+                                                <div className="truncate text-base font-bold text-slate-900">{pass.visitor_name}</div>
+                                                <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
+                                                    <span className="capitalize">{pass.purpose || 'Visit'}</span>
+                                                    {' · '}
+                                                    {new Date(pass.starts_at).toLocaleDateString()}
+                                                </p>
+                                                <div className="mt-1 flex items-center gap-1 text-[13px] text-slate-400">
+                                                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                                    <span className="truncate">{organization.name}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Column: Status & Chevron */}
+                                        <div className="flex shrink-0 flex-col items-end justify-between gap-2 self-stretch py-0.5">
+                                            <span
+                                                className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${statusConfig.classes}`}
+                                            >
+                                                <span className={`h-1.5 w-1.5 rounded-full bg-current opacity-75`} />
+                                                {statusConfig.label}
+                                            </span>
+                                            <ChevronRight className="h-5 w-5 text-slate-300" strokeWidth={2.5} />
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
 
-                <AccessTabs activeTab="visitors" />
-
-                <div className="mt-8 rounded-2xl bg-white shadow-xs ring-1 ring-slate-900/5">
-                    {/* Toolbar */}
-                    <div className="flex flex-col gap-4 border-b border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                        <form onSubmit={handleSearch} className="relative max-w-sm flex-1">
-                            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Search by name, phone or code..."
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="h-10 w-full rounded-xl border-0 bg-slate-50 pr-4 pl-10 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-slate-900 focus:ring-inset"
-                            />
-                        </form>
-                    </div>
-
-                    {/* Visitors List */}
-                    <div className="divide-y divide-slate-100">
-                        {visitors.data.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-center">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-50">
-                                    <Users className="h-8 w-8 text-slate-300" />
-                                </div>
-                                <h3 className="mt-4 text-sm font-semibold text-slate-900">No visitors found</h3>
-                                <p className="mt-1 max-w-xs text-sm text-slate-500">
-                                    {search ? "We couldn't find any visitors matching your search." : 'Get started by inviting your first visitor.'}
-                                </p>
-                            </div>
-                        ) : (
-                            visitors.data.map((pass) => (
-                                <div
-                                    key={pass.id}
-                                    onClick={() => setSelectedPass(pass)}
-                                    className="group flex cursor-pointer flex-col justify-between gap-4 px-4 py-4 transition hover:bg-slate-50/80 sm:flex-row sm:items-center sm:px-6"
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold tracking-tight text-slate-700 transition group-hover:bg-slate-200">
-                                            {pass.visitor_name.charAt(0).toUpperCase()}
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-2">
-                                                <h3 className="text-base font-bold text-slate-950 transition group-hover:text-indigo-600">
-                                                    {pass.visitor_name}
-                                                </h3>
-                                                {pass.status === 'active' && (
-                                                    <span className="inline-flex items-center rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-emerald-700 uppercase ring-1 ring-emerald-100 ring-inset">
-                                                        Active
-                                                    </span>
-                                                )}
-                                                {pass.status === 'used' && (
-                                                    <span className="inline-flex items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-slate-600 uppercase ring-1 ring-slate-200 ring-inset">
-                                                        Used
-                                                    </span>
-                                                )}
-                                                {pass.status === 'revoked' && (
-                                                    <span className="inline-flex items-center rounded-md bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-rose-700 uppercase ring-1 ring-rose-100 ring-inset">
-                                                        Revoked
-                                                    </span>
-                                                )}
-                                                {pass.status === 'expired' && (
-                                                    <span className="inline-flex items-center rounded-md bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold tracking-wider text-amber-700 uppercase ring-1 ring-amber-100 ring-inset">
-                                                        Expired
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1 font-medium text-slate-600">
-                                                    <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                                    {new Date(pass.starts_at).toLocaleDateString()}
-                                                </span>
-                                                <span className="flex items-center gap-1 text-slate-500">
-                                                    <Clock className="h-3.5 w-3.5 text-slate-400" />
-                                                    {formatTimeWindow(pass.starts_at, pass.expires_at)}
-                                                </span>
-                                                {pass.purpose && (
-                                                    <span className="flex items-center gap-1 capitalize text-slate-500">
-                                                        <Tag className="h-3.5 w-3.5 text-slate-400" />
-                                                        {pass.purpose}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-end gap-3" onClick={(e) => e.stopPropagation()}>
-                                        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 shadow-2xs">
-                                            <span className="font-mono text-base font-bold tracking-widest text-slate-900">{pass.code}</span>
-                                            <button
-                                                type="button"
-                                                onClick={() => copyCode(pass)}
-                                                className="ml-2 text-slate-400 transition hover:text-slate-700"
-                                                title="Copy Pass Link"
-                                            >
-                                                {copiedCodeId === pass.id ? (
-                                                    <Check className="h-4 w-4 text-emerald-600" />
-                                                ) : (
-                                                    <Copy className="h-4 w-4" />
-                                                )}
-                                            </button>
-                                        </div>
-
-                                        {membership.is_admin && pass.status === 'active' && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleRevoke(pass.id)}
-                                                className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                                                title="Revoke Pass"
-                                            >
-                                                <ShieldAlert className="h-4 w-4" />
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </div>
-
                 {/* Pass Details Drawer */}
-                <ResponsiveSheet
-                    isOpen={!!selectedPass}
-                    onClose={() => setSelectedPass(null)}
-                    title="Pass Details"
-                >
+                <ResponsiveSheet isOpen={!!selectedPass} onClose={() => setSelectedPass(null)} title="Pass Details">
                     {selectedPass && (
                         <div className="space-y-6">
                             {/* Reusable Pass Card with visual QR Ticket */}
@@ -449,7 +413,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                         type="button"
                                         onClick={() => copyCodeOnly(selectedPass)}
                                         disabled={copying}
-                                        className={`flex flex-1 min-h-[46px] items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold shadow-xs transition-all active:scale-98 disabled:opacity-70 ${
+                                        className={`flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-2xl border px-4 py-4 text-sm font-bold shadow-xs transition-all active:scale-98 disabled:opacity-70 ${
                                             copiedCode
                                                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                                 : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
@@ -469,7 +433,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                         type="button"
                                         onClick={() => handleShare(selectedPass)}
                                         disabled={sharing}
-                                        className={`flex flex-1 min-h-[46px] items-center justify-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold shadow-xs transition-all active:scale-98 disabled:opacity-75 ${
+                                        className={`flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-2xl border px-4 py-4 text-sm font-bold shadow-xs transition-all active:scale-98 disabled:opacity-75 ${
                                             shareCopied
                                                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                                                 : 'border-slate-200 bg-white text-slate-800 hover:bg-slate-50'
@@ -491,7 +455,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                     <button
                                         type="button"
                                         onClick={() => setIsExtendModalOpen(true)}
-                                        className="flex w-full min-h-[46px] items-center justify-center gap-2 rounded-2xl border border-indigo-200/80 bg-indigo-50/80 px-4 py-3 text-sm font-bold text-indigo-700 shadow-xs transition hover:bg-indigo-100 active:scale-98"
+                                        className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border border-indigo-200/80 bg-indigo-50/80 px-4 py-4 text-sm font-bold text-indigo-700 shadow-xs transition hover:bg-indigo-100 active:scale-98"
                                     >
                                         <Clock className="h-4 w-4 text-indigo-600" />
                                         <span>Extend Pass Duration</span>
@@ -505,7 +469,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                             type="button"
                                             onClick={() => handleRevoke(selectedPass.id)}
                                             disabled={revoking}
-                                            className="flex w-full min-h-[46px] items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-3 text-sm font-bold text-rose-600 shadow-xs transition hover:bg-rose-100/70 active:scale-98 disabled:opacity-50"
+                                            className="flex min-h-[56px] w-full items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50/60 px-4 py-4 text-sm font-bold text-rose-600 shadow-xs transition hover:bg-rose-100/70 active:scale-98 disabled:opacity-50"
                                         >
                                             {revoking ? (
                                                 <Loader2 className="h-4 w-4 animate-spin text-rose-600" />
@@ -530,7 +494,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                 >
                     {selectedPass && (
                         <div className="p-1">
-                            <p className="text-xs text-slate-500 mb-4">
+                            <p className="mb-4 text-xs text-slate-500">
                                 Add extra validity time to <span className="font-semibold text-slate-800">{selectedPass.visitor_name}</span>'s pass.
                             </p>
 
@@ -556,14 +520,14 @@ export default function Visitors({ organization, membership, visitors, filters }
                                         type="button"
                                         onClick={() => setIsExtendModalOpen(false)}
                                         disabled={extending}
-                                        className="flex-1 min-h-[46px] rounded-2xl border border-slate-200 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition"
+                                        className="min-h-[56px] flex-1 rounded-2xl border border-slate-200 py-4 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={extending}
-                                        className="flex flex-1 min-h-[46px] items-center justify-center gap-2 rounded-2xl bg-slate-900 py-3 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-75 transition"
+                                        className="flex min-h-[56px] flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-75"
                                     >
                                         {extending ? (
                                             <>
@@ -668,6 +632,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                                 label="Start Time"
                                                 icon={Clock}
                                                 type="time"
+                                                required={isCustomTime}
                                                 value={data.start_time}
                                                 onChange={(e) => setData('start_time', e.target.value)}
                                                 error={errors.start_time}
@@ -676,6 +641,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                                 label="End Time"
                                                 icon={Clock}
                                                 type="time"
+                                                required={isCustomTime}
                                                 value={data.end_time}
                                                 onChange={(e) => setData('end_time', e.target.value)}
                                                 error={errors.end_time}
@@ -684,11 +650,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-                            {!isCustomTime && (
-                                <p className="mt-2 px-1 text-xs text-slate-400">
-                                    Valid entire day (expires at 11:59 PM)
-                                </p>
-                            )}
+                            {!isCustomTime && <p className="mt-2 px-1 text-xs text-slate-400">Valid entire day (expires at 11:59 PM)</p>}
                         </div>
 
                         <CustomSelect
@@ -700,18 +662,10 @@ export default function Visitors({ organization, membership, visitors, filters }
                         {errors.purpose && <p className="mt-1.5 text-xs font-medium text-rose-600">{errors.purpose}</p>}
 
                         <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-5">
-                            <Button
-                                type="button"
-                                variant="ghost"
-                                onClick={() => setInviteModalOpen(false)}
-                            >
+                            <Button type="button" variant="ghost" onClick={() => setInviteModalOpen(false)}>
                                 Cancel
                             </Button>
-                            <Button
-                                type="submit"
-                                variant="secondary"
-                                isLoading={processing}
-                            >
+                            <Button type="submit" variant="secondary" isLoading={processing}>
                                 Invite Visitor
                             </Button>
                         </div>
@@ -719,10 +673,7 @@ export default function Visitors({ organization, membership, visitors, filters }
                 </ResponsiveSheet>
 
                 {/* Bulk Invite Modal */}
-                <BulkInviteModal
-                    isOpen={bulkInviteModalOpen}
-                    onClose={() => setBulkInviteModalOpen(false)}
-                />
+                <BulkInviteModal isOpen={bulkInviteModalOpen} onClose={() => setBulkInviteModalOpen(false)} />
 
                 {/* Bulk Summary Modal */}
                 <ResponsiveSheet isOpen={bulkSummaryOpen && !!flash.bulk_passes} onClose={() => setBulkSummaryOpen(false)}>
@@ -734,16 +685,18 @@ export default function Visitors({ organization, membership, visitors, filters }
                                     <p className="mt-0.5 text-xs text-slate-500">You can now copy and share these links with your visitors.</p>
                                 </div>
                             </div>
-                            <div className="max-h-[50vh] overflow-y-auto pt-4 space-y-3">
+                            <div className="max-h-[50vh] space-y-3 overflow-y-auto pt-4">
                                 {flash.bulk_passes.map((pass, i) => (
-                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-100">
+                                    <div key={i} className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-3">
                                         <div>
                                             <div className="text-sm font-bold text-slate-900">{pass.visitor_name}</div>
-                                            <div className="text-xs text-slate-500 flex items-center gap-1 mt-0.5"><LinkIcon className="w-3 h-3"/> kontrol.test/pass/{pass.code}</div>
+                                            <div className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
+                                                <LinkIcon className="h-3 w-3" /> kontrol.test/pass/{pass.code}
+                                            </div>
                                         </div>
                                         <button
                                             onClick={() => copyCode(pass)}
-                                            className="p-2 text-slate-400 hover:text-slate-700 transition bg-white rounded-md border border-slate-200 shadow-sm"
+                                            className="rounded-md border border-slate-200 bg-white p-2 text-slate-400 shadow-sm transition hover:text-slate-700"
                                             title="Copy link"
                                         >
                                             <Copy className="h-4 w-4" />
