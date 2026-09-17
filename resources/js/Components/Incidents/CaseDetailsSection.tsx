@@ -9,12 +9,7 @@ interface Props {
     className?: string;
 }
 
-export default function CaseDetailsSection({
-    incident,
-    onEdit,
-    canEdit = true,
-    className = '',
-}: Props) {
+export default function CaseDetailsSection({ incident, onEdit, canEdit = true, className = '' }: Props) {
     const formatCategory = (cat: string) => {
         return cat.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
     };
@@ -48,18 +43,16 @@ export default function CaseDetailsSection({
 
     return (
         <section
-            className={`rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 ${className}`}
+            className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6 dark:border-slate-800 dark:bg-slate-900 ${className}`}
         >
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    Case Details
-                </h3>
+            <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+                <h3 className="text-xs font-black tracking-wider text-slate-400 uppercase dark:text-slate-500">Case Details</h3>
 
                 {canEdit && (
                     <button
                         type="button"
                         onClick={onEdit}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-bold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                         <Edit3 className="h-3.5 w-3.5" />
                         <span>Edit</span>
@@ -69,21 +62,19 @@ export default function CaseDetailsSection({
 
             <div className="space-y-4">
                 {/* Priority */}
-                <div className="flex items-center justify-between py-1 border-b border-slate-100/60 dark:border-slate-800/60 pb-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <div className="flex items-center justify-between border-b border-slate-100/60 py-1 pb-3 dark:border-slate-800/60">
+                    <span className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <ShieldAlert className="h-3.5 w-3.5 text-slate-400" />
                         <span>Priority</span>
                     </span>
-                    <span
-                        className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-xs font-bold border ${priorityInfo.bg}`}
-                    >
+                    <span className={`inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-bold ${priorityInfo.bg}`}>
                         {priorityInfo.label}
                     </span>
                 </div>
 
                 {/* Assigned Handler */}
-                <div className="flex items-center justify-between py-1 border-b border-slate-100/60 dark:border-slate-800/60 pb-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <div className="flex items-center justify-between border-b border-slate-100/60 py-1 pb-3 dark:border-slate-800/60">
+                    <span className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <UserCheck className="h-3.5 w-3.5 text-slate-400" />
                         <span>Assigned Handler</span>
                     </span>
@@ -93,37 +84,33 @@ export default function CaseDetailsSection({
                 </div>
 
                 {/* Category */}
-                <div className="flex items-center justify-between py-1 border-b border-slate-100/60 dark:border-slate-800/60 pb-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <div className="flex items-center justify-between border-b border-slate-100/60 py-1 pb-3 dark:border-slate-800/60">
+                    <span className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <Tag className="h-3.5 w-3.5 text-slate-400" />
                         <span>Category</span>
                     </span>
-                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                        {formatCategory(incident.category)}
-                    </span>
+                    <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{formatCategory(incident.category)}</span>
                 </div>
 
                 {/* Zone / Scope */}
                 {incident.zone && (
-                    <div className="flex items-center justify-between py-1 border-b border-slate-100/60 dark:border-slate-800/60 pb-3">
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <div className="flex items-center justify-between border-b border-slate-100/60 py-1 pb-3 dark:border-slate-800/60">
+                        <span className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                             <Layers className="h-3.5 w-3.5 text-slate-400" />
                             <span>Estate Zone</span>
                         </span>
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                            {incident.zone.name}
-                        </span>
+                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{incident.zone.name}</span>
                     </div>
                 )}
 
                 {/* Location */}
                 {incident.location && (
-                    <div className="flex items-center justify-between py-1 border-b border-slate-100/60 dark:border-slate-800/60 pb-3">
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <div className="flex items-center justify-between border-b border-slate-100/60 py-1 pb-3 dark:border-slate-800/60">
+                        <span className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
                             <MapPin className="h-3.5 w-3.5 text-slate-400" />
                             <span>Location</span>
                         </span>
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 max-w-[180px] truncate text-right">
+                        <span className="max-w-[180px] truncate text-right text-xs font-bold text-slate-900 dark:text-slate-100">
                             {incident.location}
                         </span>
                     </div>
@@ -131,12 +118,8 @@ export default function CaseDetailsSection({
 
                 {/* Visibility */}
                 <div className="flex items-center justify-between py-1">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                        {incident.is_private ? (
-                            <EyeOff className="h-3.5 w-3.5 text-slate-400" />
-                        ) : (
-                            <Eye className="h-3.5 w-3.5 text-slate-400" />
-                        )}
+                    <span className="flex items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400">
+                        {incident.is_private ? <EyeOff className="h-3.5 w-3.5 text-slate-400" /> : <Eye className="h-3.5 w-3.5 text-slate-400" />}
                         <span>Visibility</span>
                     </span>
                     <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
