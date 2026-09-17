@@ -181,7 +181,7 @@ export default function EstateShow({
                 onFinish: () => {
                     setIsAssigning(false);
                 },
-            }
+            },
         );
     };
 
@@ -205,7 +205,7 @@ export default function EstateShow({
             router.patch(
                 updatePartnerAssignment.url({ estate: estate.ulid }),
                 { partner_id: null, reason: 'Removed partner attribution via Zeus dashboard' },
-                { preserveScroll: true, onFinish }
+                { preserveScroll: true, onFinish },
             );
         }
     };
@@ -251,7 +251,7 @@ export default function EstateShow({
                     <div className="flex items-center gap-3">
                         <Link
                             href={`/zeus/estates/${estate.id}/impersonate`}
-                            className="inline-flex items-center gap-2 rounded-2xl bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-700 ring-1 ring-amber-500/20 shadow-sm transition-all hover:bg-amber-500/20 active:scale-95 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/30"
+                            className="inline-flex items-center gap-2 rounded-2xl bg-amber-500/10 px-5 py-2.5 text-sm font-semibold text-amber-700 shadow-sm ring-1 ring-amber-500/20 transition-all hover:bg-amber-500/20 active:scale-95 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/30"
                         >
                             <Shield className="h-4 w-4" />
                             Impersonate Estate Admin
@@ -349,7 +349,7 @@ export default function EstateShow({
                     </div>
                     <div className="p-6 sm:p-8">
                         <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">Billing Mode</p>
-                        <p className="mt-1 text-lg font-bold capitalize text-slate-900 dark:text-white">
+                        <p className="mt-1 text-lg font-bold text-slate-900 capitalize dark:text-white">
                             {estate.settings?.charge_type === 'estate' ? 'Estate Billed' : 'Resident Billed'}
                         </p>
                     </div>
@@ -368,15 +368,11 @@ export default function EstateShow({
                     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">Total Revenue</p>
-                            <p className="mt-2 text-xl font-extrabold text-slate-900 dark:text-white">
-                                {formatCurrency(analytics.total_revenue)}
-                            </p>
+                            <p className="mt-2 text-xl font-extrabold text-slate-900 dark:text-white">{formatCurrency(analytics.total_revenue)}</p>
                         </div>
                         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">This Month</p>
-                            <p className="mt-2 text-xl font-extrabold text-slate-900 dark:text-white">
-                                {formatCurrency(analytics.monthly_revenue)}
-                            </p>
+                            <p className="mt-2 text-xl font-extrabold text-slate-900 dark:text-white">{formatCurrency(analytics.monthly_revenue)}</p>
                         </div>
                         <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm dark:border-slate-800/50 dark:bg-[#0f1423]">
                             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500">Outstanding</p>
@@ -429,9 +425,7 @@ export default function EstateShow({
                                 ))}
                             </div>
                         ) : (
-                            <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                                No residents enrolled yet.
-                            </div>
+                            <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">No residents enrolled yet.</div>
                         )}
                     </div>
                 </div>
@@ -876,9 +870,7 @@ export default function EstateShow({
                                         <h3 className="text-base font-bold text-slate-900 dark:text-white">
                                             {estate.partner ? 'Change Partner Attribution' : 'Assign Partner'}
                                         </h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            {estate.name}
-                                        </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">{estate.name}</p>
                                     </div>
                                 </div>
                                 <button
@@ -892,7 +884,10 @@ export default function EstateShow({
 
                             <form onSubmit={handleSavePartnerAssignment} className="mt-5 space-y-4">
                                 <div>
-                                    <label htmlFor="partner-select" className="block text-xs font-bold tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                                    <label
+                                        htmlFor="partner-select"
+                                        className="block text-xs font-bold tracking-wider text-slate-700 uppercase dark:text-slate-300"
+                                    >
                                         Select Partner <span className="text-rose-500">*</span>
                                     </label>
                                     <select
@@ -917,13 +912,9 @@ export default function EstateShow({
                                     <div className="rounded-2xl border border-violet-100 bg-violet-50/60 p-3.5 dark:border-violet-900/30 dark:bg-violet-950/20">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <p className="text-xs font-bold text-slate-900 dark:text-white">
-                                                    {currentSelectedPartner.name}
-                                                </p>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white">{currentSelectedPartner.name}</p>
                                                 {currentSelectedPartner.email && (
-                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                                                        {currentSelectedPartner.email}
-                                                    </p>
+                                                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{currentSelectedPartner.email}</p>
                                                 )}
                                             </div>
                                             <span className="inline-flex rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-bold text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
@@ -934,7 +925,10 @@ export default function EstateShow({
                                 )}
 
                                 <div>
-                                    <label htmlFor="assignment-reason" className="block text-xs font-bold tracking-wider text-slate-700 uppercase dark:text-slate-300">
+                                    <label
+                                        htmlFor="assignment-reason"
+                                        className="block text-xs font-bold tracking-wider text-slate-700 uppercase dark:text-slate-300"
+                                    >
                                         Reason / Note <span className="text-slate-400 normal-case">(Optional)</span>
                                     </label>
                                     <textarea
@@ -1017,7 +1011,13 @@ export default function EstateShow({
                             ? 'Yes, Remove Partner'
                             : 'Yes, Send Email'
                 }
-                type={actionToConfirm === 'delete' || actionToConfirm === 'remove-partner' || (actionToConfirm === 'toggle' && estate.status === 'active') ? 'danger' : 'info'}
+                type={
+                    actionToConfirm === 'delete' ||
+                    actionToConfirm === 'remove-partner' ||
+                    (actionToConfirm === 'toggle' && estate.status === 'active')
+                        ? 'danger'
+                        : 'info'
+                }
                 isLoading={isProcessing}
             />
         </ZeusLayout>
