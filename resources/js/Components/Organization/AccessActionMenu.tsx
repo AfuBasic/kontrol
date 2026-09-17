@@ -30,20 +30,15 @@ export default function AccessActionMenu({ onAddPerson, onInviteVisitor, onInvit
         <>
             <button
                 onClick={() => setIsOpen(true)}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 hover:shadow-md active:scale-95"
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[#0b4aa2] px-3.5 text-[13px] font-bold text-white shadow-md transition-transform hover:scale-[1.02] active:scale-95"
             >
                 <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">Add / Invite</span>
                 <span className="sm:hidden">Add</span>
-                <ChevronDown className="h-4 w-4 ml-1 opacity-70" />
+                <ChevronDown className="ml-1 h-4 w-4 opacity-70" />
             </button>
 
-            <ResponsiveSheet
-                isOpen={isOpen}
-                onClose={() => setIsOpen(false)}
-                title="Select Action"
-                maxWidth="sm"
-            >
+            <ResponsiveSheet isOpen={isOpen} onClose={() => setIsOpen(false)} title="Select Action" maxWidth="sm">
                 <div className="flex flex-col gap-2 pt-2">
                     <button
                         onClick={() => handleAction('invite_visitor')}
