@@ -24,12 +24,15 @@ interface Organization {
     id: number;
     name: string;
     type: string;
-    operating_hours?: {
-        open?: string;
-        close?: string;
-        days?: string[];
-        [key: string]: any;
-    } | string | null;
+    operating_hours?:
+        | {
+              open?: string;
+              close?: string;
+              days?: string[];
+              [key: string]: any;
+          }
+        | string
+        | null;
     hours_enforcement?: 'inherit' | 'off' | 'warn' | 'block';
 }
 
@@ -768,10 +771,7 @@ export default function SecurityVerify() {
                             transition={{ duration: 0.15 }}
                             className="flex flex-1 flex-col items-center justify-center pt-6"
                         >
-                            <QuickEntryCheckoutPanel
-                                gateName={gateName}
-                                isOnline={isOnline}
-                            />
+                            <QuickEntryCheckoutPanel gateName={gateName} isOnline={isOnline} />
                         </motion.div>
                     ) : (
                         <motion.div
