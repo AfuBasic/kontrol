@@ -104,9 +104,9 @@ export default function OrganizationLayout({
     return (
         <div className="flex min-h-screen flex-col font-sans text-slate-950 antialiased selection:bg-[#0b4aa2] selection:text-white">
             <header
-                className={`fixed inset-x-0 top-0 z-40 px-3 pt-[var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))] sm:px-6 lg:px-10 ${
+                className={`fixed inset-x-0 top-0 z-40 px-3 pt-[env(safe-area-inset-top)] sm:px-6 lg:px-10 ${
                     transparentHeader
-                        ? 'bg-transparent border-transparent'
+                        ? 'bg-gradient-to-b from-[#F3F7FC] via-[#F3F7FC]/90 to-transparent pb-4'
                         : 'border-b border-slate-200/70 bg-white/[0.94] shadow-[0_1px_0_rgba(15,23,42,0.02)] backdrop-blur-xl'
                 }`}
             >
@@ -199,10 +199,10 @@ export default function OrganizationLayout({
             <main
                 className="w-full flex-1 lg:pb-12"
                 style={{
-                    paddingTop: 'calc(4rem + var(--safe-area-inset-top-stable, env(safe-area-inset-top, 0px)) + 1.5rem)',
+                    paddingTop: 'calc(88px + env(safe-area-inset-top))',
                     paddingBottom: hideBottomNav 
-                        ? 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' 
-                        : 'calc(4.5rem + env(safe-area-inset-bottom, 0px))'
+                        ? 'calc(24px + env(safe-area-inset-bottom))' 
+                        : 'calc(72px + env(safe-area-inset-bottom))'
                 }}
             >
                 <PullToRefresh onRefresh={onRefresh}>
