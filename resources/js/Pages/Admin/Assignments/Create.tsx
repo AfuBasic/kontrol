@@ -137,7 +137,9 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                         />
                                         {errors.user_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.user_id}</p>}
                                         {(errors as Record<string, string | undefined>).user && (
-                                            <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).user}</p>
+                                            <p className="mt-2 text-xs font-bold text-red-600">
+                                                {(errors as Record<string, string | undefined>).user}
+                                            </p>
                                         )}
                                     </div>
                                 </section>
@@ -182,7 +184,9 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                         </div>
                                         {errors.role_ids && <p className="mt-2 text-xs font-bold text-red-600">{errors.role_ids}</p>}
                                         {(errors as Record<string, string | undefined>).role && (
-                                            <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).role}</p>
+                                            <p className="mt-2 text-xs font-bold text-red-600">
+                                                {(errors as Record<string, string | undefined>).role}
+                                            </p>
                                         )}
                                     </div>
                                 </section>
@@ -215,9 +219,7 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                                     />
                                                     <div
                                                         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                                                            data.scope_type === 'estate'
-                                                                ? 'bg-slate-800 text-white'
-                                                                : 'bg-slate-100 text-slate-500'
+                                                            data.scope_type === 'estate' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'
                                                         }`}
                                                     >
                                                         <Globe className="h-5 w-5" />
@@ -243,7 +245,13 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                                     name="scope_type"
                                                     value="zone"
                                                     checked={data.scope_type === 'zone'}
-                                                    onChange={() => setData({ ...data, scope_type: 'zone', zone_id: data.zone_id || zones[0]?.id.toString() || '' })}
+                                                    onChange={() =>
+                                                        setData({
+                                                            ...data,
+                                                            scope_type: 'zone',
+                                                            zone_id: data.zone_id || zones[0]?.id.toString() || '',
+                                                        })
+                                                    }
                                                     className="sr-only"
                                                 />
                                                 <div
@@ -286,7 +294,11 @@ export default function CreateAssignment({ users, roles, zones, context }: Props
                                                     </div>
                                                 )}
                                                 {errors.zone_id && <p className="mt-2 text-xs font-bold text-red-600">{errors.zone_id}</p>}
-                                                {(errors as Record<string, string | undefined>).zone && <p className="mt-2 text-xs font-bold text-red-600">{(errors as Record<string, string | undefined>).zone}</p>}
+                                                {(errors as Record<string, string | undefined>).zone && (
+                                                    <p className="mt-2 text-xs font-bold text-red-600">
+                                                        {(errors as Record<string, string | undefined>).zone}
+                                                    </p>
+                                                )}
                                             </div>
                                         )}
                                     </div>
