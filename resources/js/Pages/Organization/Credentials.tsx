@@ -1,16 +1,5 @@
 import { Head, router, Link } from '@inertiajs/react';
-import {
-    KeyRound,
-    Search,
-    RefreshCw,
-    Clock,
-    CheckCircle2,
-    Calendar,
-    User,
-    ArrowLeft,
-    Shield,
-    XCircle,
-} from 'lucide-react';
+import { KeyRound, Search, RefreshCw, Clock, CheckCircle2, Calendar, User, ArrowLeft, Shield, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -81,27 +70,20 @@ export default function Credentials({ organization, membership, credentials, fil
 
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
-                        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                            Access
-                        </h1>
-                        <p className="text-sm text-stone-500 mt-0.5">
-                            All issued gate admission codes for {organization.name}.
-                        </p>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Access</h1>
+                        <p className="mt-0.5 text-sm text-stone-500">All issued gate admission codes for {organization.name}.</p>
                     </div>
                 </div>
 
                 {/* Unified Access Tabs */}
-                <AccessTabs
-                    activeTab="people"
-                    hasPublicWindows={hasPublicWindows}
-                />
+                <AccessTabs activeTab="people" hasPublicWindows={hasPublicWindows} />
 
-                <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 flex items-center justify-between gap-3 text-xs text-indigo-900">
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 text-xs text-indigo-900">
                     <p>
                         Access codes are automatically linked to each person. You can also manage codes directly from the{' '}
-                        <Link href="/org/access-list" className="font-bold underline text-indigo-700">
+                        <Link href="/org/access-list" className="font-bold text-indigo-700 underline">
                             People tab
                         </Link>
                         .
@@ -111,12 +93,12 @@ export default function Credentials({ organization, membership, credentials, fil
                 {/* Credentials List */}
                 <div className="space-y-3">
                     {credentials.data.length === 0 ? (
-                        <div className="rounded-3xl bg-white border border-stone-200/80 p-8 sm:p-12 text-center shadow-xs">
-                            <div className="w-12 h-12 rounded-full bg-stone-100 text-stone-400 mx-auto flex items-center justify-center mb-3">
-                                <KeyRound className="w-6 h-6" />
+                        <div className="rounded-3xl border border-stone-200/80 bg-white p-8 text-center shadow-xs sm:p-12">
+                            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-stone-400">
+                                <KeyRound className="h-6 w-6" />
                             </div>
                             <h3 className="text-base font-bold text-slate-900">No access codes found</h3>
-                            <p className="text-sm text-stone-500 max-w-sm mx-auto mt-1">
+                            <p className="mx-auto mt-1 max-w-sm text-sm text-stone-500">
                                 Issued access codes will appear here with their current validity status.
                             </p>
                         </div>
@@ -124,33 +106,29 @@ export default function Credentials({ organization, membership, credentials, fil
                         credentials.data.map((c) => (
                             <div
                                 key={c.id}
-                                className="rounded-2xl bg-white border border-stone-200/80 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                                className="flex flex-col justify-between gap-3 rounded-2xl border border-stone-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:p-5"
                             >
                                 <div className="flex items-start gap-3.5">
-                                    <div className="w-10 h-10 rounded-xl bg-stone-100 border border-stone-200/60 flex items-center justify-center text-slate-800 font-bold text-sm shrink-0 mt-0.5">
-                                        <KeyRound className="w-5 h-5 text-indigo-600" />
+                                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-stone-200/60 bg-stone-100 text-sm font-bold text-slate-800">
+                                        <KeyRound className="h-5 w-5 text-indigo-600" />
                                     </div>
                                     <div>
-                                        <div className="flex items-center gap-2.5 flex-wrap">
-                                            <span className="font-mono font-bold text-sm sm:text-base text-slate-900 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">
+                                        <div className="flex flex-wrap items-center gap-2.5">
+                                            <span className="rounded border border-stone-200 bg-stone-100 px-2 py-0.5 font-mono text-sm font-bold text-slate-900 sm:text-base">
                                                 {c.code}
                                             </span>
-                                            <span className="font-semibold text-sm text-slate-800">
-                                                {c.member ? c.member.name : c.visitor_name}
-                                            </span>
+                                            <span className="text-sm font-semibold text-slate-800">{c.member ? c.member.name : c.visitor_name}</span>
                                             <span
-                                                className={`text-[11px] capitalize px-2 py-0.5 rounded-full font-semibold ${
+                                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${
                                                     c.status === 'active'
-                                                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                                                        : 'bg-stone-100 text-stone-600 border border-stone-200'
+                                                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                                        : 'border border-stone-200 bg-stone-100 text-stone-600'
                                                 }`}
                                             >
                                                 {c.status}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-stone-500 mt-1">
-                                            Expires {c.expires_at_human || 'soon'}
-                                        </p>
+                                        <p className="mt-1 text-xs text-stone-500">Expires {c.expires_at_human || 'soon'}</p>
                                     </div>
                                 </div>
 
@@ -159,14 +137,14 @@ export default function Credentials({ organization, membership, credentials, fil
                                         <button
                                             type="button"
                                             onClick={() => handleRenew(c.id)}
-                                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
+                                            className="rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50"
                                         >
                                             Renew
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => handleRevoke(c.id)}
-                                            className="px-3 py-1.5 rounded-lg text-xs font-medium text-rose-600 hover:bg-rose-50 border border-rose-200 transition-colors"
+                                            className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
                                         >
                                             Revoke
                                         </button>
