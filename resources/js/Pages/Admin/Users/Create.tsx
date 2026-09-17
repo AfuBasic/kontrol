@@ -26,9 +26,7 @@ export default function Create({ roles }: Props) {
                             Back to Estate Team
                         </Link>
                         <h1 className="text-2xl font-black tracking-tight text-slate-900">Add Staff Member</h1>
-                        <p className="mt-1 text-xs font-semibold text-slate-500">
-                            Add someone who will help operate this estate.
-                        </p>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">Add someone who will help operate this estate.</p>
                     </div>
 
                     <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-xs ring-1 ring-slate-100/50 sm:p-12">
@@ -37,7 +35,9 @@ export default function Create({ roles }: Props) {
                         </div>
                         <h2 className="text-lg font-bold text-slate-900">Create an Estate Role First</h2>
                         <p className="mt-2 max-w-md text-xs leading-relaxed font-semibold text-slate-500">
-                            Staff members need an assigned responsibility (such as <span className="font-bold text-slate-700">Estate Manager</span>, <span className="font-bold text-slate-700">Accountant</span>, or <span className="font-bold text-slate-700">Facility Officer</span>) before they can be invited to the estate team.
+                            Staff members need an assigned responsibility (such as <span className="font-bold text-slate-700">Estate Manager</span>,{' '}
+                            <span className="font-bold text-slate-700">Accountant</span>, or{' '}
+                            <span className="font-bold text-slate-700">Facility Officer</span>) before they can be invited to the estate team.
                         </p>
 
                         <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
