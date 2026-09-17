@@ -236,46 +236,46 @@ export default function Dashboard({
                 <div className="flex gap-2 justify-between">
                     <Link
                         href="/org/access-list?action=add_person"
-                        className="soft-card flex flex-col flex-1 items-start p-3 transition active:scale-95"
+                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
                     >
-                        <div className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] icon-tile-blue">
+                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-blue">
                             <UserPlus className="h-4 w-4" strokeWidth={2.2} />
                         </div>
-                        <span className="text-[12px] font-bold text-[#071f4b] leading-tight">Add person</span>
-                        <span className="mt-0.5 text-[10px] font-medium text-slate-400 leading-snug">Staff, parents &amp; more</span>
+                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">Add</span>
+                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Staff, parents &amp; more</span>
                     </Link>
 
                     <Link
                         href="/org/visitors"
-                        className="soft-card flex flex-col flex-1 items-start p-3 transition active:scale-95"
+                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
                     >
-                        <div className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] icon-tile-mint">
+                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-mint">
                             <UserCircle className="h-4 w-4" strokeWidth={2.2} />
                         </div>
-                        <span className="text-[12px] font-bold text-[#071f4b] leading-tight">Invite visitor</span>
-                        <span className="mt-0.5 text-[10px] font-medium text-slate-400 leading-snug">Send invitation or pass</span>
+                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">Invite</span>
+                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Visitor<br/>pass</span>
                     </Link>
 
                     <Link
                         href="/org/arrivals"
-                        className="soft-card flex flex-col flex-1 items-start p-3 transition active:scale-95"
+                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
                     >
-                        <div className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] icon-tile-lavender">
+                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-lavender">
                             <Clock className="h-4 w-4" strokeWidth={2.2} />
                         </div>
-                        <span className="text-[12px] font-bold text-[#071f4b] leading-tight">View arrivals</span>
-                        <span className="mt-0.5 text-[10px] font-medium text-slate-400 leading-snug">See who's on site</span>
+                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
+                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Who's<br/>on site</span>
                     </Link>
 
                     <Link
                         href="/org/arrivals/history"
-                        className="soft-card flex flex-col flex-1 items-start p-3 transition active:scale-95"
+                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
                     >
-                        <div className="mb-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] icon-tile-amber">
+                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-amber">
                             <History className="h-4 w-4" strokeWidth={2.2} />
                         </div>
-                        <span className="text-[12px] font-bold text-[#071f4b] leading-tight">View history</span>
-                        <span className="mt-0.5 text-[10px] font-medium text-slate-400 leading-snug">Past visits &amp; logs</span>
+                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">History</span>
+                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Past<br/>activity</span>
                     </Link>
                 </div>
 
