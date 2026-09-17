@@ -1,11 +1,6 @@
 import { Deferred, Head, Link, router, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    ArrowLeft,
-    Trash2,
-    MoreHorizontal,
-    Edit,
-} from 'lucide-react';
+import { ArrowLeft, Trash2, MoreHorizontal, Edit } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { store as storeComment, destroy as destroyComment } from '@/actions/App/Http/Controllers/Admin/EstateBoardCommentController';
@@ -120,14 +115,14 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
     }
 
     return (
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-32">
+        <div className="mx-auto max-w-5xl px-4 pb-32 sm:px-6 lg:px-8">
             <Head title={`Announcement - ${post.title || 'Untitled'}`} />
 
             {/* Top Contextual Navigation */}
-            <div className="mb-6 sm:mb-8 flex items-center justify-between">
+            <div className="mb-6 flex items-center justify-between sm:mb-8">
                 <Link
                     href={index.url()}
-                    className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-500 transition-colors hover:text-slate-900"
+                    className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900 sm:text-sm"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Announcements
@@ -158,7 +153,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                                     initial={{ opacity: 0, scale: 0.95, y: 8 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                                    className="absolute right-0 top-full z-50 mt-1.5 w-44 overflow-hidden rounded-2xl bg-white p-1 shadow-xl ring-1 ring-slate-900/5"
+                                    className="absolute top-full right-0 z-50 mt-1.5 w-44 overflow-hidden rounded-2xl bg-white p-1 shadow-xl ring-1 ring-slate-900/5"
                                 >
                                     <button
                                         type="button"
@@ -179,17 +174,13 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
             </div>
 
             {/* Two-Column Management Workspace */}
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
+            <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
                 {/* Main Content Column (7 cols) */}
                 <div className="space-y-8 lg:col-span-8">
                     {/* Main Reading Surface */}
-                    <article className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 lg:p-10 shadow-xs space-y-6 text-left">
+                    <article className="space-y-6 rounded-3xl border border-slate-200/80 bg-white p-6 text-left shadow-xs sm:p-8 lg:p-10">
                         {/* Header */}
-                        <AnnouncementHeader
-                            post={post}
-                            showStatusBadge={true}
-                            isAdminView={true}
-                        />
+                        <AnnouncementHeader post={post} showStatusBadge={true} isAdminView={true} />
 
                         <hr className="border-slate-100" />
 
@@ -205,7 +196,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                     </article>
 
                     {/* Discussion Section */}
-                    <div className="rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8 shadow-xs">
+                    <div className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-xs sm:p-8">
                         <Deferred
                             data="comments"
                             fallback={
@@ -236,7 +227,7 @@ export default function EstateBoardShow({ post, comments, metrics, targets }: Pr
                 </div>
 
                 {/* Secondary Operational Rail (4 cols) */}
-                <aside className="space-y-6 lg:col-span-4 sticky top-6">
+                <aside className="sticky top-6 space-y-6 lg:col-span-4">
                     {/* Delivery Insights */}
                     <AnnouncementDeliveryCard metrics={metrics} />
 
