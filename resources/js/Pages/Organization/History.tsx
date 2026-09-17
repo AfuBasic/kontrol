@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock, DoorOpen, MapPin, Radio, Search } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import AccessHeader from '@/Components/Organization/AccessHeader';
+import FilterChips from '@/Components/Organization/FilterChips';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
 interface Log {
@@ -46,8 +47,8 @@ interface Props {
 }
 
 export default function ArrivalHistory({ organization, logs, filters }: Props) {
-    const hasPublicWindows = organization.access_policy === 'public_window';
     const [search, setSearch] = useState(filters.search ?? '');
+    const [dateFilter, setDateFilter] = useState(filters.date ?? 'today');
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
@@ -106,7 +107,7 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
             <Head title={`${organization.name} - History`} />
 
             <div className="space-y-4 pt-1 sm:pt-4">
-                <AccessHeader activeTab="history" hasPublicWindows={hasPublicWindows} />
+                <AccessHeader activeTab="history" />
 
                 <div className="space-y-4 pt-2">
                     {/* Native Search Field */}
@@ -116,14 +117,27 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                             type="search"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search access history..."
+                            placeholder="Search history..."
                             className="w-full rounded-full border border-slate-200/90 bg-white py-2.5 pr-4 pl-10 text-[13px] text-slate-900 placeholder:text-slate-400 focus:border-[#0b4aa2] focus:ring-1 focus:ring-[#0b4aa2] focus:outline-none"
                         />
                     </div>
 
-                    <div className="px-1 pt-2 pb-1 text-xs font-bold tracking-wider text-slate-500 uppercase">
-                        {logs.total} {logs.total === 1 ? 'RECORDED VISIT' : 'RECORDED VISITS'}
-                    </div>
+                    <FilterChips
+                        variant="status"
+                        value={dateFilter}
+                        onChange={(id) => {
+                            if (id === 'more') {
+                                // Normally opens filter sheet
+                            } else {
+                                setDateFilter(id);
+                            }
+                        }}
+                        options={[
+                            { id: 'today', label: 'Today' },
+                            { id: 'week', label: 'This week' },
+                            { id: 'more', label: 'More' },
+                        ]}
+                    />
 
                     {logs.data.length === 0 ? (
                         <div className="rounded-2xl border border-slate-200/70 bg-white p-8 text-center">
@@ -133,63 +147,37 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
                             </p>
                         </div>
                     ) : (
-                        <div className="space-y-6">
+                        <div className="space-y-6 pb-6 px-1">
                             {Object.entries(groupedLogs).map(([date, dayLogs]) => (
-                                <div key={date} className="space-y-3">
-                                    <h3 className="px-1 text-[13px] font-bold text-slate-900">{date}</h3>
-                                    <div className="space-y-3">
-                                        {dayLogs.map((log) => {
-                                            const isHere = !log.checked_out_at;
-                                            const confirmed = Boolean(log.confirmed_at);
-
+                                <div key={date} className="space-y-2">
+                                    <h3 className="text-[12px] font-bold tracking-wider text-slate-500 uppercase px-1">{date}</h3>
+                                    <div className="overflow-hidden rounded-2xl bg-white border border-slate-200/60 shadow-[0_2px_12px_rgba(15,23,42,0.03)]">
+                                        {dayLogs.map((log, index) => {
                                             return (
                                                 <div
                                                     key={log.id}
-                                                    className="flex flex-col justify-between gap-4 rounded-2xl bg-white px-4 py-3.5 shadow-[0_2px_12px_rgba(15,23,42,0.04)] ring-1 ring-slate-900/5 transition hover:bg-slate-50 sm:flex-row sm:items-center"
+                                                    className={`flex min-h-[64px] cursor-pointer flex-col justify-between gap-3 p-3.5 transition hover:bg-slate-50 active:bg-slate-100 sm:flex-row sm:items-center ${
+                                                        index !== dayLogs.length - 1 ? 'border-b border-slate-100' : ''
+                                                    }`}
                                                 >
-                                                    <div className="flex min-w-0 items-start gap-4">
-                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#f1f5f9] text-base font-bold tracking-tight text-slate-700">
+                                                    <div className="flex min-w-0 items-start gap-3.5">
+                                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold tracking-tight text-slate-600">
                                                             {initialsFor(log.visitor_name)}
                                                         </div>
 
-                                                        <div className="min-w-0 flex-1 pt-0.5">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="truncate text-base font-bold text-slate-900">{log.visitor_name}</div>
-                                                                {log.tag && (
-                                                                    <span className="inline-flex shrink-0 items-center rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 uppercase">
-                                                                        {log.tag}
-                                                                    </span>
-                                                                )}
-                                                            </div>
+                                                        <div className="min-w-0 flex-1 py-0.5">
+                                                            <div className="truncate text-[15px] font-bold text-slate-900 leading-tight">{log.visitor_name}</div>
                                                             <p className="mt-0.5 truncate text-[13px] font-medium text-slate-500">
                                                                 <span className="capitalize">{log.admission_basis}</span>
-                                                                {' · '}
-                                                                {formatTime(log.verified_at)}
                                                             </p>
-                                                            <div className="mt-1 flex items-center gap-1 text-[13px] text-slate-400">
-                                                                <MapPin className="h-3.5 w-3.5 shrink-0" />
-                                                                <span className="truncate">
-                                                                    {log.entry_point || 'Gate'}{' '}
-                                                                    {log.vehicle_plate_number ? ` (${log.vehicle_plate_number.toUpperCase()})` : ''}
-                                                                </span>
-                                                            </div>
+                                                            <p className="mt-0.5 truncate text-[12px] text-slate-400">
+                                                                Entered {formatTime(log.verified_at)} {log.checked_out_at_human ? `· Left ${log.checked_out_at_human}` : ''}
+                                                            </p>
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex shrink-0 flex-col items-start justify-center gap-2 self-stretch py-0.5 sm:items-end">
-                                                        <span
-                                                            className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-bold ${isHere ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}
-                                                        >
-                                                            {isHere ? <Radio className="h-3 w-3" /> : <DoorOpen className="h-3 w-3" />}
-                                                            {isHere ? 'Here now' : `Left ${log.checked_out_at_human || ''}`}
-                                                        </span>
-
-                                                        {confirmed && (
-                                                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#eaf2ff] px-2 py-0.5 text-[11px] font-bold text-[#0b4aa2]">
-                                                                <CheckCircle2 className="h-3 w-3" />
-                                                                Confirmed
-                                                            </span>
-                                                        )}
+                                                    <div className="flex shrink-0 items-center justify-end">
+                                                        <ChevronRight className="h-4 w-4 text-slate-300 ml-2" strokeWidth={2.5} />
                                                     </div>
                                                 </div>
                                             );
