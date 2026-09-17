@@ -29,12 +29,7 @@ type UseEstateBoardAutoDraftOptions = {
     maxAgeDays?: number;
 };
 
-export function useEstateBoardAutoDraft({
-    formState,
-    setFormValues,
-    debounceMs = 800,
-    maxAgeDays = 7,
-}: UseEstateBoardAutoDraftOptions) {
+export function useEstateBoardAutoDraft({ formState, setFormValues, debounceMs = 800, maxAgeDays = 7 }: UseEstateBoardAutoDraftOptions) {
     const { auth } = usePage<SharedData>().props;
     const [saveStatus, setSaveStatus] = useState<DraftSaveStatus>('idle');
     const [hasDraft, setHasDraft] = useState(false);
@@ -50,19 +45,16 @@ export function useEstateBoardAutoDraft({
     /**
      * Determines whether the form contains meaningful non-empty / non-default content.
      */
-    const isMeaningful = useCallback(
-        (data: typeof formState) => {
-            const hasTitle = Boolean(data.title && data.title.trim().length > 0);
-            const hasBody = Boolean(data.body && data.body.replace(/<[^>]*>/g, '').trim().length > 0);
-            const hasNonDefaultCategory = data.category !== 'general';
-            const hasNonDefaultPriority = data.priority !== 'normal';
-            const hasNonDefaultAudience = data.audience !== 'all';
-            const hasZones = Array.isArray(data.zone_ids) && data.zone_ids.length > 0;
+    const isMeaningful = useCallback((data: typeof formState) => {
+        const hasTitle = Boolean(data.title && data.title.trim().length > 0);
+        const hasBody = Boolean(data.body && data.body.replace(/<[^>]*>/g, '').trim().length > 0);
+        const hasNonDefaultCategory = data.category !== 'general';
+        const hasNonDefaultPriority = data.priority !== 'normal';
+        const hasNonDefaultAudience = data.audience !== 'all';
+        const hasZones = Array.isArray(data.zone_ids) && data.zone_ids.length > 0;
 
-            return hasTitle || hasBody || hasNonDefaultCategory || hasNonDefaultPriority || hasNonDefaultAudience || hasZones;
-        },
-        [],
-    );
+        return hasTitle || hasBody || hasNonDefaultCategory || hasNonDefaultPriority || hasNonDefaultAudience || hasZones;
+    }, []);
 
     /**
      * Clear the draft from storage and reset draft indicator state.
