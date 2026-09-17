@@ -127,7 +127,8 @@ export default function Payments({ organization, total_outstanding = 0, outstand
                                 <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-3.5 text-xs leading-relaxed font-semibold text-amber-900">
                                     <p className="font-bold">Settlement instructions</p>
                                     <p className="mt-1 text-amber-800">
-                                        Payments are settled directly with the estate management office. Contact them to record and confirm this payment.
+                                        Payments are settled directly with the estate management office. Contact them to record and confirm this
+                                        payment.
                                     </p>
                                 </div>
                             </div>
