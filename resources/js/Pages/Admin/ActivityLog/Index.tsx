@@ -8,11 +8,7 @@ import ActivitySkeletons from '@/Components/Admin/Activity/ActivitySkeletons';
 import activityLog from '@/routes/admin/activity-log';
 import type { ActivityItem, ActivityLogIndexProps } from '@/types/activity';
 
-export default function ActivityLogIndex({
-    activities: initialActivities,
-    filters,
-    meta,
-}: ActivityLogIndexProps) {
+export default function ActivityLogIndex({ activities: initialActivities, filters, meta }: ActivityLogIndexProps) {
     const [activities, setActivities] = useState<ActivityItem[]>(initialActivities.data || []);
     const [nextPageUrl, setNextPageUrl] = useState<string | null>(initialActivities.next_page_url);
     const [loadingMore, setLoadingMore] = useState(false);
@@ -136,10 +132,8 @@ export default function ActivityLogIndex({
                 {/* Page Title & Context */}
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
                     <div>
-                        <h1 className="font-bold text-2xl text-slate-900 tracking-tight sm:text-3xl dark:text-slate-100">
-                            Estate Activity
-                        </h1>
-                        <p className="mt-1 text-slate-500 text-sm dark:text-slate-400">
+                        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">Estate Activity</h1>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                             See the important actions and operational changes happening across your estate.
                         </p>
                     </div>
@@ -167,7 +161,7 @@ export default function ActivityLogIndex({
                             placeholder="Search by action, resident, security or admin name..."
                             value={searchQuery}
                             onChange={handleSearchChange}
-                            className="block w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-10 pl-10 text-slate-900 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-slate-100 dark:focus:ring-slate-100"
+                            className="block w-full rounded-xl border border-slate-200 bg-white py-2.5 pr-10 pl-10 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-slate-100 dark:focus:ring-slate-100"
                         />
                         {searchQuery && (
                             <button
@@ -180,10 +174,7 @@ export default function ActivityLogIndex({
                         )}
                     </div>
 
-                    <ActivityModuleFilter
-                        currentModule={currentModule}
-                        onSelectModule={handleSelectModule}
-                    />
+                    <ActivityModuleFilter currentModule={currentModule} onSelectModule={handleSelectModule} />
                 </div>
 
                 {/* Activity Feed Body */}
@@ -199,7 +190,7 @@ export default function ActivityLogIndex({
                                 {loadingMore && <ActivitySkeletons count={2} />}
 
                                 {!nextPageUrl && !loadingMore && (
-                                    <div className="flex flex-col items-center gap-2 py-8 text-slate-400 text-xs dark:text-slate-500">
+                                    <div className="flex flex-col items-center gap-2 py-8 text-xs text-slate-400 dark:text-slate-500">
                                         <div className="h-px w-24 bg-slate-200 dark:bg-slate-800" />
                                         <span>Beginning of recorded activity</span>
                                     </div>
@@ -207,14 +198,12 @@ export default function ActivityLogIndex({
                             </div>
                         </>
                     ) : (
-                        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/80 border-dashed bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">
+                        <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-900">
                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
                                 <MagnifyingGlassIcon className="h-6 w-6" />
                             </div>
-                            <h3 className="mt-4 font-semibold text-base text-slate-900 dark:text-slate-100">
-                                No activity found
-                            </h3>
-                            <p className="mt-1 max-w-sm text-slate-500 text-sm dark:text-slate-400">
+                            <h3 className="mt-4 text-base font-semibold text-slate-900 dark:text-slate-100">No activity found</h3>
+                            <p className="mt-1 max-w-sm text-sm text-slate-500 dark:text-slate-400">
                                 {searchQuery || currentModule !== 'all'
                                     ? 'Try changing your search keywords or switching module filters.'
                                     : 'Operational actions and changes will appear here as your estate operates.'}
@@ -227,7 +216,7 @@ export default function ActivityLogIndex({
                                         setCurrentModule('all');
                                         triggerSearch('', 'all');
                                     }}
-                                    className="mt-4 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-medium text-slate-700 text-xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                    className="mt-4 inline-flex items-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                                 >
                                     Reset filters
                                 </button>
