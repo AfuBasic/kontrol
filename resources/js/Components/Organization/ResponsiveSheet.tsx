@@ -42,7 +42,7 @@ export default function ResponsiveSheet({ isOpen, onClose, title, children, them
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" />
                 </TransitionChild>
 
-                <div className="fixed inset-0 overflow-y-auto overflow-x-hidden">
+                <div className="fixed inset-0 overflow-x-hidden overflow-y-auto">
                     <div className="flex min-h-full items-end justify-center sm:items-center sm:p-4">
                         <TransitionChild
                             as={Fragment}
@@ -64,7 +64,9 @@ export default function ResponsiveSheet({ isOpen, onClose, title, children, them
                                 {/* Title Bar */}
                                 {title && (
                                     <div className="flex items-center justify-between px-6 py-4 sm:border-b sm:border-slate-100 sm:px-6 sm:py-5">
-                                        <h3 className={`text-xl font-black tracking-tight text-slate-900 sm:text-lg sm:font-bold ${isLight ? '' : 'dark:text-white'}`}>
+                                        <h3
+                                            className={`text-xl font-black tracking-tight text-slate-900 sm:text-lg sm:font-bold ${isLight ? '' : 'dark:text-white'}`}
+                                        >
                                             {title}
                                         </h3>
                                         <button
