@@ -184,7 +184,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
 
             <main
                 className={`w-full flex-1 pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.25rem)] ${
-                    hideBottomNav ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]'
+                    hideBottomNav ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]' : 'pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]'
                 } sm:pt-[calc(4rem+var(--safe-area-inset-top-stable,env(safe-area-inset-top,0px))+1.75rem)] lg:pb-12`}
             >
                 <PullToRefresh onRefresh={onRefresh}>
@@ -208,9 +208,9 @@ export default function OrganizationLayout({ children, title: _title, contentCla
             {!hideBottomNav && (
                 <div
                     data-mobile-bottom-nav
-                    className="fixed inset-x-4 bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] z-40 rounded-[2rem] bg-white/90 shadow-[0_8px_30px_rgb(0,0,0,0.12)] ring-1 ring-slate-900/5 backdrop-blur-xl lg:hidden"
+                    className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/60 bg-white/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl lg:hidden"
                 >
-                    <nav className="flex h-16 w-full items-center justify-between px-2">
+                    <nav className="flex h-14 w-full items-center justify-between px-2">
                         {navItems.map((item) => {
                             const active = isActive(item);
                             const Icon = item.icon;
@@ -218,7 +218,7 @@ export default function OrganizationLayout({ children, title: _title, contentCla
                                 <Link
                                     key={item.name}
                                     href={item.href}
-                                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-2 transition-colors active:opacity-70 ${
+                                    className={`relative flex flex-1 flex-col items-center justify-center gap-1 py-1 transition-colors active:opacity-70 ${
                                         active ? 'text-[#0b4aa2]' : 'text-slate-400 hover:text-slate-600'
                                     }`}
                                 >
