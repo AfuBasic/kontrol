@@ -49,12 +49,15 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
         images: [],
     });
 
-    const setFormValues = useCallback((draft: any) => {
-        setData((prev) => ({
-            ...prev,
-            ...draft,
-        }));
-    }, [setData]);
+    const setFormValues = useCallback(
+        (draft: any) => {
+            setData((prev) => ({
+                ...prev,
+                ...draft,
+            }));
+        },
+        [setData],
+    );
 
     const { saveStatus, hasDraft, clearDraft, isMeaningful } = useEstateBoardAutoDraft({
         formState: {
@@ -181,7 +184,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                         <button
                             type="button"
                             onClick={handleDiscard}
-                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-2xs transition hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                            className="inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 shadow-2xs transition hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600"
                         >
                             <Trash2 className="h-3 w-3" />
                             <span>Discard draft</span>
@@ -243,7 +246,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                     value={data.title}
                                     onChange={(e) => setData('title', e.target.value)}
                                     placeholder="Enter post title..."
-                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                                    className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition-colors focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none"
                                 />
                                 {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
                             </div>
@@ -399,7 +402,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                                     key={zone.id}
                                                     className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${
                                                         isChecked
-                                                            ? 'border-primary-500 bg-primary-50 text-primary-900 font-medium'
+                                                            ? 'border-primary-500 bg-primary-50 font-medium text-primary-900'
                                                             : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                                                     }`}
                                                 >
@@ -443,14 +446,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                                         ))}
                                     </div>
                                 )}
-                                <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={handleFilesChange}
-                                    className="hidden"
-                                />
+                                <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={handleFilesChange} className="hidden" />
                                 <button
                                     type="button"
                                     onClick={() => fileInputRef.current?.click()}
@@ -464,9 +460,7 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                             </div>
 
                             <div>
-                                <label className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase">
-                                    Publishing Status
-                                </label>
+                                <label className="mb-2 block text-xs font-bold tracking-wider text-slate-400 uppercase">Publishing Status</label>
                                 <div className="grid grid-cols-2 gap-2.5">
                                     <label
                                         className={`flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 p-3 transition-all ${
@@ -511,14 +505,14 @@ export default function CreatePost({ zones }: { zones?: ZoneOption[] }) {
                             <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
                                 <Link
                                     href={index.url()}
-                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95"
+                                    className="flex-1 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-center text-xs font-bold text-slate-700 shadow-2xs transition-colors hover:bg-slate-50 active:scale-95 sm:text-sm"
                                 >
                                     Cancel
                                 </Link>
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-center text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50"
+                                    className="flex-1 rounded-xl bg-slate-950 px-4 py-2.5 text-center text-xs font-bold text-white shadow-xs transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 sm:text-sm"
                                 >
                                     {processing ? 'Saving...' : data.status === 'published' ? 'Publish' : 'Save draft'}
                                 </button>
