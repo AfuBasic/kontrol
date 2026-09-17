@@ -18,7 +18,7 @@ export default function AnnouncementDeliveryCard({ metrics, className = '' }: An
     const readRate = metrics.read_rate || 0;
 
     return (
-        <div className={`rounded-3xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs ${className}`}>
+        <div className={`rounded-3xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6 ${className}`}>
             <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-slate-800">
                     <BarChart3 className="h-4 w-4 text-primary-600" />
@@ -40,21 +40,21 @@ export default function AnnouncementDeliveryCard({ metrics, className = '' }: An
                 <div>
                     <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Delivered</p>
                     <p className="mt-1 flex items-center gap-1 text-sm font-black text-slate-900">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary-500 shrink-0" />
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-primary-500" />
                         {targetsCount}
                     </p>
                 </div>
                 <div>
                     <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Read</p>
                     <p className="mt-1 flex items-center gap-1 text-sm font-black text-emerald-600">
-                        <Eye className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                        <Eye className="h-3.5 w-3.5 shrink-0 text-emerald-500" />
                         {readsCount}
                     </p>
                 </div>
                 <div>
                     <p className="text-[10px] font-bold tracking-wider text-slate-400 uppercase">Unread</p>
                     <p className="mt-1 flex items-center gap-1 text-sm font-black text-slate-600">
-                        <EyeOff className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        <EyeOff className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                         {unreadCount}
                     </p>
                 </div>
