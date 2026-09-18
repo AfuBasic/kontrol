@@ -1,16 +1,7 @@
 import React, { useState, useRef } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    CheckCircle2,
-    Clock,
-    Loader2,
-    LogOut,
-    ShieldAlert,
-    User,
-    Building2,
-    Car,
-} from 'lucide-react';
+import { CheckCircle2, Clock, Loader2, LogOut, ShieldAlert, User, Building2, Car } from 'lucide-react';
 
 const TAG_LENGTH = 4;
 
@@ -31,10 +22,7 @@ interface QuickEntryCheckoutPanelProps {
     isOnline: boolean;
 }
 
-export default function QuickEntryCheckoutPanel({
-    gateName,
-    isOnline,
-}: QuickEntryCheckoutPanelProps) {
+export default function QuickEntryCheckoutPanel({ gateName, isOnline }: QuickEntryCheckoutPanelProps) {
     const [digits, setDigits] = useState<string[]>(Array(TAG_LENGTH).fill(''));
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<CheckoutResult | null>(null);
@@ -118,7 +106,7 @@ export default function QuickEntryCheckoutPanel({
             }
         } catch (err: any) {
             console.error('Checkout error:', err);
-            setErrorMessage(err.response?.data?.message || "Tag not found or already checked out.");
+            setErrorMessage(err.response?.data?.message || 'Tag not found or already checked out.');
         } finally {
             setSubmitting(false);
         }
@@ -150,13 +138,11 @@ export default function QuickEntryCheckoutPanel({
                                 <span className="text-xs font-black tracking-wider text-emerald-900 uppercase dark:text-emerald-300">
                                     Exit Recorded Successfully
                                 </span>
-                                <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                                    Tag {result.tag} Checked Out
-                                </h3>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-white">Tag {result.tag} Checked Out</h3>
                             </div>
                         </div>
 
-                        <div className="mt-4 rounded-xl bg-white p-4 shadow-xs space-y-2.5 dark:bg-slate-900">
+                        <div className="mt-4 space-y-2.5 rounded-xl bg-white p-4 shadow-xs dark:bg-slate-900">
                             <div className="flex items-center justify-between text-xs">
                                 <span className="font-semibold text-slate-500">Destination</span>
                                 <span className="font-extrabold text-slate-900 dark:text-white">{result.organization_name}</span>
@@ -173,7 +159,7 @@ export default function QuickEntryCheckoutPanel({
                                     <span className="font-mono font-black text-slate-900 dark:text-white">{result.vehicle_plate_number}</span>
                                 </div>
                             )}
-                            <div className="flex items-center justify-between text-xs border-t border-slate-100 pt-2 dark:border-slate-800">
+                            <div className="flex items-center justify-between border-t border-slate-100 pt-2 text-xs dark:border-slate-800">
                                 <span className="font-semibold text-slate-500">Checked Out At</span>
                                 <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{result.checked_out_at}</span>
                             </div>
@@ -196,15 +182,9 @@ export default function QuickEntryCheckoutPanel({
                         exit={{ opacity: 0 }}
                         className="flex w-full flex-col items-center"
                     >
-                        <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">
-                            Visitor Exit Gate
-                        </p>
-                        <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-                            Enter 4-Char Quick Tag
-                        </h2>
-                        <p className="mt-1 text-xs text-slate-500">
-                            Enter visitor's allocated tag to mark checkout
-                        </p>
+                        <p className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Visitor Exit Gate</p>
+                        <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-white">Enter 4-Char Quick Tag</h2>
+                        <p className="mt-1 text-xs text-slate-500">Enter visitor's allocated tag to mark checkout</p>
 
                         {/* 4 Digit Box Inputs */}
                         <div className="mt-8 flex items-center gap-3 sm:gap-4" role="group" aria-label="Quick Tag">
@@ -225,7 +205,7 @@ export default function QuickEntryCheckoutPanel({
                                     autoComplete="off"
                                     maxLength={TAG_LENGTH}
                                     disabled={submitting}
-                                    className="h-16 w-14 rounded-2xl border-2 border-slate-200 bg-white text-center font-mono text-3xl font-black tracking-tight text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-white sm:h-20 sm:w-16 sm:text-4xl"
+                                    className="h-16 w-14 rounded-2xl border-2 border-slate-200 bg-white text-center font-mono text-3xl font-black tracking-tight text-slate-900 shadow-sm transition-all focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none disabled:opacity-60 sm:h-20 sm:w-16 sm:text-4xl dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                                     aria-label={`Tag character ${i + 1}`}
                                 />
                             ))}
@@ -245,9 +225,7 @@ export default function QuickEntryCheckoutPanel({
                                     <span className="text-sm font-bold text-slate-500">Checking out tag...</span>
                                 </div>
                             ) : (
-                                <p className="text-xs font-semibold text-slate-400">
-                                    Tag checks out automatically upon 4th character
-                                </p>
+                                <p className="text-xs font-semibold text-slate-400">Tag checks out automatically upon 4th character</p>
                             )}
                         </div>
                     </motion.div>

@@ -164,12 +164,10 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10 text-indigo-400">
                                 <MessageSquare className="h-4 w-4" />
                             </span>
-                            <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
-                                User Feedback Inbox
-                            </h1>
+                            <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">User Feedback Inbox</h1>
                         </div>
                         <p className="mt-1 text-xs text-slate-400">
                             Central triage for feedback, product suggestions, and issues reported by residents and estate admins.
@@ -196,14 +194,12 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                     applyFilters(tab.id, undefined, undefined);
                                 }}
                                 className={`inline-flex items-center gap-2 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                                    isActive
-                                        ? 'bg-white/10 text-white shadow-xs'
-                                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
+                                    isActive ? 'bg-white/10 text-white shadow-xs' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'
                                 }`}
                             >
                                 <span>{tab.label}</span>
                                 <span
-                                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-mono ${
+                                    className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] ${
                                         isActive ? 'bg-white/20 text-white' : 'bg-white/5 text-slate-400'
                                     }`}
                                 >
@@ -234,7 +230,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                 setCategoryFilter(e.target.value);
                                 applyFilters(undefined, e.target.value, undefined);
                             }}
-                            className="w-full rounded-xl border border-white/10 bg-[#12141C] py-2.5 px-3 text-xs text-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                            className="w-full rounded-xl border border-white/10 bg-[#12141C] px-3 py-2.5 text-xs text-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
                         >
                             <option value="all">All Categories</option>
                             <option value="praise">Praise</option>
@@ -253,9 +249,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                             <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-white/[0.02] p-12 text-center">
                                 <MessageSquare className="h-8 w-8 text-slate-600" />
                                 <h3 className="mt-3 text-sm font-semibold text-white">No feedback records found</h3>
-                                <p className="mt-1 text-xs text-slate-500">
-                                    No submissions match the current filter or search criteria.
-                                </p>
+                                <p className="mt-1 text-xs text-slate-500">No submissions match the current filter or search criteria.</p>
                             </div>
                         ) : (
                             <div className="overflow-hidden rounded-2xl border border-white/5 bg-[#0D0E15]">
@@ -301,9 +295,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                                     </div>
                                                 </div>
 
-                                                <p className="mt-2.5 text-xs text-slate-200 leading-relaxed line-clamp-2">
-                                                    {fb.message}
-                                                </p>
+                                                <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-slate-200">{fb.message}</p>
 
                                                 <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-slate-400">
                                                     <div className="flex items-center gap-1">
@@ -346,7 +338,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                     {feedbacks.prev_page_url && (
                                         <button
                                             onClick={() => router.get(feedbacks.prev_page_url!)}
-                                            className="rounded-lg border border-white/10 px-3 py-1.5 hover:bg-white/5 text-white"
+                                            className="rounded-lg border border-white/10 px-3 py-1.5 text-white hover:bg-white/5"
                                         >
                                             Previous
                                         </button>
@@ -354,7 +346,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                     {feedbacks.next_page_url && (
                                         <button
                                             onClick={() => router.get(feedbacks.next_page_url!)}
-                                            className="rounded-lg border border-white/10 px-3 py-1.5 hover:bg-white/5 text-white"
+                                            className="rounded-lg border border-white/10 px-3 py-1.5 text-white hover:bg-white/5"
                                         >
                                             Next
                                         </button>
@@ -371,14 +363,9 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                 <div className="flex items-start justify-between gap-3 border-b border-white/5 pb-4">
                                     <div>
                                         <h3 className="text-sm font-bold text-white">Feedback Details</h3>
-                                        <span className="text-[11px] font-mono text-slate-500">
-                                            ULID: {selectedItem.ulid}
-                                        </span>
+                                        <span className="font-mono text-[11px] text-slate-500">ULID: {selectedItem.ulid}</span>
                                     </div>
-                                    <button
-                                        onClick={() => setSelectedItem(null)}
-                                        className="text-xs text-slate-400 hover:text-white"
-                                    >
+                                    <button onClick={() => setSelectedItem(null)} className="text-xs text-slate-400 hover:text-white">
                                         Close
                                     </button>
                                 </div>
@@ -386,9 +373,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                 <div className="mt-4 space-y-4">
                                     {/* Status Triage Controls */}
                                     <div>
-                                        <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                            Update Status
-                                        </label>
+                                        <label className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">Update Status</label>
                                         <div className="mt-2 grid grid-cols-4 gap-1.5">
                                             {[
                                                 { id: 'new', label: 'New', icon: Clock },
@@ -403,10 +388,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                                         key={st.id}
                                                         type="button"
                                                         onClick={() =>
-                                                            handleUpdateStatus(
-                                                                selectedItem.id,
-                                                                st.id as 'new' | 'reviewing' | 'noted' | 'archived',
-                                                            )
+                                                            handleUpdateStatus(selectedItem.id, st.id as 'new' | 'reviewing' | 'noted' | 'archived')
                                                         }
                                                         className={`flex flex-col items-center gap-1 rounded-xl p-2 text-[11px] font-semibold transition ${
                                                             isCurrent
@@ -424,9 +406,7 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
 
                                     {/* Feedback Message */}
                                     <div>
-                                        <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                                            User Statement
-                                        </label>
+                                        <label className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">User Statement</label>
                                         <div className="mt-1.5 rounded-xl border border-white/5 bg-white/[0.02] p-3.5 text-xs leading-relaxed text-slate-200">
                                             {selectedItem.message}
                                         </div>
@@ -437,29 +417,21 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-400">Submitter:</span>
                                             <span className="font-medium text-white">
-                                                {selectedItem.user
-                                                    ? `${selectedItem.user.name} (${selectedItem.user.email})`
-                                                    : 'Unknown'}
+                                                {selectedItem.user ? `${selectedItem.user.name} (${selectedItem.user.email})` : 'Unknown'}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-400">Estate Context:</span>
-                                            <span className="font-medium text-white">
-                                                {selectedItem.estate?.name || 'Global / None'}
-                                            </span>
+                                            <span className="font-medium text-white">{selectedItem.estate?.name || 'Global / None'}</span>
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-400">Effective Role:</span>
-                                            <span className="font-medium capitalize text-white">
-                                                {selectedItem.role_context || 'resident'}
-                                            </span>
+                                            <span className="font-medium text-white capitalize">{selectedItem.role_context || 'resident'}</span>
                                         </div>
                                         {selectedItem.support_mode && (
                                             <div className="flex items-center justify-between border-t border-amber-500/20 pt-2 text-amber-400">
                                                 <span>Impersonated by:</span>
-                                                <span className="font-medium">
-                                                    {selectedItem.impersonator?.name || 'Zeus Admin'}
-                                                </span>
+                                                <span className="font-medium">{selectedItem.impersonator?.name || 'Zeus Admin'}</span>
                                             </div>
                                         )}
                                     </div>
@@ -468,31 +440,23 @@ export default function FeedbackIndex({ feedbacks, filters, counts }: Props) {
                                     <div className="space-y-2 rounded-xl border border-white/5 bg-white/[0.02] p-3 text-xs">
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-400">Platform / Env:</span>
-                                            <span className="font-mono text-white capitalize">
-                                                {selectedItem.platform || 'web'}
-                                            </span>
+                                            <span className="font-mono text-white capitalize">{selectedItem.platform || 'web'}</span>
                                         </div>
                                         {selectedItem.app_version && (
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-400">App Version:</span>
-                                                <span className="font-mono text-white">
-                                                    v{selectedItem.app_version}
-                                                </span>
+                                                <span className="font-mono text-white">v{selectedItem.app_version}</span>
                                             </div>
                                         )}
                                         {selectedItem.route_or_screen && (
                                             <div className="flex items-center justify-between">
                                                 <span className="text-slate-400">Source Route:</span>
-                                                <span className="font-mono text-white">
-                                                    {selectedItem.route_or_screen}
-                                                </span>
+                                                <span className="font-mono text-white">{selectedItem.route_or_screen}</span>
                                             </div>
                                         )}
                                         <div className="flex items-center justify-between">
                                             <span className="text-slate-400">Submitted:</span>
-                                            <span className="text-slate-300">
-                                                {new Date(selectedItem.created_at).toLocaleString()}
-                                            </span>
+                                            <span className="text-slate-300">{new Date(selectedItem.created_at).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>

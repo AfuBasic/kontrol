@@ -174,9 +174,10 @@ export default function PartnerDashboard({ user, partner, stats, monthlyEarnings
         {
             label: 'Conversion',
             display: `${stats.conversion_rate}%`,
-            hint: stats.partner_request_count > 0
-                ? `${stats.approved_request_count} of ${stats.partner_request_count} approved`
-                : `${stats.converted_estates} active`,
+            hint:
+                stats.partner_request_count > 0
+                    ? `${stats.approved_request_count} of ${stats.partner_request_count} approved`
+                    : `${stats.converted_estates} active`,
             href: '/partner/partner-requests',
             icon: SparklesIcon,
             iconWrap: 'bg-emerald-500/10 text-emerald-600 ring-emerald-500/15 dark:text-emerald-300',

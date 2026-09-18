@@ -1,11 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Car, Pause, Play } from 'lucide-react';
-import {
-    resolveVerificationDecision,
-    type ResolvedDecision,
-    type ValidationResult,
-} from '@/Components/Security/verificationDecision';
+import { resolveVerificationDecision, type ResolvedDecision, type ValidationResult } from '@/Components/Security/verificationDecision';
 
 interface VerificationResultCardProps {
     result: ValidationResult;
@@ -14,12 +10,7 @@ interface VerificationResultCardProps {
     onReset: () => void;
 }
 
-export default function VerificationResultCard({
-    result,
-    onAdmit,
-    onCheckout,
-    onReset,
-}: VerificationResultCardProps) {
+export default function VerificationResultCard({ result, onAdmit, onCheckout, onReset }: VerificationResultCardProps) {
     const decision: ResolvedDecision = resolveVerificationDecision(result);
 
     const [countdown, setCountdown] = useState(4);
@@ -98,9 +89,7 @@ export default function VerificationResultCard({
         >
             <div className="space-y-4">
                 {/* 1. COMPACT STATUS HEADER */}
-                <div
-                    className={`flex items-start gap-3.5 rounded-2xl border p-4 shadow-xs sm:p-4.5 ${toneStyles.bannerBg}`}
-                >
+                <div className={`flex items-start gap-3.5 rounded-2xl border p-4 shadow-xs sm:p-4.5 ${toneStyles.bannerBg}`}>
                     <div
                         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-md ring-4 ${toneStyles.iconBg} ${toneStyles.accentRing}`}
                     >
@@ -108,18 +97,14 @@ export default function VerificationResultCard({
                     </div>
                     <div className="min-w-0 flex-1 pt-0.5">
                         <div className="flex items-center gap-2">
-                            <h2 className={`text-base font-black tracking-tight ${toneStyles.titleColor}`}>
-                                {decision.statusLabel}
-                            </h2>
+                            <h2 className={`text-base font-black tracking-tight ${toneStyles.titleColor}`}>{decision.statusLabel}</h2>
                             {decision.badgeLabel && (
                                 <span className="inline-flex items-center rounded-md bg-white/80 px-2 py-0.5 text-[10px] font-black tracking-wider text-slate-700 uppercase shadow-2xs dark:bg-slate-800 dark:text-slate-300">
                                     {decision.badgeLabel}
                                 </span>
                             )}
                         </div>
-                        <p className={`mt-0.5 text-xs font-semibold leading-relaxed ${toneStyles.subtitleColor}`}>
-                            {decision.statusSubtitle}
-                        </p>
+                        <p className={`mt-0.5 text-xs leading-relaxed font-semibold ${toneStyles.subtitleColor}`}>{decision.statusSubtitle}</p>
                     </div>
                 </div>
 
@@ -127,19 +112,15 @@ export default function VerificationResultCard({
                 {decision.showIdentity && decision.visitorName && (
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
                         <div className="min-w-0">
-                            <p className="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase">
-                                Visitor Identity
-                            </p>
-                            <h3 className="mt-1 text-xl font-black tracking-tight text-slate-900 sm:text-2xl dark:text-white break-words">
+                            <p className="text-[10px] font-extrabold tracking-widest text-slate-400 uppercase">Visitor Identity</p>
+                            <h3 className="mt-1 text-xl font-black tracking-tight break-words text-slate-900 sm:text-2xl dark:text-white">
                                 {decision.visitorName}
                             </h3>
                             {decision.hostName && (
                                 <p className="mt-1 flex items-baseline gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
                                     <span className="text-slate-400">Visiting:</span>
                                     <span className="font-bold text-slate-800 dark:text-slate-100">{decision.hostName}</span>
-                                    {decision.purpose && (
-                                        <span className="text-slate-400">· {decision.purpose}</span>
-                                    )}
+                                    {decision.purpose && <span className="text-slate-400">· {decision.purpose}</span>}
                                 </p>
                             )}
                         </div>
@@ -149,27 +130,19 @@ export default function VerificationResultCard({
                 {/* 3. RELEVANT PASS FACTS (Clean Summary Grid) */}
                 {decision.facts.length > 0 && (
                     <div className="rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-                        <p className="mb-3 text-[10px] font-extrabold tracking-widest text-slate-400 uppercase">
-                            Pass Summary
-                        </p>
+                        <p className="mb-3 text-[10px] font-extrabold tracking-widest text-slate-400 uppercase">Pass Summary</p>
                         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                             {decision.facts.map((fact, idx) => (
                                 <div
                                     key={idx}
                                     className={`flex items-baseline justify-between rounded-xl px-3.5 py-2.5 sm:flex-col sm:items-start sm:gap-1 ${
-                                        fact.highlight
-                                            ? 'bg-slate-100/80 dark:bg-slate-800/60'
-                                            : 'bg-slate-50/60 dark:bg-slate-800/30'
+                                        fact.highlight ? 'bg-slate-100/80 dark:bg-slate-800/60' : 'bg-slate-50/60 dark:bg-slate-800/30'
                                     }`}
                                 >
-                                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                        {fact.label}
-                                    </span>
+                                    <span className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">{fact.label}</span>
                                     <span
                                         className={`text-xs font-extrabold break-words ${
-                                            fact.highlight
-                                                ? 'text-slate-950 dark:text-white'
-                                                : 'text-slate-700 dark:text-slate-200'
+                                            fact.highlight ? 'text-slate-950 dark:text-white' : 'text-slate-700 dark:text-slate-200'
                                         }`}
                                     >
                                         {fact.value}
@@ -238,14 +211,7 @@ export default function VerificationResultCard({
                                 <div className="flex items-center gap-2.5 rounded-full border border-slate-200/80 bg-slate-50 px-3.5 py-2 dark:border-slate-800 dark:bg-slate-800/40">
                                     <div className="relative flex h-5 w-5 items-center justify-center">
                                         <svg className="-rotate-90" width="20" height="20">
-                                            <circle
-                                                strokeWidth="2"
-                                                stroke="#e2e8f0"
-                                                fill="transparent"
-                                                r="8"
-                                                cx="10"
-                                                cy="10"
-                                            />
+                                            <circle strokeWidth="2" stroke="#e2e8f0" fill="transparent" r="8" cx="10" cy="10" />
                                             {!isPaused && (
                                                 <circle
                                                     className="transition-all duration-1000 ease-linear"
@@ -261,9 +227,7 @@ export default function VerificationResultCard({
                                                 />
                                             )}
                                         </svg>
-                                        <span className="absolute text-[8px] font-black text-slate-800 dark:text-white">
-                                            {countdown}
-                                        </span>
+                                        <span className="absolute text-[8px] font-black text-slate-800 dark:text-white">{countdown}</span>
                                     </div>
                                     <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
                                         {isPaused ? 'Paused' : `Next scan in ${countdown}s`}
@@ -274,11 +238,7 @@ export default function VerificationResultCard({
                                         aria-label={isPaused ? 'Resume countdown' : 'Pause countdown'}
                                         className="cursor-pointer rounded-md p-1 text-slate-400 transition-colors hover:text-slate-700 dark:hover:text-slate-200"
                                     >
-                                        {isPaused ? (
-                                            <Play className="h-3 w-3 fill-slate-500" />
-                                        ) : (
-                                            <Pause className="h-3 w-3" />
-                                        )}
+                                        {isPaused ? <Play className="h-3 w-3 fill-slate-500" /> : <Pause className="h-3 w-3" />}
                                     </button>
                                 </div>
                                 <button
@@ -316,9 +276,7 @@ function VehicleEntryForm({ onSubmit }: { onSubmit: (data: Record<string, string
         <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
             <div className="flex items-center gap-2">
                 <Car className="h-4 w-4 text-slate-500" />
-                <p className="text-[10px] font-black tracking-wider text-slate-500 uppercase">
-                    Vehicle Details Required
-                </p>
+                <p className="text-[10px] font-black tracking-wider text-slate-500 uppercase">Vehicle Details Required</p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -327,14 +285,14 @@ function VehicleEntryForm({ onSubmit }: { onSubmit: (data: Record<string, string
                     placeholder="Make (e.g. Toyota)"
                     value={data.vehicle_make}
                     onChange={(e) => setData({ ...data, vehicle_make: e.target.value })}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 outline-none transition-all focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 transition-all outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
                 <input
                     type="text"
                     placeholder="Model (e.g. Corolla)"
                     value={data.vehicle_model}
                     onChange={(e) => setData({ ...data, vehicle_model: e.target.value })}
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 outline-none transition-all focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 transition-all outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                 />
             </div>
             <input
@@ -342,7 +300,7 @@ function VehicleEntryForm({ onSubmit }: { onSubmit: (data: Record<string, string
                 placeholder="License Plate Number"
                 value={data.vehicle_plate_number}
                 onChange={(e) => setData({ ...data, vehicle_plate_number: e.target.value })}
-                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 outline-none transition-all focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-900 transition-all outline-none focus:border-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
             />
 
             <div className="flex gap-2 pt-1">

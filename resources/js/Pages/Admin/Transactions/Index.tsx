@@ -1,13 +1,5 @@
 import { Deferred, Head } from '@inertiajs/react';
-import {
-    Download,
-    FileText,
-    Plus,
-    Activity,
-    Table,
-    Shield,
-    Landmark,
-} from 'lucide-react';
+import { Download, FileText, Plus, Activity, Table, Shield, Landmark } from 'lucide-react';
 import { type ReactNode, useState, useMemo } from 'react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';

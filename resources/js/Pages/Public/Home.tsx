@@ -202,7 +202,7 @@ export default function Home() {
                                 </span>
                             </h1>
 
-                            <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg font-medium text-white sm:text-xl drop-shadow-[0_2px_16px_rgba(0,0,0,0.95)]">
+                            <p className="kontrol-hero-reveal gsap-hero-stagger-item mt-6 max-w-2xl text-lg font-medium text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.95)] sm:text-xl">
                                 From visitors at the gate to dues in the bank, Kontrol keeps your estate running without the chaos.
                             </p>
 
@@ -244,7 +244,7 @@ export default function Home() {
                         }}
                     />
                     <div className="pointer-events-none absolute -top-40 left-1/4 h-96 w-96 rounded-full bg-blue-500/10 blur-[120px]" />
-                    <div className="pointer-events-none absolute -bottom-40 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
+                    <div className="pointer-events-none absolute right-1/4 -bottom-40 h-96 w-96 rounded-full bg-cyan-500/10 blur-[120px]" />
 
                     <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
                         {/* Section Header */}
@@ -256,7 +256,8 @@ export default function Home() {
                                 Two dedicated experiences. One coordinated platform.
                             </h2>
                             <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-                                Whether you lead estate administration or live within the gates, Kontrol gives you purpose-built tools that actually work together.
+                                Whether you lead estate administration or live within the gates, Kontrol gives you purpose-built tools that actually
+                                work together.
                             </p>
                         </div>
 
@@ -264,7 +265,7 @@ export default function Home() {
                         <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 lg:grid-cols-2">
                             {/* Card 1: Estate Managers */}
                             <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-xl hover:shadow-blue-500/5 sm:p-10 dark:border-slate-800/80 dark:bg-slate-900/70 dark:hover:border-blue-500/40 dark:hover:shadow-blue-500/10">
-                                <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl transition-opacity duration-300 group-hover:opacity-100 dark:bg-blue-500/15" />
+                                <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-blue-500/10 blur-3xl transition-opacity duration-300 group-hover:opacity-100 dark:bg-blue-500/15" />
 
                                 <div>
                                     <div className="flex items-center justify-between">
@@ -277,14 +278,15 @@ export default function Home() {
                                     </div>
 
                                     <div className="mt-6">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                                        <span className="text-xs font-bold tracking-wider text-blue-600 uppercase dark:text-blue-400">
                                             For Estate Managers & ExCos
                                         </span>
                                         <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                                             Full oversight of gate access, finances, and operations from one command center.
                                         </h3>
                                         <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                                            Eliminate gate bottlenecks, automate fee collection, and maintain complete real-time visibility over community operations without messy paperwork.
+                                            Eliminate gate bottlenecks, automate fee collection, and maintain complete real-time visibility over
+                                            community operations without messy paperwork.
                                         </p>
                                     </div>
 
@@ -315,7 +317,7 @@ export default function Home() {
 
                             {/* Card 2: Residents */}
                             <div className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-cyan-500/40 hover:shadow-xl hover:shadow-cyan-500/5 sm:p-10 dark:border-slate-800/80 dark:bg-slate-900/70 dark:hover:border-cyan-500/40 dark:hover:shadow-cyan-500/10">
-                                <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl transition-opacity duration-300 group-hover:opacity-100 dark:bg-cyan-500/15" />
+                                <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl transition-opacity duration-300 group-hover:opacity-100 dark:bg-cyan-500/15" />
 
                                 <div>
                                     <div className="flex items-center justify-between">
@@ -328,14 +330,15 @@ export default function Home() {
                                     </div>
 
                                     <div className="mt-6">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-cyan-700 dark:text-cyan-400">
+                                        <span className="text-xs font-bold tracking-wider text-cyan-700 uppercase dark:text-cyan-400">
                                             For Residents & Families
                                         </span>
                                         <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
                                             Instant visitor passes, dues payments, and estate updates directly on your phone.
                                         </h3>
                                         <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                                            No more calls from security when guests arrive. Issue instant gate passes, settle invoices with instant receipts, and receive official notices instantly.
+                                            No more calls from security when guests arrive. Issue instant gate passes, settle invoices with instant
+                                            receipts, and receive official notices instantly.
                                         </p>
                                     </div>
 
@@ -387,7 +390,8 @@ export default function Home() {
                             Every estate deserves better than WhatsApp and spreadsheets.
                         </h2>
                         <p className="mx-auto mt-8 max-w-2xl text-xl text-slate-300 sm:text-2xl">
-                            We work directly with your estate management to configure and launch your platform in days, not weeks. Apply to get your estate on Kontrol today.
+                            We work directly with your estate management to configure and launch your platform in days, not weeks. Apply to get your
+                            estate on Kontrol today.
                         </p>
                         <div className="mt-14 flex justify-center">
                             <MagneticButton>

@@ -48,13 +48,14 @@ class AddCommentAction
      */
     protected function checkForDuplicate(int $userId, string $body): void
     {
-        $bodyHash = md5(trim($body));
+        $trimmedBody = trim($body);
 
-        $exists = EstateBoardComment::query()
+        $recentComments = EstateBoardComment::query()
             ->where('user_id', $userId)
             ->where('created_at', '>=', now()->subSeconds(60))
-            ->whereRaw('MD5(TRIM(body)) = ?', [$bodyHash])
-            ->exists();
+            ->pluck('body');
+
+        $exists = $recentComments->contains(fn (string $existing) => trim($existing) === $trimmedBody);
 
         if ($exists) {
             throw ValidationException::withMessages([

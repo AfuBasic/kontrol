@@ -26,7 +26,6 @@ import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
-
 interface PropertyOwner {
     id: number;
     ulid: string;
@@ -385,10 +384,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                 </div>
 
                 {/* SECTION 2 - INSIGHTS PANEL */}
-                <PropertyOwnerInsightsPanel
-                    insights={insights}
-                    incompleteOwners={incompleteOwners}
-                />
+                <PropertyOwnerInsightsPanel insights={insights} incompleteOwners={incompleteOwners} />
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
                 <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-xs ring-1 ring-slate-100/50">
@@ -489,262 +485,261 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                             {/* Desktop Table View (>= md) */}
                             <div className="hidden min-h-[280px] overflow-x-auto md:block">
                                 <table className="w-full table-auto border-collapse">
-                                <thead className="border-b border-slate-100 bg-slate-50/70">
-                                    <tr>
-                                        {can('property_owners.delete') && (
-                                            <th className="w-10 px-4 py-3.5 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        propertyOwners.data.length > 0 &&
-                                                        selectedIds.length === propertyOwners.data.length
-                                                    }
-                                                    onChange={toggleSelectAll}
-                                                    className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
-                                                />
+                                    <thead className="border-b border-slate-100 bg-slate-50/70">
+                                        <tr>
+                                            {can('property_owners.delete') && (
+                                                <th className="w-10 px-4 py-3.5 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={propertyOwners.data.length > 0 && selectedIds.length === propertyOwners.data.length}
+                                                        onChange={toggleSelectAll}
+                                                        className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
+                                                    />
+                                                </th>
+                                            )}
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Landlord
                                             </th>
-                                        )}
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Landlord
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Contact
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Properties
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Tenants
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Joined
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Status
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">Zone</th>
-                                        <th className="w-20 px-4 py-3.5 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {propertyOwners.data.map((owner, idx) => {
-                                        const isSelected = selectedIds.includes(owner.id);
-                                        const initial = owner.name ? owner.name.charAt(0).toUpperCase() : 'O';
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Contact
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Properties
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Tenants
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Joined
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Status
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Zone
+                                            </th>
+                                            <th className="w-20 px-4 py-3.5 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {propertyOwners.data.map((owner, idx) => {
+                                            const isSelected = selectedIds.includes(owner.id);
+                                            const initial = owner.name ? owner.name.charAt(0).toUpperCase() : 'O';
 
-                                        // Soft premium colors for avatars
-                                        const bgColors = [
-                                            'bg-blue-50 text-blue-700',
-                                            'bg-indigo-50 text-indigo-700',
-                                            'bg-purple-50 text-purple-700',
-                                            'bg-emerald-50 text-emerald-700',
-                                        ];
-                                        const avatarColor = bgColors[idx % bgColors.length];
+                                            // Soft premium colors for avatars
+                                            const bgColors = [
+                                                'bg-blue-50 text-blue-700',
+                                                'bg-indigo-50 text-indigo-700',
+                                                'bg-purple-50 text-purple-700',
+                                                'bg-emerald-50 text-emerald-700',
+                                            ];
+                                            const avatarColor = bgColors[idx % bgColors.length];
 
-                                        return (
-                                            <tr
-                                                key={owner.ulid}
-                                                className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
-                                            >
-                                                {can('property_owners.delete') && (
-                                                    <td className="px-4 py-3.5 text-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={() => toggleSelect(owner.id)}
-                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
-                                                        />
-                                                    </td>
-                                                )}
-
-                                                {/* Avatar & Name */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-3">
-                                                        <div
-                                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
-                                                        >
-                                                            {initial}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <Link
-                                                                href={`/admin/residents/${owner.id}`}
-                                                                className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
-                                                            >
-                                                                {owner.name}
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-                                                </td>
-
-                                                {/* Contact */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="text-xs font-semibold text-slate-800">
-                                                        <span className="block max-w-[150px] truncate">{owner.email}</span>
-                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
-                                                            {owner.phone || '-'}
-                                                        </span>
-                                                    </div>
-                                                </td>
-
-                                                {/* Properties Count */}
-                                                <td className="px-4 py-3.5">
-                                                    <Link
-                                                        href={properties.url(owner.ulid)}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
-                                                    >
-                                                        <Building className="h-3.5 w-3.5 text-slate-400" />
-                                                        <span>{owner.properties_count} Units</span>
-                                                    </Link>
-                                                </td>
-
-                                                {/* Residents Count */}
-                                                <td className="px-4 py-3.5">
-                                                    <Link
-                                                        href={residents.url(owner.ulid)}
-                                                        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
-                                                    >
-                                                        <Users className="h-3.5 w-3.5 text-slate-400" />
-                                                        <span>{owner.residents_count} Residents</span>
-                                                    </Link>
-                                                </td>
-
-                                                {/* Dates */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-1 text-xs font-semibold text-slate-800">
-                                                        <Calendar className="h-3 w-3 text-slate-400" />
-                                                        <span>{owner.created_at}</span>
-                                                    </div>
-                                                </td>
-
-                                                {/* Status Badge */}
-                                                <td className="px-4 py-3.5">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
-                                                            owner.status === 'inactive'
-                                                                ? 'bg-rose-50 text-rose-700'
-                                                                : owner.status === 'accepted'
-                                                                  ? 'bg-emerald-50 text-emerald-700'
-                                                                  : 'bg-amber-50 text-amber-700'
-                                                        }`}
-                                                    >
-                                                        {owner.status === 'accepted' ? 'active' : owner.status}
-                                                    </span>
-                                                </td>
-
-                                                {/* Zone */}
-                                                <td className="px-4 py-3.5">
-                                                    {owner.zone_name && owner.zone_name !== 'Entire Estate' ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 ring-1 ring-violet-100">
-                                                            {owner.zone_name}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                                            Entire Estate
-                                                        </span>
+                                            return (
+                                                <tr
+                                                    key={owner.ulid}
+                                                    className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
+                                                >
+                                                    {can('property_owners.delete') && (
+                                                        <td className="px-4 py-3.5 text-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => toggleSelect(owner.id)}
+                                                                className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
+                                                            />
+                                                        </td>
                                                     )}
-                                                </td>
 
-                                                {/* Actions */}
-                                                <td className="relative px-4 py-3.5 text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {/* Direct Properties Link */}
+                                                    {/* Avatar & Name */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
+                                                            >
+                                                                {initial}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <Link
+                                                                    href={`/admin/residents/${owner.id}`}
+                                                                    className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                                >
+                                                                    {owner.name}
+                                                                </Link>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Contact */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="text-xs font-semibold text-slate-800">
+                                                            <span className="block max-w-[150px] truncate">{owner.email}</span>
+                                                            <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
+                                                                {owner.phone || '-'}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Properties Count */}
+                                                    <td className="px-4 py-3.5">
                                                         <Link
                                                             href={properties.url(owner.ulid)}
-                                                            className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                            title="View Properties"
+                                                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
                                                         >
-                                                            <Building className="h-3.5 w-3.5" />
+                                                            <Building className="h-3.5 w-3.5 text-slate-400" />
+                                                            <span>{owner.properties_count} Units</span>
                                                         </Link>
+                                                    </td>
 
-                                                        {/* Direct Edit Details */}
+                                                    {/* Residents Count */}
+                                                    <td className="px-4 py-3.5">
                                                         <Link
-                                                            href={`/admin/property-owners/${owner.id}/edit`}
-                                                            className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                            title="Edit Details"
+                                                            href={residents.url(owner.ulid)}
+                                                            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 px-2.5 py-1 text-xs font-bold text-slate-700 transition hover:bg-slate-100"
                                                         >
-                                                            <Pencil className="h-3.5 w-3.5" />
+                                                            <Users className="h-3.5 w-3.5 text-slate-400" />
+                                                            <span>{owner.residents_count} Residents</span>
                                                         </Link>
+                                                    </td>
 
-                                                        {/* Direct Resend Invitation if Pending */}
-                                                        {owner.status === 'pending' && (
-                                                            <button
-                                                                onClick={() => handleResendInvitation(owner.id)}
-                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                title="Resend Invite"
-                                                            >
-                                                                <Send className="h-3.5 w-3.5" />
-                                                            </button>
-                                                        )}
+                                                    {/* Dates */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-1 text-xs font-semibold text-slate-800">
+                                                            <Calendar className="h-3 w-3 text-slate-400" />
+                                                            <span>{owner.created_at}</span>
+                                                        </div>
+                                                    </td>
 
-                                                        {/* Overflow menu */}
-                                                        <button
-                                                            onClick={() => setMenuOpenId(menuOpenId === owner.id ? null : owner.id)}
-                                                            className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                    {/* Status Badge */}
+                                                    <td className="px-4 py-3.5">
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                                owner.status === 'inactive'
+                                                                    ? 'bg-rose-50 text-rose-700'
+                                                                    : owner.status === 'accepted'
+                                                                      ? 'bg-emerald-50 text-emerald-700'
+                                                                      : 'bg-amber-50 text-amber-700'
+                                                            }`}
                                                         >
-                                                            <EllipsisVerticalIcon className="h-4 w-4" />
-                                                        </button>
+                                                            {owner.status === 'accepted' ? 'active' : owner.status}
+                                                        </span>
+                                                    </td>
 
-                                                        {/* Popup Dropdown */}
-                                                        {menuOpenId === owner.id && (
-                                                            <>
-                                                                <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                                                                <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
-                                                                    <Link
-                                                                        href={properties.url(owner.ulid)}
-                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                    >
-                                                                        <Building className="h-3.5 w-3.5 text-slate-400" />
-                                                                        View Properties
-                                                                    </Link>
-                                                                    <Link
-                                                                        href={residents.url(owner.ulid)}
-                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                    >
-                                                                        <Users className="h-3.5 w-3.5 text-slate-400" />
-                                                                        View Residents
-                                                                    </Link>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleToggleSuspend(owner);
-                                                                            setMenuOpenId(null);
-                                                                        }}
-                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                    >
-                                                                        <UserMinus className="h-3.5 w-3.5 text-slate-400" />
-                                                                        {owner.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
-                                                                    </button>
-                                                                    {!owner.is_resident && (
+                                                    {/* Zone */}
+                                                    <td className="px-4 py-3.5">
+                                                        {owner.zone_name && owner.zone_name !== 'Entire Estate' ? (
+                                                            <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 ring-1 ring-violet-100">
+                                                                {owner.zone_name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                                                Entire Estate
+                                                            </span>
+                                                        )}
+                                                    </td>
+
+                                                    {/* Actions */}
+                                                    <td className="relative px-4 py-3.5 text-right">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {/* Direct Properties Link */}
+                                                            <Link
+                                                                href={properties.url(owner.ulid)}
+                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                title="View Properties"
+                                                            >
+                                                                <Building className="h-3.5 w-3.5" />
+                                                            </Link>
+
+                                                            {/* Direct Edit Details */}
+                                                            <Link
+                                                                href={`/admin/property-owners/${owner.id}/edit`}
+                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                title="Edit Details"
+                                                            >
+                                                                <Pencil className="h-3.5 w-3.5" />
+                                                            </Link>
+
+                                                            {/* Direct Resend Invitation if Pending */}
+                                                            {owner.status === 'pending' && (
+                                                                <button
+                                                                    onClick={() => handleResendInvitation(owner.id)}
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                    title="Resend Invite"
+                                                                >
+                                                                    <Send className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            )}
+
+                                                            {/* Overflow menu */}
+                                                            <button
+                                                                onClick={() => setMenuOpenId(menuOpenId === owner.id ? null : owner.id)}
+                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                            >
+                                                                <EllipsisVerticalIcon className="h-4 w-4" />
+                                                            </button>
+
+                                                            {/* Popup Dropdown */}
+                                                            {menuOpenId === owner.id && (
+                                                                <>
+                                                                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+                                                                    <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
+                                                                        <Link
+                                                                            href={properties.url(owner.ulid)}
+                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                        >
+                                                                            <Building className="h-3.5 w-3.5 text-slate-400" />
+                                                                            View Properties
+                                                                        </Link>
+                                                                        <Link
+                                                                            href={residents.url(owner.ulid)}
+                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                        >
+                                                                            <Users className="h-3.5 w-3.5 text-slate-400" />
+                                                                            View Residents
+                                                                        </Link>
                                                                         <button
                                                                             onClick={() => {
-                                                                                handleMakeResident(owner);
+                                                                                handleToggleSuspend(owner);
                                                                                 setMenuOpenId(null);
                                                                             }}
-                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50"
+                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                         >
-                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                                                            Assign Resident Role
+                                                                            <UserMinus className="h-3.5 w-3.5 text-slate-400" />
+                                                                            {owner.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
                                                                         </button>
-                                                                    )}
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            handleDeleteOwner(owner);
-                                                                            setMenuOpenId(null);
-                                                                        }}
-                                                                        className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
-                                                                    >
-                                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                                        Delete Profile
-                                                                    </button>
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                                                        {!owner.is_resident && (
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleMakeResident(owner);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-emerald-600 hover:bg-emerald-50"
+                                                                            >
+                                                                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                                                Assign Resident Role
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                handleDeleteOwner(owner);
+                                                                                setMenuOpenId(null);
+                                                                            }}
+                                                                            className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                        >
+                                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                                            Delete Profile
+                                                                        </button>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </>
                     ) : (
                         /* Redesigned Empty State */
@@ -813,7 +808,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
 
                         {/* Desktop Numbers */}
                         <div className="hidden sm:flex sm:w-full sm:items-center sm:justify-between">
-                            <p className="text-slate-500 text-xs font-bold dark:text-slate-400">
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                                 Showing <span className="text-slate-950 dark:text-slate-100">{propertyOwners.data.length}</span> of{' '}
                                 <span className="text-slate-950 dark:text-slate-100">{propertyOwners.total}</span> landlords
                             </p>
@@ -1060,7 +1055,7 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
                                 Assign {selectedIds.length} selected property owner{selectedIds.length === 1 ? '' : 's'} to a zone, or keep them
                                 estate-wide.
                             </p>
-                            <label htmlFor="bulk_po_zone_id" className="mt-5 block text-xs font-black tracking-wider text-slate-700 uppercase mb-1.5">
+                            <label htmlFor="bulk_po_zone_id" className="mt-5 mb-1.5 block text-xs font-black tracking-wider text-slate-700 uppercase">
                                 Zone
                             </label>
                             <CustomSelect
@@ -1100,15 +1095,12 @@ export default function Index({ propertyOwners, filters: initialFilters, stats, 
     );
 }
 
-function PropertyOwnerInsightsPanel({
-    insights = [],
-}: {
-    insights?: string[];
-    incompleteOwners?: { id: number; name: string }[];
-}) {
+function PropertyOwnerInsightsPanel({ insights = [] }: { insights?: string[]; incompleteOwners?: { id: number; name: string }[] }) {
     const [isCollapsed, setIsCollapsed] = useState(false);
 
-    const otherInsights = (insights || []).filter((insight) => !insight.includes('no properties assigned') && !insight.includes('require property assignment'));
+    const otherInsights = (insights || []).filter(
+        (insight) => !insight.includes('no properties assigned') && !insight.includes('require property assignment'),
+    );
     const hasInsights = otherInsights.length > 0;
 
     if (!hasInsights) return null;
@@ -1120,10 +1112,7 @@ function PropertyOwnerInsightsPanel({
                     <AlertCircle className="h-4.5 w-4.5 text-indigo-600" />
                     <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Attention Required</h3>
                 </div>
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
-                >
+                <button onClick={() => setIsCollapsed(!isCollapsed)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700">
                     <motion.span animate={{ rotate: isCollapsed ? 180 : 0 }} className="block">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
@@ -1150,9 +1139,7 @@ function PropertyOwnerInsightsPanel({
                         </div>
                     </motion.div>
                 ) : (
-                    <div className="mt-1 text-[11px] font-semibold text-slate-400">
-                        Operational alerts collapsed
-                    </div>
+                    <div className="mt-1 text-[11px] font-semibold text-slate-400">Operational alerts collapsed</div>
                 )}
             </AnimatePresence>
         </div>

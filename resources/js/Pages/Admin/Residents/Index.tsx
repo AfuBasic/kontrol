@@ -29,7 +29,6 @@ import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
-
 type Resident = {
     id: number;
     ulid: string;
@@ -423,10 +422,7 @@ export default function Residents({
                     data={['insights', 'incompleteResidents']}
                     fallback={<div className="h-20 animate-pulse rounded-2xl border border-blue-100/40 bg-blue-50/30" />}
                 >
-                    <ResidentInsightsPanel
-                        insights={insights}
-                        incompleteResidents={incompleteResidents}
-                    />
+                    <ResidentInsightsPanel insights={insights} incompleteResidents={incompleteResidents} />
                 </Deferred>
 
                 {/* SECTION 3 - SEARCH & FILTERS */}
@@ -556,284 +552,291 @@ export default function Residents({
                             {/* Desktop Table View (>= md) */}
                             <div className="hidden min-h-[280px] overflow-x-auto md:block">
                                 <table className="w-full table-auto border-collapse">
-                                <thead className="border-b border-slate-100 bg-slate-50/70">
-                                    <tr>
-                                        {can('residents.delete') && (
-                                            <th className="w-10 px-4 py-3.5 text-center">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={
-                                                        residents.data.filter((r) => !r.is_estate_creator).length > 0 &&
-                                                        selectedIds.length === residents.data.filter((r) => !r.is_estate_creator).length
-                                                    }
-                                                    onChange={toggleSelectAll}
-                                                    className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
-                                                />
+                                    <thead className="border-b border-slate-100 bg-slate-50/70">
+                                        <tr>
+                                            {can('residents.delete') && (
+                                                <th className="w-10 px-4 py-3.5 text-center">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={
+                                                            residents.data.filter((r) => !r.is_estate_creator).length > 0 &&
+                                                            selectedIds.length === residents.data.filter((r) => !r.is_estate_creator).length
+                                                        }
+                                                        onChange={toggleSelectAll}
+                                                        className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
+                                                    />
+                                                </th>
+                                            )}
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Resident
                                             </th>
-                                        )}
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Resident
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Contact
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">Unit</th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Household
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Joined & Active
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                            Status
-                                        </th>
-                                        <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">Zone</th>
-                                        <th className="w-20 px-4 py-3.5 text-right"></th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {residents.data.map((resident, idx) => {
-                                        const isSelected = selectedIds.includes(resident.id);
-                                        const initial = resident.name ? resident.name.charAt(0).toUpperCase() : 'R';
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Contact
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Unit
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Household
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Joined & Active
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Status
+                                            </th>
+                                            <th className="text-slate-455 px-4 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                Zone
+                                            </th>
+                                            <th className="w-20 px-4 py-3.5 text-right"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {residents.data.map((resident, idx) => {
+                                            const isSelected = selectedIds.includes(resident.id);
+                                            const initial = resident.name ? resident.name.charAt(0).toUpperCase() : 'R';
 
-                                        // Soft premium colors for avatars
-                                        const bgColors = [
-                                            'bg-blue-50 text-blue-700',
-                                            'bg-indigo-50 text-indigo-700',
-                                            'bg-purple-50 text-purple-700',
-                                            'bg-emerald-50 text-emerald-700',
-                                        ];
-                                        const avatarColor = bgColors[idx % bgColors.length];
+                                            // Soft premium colors for avatars
+                                            const bgColors = [
+                                                'bg-blue-50 text-blue-700',
+                                                'bg-indigo-50 text-indigo-700',
+                                                'bg-purple-50 text-purple-700',
+                                                'bg-emerald-50 text-emerald-700',
+                                            ];
+                                            const avatarColor = bgColors[idx % bgColors.length];
 
-                                        return (
-                                            <tr
-                                                key={resident.ulid}
-                                                className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
-                                            >
-                                                {can('residents.delete') && (
-                                                    <td className="px-4 py-3.5 text-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            disabled={resident.is_estate_creator}
-                                                            onChange={() => toggleSelect(resident.id)}
-                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
-                                                        />
-                                                    </td>
-                                                )}
+                                            return (
+                                                <tr
+                                                    key={resident.ulid}
+                                                    className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
+                                                >
+                                                    {can('residents.delete') && (
+                                                        <td className="px-4 py-3.5 text-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                disabled={resident.is_estate_creator}
+                                                                onChange={() => toggleSelect(resident.id)}
+                                                                className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+                                                            />
+                                                        </td>
+                                                    )}
 
-                                                {/* Avatar & Name */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-3">
-                                                        <div
-                                                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
-                                                        >
-                                                            {initial}
-                                                        </div>
-                                                        <div className="min-w-0">
-                                                            <Link
-                                                                href={`/admin/residents/${resident.id}`}
-                                                                className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                    {/* Avatar & Name */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div
+                                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
                                                             >
-                                                                {resident.name}
-                                                            </Link>
-                                                            <span className="mt-0.5 inline-flex rounded-md bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-400 uppercase ring-1 ring-slate-100">
-                                                                {resident.role_label}
+                                                                {initial}
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <Link
+                                                                    href={`/admin/residents/${resident.id}`}
+                                                                    className="block max-w-[130px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                                >
+                                                                    {resident.name}
+                                                                </Link>
+                                                                <span className="mt-0.5 inline-flex rounded-md bg-slate-50 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-slate-400 uppercase ring-1 ring-slate-100">
+                                                                    {resident.role_label}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Contact */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="text-xs font-semibold text-slate-800">
+                                                            <span className="block max-w-[150px] truncate">{resident.email}</span>
+                                                            <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
+                                                                {resident.phone || '-'}
                                                             </span>
                                                         </div>
-                                                    </div>
-                                                </td>
+                                                    </td>
 
-                                                {/* Contact */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="text-xs font-semibold text-slate-800">
-                                                        <span className="block max-w-[150px] truncate">{resident.email}</span>
-                                                        <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
-                                                            {resident.phone || '-'}
-                                                        </span>
-                                                    </div>
-                                                </td>
-
-                                                {/* Unit */}
-                                                <td className="px-4 py-3.5">
-                                                    {resident.unit_number ? (
-                                                        <span className="text-xs font-bold text-slate-700">{resident.unit_number}</span>
-                                                    ) : (
-                                                        <span className="text-slate-350 text-xs font-bold">Unassigned</span>
-                                                    )}
-                                                </td>
-
-                                                {/* Household */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="flex items-center gap-1 text-xs font-semibold text-slate-600">
-                                                        <Users className="h-3.5 w-3.5 text-slate-400" />
-                                                        {resident.household_members_count > 0 ? (
-                                                            <Link
-                                                                href={`/admin/residents/${resident.id}#household`}
-                                                                className="text-[#0A3D91] hover:underline"
-                                                            >
-                                                                {resident.household_members_count}{' '}
-                                                                {resident.household_members_count === 1 ? 'Member' : 'Members'} &rarr;
-                                                            </Link>
+                                                    {/* Unit */}
+                                                    <td className="px-4 py-3.5">
+                                                        {resident.unit_number ? (
+                                                            <span className="text-xs font-bold text-slate-700">{resident.unit_number}</span>
                                                         ) : (
-                                                            <span className="text-slate-400">No members</span>
+                                                            <span className="text-slate-350 text-xs font-bold">Unassigned</span>
                                                         )}
-                                                    </div>
-                                                </td>
+                                                    </td>
 
-                                                {/* Dates */}
-                                                <td className="px-4 py-3.5">
-                                                    <div className="text-slate-850 text-xs font-semibold">
-                                                        <div className="flex items-center gap-1">
-                                                            <Calendar className="h-3 w-3 text-slate-400" />
-                                                            <span>{resident.created_at}</span>
+                                                    {/* Household */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="flex items-center gap-1 text-xs font-semibold text-slate-600">
+                                                            <Users className="h-3.5 w-3.5 text-slate-400" />
+                                                            {resident.household_members_count > 0 ? (
+                                                                <Link
+                                                                    href={`/admin/residents/${resident.id}#household`}
+                                                                    className="text-[#0A3D91] hover:underline"
+                                                                >
+                                                                    {resident.household_members_count}{' '}
+                                                                    {resident.household_members_count === 1 ? 'Member' : 'Members'} &rarr;
+                                                                </Link>
+                                                            ) : (
+                                                                <span className="text-slate-400">No members</span>
+                                                            )}
                                                         </div>
-                                                        <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-slate-400">
-                                                            <Clock className="h-3 w-3" />
-                                                            <span>{resident.last_active}</span>
+                                                    </td>
+
+                                                    {/* Dates */}
+                                                    <td className="px-4 py-3.5">
+                                                        <div className="text-slate-850 text-xs font-semibold">
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar className="h-3 w-3 text-slate-400" />
+                                                                <span>{resident.created_at}</span>
+                                                            </div>
+                                                            <div className="mt-0.5 flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                                                <Clock className="h-3 w-3" />
+                                                                <span>{resident.last_active}</span>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
+                                                    </td>
 
-                                                {/* Status Badge */}
-                                                <td className="px-4 py-3.5">
-                                                    <span
-                                                        className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
-                                                            resident.status === 'inactive'
-                                                                ? 'bg-rose-50 text-rose-700'
-                                                                : (resident.status as string) === 'active' || (resident.status as string) === 'accepted'
-                                                                  ? 'bg-emerald-50 text-emerald-700'
-                                                                  : 'bg-amber-50 text-amber-700'
-                                                        }`}
-                                                    >
-                                                        {resident.status}
-                                                    </span>
-                                                </td>
-
-                                                {/* Zone */}
-                                                <td className="px-4 py-3.5">
-                                                    {resident.zone_name && resident.zone_name !== 'Entire Estate' ? (
-                                                        <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 ring-1 ring-violet-100">
-                                                            {resident.zone_name}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                                            Entire Estate
-                                                        </span>
-                                                    )}
-                                                </td>
-
-                                                {/* Actions */}
-                                                <td className="relative px-4 py-3.5 text-right">
-                                                    <div className="flex items-center justify-end gap-1">
-                                                        {/* Direct Profile Edit */}
-                                                        <Link
-                                                            href={`/admin/residents/${resident.id}/edit`}
-                                                            className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                            title="Edit Profile"
+                                                    {/* Status Badge */}
+                                                    <td className="px-4 py-3.5">
+                                                        <span
+                                                            className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                                resident.status === 'inactive'
+                                                                    ? 'bg-rose-50 text-rose-700'
+                                                                    : (resident.status as string) === 'active' ||
+                                                                        (resident.status as string) === 'accepted'
+                                                                      ? 'bg-emerald-50 text-emerald-700'
+                                                                      : 'bg-amber-50 text-amber-700'
+                                                            }`}
                                                         >
-                                                            <Pencil className="h-3.5 w-3.5" />
-                                                        </Link>
+                                                            {resident.status}
+                                                        </span>
+                                                    </td>
 
-                                                        {/* Direct Resend Invitation if Pending */}
-                                                        {resident.status === 'pending' && (
-                                                            <button
-                                                                onClick={() => handleResendInvitation(resident.id)}
-                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                title="Resend Invite"
-                                                            >
-                                                                <Send className="h-3.5 w-3.5" />
-                                                            </button>
+                                                    {/* Zone */}
+                                                    <td className="px-4 py-3.5">
+                                                        {resident.zone_name && resident.zone_name !== 'Entire Estate' ? (
+                                                            <span className="inline-flex items-center gap-1 rounded-md bg-violet-50 px-2 py-0.5 text-[10px] font-bold text-violet-700 ring-1 ring-violet-100">
+                                                                {resident.zone_name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                                                                Entire Estate
+                                                            </span>
                                                         )}
+                                                    </td>
 
-                                                        {/* Direct Assign Unit Link if Unassigned */}
-                                                        {!resident.unit_number && (
+                                                    {/* Actions */}
+                                                    <td className="relative px-4 py-3.5 text-right">
+                                                        <div className="flex items-center justify-end gap-1">
+                                                            {/* Direct Profile Edit */}
                                                             <Link
                                                                 href={`/admin/residents/${resident.id}/edit`}
                                                                 className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                                title="Assign Unit"
+                                                                title="Edit Profile"
                                                             >
-                                                                <Home className="h-3.5 w-3.5" />
+                                                                <Pencil className="h-3.5 w-3.5" />
                                                             </Link>
-                                                        )}
 
-                                                        {!resident.is_property_owner && (
+                                                            {/* Direct Resend Invitation if Pending */}
+                                                            {resident.status === 'pending' && (
+                                                                <button
+                                                                    onClick={() => handleResendInvitation(resident.id)}
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                    title="Resend Invite"
+                                                                >
+                                                                    <Send className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            )}
+
+                                                            {/* Direct Assign Unit Link if Unassigned */}
+                                                            {!resident.unit_number && (
+                                                                <Link
+                                                                    href={`/admin/residents/${resident.id}/edit`}
+                                                                    className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
+                                                                    title="Assign Unit"
+                                                                >
+                                                                    <Home className="h-3.5 w-3.5" />
+                                                                </Link>
+                                                            )}
+
+                                                            {!resident.is_property_owner && (
+                                                                <button
+                                                                    onClick={() => handleMarkAsPropertyOwner(resident)}
+                                                                    className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
+                                                                    title="Convert to Landlord"
+                                                                >
+                                                                    <ShieldCheck className="h-3.5 w-3.5" />
+                                                                </button>
+                                                            )}
+
+                                                            {/* Overflow menu */}
                                                             <button
-                                                                onClick={() => handleMarkAsPropertyOwner(resident)}
-                                                                className="rounded-lg p-1 text-emerald-500 transition-all hover:bg-emerald-50 hover:text-emerald-700"
-                                                                title="Convert to Landlord"
+                                                                onClick={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
+                                                                className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                             >
-                                                                <ShieldCheck className="h-3.5 w-3.5" />
+                                                                <EllipsisVerticalIcon className="h-4 w-4" />
                                                             </button>
-                                                        )}
 
-                                                        {/* Overflow menu */}
-                                                        <button
-                                                            onClick={() => setMenuOpenId(menuOpenId === resident.id ? null : resident.id)}
-                                                            className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
-                                                        >
-                                                            <EllipsisVerticalIcon className="h-4 w-4" />
-                                                        </button>
-
-                                                        {/* Popup Dropdown */}
-                                                        {menuOpenId === resident.id && (
-                                                            <>
-                                                                <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
-                                                                <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
-                                                                    <Link
-                                                                        href={`/admin/residents/${resident.id}`}
-                                                                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                    >
-                                                                        <Eye className="h-3.5 w-3.5 text-slate-400" />
-                                                                        View Profile
-                                                                    </Link>
-                                                                    {!resident.is_estate_creator && (
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                handleToggleSuspend(resident);
-                                                                                setMenuOpenId(null);
-                                                                            }}
+                                                            {/* Popup Dropdown */}
+                                                            {menuOpenId === resident.id && (
+                                                                <>
+                                                                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpenId(null)} />
+                                                                    <div className="ring-slate-150/50 absolute top-11 right-4 z-20 w-48 rounded-xl border border-slate-100 bg-white p-1 text-left shadow-lg ring-1">
+                                                                        <Link
+                                                                            href={`/admin/residents/${resident.id}`}
                                                                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
                                                                         >
-                                                                            <UserMinus className="h-3.5 w-3.5 text-slate-400" />
-                                                                            {resident.status === 'inactive' ? 'Activate Account' : 'Suspend Account'}
-                                                                        </button>
-                                                                    )}
-                                                                    {!resident.is_property_owner && (
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                handleMarkAsPropertyOwner(resident);
-                                                                                setMenuOpenId(null);
-                                                                            }}
-                                                                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                                                        >
-                                                                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                                                            Convert to Landlord
-                                                                        </button>
-                                                                    )}
-                                                                    {!resident.is_estate_creator && (
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                handleDeleteResident(resident);
-                                                                                setMenuOpenId(null);
-                                                                            }}
-                                                                            className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
-                                                                        >
-                                                                            <Trash2 className="h-3.5 w-3.5" />
-                                                                            Delete Profile
-                                                                        </button>
-                                                                    )}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                                                            <Eye className="h-3.5 w-3.5 text-slate-400" />
+                                                                            View Profile
+                                                                        </Link>
+                                                                        {!resident.is_estate_creator && (
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleToggleSuspend(resident);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                            >
+                                                                                <UserMinus className="h-3.5 w-3.5 text-slate-400" />
+                                                                                {resident.status === 'inactive'
+                                                                                    ? 'Activate Account'
+                                                                                    : 'Suspend Account'}
+                                                                            </button>
+                                                                        )}
+                                                                        {!resident.is_property_owner && (
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleMarkAsPropertyOwner(resident);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                                                                            >
+                                                                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                                                                                Convert to Landlord
+                                                                            </button>
+                                                                        )}
+                                                                        {!resident.is_estate_creator && (
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    handleDeleteResident(resident);
+                                                                                    setMenuOpenId(null);
+                                                                                }}
+                                                                                className="mt-1 flex w-full items-center gap-2 rounded-lg border-t border-slate-50 px-3 py-2 pt-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                                                                            >
+                                                                                <Trash2 className="h-3.5 w-3.5" />
+                                                                                Delete Profile
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </>
                     ) : (
                         /* Redesigned Empty State */
@@ -902,7 +905,7 @@ export default function Residents({
 
                         {/* Desktop Numbers */}
                         <div className="hidden sm:flex sm:w-full sm:items-center sm:justify-between">
-                            <p className="text-slate-500 text-xs font-bold dark:text-slate-400">
+                            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                                 Showing <span className="text-slate-950 dark:text-slate-100">{residents.data.length}</span> of{' '}
                                 <span className="text-slate-950 dark:text-slate-100">{residents.total}</span> residents
                             </p>
@@ -1149,7 +1152,7 @@ export default function Residents({
                                 Assign {selectedIds.length} selected resident{selectedIds.length === 1 ? '' : 's'} to a zone, or keep them
                                 estate-wide.
                             </p>
-                            <label htmlFor="bulk_zone_id" className="mt-5 block text-xs font-black tracking-wider text-slate-700 uppercase mb-1.5">
+                            <label htmlFor="bulk_zone_id" className="mt-5 mb-1.5 block text-xs font-black tracking-wider text-slate-700 uppercase">
                                 Zone
                             </label>
                             <CustomSelect
@@ -1200,9 +1203,7 @@ function ResidentInsightsPanel({
     const [showDrawer, setShowDrawer] = useState(false);
     const [drawerSearch, setDrawerSearch] = useState('');
 
-    const filteredIncomplete = (incompleteResidents || []).filter((r) =>
-        r.name.toLowerCase().includes(drawerSearch.toLowerCase()),
-    );
+    const filteredIncomplete = (incompleteResidents || []).filter((r) => r.name.toLowerCase().includes(drawerSearch.toLowerCase()));
 
     const hasIncomplete = incompleteResidents && incompleteResidents.length > 0;
     const otherInsights = (insights || []).filter((insight) => !insight.includes('require profile completion'));
@@ -1217,10 +1218,7 @@ function ResidentInsightsPanel({
                     <AlertCircle className="h-4.5 w-4.5 text-indigo-600" />
                     <h3 className="text-xs font-black tracking-wider text-slate-800 uppercase">Attention Required</h3>
                 </div>
-                <button
-                    onClick={() => setIsCollapsed(!isCollapsed)}
-                    className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700"
-                >
+                <button onClick={() => setIsCollapsed(!isCollapsed)} className="rounded-lg p-1 text-slate-400 hover:bg-slate-50 hover:text-slate-700">
                     <motion.span animate={{ rotate: isCollapsed ? 180 : 0 }} className="block">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
@@ -1250,8 +1248,8 @@ function ResidentInsightsPanel({
                                     <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
                                             <p className="text-xs font-bold text-slate-800">
-                                                {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''}{' '}
-                                                require profile completion
+                                                {incompleteResidents.length} resident{incompleteResidents.length > 1 ? 's' : ''} require profile
+                                                completion
                                             </p>
                                             <div className="mt-1.5 flex items-center gap-1.5">
                                                 <div className="flex -space-x-1.5 overflow-hidden">
@@ -1269,8 +1267,7 @@ function ResidentInsightsPanel({
                                                         .slice(0, 3)
                                                         .map((r) => r.name)
                                                         .join(', ')}
-                                                    {incompleteResidents.length > 3 &&
-                                                        ` +${incompleteResidents.length - 3} more`}
+                                                    {incompleteResidents.length > 3 && ` +${incompleteResidents.length - 3} more`}
                                                 </span>
                                             </div>
                                         </div>
@@ -1287,9 +1284,7 @@ function ResidentInsightsPanel({
                     </motion.div>
                 ) : (
                     <div className="mt-1 text-[11px] font-semibold text-slate-400">
-                        {hasIncomplete
-                            ? `${incompleteResidents.length} profile completion items pending`
-                            : 'Operational alerts collapsed'}
+                        {hasIncomplete ? `${incompleteResidents.length} profile completion items pending` : 'Operational alerts collapsed'}
                     </div>
                 )}
             </AnimatePresence>
@@ -1318,12 +1313,8 @@ function ResidentInsightsPanel({
                             {/* Header */}
                             <div className="flex items-center justify-between border-b border-slate-100 px-5 pt-[calc(env(safe-area-inset-top,0px)+1rem)] pb-4">
                                 <div>
-                                    <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">
-                                        Profile Completion Needed
-                                    </h3>
-                                    <p className="mt-0.5 text-[10px] font-bold text-slate-400">
-                                        {incompleteResidents?.length ?? 0} Residents
-                                    </p>
+                                    <h3 className="text-sm font-black tracking-wide text-slate-900 uppercase">Profile Completion Needed</h3>
+                                    <p className="mt-0.5 text-[10px] font-bold text-slate-400">{incompleteResidents?.length ?? 0} Residents</p>
                                 </div>
                                 <button
                                     onClick={() => setShowDrawer(false)}
@@ -1373,9 +1364,7 @@ function ResidentInsightsPanel({
                                     ))
                                 ) : (
                                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                                        <p className="text-xs font-semibold text-slate-400">
-                                            No matching residents requiring attention.
-                                        </p>
+                                        <p className="text-xs font-semibold text-slate-400">No matching residents requiring attention.</p>
                                     </div>
                                 )}
                             </div>

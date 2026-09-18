@@ -86,7 +86,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
     };
 
     const isEvent = pass.type === 'event';
-    const qrColor = isEvent ? '7c3aed' : '1f6fdb'; // Kontrol Primary Blue
+    const qrColor = isEvent ? '7c3aed' : '059669'; // Kontrol Emerald Green
 
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrUrl)}&color=${qrColor}&bgcolor=ffffff&qzone=1&ecc=H`;
 
@@ -98,12 +98,12 @@ export default function PassCard({ pass, qrUrl }: Props) {
             className={`mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-[28px] border shadow-xl transition-all duration-300 ${
                 isEvent
                     ? 'border-violet-500/30 bg-gradient-to-br from-[#0b0f19] via-[#111827] to-[#1e112f] text-slate-100'
-                    : 'border-slate-200 bg-white text-slate-900'
+                    : 'border-emerald-100 bg-white text-slate-900'
             }`}
         >
             {/* Top Info: Visitor Avatar, Name & Single Status Badge */}
             <div
-                className={`flex items-center justify-between border-b px-5 py-4 ${isEvent ? 'border-white/10 bg-white/5' : 'border-slate-100 bg-slate-50/60'}`}
+                className={`flex items-center justify-between border-b px-5 py-4 ${isEvent ? 'border-white/10 bg-white/5' : 'border-emerald-100 bg-emerald-50/40'}`}
             >
                 <div className="flex min-w-0 items-center gap-3">
                     <VisitorAvatar category={category} name={displayName} size="md" />
@@ -118,7 +118,7 @@ export default function PassCard({ pass, qrUrl }: Props) {
             </div>
 
             {/* Host & Validity Info Section - Stacked Layout to Prevent Text Truncation */}
-            <div className={`space-y-2.5 border-b px-5 py-3 text-xs ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-100 bg-white'}`}>
+            <div className={`space-y-2.5 border-b px-5 py-3 text-xs ${isEvent ? 'border-white/10 bg-transparent' : 'border-emerald-100 bg-white'}`}>
                 <div className="flex items-center justify-between">
                     <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">HOST / ESTATE</span>
                     <span className={`text-right font-bold ${isEvent ? 'text-white' : 'text-slate-800'}`}>
@@ -127,14 +127,14 @@ export default function PassCard({ pass, qrUrl }: Props) {
                 </div>
                 <div className="flex items-center justify-between border-t border-slate-100/60 pt-2">
                     <span className="text-[9px] font-black tracking-wider text-slate-400 uppercase">VALIDITY WINDOW</span>
-                    <span className={`text-right font-bold ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}>{formatValidityRange()}</span>
+                    <span className={`text-right font-bold ${isEvent ? 'text-violet-300' : 'text-emerald-600'}`}>{formatValidityRange()}</span>
                 </div>
             </div>
 
             {/* QR Code Section */}
-            <div className={`relative flex flex-col items-center justify-center px-5 py-5 ${isEvent ? 'bg-white/5' : 'bg-slate-50/50'}`}>
+            <div className={`relative flex flex-col items-center justify-center px-5 py-5 ${isEvent ? 'bg-white/5' : 'bg-emerald-50/40'}`}>
                 <div
-                    className={`relative overflow-hidden rounded-2xl border p-3 ${isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-slate-200 bg-white shadow-xs'}`}
+                    className={`relative overflow-hidden rounded-2xl border p-3 ${isEvent ? 'border-white/10 bg-[#0d111d]' : 'border-emerald-100 bg-white shadow-xs'}`}
                 >
                     {!isPassActiveOrScheduled && (pass.type !== 'long_lived' || resolvedStatus === 'expired') && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 p-4 text-center backdrop-blur-xs">
@@ -169,16 +169,16 @@ export default function PassCard({ pass, qrUrl }: Props) {
 
             {/* Fallback Code Section with Ticket Notches */}
             <div
-                className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${isEvent ? 'border-white/10 bg-transparent' : 'border-slate-200 bg-white'}`}
+                className={`relative flex flex-col items-center justify-center border-t-2 border-dashed px-5 py-4 ${isEvent ? 'border-white/10 bg-transparent' : 'border-emerald-100 bg-white'}`}
             >
                 {/* Left & Right Ticket Notches */}
-                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full border-r border-slate-200 bg-white dark:bg-slate-950" />
-                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-slate-200 bg-white dark:bg-slate-950" />
+                <div className="absolute top-0 -left-3 h-5 w-5 -translate-y-1/2 rounded-full border-r border-emerald-100 bg-white dark:bg-slate-950" />
+                <div className="absolute top-0 -right-3 h-5 w-5 -translate-y-1/2 rounded-full border-l border-emerald-100 bg-white dark:bg-slate-950" />
 
-                <p className="mb-0.5 text-[9px] font-black tracking-widest text-slate-400 uppercase">FALLBACK ACCESS CODE</p>
+                <p className="mb-0.5 text-[9px] font-black tracking-widest text-emerald-600/70 uppercase">FALLBACK ACCESS CODE</p>
                 <div
                     data-selectable="true"
-                    className={`selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text ${isEvent ? 'text-violet-300' : 'text-primary-600'}`}
+                    className={`selectable-text font-mono text-2xl font-black tracking-[0.2em] select-text ${isEvent ? 'text-violet-300' : 'text-emerald-600'}`}
                 >
                     {pass.code}
                 </div>

@@ -477,7 +477,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
                                         <div>
                                             <label
                                                 htmlFor="recurring_interval"
-                                                className="block text-xs font-bold tracking-wider text-slate-700 uppercase mb-2"
+                                                className="mb-2 block text-xs font-bold tracking-wider text-slate-700 uppercase"
                                             >
                                                 Billing Interval
                                             </label>
@@ -599,7 +599,7 @@ export default function Create({ residents, properties, hasSettlementAccount }: 
 
                             {/* Target Audience */}
                             <div>
-                                <label htmlFor="applies_to" className="block text-xs font-bold tracking-wider text-slate-700 uppercase mb-2">
+                                <label htmlFor="applies_to" className="mb-2 block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                     Target Audience
                                 </label>
                                 <CustomSelect

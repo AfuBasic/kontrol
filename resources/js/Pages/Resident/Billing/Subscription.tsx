@@ -284,7 +284,7 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
         <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
             <Head title="Subscription & Plans" />
 
-            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
                     <Link
                         href={ResidentBillingController.index.url()}
@@ -295,7 +295,7 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                     </Link>
 
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase leading-tight">Billing destination</p>
+                        <p className="text-[10px] leading-tight font-black tracking-[0.18em] text-slate-400 uppercase">Billing destination</p>
                         <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Subscription & Plans</h1>
                     </div>
 
@@ -318,13 +318,15 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                 <motion.section
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)]"
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)] sm:p-6"
                 >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                             <div className="flex items-center gap-2">
                                 <span className={`inline-flex h-2 w-2 rounded-full ${tone.dot}`} />
-                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${tone.pill}`}>
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1 ring-inset ${tone.pill}`}
+                                >
                                     {statusMeta.label}
                                 </span>
                             </div>
@@ -347,12 +349,14 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 }}
-                    className="mt-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)]"
+                    className="mt-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)] sm:p-6"
                 >
                     <div className="border-b border-slate-100 pb-4">
                         <span className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase">Billing Cycle Options</span>
                         <h3 className="mt-1 text-base font-black tracking-tight text-slate-950">Choose or change your billing term</h3>
-                        <p className="mt-1 text-xs text-slate-500">Selecting a term will initiate secure checkout with your preferred billing cycle.</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                            Selecting a term will initiate secure checkout with your preferred billing cycle.
+                        </p>
                     </div>
 
                     {plans.length > 0 ? (
@@ -382,9 +386,7 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                                             <div className="mt-3">
                                                 {appliedCoupon ? (
                                                     <>
-                                                        <span className="text-xs font-bold text-slate-400 line-through">
-                                                            {plan.formatted_price}
-                                                        </span>
+                                                        <span className="text-xs font-bold text-slate-400 line-through">{plan.formatted_price}</span>
                                                         <p className="text-2xl font-black tracking-tight text-indigo-600">
                                                             {appliedCoupon.formatted_final_amount}
                                                         </p>
@@ -397,7 +399,9 @@ export default function SubscriptionPage({ subscription, plans, autoAppliedCoupo
                                                     <p className="text-2xl font-black tracking-tight text-slate-950">{plan.formatted_price}</p>
                                                 )}
                                             </div>
-                                            <p className="mt-1 text-xs font-semibold text-slate-500">{formatBillingInterval(plan.billing_interval)}</p>
+                                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                                                {formatBillingInterval(plan.billing_interval)}
+                                            </p>
                                         </div>
 
                                         <button

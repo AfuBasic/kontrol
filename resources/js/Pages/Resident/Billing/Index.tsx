@@ -72,7 +72,10 @@ const formatBillingInterval = (interval?: string) => {
         .join('-');
 };
 
-const STATUS_MAP: Record<SubscriptionStatus, { label: string; tone: 'success' | 'info' | 'warning' | 'danger'; description: (date: string) => string }> = {
+const STATUS_MAP: Record<
+    SubscriptionStatus,
+    { label: string; tone: 'success' | 'info' | 'warning' | 'danger'; description: (date: string) => string }
+> = {
     active: {
         label: 'Active',
         tone: 'success',
@@ -127,8 +130,10 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
     const statusKey = getComputedStatus();
     const statusMeta = STATUS_MAP[statusKey] || STATUS_MAP.active;
 
-    const daysRemaining = subscription.days_remaining ?? (periodEnd ? Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 999);
-    const isExpiringSoon = subscription.is_expiring_soon ?? (daysRemaining <= 5 && daysRemaining >= 0 && statusKey !== 'expired' && statusKey !== 'past_due');
+    const daysRemaining =
+        subscription.days_remaining ?? (periodEnd ? Math.ceil((new Date(periodEnd).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 999);
+    const isExpiringSoon =
+        subscription.is_expiring_soon ?? (daysRemaining <= 5 && daysRemaining >= 0 && statusKey !== 'expired' && statusKey !== 'past_due');
 
     const needsAttention = isExpiringSoon || statusKey === 'past_due' || statusKey === 'expired';
 
@@ -161,9 +166,10 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
         : 'No card saved · Manual renewal';
 
     const totalReceipts = receiptSummary?.total_count ?? 0;
-    const receiptsSummary = totalReceipts > 0
-        ? `${totalReceipts} ${totalReceipts === 1 ? 'record' : 'records'}${receiptSummary?.latest_invoice ? ` · Latest ${receiptSummary.latest_invoice.amount}` : ''}`
-        : 'No transaction records yet';
+    const receiptsSummary =
+        totalReceipts > 0
+            ? `${totalReceipts} ${totalReceipts === 1 ? 'record' : 'records'}${receiptSummary?.latest_invoice ? ` · Latest ${receiptSummary.latest_invoice.amount}` : ''}`
+            : 'No transaction records yet';
 
     const openWebApp = async () => {
         let url = `${window.location.origin}/resident/billing`;
@@ -193,7 +199,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
         <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
             <Head title="Billing & Renewal" />
 
-            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
                     <button
                         onClick={() => window.history.back()}
@@ -204,7 +210,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                     </button>
 
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase leading-tight">Resident billing</p>
+                        <p className="text-[10px] leading-tight font-black tracking-[0.18em] text-slate-400 uppercase">Resident billing</p>
                         <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Billing & Renewal</h1>
                     </div>
 
@@ -230,9 +236,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                         animate={{ opacity: 1, y: 0 }}
                         role="status"
                         className={`mb-4 flex items-center gap-3 rounded-2xl border px-4 py-3 ${
-                            statusKey === 'expired'
-                                ? 'bg-rose-50/80 border-rose-200/80'
-                                : 'bg-amber-50/70 border-amber-200/80'
+                            statusKey === 'expired' ? 'border-rose-200/80 bg-rose-50/80' : 'border-amber-200/80 bg-amber-50/70'
                         }`}
                     >
                         <span
@@ -250,7 +254,7 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
 
                         <Link
                             href={ResidentBillingController.subscription.url()}
-                            className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-1.5 text-xs font-black text-slate-900 border border-slate-200 shadow-2xs transition hover:bg-slate-50"
+                            className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-black text-slate-900 shadow-2xs transition hover:bg-slate-50"
                         >
                             Review
                         </Link>
@@ -278,32 +282,38 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
 
                             <Link
                                 href={ResidentBillingController.subscription.url()}
-                                className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-slate-300 hover:text-white transition"
+                                className="inline-flex shrink-0 items-center gap-1 text-xs font-bold text-slate-300 transition hover:text-white"
                             >
                                 Change term
                                 <ChevronRightIcon className="h-3 w-3" strokeWidth={2.5} />
                             </Link>
                         </div>
 
-                        <h2 className="mt-4 text-2xl sm:text-3xl font-black tracking-tight text-white">
+                        <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">
                             {subscription.plan_name || 'Resident Subscription'}
                         </h2>
-                        <p className="mt-1 text-xs sm:text-sm text-slate-300 font-medium">
-                            {displayDescription}
-                        </p>
+                        <p className="mt-1 text-xs font-medium text-slate-300 sm:text-sm">{displayDescription}</p>
 
                         <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-3">
                             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-                                <p className="text-[9px] sm:text-[10px] font-black tracking-[0.12em] sm:tracking-[0.16em] text-slate-400 uppercase truncate">{renewalDateTitle}</p>
-                                <p className="mt-1 text-xs sm:text-sm font-black text-white truncate">{renewalDateLabel}</p>
+                                <p className="truncate text-[9px] font-black tracking-[0.12em] text-slate-400 uppercase sm:text-[10px] sm:tracking-[0.16em]">
+                                    {renewalDateTitle}
+                                </p>
+                                <p className="mt-1 truncate text-xs font-black text-white sm:text-sm">{renewalDateLabel}</p>
                             </div>
                             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-                                <p className="text-[9px] sm:text-[10px] font-black tracking-[0.12em] sm:tracking-[0.16em] text-slate-400 uppercase truncate">Billing Cycle</p>
-                                <p className="mt-1 text-xs sm:text-sm font-black text-white truncate">{intervalLabel}</p>
+                                <p className="truncate text-[9px] font-black tracking-[0.12em] text-slate-400 uppercase sm:text-[10px] sm:tracking-[0.16em]">
+                                    Billing Cycle
+                                </p>
+                                <p className="mt-1 truncate text-xs font-black text-white sm:text-sm">{intervalLabel}</p>
                             </div>
                             <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-3">
-                                <p className="text-[9px] sm:text-[10px] font-black tracking-[0.12em] sm:tracking-[0.16em] text-slate-400 uppercase truncate">Auto Renewal</p>
-                                <p className="mt-1 text-xs sm:text-sm font-black text-white truncate">{autoRenewEnabled ? 'Active' : hasSavedCard ? 'Manual' : 'Not set'}</p>
+                                <p className="truncate text-[9px] font-black tracking-[0.12em] text-slate-400 uppercase sm:text-[10px] sm:tracking-[0.16em]">
+                                    Auto Renewal
+                                </p>
+                                <p className="mt-1 truncate text-xs font-black text-white sm:text-sm">
+                                    {autoRenewEnabled ? 'Active' : hasSavedCard ? 'Manual' : 'Not set'}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -324,68 +334,78 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                         {/* Destination 1: Subscription & Plans */}
                         <Link
                             href={ResidentBillingController.subscription.url()}
-                            className="group flex items-center justify-between gap-3 p-4 sm:p-5 sm:px-6 transition hover:bg-slate-50/80 active:bg-slate-100/70"
+                            className="group flex items-center justify-between gap-3 p-4 transition hover:bg-slate-50/80 active:bg-slate-100/70 sm:p-5 sm:px-6"
                         >
-                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 group-hover:scale-105 transition-transform">
+                            <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 transition-transform group-hover:scale-105">
                                     <SparklesIcon className="h-5 w-5" strokeWidth={1.9} />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-indigo-600 transition-colors">
+                                    <h3 className="text-sm font-black text-slate-950 transition-colors group-hover:text-indigo-600 sm:text-base">
                                         Subscription & Plans
                                     </h3>
-                                    <p className="mt-0.5 text-xs text-slate-500 font-medium truncate">{subscriptionSummary}</p>
+                                    <p className="mt-0.5 truncate text-xs font-medium text-slate-500">{subscriptionSummary}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ring-1 ring-inset ${tone.pill}`}>
+                            <div className="flex shrink-0 items-center gap-2">
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ring-1 ring-inset ${tone.pill}`}
+                                >
                                     {displayLabel}
                                 </span>
-                                <ChevronRightIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition" strokeWidth={2.2} />
+                                <ChevronRightIcon
+                                    className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700"
+                                    strokeWidth={2.2}
+                                />
                             </div>
                         </Link>
 
                         {/* Destination 2: Payment & Renewal */}
                         <Link
                             href={ResidentBillingController.payment.url()}
-                            className="group flex items-center justify-between gap-3 p-4 sm:p-5 sm:px-6 transition hover:bg-slate-50/80 active:bg-slate-100/70"
+                            className="group flex items-center justify-between gap-3 p-4 transition hover:bg-slate-50/80 active:bg-slate-100/70 sm:p-5 sm:px-6"
                         >
-                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 group-hover:scale-105 transition-transform">
+                            <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 transition-transform group-hover:scale-105">
                                     <CreditCardIcon className="h-5 w-5" strokeWidth={1.9} />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-emerald-600 transition-colors">
+                                    <h3 className="text-sm font-black text-slate-950 transition-colors group-hover:text-emerald-600 sm:text-base">
                                         Payment & Renewal
                                     </h3>
-                                    <p className="mt-0.5 text-xs text-slate-500 font-medium truncate">{paymentSummary}</p>
+                                    <p className="mt-0.5 truncate text-xs font-medium text-slate-500">{paymentSummary}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ${hasSavedCard ? 'bg-slate-100 text-slate-700' : 'bg-amber-50 text-amber-800 ring-1 ring-amber-200'}`}>
+                            <div className="flex shrink-0 items-center gap-2">
+                                <span
+                                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap ${hasSavedCard ? 'bg-slate-100 text-slate-700' : 'bg-amber-50 text-amber-800 ring-1 ring-amber-200'}`}
+                                >
                                     {hasSavedCard ? 'Card ready' : 'Card needed'}
                                 </span>
-                                <ChevronRightIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition" strokeWidth={2.2} />
+                                <ChevronRightIcon
+                                    className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700"
+                                    strokeWidth={2.2}
+                                />
                             </div>
                         </Link>
 
                         {/* Destination 3: Receipts & Payments */}
                         <Link
                             href={ResidentBillingController.receipts.url()}
-                            className="group flex items-center justify-between gap-3 p-4 sm:p-5 sm:px-6 transition hover:bg-slate-50/80 active:bg-slate-100/70"
+                            className="group flex items-center justify-between gap-3 p-4 transition hover:bg-slate-50/80 active:bg-slate-100/70 sm:p-5 sm:px-6"
                         >
-                            <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100 group-hover:scale-105 transition-transform">
+                            <div className="flex min-w-0 flex-1 items-center gap-3.5">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-100 transition-transform group-hover:scale-105">
                                     <DocumentTextIcon className="h-5 w-5" strokeWidth={1.9} />
                                 </span>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="text-sm sm:text-base font-black text-slate-950 group-hover:text-amber-600 transition-colors">
+                                    <h3 className="text-sm font-black text-slate-950 transition-colors group-hover:text-amber-600 sm:text-base">
                                         Receipts & Payments
                                     </h3>
-                                    <p className="mt-0.5 text-xs text-slate-500 font-medium truncate">{receiptsSummary}</p>
+                                    <p className="mt-0.5 truncate text-xs font-medium text-slate-500">{receiptsSummary}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
+                            <div className="flex shrink-0 items-center gap-2">
                                 {totalReceipts > 0 ? (
                                     <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold whitespace-nowrap text-slate-700">
                                         {totalReceipts} total
@@ -395,7 +415,10 @@ export default function ResidentBillingHubPage({ subscription, receiptSummary }:
                                         None
                                     </span>
                                 )}
-                                <ChevronRightIcon className="h-4 w-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition" strokeWidth={2.2} />
+                                <ChevronRightIcon
+                                    className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-700"
+                                    strokeWidth={2.2}
+                                />
                             </div>
                         </Link>
                     </div>

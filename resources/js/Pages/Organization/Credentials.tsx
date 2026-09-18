@@ -1,16 +1,7 @@
-import { Head, router } from '@inertiajs/react';
-import {
-    KeyRound,
-    Search,
-    RefreshCw,
-    XCircle,
-    Shield,
-    Clock,
-    CheckCircle2,
-    Calendar,
-    User,
-} from 'lucide-react';
+import { Head, router, Link } from '@inertiajs/react';
+import { KeyRound, Search, RefreshCw, Clock, CheckCircle2, Calendar, User, ArrowLeft, Shield, XCircle } from 'lucide-react';
 import React, { useState } from 'react';
+import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 
 interface Credential {
@@ -45,6 +36,7 @@ interface Props {
     organization: {
         id: number;
         name: string;
+        access_policy?: string;
     };
     membership: {
         role: string;
@@ -59,125 +51,108 @@ interface Props {
 
 export default function Credentials({ organization, membership, credentials, filters }: Props) {
     const handleRenew = (id: number) => {
-        if (confirm('Are you sure you want to renew this credential? The existing code will be superseded and a new one issued.')) {
+        if (confirm('Renew this access code? A fresh active code will be issued.')) {
             router.post(`/org/credentials/${id}/renew`);
         }
     };
 
     const handleRevoke = (id: number) => {
-        if (confirm('Are you sure you want to revoke this credential? Access will be denied immediately.')) {
+        if (confirm('Revoke this access code? Access will be denied immediately.')) {
             router.post(`/org/credentials/${id}/revoke`);
         }
     };
 
+    const hasPublicWindows = organization.access_policy === 'public_window';
+
     return (
-        <OrganizationLayout title="Credentials">
-            <Head title={`${organization.name} - Credentials`} />
+        <OrganizationLayout title="Access - Codes">
+            <Head title={`${organization.name} - Access Codes`} />
 
             <div className="space-y-6">
                 {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <KeyRound className="w-5 h-5 text-indigo-400" />
-                            Access Credentials
-                        </h1>
-                        <p className="text-xs text-zinc-400 mt-0.5">
-                            Active, scheduled, and past security access codes issued for {organization.name}.
-                        </p>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">Access</h1>
+                        <p className="mt-0.5 text-sm text-stone-500">All issued gate admission codes for {organization.name}.</p>
                     </div>
                 </div>
 
-                {/* Table */}
-                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs text-zinc-300">
-                            <thead className="bg-zinc-900/80 text-zinc-400 font-semibold uppercase tracking-wider text-[10px] border-b border-zinc-800">
-                                <tr>
-                                    <th className="py-3 px-4">Pass Code</th>
-                                    <th className="py-3 px-4">Member / Name</th>
-                                    <th className="py-3 px-4">Category</th>
-                                    <th className="py-3 px-4">Status</th>
-                                    <th className="py-3 px-4">Expires</th>
-                                    <th className="py-3 px-4">Issued By</th>
-                                    {membership.is_admin && <th className="py-3 px-4 text-right">Actions</th>}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-zinc-800/60">
-                                {credentials.data.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={7} className="py-8 text-center text-zinc-500">
-                                            No credentials found matching the criteria.
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    credentials.data.map((credential) => (
-                                        <tr key={credential.id} className="hover:bg-zinc-800/30 transition-colors">
-                                            <td className="py-3.5 px-4 font-mono font-bold text-sm text-indigo-400">
-                                                {credential.code}
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                <div className="font-medium text-zinc-100">{credential.visitor_name}</div>
-                                                {credential.member?.identifier && (
-                                                    <div className="text-[11px] font-mono text-zinc-500">
-                                                        {credential.member.identifier}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                <span className="capitalize px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
-                                                    {credential.member?.category || 'General'}
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-4">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                                                        credential.status === 'active'
-                                                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                                                            : credential.status === 'superseded'
-                                                            ? 'bg-zinc-800 text-zinc-400 border border-zinc-700'
-                                                            : credential.status === 'revoked'
-                                                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                                                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                                    }`}
-                                                >
-                                                    {credential.status}
-                                                </span>
-                                            </td>
-                                            <td className="py-3.5 px-4 text-zinc-400">
-                                                {credential.expires_at_human || 'Never'}
-                                            </td>
-                                            <td className="py-3.5 px-4 text-zinc-400">
-                                                {credential.issued_by?.name || 'System'}
-                                            </td>
-                                            {membership.is_admin && (
-                                                <td className="py-3.5 px-4 text-right space-x-2">
-                                                    {credential.status === 'active' && (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRenew(credential.id)}
-                                                                className="text-indigo-400 hover:text-indigo-300 text-xs font-medium inline-flex items-center gap-1"
-                                                            >
-                                                                <RefreshCw className="w-3 h-3" /> Renew
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleRevoke(credential.id)}
-                                                                className="text-rose-400 hover:text-rose-300 text-xs font-medium inline-flex items-center gap-1"
-                                                            >
-                                                                <XCircle className="w-3 h-3" /> Revoke
-                                                            </button>
-                                                        </>
-                                                    )}
-                                                </td>
-                                            )}
-                                        </tr>
-                                    ))
+                {/* Unified Access Tabs */}
+                <AccessTabs activeTab="people" />
+
+                <div className="flex items-center justify-between gap-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 text-xs text-indigo-900">
+                    <p>
+                        Access codes are automatically linked to each person. You can also manage codes directly from the{' '}
+                        <Link href="/org/access-list" className="font-bold text-indigo-700 underline">
+                            People tab
+                        </Link>
+                        .
+                    </p>
+                </div>
+
+                {/* Credentials List */}
+                <div className="space-y-3">
+                    {credentials.data.length === 0 ? (
+                        <div className="rounded-3xl border border-stone-200/80 bg-white p-8 text-center shadow-xs sm:p-12">
+                            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-stone-100 text-stone-400">
+                                <KeyRound className="h-6 w-6" />
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900">No access codes found</h3>
+                            <p className="mx-auto mt-1 max-w-sm text-sm text-stone-500">
+                                Issued access codes will appear here with their current validity status.
+                            </p>
+                        </div>
+                    ) : (
+                        credentials.data.map((c) => (
+                            <div
+                                key={c.id}
+                                className="flex flex-col justify-between gap-3 rounded-2xl border border-stone-200/80 bg-white p-4 shadow-xs sm:flex-row sm:items-center sm:p-5"
+                            >
+                                <div className="flex items-start gap-3.5">
+                                    <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-stone-200/60 bg-stone-100 text-sm font-bold text-slate-800">
+                                        <KeyRound className="h-5 w-5 text-indigo-600" />
+                                    </div>
+                                    <div>
+                                        <div className="flex flex-wrap items-center gap-2.5">
+                                            <span className="rounded border border-stone-200 bg-stone-100 px-2 py-0.5 font-mono text-sm font-bold text-slate-900 sm:text-base">
+                                                {c.code}
+                                            </span>
+                                            <span className="text-sm font-semibold text-slate-800">{c.member ? c.member.name : c.visitor_name}</span>
+                                            <span
+                                                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${
+                                                    c.status === 'active'
+                                                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                                        : 'border border-stone-200 bg-stone-100 text-stone-600'
+                                                }`}
+                                            >
+                                                {c.status}
+                                            </span>
+                                        </div>
+                                        <p className="mt-1 text-xs text-stone-500">Expires {c.expires_at_human || 'soon'}</p>
+                                    </div>
+                                </div>
+
+                                {membership.is_admin && c.status === 'active' && (
+                                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRenew(c.id)}
+                                            className="rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 transition-colors hover:bg-indigo-50"
+                                        >
+                                            Renew
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRevoke(c.id)}
+                                            className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 transition-colors hover:bg-rose-50"
+                                        >
+                                            Revoke
+                                        </button>
+                                    </div>
                                 )}
-                            </tbody>
-                        </table>
-                    </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </OrganizationLayout>

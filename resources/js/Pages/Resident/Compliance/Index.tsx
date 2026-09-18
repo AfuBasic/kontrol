@@ -86,7 +86,10 @@ export default function ResidentComplianceIndex({ violations, activeRestrictions
                             </span>
                             <div className="flex flex-wrap gap-2">
                                 {activeRestrictions.map((r) => (
-                                    <span key={r.id} className="inline-flex items-center gap-1.5 rounded bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-900">
+                                    <span
+                                        key={r.id}
+                                        className="inline-flex items-center gap-1.5 rounded bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-900"
+                                    >
                                         <Ban className="h-3 w-3 shrink-0" />
                                         <span>{r.feature_key.replace('.', ' ').toUpperCase()}</span>
                                     </span>

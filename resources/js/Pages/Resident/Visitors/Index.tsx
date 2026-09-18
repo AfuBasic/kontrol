@@ -106,9 +106,7 @@ export default function Visitors({
             const active: PendingPass[] = [];
 
             for (const pass of stored) {
-                const matchingOp = operations.find(
-                    (op) => op.id === pass.id || ((op.payload as any)?.uuid === pass.id),
-                );
+                const matchingOp = operations.find((op) => op.id === pass.id || (op.payload as any)?.uuid === pass.id);
 
                 if (matchingOp) {
                     if (matchingOp.status === SyncStatus.Synced) {
@@ -117,11 +115,13 @@ export default function Visitors({
                         active.push({ ...pass, status: matchingOp.status, error: matchingOp.lastError ?? pass.error });
                     }
                 } else {
-                    const alreadyOnServer = upcomingTimeline.some(
-                        (code) => code.visitor_name && pass.visitor_name && code.visitor_name.toLowerCase() === pass.visitor_name.toLowerCase(),
-                    ) || historyTimeline.some(
-                        (code) => code.visitor_name && pass.visitor_name && code.visitor_name.toLowerCase() === pass.visitor_name.toLowerCase(),
-                    );
+                    const alreadyOnServer =
+                        upcomingTimeline.some(
+                            (code) => code.visitor_name && pass.visitor_name && code.visitor_name.toLowerCase() === pass.visitor_name.toLowerCase(),
+                        ) ||
+                        historyTimeline.some(
+                            (code) => code.visitor_name && pass.visitor_name && code.visitor_name.toLowerCase() === pass.visitor_name.toLowerCase(),
+                        );
 
                     if (alreadyOnServer || (!isSyncing && operations.length === 0)) {
                         syncedOrDead.push(pass.id);
@@ -157,7 +157,7 @@ export default function Visitors({
     const handleRetry = async (pass: PendingPass) => {
         setRetryingId(pass.id);
         try {
-            const matchingOp = operations.find((op) => op.id === pass.id || ((op.payload as any)?.uuid === pass.id));
+            const matchingOp = operations.find((op) => op.id === pass.id || (op.payload as any)?.uuid === pass.id);
             if (matchingOp) {
                 await retryOperation(matchingOp.id);
             } else {
@@ -330,9 +330,7 @@ export default function Visitors({
                         </div>
                         <div className="mt-2 space-y-1.5">
                             {pendingPasses.map((pass) => {
-                                const matchingOp = operations.find(
-                                    (op) => op.id === pass.id || ((op.payload as any)?.uuid === pass.id),
-                                );
+                                const matchingOp = operations.find((op) => op.id === pass.id || (op.payload as any)?.uuid === pass.id);
                                 const status = matchingOp ? matchingOp.status : pass.status || SyncStatus.Pending;
                                 const badge = pendingBadge(status);
 
@@ -379,12 +377,7 @@ export default function Visitors({
                             className="space-y-2.5"
                         >
                             {/* Active Visits Callout on Schedule */}
-                            {checkoutEnabled && (
-                                <ActiveVisitsCallout
-                                    activeVisits={activeVisits}
-                                    onViewAll={() => switchTab('active')}
-                                />
-                            )}
+                            {checkoutEnabled && <ActiveVisitsCallout activeVisits={activeVisits} onViewAll={() => switchTab('active')} />}
 
                             {/* 1. If no scheduled visitors, render high-polish Empty State card */}
                             {upcomingTimeline.length === 0 ? (

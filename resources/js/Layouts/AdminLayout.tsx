@@ -16,28 +16,17 @@ import {
 import { Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    
-    Search,
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 import * as SupportController from '@/actions/App/Http/Controllers/Account/SupportController';
 import * as ContextController from '@/actions/App/Http/Controllers/Auth/ContextController';
 import { type ReactNode, useEffect, useState, lazy, Suspense } from 'react';
 
 import BillingController from '@/actions/App/Http/Controllers/Admin/BillingController';
 
-
 import DashboardController from '@/actions/App/Http/Controllers/Admin/DashboardController';
-
 
 import * as NotificationController from '@/actions/App/Http/Controllers/Admin/NotificationController';
 import * as ProfileController from '@/actions/App/Http/Controllers/Admin/ProfileController';
-
-
-
-
-
-
 
 import SupportModeBanner from '@/Components/SupportModeBanner';
 import OfflineBanner from '@/Components/OfflineBanner';

@@ -1,16 +1,9 @@
-import { Head, useForm, router } from '@inertiajs/react';
-import {
-    Settings as SettingsIcon,
-    Shield,
-    Clock,
-    Users,
-    AlertTriangle,
-    Check,
-    Trash2,
-    Plus,
-} from 'lucide-react';
-import React from 'react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, Bell, Building2, Check, ChevronDown, ChevronRight, LogOut, Plus, Trash2, X } from 'lucide-react';
+import React, { useState } from 'react';
+import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 
 interface StaffMember {
     id: number;
@@ -32,6 +25,7 @@ interface Props {
         confirmation_window_minutes: number;
         confirmation_escalation: string;
         is_unrestricted: boolean;
+        estate_name?: string;
     };
     membership: {
         role: string;
@@ -41,6 +35,12 @@ interface Props {
 }
 
 export default function Settings({ organization, membership, staff }: Props) {
+    const page = usePage();
+    const auth = (page.props as any).auth || {};
+    const user = auth.user || {};
+
+    const [activeModal, setActiveModal] = useState<'details' | 'team' | 'preferences' | 'help' | 'signout' | 'personal' | null>(null);
+
     const policyForm = useForm({
         arrival_confirmation_required: organization.arrival_confirmation_required,
         confirmation_window_minutes: organization.confirmation_window_minutes || 15,
@@ -54,7 +54,9 @@ export default function Settings({ organization, membership, staff }: Props) {
 
     const handleUpdatePolicy = (e: React.FormEvent) => {
         e.preventDefault();
-        policyForm.patch('/org/settings/confirmation-policy');
+        policyForm.patch('/org/settings/confirmation-policy', {
+            onSuccess: () => setActiveModal(null),
+        });
     };
 
     const handleInviteStaff = (e: React.FormEvent) => {
@@ -65,192 +67,394 @@ export default function Settings({ organization, membership, staff }: Props) {
     };
 
     const handleRemoveStaff = (id: number) => {
-        if (confirm('Are you sure you want to remove this staff member?')) {
+        if (confirm('Remove this team member from organization management?')) {
             router.delete(`/org/settings/staff/${id}`);
         }
     };
 
     return (
-        <OrganizationLayout title="Settings & Policy">
-            <Head title={`${organization.name} - Settings`} />
+        <OrganizationLayout title="Profile">
+            <Head title={`${organization.name} - Profile`} />
 
-            <div className="space-y-8 max-w-4xl">
-                {/* Header */}
-                <div className="pb-4 border-b border-zinc-800/80">
-                    <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        <SettingsIcon className="w-5 h-5 text-indigo-400" />
-                        Settings & Arrival Policy
-                    </h1>
-                    <p className="text-xs text-zinc-400 mt-0.5">
-                        Configure arrival confirmation rules and organization staff permissions for {organization.name}.
-                    </p>
+            <div className="max-w-xl space-y-8">
+                {/* 1. Profile Header (Resident-style avatar & identity) */}
+                <div className="flex items-center gap-4 py-2">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-[24px] bg-slate-900 text-2xl font-black text-white shadow-md">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'A'}
+                    </div>
+                    <div className="min-w-0">
+                        <h1 className="truncate text-xl font-black text-slate-900 sm:text-2xl">{user.name || 'Account'}</h1>
+                        <p className="truncate text-xs font-semibold text-slate-400">{user.email}</p>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                            <span>{organization.name}</span>
+                            <span>·</span>
+                            <span className="capitalize">{membership.role || 'Member'}</span>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Policy Configuration Card */}
-                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 space-y-5">
-                    <div className="flex items-center gap-2 pb-3 border-b border-zinc-800">
-                        <Shield className="w-4 h-4 text-emerald-400" />
-                        <h2 className="text-sm font-semibold text-white">Arrival Confirmation Policy</h2>
+                {/* 2. ACCOUNT SECTION */}
+                <section className="space-y-3">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Account</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal('personal')}
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <span className="text-sm font-bold text-slate-900">Personal information</span>
+                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                        </button>
+                        <Link
+                            href="/org/notifications"
+                            className="group flex items-center justify-between p-4 transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <span className="text-sm font-bold text-slate-900">Notifications</span>
+                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                        </Link>
+                    </div>
+                </section>
+
+                {/* 3. ORGANIZATION SECTION */}
+                <section className="space-y-3">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">{organization.name}</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal('details')}
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <span className="text-sm font-bold text-slate-900">Organization details</span>
+                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                        </button>
+
+                        {!organization.is_unrestricted && membership.is_admin && (
+                            <button
+                                type="button"
+                                onClick={() => setActiveModal('preferences')}
+                                className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                            >
+                                <span className="text-sm font-bold text-slate-900">Arrival preferences</span>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                            </button>
+                        )}
+                    </div>
+                </section>
+
+                {/* 4. KONTROL SECTION */}
+                <section className="space-y-3">
+                    <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Kontrol</h2>
+                    <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal('help')}
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <span className="text-sm font-bold text-slate-900">Help & Support</span>
+                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal('signout')}
+                            className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-rose-50/50 sm:p-5"
+                        >
+                            <span className="text-sm font-bold text-rose-600">Sign out</span>
+                            <LogOut className="h-4 w-4 text-rose-400" />
+                        </button>
+                    </div>
+                </section>
+
+                {/* FOCUSED MODAL: ORGANIZATION DETAILS */}
+                {/* FOCUSED MODAL: ORGANIZATION DETAILS */}
+                <ResponsiveSheet isOpen={activeModal === 'details'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Organization Details</h3>
+                        </div>
                     </div>
 
-                    {organization.is_unrestricted ? (
-                        <div className="p-4 rounded-lg bg-zinc-950/60 border border-zinc-800 text-xs text-zinc-400">
-                            This organization operates under an <strong>Unrestricted</strong> destination policy (Hospital/Emergency).
-                            Arrival confirmations are not required.
+                    <div className="space-y-4 pt-4 text-xs sm:text-sm">
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Name</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{organization.name}</p>
                         </div>
-                    ) : (
-                        <form onSubmit={handleUpdatePolicy} className="space-y-4 text-xs">
-                            <div className="flex items-start gap-3">
-                                <input
-                                    type="checkbox"
-                                    id="arrival_confirmation_required"
-                                    checked={policyForm.data.arrival_confirmation_required}
-                                    onChange={(e) =>
-                                        policyForm.setData('arrival_confirmation_required', e.target.checked)
-                                    }
-                                    className="mt-0.5 rounded bg-zinc-950 border-zinc-800 text-indigo-600 focus:ring-indigo-500"
-                                />
-                                <div>
-                                    <label
-                                        htmlFor="arrival_confirmation_required"
-                                        className="font-medium text-zinc-200 cursor-pointer"
-                                    >
-                                        Require Facility Arrival Confirmation
-                                    </label>
-                                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                                        When enabled, security admissions create a pending arrival record. Staff must confirm
-                                        physical arrival at your building within the window below.
-                                    </p>
-                                </div>
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Estate</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{organization.estate_name || 'Estate'}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Category</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{organization.type}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Policy Setup</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">
+                                {organization.is_unrestricted ? 'Unrestricted destination (Open entry)' : 'Managed facility'}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </ResponsiveSheet>
+
+                {/* FOCUSED MODAL: PERSONAL INFORMATION */}
+                <ResponsiveSheet isOpen={activeModal === 'personal'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Personal Information</h3>
+                            <p className="mt-1 text-sm text-slate-500">Your account details across Kontrol.</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4 text-xs sm:text-sm">
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Full Name</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{user.name}</p>
+                        </div>
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Email Address</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900">{user.email}</p>
+                        </div>
+                        {user.phone && (
+                            <div>
+                                <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Phone</span>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">{user.phone}</p>
                             </div>
+                        )}
+                        <div>
+                            <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">Role</span>
+                            <p className="mt-1 text-sm font-semibold text-slate-900 capitalize">{membership.role || 'Member'}</p>
+                        </div>
+                    </div>
 
-                            {policyForm.data.arrival_confirmation_required && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-zinc-800/60">
-                                    <div>
-                                        <label className="block text-zinc-300 font-medium mb-1">
-                                            Confirmation Window (Minutes)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="5"
-                                            max="120"
-                                            value={policyForm.data.confirmation_window_minutes}
-                                            onChange={(e) =>
-                                                policyForm.setData(
-                                                    'confirmation_window_minutes',
-                                                    parseInt(e.target.value, 10) || 15
-                                                )
-                                            }
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                        />
-                                        <p className="text-[10px] text-zinc-500 mt-1">
-                                            Arrivals unconfirmed after this duration will flag as OVERDUE.
-                                        </p>
-                                    </div>
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </ResponsiveSheet>
 
-                                    <div>
-                                        <label className="block text-zinc-300 font-medium mb-1">
-                                            Overdue Escalation Mode
-                                        </label>
-                                        <select
-                                            value={policyForm.data.confirmation_escalation}
-                                            onChange={(e) =>
-                                                policyForm.setData('confirmation_escalation', e.target.value)
-                                            }
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                        >
-                                            <option value="alert_only">Alert Only (Internal dashboard alert)</option>
-                                            <option value="flag_security">
-                                                Flag Security (Highlight on security console queue)
-                                            </option>
-                                        </select>
-                                    </div>
+                {/* FOCUSED MODAL: TEAM */}
+                {/* FOCUSED MODAL: TEAM */}
+                <ResponsiveSheet isOpen={activeModal === 'team'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Team Members</h3>
+                        </div>
+                    </div>
+
+                    <div className="pt-4">
+                        {membership.is_admin && (
+                            <form
+                                noValidate
+                                onSubmit={handleInviteStaff}
+                                className="mb-4 space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                            >
+                                <span className="block text-xs font-semibold text-slate-900">Invite someone</span>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        inputMode="email"
+                                        placeholder="colleague@example.com"
+                                        value={inviteForm.data.email}
+                                        onChange={(e) => inviteForm.setData('email', e.target.value)}
+                                        className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                                    />
+                                    <select
+                                        value={inviteForm.data.role}
+                                        onChange={(e) => inviteForm.setData('role', e.target.value)}
+                                        className="rounded-xl border border-slate-200 px-2 py-2 text-sm capitalize focus:outline-none"
+                                    >
+                                        <option value="member">Staff</option>
+                                        <option value="admin">Admin</option>
+                                    </select>
                                 </div>
-                            )}
-
-                            {membership.is_admin && (
-                                <div className="flex justify-end pt-3">
+                                <div className="flex justify-end pt-1">
                                     <button
                                         type="submit"
-                                        disabled={policyForm.processing}
-                                        className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-sm transition-colors disabled:opacity-50"
+                                        disabled={inviteForm.processing}
+                                        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
                                     >
-                                        {policyForm.processing ? 'Saving...' : 'Save Policy Changes'}
+                                        {inviteForm.processing ? 'Inviting...' : 'Invite Member'}
                                     </button>
                                 </div>
-                            )}
-                        </form>
-                    )}
-                </div>
-
-                {/* Staff Members Management */}
-                {membership.is_admin && (
-                    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 space-y-5">
-                        <div className="flex items-center gap-2 pb-3 border-b border-zinc-800">
-                            <Users className="w-4 h-4 text-indigo-400" />
-                            <h2 className="text-sm font-semibold text-white">Organization Staff & Administrators</h2>
-                        </div>
-
-                        {/* Invite Staff Form */}
-                        <form onSubmit={handleInviteStaff} className="flex flex-col sm:flex-row gap-3 text-xs">
-                            <input
-                                type="email"
-                                required
-                                placeholder="Staff member's registered email"
-                                value={inviteForm.data.email}
-                                onChange={(e) => inviteForm.setData('email', e.target.value)}
-                                className="flex-1 bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                            />
-                            <select
-                                value={inviteForm.data.role}
-                                onChange={(e) => inviteForm.setData('role', e.target.value)}
-                                className="bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                            >
-                                <option value="member">Staff Member</option>
-                                <option value="admin">Administrator</option>
-                            </select>
-                            <button
-                                type="submit"
-                                disabled={inviteForm.processing}
-                                className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold border border-zinc-700 transition-colors shrink-0"
-                            >
-                                Grant Access
-                            </button>
-                        </form>
-                        {inviteForm.errors.email && (
-                            <p className="text-xs text-rose-400">{inviteForm.errors.email}</p>
+                            </form>
                         )}
 
-                        {/* Staff Table */}
-                        <div className="divide-y divide-zinc-800/60 border border-zinc-800/60 rounded-lg overflow-hidden text-xs">
+                        <div className="divide-y divide-slate-100">
                             {staff.map((member) => (
-                                <div
-                                    key={member.id}
-                                    className="p-3.5 flex items-center justify-between hover:bg-zinc-800/20"
-                                >
+                                <div key={member.id} className="flex items-center justify-between gap-3 py-3">
                                     <div>
-                                        <div className="font-medium text-zinc-200">{member.name}</div>
-                                        <div className="text-[11px] text-zinc-500">{member.email}</div>
+                                        <p className="text-sm font-semibold text-slate-900">{member.name}</p>
+                                        <p className="text-xs text-slate-500">{member.email}</p>
                                     </div>
-
                                     <div className="flex items-center gap-3">
-                                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
+                                        <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600 capitalize">
                                             {member.role}
                                         </span>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleRemoveStaff(member.id)}
-                                            className="text-rose-400 hover:text-rose-300 p-1"
-                                            title="Revoke Staff Access"
-                                        >
-                                            <Trash2 className="w-3.5 h-3.5" />
-                                        </button>
+                                        {membership.is_admin && member.user_id !== user.id && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveStaff(member.id)}
+                                                className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                                                title="Remove"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                )}
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Done
+                        </button>
+                    </div>
+                </ResponsiveSheet>
+
+                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
+                {/* FOCUSED MODAL: ARRIVAL PREFERENCES */}
+                <ResponsiveSheet isOpen={activeModal === 'preferences'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Arrival Preferences</h3>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleUpdatePolicy} className="mt-5 space-y-5">
+                        <label className="flex cursor-pointer items-start gap-4 rounded-xl border border-slate-100 bg-slate-50 p-4">
+                            <input
+                                type="checkbox"
+                                checked={policyForm.data.arrival_confirmation_required}
+                                onChange={(e) => policyForm.setData('arrival_confirmation_required', e.target.checked)}
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                            />
+                            <div>
+                                <span className="block text-sm font-semibold text-slate-900">Confirm visitor arrivals</span>
+                                <p className="mt-1 text-xs text-slate-500">Ask team to confirm when visitors reach your reception desk.</p>
+                            </div>
+                        </label>
+
+                        {policyForm.data.arrival_confirmation_required && (
+                            <div className="space-y-4 pt-2">
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        How long should we wait?
+                                    </label>
+                                    <select
+                                        value={policyForm.data.confirmation_window_minutes}
+                                        onChange={(e) => policyForm.setData('confirmation_window_minutes', parseInt(e.target.value, 10))}
+                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                                    >
+                                        <option value={10}>10 minutes</option>
+                                        <option value={15}>15 minutes</option>
+                                        <option value={30}>30 minutes</option>
+                                        <option value={45}>45 minutes</option>
+                                        <option value={60}>1 hour</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="mb-1.5 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                        If unconfirmed
+                                    </label>
+                                    <select
+                                        value={policyForm.data.confirmation_escalation}
+                                        onChange={(e) => policyForm.setData('confirmation_escalation', e.target.value)}
+                                        className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm focus:border-slate-400 focus:ring-1 focus:ring-slate-900 focus:outline-none"
+                                    >
+                                        <option value="alert_only">Highlight on dashboard only</option>
+                                        <option value="flag_security">Flag for security gate</option>
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setActiveModal(null)}
+                                className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={policyForm.processing}
+                                className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
+                            >
+                                {policyForm.processing ? 'Saving...' : 'Save Preferences'}
+                            </button>
+                        </div>
+                    </form>
+                </ResponsiveSheet>
+
+                {/* FOCUSED MODAL: HELP & SUPPORT */}
+                {/* FOCUSED MODAL: HELP & SUPPORT */}
+                <ResponsiveSheet isOpen={activeModal === 'help'} onClose={() => setActiveModal(null)}>
+                    <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">Help & Support</h3>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 pt-4">
+                        <p className="text-sm leading-relaxed text-slate-600">
+                            For security escalation, gate passes, or estate inquiries, you can reach out directly to the estate management office or
+                            Kontrol support.
+                        </p>
+
+                        <div className="pt-2">
+                            <a
+                                href="mailto:support@kontrol.app"
+                                className="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50"
+                            >
+                                Email Kontrol Support
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                        <button
+                            type="button"
+                            onClick={() => setActiveModal(null)}
+                            className="rounded-xl bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-xs transition hover:bg-slate-800"
+                        >
+                            Close
+                        </button>
+                    </div>
+                </ResponsiveSheet>
+
+                {/* SIGN OUT CONFIRMATION MODAL */}
+                <ConfirmationSheet
+                    isOpen={activeModal === 'signout'}
+                    onClose={() => setActiveModal(null)}
+                    onConfirm={() => router.post('/logout')}
+                    title="Sign Out"
+                    message="Are you sure you want to sign out of your account? You will need to log in again to access Kontrol."
+                    confirmLabel="Sign out"
+                    type="danger"
+                />
             </div>
         </OrganizationLayout>
     );

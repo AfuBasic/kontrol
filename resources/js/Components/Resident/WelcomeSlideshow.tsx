@@ -1,17 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    X,
-    QrCode,
-    Check,
-    Bell,
-    CreditCard,
-    ArrowRight,
-    Smartphone,
-    ShieldAlert,
-    Sparkles,
-    Home,
-    MessageSquare,
-} from 'lucide-react';
+import { X, QrCode, Check, Bell, CreditCard, ArrowRight, Smartphone, ShieldAlert, Sparkles, Home, MessageSquare } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface WelcomeSlideshowProps {

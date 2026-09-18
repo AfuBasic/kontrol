@@ -31,7 +31,10 @@ export default function DeviceLinkInvalid({ reason = 'invalid' }: Props) {
                     <CircleAlert className="h-10 w-10 text-slate-300" aria-hidden="true" />
                     <h1 className="mt-6 text-3xl font-semibold tracking-tight">{content.title}</h1>
                     <p className="mt-3 text-sm leading-relaxed text-slate-400">{content.body}</p>
-                    <Link href="/login" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950">
+                    <Link
+                        href="/login"
+                        className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950"
+                    >
                         Back to sign in
                     </Link>
                 </div>

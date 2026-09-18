@@ -17,7 +17,10 @@ export default function DeviceApproved({ displayName }: Props) {
                     <p className="mt-3 text-sm leading-relaxed text-slate-400">
                         {displayName ?? 'The pending device'} can continue signing in. Return to that device to finish.
                     </p>
-                    <Link href="/login" className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950">
+                    <Link
+                        href="/login"
+                        className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-5 text-sm font-semibold text-slate-950"
+                    >
                         Back to sign in
                     </Link>
                 </div>

@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-    AlertCircle,
-    ArrowRight,
-    CheckCircle2,
-    Clock,
-    Flame,
-    Lock,
-    Shield,
-    Sparkles,
-    UserCheck,
-} from 'lucide-react';
+import { AlertCircle, ArrowRight, CheckCircle2, Clock, Flame, Lock, Shield, Sparkles, UserCheck } from 'lucide-react';
 import type { Incident, IncidentStatus } from '@/types/incidents';
 
 interface Props {
@@ -17,6 +7,8 @@ interface Props {
     onAcknowledge: () => void;
     onBeginResolution: () => void;
     onOpenResolveModal: () => void;
+    onClose?: () => void;
+    canClose?: boolean;
     isUpdatingStatus?: boolean;
     className?: string;
 }
@@ -46,7 +38,7 @@ const STATE_CONFIG: Record<IncidentStatus, StateDetails> = {
     },
     acknowledged: {
         badgeLabel: 'Acknowledged',
-        title: 'Acknowledged — Ready for Action',
+        title: 'Acknowledged - Ready for Action',
         description:
             'Management has acknowledged the report. When maintenance personnel or security begins field work, begin resolution to mark this case in progress.',
         icon: Clock,
@@ -68,9 +60,8 @@ const STATE_CONFIG: Record<IncidentStatus, StateDetails> = {
     },
     solved: {
         badgeLabel: 'Resolved by Management',
-        title: 'Resolved — Awaiting Reporter Confirmation',
-        description:
-            'Estate management marked this issue as resolved. The original reporter has been notified to verify the fix and close the case.',
+        title: 'Resolved - Awaiting Reporter Confirmation',
+        description: 'Estate management marked this issue as resolved. The original reporter has been notified to verify the fix and close the case.',
         icon: CheckCircle2,
         bgClass: 'bg-gradient-to-br from-emerald-50/90 via-emerald-50/40 to-white dark:from-emerald-950/30 dark:via-slate-900 dark:to-slate-900',
         borderClass: 'border-emerald-200/90 dark:border-emerald-900/50',
@@ -80,8 +71,7 @@ const STATE_CONFIG: Record<IncidentStatus, StateDetails> = {
     closed: {
         badgeLabel: 'Closed & Archived',
         title: 'Case Successfully Closed',
-        description:
-            'This incident was confirmed resolved and closed by the reporter. It is archived for estate historical and compliance records.',
+        description: 'This incident was confirmed resolved and closed by the reporter. It is archived for estate historical and compliance records.',
         icon: Lock,
         bgClass: 'bg-gradient-to-br from-slate-100/90 via-slate-50 to-white dark:from-slate-800/60 dark:via-slate-900 dark:to-slate-900',
         borderClass: 'border-slate-200 dark:border-slate-800',
@@ -95,6 +85,8 @@ export default function CurrentResponseSection({
     onAcknowledge,
     onBeginResolution,
     onOpenResolveModal,
+    onClose,
+    canClose = false,
     isUpdatingStatus = false,
     className = '',
 }: Props) {
@@ -104,23 +96,21 @@ export default function CurrentResponseSection({
 
     return (
         <section
-            className={`relative overflow-hidden rounded-2xl border p-5 sm:p-6 shadow-xs transition-all ${config.bgClass} ${config.borderClass} ${className}`}
+            className={`relative overflow-hidden rounded-2xl border p-5 shadow-xs transition-all sm:p-6 ${config.bgClass} ${config.borderClass} ${className}`}
         >
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+            <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
                 {/* Status & Operational Narrative */}
                 <div className="flex items-start gap-4">
-                    <div
-                        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-xs ${config.accentClass}`}
-                    >
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl shadow-xs ${config.accentClass}`}>
                         <Icon className="h-5 w-5" />
                     </div>
 
                     <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-[11px] font-black tracking-wider uppercase text-slate-500 dark:text-slate-400">
+                            <span className="text-[11px] font-black tracking-wider text-slate-500 uppercase dark:text-slate-400">
                                 Current Response
                             </span>
-                            <span className="inline-flex items-center rounded-md bg-white/80 dark:bg-slate-800 px-2 py-0.5 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-2xs border border-slate-200/60 dark:border-slate-700">
+                            <span className="inline-flex items-center rounded-md border border-slate-200/60 bg-white/80 px-2 py-0.5 text-xs font-bold text-slate-700 shadow-2xs dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                                 {config.badgeLabel}
                             </span>
                             {incident.assignee && (
@@ -131,24 +121,22 @@ export default function CurrentResponseSection({
                             )}
                         </div>
 
-                        <h2 className={`text-base sm:text-lg font-black tracking-tight ${config.textClass}`}>
-                            {config.title}
-                        </h2>
+                        <h2 className={`text-base font-black tracking-tight sm:text-lg ${config.textClass}`}>{config.title}</h2>
 
-                        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl font-normal">
+                        <p className="max-w-2xl text-xs leading-relaxed font-normal text-slate-600 sm:text-sm dark:text-slate-300">
                             {config.description}
                         </p>
                     </div>
                 </div>
 
                 {/* Authoritative Single Next Action Button */}
-                <div className="shrink-0 pt-2 md:pt-0 border-t border-slate-200/60 dark:border-slate-800 md:border-t-0">
+                <div className="shrink-0 border-t border-slate-200/60 pt-2 md:border-t-0 md:pt-0 dark:border-slate-800">
                     {status === 'pending' && (
                         <button
                             type="button"
                             onClick={onAcknowledge}
                             disabled={isUpdatingStatus}
-                            className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-50 sm:text-sm md:w-auto"
                         >
                             <Sparkles className="h-4 w-4" />
                             <span>{isUpdatingStatus ? 'Updating...' : 'Acknowledge Incident'}</span>
@@ -161,7 +149,7 @@ export default function CurrentResponseSection({
                             type="button"
                             onClick={onBeginResolution}
                             disabled={isUpdatingStatus}
-                            className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-xs font-bold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50 sm:text-sm md:w-auto"
                         >
                             <Flame className="h-4 w-4" />
                             <span>{isUpdatingStatus ? 'Updating...' : 'Begin Resolution'}</span>
@@ -174,7 +162,7 @@ export default function CurrentResponseSection({
                             type="button"
                             onClick={onOpenResolveModal}
                             disabled={isUpdatingStatus}
-                            className="inline-flex w-full md:w-auto items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-xs font-bold text-white shadow-sm transition-all hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50 sm:text-sm md:w-auto"
                         >
                             <CheckCircle2 className="h-4 w-4" />
                             <span>{isUpdatingStatus ? 'Updating...' : 'Mark as Resolved'}</span>
@@ -182,15 +170,27 @@ export default function CurrentResponseSection({
                         </button>
                     )}
 
-                    {status === 'solved' && (
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/70 dark:bg-emerald-950/60 px-3.5 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                            <Shield className="h-4 w-4 shrink-0" />
-                            <span>Awaiting resident closing confirmation</span>
-                        </div>
-                    )}
+                    {status === 'solved' &&
+                        (canClose && onClose ? (
+                            <button
+                                type="button"
+                                onClick={onClose}
+                                disabled={isUpdatingStatus}
+                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-xs font-bold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50 sm:text-sm md:w-auto dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                            >
+                                <CheckCircle2 className="h-4 w-4" />
+                                <span>{isUpdatingStatus ? 'Closing...' : 'Close Incident'}</span>
+                                <ArrowRight className="h-4 w-4" />
+                            </button>
+                        ) : (
+                            <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-100/70 px-3.5 py-2.5 text-xs font-bold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                                <Shield className="h-4 w-4 shrink-0" />
+                                <span>Awaiting resident closing confirmation</span>
+                            </div>
+                        ))}
 
                     {status === 'closed' && (
-                        <div className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-100 px-3.5 py-2.5 text-xs font-bold text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">
                             <Lock className="h-4 w-4 shrink-0" />
                             <span>Closed & Archived</span>
                         </div>

@@ -104,17 +104,21 @@ export default function useNativeViewport(): void {
             root.style.setProperty(KEYBOARD_HEIGHT_VARIABLE, `${kh}px`);
             root.setAttribute(KEYBOARD_OPEN_ATTRIBUTE, 'true');
             scheduleSettledSync();
-        }).then((handle) => {
-            showListenerHandle = handle;
-        }).catch(() => {});
+        })
+            .then((handle) => {
+                showListenerHandle = handle;
+            })
+            .catch(() => {});
 
         Keyboard.addListener('keyboardWillHide', () => {
             root.style.setProperty(KEYBOARD_HEIGHT_VARIABLE, '0px');
             root.setAttribute(KEYBOARD_OPEN_ATTRIBUTE, 'false');
             scheduleSettledSync();
-        }).then((handle) => {
-            hideListenerHandle = handle;
-        }).catch(() => {});
+        })
+            .then((handle) => {
+                hideListenerHandle = handle;
+            })
+            .catch(() => {});
 
         window.addEventListener('resize', scheduleSettledSync);
         window.addEventListener('pageshow', scheduleSettledSync);

@@ -425,7 +425,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Zone
                                                 </label>
                                                 <CustomSelect
@@ -594,7 +594,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="bulk_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="bulk_zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Zone
                                                 </label>
                                                 <CustomSelect
@@ -758,7 +758,7 @@ export default function CreatePropertyOwner({ inviteLinks = [], zones = [] }: Pr
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="paste_zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="paste_zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Zone
                                                 </label>
                                                 <CustomSelect

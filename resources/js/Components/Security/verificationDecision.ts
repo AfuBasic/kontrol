@@ -1,15 +1,5 @@
 import type React from 'react';
-import {
-    AlertTriangle,
-    Ban,
-    CheckCircle2,
-    Clock,
-    LogOut,
-    ShieldAlert,
-    ShieldCheck,
-    ShieldX,
-    WifiOff,
-} from 'lucide-react';
+import { AlertTriangle, Ban, CheckCircle2, Clock, LogOut, ShieldAlert, ShieldCheck, ShieldX, WifiOff } from 'lucide-react';
 
 export type ValidationResult = {
     valid: boolean;

@@ -1,6 +1,22 @@
 import { Head, router, InfiniteScroll } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { Search, Calendar, Car, User, Filter, Clock, ShieldCheck, UserPlus, Loader2, MapPin, Phone, Zap, Building2, Tag, ChevronRight } from 'lucide-react';
+import {
+    Search,
+    Calendar,
+    Car,
+    User,
+    Filter,
+    Clock,
+    ShieldCheck,
+    UserPlus,
+    Loader2,
+    MapPin,
+    Phone,
+    Zap,
+    Building2,
+    Tag,
+    ChevronRight,
+} from 'lucide-react';
 import { useState, useEffect } from 'react';
 import * as HistoryController from '@/actions/App/Http/Controllers/Security/HistoryController';
 import { MobileInput, MobileSelect } from '@/Components/MobileInputs';
@@ -92,14 +108,7 @@ type Props = {
     activeCount?: number;
 };
 
-export default function History({
-    logs,
-    filters,
-    hosts,
-    checkoutEnabled = false,
-    activeVisits = [],
-    activeCount = 0,
-}: Props) {
+export default function History({ logs, filters, hosts, checkoutEnabled = false, activeVisits = [], activeCount = 0 }: Props) {
     const paramTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
     const initialTab = paramTab === 'active' && checkoutEnabled ? 'active' : 'history';
     const [activeTab, setActiveTab] = useState<'active' | 'history'>(initialTab);
@@ -235,9 +244,7 @@ export default function History({
                             type="button"
                             onClick={() => handleSubTabChange('all')}
                             className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                                historyFilterTab === 'all'
-                                    ? 'bg-slate-900 text-white shadow-xs'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                historyFilterTab === 'all' ? 'bg-slate-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                             }`}
                         >
                             All Entries
@@ -317,8 +324,8 @@ export default function History({
                                         {/* TOP ROW: Visitor + Destination vs Status (CHECKED OUT / INSIDE) */}
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
-                                                <div className="flex items-baseline gap-2 flex-wrap">
-                                                    <h3 className="text-base font-bold text-slate-900 dark:text-white truncate">
+                                                <div className="flex flex-wrap items-baseline gap-2">
+                                                    <h3 className="truncate text-base font-bold text-slate-900 dark:text-white">
                                                         {log.visitor.name}
                                                     </h3>
                                                     {log.outside_hours && (
@@ -336,9 +343,7 @@ export default function History({
                                                         <User className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                                                     )}
                                                     <span className="truncate">{destination}</span>
-                                                    {log.host.unit && !isQuick && (
-                                                        <span className="text-slate-400">· Unit {log.host.unit}</span>
-                                                    )}
+                                                    {log.host.unit && !isQuick && <span className="text-slate-400">· Unit {log.host.unit}</span>}
                                                 </div>
                                             </div>
 
@@ -351,7 +356,7 @@ export default function History({
                                                     </div>
                                                 ) : (
                                                     <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-emerald-800 ring-1 ring-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-800/50">
-                                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400 animate-pulse" />
+                                                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-600 dark:bg-emerald-400" />
                                                         <span className="text-xs font-black tracking-wider">INSIDE</span>
                                                     </div>
                                                 )}
@@ -364,12 +369,12 @@ export default function History({
                                         </div>
 
                                         {/* MIDDLE: Operational Dual Gate & Time Facts */}
-                                        <div className="mt-3.5 grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl bg-slate-50/80 p-2.5 dark:bg-slate-800/50">
+                                        <div className="mt-3.5 grid grid-cols-2 gap-2 rounded-xl bg-slate-50/80 p-2.5 sm:grid-cols-3 dark:bg-slate-800/50">
                                             <div>
                                                 <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">
                                                     Entry Gate & Time
                                                 </span>
-                                                <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                                <p className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-100">
                                                     {log.entry_point || log.gate || 'Gate not recorded'}
                                                 </p>
                                                 <span className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -383,7 +388,7 @@ export default function History({
                                                 </span>
                                                 {isCheckedOut ? (
                                                     <>
-                                                        <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                                        <p className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-100">
                                                             {log.exit_point || log.entry_point || 'Main Entrance'}
                                                         </p>
                                                         <span className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -399,12 +404,14 @@ export default function History({
 
                                             <div className="col-span-2 sm:col-span-1">
                                                 <span className="block text-[9px] font-black tracking-wider text-slate-400 uppercase">
-                                                    {isCheckedOut && log.duration_minutes !== null && log.duration_minutes !== undefined ? 'Duration' : 'Entry Type'}
+                                                    {isCheckedOut && log.duration_minutes !== null && log.duration_minutes !== undefined
+                                                        ? 'Duration'
+                                                        : 'Entry Type'}
                                                 </span>
                                                 <p className="mt-0.5 text-xs font-bold text-slate-800 dark:text-slate-100">
                                                     {isCheckedOut && log.duration_minutes !== null && log.duration_minutes !== undefined
                                                         ? formatStayDuration(log.duration_minutes, log)
-                                                        : (log.entry_type_label || (isQuick ? 'Quick Entry' : 'Visitor Pass'))}
+                                                        : log.entry_type_label || (isQuick ? 'Quick Entry' : 'Visitor Pass')}
                                                 </p>
                                                 {isCheckedOut && (
                                                     <span className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -416,7 +423,7 @@ export default function History({
 
                                         {/* LOWER: Guard, Identifier, Vehicle, Purpose */}
                                         <div className="mt-3 flex flex-wrap items-center justify-between gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                            <div className="flex items-center gap-1.5 flex-wrap">
+                                            <div className="flex flex-wrap items-center gap-1.5">
                                                 {log.tag ? (
                                                     <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-xs font-bold text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-300">
                                                         <Tag className="h-3 w-3" />
@@ -442,16 +449,12 @@ export default function History({
                                         </div>
 
                                         {!isRedundantPurpose && (
-                                            <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400 italic">
-                                                "{log.purpose}"
-                                            </p>
+                                            <p className="mt-1.5 text-[11px] text-slate-500 italic dark:text-slate-400">"{log.purpose}"</p>
                                         )}
 
                                         {/* BOTTOM: Secondary View Details trigger */}
                                         <div className="mt-3.5 flex items-center justify-between border-t border-slate-100 pt-2.5 dark:border-slate-800">
-                                            <span className="text-[11px] text-slate-400">
-                                                {log.verified_at}
-                                            </span>
+                                            <span className="text-[11px] text-slate-400">{log.verified_at}</span>
 
                                             <button
                                                 type="button"

@@ -198,7 +198,7 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
         <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
             <Head title="Receipts & Payments" />
 
-            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
                     <Link
                         href={ResidentBillingController.index.url()}
@@ -209,7 +209,7 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                     </Link>
 
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase leading-tight">Billing destination</p>
+                        <p className="text-[10px] leading-tight font-black tracking-[0.18em] text-slate-400 uppercase">Billing destination</p>
                         <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Receipts & Payments</h1>
                     </div>
 
@@ -256,8 +256,11 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                     const isDownloading = downloadingId === invoice.id;
 
                                     return (
-                                        <li key={invoice.id} className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6 transition hover:bg-slate-50/60">
-                                            <div className="flex min-w-0 items-center gap-3.5 flex-1">
+                                        <li
+                                            key={invoice.id}
+                                            className="flex items-center justify-between gap-3 px-5 py-4 transition hover:bg-slate-50/60 sm:px-6"
+                                        >
+                                            <div className="flex min-w-0 flex-1 items-center gap-3.5">
                                                 <span
                                                     className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${
                                                         paid
@@ -277,20 +280,20 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                                 </span>
                                                 <div className="min-w-0 flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <p className="text-sm sm:text-base font-black text-slate-950">{invoice.formatted_amount}</p>
+                                                        <p className="text-sm font-black text-slate-950 sm:text-base">{invoice.formatted_amount}</p>
                                                         <span
                                                             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap ${
                                                                 paid
-                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200'
+                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 ring-inset'
                                                                     : overdue
-                                                                      ? 'bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200'
-                                                                      : 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200'
+                                                                      ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200 ring-inset'
+                                                                      : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200 ring-inset'
                                                             }`}
                                                         >
                                                             {paid ? 'Paid' : overdue ? 'Overdue' : 'Pending'}
                                                         </span>
                                                     </div>
-                                                    <p className="mt-0.5 text-xs text-slate-500 font-medium truncate">
+                                                    <p className="mt-0.5 truncate text-xs font-medium text-slate-500">
                                                         {formatDate(invoice.created_at)} · {invoice.invoice_number}
                                                     </p>
                                                 </div>
@@ -309,7 +312,7 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                                     ) : (
                                                         <ArrowDownTrayIcon className="h-3.5 w-3.5 text-slate-500" strokeWidth={2.2} />
                                                     )}
-                                                    <span className="hidden xs:inline sm:inline">Receipt</span>
+                                                    <span className="xs:inline hidden sm:inline">Receipt</span>
                                                 </button>
                                             )}
                                         </li>
@@ -342,7 +345,9 @@ export default function ReceiptsPage({ invoices, recentInvoices }: Props) {
                                 <SparklesIcon className="h-5 w-5" strokeWidth={2} />
                             </span>
                             <p className="mt-3 text-sm font-black text-slate-950">No transaction records yet</p>
-                            <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">Invoices and payment receipts will appear here after completed transactions.</p>
+                            <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">
+                                Invoices and payment receipts will appear here after completed transactions.
+                            </p>
                         </div>
                     )}
                 </motion.section>

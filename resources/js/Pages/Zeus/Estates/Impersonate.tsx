@@ -39,14 +39,7 @@ interface Props {
     admins: AdminUser[];
 }
 
-const SUPPORT_REASONS = [
-    'Customer support',
-    'Troubleshooting',
-    'Onboarding assistance',
-    'Configuration assistance',
-    'Issue reproduction',
-    'Other',
-];
+const SUPPORT_REASONS = ['Customer support', 'Troubleshooting', 'Onboarding assistance', 'Configuration assistance', 'Issue reproduction', 'Other'];
 
 export default function Impersonate({ estate, admins }: Props) {
     const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
@@ -70,7 +63,7 @@ export default function Impersonate({ estate, admins }: Props) {
                 onFinish: () => {
                     setIsSubmitting(false);
                 },
-            }
+            },
         );
     };
 
@@ -82,7 +75,7 @@ export default function Impersonate({ estate, admins }: Props) {
 
     return (
         <ZeusLayout>
-            <Head title={`Impersonate Estate Admin — ${estate.name}`} />
+            <Head title={`Impersonate Estate Admin - ${estate.name}`} />
 
             {/* Back Link */}
             <Link
@@ -107,7 +100,7 @@ export default function Impersonate({ estate, admins }: Props) {
                         <div>
                             <div className="flex items-center gap-2">
                                 <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                                    Support Mode — Impersonate Estate Admin
+                                    Support Mode - Impersonate Estate Admin
                                 </h1>
                                 <span
                                     className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase ring-1 ring-inset ${
@@ -146,9 +139,10 @@ export default function Impersonate({ estate, admins }: Props) {
                     <Info className="mt-0.5 h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400" />
                     <div>
                         <p className="font-semibold">Important Security & Attribution Protocol</p>
-                        <p className="mt-0.5 text-xs text-amber-800/80 dark:text-amber-300/80 leading-relaxed">
-                            Support Mode allows you to operate under the legitimate authority context of an active estate administrator. 
-                            Actions performed during this session are recorded in the estate audit log as <strong>Kontrol Support</strong> activity while maintaining internal attribution to your Zeus provider account.
+                        <p className="mt-0.5 text-xs leading-relaxed text-amber-800/80 dark:text-amber-300/80">
+                            Support Mode allows you to operate under the legitimate authority context of an active estate administrator. Actions
+                            performed during this session are recorded in the estate audit log as <strong>Kontrol Support</strong> activity while
+                            maintaining internal attribution to your Zeus provider account.
                         </p>
                     </div>
                 </div>
@@ -159,9 +153,7 @@ export default function Impersonate({ estate, admins }: Props) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-base font-bold text-slate-900 dark:text-white">Active Administrators</h2>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Select an administrator to begin Support Mode in this estate.
-                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">Select an administrator to begin Support Mode in this estate.</p>
                     </div>
                     <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                         {admins.length} Available
@@ -233,11 +225,10 @@ export default function Impersonate({ estate, admins }: Props) {
                         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 ring-1 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:ring-amber-500/20">
                             <ShieldAlert className="h-7 w-7" />
                         </div>
-                        <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">
-                            No estate administrator available
-                        </h3>
+                        <h3 className="mt-4 text-base font-bold text-slate-900 dark:text-white">No estate administrator available</h3>
                         <p className="mx-auto mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">
-                            This estate currently has no active administrator that can be impersonated. You cannot enter Support Mode without an authentic administrator context.
+                            This estate currently has no active administrator that can be impersonated. You cannot enter Support Mode without an
+                            authentic administrator context.
                         </p>
                         <div className="mt-6">
                             <Link
@@ -276,12 +267,8 @@ export default function Impersonate({ estate, admins }: Props) {
                                         <ShieldCheck className="h-6 w-6" />
                                     </div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                                            Impersonate {selectedAdmin.name}?
-                                        </h3>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                                            Entering {estate.name} in Support Mode
-                                        </p>
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Impersonate {selectedAdmin.name}?</h3>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400">Entering {estate.name} in Support Mode</p>
                                     </div>
                                 </div>
                                 <button
@@ -294,16 +281,15 @@ export default function Impersonate({ estate, admins }: Props) {
                             </div>
 
                             <div className="mt-5 space-y-4">
-                                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200 leading-relaxed">
-                                    You are about to enter <strong>{estate.name}</strong> using{' '}
-                                    <strong>{selectedAdmin.name}</strong>'s Estate Admin authority. Actions performed during this session will be recorded as <strong>Kontrol Support</strong> activity for the estate and will remain attributable to your provider account internally.
+                                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 text-xs leading-relaxed text-amber-900 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-200">
+                                    You are about to enter <strong>{estate.name}</strong> using <strong>{selectedAdmin.name}</strong>'s Estate Admin
+                                    authority. Actions performed during this session will be recorded as <strong>Kontrol Support</strong> activity for
+                                    the estate and will remain attributable to your provider account internally.
                                 </div>
 
                                 {/* Support Reason Selector */}
                                 <div>
-                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                                        Support Reason (Optional)
-                                    </label>
+                                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Support Reason (Optional)</label>
                                     <select
                                         value={reason}
                                         onChange={(e) => setReason(e.target.value)}
@@ -320,9 +306,7 @@ export default function Impersonate({ estate, admins }: Props) {
 
                                 {reason === 'Other' && (
                                     <div>
-                                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                                            Specify Reason
-                                        </label>
+                                        <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">Specify Reason</label>
                                         <input
                                             type="text"
                                             value={customReason}

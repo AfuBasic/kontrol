@@ -7,7 +7,6 @@ use App\Actions\Security\RecordQuickEntryAction;
 use App\Actions\Security\ReserveQuickEntryTagsAction;
 use App\Http\Controllers\Controller;
 use App\Models\AccessLog;
-use App\Models\EstateOrganization;
 use App\Services\EstateContextService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

@@ -48,6 +48,23 @@ export function CustomSelect<T extends string | number = string | number>({
             )}
             <Listbox value={value} onChange={onChange} disabled={disabled}>
                 <div className="relative">
+                    <select
+                        className="absolute inset-0 w-full h-full opacity-0 z-10 sm:hidden cursor-pointer"
+                        value={String(value)}
+                        onChange={(e) => {
+                            const val = e.target.value;
+                            const option = options.find(opt => String(opt.value) === val);
+                            if (option) onChange(option.value);
+                        }}
+                        disabled={disabled}
+                    >
+                        <option value="" disabled hidden>{placeholder}</option>
+                        {options.map((option) => (
+                            <option key={String(option.value)} value={String(option.value)}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
                     <ListboxButton
                         className={`flex w-full items-center justify-between gap-2 border border-slate-200 bg-white text-left text-slate-800 shadow-2xs transition-all hover:border-slate-300 focus:border-slate-800 focus:outline-hidden focus:ring-1 focus:ring-slate-800 disabled:cursor-not-allowed disabled:opacity-60 ${sizeClasses} ${buttonClassName}`}
                     >
@@ -63,7 +80,7 @@ export function CustomSelect<T extends string | number = string | number>({
                         leaveFrom="opacity-100"
                         leaveTo="opacity-0"
                     >
-                        <ListboxOptions className="absolute z-50 mt-1.5 max-h-60 w-full min-w-[220px] overflow-auto rounded-xl border border-slate-100 bg-white p-1 text-xs shadow-xl ring-1 ring-black/5 focus:outline-hidden">
+                        <ListboxOptions className="hidden sm:block absolute z-50 mt-1.5 max-h-60 w-full min-w-[220px] overflow-auto rounded-xl border border-slate-100 bg-white p-1 text-xs shadow-xl ring-1 ring-black/5 focus:outline-hidden">
                             {options.map((option) => (
                                 <ListboxOption
                                     key={String(option.value)}

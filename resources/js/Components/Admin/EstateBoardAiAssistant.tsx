@@ -197,15 +197,15 @@ export default function EstateBoardAiAssistant({ context, onDraft, onTemplateSel
                     )}
                 </AnimatePresence>
 
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-violet-100/60">
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-normal">
+                <div className="flex flex-col justify-between gap-3 border-t border-violet-100/60 pt-1 sm:flex-row sm:items-center">
+                    <p className="text-xs leading-normal font-medium text-slate-500 dark:text-slate-400">
                         Uses your category, priority, and audience settings for context.
                     </p>
                     <button
                         type="button"
                         onClick={handleGenerate}
                         disabled={!canGenerate || isGenerating}
-                        className="inline-flex w-full sm:w-auto shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition-all hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:shadow-md active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:text-sm"
                     >
                         {isGenerating ? (
                             <>

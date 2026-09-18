@@ -71,14 +71,17 @@ export default function TrustedDevices({ devices }: Props) {
                     <p className="text-[11px] font-semibold tracking-[0.18em] text-slate-500 uppercase">Account security</p>
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Your devices</h1>
                     <p className="max-w-2xl text-sm leading-relaxed text-slate-500">
-                        These devices can sign in without extra authorization. Removing a device does not change your passwordless sign-in
-                        method - it only requires that device to be approved again.
+                        These devices can sign in without extra authorization. Removing a device does not change your passwordless sign-in method - it
+                        only requires that device to be approved again.
                     </p>
                 </header>
 
                 {devices.length === 0 ? (
                     <div className="rounded-3xl border border-slate-200 bg-white">
-                        <EmptyState title="No trusted devices yet" description="The next time you sign in and authorize a device, it will appear here." />
+                        <EmptyState
+                            title="No trusted devices yet"
+                            description="The next time you sign in and authorize a device, it will appear here."
+                        />
                     </div>
                 ) : (
                     <ul className="space-y-3">

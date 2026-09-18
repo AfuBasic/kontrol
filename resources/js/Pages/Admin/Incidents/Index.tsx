@@ -601,10 +601,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                         setStatus(String(val));
                                         applyFilters({ status: String(val) || undefined });
                                     }}
-                                    options={[
-                                        { value: '', label: 'All Statuses' },
-                                        ...statuses.map((s) => ({ value: s.value, label: s.label })),
-                                    ]}
+                                    options={[{ value: '', label: 'All Statuses' }, ...statuses.map((s) => ({ value: s.value, label: s.label }))]}
                                 />
                             </div>
 
@@ -636,10 +633,7 @@ export default function IncidentsIndex({ incidents: rawIncidents, filters: initi
                                         setCategory(String(val));
                                         applyFilters({ category: String(val) || undefined });
                                     }}
-                                    options={[
-                                        { value: '', label: 'All Categories' },
-                                        ...categories.map((c) => ({ value: c.value, label: c.label })),
-                                    ]}
+                                    options={[{ value: '', label: 'All Categories' }, ...categories.map((c) => ({ value: c.value, label: c.label }))]}
                                 />
                             </div>
 

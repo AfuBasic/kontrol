@@ -15,14 +15,7 @@ type Props = {
 /**
  * Timeline tools - search + filters sit in the journal chrome, not as floating widgets.
  */
-export default function ActivityFiltersBar({
-    filters,
-    hosts,
-    checkoutEnabled,
-    activeVisitCount = 0,
-    onFilterChange,
-    onClearFilters,
-}: Props) {
+export default function ActivityFiltersBar({ filters, hosts, checkoutEnabled, activeVisitCount = 0, onFilterChange, onClearFilters }: Props) {
     const [filtersOpen, setFiltersOpen] = useState(false);
     const active = hasActiveVisitorFilters(filters);
     const isInsideOnly = filters.status === 'inside';
@@ -61,7 +54,7 @@ export default function ActivityFiltersBar({
                         <span>Currently Inside</span>
                         {activeVisitCount > 0 && (
                             <span
-                                className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
+                                className={`py-0.2 rounded-full px-1.5 text-[10px] font-bold ${
                                     isInsideOnly
                                         ? 'bg-emerald-200/80 text-emerald-900 dark:bg-emerald-800 dark:text-emerald-100'
                                         : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200'
@@ -123,10 +116,7 @@ export default function ActivityFiltersBar({
                                 size="sm"
                                 value={filters.host_id || ''}
                                 onChange={(val) => onFilterChange({ host_id: val || undefined })}
-                                options={[
-                                    { value: '', label: 'All hosts' },
-                                    ...hosts.map((host) => ({ value: host.id, label: host.name })),
-                                ]}
+                                options={[{ value: '', label: 'All hosts' }, ...hosts.map((host) => ({ value: host.id, label: host.name }))]}
                             />
                         </FilterField>
 

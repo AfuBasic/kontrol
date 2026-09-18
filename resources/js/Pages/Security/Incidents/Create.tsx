@@ -23,7 +23,14 @@ async function getFileHash(file: File): Promise<string> {
 
 export default function Create({ categories }: Props) {
     const { errors: pageErrors } = usePage().props;
-    const { data, setData, processing, errors: formErrors, setError, clearErrors } = useForm<{
+    const {
+        data,
+        setData,
+        processing,
+        errors: formErrors,
+        setError,
+        clearErrors,
+    } = useForm<{
         title: string;
         body: string;
         category: string;
@@ -208,7 +215,7 @@ export default function Create({ categories }: Props) {
 
                     {Object.keys(errors).length > 0 && (
                         <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-red-100 bg-red-50/50 p-4 text-xs font-semibold text-red-700">
-                            <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                            <AlertCircle className="mt-0.5 h-4.5 w-4.5 shrink-0" />
                             <div>
                                 <p className="font-bold">Please correct the errors below:</p>
                                 <ul className="mt-1 list-inside list-disc space-y-0.5 text-red-600">

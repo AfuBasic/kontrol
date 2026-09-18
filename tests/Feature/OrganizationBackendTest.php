@@ -6,9 +6,14 @@ use App\Actions\Organization\RenewOrganizationCredentialAction;
 use App\Actions\Security\RecordQuickEntryAction;
 use App\Enums\AccessCodeSource;
 use App\Enums\AccessCodeStatus;
+use App\Enums\EstateBoardPostAudience;
+use App\Enums\EstateBoardPostStatus;
 use App\Jobs\RenewExpiringOrganizationCredentials;
 use App\Models\AccessCode;
 use App\Models\Estate;
+use App\Models\EstateBoardPost;
+use App\Models\EstateBoardPostMedia;
+use App\Models\EstateBoardPostRead;
 use App\Models\EstateOrganization;
 use App\Models\OrganizationAccessMember;
 use App\Models\OrganizationMembership;
@@ -21,6 +26,7 @@ use Carbon\CarbonImmutable;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Session;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -355,9 +361,47 @@ test('organization portal routes render successfully for authorized organization
     $this->get(route('org.dashboard'))->assertOk();
     $this->get(route('org.access-list.index'))->assertOk();
     $this->get(route('org.credentials.index'))->assertOk();
-    $this->get(route('org.arrivals.index'))->assertOk();
-    $this->get(route('org.public-windows.index'))->assertOk();
+    $this->get(route('org.arrivals.index'))->assertRedirect(route('org.access-list.index', ['tab' => 'arrivals']));
+    $this->get(route('org.public-windows.index'))->assertRedirect(route('org.access-list.index', ['tab' => 'public_windows']));
+    $this->get(route('org.payments.index'))->assertOk();
+    $this->get(route('org.announcements.index'))->assertOk();
     $this->get(route('org.settings.index'))->assertOk();
+});
+
+test('organization announcements include media previews', function () {
+    $post = EstateBoardPost::factory()->published()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->orgAdmin->id,
+        'audience' => EstateBoardPostAudience::All,
+        'status' => EstateBoardPostStatus::Published,
+        'title' => 'Water service update',
+        'body' => '<p>First paragraph.</p><p>Second paragraph.</p>',
+    ]);
+
+    EstateBoardPostMedia::create([
+        'estate_board_post_id' => $post->id,
+        'estate_id' => $this->estate->id,
+        'disk' => 'public',
+        'path' => 'announcements/water.jpg',
+        'url' => '/storage/announcements/water.jpg',
+        'mime_type' => 'image/jpeg',
+        'size_bytes' => 12345,
+        'width' => 1200,
+        'height' => 800,
+        'hash' => str_repeat('a', 64),
+        'sort_order' => 0,
+    ]);
+
+    $this->actingAs($this->orgAdmin);
+    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
+
+    $this->get(route('org.announcements.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('posts.data.0.media.0.url', '/storage/announcements/water.jpg')
+            ->where('posts.data.0.media.0.mime_type', 'image/jpeg')
+            ->where('posts.data.0.media.0.width', 1200));
 });
 
 test('organization admin can confirm arrival via portal HTTP endpoint', function () {
@@ -385,4 +429,82 @@ test('organization admin can confirm arrival via portal HTTP endpoint', function
     expect($log->confirmed_at)->not->toBeNull()
         ->and($log->confirmed_by)->toBe($this->orgAdmin->id)
         ->and($log->confirmationState(15))->toBe('CONFIRMED');
+});
+
+test('organization announcements can be searched, filtered by category, and sorted', function () {
+    $this->actingAs($this->orgAdmin);
+    Session::put(OrganizationContextService::SESSION_KEY, $this->org->id);
+
+    $post1 = EstateBoardPost::factory()->published()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->orgAdmin->id,
+        'title' => 'Security Gate Firmware Maintenance',
+        'body' => 'Notice regarding gate sensor update',
+        'category' => 'security',
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => now()->subDays(2),
+    ]);
+
+    $post2 = EstateBoardPost::factory()->published()->create([
+        'estate_id' => $this->estate->id,
+        'user_id' => $this->orgAdmin->id,
+        'title' => 'Annual General Meeting',
+        'body' => 'Upcoming AGM schedule',
+        'category' => 'meeting',
+        'audience' => EstateBoardPostAudience::All,
+        'published_at' => now()->subDay(),
+    ]);
+
+    // Test search filter
+    $this->get(route('org.announcements.index', ['search' => 'Security Gate']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.search', 'Security Gate')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post1->id));
+
+    // Test category filter
+    $this->get(route('org.announcements.index', ['category' => 'meeting']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.category', 'meeting')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post2->id));
+
+    // Mark post1 as read by orgAdmin
+    EstateBoardPostRead::create([
+        'estate_board_post_id' => $post1->id,
+        'user_id' => $this->orgAdmin->id,
+    ]);
+
+    // Test unread filter
+    $this->get(route('org.announcements.index', ['read_status' => 'unread']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.read_status', 'unread')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post2->id));
+
+    // Test read filter
+    $this->get(route('org.announcements.index', ['read_status' => 'read']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Announcements')
+            ->where('filters.read_status', 'read')
+            ->has('posts.data', 1)
+            ->where('posts.data.0.id', $post1->id));
+});
+
+test('organization user can view and manage notifications', function () {
+    $this->actingAs($this->orgAdmin);
+
+    $this->get(route('org.notifications.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Organization/Notifications')
+            ->has('notifications.data')
+            ->has('unreadCount'));
 });

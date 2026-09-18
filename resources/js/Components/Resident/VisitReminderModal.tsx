@@ -43,18 +43,9 @@ function wallClockTime(startsAt: string | null, offsetMinutes: number): string |
 
 const CUSTOM_KEY = -1;
 
-export default function VisitReminderModal({
-    isOpen,
-    onClose,
-    accessCode,
-    availableOptions,
-    isPostCreation = false,
-    onSuccess,
-}: Props) {
+export default function VisitReminderModal({ isOpen, onClose, accessCode, availableOptions, isPostCreation = false, onSuccess }: Props) {
     const defaultOffset = availableOptions[0]?.minutes ?? 120;
-    const [selectedOffset, setSelectedOffset] = useState<number>(
-        accessCode.reminder?.reminder_offset_minutes ?? defaultOffset,
-    );
+    const [selectedOffset, setSelectedOffset] = useState<number>(accessCode.reminder?.reminder_offset_minutes ?? defaultOffset);
     const [isCustomSelected, setIsCustomSelected] = useState(false);
     const [customMinutes, setCustomMinutes] = useState(180);
     const [submitting, setSubmitting] = useState(false);
@@ -62,9 +53,7 @@ export default function VisitReminderModal({
     /** Max allowed custom value: minutes until the pass starts minus 5 */
     const maxCustom = useMemo(() => {
         if (!accessCode.starts_at) return 10080;
-        const diff = Math.floor(
-            (new Date(accessCode.starts_at).getTime() - Date.now()) / 60000,
-        );
+        const diff = Math.floor((new Date(accessCode.starts_at).getTime() - Date.now()) / 60000);
         return Math.max(5, diff - 5);
     }, [accessCode.starts_at]);
 
@@ -97,9 +86,7 @@ export default function VisitReminderModal({
                     setSubmitting(false);
                     onClose();
                     const preset = availableOptions.find((o) => o.minutes === effectiveOffset);
-                    const label = preset
-                        ? preset.label.toLowerCase()
-                        : `${formatOffset(effectiveOffset)} before`;
+                    const label = preset ? preset.label.toLowerCase() : `${formatOffset(effectiveOffset)} before`;
                     if (onSuccess) {
                         onSuccess(`Reminder set. We'll remind you ${label} ${visitorName}'s visit.`);
                     }
@@ -115,7 +102,7 @@ export default function VisitReminderModal({
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-0 sm:p-4">
+            <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
                 {/* Backdrop */}
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -131,10 +118,10 @@ export default function VisitReminderModal({
                     animate={{ y: 0, opacity: 1 }}
                     exit={{ y: '100%', opacity: 0 }}
                     transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                    className="relative z-10 w-full max-w-md overflow-hidden rounded-t-[28px] sm:rounded-[28px] bg-white p-6 shadow-2xl border border-slate-100"
+                    className="relative z-10 w-full max-w-md overflow-hidden rounded-t-[28px] border border-slate-100 bg-white p-6 shadow-2xl sm:rounded-[28px]"
                 >
                     {/* Drag handle (mobile) */}
-                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
+                    <div className="absolute top-2.5 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-slate-200 sm:hidden" />
 
                     {/* Header */}
                     <div className="flex items-start justify-between pt-3 sm:pt-0">
@@ -146,16 +133,13 @@ export default function VisitReminderModal({
                                 <h3 className="text-base font-black tracking-tight text-slate-900">
                                     {isPostCreation ? 'Pass Created Successfully' : 'Set Visit Reminder'}
                                 </h3>
-                                <p className="text-xs font-semibold text-slate-500 line-clamp-1">
+                                <p className="line-clamp-1 text-xs font-semibold text-slate-500">
                                     {visitorName}'s pass · {arrivalDate}
                                     {arrivalTime ? ` at ${arrivalTime}` : ''}
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-                        >
+                        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600">
                             <X className="h-5 w-5" />
                         </button>
                     </div>
@@ -163,12 +147,9 @@ export default function VisitReminderModal({
                     {/* Body */}
                     <div className="mt-5 space-y-3">
                         <div>
-                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                                Want a reminder before the visit?
-                            </h4>
+                            <h4 className="text-xs font-black tracking-wider text-slate-400 uppercase">Want a reminder before the visit?</h4>
                             <p className="mt-0.5 text-xs text-slate-600">
-                                Kontrol can send a push notification to your phone before {visitorName}'s pass becomes
-                                valid.
+                                Kontrol can send a push notification to your phone before {visitorName}'s pass becomes valid.
                             </p>
                         </div>
 
@@ -202,9 +183,7 @@ export default function VisitReminderModal({
                                         </div>
                                         <div
                                             className={`flex h-5 w-5 items-center justify-center rounded-full border transition ${
-                                                isSelected
-                                                    ? 'border-indigo-600 bg-indigo-600 text-white'
-                                                    : 'border-slate-300 bg-white'
+                                                isSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
                                             }`}
                                         >
                                             {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
@@ -235,16 +214,14 @@ export default function VisitReminderModal({
                                 </div>
                                 <div
                                     className={`flex h-5 w-5 items-center justify-center rounded-full border transition ${
-                                        isCustomSelected
-                                            ? 'border-indigo-600 bg-indigo-600 text-white'
-                                            : 'border-slate-300 bg-white'
+                                        isCustomSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white'
                                     }`}
                                 >
                                     {isCustomSelected && <Check className="h-3 w-3 stroke-[3]" />}
                                 </div>
                             </button>
 
-                            {/* Custom Stepper — expands inline */}
+                            {/* Custom Stepper - expands inline */}
                             <AnimatePresence>
                                 {isCustomSelected && (
                                     <motion.div
@@ -255,7 +232,7 @@ export default function VisitReminderModal({
                                         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                                         className="overflow-hidden"
                                     >
-                                        <div className="mt-1 rounded-2xl bg-indigo-50/60 border border-indigo-100 p-4 space-y-3">
+                                        <div className="mt-1 space-y-3 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
                                             {/* Stepper row */}
                                             <div className="flex items-center justify-between gap-3">
                                                 <button
@@ -268,12 +245,8 @@ export default function VisitReminderModal({
                                                 </button>
 
                                                 <div className="flex-1 text-center">
-                                                    <p className="text-lg font-black text-indigo-900 leading-none">
-                                                        {formatOffset(customMinutes)}
-                                                    </p>
-                                                    <p className="text-[10px] font-semibold text-indigo-500 mt-0.5">
-                                                        before the visit
-                                                    </p>
+                                                    <p className="text-lg leading-none font-black text-indigo-900">{formatOffset(customMinutes)}</p>
+                                                    <p className="mt-0.5 text-[10px] font-semibold text-indigo-500">before the visit</p>
                                                 </div>
 
                                                 <button
@@ -289,8 +262,7 @@ export default function VisitReminderModal({
                                             {/* Wall-clock preview */}
                                             {customWallClock && (
                                                 <p className="text-center text-xs font-semibold text-indigo-700">
-                                                    We'll notify you at{' '}
-                                                    <span className="font-black">{customWallClock}</span>
+                                                    We'll notify you at <span className="font-black">{customWallClock}</span>
                                                 </p>
                                             )}
                                         </div>
@@ -306,7 +278,7 @@ export default function VisitReminderModal({
                             type="button"
                             onClick={handleSetReminder}
                             disabled={submitting || availableOptions.length === 0}
-                            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 hover:bg-indigo-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-indigo-600 text-sm font-bold text-white shadow-lg shadow-indigo-600/30 transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50"
                         >
                             {submitting ? (
                                 <>
@@ -324,7 +296,7 @@ export default function VisitReminderModal({
                             type="button"
                             onClick={onClose}
                             disabled={submitting}
-                            className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                            className="flex h-12 w-full items-center justify-center rounded-2xl text-sm font-bold text-slate-500 transition-all hover:bg-slate-100 hover:text-slate-700 active:scale-[0.98] disabled:opacity-50"
                         >
                             {isPostCreation ? 'No, thanks' : 'Cancel'}
                         </button>

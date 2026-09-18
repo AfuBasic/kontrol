@@ -282,3 +282,71 @@ test('admin can update case details without modifying status', function () {
     expect($fresh->priority->value)->toBe('critical');
     expect($fresh->is_private)->toBeTrue();
 });
+
+test('admin who reported an incident can close it from admin when solved', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $admin->estates()->attach($estate->id, ['status' => 'accepted']);
+    $adminRole = Role::where('name', 'admin')->first();
+    AdministrativeAssignment::create([
+        'user_id' => $admin->id,
+        'estate_id' => $estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    $incident = Incident::create([
+        'estate_id' => $estate->id,
+        'reporter_id' => $admin->id,
+        'title' => 'Admin reported issue',
+        'body' => 'Water pump needs inspection.',
+        'category' => 'water',
+        'status' => IncidentStatus::Solved,
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->post(route('admin.incidents.close', $incident->hashid));
+
+    $response->assertRedirect(route('admin.incidents.show', $incident->hashid));
+    $response->assertSessionHas('success', 'Incident marked as closed successfully.');
+
+    expect($incident->fresh()->status)->toBe(IncidentStatus::Closed);
+    expect($incident->fresh()->closed_at)->not->toBeNull();
+});
+
+test('admin who is not the reporter cannot close incident from admin', function () {
+    $estate = Estate::factory()->create();
+    $admin = User::factory()->create();
+    $resident = User::factory()->create();
+
+    setPermissionsTeamId($estate->id);
+    $admin->assignRole('admin');
+    $admin->estates()->attach($estate->id, ['status' => 'accepted']);
+    $adminRole = Role::where('name', 'admin')->first();
+    AdministrativeAssignment::create([
+        'user_id' => $admin->id,
+        'estate_id' => $estate->id,
+        'role_id' => $adminRole->id,
+        'scope_type' => AssignmentScope::Estate,
+        'is_active' => true,
+    ]);
+
+    $incident = Incident::create([
+        'estate_id' => $estate->id,
+        'reporter_id' => $resident->id,
+        'title' => 'Resident reported issue',
+        'body' => 'Water pump noise.',
+        'category' => 'water',
+        'status' => IncidentStatus::Solved,
+    ]);
+
+    $response = $this->actingAs($admin)
+        ->post(route('admin.incidents.close', $incident->hashid));
+
+    $response->assertForbidden();
+    expect($incident->fresh()->status)->toBe(IncidentStatus::Solved);
+});

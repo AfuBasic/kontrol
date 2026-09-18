@@ -79,6 +79,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
         Route::get('/', [OrganizationController::class, 'index'])->name('index');
         Route::post('/', [OrganizationController::class, 'store'])->name('store');
         Route::put('/{organization}', [OrganizationController::class, 'update'])->name('update');
+        Route::post('/{organization}/resend-invitation', [OrganizationController::class, 'resendInvitation'])->name('resend-invitation');
         Route::delete('/{organization}', [OrganizationController::class, 'destroy'])->name('destroy');
     });
 
@@ -299,6 +300,7 @@ Route::middleware(['auth', EnsureIsAdmin::class, BlockSensitiveDuringImpersonati
         Route::get('/{incident}', [IncidentController::class, 'show'])->name('show');
         Route::delete('/{incident}', [IncidentController::class, 'destroy'])->name('destroy');
         Route::put('/{incident}/status', [IncidentStatusController::class, 'update'])->name('status.update');
+        Route::post('/{incident}/close', [IncidentController::class, 'close'])->name('close');
 
         Route::post('/{incident}/comments', [IncidentCommentController::class, 'store'])->name('comments.store');
         Route::delete('/comments/{comment}', [IncidentCommentController::class, 'destroy'])->name('comments.destroy');

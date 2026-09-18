@@ -6,8 +6,10 @@ use App\Models\AdministrativeAssignment;
 use App\Models\Collection;
 use App\Models\CollectionAssignment;
 use App\Models\Estate;
+use App\Models\EstateOrganization;
 use App\Models\EstateSettings;
 use App\Models\EstateSubscription;
+use App\Models\OrganizationMembership;
 use App\Models\Plan;
 use App\Models\Property;
 use App\Models\User;
@@ -270,4 +272,80 @@ it('authorizes zone targeted collections through their target zones', function (
     asCollectionZoneAdmin($this->zoneB)
         ->get(route('admin.collections.show', $collection->ulid))
         ->assertForbidden();
+});
+
+it('resolves target user IDs for organization audience and includes them in all', function () {
+    $this->actingAs($this->admin);
+
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Tech Hub Corp',
+        'is_active' => true,
+    ]);
+
+    $orgAdmin = User::factory()->create(['name' => 'Org Admin User']);
+    OrganizationMembership::create([
+        'user_id' => $orgAdmin->id,
+        'organization_id' => $org->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $resident = makeZonedResident($this->estate, $this->zoneA);
+
+    // 1. Target applies_to = 'organization'
+    $orgCollection = app(CollectionService::class)->createCollection($this->estate, [
+        'name' => 'Commercial Levy',
+        'amount' => 50000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addMonth()->toDateString(),
+        'applies_to' => 'organization',
+    ]);
+
+    $targetIdsForOrg = app(CollectionService::class)->resolveTargetUserIds($orgCollection);
+    expect($targetIdsForOrg)->toContain($orgAdmin->id)
+        ->and($targetIdsForOrg)->not->toContain($resident->id);
+
+    // 2. Target applies_to = 'all' (Everyone now includes organizations)
+    $allCollection = app(CollectionService::class)->createCollection($this->estate, [
+        'name' => 'Estate Security Levy',
+        'amount' => 20000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addMonth()->toDateString(),
+        'applies_to' => 'all',
+    ]);
+
+    $targetIdsForAll = app(CollectionService::class)->resolveTargetUserIds($allCollection);
+    expect($targetIdsForAll)->toContain($resident->id)
+        ->and($targetIdsForAll)->toContain($orgAdmin->id);
+
+    // 3. Target specific organizations only
+    $org2 = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'is_active' => true,
+    ]);
+    $orgAdmin2 = User::factory()->create();
+    OrganizationMembership::create([
+        'organization_id' => $org2->id,
+        'user_id' => $orgAdmin2->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $specificOrgCollection = app(CollectionService::class)->createCollection($this->estate, [
+        'name' => 'Specific Commercial Levy',
+        'amount' => 50000,
+        'billing_type' => 'one_time',
+        'start_date' => now()->toDateString(),
+        'due_at' => now()->addMonth()->toDateString(),
+        'applies_to' => 'organization',
+        'organizations' => [$org->id],
+    ]);
+
+    $targetIdsForSpecificOrg = app(CollectionService::class)->resolveTargetUserIds($specificOrgCollection);
+    expect($targetIdsForSpecificOrg)->toContain($orgAdmin->id)
+        ->and($targetIdsForSpecificOrg)->not->toContain($orgAdmin2->id)
+        ->and($targetIdsForSpecificOrg)->not->toContain($resident->id);
 });

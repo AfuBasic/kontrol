@@ -131,9 +131,13 @@ export default function CommandCenter({
                             {activeSos ? (
                                 <span className="text-rose-200">
                                     {activeSos.acknowledged_at ? (
-                                        <>Security <span className="text-white">Acknowledged</span></>
+                                        <>
+                                            Security <span className="text-white">Acknowledged</span>
+                                        </>
                                     ) : (
-                                        <>Emergency <span className="text-white">Alert Sent</span></>
+                                        <>
+                                            Emergency <span className="text-white">Alert Sent</span>
+                                        </>
                                     )}
                                 </span>
                             ) : !hasData ? (
@@ -142,7 +146,8 @@ export default function CommandCenter({
                                 </motion.span>
                             ) : (
                                 <>
-                                    {displayScheduled} {displayScheduled === 1 ? 'visitor' : 'visitors'} <span className="text-white/40">scheduled</span>
+                                    {displayScheduled} {displayScheduled === 1 ? 'visitor' : 'visitors'}{' '}
+                                    <span className="text-white/40">scheduled</span>
                                 </>
                             )}
                         </h2>
@@ -152,9 +157,7 @@ export default function CommandCenter({
                                 <>
                                     <ShieldAlert className="h-3.5 w-3.5 text-rose-400" />
                                     <span className="text-rose-300/80">
-                                        {activeSos.acknowledged_at
-                                            ? 'Responder assigned & responding'
-                                            : 'Security has been notified'}
+                                        {activeSos.acknowledged_at ? 'Responder assigned & responding' : 'Security has been notified'}
                                     </span>
                                 </>
                             ) : (
@@ -168,11 +171,7 @@ export default function CommandCenter({
 
                     <div className="flex flex-col gap-2">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/5 shadow-inner ring-1 ring-white/10 backdrop-blur-md">
-                            {activeSos ? (
-                                <ShieldAlert className="h-5 w-5 text-rose-400" />
-                            ) : (
-                                <Users className="h-5 w-5 text-indigo-400" />
-                            )}
+                            {activeSos ? <ShieldAlert className="h-5 w-5 text-rose-400" /> : <Users className="h-5 w-5 text-indigo-400" />}
                         </div>
                     </div>
                 </div>
@@ -197,12 +196,10 @@ export default function CommandCenter({
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.96 }}
                             onClick={onAction}
-                            className="relative flex h-full min-h-[52px] w-full items-center justify-center gap-1.5 rounded-[18px] bg-white px-3 py-3.5 text-center font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all sm:min-h-[56px] sm:rounded-[24px] sm:gap-3 sm:px-4 sm:py-5 active:shadow-none"
+                            className="relative flex h-full min-h-[52px] w-full items-center justify-center gap-1.5 rounded-[18px] bg-white px-3 py-3.5 text-center font-black text-slate-950 shadow-[0_20px_40px_-12px_rgba(255,255,255,0.3)] transition-all active:shadow-none sm:min-h-[56px] sm:gap-3 sm:rounded-[24px] sm:px-4 sm:py-5"
                         >
                             <Plus className="h-4 w-4 shrink-0 sm:h-5 sm:w-5 md:h-6 md:w-6" strokeWidth={3} />
-                            <span className="truncate whitespace-nowrap text-sm tracking-tight sm:text-base md:text-lg">
-                                Generate Access Code
-                            </span>
+                            <span className="truncate text-sm tracking-tight whitespace-nowrap sm:text-base md:text-lg">Generate Access Code</span>
                             {/* Subtle button glow */}
                             <div className="absolute inset-0 -z-10 rounded-[18px] bg-white/20 opacity-0 blur-md transition-opacity group-hover:opacity-100 sm:rounded-[24px]" />
                         </motion.button>
@@ -211,7 +208,7 @@ export default function CommandCenter({
 
                 {/* Contextual Emergency SOS Entry Point */}
                 {canTriggerSos && (
-                    <div className="flex items-center justify-center pt-2 border-t border-white/5">
+                    <div className="flex items-center justify-center border-t border-white/5 pt-2">
                         <SosButton variant="command-center" />
                     </div>
                 )}

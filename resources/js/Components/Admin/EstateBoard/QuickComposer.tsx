@@ -68,15 +68,18 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
         media: [] as File[],
     });
 
-    const setFormValues = useCallback((draft: any) => {
-        setData((prev) => ({
-            ...prev,
-            ...draft,
-        }));
-        if (draft.title || draft.body) {
-            setIsExpanded(true);
-        }
-    }, [setData]);
+    const setFormValues = useCallback(
+        (draft: any) => {
+            setData((prev) => ({
+                ...prev,
+                ...draft,
+            }));
+            if (draft.title || draft.body) {
+                setIsExpanded(true);
+            }
+        },
+        [setData],
+    );
 
     const { saveStatus, hasDraft, clearDraft, isMeaningful } = useEstateBoardAutoDraft({
         formState: {
@@ -291,11 +294,7 @@ export default function QuickComposer({ lastBroadcastNote, onSuccess, zones = []
                                 className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700"
                             >
                                 <span className="max-w-[120px] truncate">{file.name}</span>
-                                <button
-                                    type="button"
-                                    onClick={() => removeFile(idx)}
-                                    className="text-slate-400 hover:text-rose-500"
-                                >
+                                <button type="button" onClick={() => removeFile(idx)} className="text-slate-400 hover:text-rose-500">
                                     <X className="h-3 w-3" />
                                 </button>
                             </div>

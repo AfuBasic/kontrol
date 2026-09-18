@@ -1,9 +1,11 @@
 <?php
 
+use App\Mail\Organization\OrganizationInvitationMail;
 use App\Models\AdministrativeAssignment;
 use App\Models\Estate;
 use App\Models\EstateMembership;
 use App\Models\EstateOrganization;
+use App\Models\OrganizationMembership;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -290,7 +292,7 @@ it('sends OrganizationInvitationMail when creating an organization with an admin
 
     $response->assertRedirect()->assertSessionHas('success');
 
-    Mail::assertQueued(App\Mail\Organization\OrganizationInvitationMail::class, function ($mail) {
+    Mail::assertQueued(OrganizationInvitationMail::class, function ($mail) {
         return $mail->hasTo('dr.smith@apex.com')
             && $mail->role === 'admin'
             && $mail->isExistingUser === false;
@@ -318,7 +320,7 @@ it('sends OrganizationInvitationMail with role added info when admin is an exist
 
     $response->assertRedirect()->assertSessionHas('success');
 
-    Mail::assertQueued(App\Mail\Organization\OrganizationInvitationMail::class, function ($mail) {
+    Mail::assertQueued(OrganizationInvitationMail::class, function ($mail) {
         return $mail->hasTo('existing.doctor@apex.com')
             && $mail->role === 'admin'
             && $mail->isExistingUser === true;
@@ -335,7 +337,7 @@ it('does not re-send OrganizationInvitationMail on update if admin membership al
     ]);
 
     $adminUser = User::factory()->create(['email' => 'org.admin@example.com']);
-    \App\Models\OrganizationMembership::create([
+    OrganizationMembership::create([
         'organization_id' => $org->id,
         'user_id' => $adminUser->id,
         'role' => 'admin',
@@ -352,5 +354,55 @@ it('does not re-send OrganizationInvitationMail on update if admin membership al
 
     $response->assertRedirect()->assertSessionHas('success');
 
+    Mail::assertNothingSent();
+});
+
+it('allows estate admin to resend invitation to organization admin', function () {
+    Mail::fake();
+
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Starlight Academy',
+        'type' => 'school',
+    ]);
+
+    $orgAdmin = User::factory()->create([
+        'email' => 'principal@starlight.edu',
+        'email_verified_at' => null,
+    ]);
+
+    OrganizationMembership::create([
+        'organization_id' => $org->id,
+        'user_id' => $orgAdmin->id,
+        'role' => 'admin',
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->post(route('admin.organizations.resend-invitation', $org->id));
+
+    $response->assertRedirect()->assertSessionHas('success');
+
+    Mail::assertQueued(OrganizationInvitationMail::class, function ($mail) use ($orgAdmin) {
+        return $mail->hasTo($orgAdmin->email)
+            && $mail->role === 'admin';
+    });
+});
+
+it('returns error when resending invitation to organization without an admin', function () {
+    Mail::fake();
+
+    $org = EstateOrganization::factory()->create([
+        'estate_id' => $this->estate->id,
+        'name' => 'Orphan Organization',
+        'type' => 'business',
+    ]);
+
+    $response = $this->actingAs($this->admin)
+        ->withSession(['active_context_assignment_id' => $this->assignment->id])
+        ->post(route('admin.organizations.resend-invitation', $org->id));
+
+    $response->assertRedirect()->assertSessionHasErrors(['error']);
     Mail::assertNothingSent();
 });

@@ -42,6 +42,7 @@ export type SharedData = {
         error?: string;
         validation_result?: unknown;
         sos_success?: { id: string; time: string; has_emergency_contacts: boolean };
+        bulk_passes?: Array<{ visitor_name: string; code: string; pass_uuid: string }>;
     };
     errors: Record<string, string>;
     unreadCount?: number;

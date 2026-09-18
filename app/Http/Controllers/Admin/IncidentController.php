@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\Incidents\CloseIncidentAction;
 use App\Actions\Incidents\CreateIncidentAction;
 use App\Auth\ContextManager;
 use App\Enums\IncidentCategory;
@@ -197,8 +198,12 @@ class IncidentController extends Controller
         $settings = EstateSettings::forEstate($estateId);
         $categories = EstateSettings::resolveCategoriesForEstate($estateId);
 
+        $user = auth()->user();
+        $canClose = $loadedIncident->reporter_id === $user->id && $loadedIncident->status->value === 'solved';
+
         return Inertia::render('Admin/Incidents/Show', [
             'incident' => $loadedIncident,
+            'canClose' => $canClose,
             'require_resolution_notes' => (bool) $settings->require_resolution_notes_for_incidents,
             'official_comments' => $this->incidentService->getOfficialComments($incident->id),
             'discussion_comments' => Inertia::defer(fn () => $this->incidentService->getDiscussionComments($incident->id)),
@@ -220,6 +225,19 @@ class IncidentController extends Controller
                 ])
                 ->toArray()),
         ]);
+    }
+
+    /**
+     * Close the specified incident (reporter only).
+     */
+    public function close(Incident $incident, CloseIncidentAction $closeIncidentAction): RedirectResponse
+    {
+        $this->authorize('close', $incident);
+
+        $closeIncidentAction->execute($incident);
+
+        return redirect()->route('admin.incidents.show', $incident->hashid)
+            ->with('success', 'Incident marked as closed successfully.');
     }
 
     /**

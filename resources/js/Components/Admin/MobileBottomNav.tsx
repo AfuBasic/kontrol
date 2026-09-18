@@ -38,13 +38,7 @@ type BottomBarItem = {
     onClick?: () => void;
 };
 
-export default function MobileBottomNav({
-    url,
-    unreadNotifications = 0,
-    canAccess,
-    isAdmin = false,
-    onOpenMenu,
-}: Props) {
+export default function MobileBottomNav({ url, unreadNotifications = 0, canAccess, isAdmin = false, onOpenMenu }: Props) {
     const navItems = useMemo<BottomBarItem[]>(() => {
         // Slot 1: Universal Home (Anchor)
         const homeItem: BottomBarItem = {

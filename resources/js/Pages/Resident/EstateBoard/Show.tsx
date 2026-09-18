@@ -25,9 +25,7 @@ export default function EstateBoardShow({ post, comments }: Props) {
     const isLoadingMore = useRef(false);
     const [copied, setCopied] = useState(false);
 
-    const isPropertyOwnerCreator = Boolean(
-        post.property_owner_id && auth?.user?.id && post.property_owner_id === auth.user.id
-    );
+    const isPropertyOwnerCreator = Boolean(post.property_owner_id && auth?.user?.id && post.property_owner_id === auth.user.id);
 
     const handleDeletePost = () => {
         confirm({
@@ -125,11 +123,11 @@ export default function EstateBoardShow({ post, comments }: Props) {
     }
 
     return (
-        <div className="mx-auto max-w-2xl px-4 py-3 sm:px-6 sm:py-6 pb-28 text-left">
+        <div className="mx-auto max-w-2xl px-4 py-3 pb-28 text-left sm:px-6 sm:py-6">
             <Head title={post.title || 'Announcement'} />
 
             {/* Quiet Contextual Header */}
-            <div className="mb-4 sm:mb-6 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between sm:mb-6">
                 <Link
                     href={index.url()}
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition-colors hover:text-slate-900"

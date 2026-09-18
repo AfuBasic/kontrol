@@ -175,7 +175,7 @@ export default function EditResident({ resident, propertyOwners = [], zones = []
 
                     {/* Property Owner Delegation */}
                     <div>
-                        <label htmlFor="property_owner_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                        <label htmlFor="property_owner_id" className="mb-1.5 block text-sm font-medium text-gray-700">
                             Property Owner <span className="font-normal text-gray-400">(optional delegation)</span>
                         </label>
                         <CustomSelect
@@ -194,7 +194,7 @@ export default function EditResident({ resident, propertyOwners = [], zones = []
 
                     {zones.length > 0 && (
                         <div>
-                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700 mb-0.5">
+                            <label htmlFor="zone_id" className="mb-0.5 block text-sm font-medium text-gray-700">
                                 Zone
                             </label>
                             <p className="mb-2 text-xs text-gray-500">Assign this resident to a zone, or leave them estate-wide.</p>

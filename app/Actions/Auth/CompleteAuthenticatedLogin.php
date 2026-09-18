@@ -90,6 +90,14 @@ class CompleteAuthenticatedLogin
         }
 
         if ($defaultDestination === url('/')) {
+            if (is_string($intended) && $intended !== '' && $this->intendedDestinationGuard->allows($user, $intended)) {
+                return $intended;
+            }
+
+            if ($user->organizationMemberships()->where('is_active', true)->exists()) {
+                return route('org.dashboard');
+            }
+
             return $defaultDestination;
         }
 

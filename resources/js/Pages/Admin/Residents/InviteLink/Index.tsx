@@ -11,7 +11,6 @@ import {
 } from '@/actions/App/Http/Controllers/Admin/InviteLinkController';
 import { index as residentsIndex, create as residentsCreate } from '@/actions/App/Http/Controllers/Admin/ResidentController';
 
-
 // Wayfinder actions are used for routing
 
 interface InviteLinkProps {

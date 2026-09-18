@@ -340,33 +340,25 @@ export default function EstateExplorer({ estates, filters }: Props) {
                                             </h3>
                                             <div className="rounded-3xl border border-slate-100 bg-slate-50 p-5 dark:border-slate-800/50 dark:bg-slate-800/50">
                                                 <div className="flex justify-between border-b border-slate-200 pb-3 dark:border-slate-800">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                                        Total Residents
-                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Total Residents</span>
                                                     <span className="text-sm font-black text-slate-900 dark:text-white">
                                                         {selectedEstate.total_residents}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between border-b border-slate-200 py-3 dark:border-slate-800">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                                        Active Collections
-                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Active Collections</span>
                                                     <span className="text-sm font-black text-slate-900 dark:text-white">
                                                         {selectedEstate.total_collections ?? 0}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between border-b border-slate-200 py-3 dark:border-slate-800">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                                        Security Personnel
-                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Security Personnel</span>
                                                     <span className="text-sm font-black text-slate-900 dark:text-white">
                                                         {selectedEstate.total_security ?? 0}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between pt-3">
-                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                                                        Billing Model
-                                                    </span>
+                                                    <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Billing Model</span>
                                                     <span className="inline-flex items-center rounded-lg bg-indigo-500/10 px-2.5 py-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
                                                         {selectedEstate.billing_mode === 'estate_pays' ? 'Estate Pays' : 'Resident Direct'}
                                                     </span>

@@ -19,7 +19,7 @@ export default function VisitorScheduleEmptyState({ onInvite }: Props) {
 
             <div className="relative z-10 flex flex-col items-center">
                 {/* Visual Icon Badge */}
-                <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary-500/15 to-indigo-500/10 ring-1 ring-primary-500/20 shadow-xs">
+                <div className="relative mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-primary-500/15 to-indigo-500/10 shadow-xs ring-1 ring-primary-500/20">
                     <UserCheck className="h-8 w-8 text-primary-600" strokeWidth={1.75} />
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
                         <Sparkles className="h-2.5 w-2.5 text-white" />
@@ -27,10 +27,8 @@ export default function VisitorScheduleEmptyState({ onInvite }: Props) {
                 </div>
 
                 {/* Main Heading & Subtitle */}
-                <h3 className="text-base font-bold tracking-tight text-slate-900">
-                    You're all clear today
-                </h3>
-                <p className="mt-1.5 max-w-xs text-xs font-medium leading-relaxed text-slate-500">
+                <h3 className="text-base font-bold tracking-tight text-slate-900">You're all clear today</h3>
+                <p className="mt-1.5 max-w-xs text-xs leading-relaxed font-medium text-slate-500">
                     No visitors are currently scheduled. When you invite guests or deliveries, their arrival details and gate passes will show here.
                 </p>
 

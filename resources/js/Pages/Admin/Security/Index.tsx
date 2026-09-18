@@ -13,7 +13,6 @@ import CustomSelect from '@/Components/UI/CustomSelect';
 import { useDebounce } from '@/Hooks/useDebounce';
 import { usePermission } from '@/Hooks/usePermission';
 
-
 type SecurityPerson = {
     ulid: string;
     id: number;
@@ -133,10 +132,14 @@ export default function SecurityPersonnel({
             confirmLabel: isSuspended ? 'Activate staff' : 'Suspend staff',
             type: isSuspended ? 'info' : 'warning',
             onConfirm: () =>
-                router.patch(`/admin/security/${person.ulid}/suspend`, {}, {
-                    preserveScroll: true,
-                    preserveState: true,
-                }),
+                router.patch(
+                    `/admin/security/${person.ulid}/suspend`,
+                    {},
+                    {
+                        preserveScroll: true,
+                        preserveState: true,
+                    },
+                ),
         });
     };
 
@@ -154,9 +157,13 @@ export default function SecurityPersonnel({
     };
 
     const handleResendInvitation = (person: SecurityPerson) => {
-        router.post(`/admin/security/${person.ulid}/resend-invitation`, {}, {
-            preserveScroll: true,
-        });
+        router.post(
+            `/admin/security/${person.ulid}/resend-invitation`,
+            {},
+            {
+                preserveScroll: true,
+            },
+        );
     };
 
     const handleBulkDelete = () => {
@@ -322,139 +329,139 @@ export default function SecurityPersonnel({
                                     {/* Desktop Table View (>= md) */}
                                     <div className="hidden min-h-[280px] overflow-x-auto md:block">
                                         <table className="w-full table-auto border-collapse">
-                                        <thead className="border-b border-slate-100 bg-slate-50/70">
-                                            <tr>
-                                                {can('security.delete') && (
-                                                    <th className="w-10 px-4 py-3.5 text-center">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={selectedIds.length === security.data.length && security.data.length > 0}
-                                                            onChange={toggleSelectAll}
-                                                            className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
-                                                        />
+                                            <thead className="border-b border-slate-100 bg-slate-50/70">
+                                                <tr>
+                                                    {can('security.delete') && (
+                                                        <th className="w-10 px-4 py-3.5 text-center">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedIds.length === security.data.length && security.data.length > 0}
+                                                                onChange={toggleSelectAll}
+                                                                className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
+                                                            />
+                                                        </th>
+                                                    )}
+                                                    <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                        Personnel
                                                     </th>
-                                                )}
-                                                <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Personnel
-                                                </th>
-                                                <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Contact
-                                                </th>
-                                                <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Assigned Zone
-                                                </th>
-                                                <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Badge ID
-                                                </th>
-                                                <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
-                                                    Status
-                                                </th>
-                                                <th className="w-20 px-6 py-3.5 text-right"></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-50">
-                                            {security.data.map((person, idx) => {
-                                                const isSelected = selectedIds.includes(person.id);
-                                                const initial = person.name ? person.name.charAt(0).toUpperCase() : 'S';
+                                                    <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                        Contact
+                                                    </th>
+                                                    <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                        Assigned Zone
+                                                    </th>
+                                                    <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                        Badge ID
+                                                    </th>
+                                                    <th className="text-slate-455 px-6 py-3.5 text-left text-[9px] font-black tracking-widest uppercase">
+                                                        Status
+                                                    </th>
+                                                    <th className="w-20 px-6 py-3.5 text-right"></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-slate-50">
+                                                {security.data.map((person, idx) => {
+                                                    const isSelected = selectedIds.includes(person.id);
+                                                    const initial = person.name ? person.name.charAt(0).toUpperCase() : 'S';
 
-                                                // Soft premium colors for avatars
-                                                const bgColors = [
-                                                    'bg-blue-50 text-blue-700',
-                                                    'bg-indigo-50 text-indigo-700',
-                                                    'bg-purple-50 text-purple-700',
-                                                    'bg-emerald-50 text-emerald-700',
-                                                ];
-                                                const avatarColor = bgColors[idx % bgColors.length];
+                                                    // Soft premium colors for avatars
+                                                    const bgColors = [
+                                                        'bg-blue-50 text-blue-700',
+                                                        'bg-indigo-50 text-indigo-700',
+                                                        'bg-purple-50 text-purple-700',
+                                                        'bg-emerald-50 text-emerald-700',
+                                                    ];
+                                                    const avatarColor = bgColors[idx % bgColors.length];
 
-                                                return (
-                                                    <tr
-                                                        key={person.id}
-                                                        className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
-                                                    >
-                                                        {can('security.delete') && (
-                                                            <td className="px-4 py-3.5 text-center">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isSelected}
-                                                                    onChange={() => toggleSelect(person.id)}
-                                                                    className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
-                                                                />
-                                                            </td>
-                                                        )}
+                                                    return (
+                                                        <tr
+                                                            key={person.id}
+                                                            className={`group transition-colors hover:bg-slate-50/50 ${isSelected ? 'bg-slate-50/70' : ''}`}
+                                                        >
+                                                            {can('security.delete') && (
+                                                                <td className="px-4 py-3.5 text-center">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={isSelected}
+                                                                        onChange={() => toggleSelect(person.id)}
+                                                                        className="border-slate-350 h-4 w-4 rounded text-slate-900 focus:ring-slate-900"
+                                                                    />
+                                                                </td>
+                                                            )}
 
-                                                        {/* Avatar & Name */}
-                                                        <td className="px-6 py-3.5 whitespace-nowrap">
-                                                            <div className="flex items-center gap-3">
-                                                                <div
-                                                                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
-                                                                >
-                                                                    {initial}
-                                                                </div>
-                                                                <div className="min-w-0">
-                                                                    <Link
-                                                                        href={`/admin/security/${person.ulid}/edit`}
-                                                                        className="block max-w-[150px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                            {/* Avatar & Name */}
+                                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div
+                                                                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColor}`}
                                                                     >
-                                                                        {person.name}
-                                                                    </Link>
+                                                                        {initial}
+                                                                    </div>
+                                                                    <div className="min-w-0">
+                                                                        <Link
+                                                                            href={`/admin/security/${person.ulid}/edit`}
+                                                                            className="block max-w-[150px] truncate text-xs font-bold text-slate-900 hover:text-blue-600 hover:underline"
+                                                                        >
+                                                                            {person.name}
+                                                                        </Link>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
+                                                            </td>
 
-                                                        {/* Contact */}
-                                                        <td className="px-6 py-3.5 whitespace-nowrap">
-                                                            <div className="text-xs font-semibold text-slate-800">
-                                                                <span className="block max-w-[180px] truncate">{person.email}</span>
-                                                                <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
-                                                                    {person.phone || '-'}
+                                                            {/* Contact */}
+                                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                                <div className="text-xs font-semibold text-slate-800">
+                                                                    <span className="block max-w-[180px] truncate">{person.email}</span>
+                                                                    <span className="mt-0.5 block text-[10px] font-bold text-slate-400">
+                                                                        {person.phone || '-'}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+
+                                                            {/* Coverage / Zone */}
+                                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                                <span
+                                                                    className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${person.zone_name && person.zone_name !== 'Entire estate' ? 'border border-blue-100 bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-700'}`}
+                                                                >
+                                                                    {person.zone_name || 'Entire estate'}
                                                                 </span>
-                                                            </div>
-                                                        </td>
+                                                            </td>
+                                                            {/* Badge */}
+                                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                                <span className="border-slate-150 inline-flex rounded-full border bg-slate-50 px-2 py-0.5 text-xs font-bold text-slate-700">
+                                                                    {person.badge_number || '-'}
+                                                                </span>
+                                                            </td>
 
-                                                        {/* Coverage / Zone */}
-                                                        <td className="px-6 py-3.5 whitespace-nowrap">
-                                                            <span
-                                                                className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${person.zone_name && person.zone_name !== 'Entire estate' ? 'border border-blue-100 bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-700'}`}
-                                                            >
-                                                                {person.zone_name || 'Entire estate'}
-                                                            </span>
-                                                        </td>
-                                                        {/* Badge */}
-                                                        <td className="px-6 py-3.5 whitespace-nowrap">
-                                                            <span className="border-slate-150 inline-flex rounded-full border bg-slate-50 px-2 py-0.5 text-xs font-bold text-slate-700">
-                                                                {person.badge_number || '-'}
-                                                            </span>
-                                                        </td>
-
-                                                        {/* Status Badge */}
-                                                        <td className="px-6 py-3.5 whitespace-nowrap">
-                                                            <span
-                                                                className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
-                                                                    person.suspended_at
-                                                                        ? 'bg-rose-50 text-rose-700'
+                                                            {/* Status Badge */}
+                                                            <td className="px-6 py-3.5 whitespace-nowrap">
+                                                                <span
+                                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[9px] font-black tracking-wider uppercase ${
+                                                                        person.suspended_at
+                                                                            ? 'bg-rose-50 text-rose-700'
+                                                                            : person.status === 'accepted'
+                                                                              ? 'bg-emerald-50 text-emerald-700'
+                                                                              : 'bg-amber-50 text-amber-700'
+                                                                    }`}
+                                                                >
+                                                                    {person.suspended_at
+                                                                        ? 'Suspended'
                                                                         : person.status === 'accepted'
-                                                                          ? 'bg-emerald-50 text-emerald-700'
-                                                                          : 'bg-amber-50 text-amber-700'
-                                                                }`}
-                                                            >
-                                                                {person.suspended_at
-                                                                    ? 'Suspended'
-                                                                    : person.status === 'accepted'
-                                                                      ? 'Active'
-                                                                      : person.status}
-                                                            </span>
-                                                        </td>
+                                                                          ? 'Active'
+                                                                          : person.status}
+                                                                </span>
+                                                            </td>
 
-                                                        {/* Actions */}
-                                                        <td className="relative px-6 py-3.5 text-right whitespace-nowrap">
-                                                            <SecurityActions security={person} />
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                            {/* Actions */}
+                                                            <td className="relative px-6 py-3.5 text-right whitespace-nowrap">
+                                                                <SecurityActions security={person} />
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </>
                             ) : (
                                 /* Redesigned Empty State */
@@ -523,7 +530,7 @@ export default function SecurityPersonnel({
 
                                 {/* Desktop Numbers */}
                                 <div className="hidden sm:flex sm:w-full sm:items-center sm:justify-between">
-                                    <p className="text-slate-500 text-xs font-bold dark:text-slate-400">
+                                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                                         Showing <span className="text-slate-950 dark:text-slate-100">{security.data.length}</span> of{' '}
                                         <span className="text-slate-950 dark:text-slate-100">{security.total}</span> staff members
                                     </p>

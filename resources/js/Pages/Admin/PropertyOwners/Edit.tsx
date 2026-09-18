@@ -163,7 +163,7 @@ export default function Edit({ propertyOwner, zones = [] }: Props) {
 
                     {zones.length > 0 && (
                         <div>
-                            <label htmlFor="zone_id" className="block text-sm font-medium text-gray-700 mb-0.5">
+                            <label htmlFor="zone_id" className="mb-0.5 block text-sm font-medium text-gray-700">
                                 Zone
                             </label>
                             <p className="mb-2 text-xs text-gray-500">Assign this property owner to a zone, or leave them estate-wide.</p>

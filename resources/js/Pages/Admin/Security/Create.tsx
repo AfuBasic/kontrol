@@ -405,7 +405,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 className="mt-3 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
                                             >
-                                                <label htmlFor="zone_id" className="block text-xs font-semibold text-gray-700 mb-1.5">
+                                                <label htmlFor="zone_id" className="mb-1.5 block text-xs font-semibold text-gray-700">
                                                     Select Operational Zone
                                                 </label>
                                                 <CustomSelect
@@ -524,7 +524,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 {/* Zone Assignment for Bulk */}
                                 {zones.length > 0 && (
                                     <div className="mt-4">
-                                        <label htmlFor="bulk_zone_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        <label htmlFor="bulk_zone_id" className="mb-1.5 block text-sm font-medium text-gray-700">
                                             Zone Assignment <span className="text-gray-400">(optional)</span>
                                         </label>
                                         <CustomSelect
@@ -639,7 +639,7 @@ export default function CreateSecurity({ inviteLinks = [], zones = [] }: Props) 
                                 {/* Zone Assignment for Paste */}
                                 {zones.length > 0 && (
                                     <div className="mt-4">
-                                        <label htmlFor="paste_zone_id" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                        <label htmlFor="paste_zone_id" className="mb-1.5 block text-sm font-medium text-gray-700">
                                             Zone Assignment <span className="text-gray-400">(optional)</span>
                                         </label>
                                         <CustomSelect

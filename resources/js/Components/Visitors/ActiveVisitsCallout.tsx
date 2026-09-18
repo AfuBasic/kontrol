@@ -40,12 +40,8 @@ export default function ActiveVisitsCallout({ activeVisits, onViewAll }: Props) 
             <div className="mt-2 space-y-1">
                 {firstTwo.map((v) => (
                     <div key={v.id} className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
-                        <span className="font-semibold text-slate-900 dark:text-white truncate max-w-[200px]">
-                            {v.visitor.name}
-                        </span>
-                        <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                            since {v.verified_at_time || v.verified_at}
-                        </span>
+                        <span className="max-w-[200px] truncate font-semibold text-slate-900 dark:text-white">{v.visitor.name}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">since {v.verified_at_time || v.verified_at}</span>
                     </div>
                 ))}
             </div>

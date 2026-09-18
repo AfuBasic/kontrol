@@ -83,9 +83,7 @@ export default function UsersIndex({ users, filters, hasRoles = true }: Props) {
                     <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100/50">
                         <Users className="h-8 w-8" strokeWidth={1.5} />
                     </div>
-                    <h3 className="text-base font-black text-slate-900">
-                        {hasRoles ? 'Build your estate team' : 'Create your first estate role'}
-                    </h3>
+                    <h3 className="text-base font-black text-slate-900">{hasRoles ? 'Build your estate team' : 'Create your first estate role'}</h3>
                     <p className="mt-2 max-w-sm text-xs leading-relaxed font-semibold text-slate-500">
                         {hasRoles
                             ? "Add the people who help run your estate. Once they're added, you can give them specific responsibilities and define where those responsibilities apply."

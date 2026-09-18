@@ -2,8 +2,6 @@ import { Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { UserPlus, History, Megaphone } from 'lucide-react';
 
-
-
 const actions = [
     {
         name: 'Announcements',

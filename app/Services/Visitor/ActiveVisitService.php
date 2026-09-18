@@ -147,10 +147,10 @@ class ActiveVisitService
                             $uq->where('name', 'like', "%{$search}%");
                         });
                 })
-                ->orWhere('vehicle_plate_number', 'like', "%{$search}%")
-                ->orWhere('meta->tag', 'like', "%{$search}%")
-                ->orWhere('meta->visitor_name', 'like', "%{$search}%")
-                ->orWhere('meta->organization_name', 'like', "%{$search}%");
+                    ->orWhere('vehicle_plate_number', 'like', "%{$search}%")
+                    ->orWhere('meta->tag', 'like', "%{$search}%")
+                    ->orWhere('meta->visitor_name', 'like', "%{$search}%")
+                    ->orWhere('meta->organization_name', 'like', "%{$search}%");
             });
         }
 

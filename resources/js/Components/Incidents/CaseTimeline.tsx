@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-    Activity as ActivityIcon,
-    AlertCircle,
-    CheckCircle2,
-    Clock,
-    Flame,
-    History,
-    Lock,
-    User,
-} from 'lucide-react';
+import { Activity as ActivityIcon, AlertCircle, CheckCircle2, Clock, Flame, History, Lock, User } from 'lucide-react';
 import type { Incident } from '@/types/incidents';
 
 export interface IncidentActivityItem {
@@ -174,29 +165,23 @@ export default function CaseTimeline({ incident, activities = [], className = ''
 
     return (
         <section
-            className={`rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 ${className}`}
+            className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs sm:p-6 dark:border-slate-800 dark:bg-slate-900 ${className}`}
         >
-            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100 dark:border-slate-800">
+            <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
                 <div className="flex items-center gap-2">
                     <History className="h-4 w-4 text-slate-500" />
-                    <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">
-                        Case Operational History
-                    </h3>
+                    <h3 className="text-sm font-black tracking-tight text-slate-900 dark:text-slate-100">Case Operational History</h3>
                 </div>
                 {incident.reference_code && (
-                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
-                        {incident.reference_code}
-                    </span>
+                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">{incident.reference_code}</span>
                 )}
             </div>
 
             {/* Timeline Items */}
             {events.length === 0 ? (
-                <div className="py-6 text-center text-xs text-slate-400">
-                    No history events recorded yet.
-                </div>
+                <div className="py-6 text-center text-xs text-slate-400">No history events recorded yet.</div>
             ) : (
-                <div className="relative space-y-6 before:absolute before:left-[17px] before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200/80 dark:before:bg-slate-800">
+                <div className="relative space-y-6 before:absolute before:top-3 before:bottom-3 before:left-[17px] before:w-0.5 before:bg-slate-200/80 dark:before:bg-slate-800">
                     {events.map((event) => {
                         const Icon = event.icon;
 
@@ -208,14 +193,12 @@ export default function CaseTimeline({ incident, activities = [], className = ''
                                     <Icon className="h-4 w-4 shrink-0" />
                                 </div>
 
-                                <div className="flex-1 min-w-0 pt-0.5">
+                                <div className="min-w-0 flex-1 pt-0.5">
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                         <div className="flex items-center gap-2">
                                             <p
-                                                className={`text-xs sm:text-sm font-bold ${
-                                                    event.isMilestone
-                                                        ? 'text-slate-900 dark:text-slate-100'
-                                                        : 'text-slate-700 dark:text-slate-300'
+                                                className={`text-xs font-bold sm:text-sm ${
+                                                    event.isMilestone ? 'text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'
                                                 }`}
                                             >
                                                 {event.title}
@@ -227,13 +210,13 @@ export default function CaseTimeline({ incident, activities = [], className = ''
                                             )}
                                         </div>
 
-                                        <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                                        <span className="text-[11px] font-semibold whitespace-nowrap text-slate-400 dark:text-slate-500">
                                             {event.dateFormatted}
                                         </span>
                                     </div>
 
                                     {event.description && (
-                                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                                        <p className="mt-1 text-xs leading-relaxed font-medium text-slate-500 dark:text-slate-400">
                                             {event.description}
                                         </p>
                                     )}

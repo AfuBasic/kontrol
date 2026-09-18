@@ -1,16 +1,9 @@
-import { Head, useForm, router } from '@inertiajs/react';
-import {
-    Calendar,
-    Plus,
-    Clock,
-    CheckCircle2,
-    XCircle,
-    Trash2,
-    X,
-    AlertCircle,
-} from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { CalendarClock, Clock, DoorOpen, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
+import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
+import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
 
 interface PublicWindow {
     id: number;
@@ -36,15 +29,7 @@ interface Props {
     windows: PublicWindow[];
 }
 
-const DAYS = [
-    'Sunday',
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
-];
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export default function PublicWindows({ organization, membership, windows }: Props) {
     const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -58,8 +43,9 @@ export default function PublicWindows({ organization, membership, windows }: Pro
         notes: '',
     });
 
-    const handleCreate = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleCreate = (event: React.FormEvent) => {
+        event.preventDefault();
+
         post('/org/public-windows', {
             onSuccess: () => {
                 setCreateModalOpen(false);
@@ -69,199 +55,189 @@ export default function PublicWindows({ organization, membership, windows }: Pro
     };
 
     const handleDelete = (id: number) => {
-        if (confirm('Are you sure you want to delete this public access window?')) {
+        if (confirm('Delete this public access time?')) {
             router.delete(`/org/public-windows/${id}`);
         }
     };
 
     return (
-        <OrganizationLayout title="Public Access Windows">
-            <Head title={`${organization.name} - Public Windows`} />
+        <OrganizationLayout title="Access - Public Times" contentClassName="max-w-[86rem]">
+            <Head title={`${organization.name} - Public Access Times`} />
 
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <Calendar className="w-5 h-5 text-indigo-400" />
-                            Public Access Windows
-                        </h1>
-                        <p className="text-xs text-zinc-400 mt-0.5">
-                            Define recurring open worship or community hours when visitors can enter without private invitation passes.
-                        </p>
+            <div className="space-y-5">
+                <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                        <div className="max-w-2xl">
+                            <p className="text-sm font-black text-[#0b4aa2]">Public access policy</p>
+                            <h1 className="mt-1.5 text-2xl font-black text-slate-950 sm:mt-2 sm:text-4xl">
+                                Times visitors can enter without individual codes
+                            </h1>
+                            <p className="mt-3 text-sm leading-6 font-semibold text-slate-500 sm:text-base">
+                                Use this for services, clinic hours, school runs, or other predictable access windows.
+                            </p>
+                        </div>
+
+                        {membership.is_admin && (
+                            <button
+                                type="button"
+                                onClick={() => setCreateModalOpen(true)}
+                                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#0f172a] px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.20)]"
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add time
+                            </button>
+                        )}
                     </div>
 
-                    {membership.is_admin && (
-                        <button
-                            type="button"
-                            onClick={() => setCreateModalOpen(true)}
-                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Add Access Window
-                        </button>
-                    )}
-                </div>
+                    <div className="mt-6">
+                        <AccessTabs activeTab="public_windows" />
+                    </div>
+                </section>
 
-                {/* Windows Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {windows.length === 0 ? (
-                        <div className="col-span-full p-12 text-center text-xs text-zinc-500 border border-dashed border-zinc-800 rounded-xl bg-zinc-900/20">
-                            No public access windows scheduled. Click "Add Access Window" to define one.
+                {windows.length === 0 ? (
+                    <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-8">
+                        <div className="flex max-w-2xl gap-4">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#eaf2ff] text-[#0b4aa2]">
+                                <CalendarClock className="h-6 w-6" />
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-black tracking-tight text-slate-950">No public access times yet.</h2>
+                                <p className="mt-3 text-sm leading-6 font-semibold text-slate-500">
+                                    Add the regular windows when the estate gate should expect visitors for {organization.name}.
+                                </p>
+                            </div>
                         </div>
-                    ) : (
-                        windows.map((window) => (
-                            <div
+                    </section>
+                ) : (
+                    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                        {windows.map((window) => (
+                            <article
                                 key={window.id}
-                                className={`rounded-xl border p-4 space-y-3 shadow-sm ${
-                                    window.is_open_now
-                                        ? 'bg-emerald-950/15 border-emerald-500/30'
-                                        : 'bg-zinc-900/40 border-zinc-800/80'
-                                }`}
+                                className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-5"
                             >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                        <h3 className="text-sm font-semibold text-white">{window.name}</h3>
-                                        <div className="text-xs text-indigo-400 font-medium mt-0.5">
-                                            {DAYS[window.day_of_week]}
-                                        </div>
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-700 ring-1 ring-slate-100">
+                                        <DoorOpen className="h-6 w-6" />
                                     </div>
-
-                                    {window.is_open_now ? (
-                                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 animate-pulse">
-                                            Open Now
-                                        </span>
-                                    ) : (
-                                        <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
-                                            Scheduled
+                                    {window.is_open_now && (
+                                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700 ring-1 ring-emerald-100">
+                                            Open now
                                         </span>
                                     )}
                                 </div>
 
-                                <div className="text-xs text-zinc-300 flex items-center gap-1.5 font-mono">
-                                    <Clock className="w-3.5 h-3.5 text-zinc-400" />
-                                    <span>{window.start_time} — {window.end_time}</span>
-                                </div>
-
-                                {window.notes && (
-                                    <p className="text-[11px] text-zinc-500 italic">{window.notes}</p>
-                                )}
+                                <h2 className="mt-5 text-xl font-black tracking-tight text-slate-950">{window.name}</h2>
+                                <p className="mt-3 flex items-center gap-2 text-sm font-bold text-slate-600">
+                                    <Clock className="h-4 w-4 text-slate-400" />
+                                    {DAYS[window.day_of_week]}s, {window.start_time} to {window.end_time}
+                                </p>
+                                {window.notes && <p className="mt-3 text-sm leading-6 font-semibold text-slate-500">{window.notes}</p>}
 
                                 {membership.is_admin && (
-                                    <div className="pt-2 border-t border-zinc-800/60 flex justify-end">
-                                        <button
-                                            type="button"
-                                            onClick={() => handleDelete(window.id)}
-                                            className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1"
-                                        >
-                                            <Trash2 className="w-3 h-3" /> Remove
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                {/* Create Modal */}
-                {createModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-                        <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-xl p-6 space-y-4 shadow-xl text-xs">
-                            <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                                <h3 className="text-sm font-semibold text-white">Add Public Access Window</h3>
-                                <button
-                                    onClick={() => setCreateModalOpen(false)}
-                                    className="p-1 rounded text-zinc-400 hover:text-white"
-                                >
-                                    <X className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <form onSubmit={handleCreate} className="space-y-4">
-                                <div>
-                                    <label className="block text-zinc-300 font-medium mb-1">Window Name</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                        placeholder="e.g. Sunday Morning Service"
-                                    />
-                                    {errors.name && <p className="text-rose-400 mt-1">{errors.name}</p>}
-                                </div>
-
-                                <div>
-                                    <label className="block text-zinc-300 font-medium mb-1">Day of the Week</label>
-                                    <select
-                                        value={data.day_of_week}
-                                        onChange={(e) => setData('day_of_week', parseInt(e.target.value, 10))}
-                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                    >
-                                        {DAYS.map((day, idx) => (
-                                            <option key={day} value={idx}>
-                                                {day}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-zinc-300 font-medium mb-1">Start Time (24h)</label>
-                                        <input
-                                            type="time"
-                                            required
-                                            value={data.start_time}
-                                            onChange={(e) => setData('start_time', e.target.value)}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                        />
-                                        {errors.start_time && <p className="text-rose-400 mt-1">{errors.start_time}</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-zinc-300 font-medium mb-1">End Time (24h)</label>
-                                        <input
-                                            type="time"
-                                            required
-                                            value={data.end_time}
-                                            onChange={(e) => setData('end_time', e.target.value)}
-                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                        />
-                                        {errors.end_time && <p className="text-rose-400 mt-1">{errors.end_time}</p>}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-zinc-300 font-medium mb-1">Notes (Optional)</label>
-                                    <input
-                                        type="text"
-                                        value={data.notes}
-                                        onChange={(e) => setData('notes', e.target.value)}
-                                        className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-3 py-2 text-zinc-100 focus:outline-none focus:border-indigo-500"
-                                        placeholder="e.g. Main auditorium open to all worshippers"
-                                    />
-                                </div>
-
-                                <div className="flex items-center justify-end gap-2 pt-4 border-t border-zinc-800">
                                     <button
                                         type="button"
-                                        onClick={() => setCreateModalOpen(false)}
-                                        className="px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold"
+                                        onClick={() => handleDelete(window.id)}
+                                        className="mt-5 inline-flex min-h-10 items-center gap-2 rounded-2xl bg-rose-50 px-3 text-xs font-black text-rose-700 ring-1 ring-rose-100"
                                     >
-                                        Cancel
+                                        <Trash2 className="h-4 w-4" />
+                                        Remove
                                     </button>
-                                    <button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold disabled:opacity-50"
-                                    >
-                                        {processing ? 'Saving...' : 'Save Window'}
-                                    </button>
-                                </div>
-                            </form>
+                                )}
+                            </article>
+                        ))}
+                    </section>
+                )}
+
+                <ResponsiveSheet isOpen={createModalOpen} onClose={() => setCreateModalOpen(false)}>
+                    <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 className="text-lg font-black text-slate-950">Add public time</h3>
+                            <p className="mt-1 text-sm font-semibold text-slate-500">Tell security when this destination is open to the public.</p>
                         </div>
                     </div>
-                )}
+
+                    <form noValidate onSubmit={handleCreate} className="space-y-4 pt-5">
+                        <div>
+                            <label className="text-sm font-black text-slate-950">Schedule name</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Sunday service"
+                                value={data.name}
+                                onChange={(event) => setData('name', event.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                            />
+                            {errors.name && <p className="mt-1 text-xs font-bold text-rose-600">{errors.name}</p>}
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-black text-slate-950">Day</label>
+                            <select
+                                value={data.day_of_week}
+                                onChange={(event) => setData('day_of_week', parseInt(event.target.value, 10))}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                            >
+                                {DAYS.map((day, index) => (
+                                    <option key={day} value={index}>
+                                        {day}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.day_of_week && <p className="mt-1 text-xs font-bold text-rose-600">{errors.day_of_week}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="text-sm font-black text-slate-950">Start</label>
+                                <input
+                                    type="time"
+                                    value={data.start_time}
+                                    onChange={(event) => setData('start_time', event.target.value)}
+                                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                />
+                                {errors.start_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.start_time}</p>}
+                            </div>
+                            <div>
+                                <label className="text-sm font-black text-slate-950">End</label>
+                                <input
+                                    type="time"
+                                    value={data.end_time}
+                                    onChange={(event) => setData('end_time', event.target.value)}
+                                    className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                                />
+                                {errors.end_time && <p className="mt-1 text-xs font-bold text-rose-600">{errors.end_time}</p>}
+                            </div>
+                        </div>
+
+                        <div>
+                            <label className="text-sm font-black text-slate-950">Notes</label>
+                            <input
+                                type="text"
+                                placeholder="e.g. Open to congregation members"
+                                value={data.notes}
+                                onChange={(event) => setData('notes', event.target.value)}
+                                className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-950 focus:border-[#0b4aa2] focus:ring-4 focus:ring-[#0b4aa2]/10 focus:outline-none"
+                            />
+                            {errors.notes && <p className="mt-1 text-xs font-bold text-rose-600">{errors.notes}</p>}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4">
+                            <button
+                                type="button"
+                                onClick={() => setCreateModalOpen(false)}
+                                className="rounded-2xl px-4 py-2.5 text-sm font-black text-slate-500"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="rounded-2xl bg-[#0f172a] px-5 py-2.5 text-sm font-black text-white disabled:opacity-50"
+                            >
+                                {processing ? 'Saving...' : 'Add time'}
+                            </button>
+                        </div>
+                    </form>
+                </ResponsiveSheet>
             </div>
         </OrganizationLayout>
     );

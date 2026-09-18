@@ -94,10 +94,7 @@ export default function TransactionFilters({ filters, filterOptions }: Props) {
                     size="sm"
                     value={localFilters.resident_id}
                     onChange={(val) => update('resident_id', String(val))}
-                    options={[
-                        { value: '', label: 'All Residents' },
-                        ...filterOptions.residents.map((r) => ({ value: String(r.id), label: r.name })),
-                    ]}
+                    options={[{ value: '', label: 'All Residents' }, ...filterOptions.residents.map((r) => ({ value: String(r.id), label: r.name }))]}
                 />
                 <CustomSelect
                     size="sm"
@@ -112,28 +109,19 @@ export default function TransactionFilters({ filters, filterOptions }: Props) {
                     size="sm"
                     value={localFilters.type}
                     onChange={(val) => update('type', String(val))}
-                    options={[
-                        { value: '', label: 'All Types' },
-                        ...filterOptions.types.map((t) => ({ value: t.value, label: t.label })),
-                    ]}
+                    options={[{ value: '', label: 'All Types' }, ...filterOptions.types.map((t) => ({ value: t.value, label: t.label }))]}
                 />
                 <CustomSelect
                     size="sm"
                     value={localFilters.status}
                     onChange={(val) => update('status', String(val))}
-                    options={[
-                        { value: '', label: 'All Statuses' },
-                        ...filterOptions.statuses.map((s) => ({ value: s.value, label: s.label })),
-                    ]}
+                    options={[{ value: '', label: 'All Statuses' }, ...filterOptions.statuses.map((s) => ({ value: s.value, label: s.label }))]}
                 />
                 <CustomSelect
                     size="sm"
                     value={localFilters.payment_method}
                     onChange={(val) => update('payment_method', String(val))}
-                    options={[
-                        { value: '', label: 'All Methods' },
-                        ...filterOptions.payment_methods.map((m) => ({ value: m.value, label: m.label })),
-                    ]}
+                    options={[{ value: '', label: 'All Methods' }, ...filterOptions.payment_methods.map((m) => ({ value: m.value, label: m.label }))]}
                 />
                 <input type="date" value={localFilters.date_from} onChange={(e) => update('date_from', e.target.value)} className={selectClass} />
                 <input type="date" value={localFilters.date_to} onChange={(e) => update('date_to', e.target.value)} className={selectClass} />

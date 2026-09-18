@@ -15,12 +15,15 @@ interface Props {
 
 export default function SosButton({ variant = 'header', className = '' }: Props) {
     const { props } = usePage<SharedData>();
-    const activeSos = props.auth?.user?.active_sos as {
-        id: number;
-        status: string;
-        triggered_at: string;
-        acknowledged_at?: string | null;
-    } | null | undefined;
+    const activeSos = props.auth?.user?.active_sos as
+        | {
+              id: number;
+              status: string;
+              triggered_at: string;
+              acknowledged_at?: string | null;
+          }
+        | null
+        | undefined;
     const sosSuccessData = props.flash?.sos_success as { id: string; time: string; has_emergency_contacts: boolean } | null;
 
     const [isHolding, setIsHolding] = useState(false);
@@ -170,14 +173,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                     className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center"
                 >
                     <svg className="h-full w-full -rotate-90 p-0.5" viewBox={`0 0 ${svgSize} ${svgSize}`}>
-                        <circle
-                            cx={center}
-                            cy={center}
-                            r={radius}
-                            fill="transparent"
-                            stroke={bgColor}
-                            strokeWidth="3"
-                        />
+                        <circle cx={center} cy={center} r={radius} fill="transparent" stroke={bgColor} strokeWidth="3" />
                         <motion.circle
                             cx={center}
                             cy={center}
@@ -207,7 +203,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                     onPointerUp={handleEndHold}
                     onPointerCancel={handleEndHold}
                     onContextMenu={(e) => e.preventDefault()}
-                    className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-all select-none active:scale-95 touch-none ${
+                    className={`relative flex h-10 w-10 touch-none items-center justify-center rounded-xl transition-all select-none active:scale-95 ${
                         activeSos
                             ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100'
                             : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
@@ -215,7 +211,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                 >
                     {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
                     <ShieldAlert
-                        className={`h-5 w-5 relative z-20 ${activeSos ? 'text-rose-600 animate-pulse' : 'text-slate-500'}`}
+                        className={`relative z-20 h-5 w-5 ${activeSos ? 'animate-pulse text-rose-600' : 'text-slate-500'}`}
                         strokeWidth={2}
                     />
                     {activeSos && (
@@ -233,7 +229,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="pointer-events-none absolute top-12 left-1/2 -translate-x-1/2 rounded-lg bg-slate-900 px-2.5 py-1 text-[10px] font-black tracking-wider whitespace-nowrap text-white uppercase shadow-xl ring-1 ring-white/10 z-50"
+                            className="pointer-events-none absolute top-12 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-slate-900 px-2.5 py-1 text-[10px] font-black tracking-wider whitespace-nowrap text-white uppercase shadow-xl ring-1 ring-white/10"
                         >
                             HOLD FOR SOS
                         </motion.div>
@@ -251,28 +247,24 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                     onPointerUp={handleEndHold}
                     onPointerCancel={handleEndHold}
                     onContextMenu={(e) => e.preventDefault()}
-                    className={`group relative flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all select-none active:scale-98 touch-none ${
+                    className={`group relative flex touch-none items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all select-none active:scale-98 ${
                         activeSos
                             ? 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/30 hover:bg-rose-500/20'
-                            : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                            : 'text-white/40 hover:bg-white/5 hover:text-white/80'
                     } ${className}`}
                 >
                     <div className="relative flex h-5 w-5 items-center justify-center">
                         {renderHoldRing('rgb(244, 63, 94)', 'rgba(255, 255, 255, 0.15)')}
                         <ShieldAlert
-                            className={`h-4 w-4 relative z-20 ${
-                                activeSos ? 'text-rose-400' : 'text-white/40 group-hover:text-white/80 transition-colors'
+                            className={`relative z-20 h-4 w-4 ${
+                                activeSos ? 'text-rose-400' : 'text-white/40 transition-colors group-hover:text-white/80'
                             }`}
                             strokeWidth={2}
                         />
                     </div>
-                    <span className="tracking-tight">
-                        {activeSos ? 'Active Emergency SOS' : 'Emergency SOS'}
-                    </span>
+                    <span className="tracking-tight">{activeSos ? 'Active Emergency SOS' : 'Emergency SOS'}</span>
                     {activeSos && (
-                        <span className="ml-1 rounded-full bg-rose-500/20 px-1.5 py-0.5 text-[9px] font-black uppercase text-rose-300">
-                            Live
-                        </span>
+                        <span className="ml-1 rounded-full bg-rose-500/20 px-1.5 py-0.5 text-[9px] font-black text-rose-300 uppercase">Live</span>
                     )}
                 </button>
 
@@ -283,7 +275,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                             initial={{ opacity: 0, y: 5 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="pointer-events-none absolute -bottom-7 left-1/2 -translate-x-1/2 rounded-md bg-white/10 px-2 py-0.5 text-[9px] font-black tracking-wider whitespace-nowrap text-white uppercase backdrop-blur-md z-30"
+                            className="pointer-events-none absolute -bottom-7 left-1/2 z-30 -translate-x-1/2 rounded-md bg-white/10 px-2 py-0.5 text-[9px] font-black tracking-wider whitespace-nowrap text-white uppercase backdrop-blur-md"
                         >
                             KEEP HOLDING...
                         </motion.div>
@@ -300,7 +292,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                 onPointerUp={handleEndHold}
                 onPointerCancel={handleEndHold}
                 onContextMenu={(e) => e.preventDefault()}
-                className={`relative flex w-full flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all select-none active:scale-95 touch-none hover:bg-slate-50 ${className}`}
+                className={`relative flex w-full touch-none flex-col items-center gap-1.5 rounded-2xl p-3 text-center transition-all select-none hover:bg-slate-50 active:scale-95 ${className}`}
             >
                 <div
                     className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${
@@ -308,10 +300,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                     }`}
                 >
                     {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
-                    <ShieldAlert
-                        className={`h-6 w-6 relative z-20 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`}
-                        strokeWidth={2}
-                    />
+                    <ShieldAlert className={`relative z-20 h-6 w-6 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`} strokeWidth={2} />
                     {activeSos && (
                         <span className="absolute top-1 right-1 flex h-2.5 w-2.5">
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75"></span>
@@ -319,9 +308,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                         </span>
                     )}
                 </div>
-                <span className="text-[10px] leading-tight font-bold text-slate-600">
-                    {activeSos ? 'Active SOS' : 'Emergency SOS'}
-                </span>
+                <span className="text-[10px] leading-tight font-bold text-slate-600">{activeSos ? 'Active SOS' : 'Emergency SOS'}</span>
             </button>
         );
     } else {
@@ -334,18 +321,13 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                 onPointerUp={handleEndHold}
                 onPointerCancel={handleEndHold}
                 onContextMenu={(e) => e.preventDefault()}
-                className={`relative flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all select-none active:scale-95 touch-none w-full ${
-                    activeSos
-                        ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200'
-                        : 'text-slate-600 hover:bg-slate-50'
+                className={`relative flex w-full touch-none items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all select-none active:scale-95 ${
+                    activeSos ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-200' : 'text-slate-600 hover:bg-slate-50'
                 } ${className}`}
             >
                 <div className="relative flex h-6 w-6 items-center justify-center">
                     {renderHoldRing('rgb(225, 29, 72)', 'rgba(225, 29, 72, 0.15)')}
-                    <ShieldAlert
-                        className={`h-5 w-5 relative z-20 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`}
-                        strokeWidth={2}
-                    />
+                    <ShieldAlert className={`relative z-20 h-5 w-5 ${activeSos ? 'text-rose-600' : 'text-slate-500'}`} strokeWidth={2} />
                 </div>
                 <span>{activeSos ? 'Active Emergency SOS' : 'Emergency SOS'}</span>
             </button>
@@ -407,14 +389,22 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="relative flex h-full w-full flex-col items-center bg-[#F7F9FC] p-6 text-[#111827] overflow-y-auto"
+                                        className="relative flex h-full w-full flex-col items-center overflow-y-auto bg-[#F7F9FC] p-6 text-[#111827]"
                                     >
                                         {/* Top Area (Status Icon + Message) */}
                                         <div className="mt-8 flex flex-col items-center">
                                             <div className="relative mb-6">
-                                                <div className={`absolute inset-0 scale-150 animate-pulse rounded-full ${activeSos?.acknowledged_at ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}></div>
-                                                <div className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg ${activeSos?.acknowledged_at ? 'bg-emerald-600' : 'bg-rose-600'}`}>
-                                                    {activeSos?.acknowledged_at ? <Check className="h-12 w-12" strokeWidth={3} /> : <ShieldAlert className="h-12 w-12" strokeWidth={2.5} />}
+                                                <div
+                                                    className={`absolute inset-0 scale-150 animate-pulse rounded-full ${activeSos?.acknowledged_at ? 'bg-emerald-500/20' : 'bg-rose-500/20'}`}
+                                                ></div>
+                                                <div
+                                                    className={`relative flex h-24 w-24 items-center justify-center rounded-full text-white shadow-lg ${activeSos?.acknowledged_at ? 'bg-emerald-600' : 'bg-rose-600'}`}
+                                                >
+                                                    {activeSos?.acknowledged_at ? (
+                                                        <Check className="h-12 w-12" strokeWidth={3} />
+                                                    ) : (
+                                                        <ShieldAlert className="h-12 w-12" strokeWidth={2.5} />
+                                                    )}
                                                 </div>
                                             </div>
                                             <h2 className="text-3xl font-black tracking-tight text-[#111827]">
@@ -452,9 +442,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                                                     <Clock className="h-5 w-5" />
                                                     <span className="text-sm font-semibold">Status</span>
                                                 </div>
-                                                <span className="text-sm font-bold capitalize text-[#111827]">
-                                                    {activeSos?.status || 'Active'}
-                                                </span>
+                                                <span className="text-sm font-bold text-[#111827] capitalize">{activeSos?.status || 'Active'}</span>
                                             </div>
                                         </div>
 
@@ -482,9 +470,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                                                     <div className="relative flex flex-col items-center">
                                                         <div
                                                             className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${
-                                                                activeSos?.acknowledged_at
-                                                                    ? 'bg-[#10B981]'
-                                                                    : 'bg-[#F59E0B]'
+                                                                activeSos?.acknowledged_at ? 'bg-[#10B981]' : 'bg-[#F59E0B]'
                                                             }`}
                                                         >
                                                             {activeSos?.acknowledged_at ? (
@@ -497,9 +483,7 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
                                                     </div>
                                                     <div>
                                                         <p className="font-bold text-[#111827]">
-                                                            {activeSos?.acknowledged_at
-                                                                ? 'Security Acknowledged'
-                                                                : 'Awaiting Acknowledgment'}
+                                                            {activeSos?.acknowledged_at ? 'Security Acknowledged' : 'Awaiting Acknowledgment'}
                                                         </p>
                                                         <p className="text-sm text-[#6B7280]">
                                                             {activeSos?.acknowledged_at
@@ -511,9 +495,11 @@ export default function SosButton({ variant = 'header', className = '' }: Props)
 
                                                 {/* Step 3 */}
                                                 <div className="flex gap-4">
-                                                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${
-                                                        activeSos?.acknowledged_at ? 'bg-indigo-600' : 'bg-[#E5E7EB] text-[#6B7280]'
-                                                    }`}>
+                                                    <div
+                                                        className={`flex h-8 w-8 items-center justify-center rounded-full text-white ${
+                                                            activeSos?.acknowledged_at ? 'bg-indigo-600' : 'bg-[#E5E7EB] text-[#6B7280]'
+                                                        }`}
+                                                    >
                                                         <Shield className="h-5 w-5" />
                                                     </div>
                                                     <div>

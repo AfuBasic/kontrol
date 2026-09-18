@@ -165,7 +165,7 @@ export default function ZonesIndex({ zones }: Props) {
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-2 w-48">
+                            <div className="flex w-48 items-center gap-2">
                                 <CustomSelect
                                     size="sm"
                                     value={statusFilter}
@@ -300,11 +300,7 @@ export default function ZonesIndex({ zones }: Props) {
             </div>
 
             {/* Create Zone Modal */}
-            <Modal
-                isOpen={isCreateModalOpen}
-                onClose={() => setIsCreateModalOpen(false)}
-                maxWidth="md"
-            >
+            <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} maxWidth="md">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                         <h3 className="text-base font-black text-slate-900">Create Zone</h3>
@@ -338,10 +334,7 @@ export default function ZonesIndex({ zones }: Props) {
 
                     <div>
                         <div className="flex items-center justify-between">
-                            <label
-                                htmlFor="create_zone_desc"
-                                className="block text-xs font-black tracking-wider text-slate-700 uppercase"
-                            >
+                            <label htmlFor="create_zone_desc" className="block text-xs font-black tracking-wider text-slate-700 uppercase">
                                 Description
                             </label>
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Optional</span>
@@ -354,9 +347,7 @@ export default function ZonesIndex({ zones }: Props) {
                             onChange={(e) => createForm.setData('description', e.target.value)}
                             className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                         />
-                        {createForm.errors.description && (
-                            <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.description}</p>
-                        )}
+                        {createForm.errors.description && <p className="mt-1 text-xs font-semibold text-rose-500">{createForm.errors.description}</p>}
                     </div>
 
                     <div className="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
@@ -380,11 +371,7 @@ export default function ZonesIndex({ zones }: Props) {
             </Modal>
 
             {/* Edit Zone Modal */}
-            <Modal
-                isOpen={Boolean(editingZone)}
-                onClose={() => setEditingZone(null)}
-                maxWidth="md"
-            >
+            <Modal isOpen={Boolean(editingZone)} onClose={() => setEditingZone(null)} maxWidth="md">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div>
                         <h3 className="text-base font-black text-slate-900">Edit Zone</h3>
@@ -429,9 +416,7 @@ export default function ZonesIndex({ zones }: Props) {
                             onChange={(e) => editForm.setData('description', e.target.value)}
                             className="mt-1.5 w-full resize-none rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-slate-800 focus:ring-1 focus:ring-slate-800 focus:outline-hidden"
                         />
-                        {editForm.errors.description && (
-                            <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.description}</p>
-                        )}
+                        {editForm.errors.description && <p className="mt-1 text-xs font-semibold text-rose-500">{editForm.errors.description}</p>}
                     </div>
 
                     <div className="flex items-center gap-3 pt-1">
@@ -468,11 +453,7 @@ export default function ZonesIndex({ zones }: Props) {
             </Modal>
 
             {/* Archive Confirmation Dialog */}
-            <Modal
-                isOpen={Boolean(archivingZone)}
-                onClose={() => setArchivingZone(null)}
-                maxWidth="md"
-            >
+            <Modal isOpen={Boolean(archivingZone)} onClose={() => setArchivingZone(null)} maxWidth="md">
                 {archivingZone && (
                     <>
                         <div className="flex items-center gap-3 border-b border-slate-100 pb-3 text-rose-600">

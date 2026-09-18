@@ -318,7 +318,9 @@ export default function AssignmentsIndex({ assignments, filters, has_assignable_
 
                                                                 {(can('assignments.edit') || can('assignments.delete')) && (
                                                                     <button
-                                                                        onClick={() => setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)}
+                                                                        onClick={() =>
+                                                                            setMenuOpenId(menuOpenId === assignment.id ? null : assignment.id)
+                                                                        }
                                                                         className="rounded-lg p-1 text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-900"
                                                                     >
                                                                         <EllipsisVerticalIcon className="h-4 w-4" />

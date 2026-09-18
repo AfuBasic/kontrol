@@ -1,14 +1,15 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    Users,
-    Clock,
-    CheckCircle2,
-    AlertTriangle,
-    Shield,
+    AlertCircle,
     Calendar,
-    ArrowRight,
-    Car,
-    Tag,
+    ChevronRight,
+    Clock,
+    History,
+    MapPin,
+    ShieldCheck,
+    UserCircle,
+    UserPlus,
+    Users,
 } from 'lucide-react';
 import React from 'react';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -34,6 +35,15 @@ interface Arrival {
     is_overdue: boolean;
 }
 
+interface ActivityItem {
+    id: number;
+    name: string;
+    description: string;
+    time_human: string;
+    type: 'arrival' | 'confirmed' | 'checkout';
+    is_active: boolean;
+}
+
 interface Props {
     organization: {
         id: number;
@@ -48,168 +58,404 @@ interface Props {
         role: string;
         is_admin: boolean;
     };
+    total_access_members?: number;
     metrics: MetricProps;
     recent_arrivals: Arrival[];
+    pending_arrivals: Arrival[];
+    recent_activity: ActivityItem[];
 }
 
-export default function Dashboard({ organization, membership, metrics, recent_arrivals }: Props) {
+export default function Dashboard({
+    organization,
+    total_access_members = 0,
+    metrics,
+    recent_arrivals = [],
+    pending_arrivals = [],
+    recent_activity = [],
+}: Props) {
+    const page = usePage();
+    const auth = (page.props as any).auth || {};
+    const user = auth.user || {};
+
+    const currentlyHere = metrics.currently_inside ?? 0;
+    const pendingTotal = pending_arrivals.length;
+    const overdueTotal = metrics.overdue_confirmation ?? 0;
+    const waitingCount = pendingTotal;
+    const attentionCount = overdueTotal;
+
+    const needsAttention = attentionCount > 0 || waitingCount > 0;
+    const isCritical = overdueTotal >= 3;
+
+    const userFirstName = user.name ? user.name.split(' ')[0] : 'User';
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 17) return 'Good afternoon';
+        return 'Good evening';
+    };
+
+    const stateConfig = isCritical
+        ? {
+              label: 'Critical attention',
+              dot: 'bg-rose-500',
+              textColor: 'text-rose-700',
+              bgColor: 'bg-rose-50',
+          }
+        : needsAttention
+          ? {
+                label: 'Needs attention',
+                dot: 'bg-amber-500',
+                textColor: 'text-amber-700',
+                bgColor: 'bg-amber-50',
+            }
+          : {
+                label: 'All systems normal',
+                dot: 'bg-emerald-500',
+                textColor: 'text-emerald-700',
+                bgColor: 'bg-emerald-50/60',
+            };
+
+    const initialsFor = (name: string) => {
+        return name
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase();
+    };
+
+    const getAvatarColor = (name: string) => {
+        const colors = [
+            'bg-[#eef4ff] text-[#1a5dbf]',
+            'bg-[#fdf4ff] text-[#9b1faa]',
+            'bg-[#f0fdf4] text-[#0d7a44]',
+            'bg-[#fff1f2] text-[#b01d38]',
+            'bg-[#fffbeb] text-[#9a6010]',
+        ];
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) {
+            hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return colors[Math.abs(hash) % colors.length];
+    };
+
+    const getStatusConfig = (item: ActivityItem) => {
+        if (item.type === 'checkout') {
+            return {
+                label: 'Checked out',
+                dot: 'bg-slate-400',
+                badge: 'bg-slate-100 text-slate-600 border-slate-200',
+            };
+        }
+        if (item.type === 'confirmed') {
+            return {
+                label: 'Confirmed',
+                dot: 'bg-emerald-500',
+                badge: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+            };
+        }
+        if (item.is_active && organization.arrival_confirmation_required) {
+            const isWaiting = pending_arrivals.some((pa) => pa.visitor_name === item.name);
+            if (isWaiting) {
+                return {
+                    label: 'Waiting',
+                    dot: 'bg-amber-500',
+                    badge: 'bg-amber-50 text-amber-700 border-amber-100',
+                };
+            }
+        }
+        return {
+            label: 'Inside',
+            dot: 'bg-emerald-500',
+            badge: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+        };
+    };
+
     return (
-        <OrganizationLayout title="Organization Overview">
-            <Head title={`${organization.name} - Overview`} />
+        <OrganizationLayout title="Home" transparentHeader contentClassName="w-full relative min-h-screen">
+            <Head title={`${organization.name} - Home`} />
 
-            <div className="space-y-6">
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800/80">
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            {/* ATMOSPHERIC BACKGROUND */}
+            <div className="app-atmosphere" />
+
+            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
+
+                {/* ORGANIZATION IDENTITY */}
+                <header className="flex flex-col pt-1">
+                    <p className="text-[12px] font-medium text-slate-500">
+                        {getGreeting()}, {userFirstName}
+                    </p>
+                    <div className="flex items-center justify-between mt-0.5">
+                        <h1 className="text-[26px] font-extrabold tracking-tight text-[#071f4b] leading-tight">
                             {organization.name}
-                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
-                                {organization.type}
-                            </span>
                         </h1>
-                        <p className="text-xs text-zinc-400 mt-0.5">
-                            {organization.estate_name} • Policy:{' '}
-                            <span className="capitalize text-zinc-300 font-medium">
-                                {organization.access_policy.replace('_', ' ')}
+                        <Link
+                            href="/org/access-list?action=add_person"
+                            className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
+                        >
+                            <UserPlus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                            Add person
+                        </Link>
+                    </div>
+                    {organization.estate_name && (
+                        <p className="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-slate-500">
+                            <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
+                            {organization.estate_name}
+                            <ChevronRight className="h-3 w-3 ml-0.5 text-slate-400" />
+                        </p>
+                    )}
+                </header>
+
+                {/* ACCESS OVERVIEW CARD */}
+                <Link
+                    href="/org/access-list"
+                    className="brand-card flex items-center justify-between p-4 active:scale-[0.98] transition-transform"
+                >
+                    <div className="relative z-10 flex items-center gap-3.5">
+                        <div className="brand-card-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-[13px]">
+                            <ShieldCheck className="h-5 w-5 text-white" strokeWidth={2.1} />
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                            <h2 className="text-[13px] font-semibold text-white/90 flex items-center gap-1.5">
+                                Access Overview
+                            </h2>
+                            <p className="text-[11px] text-blue-200/70">Total people with access</p>
+                            <div className="flex items-baseline gap-1.5 mt-0.5">
+                                <span className="text-[32px] font-extrabold text-white leading-none tracking-tight">
+                                    {total_access_members}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <ChevronRight className="relative z-10 h-5 w-5 text-white/50" strokeWidth={2.5} />
+                </Link>
+
+                {/* QUICK ACTIONS */}
+                <div className="flex flex-col mt-1">
+                    <h2 className="text-[14px] font-bold text-[#071f4b] mb-2.5 px-1 tracking-tight">Quick actions</h2>
+                    <div className="grid grid-cols-2 gap-3.5">
+                        <Link
+                            href="/org/access-list?action=add_person"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
+                                <UserPlus className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Add person</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Recurring access</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
+
+                        <Link
+                            href="/org/visitors"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-mint mb-3">
+                                <UserCircle className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Invite visitor</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Create a pass</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
+
+                        <Link
+                            href="/org/arrivals"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
+                                <Clock className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's on site</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
+
+                        <Link
+                            href="/org/arrivals/history"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-amber mb-3">
+                                <History className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">History</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Past activity</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
+                    </div>
+                </div>
+
+                {/* TODAY MODULE */}
+                <div className="soft-card flex flex-col p-3.5">
+                    {/* Header row */}
+                    <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-[14px] font-bold text-[#071f4b]">Today</h2>
+                        <div
+                            className={`flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${stateConfig.bgColor} ${stateConfig.textColor}`}
+                        >
+                            <span className={`h-1.5 w-1.5 rounded-full ${stateConfig.dot}`} />
+                            {stateConfig.label}
+                        </div>
+                    </div>
+
+                    {/* Metrics row */}
+                    <div className="flex items-stretch justify-between">
+                        {/* Inside */}
+                        <Link
+                            href="/org/arrivals"
+                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
+                        >
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-mint mb-1.5">
+                                <Users className="h-3.5 w-3.5" strokeWidth={2.2} />
+                            </div>
+                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
+                                {currentlyHere}
                             </span>
-                        </p>
-                    </div>
+                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
+                                Inside
+                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
+                            </span>
+                        </Link>
 
-                    <div className="flex items-center gap-2">
+                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
+
+                        {/* Waiting */}
                         <Link
                             href="/org/arrivals"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition-colors"
+                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
                         >
-                            <Clock className="w-3.5 h-3.5" />
-                            Live Arrivals
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-lavender mb-1.5">
+                                <Clock className="h-3.5 w-3.5" strokeWidth={2.2} />
+                            </div>
+                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
+                                {waitingCount}
+                            </span>
+                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5">
+                                Waiting
+                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
+                            </span>
                         </Link>
+
+                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
+
+                        {/* Needs attention */}
                         <Link
-                            href="/org/access-list"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold border border-zinc-700 transition-colors"
+                            href="/org/arrivals"
+                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
                         >
-                            <Users className="w-3.5 h-3.5" />
-                            Access List
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-amber mb-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.2} />
+                            </div>
+                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
+                                {attentionCount}
+                            </span>
+                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
+                                Needs attention
+                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
+                            </span>
+                        </Link>
+
+                        <div className="w-px bg-slate-100 self-stretch mx-0.5" />
+
+                        {/* Arrivals today */}
+                        <Link
+                            href="/org/arrivals/history"
+                            className="flex flex-1 flex-col items-start px-1.5 py-1 hover:bg-slate-50/80 rounded-xl transition group"
+                        >
+                            <div className="flex h-7 w-7 items-center justify-center rounded-lg icon-tile-sky mb-1.5">
+                                <Calendar className="h-3.5 w-3.5" strokeWidth={2.2} />
+                            </div>
+                            <span className="text-[20px] font-extrabold text-[#071f4b] leading-none mb-0.5">
+                                {metrics.today_entries}
+                            </span>
+                            <span className="text-[10px] font-medium text-slate-500 flex items-center gap-0.5 whitespace-nowrap">
+                                Arrivals today
+                                <ChevronRight className="h-2.5 w-2.5 text-slate-300 group-hover:text-slate-400 transition" />
+                            </span>
                         </Link>
                     </div>
                 </div>
 
-                {/* Metrics Cards */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-                    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 shadow-sm">
-                        <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                            <span>Currently On-Site</span>
-                            <Users className="w-4 h-4 text-indigo-400" />
-                        </div>
-                        <div className="mt-2 text-2xl font-bold text-white tracking-tight">
-                            {metrics.currently_inside}
-                        </div>
-                        <p className="text-[11px] text-zinc-500 mt-1">Active within perimeter</p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 shadow-sm">
-                        <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                            <span>Today's Entries</span>
-                            <Clock className="w-4 h-4 text-emerald-400" />
-                        </div>
-                        <div className="mt-2 text-2xl font-bold text-white tracking-tight">
-                            {metrics.today_entries}
-                        </div>
-                        <p className="text-[11px] text-zinc-500 mt-1">Total recorded today</p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 shadow-sm">
-                        <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                            <span>Pending Confirmation</span>
-                            <AlertTriangle className="w-4 h-4 text-amber-400" />
-                        </div>
-                        <div className="mt-2 text-2xl font-bold text-amber-400 tracking-tight">
-                            {metrics.pending_confirmation}
-                        </div>
-                        <p className="text-[11px] text-zinc-500 mt-1">
-                            Awaiting staff check-in
-                        </p>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/80 shadow-sm">
-                        <div className="flex items-center justify-between text-zinc-400 text-xs font-medium">
-                            <span>Overdue Confirmations</span>
-                            <AlertTriangle className="w-4 h-4 text-rose-400" />
-                        </div>
-                        <div className="mt-2 text-2xl font-bold text-rose-400 tracking-tight">
-                            {metrics.overdue_confirmation}
-                        </div>
-                        <p className="text-[11px] text-zinc-500 mt-1">
-                            &gt;{organization.confirmation_window_minutes}m past gate entry
-                        </p>
-                    </div>
-                </div>
-
-                {/* Recent Arrivals Table / Feed */}
-                <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 overflow-hidden">
-                    <div className="p-4 border-b border-zinc-800/80 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-zinc-400" />
-                            <h2 className="text-sm font-semibold text-zinc-200">Recent Arrivals On-Site</h2>
-                        </div>
+                {/* RECENT ACTIVITY */}
+                <div className="flex flex-col">
+                    <div className="flex items-center justify-between mb-2.5 px-0.5">
+                        <h2 className="text-[14px] font-bold text-[#071f4b]">Recent Activity</h2>
                         <Link
-                            href="/org/arrivals"
-                            className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1"
+                            href="/org/arrivals/history"
+                            className="text-[11px] font-semibold text-slate-500 hover:text-[#1a5dbf] flex items-center transition"
                         >
-                            View All <ArrowRight className="w-3.5 h-3.5" />
+                            View all <ChevronRight className="h-3 w-3 ml-0.5" />
                         </Link>
                     </div>
 
-                    {recent_arrivals.length === 0 ? (
-                        <div className="p-8 text-center text-xs text-zinc-500">
-                            No visitors or members currently checked in on-site.
+                    {recent_activity.length === 0 ? (
+                        <div className="flex flex-col items-center py-5">
+                            <p className="text-[12px] font-medium text-slate-400">No movement yet today</p>
                         </div>
                     ) : (
-                        <div className="divide-y divide-zinc-800/60">
-                            {recent_arrivals.map((arrival) => (
-                                <div
-                                    key={arrival.id}
-                                    className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:bg-zinc-800/30 transition-colors"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        {arrival.tag && (
-                                            <span className="shrink-0 font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                                                {arrival.tag}
-                                            </span>
-                                        )}
-                                        <div>
-                                            <div className="text-xs font-semibold text-zinc-200">
-                                                {arrival.visitor_name}
+                        <div className="flex flex-col gap-2">
+                            {recent_activity.slice(0, 5).map((item) => {
+                                const statusConfig = getStatusConfig(item);
+                                const isOngoing = item.type !== 'checkout';
+
+                                return (
+                                    <Link
+                                        key={item.id}
+                                        href={`/org/arrivals/${item.id}`}
+                                        className="soft-card flex items-center justify-between px-3.5 py-3 transition active:scale-[0.98]"
+                                    >
+                                        <div className="flex min-w-0 items-center gap-3">
+                                            <div
+                                                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] ${getAvatarColor(item.name)} text-[12px] font-bold`}
+                                            >
+                                                {initialsFor(item.name)}
                                             </div>
-                                            <div className="text-[11px] text-zinc-500 flex items-center gap-2 mt-0.5">
-                                                <span>{arrival.verified_at_human}</span>
-                                                {arrival.entry_point && <span>• Gate: {arrival.entry_point}</span>}
-                                                {arrival.vehicle_plate_number && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Car className="w-3 h-3 text-zinc-400" />
-                                                        {arrival.vehicle_plate_number}
+                                            <div className="flex min-w-0 flex-col">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="truncate text-[13px] font-bold text-[#071f4b]">
+                                                        {item.name}
                                                     </span>
-                                                )}
+                                                    <div
+                                                        className={`flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide ${statusConfig.badge}`}
+                                                    >
+                                                        <span className={`h-1 w-1 rounded-full ${statusConfig.dot}`} />
+                                                        {statusConfig.label}
+                                                    </div>
+                                                </div>
+                                                <span className="truncate text-[11px] font-medium text-slate-400 mt-0.5">
+                                                    {isOngoing ? 'Visitor · Ongoing' : 'Visitor · Completed'}
+                                                </span>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                                                arrival.confirmation_state === 'CONFIRMED'
-                                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                                                    : arrival.confirmation_state === 'OVERDUE'
-                                                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                                                    : arrival.confirmation_state === 'PENDING'
-                                                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                                                    : 'bg-zinc-800 text-zinc-400 border-zinc-700'
-                                            }`}
-                                        >
-                                            {arrival.confirmation_state.replace('_', ' ')}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
+                                        <div className="flex shrink-0 flex-col items-end ml-2 gap-0.5">
+                                            <span className="text-[11px] font-medium text-slate-400">
+                                                {item.time_human}
+                                            </span>
+                                            <span className="text-[10px] font-medium text-slate-300 flex items-center">
+                                                Gate <ChevronRight className="h-2.5 w-2.5 ml-0.5" />
+                                            </span>
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

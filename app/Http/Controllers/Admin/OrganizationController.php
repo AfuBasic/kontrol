@@ -29,6 +29,7 @@ class OrganizationController extends Controller
 
         $search = $request->input('search');
         $type = $request->input('type');
+        $status = $request->input('status');
 
         $organizations = EstateOrganization::where('estate_id', $estate->id)
             ->with([
@@ -37,12 +38,42 @@ class OrganizationController extends Controller
                         ->where('is_active', true)
                         ->with('user.profile');
                 },
+                'publicWindows' => function ($query) {
+                    $query->where('is_active', true)
+                        ->orderBy('day_of_week')
+                        ->orderBy('start_time');
+                },
             ])
+            ->withCount('accessMembers')
             ->when($search, function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%");
             })
             ->when($type && $type !== 'all', function ($query) use ($type) {
                 $query->where('type', $type);
+            })
+            ->when($status === 'pending', function ($query) {
+                $query->whereHas('memberships', function ($mQuery) {
+                    $mQuery->where('role', 'admin')
+                        ->where('is_active', true)
+                        ->whereHas('user', function ($uQuery) {
+                            $uQuery->whereNull('email_verified_at')
+                                ->whereNull('google_id');
+                        });
+                });
+            })
+            ->when($status === 'active', function ($query) {
+                $query->where('is_active', true)
+                    ->whereDoesntHave('memberships', function ($mQuery) {
+                        $mQuery->where('role', 'admin')
+                            ->where('is_active', true)
+                            ->whereHas('user', function ($uQuery) {
+                                $uQuery->whereNull('email_verified_at')
+                                    ->whereNull('google_id');
+                            });
+                    });
+            })
+            ->when($status === 'inactive', function ($query) {
+                $query->where('is_active', false);
             })
             ->latest()
             ->paginate(15)
@@ -53,6 +84,7 @@ class OrganizationController extends Controller
             'filters' => [
                 'search' => $search,
                 'type' => $type ?? 'all',
+                'status' => $status ?? 'all',
             ],
         ]);
     }
@@ -112,8 +144,6 @@ class OrganizationController extends Controller
                     ]
                 );
 
-                $wasNewUser = $user->wasRecentlyCreated;
-
                 if (! empty($validated['admin_phone'])) {
                     UserProfile::updateOrCreate(
                         ['user_id' => $user->id],
@@ -134,8 +164,11 @@ class OrganizationController extends Controller
                 );
 
                 if ($membership->wasRecentlyCreated) {
+                    // Pass null so OrganizationInvitationMail resolves from actual credentials.
+                    // wasRecentlyCreated is unreliable: a user record may exist from a prior
+                    // deleted org with no password yet set.
                     Mail::to($user->email)->send(
-                        new OrganizationInvitationMail($user, $org, 'admin', isExistingUser: ! $wasNewUser)
+                        new OrganizationInvitationMail($user, $org, 'admin')
                     );
                 }
             }
@@ -189,8 +222,6 @@ class OrganizationController extends Controller
                     ]
                 );
 
-                $wasNewUser = $user->wasRecentlyCreated;
-
                 if (! empty($validated['admin_phone'])) {
                     UserProfile::updateOrCreate(
                         ['user_id' => $user->id],
@@ -211,8 +242,11 @@ class OrganizationController extends Controller
                 );
 
                 if ($membership->wasRecentlyCreated) {
+                    // Pass null so OrganizationInvitationMail resolves from actual credentials.
+                    // wasRecentlyCreated is unreliable: a user record may exist from a prior
+                    // deleted org with no password yet set.
                     Mail::to($user->email)->send(
-                        new OrganizationInvitationMail($user, $organization, 'admin', isExistingUser: ! $wasNewUser)
+                        new OrganizationInvitationMail($user, $organization, 'admin')
                     );
                 }
             }
@@ -235,5 +269,39 @@ class OrganizationController extends Controller
         $organization->delete();
 
         return back()->with('success', 'Organization deleted successfully.');
+    }
+
+    /**
+     * Resend an invitation to the primary admin of the organization.
+     */
+    public function resendInvitation(EstateOrganization $organization): RedirectResponse
+    {
+        $estate = app(EstateContextService::class)->getEstate();
+
+        if ($organization->estate_id !== $estate->id) {
+            abort(403);
+        }
+
+        $adminMembership = $organization->memberships()
+            ->where('role', 'admin')
+            ->where('is_active', true)
+            ->with('user')
+            ->first();
+
+        if (! $adminMembership || ! $adminMembership->user) {
+            return back()->withErrors(['error' => 'No active administrator found for this organization to send an invitation to.']);
+        }
+
+        $user = $adminMembership->user;
+
+        Mail::to($user->email)->send(
+            new OrganizationInvitationMail(
+                $user,
+                $organization,
+                'admin',
+            )
+        );
+
+        return back()->with('success', "Invitation resent successfully to {$user->email}.");
     }
 }

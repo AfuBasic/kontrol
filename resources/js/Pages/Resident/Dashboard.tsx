@@ -1,7 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 
-
 export default function Dashboard() {
     return (
         <>

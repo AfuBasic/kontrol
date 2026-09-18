@@ -5,6 +5,8 @@ use App\Jobs\Admin\SendCollectionRemindersJob;
 use App\Jobs\Admin\UpdateAssignmentStatusesJob;
 use App\Jobs\Compliance\EvaluateViolationsJob;
 use App\Jobs\GenerateMonthlyPartnerEarningsJob;
+use App\Jobs\RenewBulkVisitorInvitesJob;
+use App\Jobs\RenewExpiringOrganizationCredentials;
 use App\Jobs\Resident\SendVisitorPassRemindersJob;
 use App\Models\DeviceAuthorizationRequest;
 use Illuminate\Foundation\Inspiring;
@@ -42,3 +44,7 @@ Schedule::job(new GenerateMonthlyPartnerEarningsJob(mode: GenerateMonthlyPartner
 
 // Scheduled Visitor Pass Reminders
 Schedule::job(new SendVisitorPassRemindersJob)->everyMinute();
+
+// Organization credential auto-renewal
+Schedule::job(new RenewExpiringOrganizationCredentials)->dailyAt('01:00');
+Schedule::job(new RenewBulkVisitorInvitesJob)->dailyAt('01:15');

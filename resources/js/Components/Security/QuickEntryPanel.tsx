@@ -1,21 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Building2,
-    Car,
-    CheckCircle2,
-    Clock,
-    Flame,
-    Gauge,
-    Loader2,
-    RefreshCw,
-    ShieldAlert,
-    Tag,
-    User,
-    X,
-    Zap,
-} from 'lucide-react';
+import { Building2, Car, CheckCircle2, Clock, Flame, Gauge, Loader2, RefreshCw, ShieldAlert, Tag, User, X, Zap } from 'lucide-react';
 import { QuickEntryStore, type ReservedTag } from '@/Resilience/OfflineStorage/QuickEntryStore';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 
@@ -23,12 +9,15 @@ interface Organization {
     id: number;
     name: string;
     type: string;
-    operating_hours?: {
-        open?: string;
-        close?: string;
-        days?: string[];
-        [key: string]: any;
-    } | string | null;
+    operating_hours?:
+        | {
+              open?: string;
+              close?: string;
+              days?: string[];
+              [key: string]: any;
+          }
+        | string
+        | null;
     hours_enforcement?: 'inherit' | 'off' | 'warn' | 'block';
 }
 
@@ -59,10 +48,7 @@ function evaluateOrgHours(
     org: Organization,
     estateDefault: 'off' | 'warn' | 'block' = 'warn',
 ): { withinHours: boolean; enforcement: 'off' | 'warn' | 'block'; message?: string } {
-    const enforcement =
-        org.hours_enforcement && org.hours_enforcement !== 'inherit'
-            ? org.hours_enforcement
-            : estateDefault;
+    const enforcement = org.hours_enforcement && org.hours_enforcement !== 'inherit' ? org.hours_enforcement : estateDefault;
 
     if (enforcement === 'off' || !org.operating_hours) {
         return { withinHours: true, enforcement };
@@ -141,9 +127,7 @@ export default function QuickEntryPanel({
     requireVehicleInformation = false,
     estateHoursEnforcement = 'warn',
 }: QuickEntryPanelProps) {
-    const [selectedOrgId, setSelectedOrgId] = useState<number | null>(
-        organizations.length > 0 ? organizations[0].id : null,
-    );
+    const [selectedOrgId, setSelectedOrgId] = useState<number | null>(organizations.length > 0 ? organizations[0].id : null);
     const [visitorName, setVisitorName] = useState('');
     const [hasVehicle, setHasVehicle] = useState(false);
     const [plateNumber, setPlateNumber] = useState('');
@@ -167,9 +151,7 @@ export default function QuickEntryPanel({
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const selectedOrg = organizations.find((o) => o.id === selectedOrgId);
-    const hoursEvaluation = selectedOrg
-        ? evaluateOrgHours(selectedOrg, estateHoursEnforcement)
-        : { withinHours: true, enforcement: 'off' as const };
+    const hoursEvaluation = selectedOrg ? evaluateOrgHours(selectedOrg, estateHoursEnforcement) : { withinHours: true, enforcement: 'off' as const };
 
     // Update remaining pool count
     const updatePoolCount = async () => {
@@ -233,9 +215,7 @@ export default function QuickEntryPanel({
         // Check hours enforcement
         if (!hoursEvaluation.withinHours) {
             if (hoursEvaluation.enforcement === 'block') {
-                setErrorMessage(
-                    `Entry blocked: ${selectedOrg.name} is currently outside operating hours (${hoursEvaluation.message || 'Closed'}).`,
-                );
+                setErrorMessage(`Entry blocked: ${selectedOrg.name} is currently outside operating hours (${hoursEvaluation.message || 'Closed'}).`);
                 return;
             }
 
@@ -354,7 +334,7 @@ export default function QuickEntryPanel({
                     onClick={() => setRushMode(!rushMode)}
                     className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-black transition-all active:scale-95 ${
                         rushMode
-                            ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20 ring-2 ring-amber-400'
+                            ? 'bg-amber-500 text-slate-950 shadow-md ring-2 shadow-amber-500/20 ring-amber-400'
                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300'
                     }`}
                 >
@@ -364,7 +344,8 @@ export default function QuickEntryPanel({
 
                 <div className="flex items-center gap-2">
                     <span className="rounded-lg bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                        Pool: <span className={poolCount <= 5 ? 'text-rose-600 font-extrabold' : 'text-emerald-600 font-extrabold'}>{poolCount} tags</span>
+                        Pool:{' '}
+                        <span className={poolCount <= 5 ? 'font-extrabold text-rose-600' : 'font-extrabold text-emerald-600'}>{poolCount} tags</span>
                     </span>
                     {isOnline && (
                         <button
@@ -421,9 +402,7 @@ export default function QuickEntryPanel({
                         </div>
 
                         <div className="mt-3 flex flex-col items-center justify-center rounded-xl bg-white p-3 text-center shadow-xs dark:bg-slate-900">
-                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-                                Quick Entry Tag
-                            </span>
+                            <span className="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Quick Entry Tag</span>
                             <span className="mt-0.5 font-mono text-3xl font-black tracking-wider text-slate-900 dark:text-white">
                                 {lastIssued.tag}
                             </span>
@@ -483,16 +462,10 @@ export default function QuickEntryPanel({
                                         >
                                             <Building2 className="h-4 w-4" />
                                         </div>
-                                        {isSelected && (
-                                            <span className="flex h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />
-                                        )}
+                                        {isSelected && <span className="flex h-2 w-2 rounded-full bg-indigo-600 dark:bg-indigo-400" />}
                                     </div>
-                                    <span className="mt-2 text-xs font-black text-slate-900 line-clamp-1 dark:text-white">
-                                        {org.name}
-                                    </span>
-                                    <span className="text-[10px] font-semibold text-slate-400 capitalize">
-                                        {org.type.replace('_', ' ')}
-                                    </span>
+                                    <span className="mt-2 line-clamp-1 text-xs font-black text-slate-900 dark:text-white">{org.name}</span>
+                                    <span className="text-[10px] font-semibold text-slate-400 capitalize">{org.type.replace('_', ' ')}</span>
                                     {org.operating_hours && (
                                         <span className="mt-1 flex items-center gap-1 text-[9px] font-bold text-slate-400">
                                             <Clock className="h-2.5 w-2.5" />
@@ -528,21 +501,16 @@ export default function QuickEntryPanel({
                             : 'border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300'
                     }`}
                 >
-                    <Clock
-                        className={`h-4 w-4 shrink-0 mt-0.5 ${
-                            hoursEvaluation.enforcement === 'block' ? 'text-rose-600' : 'text-amber-600'
-                        }`}
-                    />
+                    <Clock className={`mt-0.5 h-4 w-4 shrink-0 ${hoursEvaluation.enforcement === 'block' ? 'text-rose-600' : 'text-amber-600'}`} />
                     <div>
                         <span className="block font-black">
                             {hoursEvaluation.enforcement === 'block'
-                                ? 'Outside Operating Hours — Quick Entry Blocked'
+                                ? 'Outside Operating Hours - Quick Entry Blocked'
                                 : 'Outside Operating Hours Notice'}
                         </span>
                         <span className="text-[11px] font-semibold opacity-90">
                             {hoursEvaluation.message || `${selectedOrg.name} is currently closed.`}{' '}
-                            {hoursEvaluation.enforcement === 'warn' &&
-                                'You will be prompted to confirm before assigning a tag.'}
+                            {hoursEvaluation.enforcement === 'warn' && 'You will be prompted to confirm before assigning a tag.'}
                         </span>
                     </div>
                 </div>
@@ -577,9 +545,7 @@ export default function QuickEntryPanel({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Car className="h-4 w-4 text-slate-500" />
-                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                                    Arrived with Vehicle?
-                                </span>
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Arrived with Vehicle?</span>
                             </div>
                             <button
                                 type="button"
@@ -597,14 +563,14 @@ export default function QuickEntryPanel({
                         </div>
 
                         {hasVehicle && (
-                            <div className="mt-3 grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                            <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-2 dark:border-slate-800">
                                 <div className="col-span-2 sm:col-span-1">
                                     <input
                                         type="text"
                                         value={plateNumber}
                                         onChange={(e) => setPlateNumber(e.target.value.toUpperCase())}
                                         placeholder="License Plate *"
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-xs font-black tracking-wider text-slate-900 placeholder:text-slate-400 uppercase focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-black tracking-wider text-slate-900 uppercase placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
                                 </div>
                                 <div className="col-span-2 sm:col-span-1">
@@ -613,7 +579,7 @@ export default function QuickEntryPanel({
                                         value={vehicleMake}
                                         onChange={(e) => setVehicleMake(e.target.value)}
                                         placeholder="Vehicle Make (Toyota...)"
-                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 px-3 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                                     />
                                 </div>
                             </div>
@@ -627,14 +593,10 @@ export default function QuickEntryPanel({
                 <button
                     type="button"
                     onClick={() => handleAssignEntry(false)}
-                    disabled={
-                        submitting ||
-                        organizations.length === 0 ||
-                        (!hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block')
-                    }
+                    disabled={submitting || organizations.length === 0 || (!hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block')}
                     className={`flex w-full items-center justify-center gap-3 rounded-2xl py-4.5 text-base font-black text-white shadow-xl transition-all active:scale-95 disabled:opacity-50 ${
                         !hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block'
-                            ? 'bg-rose-600 shadow-rose-500/20 cursor-not-allowed'
+                            ? 'cursor-not-allowed bg-rose-600 shadow-rose-500/20'
                             : 'bg-indigo-600 shadow-indigo-500/20 hover:bg-indigo-700'
                     }`}
                 >
@@ -646,7 +608,7 @@ export default function QuickEntryPanel({
                     ) : !hoursEvaluation.withinHours && hoursEvaluation.enforcement === 'block' ? (
                         <>
                             <ShieldAlert className="h-5 w-5 text-white" />
-                            <span>Closed — Entry Blocked</span>
+                            <span>Closed - Entry Blocked</span>
                         </>
                     ) : (
                         <>
@@ -665,7 +627,7 @@ export default function QuickEntryPanel({
             {/* Warning Confirmation Modal */}
             <AnimatePresence>
                 {showWarnConfirmModal && selectedOrg && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -675,15 +637,10 @@ export default function QuickEntryPanel({
                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400">
                                 <Clock className="h-6 w-6" />
                             </div>
-                            <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">
-                                Outside Operating Hours
-                            </h3>
+                            <h3 className="mt-4 text-base font-black text-slate-900 dark:text-white">Outside Operating Hours</h3>
                             <p className="mt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
-                                <span className="font-bold text-slate-800 dark:text-slate-200">
-                                    {selectedOrg.name}
-                                </span>{' '}
-                                is currently operating outside its standard hours (
-                                {hoursEvaluation.message || 'Closed'}). Confirm that you wish to admit this visitor.
+                                <span className="font-bold text-slate-800 dark:text-slate-200">{selectedOrg.name}</span> is currently operating
+                                outside its standard hours ({hoursEvaluation.message || 'Closed'}). Confirm that you wish to admit this visitor.
                             </p>
                             <div className="mt-6 flex gap-3">
                                 <button

@@ -27,7 +27,11 @@ class OrganizationInvitationMail extends Mailable implements ShouldQueue
         public string $role = 'member',
         ?bool $isExistingUser = null,
     ) {
-        $this->isExistingUser = $isExistingUser ?? $this->user->isEstablishedUser();
+        // In an OTP-based system there are no passwords. The signal for "can this user
+        // log in on their own" is whether their email has previously been verified.
+        // Verified → they can receive an OTP and log in normally (send "role added" email).
+        // Not verified → brand-new to the platform, needs a magic link to bootstrap access.
+        $this->isExistingUser = $isExistingUser ?? ($this->user->hasVerifiedEmail() || ! is_null($this->user->google_id));
 
         $appDomain = config('domains.app');
         $scheme = app()->environment('local') ? 'http' : 'https';

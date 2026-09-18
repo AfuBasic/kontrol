@@ -146,7 +146,7 @@ export default function PaymentPage({ subscription }: Props) {
         <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
             <Head title="Payment & Renewal" />
 
-            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+            <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md">
                 <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
                     <Link
                         href={ResidentBillingController.index.url()}
@@ -157,7 +157,7 @@ export default function PaymentPage({ subscription }: Props) {
                     </Link>
 
                     <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase leading-tight">Billing destination</p>
+                        <p className="text-[10px] leading-tight font-black tracking-[0.18em] text-slate-400 uppercase">Billing destination</p>
                         <h1 className="mt-0.5 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Payment & Renewal</h1>
                     </div>
 
@@ -190,7 +190,8 @@ export default function PaymentPage({ subscription }: Props) {
                             <div>
                                 <p className="text-sm font-black text-indigo-950">Turn on seamless automatic renewal</p>
                                 <p className="mt-0.5 text-xs leading-5 text-indigo-800/80">
-                                    You have a saved {cardBrand} card ending in {cardLast4}. Turn on auto-renewal so your resident access continues uninterrupted on {renewalDateLabel}.
+                                    You have a saved {cardBrand} card ending in {cardLast4}. Turn on auto-renewal so your resident access continues
+                                    uninterrupted on {renewalDateLabel}.
                                 </p>
                                 <div className="mt-3 flex items-center gap-2">
                                     <button
@@ -210,7 +211,7 @@ export default function PaymentPage({ subscription }: Props) {
                             type="button"
                             onClick={handleDismissSuggestion}
                             disabled={isDismissingSuggestion}
-                            className="text-slate-400 hover:text-slate-600 p-1"
+                            className="p-1 text-slate-400 hover:text-slate-600"
                             title="Dismiss suggestion"
                         >
                             <XMarkIcon className="h-4 w-4" strokeWidth={2.2} />
@@ -222,7 +223,7 @@ export default function PaymentPage({ subscription }: Props) {
                 <motion.section
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)]"
+                    className="overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)] sm:p-6"
                 >
                     <div className="border-b border-slate-100 pb-4">
                         <span className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase">Payment Method</span>
@@ -275,7 +276,7 @@ export default function PaymentPage({ subscription }: Props) {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 }}
-                    className="mt-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 sm:p-6 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)]"
+                    className="mt-6 overflow-hidden rounded-3xl border border-slate-200/70 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_30px_-20px_rgba(15,23,42,0.22)] sm:p-6"
                 >
                     <div className="border-b border-slate-100 pb-4">
                         <span className="text-[10px] font-black tracking-[0.18em] text-slate-400 uppercase">Subscription Renewal</span>
@@ -286,9 +287,7 @@ export default function PaymentPage({ subscription }: Props) {
                         <div className="flex items-start gap-4">
                             <span
                                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ring-1 ${
-                                    autoRenewEnabled
-                                        ? 'bg-indigo-50 text-indigo-600 ring-indigo-100'
-                                        : 'bg-slate-50 text-slate-500 ring-slate-200'
+                                    autoRenewEnabled ? 'bg-indigo-50 text-indigo-600 ring-indigo-100' : 'bg-slate-50 text-slate-500 ring-slate-200'
                                 }`}
                             >
                                 <ArrowPathIcon className="h-6 w-6" strokeWidth={2} />

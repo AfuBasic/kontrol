@@ -3,8 +3,6 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import * as InvoiceController from '@/actions/App/Http/Controllers/Admin/InvoiceController';
 
-
-
 type Payment = {
     id: number;
     invoice_ulid: string;

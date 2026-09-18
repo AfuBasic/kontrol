@@ -316,7 +316,7 @@ export default function CreateResident({ inviteLink, properties = [] }: Props) {
 
                             {/* Property Assignment */}
                             <div>
-                                <label htmlFor="property_id" className="block text-sm font-semibold text-slate-700 mb-1.5">
+                                <label htmlFor="property_id" className="mb-1.5 block text-sm font-semibold text-slate-700">
                                     Property Assignment <span className="font-normal text-slate-400">(optional)</span>
                                 </label>
                                 <CustomSelect

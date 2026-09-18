@@ -10,7 +10,8 @@ export function useExternalBilling() {
 
     const openExternalBilling = async (couponCode?: string | React.MouseEvent | any) => {
         const isNative = Capacitor.isNativePlatform();
-        const validCoupon = typeof couponCode === 'string' && couponCode !== '[object Object]' && couponCode.trim() !== '' ? couponCode.trim() : undefined;
+        const validCoupon =
+            typeof couponCode === 'string' && couponCode !== '[object Object]' && couponCode.trim() !== '' ? couponCode.trim() : undefined;
         const queryParams = validCoupon ? { params: { coupon: validCoupon } } : {};
 
         // 1. Native Mobile Platform (iOS/Android)

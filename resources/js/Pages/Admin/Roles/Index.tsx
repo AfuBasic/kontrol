@@ -7,7 +7,6 @@ import { destroy, index } from '@/actions/App/Http/Controllers/Admin/RoleControl
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import { usePermission } from '@/Hooks/usePermission';
 
-
 type Permission = {
     id: number;
     name: string;
@@ -120,7 +119,7 @@ export default function Roles({ roles }: Props) {
                                             <Menu as="div" className="relative inline-block text-left">
                                                 <MenuButton
                                                     aria-label={`Actions for ${role.name} role`}
-                                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-700 active:bg-slate-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
+                                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-700 focus:opacity-100 active:bg-slate-100 sm:opacity-0 sm:group-hover:opacity-100"
                                                 >
                                                     <EllipsisVerticalIcon className="h-5 w-5" />
                                                 </MenuButton>

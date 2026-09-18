@@ -785,13 +785,13 @@ export default function Settings({ settings }: SettingsProps) {
                                                     value={data.access_code_grace_period_minutes ?? ''}
                                                     onChange={(e) => {
                                                         const val = e.target.value;
-                                                        setData(
-                                                            'access_code_grace_period_minutes',
-                                                            val === '' ? ('' as any) : parseInt(val, 10),
-                                                        );
+                                                        setData('access_code_grace_period_minutes', val === '' ? ('' as any) : parseInt(val, 10));
                                                     }}
                                                     onBlur={() => {
-                                                        if (data.access_code_grace_period_minutes === ('' as any) || data.access_code_grace_period_minutes === undefined) {
+                                                        if (
+                                                            data.access_code_grace_period_minutes === ('' as any) ||
+                                                            data.access_code_grace_period_minutes === undefined
+                                                        ) {
                                                             setData('access_code_grace_period_minutes', 0);
                                                         }
                                                     }}
@@ -799,7 +799,8 @@ export default function Settings({ settings }: SettingsProps) {
                                                 />
                                             </div>
                                             <p className="mt-1.5 text-xs text-slate-400">
-                                                Extra window granted past official pass expiry for visitors to scan out at checkpoints before being flagged as expired.
+                                                Extra window granted past official pass expiry for visitors to scan out at checkpoints before being
+                                                flagged as expired.
                                             </p>
                                             {errors.access_code_grace_period_minutes && (
                                                 <p className="mt-1 text-xs text-red-500">{errors.access_code_grace_period_minutes}</p>
@@ -815,7 +816,8 @@ export default function Settings({ settings }: SettingsProps) {
                                                     Quick Entry for Organizations
                                                 </span>
                                                 <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-                                                    Enable rapid, tag-based access recording for high-volume institutions (schools, churches, hospitals).
+                                                    Enable rapid, tag-based access recording for high-volume institutions (schools, churches,
+                                                    hospitals).
                                                 </span>
                                             </div>
                                             <label className="relative mt-0.5 inline-flex shrink-0 cursor-pointer items-center">
@@ -840,12 +842,14 @@ export default function Settings({ settings }: SettingsProps) {
                                                 <div className="mt-2 max-w-sm">
                                                     <CustomSelect
                                                         value={data.quick_entry_hours_enforcement}
-                                                        onChange={(val) =>
-                                                            setData('quick_entry_hours_enforcement', val as any)
-                                                        }
+                                                        onChange={(val) => setData('quick_entry_hours_enforcement', val as any)}
                                                         options={[
                                                             { value: 'warn', label: 'Warn (Recommended)', description: 'Security confirms to admit' },
-                                                            { value: 'block', label: 'Block', description: 'Hard disallow entry outside operating hours' },
+                                                            {
+                                                                value: 'block',
+                                                                label: 'Block',
+                                                                description: 'Hard disallow entry outside operating hours',
+                                                            },
                                                             { value: 'off', label: 'Off', description: 'Hours are informational only' },
                                                         ]}
                                                     />
@@ -890,7 +894,7 @@ export default function Settings({ settings }: SettingsProps) {
                             <div className="max-w-xs">
                                 <label
                                     htmlFor="default_severity"
-                                    className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400 mb-2"
+                                    className="mb-2 block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
                                 >
                                     Default Incident Severity
                                 </label>
@@ -1076,7 +1080,7 @@ export default function Settings({ settings }: SettingsProps) {
                                     <div>
                                         <label
                                             htmlFor="reminder_freq"
-                                            className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400 mb-2"
+                                            className="mb-2 block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
                                         >
                                             Reminder Frequency
                                         </label>

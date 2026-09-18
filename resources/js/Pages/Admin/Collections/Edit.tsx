@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, User, ChevronDown, MapPin } from 'lucide-react';
+import { Wallet, Calendar, Users, ArrowLeft, Save, Search, CheckCircle2, Check, User, ChevronDown, MapPin, Building2 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { show, update } from '@/actions/App/Http/Controllers/Admin/CollectionController';
 import MoneyInput from '@/Components/MoneyInput';
@@ -32,7 +32,7 @@ type Collection = {
     due_day: number;
     grace_days: number;
     late_fee: number | null;
-    applies_to: 'all' | 'target' | 'property_owner' | 'zone';
+    applies_to: 'all' | 'target' | 'property_owner' | 'zone' | 'organization';
     targets?: CollectionTarget[];
 };
 
@@ -41,20 +41,29 @@ type ZoneOption = {
     name: string;
 };
 
+type OrganizationOption = {
+    id: number;
+    name: string;
+    type: string;
+};
+
 type Props = {
     collection: Collection;
     residents: Resident[];
     zones: ZoneOption[];
+    organizations?: OrganizationOption[];
     context?: {
         is_zone_scoped?: boolean;
     };
 };
 
-export default function EditCollection({ collection, residents, zones = [], context }: Props) {
+export default function EditCollection({ collection, residents, zones = [], organizations = [], context }: Props) {
     const isZoneScoped = context?.is_zone_scoped ?? false;
     // Format date for the input field (YYYY-MM-DD)
     const formattedStartDate = collection.start_date ? new Date(collection.start_date).toISOString().split('T')[0] : '';
     const formattedDueAt = collection.due_at ? new Date(collection.due_at).toISOString().split('T')[0] : '';
+
+    const initialOrgTargets = (collection.targets || []).filter((t) => t.target_type.toLowerCase().includes('organization')).map((t) => t.target_id);
 
     const { data, setData, put, processing, errors } = useForm({
         name: collection.name,
@@ -68,16 +77,38 @@ export default function EditCollection({ collection, residents, zones = [], cont
         grace_days: collection.grace_days,
         late_fee: collection.late_fee?.toString() || '',
         applies_to: isZoneScoped && !['target', 'zone'].includes(collection.applies_to) ? 'zone' : collection.applies_to,
-        targets: (collection.targets || []).filter((t) => !t.target_type.toLowerCase().includes('zone')).map((t) => t.target_id),
-        zones:
-            collection.targets?.some((t) => t.target_type.toLowerCase().includes('zone'))
-                ? (collection.targets || []).filter((t) => t.target_type.toLowerCase().includes('zone')).map((t) => t.target_id)
-                : isZoneScoped && zones[0]
-                  ? [zones[0].id]
-                  : [],
+        targets: (collection.targets || [])
+            .filter((t) => !t.target_type.toLowerCase().includes('zone') && !t.target_type.toLowerCase().includes('organization'))
+            .map((t) => t.target_id),
+        zones: collection.targets?.some((t) => t.target_type.toLowerCase().includes('zone'))
+            ? (collection.targets || []).filter((t) => t.target_type.toLowerCase().includes('zone')).map((t) => t.target_id)
+            : isZoneScoped && zones[0]
+              ? [zones[0].id]
+              : [],
+        organizations: initialOrgTargets,
     });
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [orgSearchQuery, setOrgSearchQuery] = useState('');
+
+    const filteredOrganizations = useMemo(() => {
+        return (organizations || []).filter(
+            (org) =>
+                org.name.toLowerCase().includes(orgSearchQuery.toLowerCase()) ||
+                (org.type && org.type.toLowerCase().includes(orgSearchQuery.toLowerCase())),
+        );
+    }, [organizations, orgSearchQuery]);
+
+    const toggleOrganization = (id: number) => {
+        const current = [...(data.organizations || [])];
+        const index = current.indexOf(id);
+        if (index > -1) {
+            current.splice(index, 1);
+        } else {
+            current.push(id);
+        }
+        setData('organizations', current);
+    };
 
     const filteredResidents = useMemo(() => {
         return residents.filter(
@@ -131,15 +162,15 @@ export default function EditCollection({ collection, residents, zones = [], cont
 
                 <form onSubmit={handleSubmit} className="space-y-8" noValidate>
                     {/* Basic Information */}
-                    <div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm ring-1 ring-slate-100">
-                        <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
-                            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-500">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:rounded-[2.5rem] sm:p-10">
+                        <div className="mb-6 flex items-center gap-3 sm:mb-8 sm:gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-500 sm:h-12 sm:w-12">
                                 <Wallet className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
-                            <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Basic Information</h2>
+                            <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Basic Information</h2>
                         </div>
 
-                        <div className="grid gap-6 sm:gap-8 sm:grid-cols-2">
+                        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
                             <div className="sm:col-span-2">
                                 <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Collection Name</label>
                                 <input
@@ -150,7 +181,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     autoComplete="on"
                                     value={data.name}
                                     onChange={(e) => setData('name', e.target.value)}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     placeholder="e.g., Annual Security Levy 2024"
                                     required
                                 />
@@ -166,7 +197,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     value={data.description}
                                     onChange={(e) => setData('description', e.target.value)}
                                     rows={3}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     placeholder="Explain the purpose of this collection..."
                                 />
                                 {errors.description && <p className="mt-2 text-sm font-bold text-red-500">{errors.description}</p>}
@@ -197,15 +228,15 @@ export default function EditCollection({ collection, residents, zones = [], cont
                     </div>
 
                     {/* Schedule & Penalties */}
-                    <div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm ring-1 ring-slate-100">
-                        <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
-                            <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:rounded-[2.5rem] sm:p-10">
+                        <div className="mb-6 flex items-center gap-3 sm:mb-8 sm:gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 sm:h-12 sm:w-12">
                                 <Calendar className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
-                            <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Schedule & Rules</h2>
+                            <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Schedule & Rules</h2>
                         </div>
 
-                        <div className="grid gap-6 sm:gap-8 sm:grid-cols-2">
+                        <div className="grid gap-6 sm:grid-cols-2 sm:gap-8">
                             {data.billing_type === 'recurring' && (
                                 <div>
                                     <label className="mb-2 block text-[10px] font-black tracking-[0.2em] text-slate-400 uppercase">Interval</label>
@@ -226,7 +257,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     type="date"
                                     value={data.start_date}
                                     onChange={(e) => setData('start_date', e.target.value)}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     required
                                 />
                                 {errors.start_date && <p className="mt-2 text-sm font-bold text-red-500">{errors.start_date}</p>}
@@ -239,7 +270,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                         type="date"
                                         value={data.due_at}
                                         onChange={(e) => setData('due_at', e.target.value)}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                         required
                                     />
                                     {errors.due_at && <p className="mt-2 text-sm font-bold text-red-500">{errors.due_at}</p>}
@@ -255,7 +286,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                         pattern="[0-9]*"
                                         value={data.due_day}
                                         onChange={(e) => setData('due_day', parseInt(e.target.value))}
-                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                        className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                         min="1"
                                         max="28"
                                         required
@@ -274,7 +305,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     pattern="[0-9]*"
                                     value={data.grace_days}
                                     onChange={(e) => setData('grace_days', parseInt(e.target.value))}
-                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 sm:px-8 py-4 sm:py-5 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                    className="block w-full rounded-2xl border-0 bg-slate-50 px-5 py-4 text-slate-900 ring-1 ring-slate-200 transition-all focus:bg-white focus:ring-2 focus:ring-[#1F6FDB] sm:px-8 sm:py-5"
                                     min="0"
                                 />
                             </div>
@@ -291,13 +322,13 @@ export default function EditCollection({ collection, residents, zones = [], cont
                     </div>
 
                     {/* Targeting */}
-                    <div className="rounded-3xl sm:rounded-[2.5rem] border border-slate-200 bg-white p-6 sm:p-10 shadow-sm ring-1 ring-slate-100">
-                        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-100 sm:rounded-[2.5rem] sm:p-10">
+                        <div className="mb-6 flex flex-col items-start justify-between gap-4 sm:mb-8 sm:flex-row sm:items-center">
                             <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 sm:h-12 sm:w-12">
                                     <Users className="h-5 w-5 sm:h-6 sm:w-6" />
                                 </div>
-                                <h2 className="text-lg sm:text-xl font-black tracking-tight text-slate-900">Target Audience</h2>
+                                <h2 className="text-lg font-black tracking-tight text-slate-900 sm:text-xl">Target Audience</h2>
                             </div>
                             <div className="w-full sm:w-56">
                                 <CustomSelect
@@ -307,7 +338,8 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                     options={[
                                         ...(!isZoneScoped
                                             ? [
-                                                  { value: 'all', label: 'Everyone' },
+                                                  { value: 'all', label: 'Everyone (Residents & Organizations)' },
+                                                  { value: 'organization', label: 'Organizations' },
                                                   { value: 'property_owner', label: 'Property Owners' },
                                               ]
                                             : []),
@@ -429,7 +461,7 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                             })}
                                         </div>
                                     </div>
-                                    <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-2">
+                                    <div className="mt-4 flex flex-col items-start justify-between gap-3 px-2 sm:flex-row sm:items-center">
                                         <p className="text-xs font-bold text-slate-500">{data.targets.length} residents selected</p>
                                         <div className="flex flex-wrap gap-2 sm:gap-3">
                                             <AnimatePresence mode="popLayout">
@@ -493,33 +525,180 @@ export default function EditCollection({ collection, residents, zones = [], cont
                                         </div>
                                     </div>
                                 </motion.div>
+                            ) : data.applies_to === 'organization' ? (
+                                <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    {organizations.length === 0 ? (
+                                        <div className="rounded-3xl bg-amber-50 p-8 text-center ring-1 ring-amber-100">
+                                            <p className="text-sm font-bold text-amber-800">
+                                                No active organizations found in this estate. Register organizations first to target them for
+                                                collections.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="relative mb-6">
+                                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-6">
+                                                    <Search className="h-4 w-4 text-slate-400" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={orgSearchQuery}
+                                                    onChange={(e) => setOrgSearchQuery(e.target.value)}
+                                                    className="block w-full rounded-2xl border-0 bg-slate-50 py-4 pr-6 pl-14 text-sm text-slate-900 ring-1 ring-slate-200 focus:bg-white focus:ring-2 focus:ring-[#1F6FDB]"
+                                                    placeholder="Search organizations by name or type..."
+                                                />
+                                            </div>
+
+                                            <div className="max-h-[400px] overflow-y-auto rounded-3xl border border-slate-100 bg-slate-50/50 p-4">
+                                                <div className="grid gap-3">
+                                                    {filteredOrganizations.map((org) => {
+                                                        const isSelected = (data.organizations || []).includes(org.id);
+                                                        return (
+                                                            <button
+                                                                key={org.id}
+                                                                type="button"
+                                                                onClick={() => toggleOrganization(org.id)}
+                                                                className={`flex items-center justify-between rounded-2xl p-4 transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-white text-[#1F6FDB] shadow-sm ring-1 ring-[#1F6FDB]/30'
+                                                                        : 'text-slate-600 hover:bg-white hover:shadow-sm'
+                                                                }`}
+                                                            >
+                                                                <div className="flex items-center gap-4">
+                                                                    <div
+                                                                        className={`flex h-10 w-10 items-center justify-center rounded-xl ${isSelected ? 'bg-blue-50' : 'bg-slate-200/50'}`}
+                                                                    >
+                                                                        <Building2
+                                                                            className={`h-5 w-5 ${isSelected ? 'text-blue-500' : 'text-slate-400'}`}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="text-left">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="text-sm font-black tracking-tight">{org.name}</p>
+                                                                            {org.type && (
+                                                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[8px] font-bold tracking-wider whitespace-nowrap text-blue-700 uppercase ring-1 ring-blue-100/50">
+                                                                                    {org.type}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                {isSelected && (
+                                                                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                                                                        <CheckCircle2 className="h-6 w-6 text-blue-500" />
+                                                                    </motion.div>
+                                                                )}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 flex flex-col items-start justify-between gap-3 px-2 sm:flex-row sm:items-center">
+                                                <p className="text-xs font-bold text-slate-500">
+                                                    {(data.organizations || []).length === 0
+                                                        ? 'All organizations will be billed (or choose specific ones below)'
+                                                        : `${(data.organizations || []).length} of ${organizations.length} organizations selected`}
+                                                </p>
+                                                <div className="flex flex-wrap gap-2 sm:gap-3">
+                                                    <AnimatePresence mode="popLayout">
+                                                        {/* Search-specific Select All */}
+                                                        {orgSearchQuery &&
+                                                            filteredOrganizations.length > 0 &&
+                                                            !filteredOrganizations.every((o) => (data.organizations || []).includes(o.id)) && (
+                                                                <motion.button
+                                                                    key="select-matches-org"
+                                                                    initial={{ opacity: 0, scale: 0.9 }}
+                                                                    animate={{ opacity: 1, scale: 1 }}
+                                                                    exit={{ opacity: 0, scale: 0.9 }}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const newOrgs = Array.from(
+                                                                            new Set([
+                                                                                ...(data.organizations || []),
+                                                                                ...filteredOrganizations.map((o) => o.id),
+                                                                            ]),
+                                                                        );
+                                                                        setData('organizations', newOrgs);
+                                                                    }}
+                                                                    className="rounded-lg bg-blue-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-blue-100"
+                                                                >
+                                                                    Select {filteredOrganizations.length} Matches
+                                                                </motion.button>
+                                                            )}
+
+                                                        {/* Global Select All */}
+                                                        {(data.organizations || []).length < (organizations || []).length && !orgSearchQuery && (
+                                                            <motion.button
+                                                                key="select-all-org"
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setData(
+                                                                        'organizations',
+                                                                        (organizations || []).map((o) => o.id),
+                                                                    )
+                                                                }
+                                                                className="rounded-lg bg-slate-100 px-3 py-1.5 text-[10px] font-black tracking-widest text-[#1F6FDB] uppercase transition-colors hover:bg-slate-200"
+                                                            >
+                                                                Select All ({(organizations || []).length})
+                                                            </motion.button>
+                                                        )}
+
+                                                        {/* Global Unselect All */}
+                                                        {(data.organizations || []).length > 0 && (
+                                                            <motion.button
+                                                                key="unselect-all-org"
+                                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                                animate={{ opacity: 1, scale: 1 }}
+                                                                exit={{ opacity: 0, scale: 0.9 }}
+                                                                type="button"
+                                                                onClick={() => setData('organizations', [])}
+                                                                className="rounded-lg bg-rose-50 px-3 py-1.5 text-[10px] font-black tracking-widest text-rose-500 uppercase transition-colors hover:bg-rose-100"
+                                                            >
+                                                                Unselect All
+                                                            </motion.button>
+                                                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </motion.div>
                             ) : (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="rounded-2xl sm:rounded-3xl bg-blue-50/50 p-6 sm:p-8 text-center ring-1 ring-blue-100"
+                                    className="rounded-2xl bg-blue-50/50 p-6 text-center ring-1 ring-blue-100 sm:rounded-3xl sm:p-8"
                                 >
-                                    <p className="text-xs sm:text-sm font-bold text-blue-700">
+                                    <p className="text-xs font-bold text-blue-700 sm:text-sm">
                                         {data.applies_to === 'property_owner'
                                             ? 'This collection will apply to all current and future property owners of the estate.'
-                                            : 'This collection will apply to all current and future residents of the estate.'}
+                                            : 'This collection will apply to everyone: all current and future residents and organizations in the estate.'}
                                     </p>
                                 </motion.div>
                             )}
                         </AnimatePresence>
                     </div>
 
-                    <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 sm:gap-6 pt-4">
+                    <div className="flex flex-col-reverse items-center justify-end gap-4 pt-4 sm:flex-row sm:gap-6">
                         <Link
                             href={show.url(collection.ulid)}
-                            className="w-full sm:w-auto text-center py-2 sm:py-0 text-sm font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900"
+                            className="w-full py-2 text-center text-sm font-black tracking-widest text-slate-400 uppercase transition-colors hover:text-slate-900 sm:w-auto sm:py-0"
                         >
                             Cancel Changes
                         </Link>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full sm:w-auto flex items-center justify-center gap-3 rounded-2xl sm:rounded-[1.5rem] bg-[#1F6FDB] px-8 sm:px-12 py-4 sm:py-5 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-slate-800 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50"
+                            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#1F6FDB] px-8 py-4 text-sm font-black text-white shadow-2xl shadow-blue-500/30 transition-all hover:bg-slate-800 hover:shadow-blue-500/40 active:scale-95 disabled:opacity-50 sm:w-auto sm:rounded-[1.5rem] sm:px-12 sm:py-5"
                         >
                             <Save className="h-5 w-5" />
                             {processing ? 'Saving Changes...' : 'Save Collection'}

@@ -20,22 +20,22 @@ export default function SupportModeBanner() {
                 onFinish: () => {
                     setIsExiting(false);
                 },
-            }
+            },
         );
     };
 
     return (
-        <aside 
-            aria-label="Support Mode active" 
+        <aside
+            aria-label="Support Mode active"
             className="sticky top-0 z-50 flex w-full items-center justify-between border-b border-amber-600/30 bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 px-4 py-2 text-slate-950 shadow-md backdrop-blur-sm sm:px-6 lg:px-8"
         >
-            <div className="flex flex-1 flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+            <div className="flex flex-1 flex-wrap items-center gap-2 text-xs sm:gap-3 sm:text-sm">
                 <div className="inline-flex items-center gap-1.5 rounded-lg bg-slate-950 px-2.5 py-1 text-[11px] font-black tracking-wider text-amber-400 uppercase shadow-xs">
                     <ShieldCheck className="h-3.5 w-3.5" />
                     Support Mode
                 </div>
 
-                <div className="text-slate-950 font-medium">
+                <div className="font-medium text-slate-950">
                     <span>You're operating </span>
                     <strong className="font-bold">{support_mode.estate.name}</strong>
                     <span> as </span>

@@ -8,12 +8,12 @@ export default function ProductEstates() {
     return (
         <PublicLayout>
             <Head>
-                <title>Kontrol for Estates — Complete Operating System for Gated Communities</title>
+                <title>Kontrol for Estates: Complete Operating System for Gated Communities</title>
                 <meta
                     name="description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
                 />
-                <meta property="og:title" content="Kontrol for Estates — Complete Operating System for Gated Communities" />
+                <meta property="og:title" content="Kontrol for Estates: Complete Operating System for Gated Communities" />
                 <meta
                     property="og:description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
@@ -22,7 +22,7 @@ export default function ProductEstates() {
                 <meta property="og:type" content="website" />
                 <meta property="og:image" content="https://usekontrol.com/assets/images/app-icon.png" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Kontrol for Estates — Complete Operating System for Gated Communities" />
+                <meta name="twitter:title" content="Kontrol for Estates: Complete Operating System for Gated Communities" />
                 <meta
                     name="twitter:description"
                     content="Eliminate gate bottlenecks, automate service charge collections, and bring order to resident communication. Built for estate managers, ExCos, and facility teams."
@@ -51,11 +51,12 @@ export default function ProductEstates() {
                         </div>
 
                         <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl lg:text-7xl">
-                            Everything that makes your estate run — finally in one place.
+                            Everything that makes your estate run, finally in one place.
                         </h1>
 
                         <p className="mx-auto mt-8 max-w-3xl text-lg leading-relaxed text-slate-300 sm:text-xl">
-                            From visitor verification at the gate to dues reconciliation in the office, Kontrol replaces fragmented spreadsheets, paper logbooks, and chaotic WhatsApp groups with a single, synchronized platform.
+                            From visitor verification at the gate to dues reconciliation in the office, Kontrol replaces fragmented spreadsheets,
+                            paper logbooks, and chaotic WhatsApp groups with a single, synchronized platform.
                         </p>
 
                         <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -74,9 +75,7 @@ export default function ProductEstates() {
                                 Explore Features
                             </a>
                         </div>
-                        <p className="mt-4 text-xs text-slate-400">
-                            First 30 days free · Dedicated onboarding assistance · No credit card required
-                        </p>
+                        <p className="mt-4 text-xs text-slate-400">First 30 days free · Dedicated onboarding assistance · No credit card required</p>
                     </div>
                 </section>
 
@@ -88,7 +87,7 @@ export default function ProductEstates() {
                                 Why estate management breaks down
                             </h2>
                             <p className="mt-4 text-lg text-slate-600 dark:text-slate-400">
-                                Most estates don't fail due to lack of effort — they fail because their tools don't talk to each other.
+                                Most estates don't fail due to lack of effort - they fail because their tools don't talk to each other.
                             </p>
                         </div>
 
@@ -99,7 +98,8 @@ export default function ProductEstates() {
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Gate Congestion & Manual Logs</h3>
                                 <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                                    Guards calling residents, illegible paper visitor books, and long queues at the security gate during peak return hours.
+                                    Guards calling residents, illegible paper visitor books, and long queues at the security gate during peak return
+                                    hours.
                                 </p>
                             </div>
 
@@ -109,7 +109,8 @@ export default function ProductEstates() {
                                 </div>
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white">Manual Payment Tracking</h3>
                                 <p className="mt-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                                    Chasing bank transfer receipts, manually updating Excel sheets, and constant disputes over who has paid estate dues.
+                                    Chasing bank transfer receipts, manually updating Excel sheets, and constant disputes over who has paid estate
+                                    dues.
                                 </p>
                             </div>
 
@@ -149,7 +150,8 @@ export default function ProductEstates() {
                                         Frictionless gate operations with instant logs
                                     </h3>
                                     <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                                        Security guards scan digital visitor passes using a dedicated guard interface. Every entry and exit is logged in real-time with timestamps, visitor details, and host resident verification.
+                                        Security guards scan digital visitor passes using a dedicated guard interface. Every entry and exit is logged
+                                        in real-time with timestamps, visitor details, and host resident verification.
                                     </p>
                                     <ul className="mt-6 space-y-3">
                                         <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
@@ -167,7 +169,7 @@ export default function ProductEstates() {
                                     <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
                                         <div className="flex items-center gap-3">
                                             <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                                            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Live Gate Feed</span>
+                                            <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">Live Gate Feed</span>
                                         </div>
                                         <span className="text-xs text-slate-400">Updated seconds ago</span>
                                     </div>
@@ -177,7 +179,10 @@ export default function ProductEstates() {
                                             { visitor: 'DHL Delivery (Bolaji)', host: 'House 7, Olive Grove', status: 'Checked In', time: '14:18' },
                                             { visitor: 'Engr. Chukwuma', host: 'House 22A, Main Ave', status: 'Checked Out', time: '13:50' },
                                         ].map((row, i) => (
-                                            <div key={i} className="flex items-center justify-between rounded-xl bg-white p-3 shadow-xs dark:bg-slate-950">
+                                            <div
+                                                key={i}
+                                                className="flex items-center justify-between rounded-xl bg-white p-3 shadow-xs dark:bg-slate-950"
+                                            >
                                                 <div>
                                                     <p className="text-sm font-semibold text-slate-900 dark:text-white">{row.visitor}</p>
                                                     <p className="text-xs text-slate-500">{row.host}</p>
@@ -196,9 +201,9 @@ export default function ProductEstates() {
 
                             {/* Feature 2 */}
                             <div className="grid grid-cols-1 items-center gap-10 rounded-3xl border border-slate-200 bg-white p-8 lg:grid-cols-2 lg:p-12 dark:border-slate-800 dark:bg-slate-950">
-                                <div className="order-2 lg:order-1 rounded-2xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900">
+                                <div className="order-2 rounded-2xl border border-slate-200 bg-slate-50 p-6 lg:order-1 dark:border-slate-800 dark:bg-slate-900">
                                     <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-800">
-                                        <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Service Charge Collections</span>
+                                        <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">Service Charge Collections</span>
                                         <span className="text-xs font-bold text-emerald-500">92% Collected</span>
                                     </div>
                                     <div className="mt-6 grid grid-cols-2 gap-4">
@@ -222,7 +227,8 @@ export default function ProductEstates() {
                                         Transparent dues collection with automatic receipts
                                     </h3>
                                     <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                                        Generate recurring or ad-hoc levies, notify residents automatically, allow them to pay securely via debit card or bank transfer, and instantly generate audit-ready receipts.
+                                        Generate recurring or ad-hoc levies, notify residents automatically, allow them to pay securely via debit card
+                                        or bank transfer, and instantly generate audit-ready receipts.
                                     </p>
                                     <ul className="mt-6 space-y-3">
                                         <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
@@ -248,7 +254,8 @@ export default function ProductEstates() {
                                         Clean communication without the WhatsApp noise
                                     </h3>
                                     <p className="mt-4 text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                                        Keep a clean, verified database of homeowners, tenants, and staff. Broadcast urgent announcements with guaranteed delivery, and handle resident maintenance requests privately.
+                                        Keep a clean, verified database of homeowners, tenants, and staff. Broadcast urgent announcements with
+                                        guaranteed delivery, and handle resident maintenance requests privately.
                                     </p>
                                     <ul className="mt-6 space-y-3">
                                         <li className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
@@ -267,12 +274,17 @@ export default function ProductEstates() {
                                         <div className="flex items-center gap-3">
                                             <Bell className="h-5 w-5 text-purple-500" />
                                             <div>
-                                                <p className="text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">Official Announcement</p>
-                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">Scheduled Water Treatment Maintenance</p>
+                                                <p className="text-xs font-bold tracking-wider text-purple-600 uppercase dark:text-purple-400">
+                                                    Official Announcement
+                                                </p>
+                                                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                                                    Scheduled Water Treatment Maintenance
+                                                </p>
                                             </div>
                                         </div>
                                         <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-                                            The estate water facility will undergo routine maintenance this Saturday between 9:00 AM and 1:00 PM. Please store sufficient water in advance.
+                                            The estate water facility will undergo routine maintenance this Saturday between 9:00 AM and 1:00 PM.
+                                            Please store sufficient water in advance.
                                         </p>
                                         <div className="mt-3 flex items-center justify-between text-[11px] text-slate-400">
                                             <span>Sent to 142 Households</span>
@@ -302,7 +314,8 @@ export default function ProductEstates() {
                                 <div className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">01</div>
                                 <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">Discovery & Setup</h3>
                                 <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                                    You submit your estate details. We configure your estate boundaries, house numbers, gate policies, and dues structures.
+                                    You submit your estate details. We configure your estate boundaries, house numbers, gate policies, and dues
+                                    structures.
                                 </p>
                             </div>
 
@@ -328,9 +341,7 @@ export default function ProductEstates() {
                 {/* BOTTOM CTA */}
                 <section className="relative overflow-hidden bg-slate-900 py-32 text-center text-white">
                     <div className="relative z-10 mx-auto max-w-4xl px-6">
-                        <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-                            Ready to modernize your estate?
-                        </h2>
+                        <h2 className="text-4xl font-extrabold tracking-tight sm:text-5xl">Ready to modernize your estate?</h2>
                         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
                             Join our founding cohort of estates. Get 30 days free, guided setup, and direct access to our product team.
                         </p>

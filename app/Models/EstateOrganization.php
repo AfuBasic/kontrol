@@ -78,6 +78,14 @@ class EstateOrganization extends Model
     }
 
     /**
+     * @return HasMany<OrganizationBulkInvite, $this>
+     */
+    public function bulkInvites(): HasMany
+    {
+        return $this->hasMany(OrganizationBulkInvite::class, 'organization_id');
+    }
+
+    /**
      * @return HasMany<AccessLog, $this>
      */
     public function accessLogs(): HasMany

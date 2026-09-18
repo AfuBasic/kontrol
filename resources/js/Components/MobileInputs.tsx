@@ -46,7 +46,7 @@ export function MobileSelect({ label, icon: Icon, error, options, value, onChang
             {label && <label className="ml-1 text-[10px] font-black tracking-[0.15em] text-slate-400 uppercase">{label}</label>}
             <div className="group relative">
                 {Icon && (
-                    <div className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 z-10 text-slate-400 transition-colors group-focus-within:text-indigo-500">
+                    <div className="pointer-events-none absolute top-1/2 left-4 z-10 -translate-y-1/2 text-slate-400 transition-colors group-focus-within:text-indigo-500">
                         <Icon size={18} strokeWidth={2.5} />
                     </div>
                 )}

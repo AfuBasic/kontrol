@@ -1,15 +1,6 @@
 import React, { useState } from 'react';
 import { Deferred, Head, Link, router } from '@inertiajs/react';
-import {
-    ArrowLeft,
-    Clock,
-    MapPin,
-    Paperclip,
-    Trash2,
-    User,
-    X,
-    ZoomIn,
-} from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, MapPin, Paperclip, Trash2, User, X, ZoomIn } from 'lucide-react';
 import { useAdminConfirmation } from '@/Components/ConfirmationProvider';
 import IncidentStatusBadge from '@/Components/Incidents/IncidentStatusBadge';
 import IncidentCategoryLabel from '@/Components/Incidents/IncidentCategoryLabel';
@@ -40,6 +31,7 @@ type ActivityEvent = {
 
 interface Props {
     incident: Incident;
+    canClose?: boolean;
     require_resolution_notes?: boolean;
     official_comments?: IncidentComment[];
     discussion_comments?: PaginatedData<IncidentComment>;
@@ -52,6 +44,7 @@ interface Props {
 
 export default function Show({
     incident,
+    canClose = false,
     require_resolution_notes = false,
     official_comments = [],
     discussion_comments,
@@ -77,8 +70,7 @@ export default function Show({
 
     const isClosed = incident.status === 'closed';
 
-    const discussionData =
-        discussion_comments ||
+    const discussionData = discussion_comments ||
         comments || {
             data: [],
             current_page: 1,
@@ -99,8 +91,7 @@ export default function Show({
     const handleAcknowledge = () => {
         confirm({
             title: 'Acknowledge Incident?',
-            message:
-                'Acknowledging this case confirms initial review and notifies the reporter. Response SLA will be updated accordingly.',
+            message: 'Acknowledging this case confirms initial review and notifies the reporter. Response SLA will be updated accordingly.',
             confirmLabel: 'Acknowledge Case',
             onConfirm: () => {
                 setIsUpdatingStatus(true);
@@ -110,7 +101,7 @@ export default function Show({
                     {
                         preserveScroll: true,
                         onFinish: () => setIsUpdatingStatus(false),
-                    }
+                    },
                 );
             },
         });
@@ -119,8 +110,7 @@ export default function Show({
     const handleBeginResolution = () => {
         confirm({
             title: 'Begin Incident Resolution?',
-            message:
-                'This will mark the incident as actively in progress and inform relevant estate teams that field work has begun.',
+            message: 'This will mark the incident as actively in progress and inform relevant estate teams that field work has begun.',
             confirmLabel: 'Begin Resolution',
             onConfirm: () => {
                 setIsUpdatingStatus(true);
@@ -130,7 +120,7 @@ export default function Show({
                     {
                         preserveScroll: true,
                         onFinish: () => setIsUpdatingStatus(false),
-                    }
+                    },
                 );
             },
         });
@@ -150,8 +140,29 @@ export default function Show({
                     setIsResolveModalOpen(false);
                 },
                 onFinish: () => setIsUpdatingStatus(false),
-            }
+            },
         );
+    };
+
+    const handleClose = () => {
+        confirm({
+            title: 'Close this Incident?',
+            message: 'Are you satisfied that this issue has been fully resolved? Closing it will archive this case.',
+            confirmLabel: 'Yes, Close Incident',
+            cancelLabel: 'Keep Open',
+            type: 'info',
+            onConfirm: () => {
+                setIsUpdatingStatus(true);
+                router.post(
+                    `/admin/incidents/${incident.hashid}/close`,
+                    {},
+                    {
+                        preserveScroll: true,
+                        onFinish: () => setIsUpdatingStatus(false),
+                    },
+                );
+            },
+        });
     };
 
     // Official Update Submission
@@ -164,7 +175,7 @@ export default function Show({
                 preserveScroll: true,
                 onSuccess: () => setIsAddUpdateModalOpen(false),
                 onFinish: () => setSubmittingOfficial(false),
-            }
+            },
         );
     };
 
@@ -180,7 +191,7 @@ export default function Show({
             {
                 preserveScroll: true,
                 onFinish: () => setSubmittingDiscussion(false),
-            }
+            },
         );
     };
 
@@ -192,23 +203,18 @@ export default function Show({
         is_private?: boolean;
     }) => {
         setIsSubmittingDetails(true);
-        router.put(
-            `/admin/incidents/${incident.hashid}/status`,
-            updatedData,
-            {
-                preserveScroll: true,
-                onSuccess: () => setIsEditDetailsModalOpen(false),
-                onFinish: () => setIsSubmittingDetails(false),
-            }
-        );
+        router.put(`/admin/incidents/${incident.hashid}/status`, updatedData, {
+            preserveScroll: true,
+            onSuccess: () => setIsEditDetailsModalOpen(false),
+            onFinish: () => setIsSubmittingDetails(false),
+        });
     };
 
     // Delete Case
     const handleDelete = () => {
         confirm({
             title: 'Permanently Delete Incident?',
-            message:
-                'This incident case file, evidence, and all comments will be permanently removed. This action cannot be undone.',
+            message: 'This incident case file, evidence, and all comments will be permanently removed. This action cannot be undone.',
             confirmLabel: 'Delete Case',
             type: 'danger',
             onConfirm: () => router.delete(`/admin/incidents/${incident.hashid}`),
@@ -245,10 +251,21 @@ export default function Show({
                 </Link>
 
                 <div className="flex items-center gap-3">
+                    {canClose && (
+                        <button
+                            type="button"
+                            onClick={handleClose}
+                            disabled={isUpdatingStatus}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-900 bg-slate-900 px-3.5 py-2 text-xs font-bold text-white transition-colors hover:bg-slate-800 disabled:opacity-50 dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                        >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>{isUpdatingStatus ? 'Closing...' : 'Close Incident'}</span>
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={handleDelete}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-400"
                     >
                         <Trash2 className="h-3.5 w-3.5" />
                         <span>Delete Case</span>
@@ -261,14 +278,12 @@ export default function Show({
                 {/* Main Left Column: Mobile order: 1. Header -> 2. Current Response -> 3. Progress -> 4. Timeline -> 5. Official Updates -> 6. Discussion */}
                 <div className="space-y-5 sm:space-y-6 lg:col-span-8">
                     {/* 1. Incident Header Card */}
-                    <div className="rounded-3xl border border-slate-200/80 bg-white p-4 sm:p-8 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                    <div className="rounded-3xl border border-slate-200/80 bg-white p-4 shadow-xs sm:p-8 dark:border-slate-800 dark:bg-slate-900">
                         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                             <div className="flex flex-wrap items-center gap-2">
                                 <IncidentCategoryLabel category={incident.category} size="sm" showBadge />
                                 {incident.reference_code && (
-                                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
-                                        {incident.reference_code}
-                                    </span>
+                                    <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">{incident.reference_code}</span>
                                 )}
                             </div>
 
@@ -276,12 +291,12 @@ export default function Show({
                         </div>
 
                         {/* Title */}
-                        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100 leading-snug">
+                        <h1 className="text-xl leading-snug font-black tracking-tight text-slate-900 sm:text-2xl dark:text-slate-100">
                             {incident.title}
                         </h1>
 
                         {/* Description */}
-                        <div className="mt-4 text-sm sm:text-base font-normal leading-relaxed text-slate-700 dark:text-slate-300 whitespace-pre-line">
+                        <div className="mt-4 text-sm leading-relaxed font-normal whitespace-pre-line text-slate-700 sm:text-base dark:text-slate-300">
                             {incident.body}
                         </div>
 
@@ -335,6 +350,8 @@ export default function Show({
                         onAcknowledge={handleAcknowledge}
                         onBeginResolution={handleBeginResolution}
                         onOpenResolveModal={() => setIsResolveModalOpen(true)}
+                        onClose={handleClose}
+                        canClose={canClose}
                         isUpdatingStatus={isUpdatingStatus}
                     />
 
@@ -342,29 +359,15 @@ export default function Show({
                     <CaseProgress incident={incident} />
 
                     {/* 4. Unified Case Timeline */}
-                    <Deferred
-                        data="activities"
-                        fallback={
-                            <div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
-                        }
-                    >
+                    <Deferred data="activities" fallback={<div className="h-48 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />}>
                         <CaseTimeline incident={incident} activities={activities} />
                     </Deferred>
 
                     {/* 5. Official Updates (with progressive sheet composer) */}
-                    <OfficialUpdates
-                        updates={official_comments}
-                        onAddUpdate={() => setIsAddUpdateModalOpen(true)}
-                        canAddUpdate={!isClosed}
-                    />
+                    <OfficialUpdates updates={official_comments} onAddUpdate={() => setIsAddUpdateModalOpen(true)} canAddUpdate={!isClosed} />
 
                     {/* 6. Resident Discussion */}
-                    <Deferred
-                        data="discussion_comments"
-                        fallback={
-                            <div className="h-40 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />
-                        }
-                    >
+                    <Deferred data="discussion_comments" fallback={<div className="h-40 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-800" />}>
                         <IncidentDiscussion
                             comments={discussionData}
                             canComment={!isClosed}
@@ -375,21 +378,13 @@ export default function Show({
 
                     {/* Mobile-only 7. Case Details (stacked at bottom for mobile) */}
                     <div className="block lg:hidden">
-                        <CaseDetailsSection
-                            incident={incident}
-                            onEdit={() => setIsEditDetailsModalOpen(true)}
-                            canEdit={!isClosed}
-                        />
+                        <CaseDetailsSection incident={incident} onEdit={() => setIsEditDetailsModalOpen(true)} canEdit={!isClosed} />
                     </div>
                 </div>
 
                 {/* Right Rail (Desktop only): Case Details */}
-                <div className="hidden lg:block lg:col-span-4 sticky top-6 space-y-6">
-                    <CaseDetailsSection
-                        incident={incident}
-                        onEdit={() => setIsEditDetailsModalOpen(true)}
-                        canEdit={!isClosed}
-                    />
+                <div className="sticky top-6 hidden space-y-6 lg:col-span-4 lg:block">
+                    <CaseDetailsSection incident={incident} onEdit={() => setIsEditDetailsModalOpen(true)} canEdit={!isClosed} />
                 </div>
             </div>
 
@@ -427,10 +422,7 @@ export default function Show({
                     onClick={() => setIsLightboxOpen(false)}
                     className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
                 >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-2xl bg-black"
-                    >
+                    <div onClick={(e) => e.stopPropagation()} className="relative max-h-[90vh] max-w-4xl overflow-hidden rounded-2xl bg-black">
                         <button
                             type="button"
                             onClick={() => setIsLightboxOpen(false)}
@@ -438,11 +430,7 @@ export default function Show({
                         >
                             <X className="h-5 w-5" />
                         </button>
-                        <img
-                            src={incident.attachment_url}
-                            alt="Incident Evidence"
-                            className="max-h-[85vh] w-auto object-contain"
-                        />
+                        <img src={incident.attachment_url} alt="Incident Evidence" className="max-h-[85vh] w-auto object-contain" />
                     </div>
                 </div>
             )}
