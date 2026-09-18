@@ -119,6 +119,9 @@ export default function AccessList({ organization, membership, members, windows 
     const [category, setCategory] = useState(filters.category ?? 'all');
     const [status, setStatus] = useState(filters.status ?? 'all');
 
+    type ConfirmActionType = 'suspend' | 'activate' | 'revoke' | null;
+    const [confirmAction, setConfirmAction] = useState<ConfirmActionType>(null);
+
     const {
         data: memberData,
         setData: setMemberData,
@@ -667,9 +670,7 @@ export default function AccessList({ organization, membership, members, windows 
                                         <div className="mt-3 space-y-2">
                                             <button
                                                 onClick={() =>
-                                                    selectedMember.status === 'suspended'
-                                                        ? handleActivate(selectedMember)
-                                                        : handleSuspend(selectedMember)
+                                                    setConfirmAction(selectedMember.status === 'suspended' ? 'activate' : 'suspend')
                                                 }
                                                 className={`flex w-full items-center justify-between rounded-xl border p-4 transition-colors disabled:opacity-50 ${
                                                     selectedMember.status === 'suspended'
@@ -702,11 +703,7 @@ export default function AccessList({ organization, membership, members, windows 
 
                                             {selectedMember.active_credential ? (
                                                 <button
-                                                    onClick={() => {
-                                                        if (confirm('Are you sure you want to permanently revoke this code?')) {
-                                                            handleRevoke(selectedMember);
-                                                        }
-                                                    }}
+                                                    onClick={() => setConfirmAction('revoke')}
                                                     className="flex w-full items-center justify-between rounded-xl border border-rose-100 bg-rose-50 p-4 transition-colors hover:border-rose-200 disabled:opacity-50"
                                                 >
                                                     <div className="flex items-center gap-3 text-left">
@@ -723,6 +720,56 @@ export default function AccessList({ organization, membership, members, windows 
                                 )}
                             </div>
                         </>
+                    )}
+                </ResponsiveSheet>
+
+                {/* Confirmation Sheet */}
+                <ResponsiveSheet isOpen={!!confirmAction} onClose={() => setConfirmAction(null)}>
+                    {confirmAction && selectedMember && (
+                        <div className="flex flex-col gap-5 pt-2 pb-4">
+                            <div className="flex items-start gap-4">
+                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${confirmAction === 'activate' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                                    {confirmAction === 'activate' ? <BadgeCheck className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">
+                                        {confirmAction === 'suspend' && 'Suspend Access?'}
+                                        {confirmAction === 'activate' && 'Reactivate Access?'}
+                                        {confirmAction === 'revoke' && 'Revoke Code?'}
+                                    </h3>
+                                    <p className="mt-1.5 text-[15px] leading-snug text-slate-500">
+                                        {confirmAction === 'suspend' && `Are you sure you want to suspend access for ${selectedMember.name}? Their code will be temporarily disabled.`}
+                                        {confirmAction === 'activate' && `Are you sure you want to reactivate access for ${selectedMember.name}? Their previous code will be valid again.`}
+                                        {confirmAction === 'revoke' && 'Are you sure you want to permanently revoke this code? You will need to issue a new code if they need access again.'}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="mt-4 flex gap-3">
+                                <button
+                                    onClick={() => setConfirmAction(null)}
+                                    className="flex h-12 flex-1 items-center justify-center rounded-2xl bg-slate-100 text-[15px] font-bold text-slate-700 active:bg-slate-200"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        if (confirmAction === 'suspend') handleSuspend(selectedMember);
+                                        if (confirmAction === 'activate') handleActivate(selectedMember);
+                                        if (confirmAction === 'revoke') handleRevoke(selectedMember);
+                                        setConfirmAction(null);
+                                    }}
+                                    className={`flex h-12 flex-1 items-center justify-center rounded-2xl text-[15px] font-bold text-white shadow-xs ${
+                                        confirmAction === 'activate' 
+                                            ? 'bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800' 
+                                            : 'bg-rose-600 hover:bg-rose-700 active:bg-rose-800'
+                                    }`}
+                                >
+                                    {confirmAction === 'suspend' && 'Yes, Suspend'}
+                                    {confirmAction === 'activate' && 'Yes, Reactivate'}
+                                    {confirmAction === 'revoke' && 'Yes, Revoke'}
+                                </button>
+                            </div>
+                        </div>
                     )}
                 </ResponsiveSheet>
             </div>
