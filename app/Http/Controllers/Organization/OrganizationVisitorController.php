@@ -48,6 +48,7 @@ class OrganizationVisitorController extends Controller
             'organization' => [
                 'id' => $organization->id,
                 'name' => $organization->name,
+                'estate_name' => $organization->estate?->name,
             ],
             'membership' => [
                 'role' => $membership->role,

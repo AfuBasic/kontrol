@@ -273,10 +273,10 @@ export default function Visitors({ organization, membership, visitors, filters }
     };
 
     return (
-        <OrganizationLayout title="Access - Visitors" contentClassName="max-w-[92rem]">
+        <OrganizationLayout title="Access - Visitors" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - Visitors`} />
 
-            <div className="space-y-4 pt-1 sm:pt-4">
+            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
                 <AccessHeader
                     activeTab="visitors"
                     primaryAction={
@@ -284,17 +284,17 @@ export default function Visitors({ organization, membership, visitors, filters }
                             <button
                                 type="button"
                                 onClick={() => setInviteModalOpen(true)}
-                                className="flex items-center gap-1 rounded-full px-2 py-1 text-[13px] font-bold text-[#0b4aa2] hover:bg-[#0b4aa2]/10"
+                                className="flex items-center gap-1.5 rounded-full border border-[#dce9ff] bg-[#eef4ff] px-3 py-1.5 text-[12px] font-semibold text-[#1a5dbf] shadow-[0_2px_8px_rgba(26,93,191,0.10)] transition active:scale-95"
                             >
-                                <Plus className="h-4 w-4" strokeWidth={2.5} />
-                                <span>Invite</span>
+                                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                                Invite
                             </button>
                         ) : undefined
                     }
                 />
 
                 {/* Directory with search, filters, and list */}
-                <div className="space-y-4 pt-2">
+                <div className="flex flex-col gap-3">
                     {/* Native Search Field */}
                     <div className="relative">
                         <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />

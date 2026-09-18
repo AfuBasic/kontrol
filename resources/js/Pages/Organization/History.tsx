@@ -103,13 +103,13 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
             .toUpperCase();
 
     return (
-        <OrganizationLayout title="Access - History" contentClassName="max-w-[92rem]">
+        <OrganizationLayout title="Access - History" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - History`} />
 
-            <div className="space-y-4 pt-1 sm:pt-4">
+            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
                 <AccessHeader activeTab="history" />
 
-                <div className="space-y-4 pt-2">
+                <div className="flex flex-col gap-3">
                     {/* Native Search Field */}
                     <div className="relative">
                         <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-slate-400" strokeWidth={2.5} />

@@ -35,6 +35,7 @@ class ArrivalController extends Controller
             'organization' => [
                 'id' => $organization->id,
                 'name' => $organization->name,
+                'estate_name' => $organization->estate?->name,
                 'arrival_confirmation_required' => $organization->requiresArrivalConfirmation(),
                 'confirmation_window_minutes' => $organization->confirmation_window_minutes ?? 15,
                 'confirmation_escalation' => $organization->confirmation_escalation ?? 'alert_only',
@@ -62,6 +63,7 @@ class ArrivalController extends Controller
             'organization' => [
                 'id' => $organization->id,
                 'name' => $organization->name,
+                'estate_name' => $organization->estate?->name,
             ],
             'membership' => [
                 'role' => $membership->role,
