@@ -233,50 +233,73 @@ export default function Dashboard({
                 </Link>
 
                 {/* QUICK ACTIONS */}
-                <div className="flex gap-2 justify-between">
-                    <Link
-                        href="/org/access-list?action=add_person"
-                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
-                    >
-                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-blue">
-                            <UserPlus className="h-4 w-4" strokeWidth={2.2} />
-                        </div>
-                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">Add</span>
-                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Staff, parents &amp; more</span>
-                    </Link>
+                <div className="flex flex-col mt-1">
+                    <h2 className="text-[14px] font-bold text-[#071f4b] mb-2.5 px-1 tracking-tight">Quick actions</h2>
+                    <div className="grid grid-cols-2 gap-3.5">
+                        <Link
+                            href="/org/access-list?action=add_person"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-blue mb-3">
+                                <UserPlus className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Add person</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Recurring access</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
 
-                    <Link
-                        href="/org/visitors"
-                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
-                    >
-                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-mint">
-                            <UserCircle className="h-4 w-4" strokeWidth={2.2} />
-                        </div>
-                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">Invite</span>
-                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Visitor<br/>pass</span>
-                    </Link>
+                        <Link
+                            href="/org/visitors"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-mint mb-3">
+                                <UserCircle className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Invite visitor</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Create a pass</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
 
-                    <Link
-                        href="/org/arrivals"
-                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
-                    >
-                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-lavender">
-                            <Clock className="h-4 w-4" strokeWidth={2.2} />
-                        </div>
-                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
-                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Who's<br/>on site</span>
-                    </Link>
+                        <Link
+                            href="/org/arrivals"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-lavender mb-3">
+                                <Clock className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">Arrivals</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">See who's on site</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
 
-                    <Link
-                        href="/org/arrivals/history"
-                        className="soft-card flex flex-col flex-1 items-start p-2.5 transition active:scale-95"
-                    >
-                        <div className="mb-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] icon-tile-amber">
-                            <History className="h-4 w-4" strokeWidth={2.2} />
-                        </div>
-                        <span className="text-[11px] font-bold text-[#071f4b] leading-tight">History</span>
-                        <span className="mt-1 text-[9px] font-medium text-slate-400 leading-snug">Past<br/>activity</span>
-                    </Link>
+                        <Link
+                            href="/org/arrivals/history"
+                            className="soft-card flex flex-col p-4 transition-all active:scale-[0.98] group"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] icon-tile-amber mb-3">
+                                <History className="h-5 w-5" strokeWidth={2.2} />
+                            </div>
+                            <div className="flex items-end justify-between w-full mt-auto">
+                                <div className="flex flex-col">
+                                    <span className="text-[14px] font-bold text-[#071f4b] leading-tight">History</span>
+                                    <span className="mt-1 text-[11px] font-medium text-slate-500 leading-tight">Past activity</span>
+                                </div>
+                                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-400 transition-colors mb-0.5" strokeWidth={2.5} />
+                            </div>
+                        </Link>
+                    </div>
                 </div>
 
                 {/* TODAY MODULE */}
