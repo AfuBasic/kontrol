@@ -52,84 +52,99 @@ export default function Payments({ organization, total_outstanding = 0, outstand
     const hasOverduePayment = outstanding.some((item) => item.is_overdue);
     const estateName = organization.estate_name || 'your estate';
 
+    const page = usePage();
+    const props = page.props as any;
+    const auth = props.auth || {};
+    const user = auth.user || {};
+    const userFirstName = user.name ? user.name.split(' ')[0] : 'User';
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 17) return 'Good afternoon';
+        return 'Good evening';
+    };
+
     return (
-        <OrganizationLayout title="Payments" contentClassName="max-w-[82rem]">
+        <OrganizationLayout title="Payments" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - Payments`} />
 
-            <div className="space-y-5">
+            <div className="flex flex-col gap-3.5 px-4 pt-1 pb-24 max-w-[480px] mx-auto">
+                {/* ATMOSPHERIC BACKGROUND */}
+                <div className="app-atmosphere" />
+
+                {/* ORGANIZATION IDENTITY */}
+                <header className="flex flex-col pt-1">
+                    <p className="text-[12px] font-medium text-slate-500">
+                        {getGreeting()}, {userFirstName}
+                    </p>
+                    <div className="flex items-center justify-between mt-0.5">
+                        <h1 className="text-[26px] font-extrabold tracking-tight text-[#071f4b] leading-tight">
+                            {organization.name || 'Payments'}
+                        </h1>
+                    </div>
+                    {estateName && (
+                        <p className="mt-0.5 flex items-center gap-1 text-[12px] font-medium text-slate-500">
+                            <MapPin className="h-3 w-3 shrink-0" strokeWidth={2} />
+                            {estateName}
+                            <ChevronRight className="h-3 w-3 ml-0.5 text-slate-400" />
+                        </p>
+                    )}
+                </header>
+
                 <section
-                    className={`grid overflow-hidden rounded-[1.5rem] shadow-[0_24px_70px_rgba(15,23,42,0.12)] ring-1 sm:rounded-[2rem] ${
+                    className={`relative overflow-hidden rounded-[20px] p-5 shadow-lg ring-1 mt-1 ${
                         isAllCaughtUp
-                            ? 'bg-[#0f172a] text-white ring-slate-900/10'
+                            ? 'bg-[#0a2558] text-white ring-slate-900/10'
                             : hasOverduePayment
-                              ? 'bg-rose-50 text-slate-950 ring-rose-200'
-                              : 'bg-amber-50 text-slate-950 ring-amber-200'
-                    } lg:grid-cols-[minmax(0,1fr)_24rem]`}
+                              ? 'bg-rose-50 text-slate-950 ring-rose-200 shadow-rose-900/5'
+                              : 'bg-amber-50 text-slate-950 ring-amber-200 shadow-amber-900/5'
+                    }`}
                 >
-                    <div className="p-4 sm:p-8">
-                        <div className="flex items-center gap-2 text-sm font-black">
+                    {isAllCaughtUp && (
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                    )}
+                    <div className="relative z-10">
+                        <div className="flex items-center gap-2 text-[12px] font-bold">
                             {isAllCaughtUp ? (
-                                <CheckCircle2 className="h-5 w-5 text-emerald-300" />
+                                <CheckCircle2 className="h-4 w-4 text-emerald-300" />
                             ) : (
-                                <AlertTriangle className={`h-5 w-5 ${hasOverduePayment ? 'text-rose-600' : 'text-amber-600'}`} />
+                                <AlertTriangle className={`h-4 w-4 ${hasOverduePayment ? 'text-rose-600' : 'text-amber-600'}`} />
                             )}
                             <span className={isAllCaughtUp ? 'text-emerald-200' : hasOverduePayment ? 'text-rose-700' : 'text-amber-800'}>
                                 {isAllCaughtUp ? 'Settled' : hasOverduePayment ? 'Overdue payment' : 'Payment due'}
                             </span>
                         </div>
 
-                        <h1 className="mt-4 max-w-3xl text-3xl leading-none font-black break-words sm:mt-5 sm:text-5xl lg:text-6xl">
-                            {isAllCaughtUp ? 'No balance due' : formatCurrency(total_outstanding)}
-                        </h1>
+                        <h2 className="mt-3 text-[36px] font-extrabold leading-none tracking-tight">
+                            {isAllCaughtUp ? 'No balance' : formatCurrency(total_outstanding)}
+                        </h2>
 
                         <p
-                            className={`mt-4 max-w-xl text-sm leading-6 font-semibold sm:mt-5 sm:text-base sm:leading-7 ${
-                                isAllCaughtUp ? 'text-slate-300' : 'text-slate-600'
+                            className={`mt-2 text-[13px] font-medium leading-relaxed ${
+                                isAllCaughtUp ? 'text-blue-100/80' : 'text-slate-600'
                             }`}
                         >
                             {isAllCaughtUp
                                 ? `${organization.name} is financially clear with ${estateName}.`
                                 : `${organization.name} has ${outstanding.length} ${outstanding.length === 1 ? 'open item' : 'open items'} with ${estateName}.`}
                         </p>
-                    </div>
-
-                    <div
-                        className={`border-t p-4 sm:p-6 lg:border-t-0 lg:border-l ${
-                            isAllCaughtUp ? 'border-white/10 bg-white/[0.06]' : 'border-white/80 bg-white/60'
-                        }`}
-                    >
-                        {isAllCaughtUp ? (
-                            <div className="flex h-full flex-col justify-between gap-6 sm:gap-8">
-                                <div>
-                                    <p className="text-sm font-black text-white">Financial calm</p>
-                                    <p className="mt-2 text-sm leading-6 font-semibold text-slate-300">
-                                        Receipts and past payments remain available below when recorded by the estate.
-                                    </p>
-                                </div>
-                                <div className="rounded-[1.5rem] bg-white/10 p-4 ring-1 ring-white/10">
-                                    <p className="text-sm font-bold text-slate-300">Outstanding</p>
-                                    <p className="mt-1 text-2xl font-black sm:text-3xl">{formatCurrency(0)}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="rounded-[1.5rem] bg-white p-4 shadow-[0_12px_30px_rgba(15,23,42,0.08)] ring-1 ring-slate-200/70">
-                                    <p className="text-sm font-black text-slate-950">{primaryBill?.name || 'Estate payment'}</p>
+                        
+                        {!isAllCaughtUp && (
+                            <div className="mt-5 space-y-3">
+                                <div className="rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-slate-200/50">
+                                    <p className="text-[13px] font-bold text-slate-900">{primaryBill?.name || 'Estate payment'}</p>
                                     {primaryBill?.description && (
-                                        <p className="mt-1 text-sm leading-6 font-semibold text-slate-500">{primaryBill.description}</p>
+                                        <p className="mt-1 text-[12px] font-medium text-slate-500 leading-snug">{primaryBill.description}</p>
                                     )}
-                                    <p className="mt-4 flex items-center gap-2 text-xs font-black text-slate-500">
-                                        <Clock className="h-4 w-4" />
+                                    <p className="mt-2 flex items-center gap-1.5 text-[11px] font-bold text-slate-500">
+                                        <Clock className="h-3.5 w-3.5" />
                                         {primaryBill?.due_date_human ? `Due ${primaryBill.due_date_human}` : 'Due date pending'}
                                     </p>
                                 </div>
-
-                                <div className="rounded-2xl border border-amber-200/80 bg-amber-50/90 p-3.5 text-xs leading-relaxed font-semibold text-amber-900">
-                                    <p className="font-bold">Settlement instructions</p>
-                                    <p className="mt-1 text-amber-800">
-                                        Payments are settled directly with the estate management office. Contact them to record and confirm this
-                                        payment.
-                                    </p>
+                                <div className="rounded-xl border border-amber-200/60 bg-amber-100/50 p-3 text-[11px] font-medium text-amber-900 leading-relaxed">
+                                    <span className="font-bold block mb-0.5">Settlement instructions</span>
+                                    Payments are settled directly with the estate management office. Contact them to record and confirm this payment.
                                 </div>
                             </div>
                         )}
@@ -137,81 +152,69 @@ export default function Payments({ organization, total_outstanding = 0, outstand
                 </section>
 
                 {!isAllCaughtUp && outstanding.length > 0 && (
-                    <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <h2 className="text-xl font-black tracking-tight text-slate-950">Open items</h2>
-                                <p className="mt-1 text-sm font-semibold text-slate-500">What the outstanding balance is made of.</p>
-                            </div>
+                    <section className="soft-card p-4">
+                        <div className="mb-3">
+                            <h2 className="text-[15px] font-bold text-[#071f4b]">Open items</h2>
                         </div>
-
-                        <div className="mt-5 divide-y divide-slate-100">
+                        <div className="flex flex-col gap-3">
                             {outstanding.map((item) => {
                                 const balance = item.amount_due - item.amount_paid;
-
                                 return (
-                                    <article
-                                        key={item.id}
-                                        className="grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
-                                    >
-                                        <div className="min-w-0">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <h3 className="truncate text-base font-black text-slate-950">{item.name}</h3>
+                                    <div key={item.id} className="flex items-center justify-between rounded-[14px] border border-slate-100 bg-slate-50/50 p-3">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex items-center gap-2">
+                                                <h3 className="truncate text-[13px] font-bold text-slate-900">{item.name}</h3>
                                                 <span
-                                                    className={`rounded-full px-2.5 py-1 text-[11px] font-black ${
-                                                        item.is_overdue ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
+                                                    className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                        item.is_overdue ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'
                                                     }`}
                                                 >
                                                     {item.is_overdue ? 'Overdue' : item.status}
                                                 </span>
                                             </div>
-                                            <p className="mt-1 text-sm font-semibold text-slate-500">
+                                            <p className="mt-0.5 text-[11px] font-medium text-slate-500">
                                                 {item.due_date_human ? `Due ${item.due_date_human}` : 'Due date pending'}
                                             </p>
                                         </div>
-                                        <p className="text-xl font-black text-slate-950">{formatCurrency(balance)}</p>
-                                    </article>
+                                        <div className="pl-3 text-right">
+                                            <p className="text-[14px] font-extrabold text-slate-900">{formatCurrency(balance)}</p>
+                                        </div>
+                                    </div>
                                 );
                             })}
                         </div>
                     </section>
                 )}
 
-                <section className="rounded-[1.5rem] bg-white p-4 shadow-[0_18px_55px_rgba(15,23,42,0.07)] ring-1 ring-slate-200/80 sm:rounded-[2rem] sm:p-6">
-                    <div className="flex items-center justify-between gap-4">
-                        <div>
-                            <h2 className="text-xl font-black tracking-tight text-slate-950">Receipts</h2>
-                            <p className="mt-1 text-sm font-semibold text-slate-500">Payment history for this organization.</p>
-                        </div>
-                        <ReceiptText className="h-5 w-5 text-slate-400" />
+                <section className="soft-card p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                        <h2 className="text-[15px] font-bold text-[#071f4b]">Receipts</h2>
+                        <ReceiptText className="h-4 w-4 text-slate-400" />
                     </div>
 
                     {paid_history.length === 0 ? (
-                        <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5">
-                            <p className="text-base font-black text-slate-950">No receipts yet.</p>
-                            <p className="mt-2 text-sm leading-6 font-semibold text-slate-500">
-                                Completed estate payments will appear here with receipt access.
+                        <div className="rounded-[14px] bg-slate-50/80 p-4 text-center border border-slate-100">
+                            <p className="text-[13px] font-bold text-slate-700">No receipts yet</p>
+                            <p className="mt-1 text-[12px] font-medium text-slate-500">
+                                Completed payments will appear here.
                             </p>
                         </div>
                     ) : (
-                        <div className="mt-5 divide-y divide-slate-100">
+                        <div className="flex flex-col gap-3">
                             {paid_history.map((item) => (
-                                <article
-                                    key={item.id}
-                                    className="grid gap-3 py-4 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
-                                >
-                                    <div>
-                                        <h3 className="text-base font-black text-slate-950">{item.name}</h3>
-                                        <p className="mt-1 text-sm font-semibold text-slate-500">Paid {item.paid_at}</p>
+                                <div key={item.id} className="flex items-center justify-between rounded-[14px] border border-slate-100 bg-slate-50/50 p-3">
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="truncate text-[13px] font-bold text-slate-900">{item.name}</h3>
+                                        <p className="mt-0.5 text-[11px] font-medium text-slate-500">Paid {item.paid_at}</p>
                                     </div>
-                                    <div className="flex items-center justify-between gap-3 sm:justify-end">
-                                        <span className="text-lg font-black text-slate-950">{formatCurrency(item.amount_paid)}</span>
-                                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                                    <div className="pl-3 text-right flex flex-col items-end">
+                                        <p className="text-[14px] font-extrabold text-slate-900">{formatCurrency(item.amount_paid)}</p>
+                                        <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
                                             <CheckCircle2 className="h-3 w-3" />
                                             Settled
-                                        </span>
+                                        </p>
                                     </div>
-                                </article>
+                                </div>
                             ))}
                         </div>
                     )}
