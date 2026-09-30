@@ -403,12 +403,12 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                             </div>
                         </div>
 
-                        <div className="flex shrink-0 gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
+                        <div className="flex shrink-0 items-center gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
                             <button
                                 type="button"
                                 onClick={() => setStep('form')}
                                 disabled={processing}
-                                className="w-1/3 rounded-xl border border-slate-200 px-4 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+                                className="shrink-0 rounded-xl border border-slate-200 px-5 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                             >
                                 Back
                             </button>
@@ -416,15 +416,15 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                 type="button"
                                 onClick={handleConfirmSubmit}
                                 disabled={processing}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0b4aa2] px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0a3d8a] disabled:opacity-50"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0b4aa2] px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0a3d8a] disabled:opacity-50 whitespace-nowrap"
                             >
                                 {processing ? (
                                     <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <Loader2 className="h-4 w-4 animate-spin shrink-0" />
                                         <span>Creating Passes...</span>
                                     </>
                                 ) : (
-                                    <span>Confirm &amp; Create {data.emails.length} Passes</span>
+                                    <span>Confirm &amp; Create ({data.emails.length})</span>
                                 )}
                             </button>
                         </div>
