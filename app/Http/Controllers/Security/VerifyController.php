@@ -6,17 +6,21 @@ use App\Actions\Security\CheckoutQuickEntryAction;
 use App\Actions\Security\RecordCheckInAction;
 use App\Actions\Security\RecordCheckOutAction;
 use App\Actions\Security\ValidateAccessCodeAction;
+use App\Enums\AccessCodeStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AccessCode;
 use App\Models\AccessLog;
 use App\Models\Estate;
 use App\Models\EstateSettings;
+use App\Services\EstateContextService;
 use App\Services\Security\CheckpointClaimService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class VerifyController extends Controller
 {
@@ -192,5 +196,183 @@ class VerifyController extends Controller
         }
 
         return back()->with('success', 'Decision recorded successfully.');
+    }
+
+    /**
+     * Download active pass hashes for offline verification.
+     * HEAD requests are used as a lightweight connectivity ping.
+     */
+    public function syncData(Request $request): JsonResponse
+    {
+        if ($request->isMethod('HEAD')) {
+            return response()->json(['success' => true]);
+        }
+
+        try {
+            $user = $request->user();
+            $estate = app(EstateContextService::class)->getEstate();
+
+            $activeCodes = AccessCode::query()
+                ->forEstate($estate->id)
+                ->active()
+                ->with('user:id,name')
+                ->withCount('accessLogs')
+                ->get();
+
+            $cachedCodes = $activeCodes->map(function (AccessCode $code) {
+                return [
+                    'hash' => hash('sha256', strtoupper(trim($code->code))),
+                    'visitor_name' => $code->visitor_name ?? 'Guest',
+                    'host_name' => $code->user?->name ?? 'Resident',
+                    'expires_at' => $code->expires_at?->toIso8601String(),
+                    'has_vehicle' => (bool) $code->has_vehicle,
+                    'purpose' => $code->purpose,
+                    'code_type' => $code->type,
+                    'guest_limit' => $code->guest_limit,
+                    'uses_count' => $code->access_logs_count ?? 0,
+                    'starts_at' => $code->starts_at?->toIso8601String(),
+                ];
+            });
+
+            $organizations = $estate->organizations()
+                ->quickEntryEnabled()
+                ->select(['id', 'name', 'type', 'access_policy'])
+                ->orderBy('name')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'synced_count' => 0,
+                'codes' => $cachedCodes,
+                'organizations' => $organizations,
+                'timestamp' => now()->toIso8601String(),
+            ]);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'synced_count' => 0,
+                'codes' => [],
+                'error' => 'Unable to refresh offline pass cache.',
+                'code' => 'SYNC_DATA_FAILED',
+                'retryable' => true,
+            ], 500);
+        }
+    }
+
+    /**
+     * Replay offline admission logs. Partial failures return partial success.
+     */
+    public function syncLogs(Request $request): JsonResponse
+    {
+        $request->validate([
+            'logs' => 'required|array',
+            'logs.*.code' => 'required|string',
+            'logs.*.decision' => 'required|in:admit,reject',
+            'logs.*.vehicle_make' => 'nullable|string',
+            'logs.*.vehicle_model' => 'nullable|string',
+            'logs.*.vehicle_plate_number' => 'nullable|string',
+            'logs.*.created_at' => 'required|string',
+        ]);
+
+        $user = $request->user();
+        $estate = app(EstateContextService::class)->getEstate();
+        $syncedCount = 0;
+        $failedCount = 0;
+        $errors = [];
+
+        foreach ($request->input('logs') as $index => $logData) {
+            try {
+                $code = $logData['code'];
+                $decision = $logData['decision'];
+                $timestamp = CarbonImmutable::parse($logData['created_at']);
+
+                if ($decision === 'admit') {
+                    $accessCode = AccessCode::query()
+                        ->forEstate($estate->id)
+                        ->where('code', $code)
+                        ->first();
+
+                    if ($accessCode && $accessCode->status === AccessCodeStatus::Active) {
+                        app(RecordCheckInAction::class)->execute(
+                            code: $code,
+                            estateId: $estate->id,
+                            verifiedBy: $user,
+                            vehicleData: [
+                                'vehicle_make' => $logData['vehicle_make'] ?? null,
+                                'vehicle_model' => $logData['vehicle_model'] ?? null,
+                                'vehicle_plate_number' => $logData['vehicle_plate_number'] ?? null,
+                            ],
+                            verificationMethod: 'offline_sync',
+                            verifiedAt: $timestamp
+                        );
+                    } else {
+                        AccessLog::create([
+                            'estate_id' => $estate->id,
+                            'access_code_id' => $accessCode?->id,
+                            'verified_by' => $user->id,
+                            'verified_at' => $timestamp,
+                            'vehicle_make' => $logData['vehicle_make'] ?? null,
+                            'vehicle_model' => $logData['vehicle_model'] ?? null,
+                            'vehicle_plate_number' => $logData['vehicle_plate_number'] ?? null,
+                            'meta' => [
+                                'visitor_name' => $accessCode?->visitor_name ?? 'Unknown (Offline Override)',
+                                'host_id' => $accessCode?->user_id,
+                                'offline_code' => $code,
+                                'offline_override' => true,
+                                'sync_status' => $accessCode ? 'code_exists_but_'.$accessCode->status->value : 'code_not_found',
+                            ],
+                        ]);
+                    }
+                }
+
+                if ($decision === 'reject') {
+                    activity()
+                        ->causedBy($user)
+                        ->withProperties([
+                            'estate_id' => $estate->id,
+                            'code' => $code,
+                            'decision' => 'reject',
+                            'offline_sync' => true,
+                            'created_at' => $timestamp->toIso8601String(),
+                        ])
+                        ->log('Security guard rejected entry offline');
+                }
+
+                $syncedCount++;
+            } catch (Throwable $e) {
+                report($e);
+                $failedCount++;
+                $errors[] = [
+                    'index' => $index,
+                    'code' => $logData['code'] ?? null,
+                    'error' => 'Failed to sync log entry.',
+                    'retryable' => true,
+                ];
+            }
+        }
+
+        activity()
+            ->causedBy($user)
+            ->withProperties([
+                'estate_id' => $estate->id,
+                'synced_count' => $syncedCount,
+                'failed_count' => $failedCount,
+                'total' => count($request->input('logs', [])),
+            ])
+            ->log('Offline security logs replayed');
+
+        $success = $failedCount === 0;
+
+        return response()->json([
+            'success' => $success,
+            'synced_count' => $syncedCount,
+            'failed_count' => $failedCount,
+            'errors' => $errors,
+            'error' => $success ? null : 'Some offline logs could not be synced.',
+            'code' => $success ? null : 'SYNC_PARTIAL_FAILURE',
+            'retryable' => $failedCount > 0,
+        ], $success ? 200 : 207);
     }
 }
