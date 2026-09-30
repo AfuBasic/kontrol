@@ -401,6 +401,18 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     </ul>
                                 </div>
                             </div>
+
+                            {/* Server Validation Errors (e.g. auto_renew, dates, general) */}
+                            {Object.keys(errors).length > 0 && (
+                                <div className="mt-4 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50/80 p-3 text-rose-800">
+                                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                                    <div className="text-xs leading-relaxed font-medium">
+                                        {Object.entries(errors).map(([key, msg]) => (
+                                            <p key={key}>{msg}</p>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="flex shrink-0 items-center gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
