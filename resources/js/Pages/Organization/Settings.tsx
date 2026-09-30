@@ -131,20 +131,19 @@ export default function Settings({ organization, membership, staff }: Props) {
                 <section className="space-y-3">
                     <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
                     <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
-                        <button
-                            type="button"
-                            onClick={() => openExternalBilling()}
+                        <Link
+                            href="/org/payments"
                             className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
                         >
                             <div className="flex items-center gap-3">
                                 <CreditCard className="h-4 w-4 text-slate-500" />
                                 <div>
-                                    <span className="text-sm font-bold text-slate-900">Subscription & Billing</span>
-                                    <p className="text-xs text-slate-400">Manage plan, saved cards & auto-renew</p>
+                                    <span className="text-sm font-bold text-slate-900">Subscription & Payments</span>
+                                    <p className="text-xs text-slate-400">View balances, estate dues & payment history</p>
                                 </div>
                             </div>
                             <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
-                        </button>
+                        </Link>
                     </div>
                 </section>
 
