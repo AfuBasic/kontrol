@@ -9,6 +9,7 @@ import {
     Loader2,
     ChevronRight,
     Clock,
+    Users,
 } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
@@ -63,16 +64,16 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
         if (!data.valid_from || !data.valid_until) return { valid: false, message: 'Please select valid dates.' };
         const start = new Date(data.valid_from);
         const end = new Date(data.valid_until);
-        
+
         if (end < start) {
             return { valid: false, message: 'End date must be on or after start date.' };
         }
 
         const diffTime = Math.abs(end.getTime() - start.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // inclusive of start & end day
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
         if (diffDays > 30) {
-            return { valid: false, message: `Selected range is ${diffDays} days. Pass validity period cannot exceed 30 days.` };
+            return { valid: false, message: `Selected range is ${diffDays} days. Pass validity cannot exceed 30 days.` };
         }
 
         return { valid: true, message: null, days: diffDays };
@@ -176,33 +177,34 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
     return (
         <ResponsiveSheet isOpen={isOpen} onClose={handleCloseAll} title="Bulk Visitor Invite">
             <div className="flex h-full flex-col">
+
                 {/* STEP 1: FORM */}
                 {step === 'form' && (
                     <form onSubmit={handleProceedToConfirm} className="flex flex-1 flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-6">
-                            <p className="mb-6 text-sm text-slate-500">
-                                Issue branded access passes to up to 30 visitor emails with PDF pass generation and automated delivery.
+                        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                            <p className="mb-5 text-[13px] leading-relaxed text-slate-500">
+                                Issue branded access passes to up to 30 visitors. Each recipient gets a personalised PDF pass by email.
                             </p>
 
-                            <div className="space-y-6">
+                            <div className="space-y-5">
                                 {/* Batch Name */}
-                                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-                                    <label className="mb-1.5 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
-                                        Batch / Group Name (Optional)
+                                <div>
+                                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
+                                        Batch Name <span className="normal-case font-normal">(optional)</span>
                                     </label>
                                     <input
                                         type="text"
                                         placeholder="e.g. Annual Audit Team, Vendor Technicians"
                                         value={data.name}
                                         onChange={(e) => setData('name', e.target.value)}
-                                        className="block w-full rounded-xl border-0 py-3 text-sm text-slate-900 shadow-xs ring-1 ring-slate-200 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-slate-900 focus:ring-inset"
+                                        className="block w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-[13px] text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-[#1a5dbf] focus:ring-2 focus:ring-[#1a5dbf]/20 focus:outline-none transition"
                                     />
                                     {errors.name && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.name}</p>}
                                 </div>
 
-                                {/* Recipient Emails Area with EmailPillInput */}
+                                {/* Recipient Emails */}
                                 <div>
-                                    <label className="mb-2 block text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                    <label className="mb-1.5 block text-[11px] font-semibold tracking-wide text-slate-500 uppercase">
                                         Recipient Emails <span className="text-rose-500">*</span>
                                     </label>
                                     <EmailPillInput
@@ -210,45 +212,47 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         onChange={(emails) => setData('emails', emails)}
                                         maxEmails={MAX_RECIPIENTS}
                                         error={errors.emails}
-                                        placeholder="Type or paste emails (press Enter or comma)..."
+                                        placeholder="Type an email and press Enter or comma..."
                                     />
                                 </div>
 
-                                {/* Validity Period (Max 30 days) */}
-                                <div className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
+                                {/* Validity Period */}
+                                <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
                                     <div className="mb-3 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
-                                            <Calendar className="h-4 w-4 text-slate-500" />
-                                            <h4 className="text-xs font-bold tracking-wider text-slate-700 uppercase">Pass Validity Period</h4>
+                                            <Calendar className="h-4 w-4 text-[#1a5dbf]" />
+                                            <span className="text-[11px] font-semibold tracking-wide text-slate-700 uppercase">
+                                                Pass Validity Period
+                                            </span>
                                         </div>
                                         {dateRangeValidation.valid && dateRangeValidation.days && (
-                                            <span className="text-[11px] font-semibold text-[#1a5dbf]">
-                                                {dateRangeValidation.days} {dateRangeValidation.days === 1 ? 'day' : 'days'} duration
+                                            <span className="rounded-full bg-[#eef4ff] px-2.5 py-0.5 text-[11px] font-bold text-[#1a5dbf]">
+                                                {dateRangeValidation.days}d window
                                             </span>
                                         )}
                                     </div>
-                                    <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="grid gap-3 sm:grid-cols-2">
                                         <div>
-                                            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">Valid From</label>
+                                            <label className="mb-1 block text-[10px] font-semibold text-slate-400 uppercase">From</label>
                                             <input
                                                 type="date"
                                                 min={today}
                                                 value={data.valid_from}
                                                 onChange={(e) => setData('valid_from', e.target.value)}
-                                                className="block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-slate-900"
+                                                className="block w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-[13px] text-slate-900 shadow-xs focus:border-[#1a5dbf] focus:ring-2 focus:ring-[#1a5dbf]/20 focus:outline-none transition"
                                             />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-[10px] font-bold text-slate-500 uppercase">
-                                                Valid Until (Max 30 Days)
-                                            </label>
+                                            <label className="mb-1 block text-[10px] font-semibold text-slate-400 uppercase">Until</label>
                                             <input
                                                 type="date"
                                                 min={data.valid_from}
                                                 value={data.valid_until}
                                                 onChange={(e) => setData('valid_until', e.target.value)}
-                                                className={`block w-full rounded-xl border-0 py-2.5 text-sm text-slate-900 ring-1 ring-inset focus:ring-2 ${
-                                                    !dateRangeValidation.valid ? 'ring-rose-400 focus:ring-rose-500' : 'ring-slate-200 focus:ring-slate-900'
+                                                className={`block w-full rounded-xl border bg-white px-3 py-2.5 text-[13px] text-slate-900 shadow-xs focus:ring-2 focus:outline-none transition ${
+                                                    !dateRangeValidation.valid
+                                                        ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-500/20'
+                                                        : 'border-slate-200 focus:border-[#1a5dbf] focus:ring-[#1a5dbf]/20'
                                                 }`}
                                             />
                                         </div>
@@ -262,72 +266,75 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                     {errors.valid_until && <p className="mt-1.5 text-xs font-medium text-rose-500">{errors.valid_until}</p>}
                                 </div>
 
-                                {/* Send Immediately Toggle */}
-                                <div className="flex items-start justify-between rounded-2xl border border-slate-200 bg-white p-5">
-                                    <div className="space-y-1 pr-4">
-                                        <div className="flex items-center gap-2">
-                                            <Send className="h-4 w-4 text-slate-700" />
-                                            <span className="text-sm font-bold text-slate-900">Send passes immediately via email</span>
+                                {/* Toggles */}
+                                <div className="space-y-3">
+                                    {/* Send Immediately Toggle */}
+                                    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#eef4ff]">
+                                                <Send className="h-3.5 w-3.5 text-[#1a5dbf]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[13px] font-semibold text-slate-900">Send passes immediately</p>
+                                                <p className="text-[11px] text-slate-400">Each visitor receives their pass via email now.</p>
+                                            </div>
                                         </div>
-                                        <p className="text-xs leading-relaxed text-slate-500">
-                                            Each visitor will receive their pass with an attached branded PDF pass and QR code right away.
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        role="switch"
-                                        aria-checked={data.send_immediately}
-                                        onClick={() => setData('send_immediately', !data.send_immediately)}
-                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                                            data.send_immediately ? 'bg-slate-900' : 'bg-slate-200'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                                data.send_immediately ? 'translate-x-5' : 'translate-x-0'
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={data.send_immediately}
+                                            onClick={() => setData('send_immediately', !data.send_immediately)}
+                                            className={`relative ml-3 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                                                data.send_immediately ? 'bg-[#1a5dbf]' : 'bg-slate-200'
                                             }`}
-                                        />
-                                    </button>
-                                </div>
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                                    data.send_immediately ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
 
-                                {/* Auto-renew Toggle */}
-                                <div className="flex items-start justify-between rounded-2xl border border-indigo-100 bg-indigo-50/40 p-5">
-                                    <div className="space-y-1 pr-4">
-                                        <div className="flex items-center gap-2">
-                                            <RefreshCw className="h-4 w-4 text-indigo-600" />
-                                            <span className="text-sm font-bold text-slate-900">Automatically renew passes on expiry</span>
+                                    {/* Auto-renew Toggle */}
+                                    <div className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#eef4ff]">
+                                                <RefreshCw className="h-3.5 w-3.5 text-[#1a5dbf]" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[13px] font-semibold text-slate-900">Auto-renew on expiry</p>
+                                                <p className="text-[11px] text-slate-400">Passes extend automatically for the same duration.</p>
+                                            </div>
                                         </div>
-                                        <p className="text-xs leading-relaxed text-slate-600">
-                                            Passes will automatically be extended for the same duration when they reach expiry. Renewal requires an active subscription.
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        role="switch"
-                                        aria-checked={data.auto_renew}
-                                        onClick={() => setData('auto_renew', !data.auto_renew)}
-                                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
-                                            data.auto_renew ? 'bg-indigo-600' : 'bg-slate-200'
-                                        }`}
-                                    >
-                                        <span
-                                            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                                                data.auto_renew ? 'translate-x-5' : 'translate-x-0'
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={data.auto_renew}
+                                            onClick={() => setData('auto_renew', !data.auto_renew)}
+                                            className={`relative ml-3 inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                                                data.auto_renew ? 'bg-[#1a5dbf]' : 'bg-slate-200'
                                             }`}
-                                        />
-                                    </button>
+                                        >
+                                            <span
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                                                    data.auto_renew ? 'translate-x-5' : 'translate-x-0'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                    {errors.auto_renew && <p className="text-xs font-medium text-rose-500">{errors.auto_renew}</p>}
                                 </div>
-                                {errors.auto_renew && <p className="text-xs font-medium text-rose-500">{errors.auto_renew}</p>}
                             </div>
                         </div>
 
-                        <div className="shrink-0 border-t border-slate-100 p-5 sm:px-6">
+                        <div className="shrink-0 border-t border-slate-100 px-5 py-4 sm:px-6">
                             <button
                                 type="submit"
                                 disabled={processing || currentRecipientsCount === 0 || isOverLimit || !dateRangeValidation.valid}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 active:scale-[0.98] disabled:opacity-50"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b4aa2] px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0a3d8a] active:scale-[0.98] disabled:opacity-50"
                             >
-                                <span>Continue to Confirmation ({currentRecipientsCount})</span>
+                                <span>Review {currentRecipientsCount > 0 ? `${currentRecipientsCount} Recipients` : 'Details'}</span>
                                 <ChevronRight className="h-4 w-4" />
                             </button>
                         </div>
@@ -337,51 +344,58 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                 {/* STEP 2: CONFIRMATION REVIEW */}
                 {step === 'confirm' && (
                     <div className="flex flex-1 flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-6">
-                            <div className="mb-6 rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5 text-indigo-900">
-                                <h3 className="font-bold text-indigo-950">Review Bulk Invite Details</h3>
-                                <p className="mt-1 text-xs text-indigo-800">
-                                    Please confirm the details below before creating passes and queueing email deliveries.
-                                </p>
-                            </div>
-
-                            <div className="space-y-4 rounded-2xl border border-slate-100 bg-slate-50/50 p-5">
-                                <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
-                                    <span className="text-slate-500">Recipients Count:</span>
-                                    <span className="font-bold text-slate-900">{data.emails.length} recipients</span>
+                        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                            {/* Summary Banner */}
+                            <div className="mb-5 flex items-center gap-3 rounded-2xl bg-[#0b1f40] px-4 py-4">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+                                    <Users className="h-4 w-4 text-white" />
                                 </div>
-                                {data.name && (
-                                    <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
-                                        <span className="text-slate-500">Batch Name:</span>
-                                        <span className="font-bold text-slate-900">{data.name}</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
-                                    <span className="text-slate-500">Validity Window:</span>
-                                    <span className="font-bold text-slate-900">
-                                        {data.valid_from} to {data.valid_until} ({dateRangeValidation.days} days)
-                                    </span>
-                                </div>
-                                <div className="flex justify-between border-b border-slate-200/60 pb-3 text-sm">
-                                    <span className="text-slate-500">Send Delivery:</span>
-                                    <span className="font-bold text-slate-900">
-                                        {data.send_immediately ? 'Immediate Email + PDF Pass' : 'Stored Only (Manual Send)'}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-500">Auto-Renewal:</span>
-                                    <span className="font-bold text-slate-900">{data.auto_renew ? 'Enabled' : 'Disabled'}</span>
+                                <div>
+                                    <p className="text-[13px] font-bold text-white">{data.emails.length} passes ready to create</p>
+                                    <p className="text-[11px] text-blue-200">Review the details below before confirming.</p>
                                 </div>
                             </div>
 
-                            <div className="mt-5">
-                                <h4 className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">Recipients Preview</h4>
-                                <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
-                                    <ul className="divide-y divide-slate-100 text-xs text-slate-700">
+                            {/* Details Card */}
+                            <div className="mb-5 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Batch Name</span>
+                                    <span className="font-semibold text-slate-900">{data.name || <span className="text-slate-400 italic">Not set</span>}</span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Recipients</span>
+                                    <span className="font-semibold text-slate-900">{data.emails.length}</span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Validity</span>
+                                    <span className="font-semibold text-slate-900">
+                                        {data.valid_from} → {data.valid_until}
+                                        {dateRangeValidation.days && <span className="ml-1.5 text-slate-400">({dateRangeValidation.days}d)</span>}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Delivery</span>
+                                    <span className="font-semibold text-slate-900">
+                                        {data.send_immediately ? 'Immediate email + PDF' : 'Stored only'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between px-4 py-3 text-[13px]">
+                                    <span className="text-slate-500">Auto-renewal</span>
+                                    <span className={`font-semibold ${data.auto_renew ? 'text-[#1a5dbf]' : 'text-slate-900'}`}>
+                                        {data.auto_renew ? 'Enabled' : 'Disabled'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Recipients Preview */}
+                            <div>
+                                <p className="mb-2 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">Recipients</p>
+                                <div className="max-h-44 overflow-y-auto rounded-xl border border-slate-200 bg-white">
+                                    <ul className="divide-y divide-slate-100">
                                         {data.emails.map((email, i) => (
-                                            <li key={email} className="py-1.5 flex items-center justify-between">
-                                                <span>{email}</span>
-                                                <span className="text-[10px] text-slate-400">#{i + 1}</span>
+                                            <li key={email} className="flex items-center justify-between px-4 py-2.5">
+                                                <span className="text-[13px] text-slate-700">{email}</span>
+                                                <span className="text-[11px] text-slate-300">#{i + 1}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -389,12 +403,12 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                             </div>
                         </div>
 
-                        <div className="flex shrink-0 gap-3 border-t border-slate-100 p-5 sm:px-6">
+                        <div className="flex shrink-0 gap-3 border-t border-slate-100 px-5 py-4 sm:px-6">
                             <button
                                 type="button"
                                 onClick={() => setStep('form')}
                                 disabled={processing}
-                                className="w-1/3 rounded-xl border border-slate-200 px-4 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                                className="w-1/3 rounded-xl border border-slate-200 px-4 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
                             >
                                 Back
                             </button>
@@ -402,7 +416,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                 type="button"
                                 onClick={handleConfirmSubmit}
                                 disabled={processing}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800 disabled:opacity-50"
+                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#0b4aa2] px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0a3d8a] disabled:opacity-50"
                             >
                                 {processing ? (
                                     <>
@@ -410,7 +424,7 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                                         <span>Creating Passes...</span>
                                     </>
                                 ) : (
-                                    <span>Confirm & Create {data.emails.length} Passes</span>
+                                    <span>Confirm &amp; Create {data.emails.length} Passes</span>
                                 )}
                             </button>
                         </div>
@@ -420,88 +434,92 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                 {/* STEP 3: REAL-TIME DELIVERY STATUS */}
                 {step === 'status' && (
                     <div className="flex flex-1 flex-col overflow-hidden">
-                        <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-6">
-                            <div className="mb-6 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                        <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">
+                            {/* Header */}
+                            <div className="mb-5 flex items-center justify-between">
                                 <div>
-                                    <h3 className="font-bold text-slate-900">Pass Delivery Tracking</h3>
-                                    <p className="text-xs text-slate-500">Real-time status of outgoing pass emails and PDFs</p>
+                                    <h3 className="text-[15px] font-bold text-slate-900">Delivery Tracking</h3>
+                                    <p className="text-[12px] text-slate-400">Real-time status of outgoing passes</p>
                                 </div>
                                 {isPolling && (
-                                    <span className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600">
-                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        Updating...
+                                    <span className="flex items-center gap-1.5 rounded-full bg-[#eef4ff] px-3 py-1 text-[11px] font-semibold text-[#1a5dbf]">
+                                        <Loader2 className="h-3 w-3 animate-spin" />
+                                        Updating
                                     </span>
                                 )}
                             </div>
 
+                            {/* Stats Grid */}
                             {statusSummary && (
-                                <div className="mb-6 grid grid-cols-4 gap-2">
+                                <div className="mb-5 grid grid-cols-4 gap-2">
                                     <div className="rounded-xl border border-slate-100 bg-slate-50 p-3 text-center">
                                         <div className="text-[10px] font-bold text-slate-400 uppercase">Total</div>
-                                        <div className="text-lg font-extrabold text-slate-900">{statusSummary.total}</div>
+                                        <div className="mt-0.5 text-xl font-extrabold text-slate-900">{statusSummary.total}</div>
                                     </div>
-                                    <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-3 text-center">
-                                        <div className="text-[10px] font-bold text-amber-600 uppercase">Queued</div>
-                                        <div className="text-lg font-extrabold text-amber-700">
+                                    <div className="rounded-xl border border-amber-100 bg-amber-50/60 p-3 text-center">
+                                        <div className="text-[10px] font-bold text-amber-500 uppercase">Queued</div>
+                                        <div className="mt-0.5 text-xl font-extrabold text-amber-700">
                                             {statusSummary.queued + statusSummary.pending}
                                         </div>
                                     </div>
-                                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 text-center">
-                                        <div className="text-[10px] font-bold text-emerald-600 uppercase">Sent</div>
-                                        <div className="text-lg font-extrabold text-emerald-700">{statusSummary.sent}</div>
+                                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3 text-center">
+                                        <div className="text-[10px] font-bold text-emerald-500 uppercase">Sent</div>
+                                        <div className="mt-0.5 text-xl font-extrabold text-emerald-700">{statusSummary.sent}</div>
                                     </div>
-                                    <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-center">
-                                        <div className="text-[10px] font-bold text-rose-600 uppercase">Failed</div>
-                                        <div className="text-lg font-extrabold text-rose-700">{statusSummary.failed}</div>
+                                    <div className="rounded-xl border border-rose-100 bg-rose-50/60 p-3 text-center">
+                                        <div className="text-[10px] font-bold text-rose-500 uppercase">Failed</div>
+                                        <div className="mt-0.5 text-xl font-extrabold text-rose-700">{statusSummary.failed}</div>
                                     </div>
                                 </div>
                             )}
 
+                            {/* Retry Banner */}
                             {statusSummary && statusSummary.failed > 0 && (
-                                <div className="mb-5 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50/60 p-4">
-                                    <div className="flex items-center gap-2 text-xs font-semibold text-rose-800">
-                                        <AlertTriangle className="h-4 w-4 shrink-0 text-rose-600" />
-                                        <span>{statusSummary.failed} passes failed to deliver.</span>
+                                <div className="mb-4 flex items-center justify-between rounded-xl border border-rose-200 bg-rose-50 px-4 py-3">
+                                    <div className="flex items-center gap-2 text-xs font-semibold text-rose-700">
+                                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                                        <span>{statusSummary.failed} failed to deliver.</span>
                                     </div>
                                     <button
                                         type="button"
                                         onClick={handleRetryFailed}
                                         disabled={isRetrying}
-                                        className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50"
+                                        className="rounded-lg bg-rose-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-rose-700 disabled:opacity-50"
                                     >
                                         {isRetrying ? 'Retrying...' : 'Retry Failed'}
                                     </button>
                                 </div>
                             )}
 
-                            <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden">
-                                <div className="border-b border-slate-100 bg-slate-50/75 px-4 py-2.5 text-[11px] font-bold tracking-wider text-slate-500 uppercase">
-                                    Recipients Status List
+                            {/* Recipients Status List */}
+                            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                <div className="border-b border-slate-100 bg-slate-50/75 px-4 py-2.5 text-[10px] font-bold tracking-wider text-slate-500 uppercase">
+                                    Recipients ({recipientStatuses.length})
                                 </div>
                                 <div className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
                                     {recipientStatuses.map((r) => (
-                                        <div key={r.id} className="flex items-center justify-between px-4 py-3 text-xs">
-                                            <span className="font-medium text-slate-800">{r.email}</span>
-                                            <div>
+                                        <div key={r.id} className="flex items-center justify-between px-4 py-3">
+                                            <span className="text-[13px] font-medium text-slate-800 truncate flex-1 mr-3">{r.email}</span>
+                                            <div className="shrink-0">
                                                 {r.delivery_status === 'sent' && (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 border border-emerald-200">
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
                                                         <CheckCircle2 className="h-3 w-3" /> Sent
                                                     </span>
                                                 )}
                                                 {r.delivery_status === 'queued' && (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 font-bold text-amber-700 border border-amber-200">
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold text-amber-700">
                                                         <Clock className="h-3 w-3" /> Queued
                                                     </span>
                                                 )}
                                                 {r.delivery_status === 'pending' && (
-                                                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-0.5 font-bold text-slate-600 border border-slate-200">
+                                                    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-bold text-slate-500">
                                                         Pending
                                                     </span>
                                                 )}
                                                 {r.delivery_status === 'failed' && (
                                                     <span
                                                         title={r.delivery_error || 'Delivery failed'}
-                                                        className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 border border-rose-200 cursor-help"
+                                                        className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-[10px] font-bold text-rose-700 cursor-help"
                                                     >
                                                         <AlertCircle className="h-3 w-3" /> Failed
                                                     </span>
@@ -513,11 +531,11 @@ export default function BulkInviteModal({ isOpen, onClose }: Props) {
                             </div>
                         </div>
 
-                        <div className="shrink-0 border-t border-slate-100 p-5 sm:px-6">
+                        <div className="shrink-0 border-t border-slate-100 px-5 py-4 sm:px-6">
                             <button
                                 type="button"
                                 onClick={handleCloseAll}
-                                className="w-full rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-xs transition hover:bg-slate-800"
+                                className="w-full rounded-xl bg-[#0b4aa2] px-4 py-3.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#0a3d8a]"
                             >
                                 Done
                             </button>
