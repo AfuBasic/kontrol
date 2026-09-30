@@ -169,18 +169,18 @@ export default function EmailPillInput({
                 )}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] px-1 text-gray-500">
-                <div>
+            <div className="flex items-start gap-3 px-1 text-[11px] text-gray-500">
+                <div className="min-w-0 flex-1">
                     {displayError ? (
                         <p className="flex items-center gap-1 text-red-600 font-medium">
                             <AlertCircle className="h-3.5 w-3.5 shrink-0" />
                             <span>{displayError}</span>
                         </p>
                     ) : (
-                        <span>Paste comma or newline-separated emails, or press Enter</span>
+                        <span>Type an email and press Enter or comma to add it.</span>
                     )}
                 </div>
-                <span className={`font-medium ${isLimitReached ? 'text-amber-600' : 'text-gray-400'}`}>
+                <span className={`shrink-0 font-medium ${isLimitReached ? 'text-amber-600' : 'text-gray-400'}`}>
                     {value.length}/{maxEmails}
                 </span>
             </div>
