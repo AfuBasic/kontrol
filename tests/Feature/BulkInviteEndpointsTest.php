@@ -72,6 +72,87 @@ test('organization admin can view bulk invites index and show pages', function (
     $showRes->assertOk();
 });
 
+test('bulk invites index provides server-computed validity, renewal, and delivery payload without eager-loading recipients', function () {
+    $this->actingAs($this->orgAdmin);
+
+    // 1. Upcoming
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Upcoming Group',
+        'valid_from' => now()->addDays(5)->toDateString(),
+        'valid_until' => now()->addDays(15)->toDateString(),
+        'status' => 'active',
+    ]);
+
+    // 2. Expiring soon (≤ 3 days) without auto-renew
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Expiring Group',
+        'valid_from' => now()->subDays(5)->toDateString(),
+        'valid_until' => now()->addDays(2)->toDateString(),
+        'status' => 'active',
+        'auto_renew' => false,
+    ]);
+
+    // 3. Expired by date while status still active
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Past Due Group',
+        'valid_from' => now()->subDays(10)->toDateString(),
+        'valid_until' => now()->subDay()->toDateString(),
+        'status' => 'active',
+    ]);
+
+    // 4. Cancelled status
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Cancelled Group',
+        'valid_from' => now()->toDateString(),
+        'valid_until' => now()->addDays(10)->toDateString(),
+        'status' => 'cancelled',
+    ]);
+
+    // 5. Auto-renew enabled with blocked reason
+    OrganizationBulkInvite::create([
+        'organization_id' => $this->org->id,
+        'estate_id' => $this->estate->id,
+        'created_by' => $this->orgAdmin->id,
+        'name' => 'Blocked Renewal Group',
+        'valid_from' => now()->subDays(2)->toDateString(),
+        'valid_until' => now()->addDays(12)->toDateString(),
+        'status' => 'active',
+        'auto_renew' => true,
+        'renewal_blocked_reason' => 'subscription_required',
+    ]);
+
+    $response = $this->get(route('org.bulk-invites.index'));
+    $response->assertOk();
+
+    $invites = $response->inertiaPage()['props']['bulkInvites']['data'];
+
+    // Ensure recipients collection is NOT eager-loaded on items
+    foreach ($invites as $item) {
+        expect(array_key_exists('recipients', $item))->toBeFalse();
+        expect($item)->toHaveKeys(['validity', 'renewal', 'delivery']);
+    }
+
+    $byName = collect($invites)->keyBy('name');
+
+    expect($byName['Upcoming Group']['validity']['state'])->toBe('upcoming')
+        ->and($byName['Expiring Group']['validity']['state'])->toBe('expiring')
+        ->and($byName['Past Due Group']['validity']['state'])->toBe('expired')
+        ->and($byName['Cancelled Group']['validity']['state'])->toBe('cancelled')
+        ->and($byName['Blocked Renewal Group']['renewal']['blocked_reason_label'])->toBe('subscription required');
+});
+
 test('delivery-status endpoint returns summary and recipient details', function () {
     $this->actingAs($this->orgAdmin);
 
