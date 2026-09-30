@@ -16,6 +16,8 @@ class OrganizationBulkInviteRecipient extends Model
         'status',
         'last_access_code_id',
         'last_delivered_at',
+        'delivery_status',
+        'delivery_error',
     ];
 
     /**
