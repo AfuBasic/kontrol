@@ -18,11 +18,25 @@ import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateShe
 import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 
-interface Recipient {
-    id: number;
-    email: string;
-    status: string;
-    delivery_status: 'pending' | 'queued' | 'sent' | 'failed';
+interface ValidityData {
+    state: 'upcoming' | 'active' | 'expiring' | 'expired' | 'cancelled';
+    starts_on_label: string;
+    ends_on_label: string;
+    days_left: number;
+    elapsed_ratio: number;
+}
+
+interface RenewalData {
+    auto: boolean;
+    next_on_label: string | null;
+    blocked_reason_label: string | null;
+}
+
+interface DeliveryData {
+    total: number;
+    sent: number;
+    pending: number;
+    failed: number;
 }
 
 interface BulkInviteItem {
@@ -32,14 +46,12 @@ interface BulkInviteItem {
     role: string | null;
     valid_from: string;
     valid_until: string;
-    auto_renew: boolean;
     status: string;
     recipients_count: number;
     renewals_count: number;
-    sent_recipients_count?: number;
-    failed_recipients_count?: number;
-    created_at: string;
-    recipients: Recipient[];
+    validity?: ValidityData;
+    renewal?: RenewalData;
+    delivery?: DeliveryData;
 }
 
 interface PaginatedData<T> {
@@ -132,12 +144,13 @@ export default function BulkInvitesIndex({
                 {!bulkInvites ? (
                     <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs">
                         {[1, 2, 3].map((i) => (
-                            <div key={i} className="flex animate-pulse items-center justify-between p-4">
-                                <div className="space-y-2">
-                                    <div className="h-3.5 w-36 rounded-full bg-slate-100" />
-                                    <div className="h-2.5 w-24 rounded-full bg-slate-100" />
+                            <div key={i} className="flex min-h-[56px] animate-pulse items-center justify-between p-4">
+                                <div className="min-w-0 flex-1 space-y-2">
+                                    <div className="h-4 w-40 rounded bg-slate-100" />
+                                    <div className="h-3 w-28 rounded bg-slate-100" />
+                                    <div className="h-3.5 w-52 rounded bg-slate-100" />
                                 </div>
-                                <div className="h-3.5 w-16 rounded-full bg-slate-100" />
+                                <div className="h-4 w-4 rounded bg-slate-100" />
                             </div>
                         ))}
                     </div>
@@ -146,9 +159,9 @@ export default function BulkInvitesIndex({
                         <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                             <Users className="h-6 w-6" />
                         </div>
-                        <h3 className="text-sm font-bold text-slate-900">No bulk invites found</h3>
+                        <h3 className="text-sm font-bold text-slate-900">No groups yet</h3>
                         <p className="mt-1 text-xs text-slate-500">
-                            Create a bulk visitor invite to generate passes and deliver branded PDF passes to multiple recipients simultaneously.
+                            Create one to send passes to several people at once.
                         </p>
                         {membership.is_admin && (
                             <button
@@ -164,95 +177,121 @@ export default function BulkInvitesIndex({
                 ) : (
                     <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-xs">
                         {bulkInvites.data.map((invite) => {
-                            const isActive = invite.status === 'active';
-                            const totalRecipients = invite.recipients_count || 0;
-                            const sentCount = invite.sent_recipients_count ?? 0;
-                            const failedCount = invite.failed_recipients_count ?? 0;
+                            const name = invite.name || invite.purpose || 'Untitled group';
+                            const totalPeople = invite.recipients_count || 0;
+                            const peopleLabel = `${totalPeople} ${totalPeople === 1 ? 'person' : 'people'}`;
+                            const tag = invite.role || (invite.name ? invite.purpose : null);
+
+                            const validity = invite.validity;
+                            const state = validity?.state ?? 'active';
+                            const renewal = invite.renewal;
+                            const delivery = invite.delivery;
+
+                            // Validity sentence
+                            let validityText = '';
+                            let validityColorClass = 'text-slate-600';
+
+                            if (state === 'cancelled') {
+                                validityText = 'Cancelled';
+                                validityColorClass = 'text-slate-400';
+                            } else if (state === 'expired') {
+                                validityText = `Expired ${validity?.ends_on_label || ''}`.trim();
+                                validityColorClass = 'text-slate-400';
+                            } else if (state === 'upcoming') {
+                                validityText = `Starts ${validity?.starts_on_label || ''}`.trim();
+                                validityColorClass = 'text-slate-600';
+                            } else if (renewal?.blocked_reason_label) {
+                                validityText = `Won't renew: ${renewal.blocked_reason_label}`;
+                                validityColorClass = 'text-amber-600 font-medium';
+                            } else if (renewal?.auto) {
+                                validityText = `Valid until ${validity?.ends_on_label || ''} · renews automatically`;
+                                validityColorClass = 'text-slate-600';
+                            } else if (state === 'expiring') {
+                                const days = validity?.days_left ?? 0;
+                                const dayStr = days === 1 ? '1 day' : `${days} days`;
+                                validityText = `Expires in ${dayStr} · ${validity?.ends_on_label || ''}`;
+                                validityColorClass = 'text-amber-600 font-medium';
+                            } else {
+                                const days = validity?.days_left ?? 0;
+                                const dayStr = days === 1 ? '1 day left' : `${days} days left`;
+                                validityText = `Valid until ${validity?.ends_on_label || ''} · ${dayStr}`;
+                                validityColorClass = 'text-slate-600';
+                            }
+
+                            // Active progress hairline (active or expiring)
+                            const showProgress = state === 'active' || state === 'expiring';
+                            const progressRatio = Math.max(0, Math.min(1, validity?.elapsed_ratio ?? 0));
+                            const progressColor = (state === 'expiring' && !renewal?.auto) ? 'bg-amber-500' : 'bg-[#1a5dbf]';
+
+                            // Delivery notice (only when not fully delivered)
+                            let deliveryNotice: { text: string; isError: boolean } | null = null;
+                            if (delivery) {
+                                if (delivery.failed > 0) {
+                                    deliveryNotice = {
+                                        text: `${delivery.failed} not delivered`,
+                                        isError: true,
+                                    };
+                                } else if (delivery.pending > 0) {
+                                    deliveryNotice = {
+                                        text: `Sending to ${delivery.pending}…`,
+                                        isError: false,
+                                    };
+                                }
+                            }
+
+                            const isDeemphasized = state === 'expired' || state === 'cancelled';
 
                             return (
                                 <Link
                                     key={invite.id}
                                     href={`/org/bulk-invites/${invite.id}`}
-                                    className="block p-4 transition hover:bg-slate-50 active:bg-slate-100"
+                                    className={`block min-h-[56px] p-4 transition hover:bg-slate-50 active:bg-slate-100 ${
+                                        isDeemphasized ? 'opacity-60' : ''
+                                    }`}
                                 >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="truncate text-sm font-bold text-slate-900">
-                                                    {invite.name || `Batch #${invite.id}`}
-                                                </span>
-                                                <span
-                                                    className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                                                        isActive
-                                                            ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                                                            : invite.status === 'cancelled'
-                                                            ? 'border border-rose-200 bg-rose-50 text-rose-700'
-                                                            : 'border border-slate-200 bg-slate-100 text-slate-600'
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div className="min-w-0 flex-1 space-y-1">
+                                            {/* 1. Name */}
+                                            <div className="truncate text-[15px] font-medium text-slate-900">
+                                                {name}
+                                            </div>
+
+                                            {/* 2. Who */}
+                                            <div className="text-[12px] text-slate-500">
+                                                <span>{peopleLabel}</span>
+                                                {tag && <span> · {tag}</span>}
+                                            </div>
+
+                                            {/* 3. Validity Line */}
+                                            <div className={`text-[13px] ${validityColorClass}`}>
+                                                {validityText}
+                                            </div>
+
+                                            {/* 4. Validity progress hairline */}
+                                            {showProgress && (
+                                                <div className="pt-0.5">
+                                                    <div className="h-[2px] w-full overflow-hidden bg-slate-100">
+                                                        <div
+                                                            className={`h-full ${progressColor} transition-all duration-300`}
+                                                            style={{ width: `${progressRatio * 100}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 5. Delivery notice (only if not fully delivered) */}
+                                            {deliveryNotice && (
+                                                <div
+                                                    className={`pt-0.5 text-[12px] font-medium ${
+                                                        deliveryNotice.isError ? 'text-rose-600' : 'text-slate-500'
                                                     }`}
                                                 >
-                                                    {invite.status}
-                                                </span>
-                                                {invite.auto_renew && (
-                                                    <span className="inline-flex items-center gap-0.5 rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
-                                                        <RefreshCw className="h-2.5 w-2.5" />
-                                                        Auto-renew on
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            <div className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-slate-500">
-                                                <span className="font-semibold text-slate-700">
-                                                    {totalRecipients} {totalRecipients === 1 ? 'recipient' : 'recipients'}
-                                                </span>
-                                                <span>·</span>
-                                                <span>
-                                                    Valid {invite.valid_from ? invite.valid_from.split('T')[0] : ''} - {invite.valid_until ? invite.valid_until.split('T')[0] : ''}
-                                                </span>
-                                            </div>
-
-                                            {/* Delivery Summary Badge Indicators */}
-                                            <div className="mt-2.5 flex items-center gap-3 text-[11px]">
-                                                {sentCount > 0 && (
-                                                    <span className="inline-flex items-center gap-1 font-medium text-emerald-700">
-                                                        <CheckCircle2 className="h-3 w-3" />
-                                                        {sentCount} sent
-                                                    </span>
-                                                )}
-                                                {failedCount > 0 && (
-                                                    <span className="inline-flex items-center gap-1 font-medium text-rose-600">
-                                                        <AlertCircle className="h-3 w-3" />
-                                                        {failedCount} failed
-                                                    </span>
-                                                )}
-                                                {invite.renewals_count > 0 && (
-                                                    <span className="text-slate-400">
-                                                        {invite.renewals_count} {invite.renewals_count === 1 ? 'renewal cycle' : 'renewal cycles'}
-                                                    </span>
-                                                )}
-                                            </div>
-
-                                            {/* Preview pill emails */}
-                                            {invite.recipients && invite.recipients.length > 0 && (
-                                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                                    {invite.recipients.slice(0, 3).map((r) => (
-                                                        <span
-                                                            key={r.id}
-                                                            className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-600"
-                                                        >
-                                                            <Mail className="h-3 w-3 text-slate-400" />
-                                                            {r.email}
-                                                        </span>
-                                                    ))}
-                                                    {totalRecipients > 3 && (
-                                                        <span className="self-center text-[11px] font-medium text-slate-400">
-                                                            +{totalRecipients - 3} more
-                                                        </span>
-                                                    )}
+                                                    {deliveryNotice.text}
                                                 </div>
                                             )}
                                         </div>
 
-                                        <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-slate-300" />
+                                        <ChevronRight className="h-4 w-4 shrink-0 text-slate-300" />
                                     </div>
                                 </Link>
                             );
