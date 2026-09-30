@@ -52,7 +52,7 @@ export default function ArrivalHistory({ organization, logs, filters }: Props) {
 
     const handleSearch = (e?: React.FormEvent) => {
         if (e) e.preventDefault();
-        router.get('/org/arrivals/history', { search }, { preserveState: true, preserveScroll: true });
+        router.get('/org/on-site/history', { search }, { preserveState: true, preserveScroll: true });
     };
 
     useEffect(() => {
