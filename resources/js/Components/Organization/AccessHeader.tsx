@@ -5,11 +5,12 @@ import AccessTabs from './AccessTabs';
 
 interface Props {
     primaryAction?: ReactNode;
-    activeTab: 'people' | 'visitors' | 'bulk_invites' | 'arrivals' | 'history' | 'public_windows' | 'credentials';
+    activeTab: 'people' | 'visitors' | 'bulk_invites' | 'on_site' | 'history' | 'public_windows' | 'credentials';
     pendingCount?: number;
     activeCount?: number;
     totalAccessMembers?: number;
-    onTabChange?: (tab: 'people' | 'visitors' | 'bulk_invites' | 'arrivals' | 'history' | 'public_windows' | 'credentials') => void;
+    showOnSiteTab?: boolean;
+    onTabChange?: (tab: 'people' | 'visitors' | 'bulk_invites' | 'on_site' | 'history' | 'public_windows' | 'credentials') => void;
 }
 
 export default function AccessHeader({
@@ -18,6 +19,7 @@ export default function AccessHeader({
     pendingCount,
     activeCount,
     totalAccessMembers = 0,
+    showOnSiteTab,
     onTabChange,
 }: Props) {
     const page = usePage();
@@ -86,6 +88,7 @@ export default function AccessHeader({
                     activeTab={activeTab}
                     pendingCount={pendingCount}
                     activeCount={activeCount}
+                    showOnSiteTab={showOnSiteTab ?? !!organization.visitor_checkout_enabled}
                     onTabChange={onTabChange}
                 />
             </div>
