@@ -28,28 +28,32 @@ class OrganizationBulkInviteController extends Controller
         $organization = $request->attributes->get('organization') ?? $this->contextService->getOrganization();
         $membership = $request->attributes->get('organization_membership') ?? $this->contextService->getMembership();
 
+        $search = $request->string('search')->trim()->toString();
         $status = $request->query('status', 'all');
 
-        $query = OrganizationBulkInvite::where('organization_id', $organization->id)
-            ->withCount([
-                'recipients',
-                'renewals',
-                'recipients as sent_recipients_count' => fn ($q) => $q->where('delivery_status', 'sent'),
-                'recipients as failed_recipients_count' => fn ($q) => $q->where('delivery_status', 'failed'),
-            ])
-            ->with(['recipients' => fn ($q) => $q->latest()->limit(5)]);
+        $bulkInvites = Inertia::merge(function () use ($organization, $search, $status) {
+            $query = OrganizationBulkInvite::where('organization_id', $organization->id)
+                ->when($search !== '', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                ->withCount([
+                    'recipients',
+                    'renewals',
+                    'recipients as sent_recipients_count' => fn ($q) => $q->where('delivery_status', 'sent'),
+                    'recipients as failed_recipients_count' => fn ($q) => $q->where('delivery_status', 'failed'),
+                ])
+                ->with(['recipients' => fn ($q) => $q->latest()->limit(5)]);
 
-        if ($status === 'active') {
-            $query->where('status', 'active');
-        } elseif ($status === 'expired') {
-            $query->where('status', 'expired');
-        } elseif ($status === 'cancelled') {
-            $query->where('status', 'cancelled');
-        }
+            if ($status === 'active') {
+                $query->where('status', 'active');
+            } elseif ($status === 'expired') {
+                $query->where('status', 'expired');
+            } elseif ($status === 'cancelled') {
+                $query->where('status', 'cancelled');
+            }
 
-        $bulkInvites = $query->latest()
-            ->paginate(15)
-            ->withQueryString();
+            return $query->latest()
+                ->paginate(15)
+                ->withQueryString();
+        });
 
         return Inertia::render('Organization/BulkInvites/Index', [
             'organization' => [
@@ -61,6 +65,9 @@ class OrganizationBulkInviteController extends Controller
                 'is_admin' => $membership->isAdmin(),
             ],
             'bulkInvites' => $bulkInvites,
+            'filters' => [
+                'search' => $search,
+            ],
             'currentStatus' => $status,
         ]);
     }
