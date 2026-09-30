@@ -82,6 +82,11 @@ class OrganizationBulkInviteController extends Controller
             abort(403, 'Only organization administrators can create bulk visitor invites.');
         }
 
+        $subscription = $request->user()->residentSubscription;
+        if (! $subscription || ! $subscription->isActive()) {
+            return back()->with('error', 'An active subscription is required to create bulk invites.');
+        }
+
         $validated = $request->validate([
             'name' => 'nullable|string|max:255',
             'purpose' => 'nullable|string|max:255',

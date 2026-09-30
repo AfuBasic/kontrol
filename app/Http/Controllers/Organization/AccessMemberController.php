@@ -109,6 +109,11 @@ class AccessMemberController extends Controller
             abort(403, 'Only organization administrators can add access members.');
         }
 
+        $subscription = $request->user()->residentSubscription;
+        if (! $subscription || ! $subscription->isActive()) {
+            return back()->with('error', 'An active subscription is required to add access members.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'identifier' => 'nullable|string|max:100',
