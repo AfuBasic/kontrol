@@ -136,6 +136,9 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
     const queuedCount = recipients.filter((r) => r.delivery_status === 'queued' || r.delivery_status === 'pending').length;
     const failedCount = recipients.filter((r) => r.delivery_status === 'failed').length;
 
+    // Delivery progress calculation
+    const progressPercent = totalRecipients > 0 ? Math.round((sentCount / totalRecipients) * 100) : 0;
+
     return (
         <OrganizationLayout title="Access - Bulk Invite Details" transparentHeader contentClassName="w-full relative min-h-screen">
             <Head title={`${organization.name} - ${bulkInvite.name || 'Bulk Invite'} Details`} />
@@ -145,7 +148,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                 <div className="flex items-center justify-between">
                     <Link
                         href="/org/bulk-invites"
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900"
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-slate-900 transition"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Bulk Invites
@@ -157,7 +160,7 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 type="button"
                                 onClick={handleRenewNow}
                                 disabled={isRenewing}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 disabled:opacity-50"
                             >
                                 <RefreshCw className={`h-3.5 w-3.5 ${isRenewing ? 'animate-spin' : ''}`} />
                                 Renew Now
@@ -166,10 +169,10 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                                 type="button"
                                 onClick={handleCancelInvite}
                                 disabled={isCancelling}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 shadow-xs hover:bg-rose-100 disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 shadow-xs hover:bg-rose-100 active:scale-95 disabled:opacity-50"
                             >
                                 <XCircle className="h-3.5 w-3.5" />
-                                Cancel
+                                Cancel Group
                             </button>
                         </div>
                     )}
@@ -180,10 +183,9 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <h2 className="text-lg font-bold text-slate-900">
-                                {bulkInvite.name || bulkInvite.purpose || `Batch #${bulkInvite.id}`}
+                                {bulkInvite.name || `Batch #${bulkInvite.id}`}
                             </h2>
                             <p className="mt-0.5 text-xs text-slate-500">
-                                {bulkInvite.role ? `${bulkInvite.role} · ` : ''}
                                 Issued by {organization.name}
                             </p>
                         </div>
@@ -191,6 +193,8 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                             className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${
                                 bulkInvite.status === 'active'
                                     ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                    : bulkInvite.status === 'cancelled'
+                                    ? 'border border-rose-200 bg-rose-50 text-rose-700'
                                     : 'border border-slate-200 bg-slate-100 text-slate-600'
                             }`}
                         >
@@ -208,9 +212,28 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                         <div>
                             <span className="text-slate-400">Auto-Renewal</span>
                             <div className="mt-0.5 font-bold text-slate-800">
-                                {bulkInvite.auto_renew ? 'Active (every 30 days)' : 'Disabled'}
+                                {bulkInvite.auto_renew ? 'Active on Expiry' : 'Disabled'}
                             </div>
+                            {bulkInvite.next_renewal_at && bulkInvite.auto_renew && (
+                                <p className="mt-0.5 text-[10px] text-indigo-600">
+                                    Next cycle: {bulkInvite.next_renewal_at}
+                                </p>
+                            )}
                         </div>
+                    </div>
+                </div>
+
+                {/* Delivery Progress Bar */}
+                <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-xs">
+                    <div className="mb-2 flex items-center justify-between text-xs font-bold text-slate-700">
+                        <span>Email Delivery Progress</span>
+                        <span>{progressPercent}% Complete</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                        <div
+                            className="h-full bg-emerald-500 transition-all duration-500"
+                            style={{ width: `${progressPercent}%` }}
+                        />
                     </div>
                 </div>
 
@@ -321,6 +344,37 @@ export default function BulkInvitesShow({ organization, membership, bulkInvite }
                         ))}
                     </div>
                 </div>
+
+                {/* Renewal History Section */}
+                {bulkInvite.renewals && bulkInvite.renewals.length > 0 && (
+                    <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-xs">
+                        <div className="border-b border-slate-100 bg-slate-50/75 px-4 py-3 text-xs font-bold tracking-wider text-slate-600 uppercase">
+                            Renewal Cycles ({bulkInvite.renewals.length})
+                        </div>
+                        <div className="divide-y divide-slate-100">
+                            {bulkInvite.renewals.map((renewal) => (
+                                <div key={renewal.id} className="flex items-center justify-between p-3.5 text-xs">
+                                    <div>
+                                        <div className="font-semibold text-slate-800">
+                                            {renewal.valid_from} to {renewal.valid_until}
+                                        </div>
+                                        <div className="mt-0.5 text-[11px] text-slate-400">
+                                            Processed on {new Date(renewal.created_at).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 font-bold text-indigo-700 border border-indigo-200 text-[10px]">
+                                            {renewal.recipients_renewed} renewed
+                                        </span>
+                                        <span className="capitalize text-[11px] text-slate-500 font-medium">
+                                            {renewal.status}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </OrganizationLayout>
     );
