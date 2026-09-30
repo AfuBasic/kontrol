@@ -36,11 +36,14 @@ class AccessLog extends Model
     protected $fillable = [
         'estate_id',
         'organization_id',
+        'zone_id',
         'visitor_profile_id',
         'entry_point',
         'access_code_id',
         'verified_by',
         'verified_at',
+        'confirmed_at',
+        'confirmed_by',
         'checked_out_at',
         'checked_out_by',
         'exit_point',
@@ -54,6 +57,7 @@ class AccessLog extends Model
     {
         return [
             'verified_at' => 'immutable_datetime',
+            'confirmed_at' => 'immutable_datetime',
             'checked_out_at' => 'immutable_datetime',
             'meta' => 'array',
         ];
@@ -84,9 +88,52 @@ class AccessLog extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function verifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function confirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'confirmed_by');
+    }
+
+    public function checkoutVerifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'checked_out_by');
+    }
+
     public function checkedOutBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'checked_out_by');
+    }
+
+    /**
+     * Compute derived confirmation state: 'NOT_REQUIRED' | 'CONFIRMED' | 'PENDING' | 'OVERDUE'.
+     */
+    public function confirmationState(?int $windowMinutes = null): string
+    {
+        if (! $this->organization_id) {
+            return 'NOT_REQUIRED';
+        }
+
+        if ($this->confirmed_at) {
+            return 'CONFIRMED';
+        }
+
+        $org = $this->organization;
+        if ($org && (! $org->requiresArrivalConfirmation() || $org->isUnrestricted())) {
+            return 'NOT_REQUIRED';
+        }
+
+        $window = $windowMinutes ?? ($org?->arrival_confirmation_minutes ?? $org?->confirmation_window_minutes ?? 15);
+        $entryTime = $this->verified_at ?? $this->created_at;
+
+        if ($entryTime && $entryTime->copy()->addMinutes($window)->isPast()) {
+            return 'OVERDUE';
+        }
+
+        return 'PENDING';
     }
 
     public function scopeActive($query)
