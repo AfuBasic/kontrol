@@ -37,7 +37,7 @@ class BulkVisitorPassMail extends Mailable implements ShouldQueue
             ?? 'Organization';
 
         return new Envelope(
-            subject: "Your Visitor Access Pass — {$orgName}",
+            subject: "Your Visitor Access Pass - {$orgName}",
         );
     }
 
