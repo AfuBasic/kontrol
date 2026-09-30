@@ -1,9 +1,10 @@
 import { Head, router, usePage, Link } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Plus, RefreshCw, WifiOff } from 'lucide-react';
+import { Calendar, Mail, Plus, RefreshCw, Users, WifiOff } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import MobileSheet from '@/Components/MobileSheet';
+import BulkInviteModal from '@/Pages/Organization/BulkInviteModal';
 import ActiveVisitsCallout from '@/Components/Visitors/ActiveVisitsCallout';
 import ResidentActiveVisits, { type ActiveVisitItem } from '@/Components/Visitors/ResidentActiveVisits';
 import ContextBanner from '@/Components/Visitors/ContextBanner';
@@ -171,6 +172,7 @@ export default function Visitors({
 
     // Modals & Creation Sheet State
     const [showCreateSheet, setShowCreateSheet] = useState(false);
+    const [showBulkInviteModal, setShowBulkInviteModal] = useState(false);
     const [revokeModalOpen, setRevokeModalOpen] = useState(false);
     const [codeToRevoke, setCodeToRevoke] = useState<{ id: number; visitor_name?: string | null } | null>(null);
     const [revoking, setRevoking] = useState(false);
@@ -496,8 +498,35 @@ export default function Visitors({
                             <p className="mt-0.5 text-[11px] font-medium text-slate-400">Shared access pass for multiple event guests.</p>
                         </div>
                     </Link>
+
+                    {!isHouseholdMember && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowCreateSheet(false);
+                                setShowBulkInviteModal(true);
+                            }}
+                            className="group flex w-full items-start gap-3.5 text-left rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 transition-all hover:border-slate-200 hover:bg-slate-100/80"
+                        >
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-sky-600">
+                                <Users className="h-4 w-4" />
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-bold text-slate-900">Bulk Visitor Invites</h4>
+                                <p className="mt-0.5 text-[11px] font-medium text-slate-400">
+                                    Send access passes to multiple email recipients simultaneously.
+                                </p>
+                            </div>
+                        </button>
+                    )}
                 </div>
             </MobileSheet>
+
+            {/* Bulk Invite Modal */}
+            <BulkInviteModal
+                isOpen={showBulkInviteModal}
+                onClose={() => setShowBulkInviteModal(false)}
+            />
 
             {/* Revoke Modal */}
             <ConfirmationModal
