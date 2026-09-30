@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { AlertCircle, Bell, Building2, Check, ChevronDown, ChevronRight, CreditCard, LogOut, Plus, Trash2, X } from 'lucide-react';
+import { AlertCircle, Bell, Building2, Check, ChevronDown, ChevronRight, CreditCard, Crown, LogOut, Plus, Trash2, X } from 'lucide-react';
 import React, { useState } from 'react';
 import ConfirmationSheet from '@/Components/ConfirmationSheet';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
@@ -92,6 +92,68 @@ export default function Settings({ organization, membership, staff }: Props) {
                     </div>
                 )}
 
+                {/* 1.5 SUBSCRIPTION CARD (Resident profile dark card style) */}
+                {subscription && (subscription.current_period_end || subscription.trial_ends_at) && (
+                    <button
+                        type="button"
+                        onClick={() => openExternalBilling()}
+                        className="group relative w-full overflow-hidden rounded-3xl bg-[#0B101E] p-6 text-left shadow-xl ring-1 ring-white/5 transition-all duration-300 hover:shadow-2xl hover:ring-white/10 active:scale-[0.99]"
+                    >
+                        {/* Subtle Top Edge Highlight */}
+                        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-50 transition-opacity duration-500 group-hover:opacity-100" />
+
+                        {/* Soft Deep Glow */}
+                        <div className="pointer-events-none absolute -top-32 -right-32 h-64 w-64 rounded-full bg-indigo-500/10 blur-[60px]" />
+
+                        <div className="relative z-10 flex flex-col gap-8">
+                            {/* Header */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2.5 text-slate-300">
+                                    <Crown className="h-4 w-4 text-indigo-400" strokeWidth={2.5} />
+                                    <h2 className="text-[14px] font-medium tracking-wide">{subscription.plan_name || 'Organization Subscription'}</h2>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {subscription.status === 'active' || subscription.status === 'trial' ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]"></span>
+                                            <span className="text-[13px] font-medium text-emerald-400">
+                                                {subscription.status === 'active' ? 'Active' : 'Trial'}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-rose-400 shadow-[0_0_8px_rgba(251,113,133,0.6)]"></span>
+                                            <span className="text-[13px] font-medium text-rose-400">Expired</span>
+                                        </div>
+                                    )}
+                                    <ChevronRight className="h-4 w-4 text-slate-500 transition-transform group-hover:translate-x-0.5" />
+                                </div>
+                            </div>
+
+                            {/* Body */}
+                            <div className="flex flex-col gap-1">
+                                {(() => {
+                                    const targetDate = subscription.current_period_end || subscription.trial_ends_at;
+                                    const formattedDate = targetDate
+                                        ? new Date(targetDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                                        : '';
+                                    const diffTime = targetDate ? new Date(targetDate).getTime() - new Date().getTime() : 0;
+                                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                                    return (
+                                        <>
+                                            <h3 className="text-[28px] font-medium tracking-tight text-white">{formattedDate}</h3>
+                                            <p className="text-[14px] font-medium text-slate-500">
+                                                {diffDays > 0 ? `${diffDays} Days Remaining` : `${Math.abs(diffDays)} Days Ago`}
+                                            </p>
+                                        </>
+                                    );
+                                })()}
+                            </div>
+                        </div>
+                    </button>
+                )}
+
                 {/* 2. ACCOUNT SECTION */}
                 <section className="space-y-3">
                     <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Account</h2>
@@ -118,6 +180,20 @@ export default function Settings({ organization, membership, staff }: Props) {
                 <section className="space-y-3">
                     <h2 className="text-[11px] font-black tracking-[0.2em] text-slate-400 uppercase">Balances & Billing</h2>
                     <div className="divide-y divide-slate-50 overflow-hidden rounded-3xl bg-white shadow-xs ring-1 ring-slate-200/80">
+                        <button
+                            type="button"
+                            onClick={() => openExternalBilling()}
+                            className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
+                        >
+                            <div className="flex items-center gap-3">
+                                <CreditCard className="h-4 w-4 text-slate-500" />
+                                <div>
+                                    <span className="text-sm font-bold text-slate-900">Subscription & Billing</span>
+                                    <p className="text-xs text-slate-400">Manage plan, billing cycle, receipts & payment methods</p>
+                                </div>
+                            </div>
+                            <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-slate-500" />
+                        </button>
                         <Link
                             href="/org/payments"
                             className="group flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-slate-50 sm:p-5"
@@ -125,7 +201,7 @@ export default function Settings({ organization, membership, staff }: Props) {
                             <div className="flex items-center gap-3">
                                 <CreditCard className="h-4 w-4 text-slate-500" />
                                 <div>
-                                    <span className="text-sm font-bold text-slate-900">Subscription & Payments</span>
+                                    <span className="text-sm font-bold text-slate-900">Estate Payments & Dues</span>
                                     <p className="text-xs text-slate-400">View balances, estate dues & payment history</p>
                                 </div>
                             </div>
