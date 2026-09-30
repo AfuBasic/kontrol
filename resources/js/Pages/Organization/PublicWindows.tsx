@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import AccessTabs from '@/Components/Organization/AccessTabs';
 import OrganizationLayout from '@/Layouts/OrganizationLayout';
 import ResponsiveSheet from '@/Components/Organization/ResponsiveSheet';
+import SubscriptionGateSheet from '@/Components/Organization/SubscriptionGateSheet';
+import { useSubscriptionGate } from '@/Hooks/useSubscriptionGate';
 
 interface PublicWindow {
     id: number;
@@ -33,6 +35,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 
 export default function PublicWindows({ organization, membership, windows }: Props) {
     const [createModalOpen, setCreateModalOpen] = useState(false);
+    const { gated, gateSheetOpen, closeGateSheet } = useSubscriptionGate();
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -80,7 +83,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                         {membership.is_admin && (
                             <button
                                 type="button"
-                                onClick={() => setCreateModalOpen(true)}
+                                onClick={gated(() => setCreateModalOpen(true))}
                                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#0f172a] px-5 py-3 text-sm font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.20)]"
                             >
                                 <Plus className="h-4 w-4" />
@@ -238,6 +241,7 @@ export default function PublicWindows({ organization, membership, windows }: Pro
                         </div>
                     </form>
                 </ResponsiveSheet>
+                <SubscriptionGateSheet open={gateSheetOpen} onClose={closeGateSheet} />
             </div>
         </OrganizationLayout>
     );
