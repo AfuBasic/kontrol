@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Car, CheckCircle2, Flame, Gauge, Loader2, RefreshCw, Tag, User, X, Zap } from 'lucide-react';
+import { Building2, Car, CheckCircle2, Flame, Gauge, Loader2, RefreshCw, ShieldAlert, Tag, User, X, Zap } from 'lucide-react';
 import { QuickEntryStore, type ReservedTag } from '@/Resilience/OfflineStorage/QuickEntryStore';
 import { SyncEngine } from '@/Resilience/SyncEngine';
 
