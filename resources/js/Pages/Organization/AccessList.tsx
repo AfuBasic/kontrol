@@ -790,7 +790,7 @@ export default function AccessList({
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">ID Number</dt>
-                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.identifier || '—'}</dd>
+                                            <dd className="text-sm font-semibold text-slate-900">{selectedMember.identifier || '-'}</dd>
                                         </div>
                                         <div className="flex items-center justify-between px-4 py-3">
                                             <dt className="text-sm font-medium text-slate-500">Valid Until</dt>
